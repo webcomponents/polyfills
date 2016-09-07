@@ -1,0 +1,28 @@
+{
+  "name": "shadydom.js",
+  "version": "0.0.1",
+  "description": "shadydom.js",
+  "main": "shadydom.js",
+  "directories": {
+    "test": "tests"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/webcomponents/shadydom.git"
+  },
+  "author": "The Polymer Authors",
+  "license": "BSD-3-Clause",
+  "bugs": {
+    "url": "https://github.com/webcomponents/shadydom/issues"
+  },
+  "scripts": {
+    "test": "wct"
+  },
+  "homepage": "http://webcomponents.org",
+  "devDependencies": {
+    "google-closure-compiler": "^20160822.0.0",
+    "gulp": "^3.8.8",
+    "gulp-sourcemaps": "^1.6.0",
+    "web-component-tester": "^4.0.1"
+  }
+}
