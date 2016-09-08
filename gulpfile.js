@@ -10,6 +10,9 @@
 
 'use strict';
 
+/* eslint-env node */
+/* eslint-disable no-console */
+
 let gulp = require('gulp');
 let compilerPackage = require('google-closure-compiler');
 let sourcemaps = require('gulp-sourcemaps');
@@ -21,8 +24,8 @@ gulp.task('default', function() {
     .pipe(closureCompiler({
       new_type_inf: true,
       compilation_level: 'SIMPLE',
-      language_in: 'ECMASCRIPT6_STRICT',
-      language_out: 'ECMASCRIPT5_STRICT',
+      language_in: 'ES6_STRICT',
+      language_out: 'ES5_STRICT',
       output_wrapper: '(function(){\n%output%\n}).call(this)',
       js_output_file: 'ShadyDOM.min.js'
     }))
