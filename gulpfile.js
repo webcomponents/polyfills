@@ -8,15 +8,12 @@
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
-// jshint node: true
-
 'use strict';
 
-var gulp = require('gulp');
-var compilerPackage = require('google-closure-compiler');
-var sourcemaps = require('gulp-sourcemaps');
-var closureCompiler = compilerPackage.gulp();
-
+let gulp = require('gulp');
+let compilerPackage = require('google-closure-compiler');
+let sourcemaps = require('gulp-sourcemaps');
+let closureCompiler = compilerPackage.gulp();
 
 gulp.task('default', function() {
   return gulp.src(['./src/ShadyDOM/*.js', './src/ShadyCSS/*.js'], {base: './'})
@@ -29,7 +26,7 @@ gulp.task('default', function() {
       output_wrapper: '(function(){\n%output%\n}).call(this)',
       js_output_file: 'ShadyDOM.min.js'
     }))
-    .on('error', function(e){ console.error(e); })
+    .on('error', (e) => console.error(e))
     .pipe(sourcemaps.write('/'))
     .pipe(gulp.dest('./'))
 });
