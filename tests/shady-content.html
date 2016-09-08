@@ -12,8 +12,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <head>
   <meta charset="utf-8">
   <script src="../../web-component-tester/browser.js"></script>
-  <script src="../../custom-elements/src/CustomElements.js"></script>
-  <script>ShadyDOM = {force: true};</script>
+  <script>
+    ShadyDOM = {force: true};
+    if (window.customElements) {
+      customElements.forcePolyfill = true;
+    }
+  </script>
+  <script src="../../custom-elements/custom-elements.min.js"></script>
   <script src="../shadydom.min.js"></script>
 </head>
 <body>
