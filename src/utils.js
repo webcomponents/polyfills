@@ -12,7 +12,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 export let settings = window.ShadyDOM || {};
 
-settings.inUse = settings.dom || !Element.prototype.attachShadow;
+settings.hasNativeShadowDOM = Boolean(Element.prototype.attachShadow);
+
+settings.inUse = settings.force || !settings.hasNativeShadowDOM;
 
 export function isShadyRoot(obj) {
   return Boolean(obj.__localName === 'ShadyRoot');
