@@ -1,5 +1,5 @@
 {
-  "name": "shadycss",
+  "name": "@webcomponents/shadycss",
   "version": "0.0.1",
   "description": "shadydom.js",
   "main": "shadycss.min.js",
@@ -20,6 +20,9 @@
   },
   "homepage": "http://webcomponents.org",
   "devDependencies": {
+    "@webcomponents/custom-elements": "^1.0.0-alpha.1",
+    "eslint": "^3.4.0",
+    "eslint-plugin-html": "^1.5.2",
     "google-closure-compiler": "^20160822.0.0",
     "gulp": "^3.8.8",
     "gulp-sourcemaps": "^1.6.0",
