@@ -170,11 +170,9 @@ let Deferred;
       /** @type {MutationObserver} **/
       this._mainDocumentObserver = this._observeRoot(doc);
 
-      // TODO(justinfagnani): Possibly remove WebComponentsReady event
       const onReady = () => {
         this._ready = true;
         this._addNodes(doc.childNodes);
-        window.dispatchEvent(new CustomEvent('WebComponentsReady'));
       };
       if (window['HTMLImports']) {
         window['HTMLImports']['whenReady'](onReady);
@@ -768,9 +766,12 @@ let Deferred;
     }
   }
 
-  /** @type {CustomElementRegistry} */
-  window['customElements'] = new CustomElementRegistry();
-
+  Object.defineProperty(window, 'customElements', {
+    value: new CustomElementRegistry(),
+    configurable: true,
+    enumerable: true,
+  });
+  
   // TODO(justinfagnani): Remove. Temporary for backward-compatibility
   window['CustomElements'] = {
     takeRecords() {
