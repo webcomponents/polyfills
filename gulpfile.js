@@ -17,7 +17,7 @@ const sourcemaps = require('gulp-sourcemaps');
 const closureCompiler = compilerPackage.gulp();
 
 gulp.task('default', () => {
-  return gulp.src('./src/CustomElements.js', {base: './'})
+  return gulp.src('./src/custom-elements.js', {base: './'})
       .pipe(sourcemaps.init())
       .pipe(closureCompiler({
           compilation_level: 'ADVANCED',
@@ -25,7 +25,7 @@ gulp.task('default', () => {
           language_in: 'ECMASCRIPT6_STRICT',
           language_out: 'ECMASCRIPT5_STRICT',
           externs: ['externs/html5.js', 'externs/custom-elements.js'],
-          js_output_file: 'CustomElements.min.js',
+          js_output_file: 'custom-elements.min.js',
           new_type_inf: true,
           rewrite_polyfills: false,
         }))

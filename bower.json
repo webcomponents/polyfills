@@ -1,6 +1,6 @@
 {
   "name": "custom-elements",
-  "main": "CustomElements.min.js",
+  "main": "custom-elements.min.js",
   "version": "1.0.0-alpha.1",
   "homepage": "http://webcomponents.org",
   "authors": [
