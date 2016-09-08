@@ -1,8 +1,8 @@
 {
-  "name": "shadydom.js",
+  "name": "shadydom",
   "version": "0.0.1",
   "description": "shadydom.js",
-  "main": "shadydom.js",
+  "main": "shadydom.min.js",
   "directories": {
     "test": "tests"
   },
