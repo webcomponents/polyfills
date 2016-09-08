@@ -19,7 +19,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     }
   </script>
   <script src="../../../webcomponentsjs/src/CustomElements/v1/CustomElements.js"></script>
-  <script>customElements.enableFlush = true;</script>
   <script src="../../ShadyDOM.min.js"></script>
 </head>
 <body>
@@ -29,12 +28,15 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       var template = document.querySelector('#' + name);
       customElements.define(name, class extends HTMLElement {
         connectedCallback() {
-          if (template) {
-            this.attachShadow({mode: 'open'});
-            this.shadowRoot.appendChild(document.importNode(template.content, true));
-          }
-          if (connected) {
-            connected.call(this);
+          if (!this._initialized) {
+            this._initialized = true;
+            if (connected) {
+              connected.call(this);
+            }
+            if (template) {
+              this.attachShadow({mode: 'open'});
+              this.shadowRoot.appendChild(document.importNode(template.content, true));
+            }
           }
         }
       });
@@ -864,7 +866,7 @@ suite('Accessors', function() {
     assert.equal(before.nextSibling, child, 'nextSibling incorrect');
     assert.equal(child.nextSibling, after, 'nextSibling incorrect');
     assert.equal(after.previousSibling, child, 'previousSibling incorrect');
-    assert.equal(after.nextSibling, 'nextSibling incorrect');
+    assert.equal(after.nextSibling, null, 'nextSibling incorrect');
     assert.equal(child.previousSibling, before, 'previousSibling incorrect');
   });
 
@@ -881,7 +883,7 @@ suite('Accessors', function() {
     assert.equal(before.nextSibling, child, 'nextSibling incorrect');
     assert.equal(child.nextSibling, after, 'nextSibling incorrect');
     assert.equal(after.previousSibling, child, 'previousSibling incorrect');
-    assert.equal(after.nextSibling, 'nextSibling incorrect');
+    assert.equal(after.nextSibling, null, 'nextSibling incorrect');
     assert.equal(child.previousSibling, before, 'previousSibling incorrect');
   });
 
@@ -919,15 +921,15 @@ suite('Accessors', function() {
 
   test('node accessors (empty logical tree)', function() {
     var element = document.createElement('x-simple');
-    assert.equal(element.parentNode, 'parentNode incorrect');
-    assert.equal(element.firstChild, 'firstChild incorrect');
-    assert.equal(element.lastChild, 'lastChild incorrect');
-    assert.equal(element.nextSibling, 'nextSibling incorrect');
-    assert.equal(element.previousSibling, 'previousSibling incorrect');
-    assert.equal(element.firstElementChild, 'firstElementChild incorrect');
-    assert.equal(element.lastElementChild, 'lastElementChild incorrect');
-    assert.equal(element.nextElementSibling, 'nextElementSibling incorrect');
-    assert.equal(element.previousElementSibling, 'previousElementSibling incorrect');
+    assert.equal(element.parentNode, null, 'parentNode incorrect');
+    assert.equal(element.firstChild, null, 'firstChild incorrect');
+    assert.equal(element.lastChild, null, 'lastChild incorrect');
+    assert.equal(element.nextSibling, null, 'nextSibling incorrect');
+    assert.equal(element.previousSibling, null, 'previousSibling incorrect');
+    assert.equal(element.firstElementChild, null, 'firstElementChild incorrect');
+    assert.equal(element.lastElementChild, null, 'lastElementChild incorrect');
+    assert.equal(element.nextElementSibling, null, 'nextElementSibling incorrect');
+    assert.equal(element.previousElementSibling, null, 'previousElementSibling incorrect');
   });
 
   test('node accessors (unmanaged logical tree)', function() {
@@ -936,15 +938,15 @@ suite('Accessors', function() {
     var child2 = document.createElement('div');
     element.appendChild(child1);
     element.appendChild(child2);
-    assert.equal(element.parentNode, 'parentNode incorrect');
+    assert.equal(element.parentNode, null, 'parentNode incorrect');
     assert.equal(element.firstChild, child1, 'firstChild incorrect');
     assert.equal(element.lastChild, child2, 'lastChild incorrect');
-    assert.equal(element.nextSibling, 'nextSibling incorrect');
-    assert.equal(element.previousSibling, 'previousSibling incorrect');
+    assert.equal(element.nextSibling, null, 'nextSibling incorrect');
+    assert.equal(element.previousSibling, null, 'previousSibling incorrect');
     assert.equal(element.firstElementChild, child1, 'firstElementChild incorrect');
     assert.equal(element.lastElementChild, child2, 'lastElementChild incorrect');
-    assert.equal(element.nextElementSibling, 'nextElementSibling incorrect');
-    assert.equal(element.previousElementSibling, 'previousElementSibling incorrect');
+    assert.equal(element.nextElementSibling, null, 'nextElementSibling incorrect');
+    assert.equal(element.previousElementSibling, null, 'previousElementSibling incorrect');
   });
 
   test('textContent', function() {
@@ -1049,26 +1051,26 @@ suite('activeElement', function() {
     r.focus();
 
     assert.equal(document._activeElement, r, 'document.activeElement === r');
-    assert.equal(r.shadowRoot.activeElement, 'r.shadowRoot.activeElement === null');
-    assert.equal(r_0.shadowRoot.activeElement, 'r_0.shadowRoot.activeElement === null');
-    assert.equal(r_0_0.shadowRoot.activeElement, 'r_0_0.shadowRoot.activeElement === null');
-    assert.equal(r_0_1.shadowRoot.activeElement, 'r_0_1.shadowRoot.activeElement === null');
-    assert.equal(r_1.shadowRoot.activeElement, 'r_1.shadowRoot.activeElement === null');
-    assert.equal(r_1_0.shadowRoot.activeElement, 'r_1_0.shadowRoot.activeElement === null');
-    assert.equal(r_1_1.shadowRoot.activeElement, 'r_1_1.shadowRoot.activeElement === null');
+    assert.equal(r.shadowRoot.activeElement, null, 'r.shadowRoot.activeElement === null');
+    assert.equal(r_0.shadowRoot.activeElement, null, 'r_0.shadowRoot.activeElement === null');
+    assert.equal(r_0_0.shadowRoot.activeElement, null, 'r_0_0.shadowRoot.activeElement === null');
+    assert.equal(r_0_1.shadowRoot.activeElement, null, 'r_0_1.shadowRoot.activeElement === null');
+    assert.equal(r_1.shadowRoot.activeElement, null, 'r_1.shadowRoot.activeElement === null');
+    assert.equal(r_1_0.shadowRoot.activeElement, null, 'r_1_0.shadowRoot.activeElement === null');
+    assert.equal(r_1_1.shadowRoot.activeElement, null, 'r_1_1.shadowRoot.activeElement === null');
   });
 
   test('r_l.focus()', function() {
     r_l.focus();
 
     assert.equal(document._activeElement, r_l, 'document.activeElement === r_l');
-    assert.equal(r.shadowRoot.activeElement, 'r.shadowRoot.activeElement === null');
-    assert.equal(r_0.shadowRoot.activeElement, 'r_0.shadowRoot.activeElement === null');
-    assert.equal(r_0_0.shadowRoot.activeElement, 'r_0_0.shadowRoot.activeElement === null');
-    assert.equal(r_0_1.shadowRoot.activeElement, 'r_0_1.shadowRoot.activeElement === null');
-    assert.equal(r_1.shadowRoot.activeElement, 'r_1.shadowRoot.activeElement === null');
-    assert.equal(r_1_0.shadowRoot.activeElement, 'r_1_0.shadowRoot.activeElement === null');
-    assert.equal(r_1_1.shadowRoot.activeElement, 'r_1_1.shadowRoot.activeElement === null');
+    assert.equal(r.shadowRoot.activeElement, null, 'r.shadowRoot.activeElement === null');
+    assert.equal(r_0.shadowRoot.activeElement, null, 'r_0.shadowRoot.activeElement === null');
+    assert.equal(r_0_0.shadowRoot.activeElement, null, 'r_0_0.shadowRoot.activeElement === null');
+    assert.equal(r_0_1.shadowRoot.activeElement, null, 'r_0_1.shadowRoot.activeElement === null');
+    assert.equal(r_1.shadowRoot.activeElement, null, 'r_1.shadowRoot.activeElement === null');
+    assert.equal(r_1_0.shadowRoot.activeElement, null, 'r_1_0.shadowRoot.activeElement === null');
+    assert.equal(r_1_1.shadowRoot.activeElement, null, 'r_1_1.shadowRoot.activeElement === null');
   });
 
   test('r_0.focus()', function() {
@@ -1076,12 +1078,12 @@ suite('activeElement', function() {
 
     assert.equal(document._activeElement, r, 'document.activeElement === r');
     assert.equal(r.shadowRoot.activeElement, r_0, 'r.shadowRoot.activeElement === r_0');
-    assert.equal(r_0.shadowRoot.activeElement, 'r_0.shadowRoot.activeElement === null');
-    assert.equal(r_0_0.shadowRoot.activeElement, 'r_0_0.shadowRoot.activeElement === null');
-    assert.equal(r_0_1.shadowRoot.activeElement, 'r_0_1.shadowRoot.activeElement === null');
-    assert.equal(r_1.shadowRoot.activeElement, 'r_1.shadowRoot.activeElement === null');
-    assert.equal(r_1_0.shadowRoot.activeElement, 'r_1_0.shadowRoot.activeElement === null');
-    assert.equal(r_1_1.shadowRoot.activeElement, 'r_1_1.shadowRoot.activeElement === null');
+    assert.equal(r_0.shadowRoot.activeElement, null, 'r_0.shadowRoot.activeElement === null');
+    assert.equal(r_0_0.shadowRoot.activeElement, null, 'r_0_0.shadowRoot.activeElement === null');
+    assert.equal(r_0_1.shadowRoot.activeElement, null, 'r_0_1.shadowRoot.activeElement === null');
+    assert.equal(r_1.shadowRoot.activeElement, null, 'r_1.shadowRoot.activeElement === null');
+    assert.equal(r_1_0.shadowRoot.activeElement, null, 'r_1_0.shadowRoot.activeElement === null');
+    assert.equal(r_1_1.shadowRoot.activeElement, null, 'r_1_1.shadowRoot.activeElement === null');
   });
 
   test('r_0_l.focus()', function() {
@@ -1089,13 +1091,13 @@ suite('activeElement', function() {
 
     assert.equal(document._activeElement, r, 'document.activeElement === r');
     assert.equal(r.shadowRoot.activeElement, r_0_l, 'r.shadowRoot.activeElement === r_0_l');
-    assert.equal(r_0.shadowRoot.activeElement, 'r_0.shadowRoot.activeElement === null');
-    assert.equal(r_1.shadowRoot.activeElement, 'r_1.shadowRoot.activeElement === null');
+    assert.equal(r_0.shadowRoot.activeElement, null, 'r_0.shadowRoot.activeElement === null');
+    assert.equal(r_1.shadowRoot.activeElement, null, 'r_1.shadowRoot.activeElement === null');
 
-    assert.equal(r_0_0.shadowRoot.activeElement, 'r_0_0.shadowRoot.activeElement === null');
-    assert.equal(r_0_1.shadowRoot.activeElement, 'r_0_1.shadowRoot.activeElement === null');
-    assert.equal(r_1_0.shadowRoot.activeElement, 'r_1_0.shadowRoot.activeElement === null');
-    assert.equal(r_1_1.shadowRoot.activeElement, 'r_1_1.shadowRoot.activeElement === null');
+    assert.equal(r_0_0.shadowRoot.activeElement, null, 'r_0_0.shadowRoot.activeElement === null');
+    assert.equal(r_0_1.shadowRoot.activeElement, null, 'r_0_1.shadowRoot.activeElement === null');
+    assert.equal(r_1_0.shadowRoot.activeElement, null, 'r_1_0.shadowRoot.activeElement === null');
+    assert.equal(r_1_1.shadowRoot.activeElement, null, 'r_1_1.shadowRoot.activeElement === null');
   });
 
   test('r_0_0.focus()', function() {
@@ -1104,11 +1106,11 @@ suite('activeElement', function() {
     assert.equal(document._activeElement, r, 'document.activeElement === r');
     assert.equal(r.shadowRoot.activeElement, r_0, 'r.shadowRoot.activeElement === r_0');
     assert.equal(r_0.shadowRoot.activeElement, r_0_0, 'r_0.shadowRoot.activeElement === r_0_0');
-    assert.equal(r_0_0.shadowRoot.activeElement, 'r_0_0.shadowRoot.activeElement === null');
-    assert.equal(r_0_1.shadowRoot.activeElement, 'r_0_1.shadowRoot.activeElement === null');
-    assert.equal(r_1.shadowRoot.activeElement, 'r_1.shadowRoot.activeElement === null');
-    assert.equal(r_1_0.shadowRoot.activeElement, 'r_1_0.shadowRoot.activeElement === null');
-    assert.equal(r_1_1.shadowRoot.activeElement, 'r_1_1.shadowRoot.activeElement === null');
+    assert.equal(r_0_0.shadowRoot.activeElement, null, 'r_0_0.shadowRoot.activeElement === null');
+    assert.equal(r_0_1.shadowRoot.activeElement, null, 'r_0_1.shadowRoot.activeElement === null');
+    assert.equal(r_1.shadowRoot.activeElement, null, 'r_1.shadowRoot.activeElement === null');
+    assert.equal(r_1_0.shadowRoot.activeElement, null, 'r_1_0.shadowRoot.activeElement === null');
+    assert.equal(r_1_1.shadowRoot.activeElement, null, 'r_1_1.shadowRoot.activeElement === null');
   });
 
   test('r_0_0_l.focus()', function() {
@@ -1117,11 +1119,11 @@ suite('activeElement', function() {
     assert.equal(document._activeElement, r, 'document.activeElement === r');
     assert.equal(r.shadowRoot.activeElement, r_0, 'r.shadowRoot.activeElement === r_0');
     assert.equal(r_0.shadowRoot.activeElement, r_0_0_l, 'r_0.shadowRoot.activeElement === r_0_0_l');
-    assert.equal(r_0_0.shadowRoot.activeElement, 'r_0_0.shadowRoot.activeElement === null');
-    assert.equal(r_0_1.shadowRoot.activeElement, 'r_0_1.shadowRoot.activeElement === null');
-    assert.equal(r_1.shadowRoot.activeElement, 'r_1.shadowRoot.activeElement === null');
-    assert.equal(r_1_0.shadowRoot.activeElement, 'r_1_0.shadowRoot.activeElement === null');
-    assert.equal(r_1_1.shadowRoot.activeElement, 'r_1_1.shadowRoot.activeElement === null');
+    assert.equal(r_0_0.shadowRoot.activeElement, null, 'r_0_0.shadowRoot.activeElement === null');
+    assert.equal(r_0_1.shadowRoot.activeElement, null, 'r_0_1.shadowRoot.activeElement === null');
+    assert.equal(r_1.shadowRoot.activeElement, null, 'r_1.shadowRoot.activeElement === null');
+    assert.equal(r_1_0.shadowRoot.activeElement, null, 'r_1_0.shadowRoot.activeElement === null');
+    assert.equal(r_1_1.shadowRoot.activeElement, null, 'r_1_1.shadowRoot.activeElement === null');
   });
 
   test('r_0_0_l_0.focus()', function() {
@@ -1130,12 +1132,12 @@ suite('activeElement', function() {
     assert.equal(document._activeElement, r, 'document.activeElement === r');
     assert.equal(r.shadowRoot.activeElement, r_0, 'r.shadowRoot.activeElement === r_0');
     assert.equal(r_0.shadowRoot.activeElement, r_0_0_l, 'r_0.shadowRoot.activeElement === r_0_0_l');
-    assert.equal(r_0_0.shadowRoot.activeElement, 'r_0_0.shadowRoot.activeElement === null');
+    assert.equal(r_0_0.shadowRoot.activeElement, null, 'r_0_0.shadowRoot.activeElement === null');
     assert.equal(r_0_0_l.shadowRoot.activeElement, r_0_0_l_0, 'r_0_0_l.shadowRoot.activeElement === r_0_0_l_0');
-    assert.equal(r_0_1.shadowRoot.activeElement, 'r_0_1.shadowRoot.activeElement === null');
-    assert.equal(r_1.shadowRoot.activeElement, 'r_1.shadowRoot.activeElement === null');
-    assert.equal(r_1_0.shadowRoot.activeElement, 'r_1_0.shadowRoot.activeElement === null');
-    assert.equal(r_1_1.shadowRoot.activeElement, 'r_1_1.shadowRoot.activeElement === null');
+    assert.equal(r_0_1.shadowRoot.activeElement, null, 'r_0_1.shadowRoot.activeElement === null');
+    assert.equal(r_1.shadowRoot.activeElement, null, 'r_1.shadowRoot.activeElement === null');
+    assert.equal(r_1_0.shadowRoot.activeElement, null, 'r_1_0.shadowRoot.activeElement === null');
+    assert.equal(r_1_1.shadowRoot.activeElement, null, 'r_1_1.shadowRoot.activeElement === null');
   });
 
   test('r_0_1.focus()', function() {
@@ -1144,11 +1146,11 @@ suite('activeElement', function() {
     assert.equal(document._activeElement, r, 'document.activeElement === r');
     assert.equal(r.shadowRoot.activeElement, r_0, 'r.shadowRoot.activeElement === r_0');
     assert.equal(r_0.shadowRoot.activeElement, r_0_1, 'r_0.shadowRoot.activeElement === r_0_1');
-    assert.equal(r_0_0.shadowRoot.activeElement, 'r_0_0.shadowRoot.activeElement === null');
-    assert.equal(r_0_1.shadowRoot.activeElement, 'r_0_1.shadowRoot.activeElement === null');
-    assert.equal(r_1.shadowRoot.activeElement, 'r_1.shadowRoot.activeElement === null');
-    assert.equal(r_1_0.shadowRoot.activeElement, 'r_1_0.shadowRoot.activeElement === null');
-    assert.equal(r_1_1.shadowRoot.activeElement, 'r_1_1.shadowRoot.activeElement === null');
+    assert.equal(r_0_0.shadowRoot.activeElement, null, 'r_0_0.shadowRoot.activeElement === null');
+    assert.equal(r_0_1.shadowRoot.activeElement, null, 'r_0_1.shadowRoot.activeElement === null');
+    assert.equal(r_1.shadowRoot.activeElement, null, 'r_1.shadowRoot.activeElement === null');
+    assert.equal(r_1_0.shadowRoot.activeElement, null, 'r_1_0.shadowRoot.activeElement === null');
+    assert.equal(r_1_1.shadowRoot.activeElement, null, 'r_1_1.shadowRoot.activeElement === null');
   });
 
   test('r_0_1_l.focus()', function() {
@@ -1157,11 +1159,11 @@ suite('activeElement', function() {
     assert.equal(document._activeElement, r, 'document.activeElement === r');
     assert.equal(r.shadowRoot.activeElement, r_0, 'r.shadowRoot.activeElement === r_0');
     assert.equal(r_0.shadowRoot.activeElement, r_0_1_l, 'r_0.shadowRoot.activeElement === r_0_1_l');
-    assert.equal(r_0_0.shadowRoot.activeElement, 'r_0_0.shadowRoot.activeElement === null');
-    assert.equal(r_0_1.shadowRoot.activeElement, 'r_0_1.shadowRoot.activeElement === null');
-    assert.equal(r_1.shadowRoot.activeElement, 'r_1.shadowRoot.activeElement === null');
-    assert.equal(r_1_0.shadowRoot.activeElement, 'r_1_0.shadowRoot.activeElement === null');
-    assert.equal(r_1_1.shadowRoot.activeElement, 'r_1_1.shadowRoot.activeElement === null');
+    assert.equal(r_0_0.shadowRoot.activeElement, null, 'r_0_0.shadowRoot.activeElement === null');
+    assert.equal(r_0_1.shadowRoot.activeElement, null, 'r_0_1.shadowRoot.activeElement === null');
+    assert.equal(r_1.shadowRoot.activeElement, null, 'r_1.shadowRoot.activeElement === null');
+    assert.equal(r_1_0.shadowRoot.activeElement, null, 'r_1_0.shadowRoot.activeElement === null');
+    assert.equal(r_1_1.shadowRoot.activeElement, null, 'r_1_1.shadowRoot.activeElement === null');
   });
 
   test('r_1.focus()', function() {
@@ -1169,12 +1171,12 @@ suite('activeElement', function() {
 
     assert.equal(document._activeElement, r, 'document.activeElement === r');
     assert.equal(r.shadowRoot.activeElement, r_1, 'r.shadowRoot.activeElement === r_1');
-    assert.equal(r_0.shadowRoot.activeElement, 'r_0.shadowRoot.activeElement === null');
-    assert.equal(r_0_0.shadowRoot.activeElement, 'r_0_0.shadowRoot.activeElement === null');
-    assert.equal(r_0_1.shadowRoot.activeElement, 'r_0_1.shadowRoot.activeElement === null');
-    assert.equal(r_1.shadowRoot.activeElement, 'r_1.shadowRoot.activeElement === null');
-    assert.equal(r_1_0.shadowRoot.activeElement, 'r_1_0.shadowRoot.activeElement === null');
-    assert.equal(r_1_1.shadowRoot.activeElement, 'r_1_1.shadowRoot.activeElement === null');
+    assert.equal(r_0.shadowRoot.activeElement, null, 'r_0.shadowRoot.activeElement === null');
+    assert.equal(r_0_0.shadowRoot.activeElement, null, 'r_0_0.shadowRoot.activeElement === null');
+    assert.equal(r_0_1.shadowRoot.activeElement, null, 'r_0_1.shadowRoot.activeElement === null');
+    assert.equal(r_1.shadowRoot.activeElement, null, 'r_1.shadowRoot.activeElement === null');
+    assert.equal(r_1_0.shadowRoot.activeElement, null, 'r_1_0.shadowRoot.activeElement === null');
+    assert.equal(r_1_1.shadowRoot.activeElement, null, 'r_1_1.shadowRoot.activeElement === null');
   });
 
   test('r_1_l.focus()', function() {
@@ -1182,12 +1184,12 @@ suite('activeElement', function() {
 
     assert.equal(document._activeElement, r, 'document.activeElement === r');
     assert.equal(r.shadowRoot.activeElement, r_1_l, 'r.shadowRoot.activeElement === r_1_l');
-    assert.equal(r_0.shadowRoot.activeElement, 'r_0.shadowRoot.activeElement === null');
-    assert.equal(r_0_0.shadowRoot.activeElement, 'r_0_0.shadowRoot.activeElement === null');
-    assert.equal(r_0_1.shadowRoot.activeElement, 'r_0_1.shadowRoot.activeElement === null');
-    assert.equal(r_1.shadowRoot.activeElement, 'r_1.shadowRoot.activeElement === null');
-    assert.equal(r_1_0.shadowRoot.activeElement, 'r_1_0.shadowRoot.activeElement === null');
-    assert.equal(r_1_1.shadowRoot.activeElement, 'r_1_1.shadowRoot.activeElement === null');
+    assert.equal(r_0.shadowRoot.activeElement, null, 'r_0.shadowRoot.activeElement === null');
+    assert.equal(r_0_0.shadowRoot.activeElement, null, 'r_0_0.shadowRoot.activeElement === null');
+    assert.equal(r_0_1.shadowRoot.activeElement, null, 'r_0_1.shadowRoot.activeElement === null');
+    assert.equal(r_1.shadowRoot.activeElement, null, 'r_1.shadowRoot.activeElement === null');
+    assert.equal(r_1_0.shadowRoot.activeElement, null, 'r_1_0.shadowRoot.activeElement === null');
+    assert.equal(r_1_1.shadowRoot.activeElement, null, 'r_1_1.shadowRoot.activeElement === null');
   });
 
   test('r_1_l_0.focus()', function() {
@@ -1195,13 +1197,13 @@ suite('activeElement', function() {
 
     assert.equal(document._activeElement, r, 'document.activeElement === r');
     assert.equal(r.shadowRoot.activeElement, r_1_l, 'r.shadowRoot.activeElement === r_1_l');
-    assert.equal(r_0.shadowRoot.activeElement, 'r_0.shadowRoot.activeElement === null');
-    assert.equal(r_0_0.shadowRoot.activeElement, 'r_0_0.shadowRoot.activeElement === null');
-    assert.equal(r_0_1.shadowRoot.activeElement, 'r_0_1.shadowRoot.activeElement === null');
-    assert.equal(r_1.shadowRoot.activeElement, 'r_1.shadowRoot.activeElement === null');
+    assert.equal(r_0.shadowRoot.activeElement, null, 'r_0.shadowRoot.activeElement === null');
+    assert.equal(r_0_0.shadowRoot.activeElement, null, 'r_0_0.shadowRoot.activeElement === null');
+    assert.equal(r_0_1.shadowRoot.activeElement, null, 'r_0_1.shadowRoot.activeElement === null');
+    assert.equal(r_1.shadowRoot.activeElement, null, 'r_1.shadowRoot.activeElement === null');
     assert.equal(r_1_l.shadowRoot.activeElement, r_1_l_0, 'r_1.shadowRoot.activeElement === r_1_l_0');
-    assert.equal(r_1_0.shadowRoot.activeElement, 'r_1_0.shadowRoot.activeElement === null');
-    assert.equal(r_1_1.shadowRoot.activeElement, 'r_1_1.shadowRoot.activeElement === null');
+    assert.equal(r_1_0.shadowRoot.activeElement, null, 'r_1_0.shadowRoot.activeElement === null');
+    assert.equal(r_1_1.shadowRoot.activeElement, null, 'r_1_1.shadowRoot.activeElement === null');
   });
 
   test('r_1_0.focus()', function() {
@@ -1209,12 +1211,12 @@ suite('activeElement', function() {
 
     assert.equal(document._activeElement, r, 'document.activeElement === r');
     assert.equal(r.shadowRoot.activeElement, r_1, 'r.shadowRoot.activeElement === r_1');
-    assert.equal(r_0.shadowRoot.activeElement, 'r_0.shadowRoot.activeElement === null');
-    assert.equal(r_0_0.shadowRoot.activeElement, 'r_0_0.shadowRoot.activeElement === null');
-    assert.equal(r_0_1.shadowRoot.activeElement, 'r_0_1.shadowRoot.activeElement === null');
+    assert.equal(r_0.shadowRoot.activeElement, null, 'r_0.shadowRoot.activeElement === null');
+    assert.equal(r_0_0.shadowRoot.activeElement, null, 'r_0_0.shadowRoot.activeElement === null');
+    assert.equal(r_0_1.shadowRoot.activeElement, null, 'r_0_1.shadowRoot.activeElement === null');
     assert.equal(r_1.shadowRoot.activeElement, r_1_0, 'r_1.shadowRoot.activeElement === r_1_0');
-    assert.equal(r_1_0.shadowRoot.activeElement, 'r_1_0.shadowRoot.activeElement === null');
-    assert.equal(r_1_1.shadowRoot.activeElement, 'r_1_1.shadowRoot.activeElement === null');
+    assert.equal(r_1_0.shadowRoot.activeElement, null, 'r_1_0.shadowRoot.activeElement === null');
+    assert.equal(r_1_1.shadowRoot.activeElement, null, 'r_1_1.shadowRoot.activeElement === null');
   });
 
   test('r_1_0_l.focus()', function() {
@@ -1222,12 +1224,12 @@ suite('activeElement', function() {
 
     assert.equal(document._activeElement, r, 'document.activeElement === r');
     assert.equal(r.shadowRoot.activeElement, r_1, 'r.shadowRoot.activeElement === r_1');
-    assert.equal(r_0.shadowRoot.activeElement, 'r_0.shadowRoot.activeElement === null');
-    assert.equal(r_0_0.shadowRoot.activeElement, 'r_0_0.shadowRoot.activeElement === null');
-    assert.equal(r_0_1.shadowRoot.activeElement, 'r_0_1.shadowRoot.activeElement === null');
+    assert.equal(r_0.shadowRoot.activeElement, null, 'r_0.shadowRoot.activeElement === null');
+    assert.equal(r_0_0.shadowRoot.activeElement, null, 'r_0_0.shadowRoot.activeElement === null');
+    assert.equal(r_0_1.shadowRoot.activeElement, null, 'r_0_1.shadowRoot.activeElement === null');
     assert.equal(r_1.shadowRoot.activeElement, r_1_0_l, 'r_1.shadowRoot.activeElement === r_1_0_l');
-    assert.equal(r_1_0.shadowRoot.activeElement, 'r_1_0.shadowRoot.activeElement === null');
-    assert.equal(r_1_1.shadowRoot.activeElement, 'r_1_1.shadowRoot.activeElement === null');
+    assert.equal(r_1_0.shadowRoot.activeElement, null, 'r_1_0.shadowRoot.activeElement === null');
+    assert.equal(r_1_1.shadowRoot.activeElement, null, 'r_1_1.shadowRoot.activeElement === null');
   });
 
   test('r_1_1.focus()', function() {
@@ -1235,12 +1237,12 @@ suite('activeElement', function() {
 
     assert.equal(document._activeElement, r, 'document.activeElement === r');
     assert.equal(r.shadowRoot.activeElement, r_1, 'r.shadowRoot.activeElement === r_1');
-    assert.equal(r_0.shadowRoot.activeElement, 'r_0.shadowRoot.activeElement === null');
-    assert.equal(r_0_0.shadowRoot.activeElement, 'r_0_0.shadowRoot.activeElement === null');
-    assert.equal(r_0_1.shadowRoot.activeElement, 'r_0_1.shadowRoot.activeElement === null');
+    assert.equal(r_0.shadowRoot.activeElement, null, 'r_0.shadowRoot.activeElement === null');
+    assert.equal(r_0_0.shadowRoot.activeElement, null, 'r_0_0.shadowRoot.activeElement === null');
+    assert.equal(r_0_1.shadowRoot.activeElement, null, 'r_0_1.shadowRoot.activeElement === null');
     assert.equal(r_1.shadowRoot.activeElement, r_1_1, 'r_1.shadowRoot.activeElement === r_1_1');
-    assert.equal(r_1_0.shadowRoot.activeElement, 'r_1_0.shadowRoot.activeElement === null');
-    assert.equal(r_1_1.shadowRoot.activeElement, 'r_1_1.shadowRoot.activeElement === null');
+    assert.equal(r_1_0.shadowRoot.activeElement, null, 'r_1_0.shadowRoot.activeElement === null');
+    assert.equal(r_1_1.shadowRoot.activeElement, null, 'r_1_1.shadowRoot.activeElement === null');
   });
 
   test('r_1_1_l.focus()', function() {
@@ -1248,12 +1250,12 @@ suite('activeElement', function() {
 
     assert.equal(document._activeElement, r, 'document.activeElement === r');
     assert.equal(r.shadowRoot.activeElement, r_1, 'r.shadowRoot.activeElement === r_1');
-    assert.equal(r_0.shadowRoot.activeElement, 'r_0.shadowRoot.activeElement === null');
-    assert.equal(r_0_0.shadowRoot.activeElement, 'r_0_0.shadowRoot.activeElement === null');
-    assert.equal(r_0_1.shadowRoot.activeElement, 'r_0_1.shadowRoot.activeElement === null');
+    assert.equal(r_0.shadowRoot.activeElement, null, 'r_0.shadowRoot.activeElement === null');
+    assert.equal(r_0_0.shadowRoot.activeElement, null, 'r_0_0.shadowRoot.activeElement === null');
+    assert.equal(r_0_1.shadowRoot.activeElement, null, 'r_0_1.shadowRoot.activeElement === null');
     assert.equal(r_1.shadowRoot.activeElement, r_1_1_l, 'r_1.shadowRoot.activeElement === r_1_1_l');
-    assert.equal(r_1_0.shadowRoot.activeElement, 'r_1_0.shadowRoot.activeElement === null');
-    assert.equal(r_1_1.shadowRoot.activeElement, 'r_1_1.shadowRoot.activeElement === null');
+    assert.equal(r_1_0.shadowRoot.activeElement, null, 'r_1_0.shadowRoot.activeElement === null');
+    assert.equal(r_1_1.shadowRoot.activeElement, null, 'r_1_1.shadowRoot.activeElement === null');
   });
 
   test('setting activeElement on document has no effect', function() {
@@ -1264,12 +1266,12 @@ suite('activeElement', function() {
     });
     assert.equal(document._activeElement, r, 'document.activeElement === r');
     assert.equal(r.shadowRoot.activeElement, r_1, 'r.shadowRoot.activeElement === r_1');
-    assert.equal(r_0.shadowRoot.activeElement, 'r_0.shadowRoot.activeElement === null');
-    assert.equal(r_0_0.shadowRoot.activeElement, 'r_0_0.shadowRoot.activeElement === null');
-    assert.equal(r_0_1.shadowRoot.activeElement, 'r_0_1.shadowRoot.activeElement === null');
+    assert.equal(r_0.shadowRoot.activeElement, null, 'r_0.shadowRoot.activeElement === null');
+    assert.equal(r_0_0.shadowRoot.activeElement, null, 'r_0_0.shadowRoot.activeElement === null');
+    assert.equal(r_0_1.shadowRoot.activeElement, null, 'r_0_1.shadowRoot.activeElement === null');
     assert.equal(r_1.shadowRoot.activeElement, r_1_1, 'r_1.shadowRoot.activeElement === r_1_1');
-    assert.equal(r_1_0.shadowRoot.activeElement, 'r_1_0.shadowRoot.activeElement === null');
-    assert.equal(r_1_1.shadowRoot.activeElement, 'r_1_1.shadowRoot.activeElement === null');
+    assert.equal(r_1_0.shadowRoot.activeElement, null, 'r_1_0.shadowRoot.activeElement === null');
+    assert.equal(r_1_1.shadowRoot.activeElement, null, 'r_1_1.shadowRoot.activeElement === null');
   });
 
   test('setting activeElement on a shadow root has no effect', function() {
@@ -1280,12 +1282,12 @@ suite('activeElement', function() {
     });
     assert.equal(document._activeElement, r, 'document.activeElement === r');
     assert.equal(r.shadowRoot.activeElement, r_1, 'r.shadowRoot.activeElement === r_1');
-    assert.equal(r_0.shadowRoot.activeElement, 'r_0.shadowRoot.activeElement === null');
-    assert.equal(r_0_0.shadowRoot.activeElement, 'r_0_0.shadowRoot.activeElement === null');
-    assert.equal(r_0_1.shadowRoot.activeElement, 'r_0_1.shadowRoot.activeElement === null');
+    assert.equal(r_0.shadowRoot.activeElement, null, 'r_0.shadowRoot.activeElement === null');
+    assert.equal(r_0_0.shadowRoot.activeElement, null, 'r_0_0.shadowRoot.activeElement === null');
+    assert.equal(r_0_1.shadowRoot.activeElement, null, 'r_0_1.shadowRoot.activeElement === null');
     assert.equal(r_1.shadowRoot.activeElement, r_1_1, 'r_1.shadowRoot.activeElement === r_1_1');
-    assert.equal(r_1_0.shadowRoot.activeElement, 'r_1_0.shadowRoot.activeElement === null');
-    assert.equal(r_1_1.shadowRoot.activeElement, 'r_1_1.shadowRoot.activeElement === null');
+    assert.equal(r_1_0.shadowRoot.activeElement, null, 'r_1_0.shadowRoot.activeElement === null');
+    assert.equal(r_1_1.shadowRoot.activeElement, null, 'r_1_1.shadowRoot.activeElement === null');
   });
 });
 
