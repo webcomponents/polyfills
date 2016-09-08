@@ -25,17 +25,17 @@ import * as patch from './patch'
 import {getRootNode} from './element-mixin'
 import * as events from './event-mixin'
 
-window.ShadyDOM = {
-  patch: patch.patchNode,
-  isPatched: patch.isNodePatched,
-  unpatch: patch.unpatchNode,
-  isShadyRoot: utils.isShadyRoot,
-  enqueue: enqueue,
-  flush: flush,
-  inUse: utils.settings.inUse
-};
-
 if (utils.settings.inUse) {
+
+  window.ShadyDOM = {
+    patch: patch.patchNode,
+    isPatched: patch.isNodePatched,
+    unpatch: patch.unpatchNode,
+    isShadyRoot: utils.isShadyRoot,
+    enqueue: enqueue,
+    flush: flush,
+    inUse: utils.settings.inUse
+  };
 
   let createRootAndEnsurePatched = function(node) {
     // TODO(sorvell): need to ensure ancestors are patched but this introduces
