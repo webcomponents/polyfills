@@ -19,7 +19,7 @@ let sourcemaps = require('gulp-sourcemaps');
 let closureCompiler = compilerPackage.gulp();
 
 gulp.task('default', function() {
-  return gulp.src(['./src/ShadyDOM/*.js', './src/ShadyCSS/*.js'], {base: './'})
+  return gulp.src(['./src/ShadyDOM/*.js'], {base: './'})
     .pipe(sourcemaps.init())
     .pipe(closureCompiler({
       new_type_inf: true,
