@@ -367,10 +367,10 @@ let Deferred;
      * @private
      */
     _observeRoot(root) {
-      console.log('_observeRoot', root, root.baseURI);
+      //console.log('_observeRoot', root, root.baseURI);
       // console.assert(!root[_observerProp]);
       if (root[_observerProp] != null) {
-        console.warn(`Root ${root} is already observed`);
+        //console.warn(`Root ${root} is already observed`);
         return root[_observerProp];
       }
       root[_observerProp] = new MutationObserver(
@@ -771,7 +771,7 @@ let Deferred;
     configurable: true,
     enumerable: true,
   });
-  
+
   // TODO(justinfagnani): Remove. Temporary for backward-compatibility
   window['CustomElements'] = {
     takeRecords() {
