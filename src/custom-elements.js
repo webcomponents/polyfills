@@ -666,7 +666,7 @@ let Deferred;
   // TODO(justinfagnani): why is the cast neccessary?
   // Can we fix the Closure DOM externs?
   const _origCreateElement =
-    /** @type {function(this:Document, string, (Object|undefined)): !HTMLElement}}*/
+    /** @type {function(this:Document, string, (Object|undefined)=): !HTMLElement}}*/
     (doc.createElement);
 
   /**
@@ -681,7 +681,8 @@ let Deferred;
    */
   function _createElement(doc, tagName, options, callConstructor) {
     const customElements = _customElements();
-    const element = _origCreateElement.call(doc, tagName, options);
+    const element = options ? _origCreateElement.call(doc, tagName, options) :
+      _origCreateElement.call(doc, tagName);
     const definition = customElements._definitions.get(tagName.toLowerCase());
     if (definition) {
       customElements._upgradeElement(element, definition, callConstructor);
