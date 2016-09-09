@@ -1,0 +1,19 @@
+{
+  "name": "shadycss",
+  "main": "shadycss.min.js",
+  "authors": [
+    "The Polymer Authors"
+  ],
+  "license": "BSD-3-Clause",
+  "keywords": [
+    "webcomponents"
+  ],
+  "homepage": "https://github.com/webcomponents/shadycss",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}

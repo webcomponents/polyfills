@@ -1,7 +1,7 @@
 {
   "name": "@webcomponents/shadycss",
   "version": "0.0.1",
-  "description": "shadydom.js",
+  "description": "Styling helpers for ShadyDOM",
   "main": "shadycss.min.js",
   "directories": {
     "test": "tests"
@@ -16,6 +16,7 @@
     "url": "https://github.com/webcomponents/shadycss/issues"
   },
   "scripts": {
+    "build": "gulp",
     "test": "wct"
   },
   "homepage": "http://webcomponents.org",
