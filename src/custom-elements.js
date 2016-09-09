@@ -168,10 +168,11 @@ let Deferred;
       this._ready = false;
 
       /** @type {MutationObserver} **/
-      this._mainDocumentObserver = this._observeRoot(doc);
+      this._mainDocumentObserver = null;
 
       const onReady = () => {
         this._ready = true;
+        this._mainDocumentObserver = this._observeRoot(doc);
         this._addNodes(doc.childNodes);
       };
       if (window['HTMLImports']) {
