@@ -17,7 +17,7 @@
   },
   "scripts": {
     "build": "gulp",
-    "test": "wct"
+    "test": "eslint src test && wct"
   },
   "homepage": "http://webcomponents.org",
   "devDependencies": {

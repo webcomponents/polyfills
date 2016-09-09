@@ -15,5 +15,12 @@
     "bower_components",
     "test",
     "tests"
-  ]
+  ],
+  "dependencies": {
+    "custom-elements": "webcomponents/custom-elements#^1.0.0-alpha.3"
+  },
+  "devDependencies": {
+    "web-component-tester": "^4.3.5",
+    "shadydom": "webcomponents/shadydom"
+  }
 }

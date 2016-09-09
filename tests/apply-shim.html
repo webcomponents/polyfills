@@ -13,9 +13,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
   <meta charset="utf-8">
 
-  <script src="../../../web-component-tester/browser.js"></script>
-  <script src="../../../webcomponentsjs/src/CustomElements/v1/CustomElements.js"></script>
-  <script src="../../ShadyDOM.min.js"></script>
+  <script src="../../web-component-tester/browser.js"></script>
+  <script src="../../custom-elements/custom-elements.min.js"></script>
+  <script src="../../shadydom/shadydom.min.js"></script>
+  <script src="../../shadycss/shadycss.min.js"></script>
 
   <title>Apply Shim</title>
 
@@ -125,7 +126,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     }
     function prep(templateName, elementName) {
       var style = copy(templateName).querySelector('style');
-      var ast = ApplyShim.transformStyle(style, elementName);
+      var ast = window.ApplyShim.transformStyle(style, elementName);
       return {style: style, ast: ast};
     }
     suite('Basic', function() {
@@ -134,7 +135,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         var info = prep('basic');
         style = info.style;
         ast = info.ast;
-        style.textContent = ShadyCSS.styleAstToString(ast);
+        style.textContent = window.ShadyCSS.styleAstToString(ast);
       });
 
       test('style is transformed', function() {
@@ -150,7 +151,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       });
     });
     suite('Defaults', function() {
-      var style, ast;
+      var style, ast; // eslint-disable-line no-unused-vars
       suiteSetup(function() {
         var info = prep('defaults');
         style = info.style;
@@ -164,7 +165,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     });
 
     suite('override', function() {
-      var style, ast;
+      var style, ast; // eslint-disable-line no-unused-vars
       suiteSetup(function() {
         var info = prep('override');
         style = info.style;
@@ -187,7 +188,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     });
 
     suite('override with property', function() {
-      var style, ast;
+      var style, ast; // eslint-disable-line no-unused-vars
       suiteSetup(function() {
         var info = prep('override-with-property');
         style = info.style;
@@ -206,7 +207,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     });
 
     suite('define with var()', function() {
-      var style, ast;
+      var style, ast; // eslint-disable-line no-unused-vars
       suiteSetup(function() {
         var info = prep('define-with-var');
         style = info.style;
@@ -228,7 +229,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       var style, ast, template;
       suiteSetup(function() {
         template = document.querySelector('template#element');
-        ShadyCSS.prepareTemplate(template, 'x-element');
+        window.ShadyCSS.prepareTemplate(template, 'x-element');
         var info = prep('element', 'x-element');
         style = info.style;
         ast = info.ast;
@@ -238,13 +239,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         assert.equal(ast.rules[0].cssText, ';');
       });
 
-      test('Definiing the mixin invalidates the element', function() {
+      test('Defining the mixin invalidates the element', function() {
         prep('element2');
         assert.equal(template.__applyShimInvalid, true);
       });
 
       test('Revalidating Apply Shim on element template fills in properties', function() {
-        ast = ApplyShim.transformStyle(style, 'x-element');
+        ast = window.ApplyShim.transformStyle(style, 'x-element');
         assert.equal(template.__applyShimInvalid, false);
         assert.match(ast.rules[0].cssText, /border:\s*var\(--my-mixin_-_border\)/);
       });
