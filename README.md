@@ -1,15 +1,17 @@
 # ShadyCSS
 
-ShadyCSS provides a shim for ShadowDOM V1 style encapsulation and
-css custom properties with `@apply` support. It is intended to be used in
-conjunction with the ShadyDOM shim.
+ShadyCSS provides a shim for, CSS Custom Properties, CSS Mixins with `@apply` support,
+and ShadowDOM V1 style encapsulation with the ShadyDOM library.
 
 ## Usage
 
 The shim will transparently no-op if some or all native support is available.
-If native ShadowDOM is available, no scoping will be applied. If native custom
-properties are available, they will be used and `@apply` will be simulated
-via native custom properties.
+
+If native ShadowDOM is not available, stylesheet selectors will be modified to simulate scoping.
+
+if CSS Custom Properties are not available, stylesheets will be generated with realized values for custom properties.
+
+`@apply` is not native in any browser, so they will be shimmed with CSS Custom Properties in browsers that support them, or via generated stylesheets with the CSS Custom Properties shim.
 
 To use ShadyCSS:
 
