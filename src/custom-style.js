@@ -53,6 +53,15 @@ function enqueueDocumentValidation() {
   }
 }
 
+// NOTE: Make sure to enqueue eagerly. This is an optimization that
+// helps ensure that the first run of validateDocument will actually
+// have access to all the custom-style's created via loading imports.
+// If the first created custom-style calls enqueue and HTMLImports.ready
+// is true at that time (which is the case when HTMLImports are polyfilled),
+// then the enqueue immediately calls validateDocument and work that could be
+// batched is not.
+enqueueDocumentValidation();
+
 function validateDocument() {
   if (enqueued) {
     ShadyCSS.updateStyles();
@@ -141,15 +150,15 @@ CustomStyle.prototype._findStyle = function() {
       return;
     }
     // HTMLImports polyfill may have cloned the style into the main document,
-    // which is referenced with __appliedStyle.
+    // which is referenced with __appliedElement.
     // Also, we must copy over the attributes.
-    if (style.__appliedStyle) {
+    if (style.__appliedElement) {
       for (let i = 0; i < style.attributes.length; i++) {
         let attr = style.attributes[i];
-        style.__appliedStyle.setAttribute(attr.name, attr.value);
+        style.__appliedElement.setAttribute(attr.name, attr.value);
       }
     }
-    this._style = style.__appliedStyle || style;
+    this._style = style.__appliedElement || style;
     if (hookFn) {
       hookFn(this._style);
     }
