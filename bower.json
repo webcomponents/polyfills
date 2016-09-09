@@ -19,6 +19,6 @@
   ],
   "devDependencies": {
     "web-component-tester": "^4.3.5",
-    "custom-elements": "webcomponents/custom-elements#^1.0.0-alpha.3"
+    "custom-elements": "webcomponents/custom-elements#master"
   }
 }

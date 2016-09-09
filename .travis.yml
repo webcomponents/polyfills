@@ -10,6 +10,9 @@ addons:
     - google-chrome
     packages:
     - google-chrome-stable
+before_script:
+- npm install -g bower
+- bower install
 script:
 - xvfb-run wct
 - if [ "${TRAVIS_PULL_REQUEST}" = "false" ]; then wct -s 'default'; fi
