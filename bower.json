@@ -1,0 +1,24 @@
+{
+  "name": "shadydom",
+  "description": "shadydom.js",
+  "main": "shadydom.min.js",
+  "authors": [
+    "The Polymer Authors"
+  ],
+  "license": "BSD-3-Clause",
+  "keywords": [
+    "webcomponents"
+  ],
+  "homepage": "https://github.com/webcomponents/shadydom",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "devDependencies": {
+    "web-component-tester": "^4.3.5",
+    "custom-elements": "webcomponents/custom-elements#^1.0.0-alpha.3"
+  }
+}
