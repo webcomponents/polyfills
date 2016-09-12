@@ -111,6 +111,27 @@
           chai.assert.equal(observedSubImports.length, 1);
         });
 
+        test('CustomElements instance can depend on custom element instance in async loaded import', function(done) {
+          window.dependencySatisfied = false;
+          customElements.define('x-dependency', class extends HTMLElement {
+            constructor() {
+              super();
+              window.dependencySatisfied = true;
+            }
+          });
+          var el = document.createElement('x-dependent');
+          document.body.appendChild(el);
+          var l = document.createElement('link');
+          l.rel = "import";
+          l.href="async-import.html";
+          customElements.whenDefined('x-dependent').then(function() {
+            chai.assert.isTrue(el.dependencyMet, 'element instance cannot depend on element instance in HTMLImport');
+            document.body.removeChild(el);
+            done();
+          });
+          document.head.appendChild(l);
+        });
+
       });
     </script>
   </head>
