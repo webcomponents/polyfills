@@ -18,8 +18,8 @@ export let placeholderMap = {};
 const ce = window.customElements;
 if (ce && !nativeShadow) {
   const origDefine = ce.define;
-  ce.define = function(name, ...args) {
+  ce.define = function(name, clazz, options) {
     placeholderMap[name] = applyStylePlaceHolder(name);
-    return origDefine.call(ce, name, ...args);
+    return origDefine.call(ce, name, clazz, options);
   };
 }

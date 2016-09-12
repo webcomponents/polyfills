@@ -28,6 +28,10 @@ import {nativeShadow} from './style-settings'
 
 * ::slotted(...) -> scopeName > ...
 
+* ...:dir(ltr|rtl) -> [dir="ltr|rtl"] ..., ...[dir="ltr|rtl"]
+
+* :host(:dir[rtl]) -> scopeName:dir(rtl) -> [dir="rtl"] scopeName, scopeName[dir="rtl"]
+
 */
 export let StyleTransformer = {
 
@@ -173,10 +177,10 @@ export let StyleTransformer = {
   _transformCompoundSelector: function(selector, combinator, scope, hostScope) {
     // replace :host with host scoping class
     let slottedIndex = selector.indexOf(SLOTTED);
-    if (selector.indexOf(HOST) >=0) {
+    if (selector.indexOf(HOST) >= 0) {
       selector = this._transformHostSelector(selector, hostScope);
     // replace other selectors with scoping class
-    } else if (slottedIndex !== 0){
+    } else if (slottedIndex !== 0) {
       selector = scope ? this._transformSimpleSelector(selector, scope) :
         selector;
     }
@@ -196,6 +200,8 @@ export let StyleTransformer = {
         selector = selector.replace(SLOTTED_PAREN, (m, paren) => ` > ${paren}`);
       }
     }
+    selector = selector.replace(DIR_PAREN, (m, before, dir) =>
+      `[dir="${dir}"] ${before}, ${before}[dir="${dir}"]`);
     return {value: selector, combinator, stop};
   },
 
@@ -275,6 +281,7 @@ let SLOTTED = '::slotted';
 let HOST_PAREN = /(:host)(?:\(((?:\([^)(]*\)|[^)(]*)+?)\))/;
 // similar to HOST_PAREN
 let SLOTTED_PAREN = /(?:::slotted)(?:\(((?:\([^)(]*\)|[^)(]*)+?)\))/;
+let DIR_PAREN = /(.*):dir\((?:(ltr|rtl))\)/;
 let CSS_CLASS_PREFIX = '.';
 let PSEUDO_PREFIX = ':';
 let CLASS = 'class';

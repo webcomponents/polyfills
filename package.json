@@ -21,10 +21,10 @@
   },
   "homepage": "http://webcomponents.org",
   "devDependencies": {
-    "@webcomponents/custom-elements": "^1.0.0-alpha.1",
+    "@webcomponents/custom-elements": "^1.0.0-alpha.3",
     "eslint": "^3.4.0",
     "eslint-plugin-html": "^1.5.2",
-    "google-closure-compiler": "^20160822.0.0",
+    "google-closure-compiler": "^20160822.2.0",
     "gulp": "^3.8.8",
     "gulp-sourcemaps": "^1.6.0",
     "web-component-tester": "^4.0.1"
