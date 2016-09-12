@@ -294,6 +294,19 @@ export let ShadyCSS = {
     if (!this.nativeCss) {
       StyleProperties.applyCustomStyle(style, this._documentOwnerStyleInfo.styleProperties);
     }
+  },
+  getComputedStyleValue(element, property) {
+    let value;
+    if (!this.nativeCss) {
+      // element is either a style host, or an ancestor of a style host
+      let styleInfo = StyleInfo.get(element) || StyleInfo.get(this._styleOwnerForNode(element));
+      value = styleInfo.styleProperties[property];
+    }
+    // fall back to the property value from the computed styling
+    value = value || window.getComputedStyle(element).getPropertyValue(property);
+    // trim whitespace that can come after the `:` in css
+    // example: padding: 2px -> " 2px"
+    return value.trim();
   }
 }
 
