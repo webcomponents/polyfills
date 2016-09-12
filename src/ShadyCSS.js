@@ -69,7 +69,8 @@ export let ShadyCSS = {
     let info = {
       is: elementName,
       extends: typeExtension,
-      __cssBuild: cssBuild
+      __cssBuild: cssBuild,
+      notStyleScopeCacheable: false,
     };
     if (!this.nativeShadow) {
       StyleTransformer.dom(template.content, elementName);
@@ -91,6 +92,7 @@ export let ShadyCSS = {
       template._style = style;
     }
     template._ownPropertyNames = ownPropertyNames;
+    template._notStyleScopeCacheable = info.notStyleScopeCacheable;
   },
   _generateStaticStyle(info, rules, shadowroot, placeholder) {
     let cssText = StyleTransformer.elementStyles(info, rules);
@@ -109,10 +111,12 @@ export let ShadyCSS = {
     let ast;
     let ownStylePropertyNames;
     let cssBuild;
+    let notStyleScopeCacheable = false;
     if (template) {
       ast = template._styleAst;
       ownStylePropertyNames = template._ownPropertyNames;
       cssBuild = template._cssBuild;
+      notStyleScopeCacheable = template._notStyleScopeCacheable;
     }
     return StyleInfo.set(host,
       new StyleInfo(
@@ -121,7 +125,8 @@ export let ShadyCSS = {
         ownStylePropertyNames,
         is,
         typeExtension,
-        cssBuild
+        cssBuild,
+        notStyleScopeCacheable
       )
     );
   },

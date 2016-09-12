@@ -18,7 +18,7 @@ export default class StyleInfo {
     node.__styleInfo = styleInfo;
     return styleInfo;
   }
-  constructor(ast, placeholder, ownStylePropertyNames, elementName, typeExtension, cssBuild) {
+  constructor(ast, placeholder, ownStylePropertyNames, elementName, typeExtension, cssBuild, notStyleScopeCacheable) {
     this.styleRules = ast || null;
     this.placeholder = placeholder || null;
     this.ownStylePropertyNames = ownStylePropertyNames || [];
@@ -26,7 +26,7 @@ export default class StyleInfo {
     this.elementName = elementName || '';
     this.cssBuild = cssBuild || '';
     this.typeExtension = typeExtension || '';
-    this.notStyleScopeCacheable = false;
+    this.notStyleScopeCacheable = notStyleScopeCacheable || false;
     this.styleProperties = null;
     this.ownStyleProperties = null;
     this.scopeSelector = null;

@@ -10,7 +10,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 'use strict';
 
-import {removeCustomPropAssignment} from './css-parse'
+import {removeCustomPropAssignment, types} from './css-parse'
 import {nativeShadow} from './style-settings'
 import {StyleTransformer} from './style-transformer'
 import * as StyleUtil from './style-util'
@@ -32,14 +32,14 @@ export let StyleProperties = {
     let self = this, props = {}, keyframes = [], ruleIndex = 0;
     let scopeSelector = StyleTransformer._calcHostScope(scope.is, scope.extends);
     let cssBuild = rules.__cssBuild;
-    let styleInfo = StyleInfo.get(scope);
+    let styleInfo = StyleInfo.get(scope) || scope;
     StyleUtil.forEachRule(rules, function(rule) {
       self.decorateRule(rule);
       // mark in-order position of ast rule in styles block, used for cache key
       rule.index = ruleIndex++;
       self.whenHostOrRootRule(scope, rule, cssBuild, function(info) {
         // we can't cache styles with :host and :root props in @media rules
-        if (rule.parent.type === StyleUtil.ruleTypes.MEDIA_RULE) {
+        if (rule.parent.type === types.MEDIA_RULE) {
           styleInfo.notStyleScopeCacheable = true;
         }
         if (info.isHost) {
@@ -169,7 +169,7 @@ export let StyleProperties = {
           if (!propertyValue || propertyValue === 'initial') {
             // fallback may be --a or var(--a) or literal
             propertyValue = self.valueForProperty(props[fallback] || fallback, props) ||
-            fallback || 'unset';
+            fallback;
           } else if (propertyValue === 'apply-shim-inherit') {
             // CSS build will replace `inherit` with `apply-shim-inherit`
             // for use with native css variables.
