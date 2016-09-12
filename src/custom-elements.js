@@ -165,21 +165,10 @@ let Deferred;
       this.enableFlush = true;
 
       /** @private {boolean} **/
-      this._ready = false;
+      this._upgradeScheduled = false;
 
       /** @type {MutationObserver} **/
       this._mainDocumentObserver = null;
-
-      const onReady = () => {
-        this._ready = true;
-        this._mainDocumentObserver = this._observeRoot(doc);
-        this._addNodes(doc.childNodes);
-      };
-      if (window['HTMLImports']) {
-        window['HTMLImports']['whenReady'](onReady);
-      } else {
-        onReady();
-      }
     }
 
     // HTML spec part 4.13.4
@@ -284,7 +273,7 @@ let Deferred;
       this._constructors.set(constructor, localName);
 
       // 17, 18, 19:
-      if (this._ready) this._addNodes(doc.childNodes);
+      this._upgradeDoc();
 
       // 20:
       /** @type {Deferred} **/
@@ -351,6 +340,32 @@ let Deferred;
           function(observer) {
             this._handleMutations(observer.takeRecords());
           }, this);
+      }
+    }
+
+    /**
+     * Upgrade all existing in document elements. This process is expensive so
+     * is optionally batched based on the state of HTMLImports. (Note,
+     * this batching might not be necessary if instead of walking the dom,
+     * a map of upgrade candidates was maintained.)
+     * @private
+     */
+    _upgradeDoc() {
+      if (!this._upgradeScheduled) {
+        this._upgradeScheduled = true;
+        const onReady = () => {
+          this._upgradeScheduled = false;
+          if (!this._mainDocumentObserver) {
+            this._mainDocumentObserver = this._observeRoot(doc);
+          }
+          this._addNodes(doc.childNodes);
+
+        };
+        if (window['HTMLImports']) {
+          window['HTMLImports']['whenReady'](onReady);
+        } else {
+          onReady();
+        }
       }
     }
 
