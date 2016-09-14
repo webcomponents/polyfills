@@ -41,12 +41,29 @@ gulp.task('default', function() {
     .pipe(gulp.dest('./'))
 });
 
-gulp.task('test-modules', function() {
-  let opts = generateClosureOptions('/tests/module/css-parse-shim', 'css-parse.min.js');
-  return gulp.src(['./tests/module/css-parse-shim.js', './src/*.js'], {base: './'})
+let modules = [
+  // 'apply-shim',
+  'css-parse',
+  // 'custom-style',
+  // 'style-info',
+  // 'style-placeholder',
+  // 'style-properties',
+  // 'style-settings',
+  // 'style-transformer',
+  // 'style-util',
+]
+
+let moduleTasks = modules.map((m) => {
+  gulp.task(`test-module-${m}`, function() {
+    let opts = generateClosureOptions(`/tests/module/${m}`, `${m}.min.js`);
+    return gulp.src([`./tests/module/${m}.js`, './src/*.js'], {base: './'})
     .pipe(sourcemaps.init())
     .pipe(closureCompiler(opts))
     .on('error', (e) => console.error(e))
     .pipe(sourcemaps.write('/'))
     .pipe(gulp.dest('./tests/module/generated'))
+  });
+  return `test-module-${m}`;
 });
+
+gulp.task('test-modules', moduleTasks);
