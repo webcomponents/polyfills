@@ -11,7 +11,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 'use strict';
 
 import {parse} from './css-parse'
-import {nativeShadow, nativeCssVariables, nativeCssApply} from './style-settings'
+import {
+  nativeShadow,
+  nativeCssVariables,
+  nativeCssApply,
+  parseSettings as ParseShadySettings
+} from './style-settings'
 import {StyleTransformer} from './style-transformer'
 import * as StyleUtil from './style-util'
 import {StyleProperties} from './style-properties'
@@ -308,6 +313,12 @@ export let ShadyCSS = {
     // example: padding: 2px -> " 2px"
     return value.trim();
   }
+}
+
+if (window.ShadyCSS) {
+  ParseShadySettings(window.ShadyCSS);
+} else if (window.WebComponents) {
+  ParseShadySettings(window.WebComponents.flags);
 }
 
 window['ShadyCSS'] = ShadyCSS;

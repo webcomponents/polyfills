@@ -10,10 +10,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 'use strict';
 
-export let nativeShadow = Boolean(!window.ShadyDOM || !window.ShadyDOM.inUse);
+export let nativeShadow = !(window.ShadyDOM && window.ShadyDOM.inUse);
 
-// force shim support
-let forceShimCssProperties = window.WebComponents && window.WebComponents.flags.shimcssproperties;
+// force shim'd properties
+let forceShimCssProperties;
 
 // chrome 49 has semi-working css vars, check if box-shadow works
 // safari 9.1 has a recalc bug: https://bugs.webkit.org/show_bug.cgi?id=155782
@@ -31,4 +31,10 @@ function detectNativeApply() {
   return nativeCssApply;
 }
 
-export let nativeCssApply = false && detectNativeApply()
+export let nativeCssApply = false && detectNativeApply();
+
+export function parseSettings(settings) {
+  if (settings) {
+    forceShimCssProperties = settings.shimcssproperties;
+  }
+}
