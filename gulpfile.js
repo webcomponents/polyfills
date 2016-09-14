@@ -19,14 +19,13 @@ let sourcemaps = require('gulp-sourcemaps');
 
 function generateClosureOptions(entry_point, js_output_file) {
   return {
-    //dependency_mode: 'STRICT',
+    dependency_mode: 'STRICT',
     new_type_inf: true,
     compilation_level: 'SIMPLE',
     language_in: 'ES6_STRICT',
     language_out: 'ES5_STRICT',
     output_wrapper: '(function(){\n%output%\n}).call(this)',
-    // FIXME(dfreedm): revert when custom-style can be otherwise included
-    //entry_point,
+    entry_point,
     js_output_file
   };
 }

@@ -27,6 +27,9 @@ import StyleInfo from './style-info'
 // TODO(dfreedm): consider spliting into separate global
 import ApplyShim from './apply-shim'
 
+// Import <custom-style> to make it into the bundle
+import './custom-style'
+
 export let ShadyCSS = {
   scopeCounter: {},
   nativeShadow: nativeShadow,
