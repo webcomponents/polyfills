@@ -14,22 +14,38 @@
 /* eslint-disable no-console */
 
 let gulp = require('gulp');
-let compilerPackage = require('google-closure-compiler');
+let closureCompiler = require('google-closure-compiler').gulp();
 let sourcemaps = require('gulp-sourcemaps');
-let closureCompiler = compilerPackage.gulp();
+
+function generateClosureOptions(entry_point, js_output_file) {
+  return {
+    dependency_mode: 'STRICT',
+    new_type_inf: true,
+    compilation_level: 'SIMPLE',
+    language_in: 'ES6_STRICT',
+    language_out: 'ES5_STRICT',
+    output_wrapper: '(function(){\n%output%\n}).call(this)',
+    entry_point,
+    js_output_file
+  };
+}
 
 gulp.task('default', function() {
+  let opts = generateClosureOptions('/src/ShadyCSS', 'shadycss.min.js');
   return gulp.src(['./src/*.js'], {base: './'})
     .pipe(sourcemaps.init())
-    .pipe(closureCompiler({
-      new_type_inf: true,
-      compilation_level: 'SIMPLE',
-      language_in: 'ES6_STRICT',
-      language_out: 'ES5_STRICT',
-      output_wrapper: '(function(){\n%output%\n}).call(this)',
-      js_output_file: 'shadycss.min.js'
-    }))
+    .pipe(closureCompiler(opts))
     .on('error', (e) => console.error(e))
     .pipe(sourcemaps.write('/'))
     .pipe(gulp.dest('./'))
+});
+
+gulp.task('test-modules', function() {
+  let opts = generateClosureOptions('/tests/module/css-parse-shim', 'css-parse.min.js');
+  return gulp.src(['./tests/module/css-parse-shim.js', './src/*.js'], {base: './'})
+    .pipe(sourcemaps.init())
+    .pipe(closureCompiler(opts))
+    .on('error', (e) => console.error(e))
+    .pipe(sourcemaps.write('/'))
+    .pipe(gulp.dest('./tests/module/generated'))
 });
