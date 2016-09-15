@@ -31,7 +31,7 @@ function generateClosureOptions(entry_point, js_output_file) {
 }
 
 gulp.task('default', function() {
-  let opts = generateClosureOptions('/src/ShadyCSS', 'shadycss.min.js');
+  let opts = generateClosureOptions(['/src/ShadyCSS', '/src/custom-style'], 'shadycss.min.js');
   return gulp.src(['./src/*.js'], {base: './'})
     .pipe(sourcemaps.init())
     .pipe(closureCompiler(opts))
