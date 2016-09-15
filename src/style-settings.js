@@ -15,6 +15,18 @@ export let nativeShadow = !(window.ShadyDOM && window.ShadyDOM.inUse);
 // force shim'd properties
 let forceShimCssProperties;
 
+function parseSettings(settings) {
+  if (settings) {
+    forceShimCssProperties = settings.shimcssproperties;
+  }
+}
+
+if (window.ShadyCSS) {
+  parseSettings(window.ShadyCSS);
+} else if (window.WebComponents) {
+  parseSettings(window.WebComponents.flags);
+}
+
 // chrome 49 has semi-working css vars, check if box-shadow works
 // safari 9.1 has a recalc bug: https://bugs.webkit.org/show_bug.cgi?id=155782
 export let nativeCssVariables = !forceShimCssProperties &&
@@ -32,9 +44,3 @@ function detectNativeApply() {
 }
 
 export let nativeCssApply = false && detectNativeApply();
-
-export function parseSettings(settings) {
-  if (settings) {
-    forceShimCssProperties = settings.shimcssproperties;
-  }
-}
