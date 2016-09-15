@@ -53,6 +53,13 @@ export function extendAll(target, ...sources) {
   return target;
 }
 
+export function mixin(target, source) {
+  for (var i in source) {
+    target[i] = source[i];
+  }
+  return target;
+}
+
 export function patchPrototype(obj, mixin) {
   let proto = Object.getPrototypeOf(obj);
   if (!proto.hasOwnProperty('__patchProto')) {

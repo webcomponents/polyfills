@@ -160,8 +160,9 @@ function mixinComposedFlag(Base) {
     event.__composed = options && Boolean(options.composed);
     return event;
   }
-  // put constructor properties on subclass (prototype and any statics)
-  utils.extend(klazz, Base);
+  // put constructor properties on subclass
+  utils.mixin(klazz, Base);
+  klazz.prototype = Base.prototype;
   return klazz;
 }
 

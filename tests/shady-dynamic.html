@@ -467,6 +467,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     assert.equal(re.localName, 'x-reproject');
     var p = re.shadowRoot.querySelector('x-project');
     assert.equal(p.localName, 'x-project');
+    ShadyDOM.flush();
     var c1 = rere.shadowRoot.querySelector('slot');
     assert.include(c1.assignedNodes({flatten: true}), projected);
     var c2 = re.shadowRoot.querySelector('slot');
