@@ -18,9 +18,12 @@ import {StyleProperties} from './style-properties'
 import {templateMap} from './template-map'
 import {placeholderMap} from './style-placeholder'
 import StyleInfo from './style-info'
+import StyleCache from './style-cache'
 
 // TODO(dfreedm): consider spliting into separate global
 import ApplyShim from './apply-shim'
+
+let styleCache = new StyleCache();
 
 export let ShadyCSS = {
   scopeCounter: {},
@@ -165,10 +168,10 @@ export let ShadyCSS = {
       }
       this._updateNativeProperties(host, styleInfo.overrideStyleProperties);
     } else {
-      this._updateProperties(host, styleInfo);
+      let bitmask = this._updateProperties(host, styleInfo);
       if (styleInfo.ownStylePropertyNames && styleInfo.ownStylePropertyNames.length) {
         // TODO: use caching
-        this._applyStyleProperties(host, styleInfo);
+        this._applyStyleProperties(host, styleInfo, bitmask);
       }
       let root = this._isRootOwner(host) ? host : host.shadowRoot;
       // note: some elements may not have a root!
@@ -202,13 +205,20 @@ export let ShadyCSS = {
   _isRootOwner(node) {
     return (node === this._documentOwner);
   },
-  _applyStyleProperties(host, styleInfo) {
+  _applyStyleProperties(host, styleInfo, bitmask) {
     let is = host.getAttribute('is') || host.localName;
+    let cacheEntry = styleCache.fetch(is, styleInfo.styleProperties, bitmask)
+    let cachedScopeSelector = cacheEntry && cacheEntry.scopeSelector;
+    let cachedStyle = cacheEntry ? cacheEntry.stylesheet : null;
     let oldScopeSelector = styleInfo.scopeSelector;
-    styleInfo.scopeSelector = this._generateScopeSelector(is);
-    let style = StyleProperties.applyElementStyle(host, styleInfo.styleProperties, styleInfo.scopeSelector, null);
+    // only generate new scope if cached style is not found
+    styleInfo.scopeSelector = cachedScopeSelector || this._generateScopeSelector(is);
+    let style = StyleProperties.applyElementStyle(host, styleInfo.styleProperties, styleInfo.scopeSelector, cachedStyle);
     if (!this.nativeShadow) {
       StyleProperties.applyElementScopeSelector(host, styleInfo.scopeSelector, oldScopeSelector);
+    }
+    if (!cacheEntry) {
+      styleCache.store(is, styleInfo.styleProperties, bitmask, style, styleInfo.scopeSelector);
     }
     return style;
   },
@@ -218,7 +228,9 @@ export let ShadyCSS = {
     let ownerProperties = ownerStyleInfo.styleProperties;
     let props = Object.create(ownerProperties || null);
     let hostAndRootProps = StyleProperties.hostAndRootPropertiesForScope(host, styleInfo.styleRules);
-    let propertiesMatchingHost = StyleProperties.propertyDataFromStyles(ownerStyleInfo.styleRules, host).properties;
+    let propertyData = StyleProperties.propertyDataFromStyles(ownerStyleInfo.styleRules, host);
+    let propertiesMatchingHost = propertyData.properties
+    let styleBitmask = propertyData.key;
     Object.assign(
       props,
       hostAndRootProps.hostProps,
@@ -236,6 +248,7 @@ export let ShadyCSS = {
       }
     }
     styleInfo.ownStyleProperties = ownProps;
+    return styleBitmask;
   },
   _mixinOverrideStyles(props, overrides) {
     for (let p in overrides) {

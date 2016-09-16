@@ -44,6 +44,7 @@ let modules = [
   'apply-shim',
   'css-parse',
   'custom-style',
+  'style-cache',
   'style-info',
   'style-placeholder',
   'style-properties',
