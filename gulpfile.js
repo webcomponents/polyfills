@@ -16,53 +16,60 @@
 let gulp = require('gulp');
 let closureCompiler = require('google-closure-compiler').gulp();
 let sourcemaps = require('gulp-sourcemaps');
+let rollup = require('rollup-stream');
+let buble = require('rollup-plugin-buble');
+let source = require('vinyl-source-stream');
+let buffer = require('vinyl-buffer');
+let del = require('del');
 
-function generateClosureOptions(entry_point, js_output_file) {
-  return {
-    dependency_mode: 'STRICT',
-    new_type_inf: true,
-    compilation_level: 'SIMPLE',
-    language_in: 'ES6_STRICT',
-    language_out: 'ES5_STRICT',
-    output_wrapper: '(function(){\n%output%\n}).call(this)',
-    entry_point,
-    js_output_file
-  };
-}
-
-gulp.task('default', function() {
-  let opts = generateClosureOptions(['/src/ShadyCSS', '/src/custom-style'], 'shadycss.min.js');
+gulp.task('default', () => {
   return gulp.src(['./src/*.js'], {base: './'})
     .pipe(sourcemaps.init())
-    .pipe(closureCompiler(opts))
+    .pipe(closureCompiler({
+      dependency_mode: 'STRICT',
+      new_type_inf: true,
+      compilation_level: 'SIMPLE',
+      language_in: 'ES6_STRICT',
+      language_out: 'ES5_STRICT',
+      output_wrapper: '(function(){\n%output%\n}).call(this)',
+      entry_point: ['/src/ShadyCSS', '/src/custom-style'],
+      js_output_file: 'shadycss.min.js'
+    }))
     .on('error', (e) => console.error(e))
     .pipe(sourcemaps.write('/'))
     .pipe(gulp.dest('./'))
 });
 
 let modules = [
-  // 'apply-shim',
+  'apply-shim',
   'css-parse',
-  // 'custom-style',
-  // 'style-info',
-  // 'style-placeholder',
-  // 'style-properties',
-  // 'style-settings',
-  // 'style-transformer',
-  // 'style-util',
-]
+  'custom-style',
+  'style-info',
+  'style-placeholder',
+  'style-properties',
+  'style-settings',
+  'style-transformer',
+  'style-util',
+];
 
 let moduleTasks = modules.map((m) => {
-  gulp.task(`test-module-${m}`, function() {
-    let opts = generateClosureOptions(`/tests/module/${m}`, `${m}.min.js`);
-    return gulp.src([`./tests/module/${m}.js`, './src/*.js'], {base: './'})
-    .pipe(sourcemaps.init())
-    .pipe(closureCompiler(opts))
-    .on('error', (e) => console.error(e))
-    .pipe(sourcemaps.write('/'))
+  gulp.task(`test-module-${m}`, () => {
+    return rollup({
+      entry: `./tests/module/${m}.js`,
+      plugins: [buble()],
+      format: 'iife',
+      moduleName: `${m}`,
+      sourceMap: true
+    })
+    .pipe(source(`${m}.js`, './tests/module/'))
+    .pipe(buffer())
+    .pipe(sourcemaps.init({loadMaps: true}))
+    .pipe(sourcemaps.write('.'))
     .pipe(gulp.dest('./tests/module/generated'))
   });
   return `test-module-${m}`;
 });
 
 gulp.task('test-modules', moduleTasks);
+
+gulp.task('clean-test-modules', () => del(['tests/module/generated']));
