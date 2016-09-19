@@ -10,7 +10,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 'use strict';
 
-import {removeCustomPropAssignment, types} from './css-parse'
+import {removeCustomPropAssignment} from './css-parse'
 import {nativeShadow} from './style-settings'
 import {StyleTransformer} from './style-transformer'
 import * as StyleUtil from './style-util'
@@ -28,29 +28,12 @@ export let StyleProperties = {
 
   // decorates styles with rule info and returns an array of used style
   // property names
-  decorateStyles: function(rules, scope) {
+  decorateStyles: function(rules) {
     let self = this, props = {}, keyframes = [], ruleIndex = 0;
-    let scopeSelector = StyleTransformer._calcHostScope(scope.is, scope.extends);
-    let cssBuild = rules.__cssBuild;
-    let styleInfo = StyleInfo.get(scope) || scope;
     StyleUtil.forEachRule(rules, function(rule) {
       self.decorateRule(rule);
       // mark in-order position of ast rule in styles block, used for cache key
       rule.index = ruleIndex++;
-      self.whenHostOrRootRule(scope, rule, cssBuild, function(info) {
-        // we can't cache styles with :host and :root props in @media rules
-        if (rule.parent.type === types.MEDIA_RULE) {
-          styleInfo.notStyleScopeCacheable = true;
-        }
-        if (info.isHost) {
-          // check if the selector is in the form of `:host-context()` or `:host()`
-          // if so, this style is not cacheable
-          let hostContextOrFunction = info.selector.split(' ').some(function(s) {
-            return s.indexOf(scopeSelector) === 0 && s.length !== scopeSelector.length;
-          });
-          styleInfo.notStyleScopeCacheable = styleInfo.notStyleScopeCacheable || hostContextOrFunction;
-        }
-      });
       self.collectPropertiesInCssText(rule.propertyInfo.cssText, props);
     }, function onKeyframesRule(rule) {
       keyframes.push(rule);

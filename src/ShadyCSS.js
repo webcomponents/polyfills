@@ -73,7 +73,6 @@ export let ShadyCSS = {
       is: elementName,
       extends: typeExtension,
       __cssBuild: cssBuild,
-      notStyleScopeCacheable: false,
     };
     if (!this.nativeShadow) {
       StyleTransformer.dom(template.content, elementName);
@@ -95,7 +94,6 @@ export let ShadyCSS = {
       template._style = style;
     }
     template._ownPropertyNames = ownPropertyNames;
-    template._notStyleScopeCacheable = info.notStyleScopeCacheable;
   },
   _generateStaticStyle(info, rules, shadowroot, placeholder) {
     let cssText = StyleTransformer.elementStyles(info, rules);
@@ -114,12 +112,10 @@ export let ShadyCSS = {
     let ast;
     let ownStylePropertyNames;
     let cssBuild;
-    let notStyleScopeCacheable = false;
     if (template) {
       ast = template._styleAst;
       ownStylePropertyNames = template._ownPropertyNames;
       cssBuild = template._cssBuild;
-      notStyleScopeCacheable = template._notStyleScopeCacheable;
     }
     return StyleInfo.set(host,
       new StyleInfo(
@@ -128,8 +124,7 @@ export let ShadyCSS = {
         ownStylePropertyNames,
         is,
         typeExtension,
-        cssBuild,
-        notStyleScopeCacheable
+        cssBuild
       )
     );
   },
@@ -168,10 +163,10 @@ export let ShadyCSS = {
       }
       this._updateNativeProperties(host, styleInfo.overrideStyleProperties);
     } else {
-      let bitmask = this._updateProperties(host, styleInfo);
+      this._updateProperties(host, styleInfo);
       if (styleInfo.ownStylePropertyNames && styleInfo.ownStylePropertyNames.length) {
         // TODO: use caching
-        this._applyStyleProperties(host, styleInfo, bitmask);
+        this._applyStyleProperties(host, styleInfo);
       }
       let root = this._isRootOwner(host) ? host : host.shadowRoot;
       // note: some elements may not have a root!
@@ -205,9 +200,9 @@ export let ShadyCSS = {
   _isRootOwner(node) {
     return (node === this._documentOwner);
   },
-  _applyStyleProperties(host, styleInfo, bitmask) {
+  _applyStyleProperties(host, styleInfo) {
     let is = host.getAttribute('is') || host.localName;
-    let cacheEntry = styleCache.fetch(is, styleInfo.styleProperties, bitmask)
+    let cacheEntry = styleCache.fetch(is, styleInfo.styleProperties, styleInfo.ownStylePropertyNames);
     let cachedScopeSelector = cacheEntry && cacheEntry.scopeSelector;
     let cachedStyle = cacheEntry ? cacheEntry.stylesheet : null;
     let oldScopeSelector = styleInfo.scopeSelector;
@@ -218,7 +213,7 @@ export let ShadyCSS = {
       StyleProperties.applyElementScopeSelector(host, styleInfo.scopeSelector, oldScopeSelector);
     }
     if (!cacheEntry) {
-      styleCache.store(is, styleInfo.styleProperties, bitmask, style, styleInfo.scopeSelector);
+      styleCache.store(is, styleInfo.styleProperties, style, styleInfo.scopeSelector);
     }
     return style;
   },
@@ -230,7 +225,6 @@ export let ShadyCSS = {
     let hostAndRootProps = StyleProperties.hostAndRootPropertiesForScope(host, styleInfo.styleRules);
     let propertyData = StyleProperties.propertyDataFromStyles(ownerStyleInfo.styleRules, host);
     let propertiesMatchingHost = propertyData.properties
-    let styleBitmask = propertyData.key;
     Object.assign(
       props,
       hostAndRootProps.hostProps,
@@ -240,15 +234,6 @@ export let ShadyCSS = {
     this._mixinOverrideStyles(props, styleInfo.overrideStyleProperties);
     StyleProperties.reify(props);
     styleInfo.styleProperties = props;
-    let ownProps = {};
-    if (styleInfo.ownStylePropertyNames) {
-      for (let i = 0, n; i < styleInfo.ownStylePropertyNames.length; i++) {
-        n = styleInfo.ownStylePropertyNames[i];
-        ownProps[n] = props[n];
-      }
-    }
-    styleInfo.ownStyleProperties = ownProps;
-    return styleBitmask;
   },
   _mixinOverrideStyles(props, overrides) {
     for (let p in overrides) {

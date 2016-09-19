@@ -11,62 +11,30 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 export default class StyleCache {
   constructor(max = 100) {
-    // map element name -> [{properties, bitmask, stylesheet}]
+    // map element name -> [{properties, stylesheet, scopeSelector}]
     this.cache = {};
     this.max = max;
   }
 
-  _validate(cacheEntry, bitmask, properties) {
-    if (this._bitmaskEqual(cacheEntry.bitmask, bitmask)) {
-      return this._deepEqual(cacheEntry.properties, properties);
-    }
-  }
-
-  _bitmaskEqual(bitA, bitB) {
-    if (bitA.length === bitB.length) {
-      for (let i = 0; i < bitA.length; i++) {
-        if (bitA[i] !== bitB[i]) {
-          return false;
-        }
+  _validate(cacheEntry, properties, ownPropertyNames) {
+    for (let idx = 0; idx < ownPropertyNames.length; idx++) {
+      let pn = ownPropertyNames[idx];
+      if (cacheEntry.properties[pn] !== properties[pn]) {
+        return false;
       }
     }
     return true;
   }
 
-  _deepEqual(objA, objB) {
-    if (!objA || !objB) {
-      return;
-    }
-    let keysA = Object.getOwnPropertyNames(objA);
-    let keysB = Object.getOwnPropertyNames(objB);
-    if (keysA.length === keysB.length) {
-      for (let i = 0; i < keysA.length; i++) {
-        if (keysA[i] !== keysB[i]) {
-          return false;
-        }
-        if (objA[keysA[i]] !== objB[keysB[i]]) {
-          return false;
-        }
-      }
-    }
-    let protoA = Object.getPrototypeOf(objA);
-    let protoB = Object.getPrototypeOf(objB);
-    if (protoA === protoB) {
-      return true;
-    } else {
-      return this._deepEqual(protoA, protoB);
-    }
-  }
-
-  store(tagname, properties, bitmask, stylesheet, scopeSelector) {
+  store(tagname, properties, stylesheet, scopeSelector) {
     let list = this.cache[tagname] || [];
-    list.push({properties, bitmask, stylesheet, scopeSelector});
+    list.push({properties, stylesheet, scopeSelector});
     if (list.length > this.max) {
       list.shift();
     }
     this.cache[tagname] = list;
   }
-  fetch(tagname, properties, bitmask) {
+  fetch(tagname, properties, ownPropertyNames) {
     let list = this.cache[tagname];
     if (!list) {
       return;
@@ -74,12 +42,9 @@ export default class StyleCache {
     // reverse list for most-recent lookups
     for (let idx = list.length - 1; idx >= 0; idx--) {
       let entry = list[idx];
-      if (this._validate(entry, bitmask, properties)) {
+      if (this._validate(entry, properties, ownPropertyNames)) {
         return entry;
       }
     }
-  }
-  clear() {
-    this.cache = {};
   }
 }
