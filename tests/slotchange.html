@@ -1,0 +1,170 @@
+<!doctype html>
+<!--
+@license
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="../../web-component-tester/browser.js"></script>
+  <script>
+    ShadyDOM = {force: true};
+  </script>
+  <script src="../shadydom.min.js"></script>
+</head>
+<body>
+
+<script>
+
+  'use strict';
+
+
+  suite('slotchange', function() {
+
+  function makeShadowRootWithSlot(element) {
+    element.attachShadow({mode: 'open'});
+    element.shadowRoot.appendChild(document.createElement('slot'));
+  }
+
+  function afterFlush(fn) {
+    if (window.ShadyDOM) {
+      ShadyDOM.flush();
+      fn();
+    } else {
+      requestAnimationFrame(fn);
+    }
+  }
+
+  test('slotchange fires when node added', function(done) {
+    var d = document.createElement('div');
+    makeShadowRootWithSlot(d);
+    var slot = d.shadowRoot.firstChild;
+    var slotChangeFired = false;
+    slot.addEventListener('slotchange', function(e) {
+      slotChangeFired = true;
+    });
+    d.appendChild(document.createElement('div'));
+    afterFlush(function() {
+      assert.isTrue(slotChangeFired, 'slotchange did not fire');
+      done();
+    });
+  });
+
+  test('slotchange fires when node removed', function(done) {
+    var d = document.createElement('div');
+    makeShadowRootWithSlot(d);
+    var slot = d.shadowRoot.firstChild;
+    var slotChangeFired = false;
+    slot.addEventListener('slotchange', function(e) {
+      slotChangeFired = true;
+    });
+    var e = document.createElement('div');
+    d.appendChild(e);
+    afterFlush(function() {
+      assert.isTrue(slotChangeFired, 'slotchange did not fire');
+      d.removeChild(e);
+      slotChangeFired = false;
+      afterFlush(function() {
+        assert.isTrue(slotChangeFired, 'slotchange did not fire');
+        done();
+      });
+    });
+  });
+
+  test('slotchange fires via fallback added', function(done) {
+    var d = document.createElement('div');
+    makeShadowRootWithSlot(d);
+    var slot = d.shadowRoot.firstChild;
+    slot.appendChild(document.createElement('div'));
+    var slotChangeFired = false;
+    slot.addEventListener('slotchange', function(e) {
+      slotChangeFired = true;
+    });
+    afterFlush(function() {
+      assert.isTrue(slotChangeFired, 'slotchange did not fire');
+      done();
+    });
+
+  });
+
+  test('slotchange does not fire when unused fallback changes', function(done) {
+    var d = document.createElement('div');
+    makeShadowRootWithSlot(d);
+    var slot = d.shadowRoot.firstChild;
+    var slotChangeFired = false;
+    slot.addEventListener('slotchange', function(e) {
+      slotChangeFired = true;
+    });
+    var e = document.createElement('div');
+    d.appendChild(e);
+    afterFlush(function() {
+      assert.isTrue(slotChangeFired, 'slotchange did not fire');
+      slotChangeFired = false;
+      slot.appendChild(document.createElement('div'));
+      afterFlush(function() {
+        assert.isFalse(slotChangeFired, 'slotchange fired when unused fallback changed');
+        done();
+      });
+    });
+  });
+
+  test('slotchange fires when element "redistributed"', function(done) {
+    var d = document.createElement('div');
+    d.id = 'host';
+    makeShadowRootWithSlot(d);
+    var slot = d.shadowRoot.firstChild;
+    slot.id = 'slot';
+    var inner = document.createElement('div');
+    inner.id = 'innerHost';
+    makeShadowRootWithSlot(inner);
+    var innerSlot = inner.shadowRoot.firstChild;
+    innerSlot.id = 'innerSlot';
+    d.shadowRoot.appendChild(inner);
+    inner.appendChild(slot);
+    var innerInner = document.createElement('div');
+    innerInner.id = 'innerInnerHost';
+    makeShadowRootWithSlot(innerInner);
+    var innerInnerSlot = innerInner.shadowRoot.firstChild;
+    innerInnerSlot.id = 'innerInnerSlot';
+    inner.shadowRoot.appendChild(innerInner);
+    innerInner.appendChild(innerSlot);
+    afterFlush(function() {
+      var slotChangeFired = 0;
+      slot.addEventListener('slotchange', function(e) {
+        if (e.eventPhase !== Event.BUBBLING_PHASE) {
+          slotChangeFired++;
+        }
+      });
+      var innerSlotChangeFired = 0;
+      innerSlot.addEventListener('slotchange', function(e) {
+        if (e.eventPhase !== Event.BUBBLING_PHASE) {
+          innerSlotChangeFired++;
+        }
+      });
+      var innerInnerSlotChangeFired = 0;
+      innerInnerSlot.addEventListener('slotchange', function(e) {
+        if (e.eventPhase !== Event.BUBBLING_PHASE) {
+          innerInnerSlotChangeFired++;
+        }
+      });
+      d.appendChild(document.createElement('div'));
+      afterFlush(function() {
+        assert.equal(slotChangeFired, 1, 'slotchange did not fire 1x based on distribution');
+        assert.equal(innerSlotChangeFired, 1, 'inner did not fire 1x based on distribution');
+        assert.equal(innerInnerSlotChangeFired, 1, 'inner-inner did not fire 1x based on distribution');
+        done();
+      });
+    });
+  });
+
+});
+
+</script>
+
+</body>
+</html>
