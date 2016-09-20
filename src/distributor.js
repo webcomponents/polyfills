@@ -127,7 +127,6 @@ export default class {
     return (slot == slotName);
   }
 
-  // returns true if child is newly assigned to this slot.
   distributeNodeInto(child, insertionPoint) {
     insertionPoint._assignedNodes.push(child);
     child._assignedSlot = insertionPoint;
@@ -154,7 +153,7 @@ export default class {
     // NOTE: cannot bubble correctly here so not setting bubbles: true
     // Safari tech preview does not bubble but chrome does
     // Spec says it bubbles (https://dom.spec.whatwg.org/#mutation-observers)
-    insertionPoint.dispatchEvent(new Event('slotchange', { cancelable: true }));
+    insertionPoint.dispatchEvent(new Event('slotchange'));
     if (insertionPoint._assignedSlot) {
       this._fireSlotChange(insertionPoint._assignedSlot);
     }
