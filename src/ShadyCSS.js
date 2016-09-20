@@ -204,7 +204,7 @@ export let ShadyCSS = {
     let is = host.getAttribute('is') || host.localName;
     let cacheEntry = styleCache.fetch(is, styleInfo.styleProperties, styleInfo.ownStylePropertyNames);
     let cachedScopeSelector = cacheEntry && cacheEntry.scopeSelector;
-    let cachedStyle = cacheEntry ? cacheEntry.stylesheet : null;
+    let cachedStyle = cacheEntry ? cacheEntry.styleElement : null;
     let oldScopeSelector = styleInfo.scopeSelector;
     // only generate new scope if cached style is not found
     styleInfo.scopeSelector = cachedScopeSelector || this._generateScopeSelector(is);

@@ -10,10 +10,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 'use strict';
 
 export default class StyleCache {
-  constructor(max = 100) {
-    // map element name -> [{properties, stylesheet, scopeSelector}]
+  constructor(typeMax = 100) {
+    // map element name -> [{properties, styleElement, scopeSelector}]
     this.cache = {};
-    this.max = max;
+    this.typeMax = typeMax;
   }
 
   _validate(cacheEntry, properties, ownPropertyNames) {
@@ -26,10 +26,10 @@ export default class StyleCache {
     return true;
   }
 
-  store(tagname, properties, stylesheet, scopeSelector) {
+  store(tagname, properties, styleElement, scopeSelector) {
     let list = this.cache[tagname] || [];
-    list.push({properties, stylesheet, scopeSelector});
-    if (list.length > this.max) {
+    list.push({properties, styleElement, scopeSelector});
+    if (list.length > this.typeMax) {
       list.shift();
     }
     this.cache[tagname] = list;
