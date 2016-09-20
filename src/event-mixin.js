@@ -68,7 +68,7 @@ let alwaysComposed = {
 function pathComposer(startNode, composed) {
   let composedPath = [];
   let current = startNode;
-  let startRoot = startNode === window ? window : startNode.getRootNode();
+  let startRoot = getRootNode(startNode);
   while (current) {
     composedPath.push(current);
     if (current.assignedSlot) {
@@ -96,7 +96,7 @@ function retarget(refNode, path) {
   let p$ = path;
   for (let i=0, ancestor, lastRoot, root, rootIdx; i < p$.length; i++) {
     ancestor = p$[i];
-    root = ancestor === window ? window : ancestor.getRootNode();
+    root = getRootNode(ancestor);
     if (root !== lastRoot) {
       rootIdx = refNodePath.indexOf(root);
       lastRoot = root;
@@ -105,6 +105,10 @@ function retarget(refNode, path) {
       return ancestor;
     }
   }
+}
+
+function getRootNode(node) {
+  return node === window || !node.getRootNode ? node : node.getRootNode();
 }
 
 let EventMixin = {
