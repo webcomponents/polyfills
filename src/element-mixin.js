@@ -739,4 +739,24 @@ export let Mixins = {
 
 };
 
-export let getRootNode = mixinImpl.getRootNode;
+export let getRootNode = function(node) {
+  return mixinImpl.getRootNode(node);
+}
+
+export function filterMutations(mutations, target) {
+  const targetRootNode = getRootNode(target);
+  return mutations.filter(function(mutation) {
+    const mutationInScope = (targetRootNode === getRootNode(mutation.target));
+    if (mutationInScope && mutation.addedNodes) {
+      let nodes = Array.from(mutation.addedNodes).filter(function(n) {
+        return (targetRootNode === getRootNode(n));
+      });
+      Object.defineProperty(mutation, 'addedNodes', {
+        value: nodes,
+        configurable: true
+      });
+    }
+    return mutationInScope &&
+      (!mutation.addedNodes || mutation.addedNodes.length);
+  });
+}
