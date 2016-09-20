@@ -9,7 +9,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 */
 
 'use strict';
-import './getrootnode'
 
 export let settings = window.ShadyDOM || {};
 
