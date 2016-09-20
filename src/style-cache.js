@@ -34,6 +34,7 @@ export default class StyleCache {
     }
     this.cache[tagname] = list;
   }
+
   fetch(tagname, properties, ownPropertyNames) {
     let list = this.cache[tagname];
     if (!list) {

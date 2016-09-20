@@ -72,7 +72,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 'use strict';
 
 import {rx, forEachRule, processVariableAndFallback, rulesForStyle} from './style-util'
-import {templateMap} from './template-map'
+import templateMap from './template-map'
 
 let MIXIN_MATCH = rx.MIXIN_MATCH;
 let VAR_ASSIGN = rx.VAR_ASSIGN;

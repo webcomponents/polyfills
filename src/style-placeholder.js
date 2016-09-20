@@ -13,7 +13,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 import {applyStylePlaceHolder} from './style-util'
 import {nativeShadow} from './style-settings'
 
-export let placeholderMap = {};
+let placeholderMap = {};
 
 const ce = window.customElements;
 if (ce && !nativeShadow) {
@@ -23,3 +23,5 @@ if (ce && !nativeShadow) {
     return origDefine.call(ce, name, clazz, options);
   };
 }
+
+export default placeholderMap;

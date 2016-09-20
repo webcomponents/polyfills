@@ -15,8 +15,8 @@ import {nativeShadow, nativeCssVariables, nativeCssApply} from './style-settings
 import {StyleTransformer} from './style-transformer'
 import * as StyleUtil from './style-util'
 import {StyleProperties} from './style-properties'
-import {templateMap} from './template-map'
-import {placeholderMap} from './style-placeholder'
+import templateMap from './template-map'
+import placeholderMap from './style-placeholder'
 import StyleInfo from './style-info'
 import StyleCache from './style-cache'
 
