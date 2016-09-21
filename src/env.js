@@ -22,7 +22,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 import * as utils from './utils'
 import {ShadyRoot, flush, enqueue} from './shady'
 import * as patch from './patch'
-import {getRootNode} from './element-mixin'
+import {getRootNode, filterMutations} from './element-mixin'
 import * as events from './event-mixin'
 
 if (utils.settings.inUse) {
@@ -34,7 +34,8 @@ if (utils.settings.inUse) {
     isShadyRoot: utils.isShadyRoot,
     enqueue: enqueue,
     flush: flush,
-    inUse: utils.settings.inUse
+    inUse: utils.settings.inUse,
+    filterMutations: filterMutations
   };
 
   let createRootAndEnsurePatched = function(node) {

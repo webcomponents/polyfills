@@ -114,8 +114,6 @@ let ShadyMixin = {
       this.distribute();
       // physical
       this.compose();
-      // allow distributor to do post render tasks (e.g. fire events!)
-      this._distributor.rendered();
       this._clean = true;
       this._hasRendered = true;
     }
