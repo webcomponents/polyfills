@@ -38,7 +38,7 @@ export class ShadyRoot {
 let ShadyMixin = {
 
   _init(host) {
-    // TODO(sorvell): set a fake local name so this element can be
+    // NOTE: set a fake local name so this element can be
     // distinguished from a DocumentFragment when patching.
     // FF doesn't allow this to be `localName`
     this.__localName = 'ShadyRoot';
@@ -132,7 +132,17 @@ let ShadyMixin = {
   },
 
   updateInsertionPoints() {
-    let i$ = this._insertionPoints = this._distributor.getInsertionPoints();
+    let i$ = this.__insertionPoints;
+    // if any insertion points have been removed, clear their distribution info
+    if (i$) {
+      for (let i=0, c; i < i$.length; i++) {
+        c = i$[i];
+        if (c.getRootNode() !== this) {
+          this._distributor.clearAssignedSlots(c);
+        }
+      }
+    }
+    i$ = this._insertionPoints = this._distributor.getInsertionPoints();
     // ensure insertionPoints's and their parents have logical dom info.
     // save logical tree info
     // a. for shadyRoot
@@ -166,14 +176,8 @@ let ShadyMixin = {
     // so that attachment that provokes additional distribution (e.g.
     // adding something to your parentNode) works
     this._composeTree();
-    // TODO(sorvell): notification.
-    // NOTE: send a signal to insertion points that we have distributed
-    // which informs effective children observers
-    //notifyContentObservers(this);
     // TODO(sorvell): See fast paths here in Polymer v1
     // (these seem unnecessary)
-    // NOTE: send a signal to any observers
-    // to report the initial set of childNodes
   },
 
   // Reify dom such that it is at its correct rendering position
@@ -246,7 +250,6 @@ let ShadyMixin = {
     }
   },
 
-  // TODO(sorvell): util
   getInsertionPointTag() {
     return this._distributor.insertionPointTag;
   }
@@ -255,22 +258,6 @@ let ShadyMixin = {
 
 let ShadyFragmentMixin = Object.create(DocumentFragment.prototype);
 utils.extend(ShadyFragmentMixin, ShadyMixin);
-
-// TODO(sorvell): observation...
-// function notifyContentObservers(root) {
-//   for (let i=0, c; i < root._insertionPoints.length; i++) {
-//     c = root._insertionPoints[i];
-//     if (DomApi.hasApi(c)) {
-//       Polymer.dom(c).notifyObserver();
-//     }
-//   }
-// }
-
-// function notifyInitialDistribution(host) {
-//   if (DomApi.hasApi(host)) {
-//     Polymer.dom(host).notifyObserver();
-//   }
-// }
 
 // let needsUpgrade = window.CustomElements && !CustomElements.useNative;
 
@@ -294,7 +281,8 @@ export function enqueue(callback) {
   flushList.push(callback);
 }
 
-export function flush() {
+let flushImpl = function() {
+  scheduled = false;
   while (flushList.length) {
     flushList.shift()();
   }
@@ -303,6 +291,10 @@ export function flush() {
   }
   // continue flushing after elements are upgraded...
   if (flushList.length) {
-    flush();
+    flushImpl();
   }
 }
+
+flushImpl.flushList = flushList;
+
+export let flush = flushImpl;
