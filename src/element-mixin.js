@@ -763,6 +763,9 @@ export function filterMutations(mutations, target) {
   });
 }
 
+
+const promise = Promise.resolve();
+
 class AsyncObserver {
 
   constructor() {
@@ -773,7 +776,7 @@ class AsyncObserver {
   schedule() {
     if (!this._scheduled) {
       this._scheduled = true;
-      Promise.resolve().then(() => {
+      promise.then(() => {
         this.flush();
       });
     }
@@ -781,9 +784,9 @@ class AsyncObserver {
 
   flush() {
     this._scheduled = false;
-    for (let cb of this.callbacks) {
+    this.callbacks.forEach(function(cb) {
       cb();
-    }
+    });
   }
 
 }
