@@ -188,7 +188,7 @@ function retargetNonBubblingEvent(e) {
   let path = e.composedPath();
   let node;
   // override `currentTarget` to let patched `target` calculate correctly
-  Object.defineProperty(event, 'currentTarget', {
+  Object.defineProperty(e, 'currentTarget', {
     get: function() {
       return node;
     },
