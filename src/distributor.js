@@ -32,31 +32,8 @@ export default class {
     return node.localName && node.localName == this.insertionPointTag;
   }
 
-  reset() {
-    // light children
-    let children = tree.Logical.getChildNodes(this.root.host);
-    for (let i = 0; i < children.length; i++) {
-      this.resetChild(children[i]);
-    }
-    // insertion points
-    let p$ = this.root._insertionPoints;
-    for (let j = 0; j < p$.length; j++) {
-      this.resetInsertionPoint(p$[j]);
-    }
-  }
-
-  resetChild(child) {
-    child._assignedSlot = undefined;
-  }
-
-  resetInsertionPoint(insertionPoint) {
-    insertionPoint._distributedNodes = [];
-    insertionPoint._assignedNodes = [];
-  }
-
   distribute() {
     if (this.hasInsertionPoint()) {
-      this.reset();
       return this.distributePool(this.root, this.collectPool());
     }
     return [];
@@ -70,7 +47,7 @@ export default class {
   }
 
   // perform "logical" distribution; note, no actual dom is moved here,
-  // instead elements are distributed into a `content._distributedNodes`
+  // instead elements are distributed into storage
   // array where applicable.
   distributePool(node, pool) {
     let dirtyRoots = [];
@@ -87,10 +64,19 @@ export default class {
         dirtyRoots.push(parent.shadyRoot);
       }
     }
+    for (let i=0; i < pool.length; i++) {
+      if (pool[i]) {
+        pool[i]._assignedSlot = undefined;
+      }
+    }
     return dirtyRoots;
   }
 
   distributeInsertionPoint(insertionPoint, pool) {
+    let previousCount = insertionPoint._assignedNodes ?
+      insertionPoint._assignedNodes.length : 0;
+    insertionPoint._assignedNodes = [];
+    let needsSlotChange = false;
     // distribute nodes from the pool that this selector matches
     let anyDistributed = false;
     for (let i=0, l=pool.length, node; i < l; i++) {
@@ -101,7 +87,10 @@ export default class {
       }
       // distribute this node if it matches
       if (this.matchesInsertionPoint(node, insertionPoint)) {
-        this.distributeNodeInto(node, insertionPoint);
+        if (node._assignedSlot != insertionPoint) {
+          needsSlotChange = true;
+        }
+        this.distributeNodeInto(node, insertionPoint)
         // remove this node from the pool
         pool[i] = undefined;
         // since at least one node matched, we won't need fallback content
@@ -111,11 +100,23 @@ export default class {
     // Fallback content if nothing was distributed here
     if (!anyDistributed) {
       let children = tree.Logical.getChildNodes(insertionPoint);
-      for (let j = 0; j < children.length; j++) {
-        this.distributeNodeInto(children[j], insertionPoint);
+      for (let j = 0, node; j < children.length; j++) {
+        node = children[j];
+        if (node._assignedSlot != insertionPoint) {
+          needsSlotChange = true;
+        }
+        this.distributeNodeInto(node, insertionPoint);
       }
     }
+    // we're already dirty if a node was newly added to the slot
+    // and we're also dirty if the assigned count decreased.
+    if (insertionPoint._assignedNodes.length < previousCount) {
+      needsSlotChange = true;
+    }
     this.setDistributedNodesOnInsertionPoint(insertionPoint);
+    if (needsSlotChange) {
+      this._fireSlotChange(insertionPoint);
+    }
   }
 
   matchesInsertionPoint(node, insertionPoint) {
@@ -148,19 +149,18 @@ export default class {
     }
   }
 
-  isFinalDestination(insertionPoint) {
-    return !(insertionPoint._assignedSlot);
+  _fireSlotChange(insertionPoint) {
+    // NOTE: cannot bubble correctly here so not setting bubbles: true
+    // Safari tech preview does not bubble but chrome does
+    // Spec says it bubbles (https://dom.spec.whatwg.org/#mutation-observers)
+    insertionPoint.dispatchEvent(new Event('slotchange'));
+    if (insertionPoint._assignedSlot) {
+      this._fireSlotChange(insertionPoint._assignedSlot);
+    }
   }
 
-  rendered() {
-    let ip$ = this.root._insertionPoints;
-    for (let i=0, slot; i < ip$.length; i++) {
-      slot = ip$[i];
-      if (slot.__eventListenerCount) {
-        // NOTE: cannot bubble correctly here so not setting bubbles: true
-        slot.dispatchEvent(new Event('slotchange', { cancelable: true }));
-      }
-    }
+  isFinalDestination(insertionPoint) {
+    return !(insertionPoint._assignedSlot);
   }
 
 }
