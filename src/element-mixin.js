@@ -763,7 +763,6 @@ export function filterMutations(mutations, target) {
   });
 }
 
-
 const promise = Promise.resolve();
 
 class AsyncObserver {
