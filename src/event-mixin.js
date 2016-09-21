@@ -289,16 +289,18 @@ export function removeEventListener(type, fn, optionsOrCapture) {
   }
 }
 
-for (let ev in nonBubblingEventsToRetarget) {
-  window.addEventListener(ev, function(e) {
-    if (!e.__target) {
-      e.__target = e.target;
-      e.__relatedTarget = e.relatedTarget;
-      utils.patchPrototype(e, EventMixin);
-      retargetNonBubblingEvent(e);
-      e.stopImmediatePropagation();
-    }
-  }, true);
+export function activateFocusEventOverrides() {
+  for (let ev in nonBubblingEventsToRetarget) {
+    window.addEventListener(ev, function(e) {
+      if (!e.__target) {
+        e.__target = e.target;
+        e.__relatedTarget = e.relatedTarget;
+        utils.patchPrototype(e, EventMixin);
+        retargetNonBubblingEvent(e);
+        e.stopImmediatePropagation();
+      }
+    }, true);
+  }
 }
 
 export let OriginalEvent = Event;
