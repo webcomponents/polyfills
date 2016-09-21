@@ -68,6 +68,7 @@ if (utils.settings.inUse) {
   Event = events.PatchedEvent;
   CustomEvent = events.PatchedCustomEvent;
   MouseEvent = events.PatchedMouseEvent;
+  events.activateFocusEventOverrides();
 
   Object.defineProperty(Node.prototype, 'isConnected', {
     get() {
