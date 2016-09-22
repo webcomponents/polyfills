@@ -113,6 +113,9 @@ export default class {
     // we're already dirty if a node was newly added to the slot
     // and we're also dirty if the assigned count decreased.
     if (prevAssignedNodes) {
+      // TODO(sorvell): the tracking of previously assigned slots
+      // could instead by done with a Set and then we could
+      // avoid needing to iterate here to clear the info.
       for (let i=0; i < prevAssignedNodes.length; i++) {
         prevAssignedNodes[i].__prevAssignedSlot = null;
       }

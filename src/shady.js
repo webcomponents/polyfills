@@ -281,7 +281,7 @@ export function enqueue(callback) {
   flushList.push(callback);
 }
 
-let flushImpl = function() {
+export function flush() {
   scheduled = false;
   while (flushList.length) {
     flushList.shift()();
@@ -291,10 +291,8 @@ let flushImpl = function() {
   }
   // continue flushing after elements are upgraded...
   if (flushList.length) {
-    flushImpl();
+    flush();
   }
 }
 
-flushImpl.flushList = flushList;
-
-export let flush = flushImpl;
+flush.list = flushList;
