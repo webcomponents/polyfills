@@ -73,8 +73,10 @@ export default class {
   }
 
   distributeInsertionPoint(insertionPoint, pool) {
-    let previousCount = insertionPoint._assignedNodes ?
-      insertionPoint._assignedNodes.length : 0;
+    let prevAssignedNodes = insertionPoint._assignedNodes;
+    if (prevAssignedNodes) {
+      this.clearAssignedSlots(insertionPoint, true);
+    }
     insertionPoint._assignedNodes = [];
     let needsSlotChange = false;
     // distribute nodes from the pool that this selector matches
@@ -87,7 +89,7 @@ export default class {
       }
       // distribute this node if it matches
       if (this.matchesInsertionPoint(node, insertionPoint)) {
-        if (node._assignedSlot != insertionPoint) {
+        if (node.__prevAssignedSlot != insertionPoint) {
           needsSlotChange = true;
         }
         this.distributeNodeInto(node, insertionPoint)
@@ -102,7 +104,7 @@ export default class {
       let children = tree.Logical.getChildNodes(insertionPoint);
       for (let j = 0, node; j < children.length; j++) {
         node = children[j];
-        if (node._assignedSlot != insertionPoint) {
+        if (node.__prevAssignedSlot != insertionPoint) {
           needsSlotChange = true;
         }
         this.distributeNodeInto(node, insertionPoint);
@@ -110,12 +112,38 @@ export default class {
     }
     // we're already dirty if a node was newly added to the slot
     // and we're also dirty if the assigned count decreased.
-    if (insertionPoint._assignedNodes.length < previousCount) {
-      needsSlotChange = true;
+    if (prevAssignedNodes) {
+      // TODO(sorvell): the tracking of previously assigned slots
+      // could instead by done with a Set and then we could
+      // avoid needing to iterate here to clear the info.
+      for (let i=0; i < prevAssignedNodes.length; i++) {
+        prevAssignedNodes[i].__prevAssignedSlot = null;
+      }
+      if (insertionPoint._assignedNodes.length < prevAssignedNodes.length) {
+        needsSlotChange = true;
+      }
     }
     this.setDistributedNodesOnInsertionPoint(insertionPoint);
     if (needsSlotChange) {
       this._fireSlotChange(insertionPoint);
+    }
+  }
+
+  clearAssignedSlots(slot, savePrevious) {
+    let n$ = slot._assignedNodes;
+    if (n$) {
+      for (let i=0; i < n$.length; i++) {
+        let n = n$[i];
+        if (savePrevious) {
+          n.__prevAssignedSlot = n._assignedSlot;
+        }
+        // only clear if it was previously set to this slot;
+        // this helps ensure that if the node has otherwise been distributed
+        // ignore it.
+        if (n._assignedSlot === slot) {
+          n._assignedSlot = null;
+        }
+      }
     }
   }
 

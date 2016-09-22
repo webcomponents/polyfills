@@ -22,7 +22,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 import * as utils from './utils'
 import {ShadyRoot, flush, enqueue} from './shady'
 import * as patch from './patch'
-import {getRootNode, filterMutations} from './element-mixin'
+import {getRootNode, filterMutations, observeChildren, unobserveChildren}
+  from './element-mixin'
 import * as events from './event-mixin'
 
 if (utils.settings.inUse) {
@@ -35,7 +36,9 @@ if (utils.settings.inUse) {
     enqueue: enqueue,
     flush: flush,
     inUse: utils.settings.inUse,
-    filterMutations: filterMutations
+    filterMutations: filterMutations,
+    observeChildren: observeChildren,
+    unobserveChildren: unobserveChildren
   };
 
   let createRootAndEnsurePatched = function(node) {
@@ -77,6 +80,23 @@ if (utils.settings.inUse) {
   Node.prototype.getRootNode = function(options) {
     return getRootNode(this, options);
   }
+
+  Object.defineProperty(Element.prototype, 'slot', {
+    get() {
+      return this.getAttribute('slot');
+    },
+    set(value) {
+      this.setAttribute('slot', value);
+    },
+    configurable: true
+  });
+
+  Object.defineProperty(Node.prototype, 'assignedSlot', {
+    get() {
+      return this._assignedSlot || null;
+    },
+    configurable: true
+  });
 
   // TODO(sorvell): super experimental auto patching of document fragment
   // via appendChild. This either needs to be expanded or contracted.

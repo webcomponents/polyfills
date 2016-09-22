@@ -97,12 +97,17 @@ let mixinImpl = {
     return distributed;
   },
 
+
+  _scheduleObserver(node) {
+    let observer = node.__dom && node.__dom.observer;
+    if (observer) {
+      observer.schedule();
+    }
+  },
+
   removeNodeFromParent(node, parent) {
     if (parent) {
-      // TODO(sorvell): notify
-      // if (DomApi.hasApi(parent)) {
-      //   dom(parent).notifyObserver();
-      // }
+      this._scheduleObserver(parent);
       this.removeNode(node);
     } else {
       this._removeOwnerShadyRoot(node);
@@ -464,7 +469,6 @@ let FragmentMixin = {
     if (!mixinImpl.addNode(this, node, ref_node)) {
       if (ref_node) {
         // if ref_node is an insertion point replace with first distributed node
-        // TODO(sorvell): v0/v1!!
         let root = mixinImpl.ownerShadyRootForNode(ref_node);
         if (root) {
           ref_node = ref_node.localName === root.getInsertionPointTag() ?
@@ -480,8 +484,7 @@ let FragmentMixin = {
         tree.Composed.appendChild(container, node);
       }
     }
-    // TODO(sorvell): notify
-    //this.notifyObserver();
+    mixinImpl._scheduleObserver(this);
     return node;
   },
 
@@ -506,8 +509,7 @@ let FragmentMixin = {
         tree.Composed.removeChild(container, node);
       }
     }
-    // TODO(sorvell): notify
-    //this.notifyObserver();
+    mixinImpl._scheduleObserver(this);
     return node;
   },
 
@@ -759,4 +761,51 @@ export function filterMutations(mutations, target) {
     return mutationInScope &&
       (!mutation.addedNodes || mutation.addedNodes.length);
   });
+}
+
+const promise = Promise.resolve();
+
+class AsyncObserver {
+
+  constructor() {
+    this._scheduled = false;
+    this.callbacks = new Set();
+  }
+
+  schedule() {
+    if (!this._scheduled) {
+      this._scheduled = true;
+      promise.then(() => {
+        this.flush();
+      });
+    }
+  }
+
+  flush() {
+    this._scheduled = false;
+    this.callbacks.forEach(function(cb) {
+      cb();
+    });
+  }
+
+}
+
+export let observeChildren = function(node, callback) {
+  utils.common.patchNode(node);
+  if (!node.__dom.observer) {
+    node.__dom.observer = new AsyncObserver();
+  }
+  node.__dom.observer.callbacks.add(callback);
+  callback.observer = node.__dom.observer;
+  return callback;
+}
+
+export let unobserveChildren = function(callbackHandle) {
+  let observer = callbackHandle && callbackHandle.observer;
+  if (observer) {
+    observer.callbacks.delete(callbackHandle);
+    if (!observer.callbacks.size) {
+      observer.target.__dom.observer = null;
+    }
+  }
 }
