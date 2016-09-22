@@ -22,7 +22,7 @@ let source = require('vinyl-source-stream');
 let buffer = require('vinyl-buffer');
 let del = require('del');
 
-gulp.task('default', () => {
+gulp.task('build', () => {
   return gulp.src(['./src/*.js'], {base: './'})
     .pipe(sourcemaps.init())
     .pipe(closureCompiler({
@@ -74,3 +74,5 @@ let moduleTasks = modules.map((m) => {
 gulp.task('test-modules', moduleTasks);
 
 gulp.task('clean-test-modules', () => del(['tests/module/generated']));
+
+gulp.task('default', ['build', 'test-modules']);

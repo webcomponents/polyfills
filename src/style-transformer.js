@@ -162,6 +162,7 @@ export let StyleTransformer = {
   _transformComplexSelector: function(selector, scope, hostScope) {
     let stop = false;
     selector = selector.trim();
+    selector = selector.replace(SLOTTED_START, `${HOST} $1`)
     selector = selector.replace(SIMPLE_SELECTOR_SEP, (m, c, s) => {
       if (!stop) {
         let info = this._transformCompoundSelector(s, c, scope, hostScope);
@@ -261,20 +262,18 @@ export let StyleTransformer = {
     return selector.match(SLOTTED) ?
       this._transformComplexSelector(selector, SCOPE_DOC_SELECTOR) :
       this._transformSimpleSelector(selector.trim(), SCOPE_DOC_SELECTOR);
-  },
-
-  SCOPE_NAME: 'style-scope'
+  }
 };
 
-let SCOPE_NAME = StyleTransformer.SCOPE_NAME;
-let SCOPE_DOC_SELECTOR = ':not([' + SCOPE_NAME + '])' +
-  ':not(.' + SCOPE_NAME + ')';
+let SCOPE_NAME = 'style-scope';
+let SCOPE_DOC_SELECTOR = `:not(.${SCOPE_NAME})`;
 let COMPLEX_SELECTOR_SEP = ',';
 let SIMPLE_SELECTOR_SEP = /(^|[\s>+~]+)((?:\[.+?\]|[^\s>+~=\[])+)/g;
 let SIMPLE_SELECTOR_PREFIX = /[[.:#*]/;
 let HOST = ':host';
 let ROOT = ':root';
 let SLOTTED = '::slotted';
+let SLOTTED_START = new RegExp(`^(${SLOTTED})`);
 // NOTE: this supports 1 nested () pair for things like
 // :host(:not([selected]), more general support requires
 // parsing which seems like overkill
