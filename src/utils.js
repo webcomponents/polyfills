@@ -78,3 +78,20 @@ export function unpatchPrototype(obj) {
 }
 
 export let common = {};
+
+// TODO(sorvell): actually rely on a real Promise polyfill...
+export let promish;
+if (window.Promise) {
+  promish = Promise.resolve();
+} else {
+  promish = {
+    then: function(cb) {
+      let twiddle = document.createTextNode('');
+      let observer = new MutationObserver(function() {
+        observer.disconnect();
+        cb();
+      });
+      observer.observe(twiddle, {characterData: true});
+    }
+  }
+}

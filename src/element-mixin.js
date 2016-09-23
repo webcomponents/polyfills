@@ -98,16 +98,22 @@ let mixinImpl = {
   },
 
 
-  _scheduleObserver(node) {
+  _scheduleObserver(node, addedNode, removedNode) {
     let observer = node.__dom && node.__dom.observer;
     if (observer) {
+      if (addedNode) {
+        observer.addedNodes.push(addedNode);
+      }
+      if (removedNode) {
+        observer.removedNodes.push(removedNode);
+      }
       observer.schedule();
     }
   },
 
   removeNodeFromParent(node, parent) {
     if (parent) {
-      this._scheduleObserver(parent);
+      this._scheduleObserver(parent, null, node);
       this.removeNode(node);
     } else {
       this._removeOwnerShadyRoot(node);
@@ -135,7 +141,7 @@ let mixinImpl = {
       // can be cached while an element is inside a fragment.
       // If this happens and we cache the result, the value can become stale
       // because for perf we avoid processing the subtree of added fragments.
-      if (document.contains(node)) {
+      if (document.documentElement.contains(node)) {
         node.__ownerShadyRoot = root;
       }
     }
@@ -484,7 +490,7 @@ let FragmentMixin = {
         tree.Composed.appendChild(container, node);
       }
     }
-    mixinImpl._scheduleObserver(this);
+    mixinImpl._scheduleObserver(this, node);
     return node;
   },
 
@@ -509,7 +515,7 @@ let FragmentMixin = {
         tree.Composed.removeChild(container, node);
       }
     }
-    mixinImpl._scheduleObserver(this);
+    mixinImpl._scheduleObserver(this, null, node);
     return node;
   },
 
@@ -763,29 +769,41 @@ export function filterMutations(mutations, target) {
   });
 }
 
-const promise = Promise.resolve();
+// const promise = Promise.resolve();
 
 class AsyncObserver {
 
   constructor() {
     this._scheduled = false;
+    this.addedNodes = [];
+    this.removedNodes = [];
     this.callbacks = new Set();
   }
 
   schedule() {
     if (!this._scheduled) {
       this._scheduled = true;
-      promise.then(() => {
+      utils.promish.then(() => {
         this.flush();
       });
     }
   }
 
   flush() {
-    this._scheduled = false;
-    this.callbacks.forEach(function(cb) {
-      cb();
-    });
+    if (this._scheduled) {
+      this._scheduled = false;
+      let mutations = [{
+        addedNodes: this.addedNodes,
+        removedNodes: this.removedNodes
+      }];
+      this.callbacks.forEach(function(cb) {
+        cb(mutations);
+      });
+      this.addedNodes = [];
+      this.removedNodes = [];
+      return mutations;
+    }
+    return [];
   }
 
 }
@@ -796,16 +814,23 @@ export let observeChildren = function(node, callback) {
     node.__dom.observer = new AsyncObserver();
   }
   node.__dom.observer.callbacks.add(callback);
-  callback.observer = node.__dom.observer;
-  return callback;
+  let observer = node.__dom.observer;
+  return {
+    callback,
+    observer,
+    node,
+    flush() {
+      observer.flush()
+    }
+  };
 }
 
-export let unobserveChildren = function(callbackHandle) {
-  let observer = callbackHandle && callbackHandle.observer;
+export let unobserveChildren = function(handle) {
+  let observer = handle && handle.observer;
   if (observer) {
-    observer.callbacks.delete(callbackHandle);
+    observer.callbacks.delete(handle.callback);
     if (!observer.callbacks.size) {
-      observer.target.__dom.observer = null;
+      handle.node.__dom.observer = null;
     }
   }
 }

@@ -12,6 +12,15 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 import {tree} from './tree'
 
+// NOTE: normalize event contruction where necessary (IE11)
+let NormalizedEvent = typeof Event === 'function' ? Event :
+  function(inType, params) {
+    params = params || {};
+    var e = document.createEvent('Event');
+    e.initEvent(inType, Boolean(params.bubbles), Boolean(params.cancelable));
+    return e;
+  };
+
 export default class {
 
   constructor(root) {
@@ -181,7 +190,7 @@ export default class {
     // NOTE: cannot bubble correctly here so not setting bubbles: true
     // Safari tech preview does not bubble but chrome does
     // Spec says it bubbles (https://dom.spec.whatwg.org/#mutation-observers)
-    insertionPoint.dispatchEvent(new Event('slotchange'));
+    insertionPoint.dispatchEvent(new NormalizedEvent('slotchange'));
     if (insertionPoint._assignedSlot) {
       this._fireSlotChange(insertionPoint._assignedSlot);
     }

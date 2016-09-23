@@ -26,12 +26,31 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <script>
     window.defineTestElement = function(name) {
       var template = document.querySelector('#' + name);
-      customElements.define(name, class extends HTMLElement {
-        connectedCallback() {
+      // es5 compat class
+      function Klass() {
+        const self = (window.Reflect && Reflect.construct)
+          ? Reflect.construct(HTMLElement, [], this.constructor || Klass)
+          : HTMLElement.call(this);
+        return self;
+      }
+
+      Klass.prototype = Object.create(HTMLElement.prototype, {
+        'constructor': {
+          value: Klass,
+          configurable: true,
+          writable: true
+        }
+      });
+
+      Klass.prototype.connectedCallback = function() {
+        if (!this._initialized) {
+          this._initialized = true;
           this.attachShadow({mode: 'open'});
           this.shadowRoot.appendChild(document.importNode(template.content, true));
         }
-      });
+      }
+
+      customElements.define(name, Klass);
     }
   </script>
 

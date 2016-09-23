@@ -26,20 +26,36 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <script>
     window.defineTestElement = function(name, connected) {
       var template = document.querySelector('#' + name);
-      customElements.define(name, class extends HTMLElement {
-        connectedCallback() {
-          if (!this._initialized) {
-            this._initialized = true;
-            if (connected) {
-              connected.call(this);
-            }
-            if (template) {
-              this.attachShadow({mode: 'open'});
-              this.shadowRoot.appendChild(document.importNode(template.content, true));
-            }
-          }
+      // es5 compat class
+      function Klass() {
+        const self = (window.Reflect && Reflect.construct)
+          ? Reflect.construct(HTMLElement, [], this.constructor || Klass)
+          : HTMLElement.call(this);
+        return self;
+      }
+
+      Klass.prototype = Object.create(HTMLElement.prototype, {
+        'constructor': {
+          value: Klass,
+          configurable: true,
+          writable: true
         }
       });
+
+      Klass.prototype.connectedCallback = function() {
+        if (!this._initialized) {
+          this._initialized = true;
+          if (connected) {
+            connected.call(this);
+          }
+          if (template) {
+            this.attachShadow({mode: 'open'});
+            this.shadowRoot.appendChild(document.importNode(template.content, true));
+          }
+        }
+      }
+
+      customElements.define(name, Klass);
     }
 
     window.makeFocusable = function() {
@@ -162,7 +178,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 
 
-  <template id="x-commented"><span>[</span><!--comment--><slot></slot></span><span>]</span></slot></template>
+  <template id="x-commented"><span>[</span><!--comment--><slot></slot><span>]</span></template>
   <script>defineTestElement('x-commented');</script>
 
 

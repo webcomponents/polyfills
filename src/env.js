@@ -72,7 +72,7 @@ if (utils.settings.inUse) {
 
   Object.defineProperty(Node.prototype, 'isConnected', {
     get() {
-      return document.contains(this);
+      return document.documentElement.contains(this);
     },
     configurable: true
   });
