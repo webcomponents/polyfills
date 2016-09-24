@@ -818,9 +818,9 @@ export let observeChildren = function(node, callback) {
   node.__dom.observer.callbacks.add(callback);
   let observer = node.__dom.observer;
   return {
-    callback,
-    observer,
-    node,
+    _callback: callback,
+    _observer: observer,
+    _node: node,
     flush() {
       observer.flush()
     }
@@ -828,11 +828,11 @@ export let observeChildren = function(node, callback) {
 }
 
 export let unobserveChildren = function(handle) {
-  let observer = handle && handle.observer;
+  let observer = handle && handle._observer;
   if (observer) {
-    observer.callbacks.delete(handle.callback);
+    observer.callbacks.delete(handle._callback);
     if (!observer.callbacks.size) {
-      handle.node.__dom.observer = null;
+      handle._node.__dom.observer = null;
     }
   }
 }
