@@ -792,16 +792,18 @@ class AsyncObserver {
   flush() {
     if (this._scheduled) {
       this._scheduled = false;
-      let mutations = [{
-        addedNodes: this.addedNodes,
-        removedNodes: this.removedNodes
-      }];
-      this.callbacks.forEach(function(cb) {
-        cb(mutations);
-      });
-      this.addedNodes = [];
-      this.removedNodes = [];
-      return mutations;
+      if (this.addedNodes.length || this.removedNodes.length) {
+        let mutations = [{
+          addedNodes: this.addedNodes,
+          removedNodes: this.removedNodes
+        }];
+        this.callbacks.forEach(function(cb) {
+          cb(mutations);
+        });
+        this.addedNodes = [];
+        this.removedNodes = [];
+        return mutations;
+      }
     }
     return [];
   }
