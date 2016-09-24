@@ -98,16 +98,22 @@ let mixinImpl = {
   },
 
 
-  _scheduleObserver(node) {
+  _scheduleObserver(node, addedNode, removedNode) {
     let observer = node.__dom && node.__dom.observer;
     if (observer) {
+      if (addedNode) {
+        observer.addedNodes.push(addedNode);
+      }
+      if (removedNode) {
+        observer.removedNodes.push(removedNode);
+      }
       observer.schedule();
     }
   },
 
   removeNodeFromParent(node, parent) {
     if (parent) {
-      this._scheduleObserver(parent);
+      this._scheduleObserver(parent, null, node);
       this.removeNode(node);
     } else {
       this._removeOwnerShadyRoot(node);
@@ -135,7 +141,7 @@ let mixinImpl = {
       // can be cached while an element is inside a fragment.
       // If this happens and we cache the result, the value can become stale
       // because for perf we avoid processing the subtree of added fragments.
-      if (document.contains(node)) {
+      if (document.documentElement.contains(node)) {
         node.__ownerShadyRoot = root;
       }
     }
@@ -484,7 +490,7 @@ let FragmentMixin = {
         tree.Composed.appendChild(container, node);
       }
     }
-    mixinImpl._scheduleObserver(this);
+    mixinImpl._scheduleObserver(this, node);
     return node;
   },
 
@@ -509,7 +515,7 @@ let FragmentMixin = {
         tree.Composed.removeChild(container, node);
       }
     }
-    mixinImpl._scheduleObserver(this);
+    mixinImpl._scheduleObserver(this, null, node);
     return node;
   },
 
@@ -763,49 +769,81 @@ export function filterMutations(mutations, target) {
   });
 }
 
-const promise = Promise.resolve();
+// const promise = Promise.resolve();
 
 class AsyncObserver {
 
   constructor() {
     this._scheduled = false;
+    this.addedNodes = [];
+    this.removedNodes = [];
     this.callbacks = new Set();
   }
 
   schedule() {
     if (!this._scheduled) {
       this._scheduled = true;
-      promise.then(() => {
+      utils.promish.then(() => {
         this.flush();
       });
     }
   }
 
   flush() {
-    this._scheduled = false;
-    this.callbacks.forEach(function(cb) {
-      cb();
-    });
+    if (this._scheduled) {
+      this._scheduled = false;
+      let mutations = this.takeRecords();
+      if (mutations.length) {
+        this.callbacks.forEach(function(cb) {
+          cb(mutations);
+        });
+      }
+    }
+  }
+
+  takeRecords() {
+    if (this.addedNodes.length || this.removedNodes.length) {
+      let mutations = [{
+        addedNodes: this.addedNodes,
+        removedNodes: this.removedNodes
+      }];
+      this.addedNodes = [];
+      this.removedNodes = [];
+      return mutations;
+    }
+    return [];
   }
 
 }
 
+// TODO(sorvell): consider instead polyfilling MutationObserver
+// directly so that users do not have to fork their code.
+// Supporting the entire api may be challenging: e.g. filtering out
+// removed nodes in the wrong scope and seeing non-distributing
+// subtree child mutations.
 export let observeChildren = function(node, callback) {
   utils.common.patchNode(node);
   if (!node.__dom.observer) {
     node.__dom.observer = new AsyncObserver();
   }
   node.__dom.observer.callbacks.add(callback);
-  callback.observer = node.__dom.observer;
-  return callback;
+  let observer = node.__dom.observer;
+  return {
+    _callback: callback,
+    _observer: observer,
+    _node: node,
+    takeRecords() {
+      return observer.takeRecords()
+    }
+  };
 }
 
-export let unobserveChildren = function(callbackHandle) {
-  let observer = callbackHandle && callbackHandle.observer;
+export let unobserveChildren = function(handle) {
+  let observer = handle && handle._observer;
   if (observer) {
-    observer.callbacks.delete(callbackHandle);
+    observer.callbacks.delete(handle._callback);
     if (!observer.callbacks.size) {
-      observer.target.__dom.observer = null;
+      handle._node.__dom.observer = null;
     }
   }
 }

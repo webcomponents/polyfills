@@ -276,7 +276,7 @@ let scheduled;
 export function enqueue(callback) {
   if (!scheduled) {
     scheduled = true;
-    Promise.resolve().then(flush);
+    utils.promish.then(flush);
   }
   flushList.push(callback);
 }
