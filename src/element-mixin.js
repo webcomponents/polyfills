@@ -810,6 +810,11 @@ class AsyncObserver {
 
 }
 
+// TODO(sorvell): consider instead polyfilling MutationObserver
+// directly so that users do not have to fork their code.
+// Supporting the entire api may be challenging: e.g. filtering out
+// removed nodes in the wrong scope and seeing non-distributing
+// subtree child mutations.
 export let observeChildren = function(node, callback) {
   utils.common.patchNode(node);
   if (!node.__dom.observer) {
