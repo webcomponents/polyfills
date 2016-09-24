@@ -792,18 +792,24 @@ class AsyncObserver {
   flush() {
     if (this._scheduled) {
       this._scheduled = false;
-      if (this.addedNodes.length || this.removedNodes.length) {
-        let mutations = [{
-          addedNodes: this.addedNodes,
-          removedNodes: this.removedNodes
-        }];
+      let mutations = this.takeRecords();
+      if (mutations.length) {
         this.callbacks.forEach(function(cb) {
           cb(mutations);
         });
-        this.addedNodes = [];
-        this.removedNodes = [];
-        return mutations;
       }
+    }
+  }
+
+  takeRecords() {
+    if (this.addedNodes.length || this.removedNodes.length) {
+      let mutations = [{
+        addedNodes: this.addedNodes,
+        removedNodes: this.removedNodes
+      }];
+      this.addedNodes = [];
+      this.removedNodes = [];
+      return mutations;
     }
     return [];
   }
@@ -826,8 +832,8 @@ export let observeChildren = function(node, callback) {
     _callback: callback,
     _observer: observer,
     _node: node,
-    flush() {
-      observer.flush()
+    takeRecords() {
+      return observer.takeRecords()
     }
   };
 }
