@@ -17,10 +17,13 @@ let gulp = require('gulp');
 let closureCompiler = require('google-closure-compiler').gulp();
 let sourcemaps = require('gulp-sourcemaps');
 let rollup = require('rollup-stream');
-let buble = require('rollup-plugin-buble');
+let babel = require('rollup-plugin-babel');
 let source = require('vinyl-source-stream');
 let buffer = require('vinyl-buffer');
 let del = require('del');
+let rename = require('gulp-rename');
+
+let babelSettings = {presets: [['es2015', {modules: false}]], plugins: ['external-helpers']};
 
 gulp.task('build', () => {
   return gulp.src(['./src/*.js'], {base: './'})
@@ -33,11 +36,28 @@ gulp.task('build', () => {
       language_out: 'ES5_STRICT',
       output_wrapper: '(function(){\n%output%\n}).call(this)',
       entry_point: ['/src/ShadyCSS', '/src/custom-style'],
+      // entry_point: ['/src/entry'],
       js_output_file: 'shadycss.min.js'
     }))
     .on('error', (e) => console.error(e))
     .pipe(sourcemaps.write('/'))
     .pipe(gulp.dest('./'))
+});
+
+gulp.task('debug', () => {
+  return rollup({
+    entry: './src/entry.js',
+    plugins: [babel(babelSettings)],
+    format: 'iife',
+    moduleName: 'shadycss',
+    sourceMap: true
+  })
+  .pipe(source('entry.js', './src'))
+  .pipe(buffer())
+  .pipe(sourcemaps.init({loadMaps: true}))
+  .pipe(rename('shadycss.min.js'))
+  .pipe(sourcemaps.write('.'))
+  .pipe(gulp.dest('./'))
 });
 
 let modules = [
@@ -57,7 +77,7 @@ let moduleTasks = modules.map((m) => {
   gulp.task(`test-module-${m}`, () => {
     return rollup({
       entry: `./tests/module/${m}.js`,
-      plugins: [buble()],
+      plugins: [babel(babelSettings)],
       format: 'iife',
       moduleName: `${m}`,
       sourceMap: true
