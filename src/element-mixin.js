@@ -53,9 +53,11 @@ let mixinImpl = {
     // dom-if's attached/detached checks.
     if (handled) {
       if (node.nodeType === Node.DOCUMENT_FRAGMENT_NODE) {
-        // TODO(sorvell): copy nodes ahead of time to avoid iloop
-        // that can occur when parent is not patched and child is...
-        let c$ = tree.arrayCopyChildNodes(node);
+        // TODO(sorvell): this should be removed and instead
+        // handled via distribution... however, it's not ok to
+        // use logical dom since it has already been remapp to new location
+        // at this point
+        let c$ = tree.Composed.getChildNodes(node);
         for (let i=0; i < c$.length; i++) {
           tree.Composed.removeChild(node, c$[i]);
         }
