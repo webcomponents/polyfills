@@ -129,6 +129,7 @@ export let ShadyCSS = {
     );
   },
   applyStyle(host, overrideProps) {
+    let is = host.getAttribute('is') || host.localName;
     if (window.CustomStyle) {
       let CS = window.CustomStyle;
       if (CS._documentDirty) {
@@ -146,7 +147,6 @@ export let ShadyCSS = {
     if (!styleInfo) {
       styleInfo = this._prepareHost(host);
     }
-    let is = host.getAttribute('is') || host.localName;
     Object.assign(styleInfo.overrideStyleProperties, overrideProps);
     if (this.nativeCss) {
       let template = templateMap[is];
@@ -168,11 +168,11 @@ export let ShadyCSS = {
         // TODO: use caching
         this._applyStyleProperties(host, styleInfo);
       }
-      let root = this._isRootOwner(host) ? host : host.shadowRoot;
-      // note: some elements may not have a root!
-      if (root) {
-        this._applyToDescendants(root);
-      }
+    }
+    let root = this._isRootOwner(host) ? host : host.shadowRoot;
+    // note: some elements may not have a root!
+    if (root) {
+      this._applyToDescendants(root);
     }
   },
   _applyToDescendants(root) {
