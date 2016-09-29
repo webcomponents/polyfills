@@ -16,6 +16,10 @@
 let gulp = require('gulp');
 let compilerPackage = require('google-closure-compiler');
 let sourcemaps = require('gulp-sourcemaps');
+let rollup = require('rollup-stream');
+let rename = require('gulp-rename');
+let source = require('vinyl-source-stream');
+let buffer = require('vinyl-buffer');
 let closureCompiler = compilerPackage.gulp();
 
 gulp.task('default', function() {
@@ -23,6 +27,7 @@ gulp.task('default', function() {
     .pipe(sourcemaps.init())
     .pipe(closureCompiler({
       new_type_inf: true,
+      debug: true,
       compilation_level: 'SIMPLE',
       language_in: 'ES6_STRICT',
       language_out: 'ES5_STRICT',
@@ -32,4 +37,19 @@ gulp.task('default', function() {
     .on('error', (e) => console.error(e))
     .pipe(sourcemaps.write('/'))
     .pipe(gulp.dest('./'))
+});
+
+gulp.task(`debug`, () => {
+  return rollup({
+    entry: `./src/env.js`,
+    format: 'iife',
+    moduleName: `shadydom`,
+    sourceMap: true
+  })
+  .pipe(source(`env.js`, './src/'))
+  .pipe(buffer())
+  .pipe(rename('shadydom.min.js'))
+  .pipe(sourcemaps.init({loadMaps: true}))
+  .pipe(sourcemaps.write('.'))
+  .pipe(gulp.dest('./'))
 });
