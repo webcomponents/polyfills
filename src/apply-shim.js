@@ -121,7 +121,9 @@ class ApplyShim {
   }
   transformRules(rules, elementName) {
     this._currentTemplate = templateMap[elementName];
-    forEachRule(rules, (r) => { this.transformRule(r); });
+    forEachRule(rules, (r) => {
+      this.transformRule(r);
+    });
     if (this._currentTemplate) {
       this._currentTemplate.__applyShimInvalid = false;
     }
