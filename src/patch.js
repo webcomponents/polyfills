@@ -97,3 +97,4 @@ export function isNodePatched(node) {
 
 // TODO(sorvell): fake export
 utils.common.patchNode = patchNode;
+utils.common.isNodePatched = isNodePatched;
