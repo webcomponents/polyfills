@@ -73,7 +73,7 @@ function pathComposer(startNode, composed) {
     composedPath.push(current);
     if (current.assignedSlot) {
       current = current.assignedSlot;
-    } else if (current.host && (composed || current !== startRoot)) {
+    } else if (current.nodeType === Node.DOCUMENT_FRAGMENT_NODE && current.host && (composed || current !== startRoot)) {
       current = current.host;
     } else {
       current = current.parentNode;
