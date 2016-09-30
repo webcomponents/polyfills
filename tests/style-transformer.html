@@ -39,6 +39,9 @@ window.ShadyCSS = {shimshadow: true};
   ::slotted(.bar) {
     color: lightgray;
   }
+  :host > ::slotted(*:nth-of-type(2n - 1)) {
+    color: red;
+  }
   </style>
 </template>
 
@@ -99,6 +102,10 @@ suite('Style Transformer', function() {
 
     test('::slotted(.bar)', function() {
       assert.equal(ast.rules[1].selector, 'x-slot > .bar');
+    });
+
+    test(':host > ::slotted(*:nth-of-type(2n - 1))', function() {
+      assert.equal(ast.rules[2].selector, 'x-slot > *:nth-of-type(2n-1)');
     });
   });
 
