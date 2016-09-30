@@ -274,7 +274,7 @@ let customElements = window.customElements;
 let flushList = [];
 let scheduled;
 let flushCount = 0;
-let flushMax = 10;
+let flushMax = 100;
 export function enqueue(callback) {
   if (!scheduled) {
     scheduled = true;
