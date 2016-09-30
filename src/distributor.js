@@ -74,8 +74,14 @@ export default class {
       }
     }
     for (let i=0; i < pool.length; i++) {
-      if (pool[i]) {
-        pool[i]._assignedSlot = undefined;
+      let p = pool[i];
+      if (p) {
+        p._assignedSlot = undefined;
+        // remove undistributed elements from physical dom.
+        let parent = tree.Composed.getParentNode(p);
+        if (parent) {
+          tree.Composed.removeChild(parent, p);
+        }
       }
     }
     return dirtyRoots;

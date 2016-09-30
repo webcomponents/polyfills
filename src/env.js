@@ -25,10 +25,13 @@ import * as patch from './patch'
 import {getRootNode, filterMutations, observeChildren, unobserveChildren}
   from './element-mixin'
 import * as events from './event-mixin'
+import {tree, getNativeProperty} from './tree'
 
 if (utils.settings.inUse) {
 
   window.ShadyDOM = {
+    tree: tree,
+    getNativeProperty: getNativeProperty,
     patch: patch.patchNode,
     isPatched: patch.isNodePatched,
     unpatch: patch.unpatchNode,

@@ -270,9 +270,11 @@ utils.extend(ShadyFragmentMixin, ShadyMixin);
 // }
 
 // render enqueuer/flusher
-let customElements = window.CustomElements;
+let customElements = window.customElements;
 let flushList = [];
 let scheduled;
+let flushCount = 0;
+let flushMax = 100;
 export function enqueue(callback) {
   if (!scheduled) {
     scheduled = true;
@@ -283,15 +285,21 @@ export function enqueue(callback) {
 
 export function flush() {
   scheduled = false;
+  flushCount++;
   while (flushList.length) {
     flushList.shift()();
   }
-  if (customElements) {
-    customElements.takeRecords();
+  if (customElements && customElements.flush) {
+    customElements.flush();
   }
   // continue flushing after elements are upgraded...
-  if (flushList.length) {
-    flush();
+  const isFlushedMaxed = (flushCount > flushMax);
+  if (flushList.length && !isFlushedMaxed) {
+      flush();
+  }
+  flushCount = 0;
+  if (isFlushedMaxed) {
+    throw new Error('Loop detected in ShadyDOM distribution, aborting.')
   }
 }
 
