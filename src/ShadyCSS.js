@@ -22,6 +22,7 @@ import StyleCache from './style-cache'
 
 // TODO(dfreedm): consider spliting into separate global
 import ApplyShim from './apply-shim'
+import './document-watcher'
 
 let styleCache = new StyleCache();
 
