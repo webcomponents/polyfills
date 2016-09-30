@@ -214,7 +214,7 @@ tree.Logical = {
       }
       // cleanup logical dom in doc fragment.
       node.__dom = node.__dom || {};
-      node.__dom.firstChild = node.__dom.lastChild = undefined;
+      node.__dom.firstChild = node.__dom.lastChild = null;
       node.__dom.childNodes = null;
     } else {
       this._linkNode(node, container, ref_node);
@@ -279,7 +279,7 @@ tree.Logical = {
     // Explicitly set `undefined` here to indicate this. This is disginguished
     // from `null` which is set if info is null.
     node.__dom.parentNode = node.__dom.previousSibling =
-      node.__dom.nextSibling = undefined;
+      node.__dom.nextSibling = null;
     // remove caching of childNodes
     container.__dom.childNodes = null;
   }

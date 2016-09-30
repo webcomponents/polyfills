@@ -41,33 +41,6 @@ let mixinImpl = {
     // if not distributing and not adding to host, do a fast path addition
     let handled = this._maybeDistribute(node, container, ownerRoot) ||
       container.shadyRoot;
-    // TODO(sorvell): Can we do this cleanup code before distribution?
-    // if shady is handling this node,
-    // the actual dom may not be removed if the node or fragment contents
-    // remain undistributed so we ensure removal here.
-    // NOTE: we only remove from existing location iff shady dom is involved.
-    // This is because a node fragment is passed to the native add method
-    // which expects to see fragment children. Regular elements must also
-    // use this check because not doing so causes separation of
-    // attached/detached and breaks, for example,
-    // dom-if's attached/detached checks.
-    if (handled) {
-      if (node.nodeType === Node.DOCUMENT_FRAGMENT_NODE) {
-        // TODO(sorvell): this should be removed and instead
-        // handled via distribution... however, it's not ok to
-        // use logical dom since it has already been remapp to new location
-        // at this point
-        let c$ = tree.Composed.getChildNodes(node);
-        for (let i=0; i < c$.length; i++) {
-          tree.Composed.removeChild(node, c$[i]);
-        }
-      } else {
-        let parent = tree.Composed.getParentNode(node);
-        if (parent) {
-          tree.Composed.removeChild(parent, node);
-        }
-      }
-    }
     return handled;
   },
 
