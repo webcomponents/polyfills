@@ -21,8 +21,10 @@ let rename = require('gulp-rename');
 let source = require('vinyl-source-stream');
 let buffer = require('vinyl-buffer');
 let closureCompiler = compilerPackage.gulp();
+let uglify = require('gulp-uglify');
+let buble = require('rollup-plugin-buble')
 
-gulp.task('default', function() {
+gulp.task('closure', function() {
   return gulp.src(['./src/*.js'], {base: './'})
     .pipe(sourcemaps.init())
     .pipe(closureCompiler({
@@ -39,10 +41,28 @@ gulp.task('default', function() {
     .pipe(gulp.dest('./'))
 });
 
+gulp.task(`default`, () => {
+  return rollup({
+    entry: `./src/env.js`,
+    format: 'iife',
+    plugins: [buble()],
+    moduleName: `shadydom`,
+    sourceMap: true
+  })
+  .pipe(source(`env.js`, './src/'))
+  .pipe(buffer())
+  .pipe(rename('shadydom.min.js'))
+  .pipe(sourcemaps.init({loadMaps: true}))
+  .pipe(uglify())
+  .pipe(sourcemaps.write('.'))
+  .pipe(gulp.dest('./'))
+});
+
 gulp.task(`debug`, () => {
   return rollup({
     entry: `./src/env.js`,
     format: 'iife',
+    plugins: [buble()],
     moduleName: `shadydom`,
     sourceMap: true
   })
