@@ -245,7 +245,12 @@ export function addEventListener(type, fn, optionsOrCapture) {
       return fn(e);
     }
   };
-  fn.__eventWrapper = wrappedFn;
+  // The function might be used for multiple events, so keep track of the event type.
+  fn.__eventWrappers = fn.__eventWrappers || {};
+  // This event listener might be added multiple times, we need to be able to remove
+  // all the wrappers we add.
+  fn.__eventWrappers[type] = fn.__eventWrappers[type] || [];
+  fn.__eventWrappers[type].push(wrappedFn);
   if (nonBubblingEventsToRetarget[type]) {
     this.__handlers = this.__handlers || {};
     this.__handlers[type] = this.__handlers[type] || {capture: [], bubble: []};
@@ -263,10 +268,11 @@ export function removeEventListener(type, fn, optionsOrCapture) {
   if (!fn) {
     return;
   }
-  let wrapper = fn.__eventWrapper;
+  const wrappers = fn.__eventWrappers || {};
+  const wrappersForType = wrappers[type] || [];
+  const wrapper = wrappersForType.pop();
   origRemoveEventListener.call(this, type, wrapper || fn, optionsOrCapture);
   if (wrapper) {
-    fn.__eventWrapper = null;
     this.__eventListenerCount--;
     if (nonBubblingEventsToRetarget[type]) {
       if (this.__handlers) {
