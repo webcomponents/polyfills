@@ -376,6 +376,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 </x-outer>
 
 <script>
+  defineTestElement('x-stamps-peer', function() {
+    var span = document.createElement('span');
+    span.setAttribute('id', 'peer');
+    this.parentNode.appendChild(span);
+  });
+</script>
+
+<script>
 
   'use strict';
 
@@ -858,6 +866,19 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     var evt = new CustomEvent('child-event');
     child.dispatchEvent(evt);
     document.body.removeChild(re);
+  });
+
+  test('synchronous append during distribution', function() {
+    var echo = document.createElement('x-echo');
+    document.body.appendChild(echo);
+    customElements.flush();
+    // When connected will cause span#peer to be added after it,
+    // which should also be distributed
+    echo.appendChild(document.createElement('x-stamps-peer'));
+    ShadyDOM.flush();
+    var assignedNodes = echo.shadowRoot.firstElementChild.assignedNodes();
+    assert.equal(assignedNodes[0].localName, 'x-stamps-peer');
+    assert.equal(assignedNodes[1].id, 'peer');
   });
 
 });

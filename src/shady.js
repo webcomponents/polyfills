@@ -113,8 +113,8 @@ let ShadyMixin = {
       // logical
       this.distribute();
       // physical
-      this.compose();
       this._clean = true;
+      this.compose();
       this._hasRendered = true;
     }
   },
