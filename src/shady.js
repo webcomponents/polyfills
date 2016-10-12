@@ -49,7 +49,7 @@ let ShadyMixin = {
     tree.Logical.saveChildNodes(host);
     tree.Logical.saveChildNodes(this);
     // state flags
-    this._clean = true;
+    this._renderPending = false;
     this._hasRendered = false;
     this._distributor = new Distributor(this);
     this.update();
@@ -59,9 +59,9 @@ let ShadyMixin = {
   // distribute this host).
   update() {
     let distributionRoot = this._findDistributionRoot(this.host);
-    //console.log('update from', this.host, 'root', distributionRoot.host, distributionRoot._clean);
-    if (distributionRoot._clean) {
-      distributionRoot._clean = false;
+    //console.log('update from', this.host, 'root', distributionRoot.host, distributionRoot._renderPending);
+    if (!distributionRoot._renderPending) {
+      distributionRoot._renderPending = true;
       enqueue(function() {
         distributionRoot.render();
       });
@@ -91,7 +91,8 @@ let ShadyMixin = {
   },
 
   render() {
-    if (!this._clean) {
+    if (this._renderPending) {
+      this._renderPending = false;
       if (!this._skipUpdateInsertionPoints) {
         this.updateInsertionPoints();
       } else if (!this._hasRendered) {
@@ -114,13 +115,12 @@ let ShadyMixin = {
       this.distribute();
       // physical
       this.compose();
-      this._clean = true;
       this._hasRendered = true;
     }
   },
 
   forceRender() {
-    this._clean = false;
+    this._renderPending = true;
     this.render();
   },
 
