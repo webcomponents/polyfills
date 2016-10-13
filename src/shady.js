@@ -49,7 +49,7 @@ let ShadyMixin = {
     tree.Logical.saveChildNodes(host);
     tree.Logical.saveChildNodes(this);
     // state flags
-    this._renderPending = false;
+    this._clean = true;
     this._hasRendered = false;
     this._distributor = new Distributor(this);
     this.update();
@@ -58,16 +58,20 @@ let ShadyMixin = {
   // async render the "top" distributor (this is all that is needed to
   // distribute this host).
   update() {
+    // TODO(sorvell): instead the root should always be enqueued to helps record that it is dirty.
+    // Then, in `render`, the top most (in the distribution tree) "dirty" root should be rendered.
     let distributionRoot = this._findDistributionRoot(this.host);
-    //console.log('update from', this.host, 'root', distributionRoot.host, distributionRoot._renderPending);
-    if (!distributionRoot._renderPending) {
-      distributionRoot._renderPending = true;
+    //console.log('update from', this.host, 'root', distributionRoot.host, distributionRoot._clean);
+    if (distributionRoot._clean) {
+      distributionRoot._clean = false;
       enqueue(function() {
         distributionRoot.render();
       });
     }
   },
 
+  // TODO(sorvell): this may not return a shadowRoot (for example if the element is in a docFragment)
+  // this should only return a shadowRoot.
   // returns the host that's the top of this host's distribution tree
   _findDistributionRoot(element) {
     let root = element.shadyRoot;
@@ -91,8 +95,8 @@ let ShadyMixin = {
   },
 
   render() {
-    if (this._renderPending) {
-      this._renderPending = false;
+    if (!this._clean) {
+      this._clean = true;
       if (!this._skipUpdateInsertionPoints) {
         this.updateInsertionPoints();
       } else if (!this._hasRendered) {
@@ -120,7 +124,7 @@ let ShadyMixin = {
   },
 
   forceRender() {
-    this._renderPending = true;
+    this._clean = false;
     this.render();
   },
 
