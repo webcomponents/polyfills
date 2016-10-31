@@ -216,6 +216,16 @@ function shouldCapture(optionsOrCapture) {
     optionsOrCapture.capture : optionsOrCapture);
 }
 
+/**
+ * Returns an eventWrapperId formatted as "type|options".
+ * @param {!string} type
+ * @param {(Object|boolean)=} options
+ * @return {string}
+ */
+function getEventWrapperId(type, options) {
+  return type + '|' + JSON.stringify(options);
+}
+
 export function addEventListener(type, fn, optionsOrCapture) {
   if (!fn) {
     return;
@@ -249,8 +259,9 @@ export function addEventListener(type, fn, optionsOrCapture) {
   fn.__eventWrappers = fn.__eventWrappers || {};
   // This event listener might be added multiple times, we need to be able to remove
   // all the wrappers we add.
-  fn.__eventWrappers[type] = fn.__eventWrappers[type] || [];
-  fn.__eventWrappers[type].push(wrappedFn);
+  const eventWrapperId = getEventWrapperId(type, optionsOrCapture);
+  fn.__eventWrappers[eventWrapperId] = fn.__eventWrappers[eventWrapperId] || [];
+  fn.__eventWrappers[eventWrapperId].push(wrappedFn);
   if (nonBubblingEventsToRetarget[type]) {
     this.__handlers = this.__handlers || {};
     this.__handlers[type] = this.__handlers[type] || {capture: [], bubble: []};
@@ -269,7 +280,7 @@ export function removeEventListener(type, fn, optionsOrCapture) {
     return;
   }
   const wrappers = fn.__eventWrappers || {};
-  const wrappersForType = wrappers[type] || [];
+  const wrappersForType = wrappers[getEventWrapperId(type, optionsOrCapture)] || [];
   const wrapper = wrappersForType.pop();
   origRemoveEventListener.call(this, type, wrapper || fn, optionsOrCapture);
   if (wrapper) {

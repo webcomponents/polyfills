@@ -482,6 +482,20 @@ suite('Patch of addEventListener/removeEventListener', function() {
     assert.equal(spy.callCount, 2, 'listeners removed (callCount did not increase)');
   });
 
+  test('same callback with different options', function() {
+    var spy = sinon.stub();
+    el.addEventListener('click', spy, {passive: true});
+    el.addEventListener('click', spy, {capture: true});
+    el.click();
+    assert.equal(spy.callCount, 2, 'called twice');
+    el.removeEventListener('click', spy, {passive: true});
+    el.click();
+    assert.equal(spy.callCount, 3, 'called by capturing listener');
+    el.removeEventListener('click', spy, {capture: true});
+    el.click();
+    assert.equal(spy.callCount, 3, 'listeners removed (callCount did not increase)');
+  });
+
   test('add same listener twice', function() {
     var spy = sinon.stub();
     el.addEventListener('click', spy);
