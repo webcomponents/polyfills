@@ -217,13 +217,23 @@ function shouldCapture(optionsOrCapture) {
 }
 
 /**
- * Returns an eventWrapperId formatted as "type|options".
+ * Returns an eventWrapperId formatted as "type|options". All these cases return
+ * the same result:
+ * - getEventWrapperId('some-event', false|null|undefined)
+ * - getEventWrapperId('some-event', {capture: false|null|undefined})
+ * - getEventWrapperId('some-event', {})
  * @param {!string} type
  * @param {(Object|boolean)=} options
  * @return {string}
  */
 function getEventWrapperId(type, options) {
-  return type + '|' + JSON.stringify(options);
+  // Handle the case where `options` is not an object.
+  const normalizedOpts = typeof options === 'object' ? options : {
+    capture: shouldCapture(options)
+  };
+  // Handle the case `options = {}`, which means `options = {capture: false}`.
+  normalizedOpts.capture = Boolean(normalizedOpts.capture);
+  return type + '|' + JSON.stringify(normalizedOpts);
 }
 
 export function addEventListener(type, fn, optionsOrCapture) {
