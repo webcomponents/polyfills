@@ -456,68 +456,86 @@ suite('Add.shadowRoot to element with childNodes', function() {
 
 suite('Patch of addEventListener/removeEventListener', function() {
 
-  var el;
+  var el1, el2;
 
   setup(function() {
-    el = document.createElement('button');
-    el.textContent = 'hi';
-    document.body.appendChild(el);
+    el1 = document.createElement('button');
+    el1.textContent = 'hi';
+    document.body.appendChild(el1);
+
+    el2 = document.createElement('button');
+    el2.textContent = 'hi again';
+    document.body.appendChild(el2);
   });
 
   teardown(function() {
-    el.parentNode && el.parentNode.removeChild(el);
+    el1.parentNode && el1.parentNode.removeChild(el1);
+    el2.parentNode && el2.parentNode.removeChild(el2);
   });
 
-  test('same callback for 2 listeners', function() {
+  test('different events, same callback', function() {
     var spy = sinon.stub();
-    el.addEventListener('test-event-1', spy);
-    el.addEventListener('test-event-2', spy);
-    el.dispatchEvent(new CustomEvent('test-event-1'));
-    el.dispatchEvent(new CustomEvent('test-event-2'));
+    el1.addEventListener('test-event-1', spy);
+    el1.addEventListener('test-event-2', spy);
+    el1.dispatchEvent(new CustomEvent('test-event-1'));
+    el1.dispatchEvent(new CustomEvent('test-event-2'));
     assert.equal(spy.callCount, 2, 'called twice');
-    el.removeEventListener('test-event-1', spy);
-    el.removeEventListener('test-event-2', spy);
-    el.dispatchEvent(new CustomEvent('test-event-1'));
-    el.dispatchEvent(new CustomEvent('test-event-2'));
+    el1.removeEventListener('test-event-1', spy);
+    el1.removeEventListener('test-event-2', spy);
+    el1.dispatchEvent(new CustomEvent('test-event-1'));
+    el1.dispatchEvent(new CustomEvent('test-event-2'));
     assert.equal(spy.callCount, 2, 'listeners removed (callCount did not increase)');
   });
 
-  test('same callback with different options', function() {
+  test('same event, same callback, different options', function() {
     var spy = sinon.stub();
-    el.addEventListener('click', spy, {passive: true});
-    el.addEventListener('click', spy, {capture: true});
-    el.click();
+    el1.addEventListener('click', spy, {passive: true});
+    el1.addEventListener('click', spy, {capture: true});
+    el1.click();
     assert.equal(spy.callCount, 2, 'called twice');
-    el.removeEventListener('click', spy, {passive: true});
-    el.click();
+    el1.removeEventListener('click', spy, {passive: true});
+    el1.click();
     assert.equal(spy.callCount, 3, 'called by capturing listener');
-    el.removeEventListener('click', spy, {capture: true});
-    el.click();
+    el1.removeEventListener('click', spy, {capture: true});
+    el1.click();
     assert.equal(spy.callCount, 3, 'listeners removed (callCount did not increase)');
   });
 
-  test('same callback, different useCapture notation', function() {
+  test('add same listener twice, invoke callback once', function() {
     var spy = sinon.stub();
-    el.addEventListener('click', spy, true /* useCapture */);
-    el.click();
-    assert.equal(spy.callCount, 1, 'listener called');
-    el.removeEventListener('click', spy, {capture: true});
-    el.click();
-    assert.equal(spy.callCount, 1, 'listener removed');
+    el1.addEventListener('click', spy);
+    el1.addEventListener('click', spy);
+    el1.click();
+    assert.equal(spy.callCount, 1, 'called once');
+    el1.removeEventListener('click', spy);
+    el1.click();
+    assert.equal(spy.callCount, 1, 'listener removed (callCount did not increase)');
   });
 
-  test('add same listener twice', function() {
+  test('add same listener twice, invoke callback once (different useCapture notation)', function() {
     var spy = sinon.stub();
-    el.addEventListener('click', spy);
-    el.addEventListener('click', spy);
-    el.click();
+    el1.addEventListener('click', spy, true /* useCapture */);
+    el1.addEventListener('click', spy, {capture: true});
+    el1.click();
+    assert.equal(spy.callCount, 1, 'listener called once');
+    el1.removeEventListener('click', spy, {capture: true});
+    el1.click();
+    assert.equal(spy.callCount, 1, 'listener removed (callCount did not increase)');
+  });
+
+  test('add same listener on two different nodes', function() {
+    var spy = sinon.stub();
+    el1.addEventListener('click', spy);
+    el2.addEventListener('click', spy);
+    el1.click();
+    assert.equal(spy.callCount, 1, 'called once');
+    el2.click();
     assert.equal(spy.callCount, 2, 'called twice');
-    el.removeEventListener('click', spy);
-    el.click();
-    assert.equal(spy.callCount, 3, 'called by remaining listener');
-    el.removeEventListener('click', spy);
-    el.click();
-    assert.equal(spy.callCount, 3, 'listeners removed (callCount did not increase)');
+    el1.removeEventListener('click', spy);
+    el2.removeEventListener('click', spy);
+    el1.click();
+    el2.click();
+    assert.equal(spy.callCount, 2, 'listeners removed (callCount did not increase)');
   });
 
 });

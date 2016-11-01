@@ -228,12 +228,12 @@ function shouldCapture(optionsOrCapture) {
  */
 function getEventWrapperId(type, options) {
   // Handle the case where `options` is not an object.
-  const normalizedOpts = typeof options === 'object' ? options : {
+  const normalizedOptions = typeof options === 'object' ? options : {
     capture: shouldCapture(options)
   };
   // Handle the case `options = {}`, which means `options = {capture: false}`.
-  normalizedOpts.capture = Boolean(normalizedOpts.capture);
-  return type + '|' + JSON.stringify(normalizedOpts);
+  normalizedOptions.capture = Boolean(normalizedOptions.capture);
+  return type + '|' + JSON.stringify(normalizedOptions);
 }
 
 export function addEventListener(type, fn, optionsOrCapture) {
@@ -246,7 +246,24 @@ export function addEventListener(type, fn, optionsOrCapture) {
     this.__eventListenerCount = 0;
   }
   this.__eventListenerCount++;
-  let wrappedFn = function(e) {
+
+  // The function might be used for multiple events, so we need to keep track of
+  // the event type, options, and node into this object where the key determines
+  // the Id of the wrapped function (type+options), and the value is a WeakMap where
+  // we associate a node to the wrapped function.
+  fn.__eventWrappers = fn.__eventWrappers || {};
+  // This event listener might be added multiple times, we need to be able to remove
+  // all the wrappers we add.
+  const eventWrapperId = getEventWrapperId(type, optionsOrCapture);
+  const wrappersForType = fn.__eventWrappers[eventWrapperId] || new WeakMap();
+  fn.__eventWrappers[eventWrapperId] = wrappersForType;
+  // If this event listener was already added, no need to create a new wrapper
+  // for the function.
+  if (wrappersForType.has(this)) {
+    return;
+  }
+
+  const wrappedFn = function(e) {
     if (!e.__target) {
       e.__target = e.target;
       e.__relatedTarget = e.relatedTarget;
@@ -265,13 +282,9 @@ export function addEventListener(type, fn, optionsOrCapture) {
       return fn(e);
     }
   };
-  // The function might be used for multiple events, so keep track of the event type.
-  fn.__eventWrappers = fn.__eventWrappers || {};
-  // This event listener might be added multiple times, we need to be able to remove
-  // all the wrappers we add.
-  const eventWrapperId = getEventWrapperId(type, optionsOrCapture);
-  fn.__eventWrappers[eventWrapperId] = fn.__eventWrappers[eventWrapperId] || [];
-  fn.__eventWrappers[eventWrapperId].push(wrappedFn);
+  // Store the wrapped function.
+  wrappersForType.set(this, wrappedFn);
+
   if (nonBubblingEventsToRetarget[type]) {
     this.__handlers = this.__handlers || {};
     this.__handlers[type] = this.__handlers[type] || {capture: [], bubble: []};
@@ -289,23 +302,26 @@ export function removeEventListener(type, fn, optionsOrCapture) {
   if (!fn) {
     return;
   }
+  // Search the wrapped function.
   const wrappers = fn.__eventWrappers || {};
-  const wrappersForType = wrappers[getEventWrapperId(type, optionsOrCapture)] || [];
-  const wrapper = wrappersForType.pop();
-  origRemoveEventListener.call(this, type, wrapper || fn, optionsOrCapture);
-  if (wrapper) {
+  const wrappersForType = wrappers[getEventWrapperId(type, optionsOrCapture)] || new WeakMap();
+  const wrapperFn = wrappersForType.get(this);
+  wrappersForType.delete(this);
+
+  origRemoveEventListener.call(this, type, wrapperFn || fn, optionsOrCapture);
+  if (wrapperFn) {
     this.__eventListenerCount--;
     if (nonBubblingEventsToRetarget[type]) {
       if (this.__handlers) {
         if (this.__handlers[type]) {
           let idx;
           if (shouldCapture(optionsOrCapture)) {
-            idx = this.__handlers[type].capture.indexOf(wrapper);
+            idx = this.__handlers[type].capture.indexOf(wrapperFn);
             if (idx > -1) {
               this.__handlers[type].capture.splice(idx, 1);
             }
           } else {
-            idx = this.__handlers[type].bubble.indexOf(wrapper);
+            idx = this.__handlers[type].bubble.indexOf(wrapperFn);
             if (idx > -1) {
               this.__handlers[type].bubble.splice(idx, 1);
             }
