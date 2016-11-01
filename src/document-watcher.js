@@ -18,12 +18,11 @@ export let flush = function() {};
 if (!nativeShadow) {
   let handler = (mxns) => {
     mxns.forEach((mxn) => {
-      mxn.addedNodes.forEach((n) => {
-        if (n.nodeType !== Node.ELEMENT_NODE) {
-          return;
-        }
-        if (n.classList.contains('style-scope')) {
-          return;
+      for (let i=0; i < mxn.addedNodes.length; i++) {
+        let n = mxn.addedNodes[i];
+        if (n.nodeType !== Node.ELEMENT_NODE ||
+            n.classList.contains('style-scope')) {
+          continue;
         }
         let root = n.getRootNode();
         if (root.nodeType === Node.DOCUMENT_FRAGMENT_NODE) {
@@ -31,19 +30,20 @@ if (!nativeShadow) {
           let scope = host.is || host.localName;
           StyleTransformer.dom(n, scope);
         }
-      });
-      mxn.removedNodes.forEach((n) => {
+      }
+      for (let i=0; i < mxn.removedNodes.length; i++) {
+        let n = mxn.removedNodes[i];
         if (n.nodeType !== Node.ELEMENT_NODE) {
-          return;
+          continue;
         }
-        var i = Array.from(n.classList).indexOf(StyleTransformer.SCOPE_NAME);
-        if (i >= 0) {
-          let scope = n.classList[i + 1];
+        let classIdx = Array.from(n.classList).indexOf(StyleTransformer.SCOPE_NAME);
+        if (classIdx >= 0) {
+          let scope = n.classList[classIdx + 1];
           if (scope) {
             StyleTransformer.dom(n, scope, true);
           }
         }
-      });
+      }
     });
   };
 
