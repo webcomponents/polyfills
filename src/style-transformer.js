@@ -52,7 +52,7 @@ export let StyleTransformer = {
     }
     let c$ = (node.localName === 'template') ?
       (node.content || node._content).childNodes :
-      node.children;
+      node.children || node.childNodes;
     if (c$) {
       for (let i=0; i<c$.length; i++) {
         this._transformDom(c$[i], selector, shouldRemoveScope);
