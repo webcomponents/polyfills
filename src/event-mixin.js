@@ -227,13 +227,25 @@ function shouldCapture(optionsOrCapture) {
  * @return {string}
  */
 function getEventWrapperId(type, options) {
+  return type + '|' + JSON.stringify(normalizedOptions(options));
+}
+
+/**
+ * @param {(Object|boolean)=} options
+ * @return {Object}
+ */
+function normalizedOptions(options) {
   // Handle the case where `options` is not an object.
-  const normalizedOptions = typeof options === 'object' ? options : {
-    capture: shouldCapture(options)
+  if (typeof options !== 'object') {
+    options = {
+      capture: shouldCapture(options)
+    };
+  }
+  return {
+    capture: Boolean(options.capture),
+    passive: Boolean(options.passive),
+    once: Boolean(options.once)
   };
-  // Handle the case `options = {}`, which means `options = {capture: false}`.
-  normalizedOptions.capture = Boolean(normalizedOptions.capture);
-  return type + '|' + JSON.stringify(normalizedOptions);
 }
 
 export function addEventListener(type, fn, optionsOrCapture) {
@@ -264,6 +276,10 @@ export function addEventListener(type, fn, optionsOrCapture) {
   }
 
   const wrappedFn = function(e) {
+    // Support `once` option.
+    if (optionsOrCapture && optionsOrCapture.once) {
+      this.removeEventListener(type, fn, optionsOrCapture);
+    }
     if (!e.__target) {
       e.__target = e.target;
       e.__relatedTarget = e.relatedTarget;

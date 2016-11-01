@@ -487,6 +487,15 @@ suite('Patch of addEventListener/removeEventListener', function() {
     assert.equal(spy.callCount, 2, 'listeners removed (callCount did not increase)');
   });
 
+  test('support `once` option', function() {
+    var spy = sinon.stub();
+    el1.addEventListener('click', spy, {once: true});
+    el1.click();
+    assert.equal(spy.callCount, 1, 'listener called once');
+    el1.click();
+    assert.equal(spy.callCount, 1, 'listener automatically removed (callCount did not increase)');
+  });
+
   test('same event, same callback, different options', function() {
     var spy = sinon.stub();
     el1.addEventListener('click', spy, {passive: true});
@@ -519,6 +528,17 @@ suite('Patch of addEventListener/removeEventListener', function() {
     el1.click();
     assert.equal(spy.callCount, 1, 'listener called once');
     el1.removeEventListener('click', spy, {capture: true});
+    el1.click();
+    assert.equal(spy.callCount, 1, 'listener removed (callCount did not increase)');
+  });
+
+  test('add same listener twice, different order of options keys', function() {
+    var spy = sinon.stub();
+    el1.addEventListener('click', spy, {capture: false, passive: true});
+    el1.addEventListener('click', spy, {passive: true, capture: false});
+    el1.click();
+    assert.equal(spy.callCount, 1, 'listener called once');
+    el1.removeEventListener('click', spy, {passive: true, capture: false});
     el1.click();
     assert.equal(spy.callCount, 1, 'listener removed (callCount did not increase)');
   });
