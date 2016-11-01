@@ -477,8 +477,8 @@ suite('Patch of addEventListener/removeEventListener', function() {
     assert.equal(spy.callCount, 2, 'called twice');
     el.removeEventListener('test-event-1', spy);
     el.removeEventListener('test-event-2', spy);
-    el.focus();
-    el.blur();
+    el.dispatchEvent(new CustomEvent('test-event-1'));
+    el.dispatchEvent(new CustomEvent('test-event-2'));
     assert.equal(spy.callCount, 2, 'listeners removed (callCount did not increase)');
   });
 
@@ -500,7 +500,7 @@ suite('Patch of addEventListener/removeEventListener', function() {
     var spy = sinon.stub();
     el.addEventListener('click', spy, true /* useCapture */);
     el.click();
-    assert.equal(spy.callCount, 1, 'called twice');
+    assert.equal(spy.callCount, 1, 'listener called');
     el.removeEventListener('click', spy, {capture: true});
     el.click();
     assert.equal(spy.callCount, 1, 'listener removed');
