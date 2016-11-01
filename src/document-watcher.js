@@ -13,8 +13,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 import {nativeShadow} from './style-settings'
 import {StyleTransformer} from './style-transformer'
 
+export let flush = function() {};
+
 if (!nativeShadow) {
-  let observer = new MutationObserver((mxns) => {
+  let handler = (mxns) => {
     mxns.forEach((mxn) => {
       mxn.addedNodes.forEach((n) => {
         if (n.nodeType !== Node.ELEMENT_NODE) {
@@ -30,8 +32,22 @@ if (!nativeShadow) {
           StyleTransformer.dom(n, scope);
         }
       });
+      mxn.removedNodes.forEach((n) => {
+        if (n.nodeType !== Node.ELEMENT_NODE) {
+          return;
+        }
+        var i = Array.from(n.classList).indexOf(StyleTransformer.SCOPE_NAME);
+        if (i >= 0) {
+          let scope = n.classList[i + 1];
+          if (scope) {
+            StyleTransformer.dom(n, scope, true);
+          }
+        }
+      });
     });
-  });
+  };
+
+  let observer = new MutationObserver(handler);
 
   let start = () => observer.observe(document, {childList: true, subtree: true});
   if (window.HTMLImports) {
@@ -44,5 +60,9 @@ if (!nativeShadow) {
         start();
       }
     });
+  }
+
+  flush = function() {
+    handler(observer.takeRecords());
   }
 }
