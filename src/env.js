@@ -22,8 +22,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 import * as utils from './utils'
 import {ShadyRoot, flush, enqueue} from './shady'
 import * as patch from './patch'
-import {getRootNode, filterMutations, observeChildren, unobserveChildren}
-  from './element-mixin'
+import {getRootNode, filterMutations, observeChildren, unobserveChildren,
+  setAttribute} from './element-mixin'
 import * as events from './event-mixin'
 import {tree, getNativeProperty} from './tree'
 
@@ -97,6 +97,18 @@ if (utils.settings.inUse) {
   Object.defineProperty(Node.prototype, 'assignedSlot', {
     get() {
       return this._assignedSlot || null;
+    },
+    configurable: true
+  });
+
+  Element.prototype.setAttribute = setAttribute;
+
+  Object.defineProperty(Element.prototype, 'className', {
+    get() {
+      return this.getAttribute('class');
+    },
+    set(value) {
+      setAttribute.call(this, 'class', value);
     },
     configurable: true
   });

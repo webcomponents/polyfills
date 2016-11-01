@@ -22,7 +22,7 @@ let mixinImpl = {
     let ownerRoot = this.ownerShadyRootForNode(container);
     if (ownerRoot) {
       // optimization: special insertion point tracking
-      if (node.__noInsertionPoint) {
+      if (node.__noInsertionPoint && ownerRoot._clean) {
         ownerRoot._skipUpdateInsertionPoints = true;
       }
       // note: we always need to see if an insertion point is added
@@ -371,6 +371,14 @@ let nativeImportNode = Document.prototype.importNode;
 let nativeSetAttribute = Element.prototype.setAttribute;
 let nativeRemoveAttribute = Element.prototype.removeAttribute;
 
+export let setAttribute = function(attr, value) {
+  if (window.ShadyCSS && attr === 'class') {
+    window.ShadyCSS.setElementClass(this, value);
+  } else {
+    nativeSetAttribute.call(this, attr, value);
+  }
+}
+
 let NodeMixin = {};
 
 Object.defineProperties(NodeMixin, {
@@ -656,7 +664,7 @@ let ElementMixin = {
 
 
   setAttribute(name, value) {
-    nativeSetAttribute.call(this, name, value);
+    setAttribute.call(this, name, value);
     if (!mixinImpl.maybeDistributeParent(this)) {
       mixinImpl.maybeDistributeAttributeChange(this, name);
     }
