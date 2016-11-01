@@ -305,6 +305,27 @@ export let ShadyCSS = {
     // trim whitespace that can come after the `:` in css
     // example: padding: 2px -> " 2px"
     return value.trim();
+  },
+  setElementClass(element, selector) {
+    // clear
+    while (element.classList.length) {
+      element.classList.remove(element.classList[0]);
+    }
+    // add user selector
+    element.classList.add(...selector.split(' '));
+    // scope by shadyRoot
+    let root = element.getRootNode();
+    if (root.host) {
+      element.classList.add(StyleTransformer.SCOPE_NAME, root.host.localName);
+    }
+    // add property scoping
+    if (!this.nativeCss) {
+      let styleInfo = StyleInfo.get(element);
+      if (styleInfo && styleInfo.scopeSelector) {
+        element.classList.add(StyleProperties.XSCOPE_NAME,
+          styleInfo.scopeSelector);
+      }
+    }
   }
 }
 
