@@ -239,16 +239,13 @@ function getEventWrapperId(type, options) {
  * @return {string}
  */
 function normalizedOptions(options) {
-  const capture = shouldCapture(options);
-  let passive = false;
-  let once = false;
-  if (typeof options === 'object') {
-    passive = Boolean(options.passive);
-    once = Boolean(options.once);
+  if (typeof options !== 'object') {
+    return Number(!!options) + '00';
   }
-  return '' + Number(capture) + Number(once) + Number(passive);
+  return '' + Number(!!options.capture) + Number(!!options.once) + Number(!!options.passive);
 }
 
+let nodeId = 0;
 export function addEventListener(type, fn, optionsOrCapture) {
   if (!fn) {
     return;
@@ -268,11 +265,12 @@ export function addEventListener(type, fn, optionsOrCapture) {
   // This event listener might be added multiple times, we need to be able to remove
   // all the wrappers we add.
   const eventWrapperId = getEventWrapperId(type, optionsOrCapture);
-  const wrappersForType = fn.__eventWrappers[eventWrapperId] || new WeakMap();
-  fn.__eventWrappers[eventWrapperId] = wrappersForType;
+  const wrappers = fn.__eventWrappers[eventWrapperId] || {};
+  fn.__eventWrappers[eventWrapperId] = wrappers;
   // If this event listener was already added, no need to create a new wrapper
   // for the function.
-  if (wrappersForType.has(this)) {
+  this.__id = this.__id || this.id || ++nodeId;
+  if (wrappers[this.__id]) {
     return;
   }
 
@@ -300,7 +298,7 @@ export function addEventListener(type, fn, optionsOrCapture) {
     }
   };
   // Store the wrapped function.
-  wrappersForType.set(this, wrappedFn);
+  wrappers[this.__id] = wrappedFn;
 
   if (nonBubblingEventsToRetarget[type]) {
     this.__handlers = this.__handlers || {};
@@ -320,10 +318,14 @@ export function removeEventListener(type, fn, optionsOrCapture) {
     return;
   }
   // Search the wrapped function.
-  const wrappers = fn.__eventWrappers || {};
-  const wrappersForType = wrappers[getEventWrapperId(type, optionsOrCapture)] || new WeakMap();
-  const wrapperFn = wrappersForType.get(this);
-  wrappersForType.delete(this);
+  let wrapperFn = undefined;
+  if (fn.__eventWrappers) {
+    const wrappers = fn.__eventWrappers[getEventWrapperId(type, optionsOrCapture)];
+    if (wrappers) {
+      wrapperFn = wrappers[this.__id];
+      wrappers[this.__id] = undefined;
+    }
+  }
 
   origRemoveEventListener.call(this, type, wrapperFn || fn, optionsOrCapture);
   if (wrapperFn) {
