@@ -52,3 +52,7 @@ customElements.flush();
 
 // some more DOM operations dependent on reactions in the first set
 ```
+
+## Known Issues
+
+Currently compiling Custom Elements down to ES5 will result in issues in browsers that already natively support Custom Elements as classes. We're working on a fix which should be forthcoming soon. In the meantime you can include the [native-shim.js](https://github.com/webcomponents/custom-elements/blob/master/src/native-shim.js).
