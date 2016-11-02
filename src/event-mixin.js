@@ -219,33 +219,34 @@ function shouldCapture(optionsOrCapture) {
 /**
  * Returns an eventWrapperId formatted as "type|options". All these cases return
  * the same result:
- * - getEventWrapperId('some-event', false|null|undefined)
+ * - getEventWrapperId('some-event', false|{}|null|undefined)
  * - getEventWrapperId('some-event', {capture: false|null|undefined})
- * - getEventWrapperId('some-event', {})
  * @param {!string} type
  * @param {(Object|boolean)=} options
  * @return {string}
  */
 function getEventWrapperId(type, options) {
-  return type + '|' + JSON.stringify(normalizedOptions(options));
+  return type + '|' + normalizedOptions(options);
 }
 
 /**
+ * Normalizes the options into a string with format "[CAPTURE][ONCE][PASSIVE]"
+ * e.g.
+ * normalizedOptions(false|{}|undefined|null) -> "000"
+ * normalizedOptions({capture: true}) -> "100"
+ * normalizedOptions({passive: true, once: true}) -> "011"
  * @param {(Object|boolean)=} options
- * @return {Object}
+ * @return {string}
  */
 function normalizedOptions(options) {
-  // Handle the case where `options` is not an object.
-  if (typeof options !== 'object') {
-    options = {
-      capture: shouldCapture(options)
-    };
+  const capture = shouldCapture(options);
+  let passive = false;
+  let once = false;
+  if (typeof options === 'object') {
+    passive = Boolean(options.passive);
+    once = Boolean(options.once);
   }
-  return {
-    capture: Boolean(options.capture),
-    passive: Boolean(options.passive),
-    once: Boolean(options.once)
-  };
+  return '' + Number(capture) + Number(once) + Number(passive);
 }
 
 export function addEventListener(type, fn, optionsOrCapture) {
