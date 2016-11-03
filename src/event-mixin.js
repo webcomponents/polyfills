@@ -235,80 +235,23 @@ function normalizedOptions(optionsOrCapture) {
 }
 
 /**
- * Returns the index of the event wrapper info that match the passed parameters, or
- * -1 if not found.
- * @param {!Node} node
- * @param {!string} type
- * @param {!Function} fn
- * @param {!Object} options
+ * Returns the index of the wrapper, -1 if not found.
+ * @param {Array<Object>=} wrappers
+ * @param {!Object} wrapper
  * @return {number}
  */
-function getEventWrapperIndex(node, type, fn, options) {
-  const wrappers = fn.__eventWrappers || [];
+function getIndexOfWrapper(wrappers, wrapper) {
+  wrappers = wrappers || [];
   for (let i = 0; i < wrappers.length; i++) {
-    if (wrappers[i].node === node &&
-        wrappers[i].type === type &&
-        wrappers[i].options.capture === options.capture &&
-        wrappers[i].options.once === options.once &&
-        wrappers[i].options.passive === options.passive) {
+    if (wrappers[i].node === wrapper.node &&
+        wrappers[i].type === wrapper.type &&
+        wrappers[i].options.capture === wrapper.options.capture &&
+        wrappers[i].options.once === wrapper.options.once &&
+        wrappers[i].options.passive === wrapper.options.passive) {
       return i;
     }
   }
   return -1;
-}
-
-/**
- * Returns if there is already an event wrapper for the passed parameters.
- * @param {!Node} node
- * @param {!string} type
- * @param {!Function} fn
- * @param {!Object} options
- * @return {boolean}
- */
-function hasEventWrapper(node, type, fn, options) {
-  return getEventWrapperIndex(node, type, fn, options) > -1;
-}
-
-/**
- * Stores the wrapperFn and associates it with the node, function, options, and event.
- * @param {!Node} node
- * @param {!string} type
- * @param {!Function} fn
- * @param {!Object} options
- * @param {!Function} wrapperFn
- */
-function setEventWrapper(node, type, fn, options, wrapperFn) {
-  // We assume a callback is used for 1 or few nodes, hence we use an Array
-  // to keep track of the event wrappers.
-  fn.__eventWrappers = fn.__eventWrappers || [];
-  fn.__eventWrappers.push({
-    node: node,
-    type: type,
-    options: options,
-    wrapperFn: wrapperFn
-  });
-}
-
-/**
- * Deletes and returns the wrapperFn associated with the node, function, options, and event.
- * @param {!Node} node
- * @param {!string} type
- * @param {!Function} fn
- * @param {!Object} options
- * @return {Function|undefined}
- */
-function deleteEventWrapper(node, type, fn, options) {
-  let wrapperFn = undefined;
-  const wrapperIdx = getEventWrapperIndex(node, type, fn, options);
-  if (wrapperIdx > -1) {
-    wrapperFn = fn.__eventWrappers[wrapperIdx].wrapperFn;
-    fn.__eventWrappers.splice(wrapperIdx, 1);
-    // Cleanup.
-    if (!fn.__eventWrappers.length) {
-      fn.__eventWrappers = undefined;
-    }
-  }
-  return wrapperFn;
 }
 
 export function addEventListener(type, fn, optionsOrCapture) {
@@ -316,7 +259,18 @@ export function addEventListener(type, fn, optionsOrCapture) {
     return;
   }
   const options = normalizedOptions(optionsOrCapture);
-  if (hasEventWrapper(this, type, fn, options)) {
+  // The callback `fn` might be used for multiple nodes/events. Since we generate
+  // a wrapper function, we need to keep track of it when we remove the listener.
+  // It's more efficient to store the node/type/options information as Array in
+  // `fn` itself rather than the node (we assume that the same callback is used
+  // for few nodes at most, whereas a node will likely have many event listeners).
+  const wrapperIdx = getIndexOfWrapper(fn.__eventWrappers, {
+    node: this,
+    type: type,
+    options: options
+  });
+  // Stop if the wrapper function has already been created.
+  if (wrapperIdx > -1) {
     return;
   }
 
@@ -351,7 +305,14 @@ export function addEventListener(type, fn, optionsOrCapture) {
     }
   };
 
-  setEventWrapper(this, type, fn, options, wrapperFn);
+  // Store the wrapper information.
+  fn.__eventWrappers = fn.__eventWrappers || [];
+  fn.__eventWrappers.push({
+    node: this,
+    type: type,
+    options: options,
+    wrapperFn: wrapperFn
+  });
 
   if (nonBubblingEventsToRetarget[type]) {
     this.__handlers = this.__handlers || {};
@@ -371,8 +332,21 @@ export function removeEventListener(type, fn, optionsOrCapture) {
     return;
   }
   const options = normalizedOptions(optionsOrCapture);
-  // Deletion returns the wrapperFn we just deleted (if any).
-  const wrapperFn = deleteEventWrapper(this, type, fn, options);
+  // Search the wrapped function.
+  let wrapperFn = undefined;
+  const wrapperIdx = getIndexOfWrapper(fn.__eventWrappers, {
+    node: this,
+    type: type,
+    options: options
+  });
+  if (wrapperIdx > -1) {
+    wrapperFn = fn.__eventWrappers[wrapperIdx].wrapperFn;
+    fn.__eventWrappers.splice(wrapperIdx, 1);
+    // Cleanup.
+    if (!fn.__eventWrappers.length) {
+      fn.__eventWrappers = undefined;
+    }
+  }
 
   origRemoveEventListener.call(this, type, wrapperFn || fn, optionsOrCapture);
   if (wrapperFn) {
