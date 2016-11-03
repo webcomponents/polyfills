@@ -10,7 +10,9 @@
 -->
 <title>Custom Elements Tests</title>
 <meta charset="utf-8">
-
+<script>
+  window.customElements.forcePolyfill = true;
+</script>
 <script src="../custom-elements.min.js"></script>
 <script src="../src/htmlelement-instanceof.js"></script>
 <script src="../../web-component-tester/browser.js"></script>
@@ -27,6 +29,7 @@
     'js/shadow-dom.js',
     'js/patching.js',
     'html/imports.html',
+    'html/shim.html',
     // 'chromium/custom-elements/spec/callback.html',
   ]);
 </script>
