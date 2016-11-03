@@ -211,67 +211,38 @@ function retargetNonBubblingEvent(e) {
   }
 }
 
-/**
- * Normalizes the options into a an object with capture, once, passive.
- * @param {(Object|boolean)=} optionsOrCapture
- * @return {Object}
- */
-function normalizedOptions(optionsOrCapture) {
-  let capture, once, passive;
-  if (typeof optionsOrCapture === 'object') {
-    capture = Boolean(optionsOrCapture.capture);
-    once = Boolean(optionsOrCapture.once);
-    passive = Boolean(optionsOrCapture.passive);
-  } else {
-    capture = Boolean(optionsOrCapture);
-    once = false;
-    passive = false;
-  }
-  return {
-    capture: capture,
-    once: once,
-    passive: passive
-  };
-}
-
-/**
- * Returns the index of the wrapper, -1 if not found.
- * @param {Array<Object>=} wrappers
- * @param {!Object} wrapper
- * @return {number}
- */
-function getIndexOfWrapper(wrappers, wrapper) {
-  wrappers = wrappers || [];
-  for (let i = 0; i < wrappers.length; i++) {
-    if (wrappers[i].node === wrapper.node &&
-        wrappers[i].type === wrapper.type &&
-        wrappers[i].options.capture === wrapper.options.capture &&
-        wrappers[i].options.once === wrapper.options.once &&
-        wrappers[i].options.passive === wrapper.options.passive) {
-      return i;
-    }
-  }
-  return -1;
-}
-
 export function addEventListener(type, fn, optionsOrCapture) {
   if (!fn) {
     return;
   }
-  const options = normalizedOptions(optionsOrCapture);
+
   // The callback `fn` might be used for multiple nodes/events. Since we generate
   // a wrapper function, we need to keep track of it when we remove the listener.
   // It's more efficient to store the node/type/options information as Array in
   // `fn` itself rather than the node (we assume that the same callback is used
   // for few nodes at most, whereas a node will likely have many event listeners).
-  const wrapperIdx = getIndexOfWrapper(fn.__eventWrappers, {
-    node: this,
-    type: type,
-    options: options
-  });
-  // Stop if the wrapper function has already been created.
-  if (wrapperIdx > -1) {
-    return;
+  // NOTE(valdrin) invoking external functions is costly, inline has better perf.
+  const options = {};
+  if (typeof optionsOrCapture === 'object') {
+    options.capture = Boolean(optionsOrCapture.capture);
+    options.once = Boolean(optionsOrCapture.once);
+    options.passive = Boolean(optionsOrCapture.passive);
+  } else {
+    options.capture = Boolean(optionsOrCapture);
+    options.once = false;
+    options.passive = false;
+  }
+  if (fn.__eventWrappers) {
+    // Stop if the wrapper function has already been created.
+    for (let i = 0; i < fn.__eventWrappers.length; i++) {
+      if (fn.__eventWrappers[i].node === this &&
+          fn.__eventWrappers[i].type === type &&
+          fn.__eventWrappers[i].options.capture === options.capture &&
+          fn.__eventWrappers[i].options.once === options.once &&
+          fn.__eventWrappers[i].options.passive === options.passive) {
+        return;
+      }
+    }
   }
 
   // TODO: investigate if this is worth tracking, as it is only used for
@@ -304,7 +275,6 @@ export function addEventListener(type, fn, optionsOrCapture) {
       return fn(e);
     }
   };
-
   // Store the wrapper information.
   fn.__eventWrappers = fn.__eventWrappers || [];
   fn.__eventWrappers.push({
@@ -331,20 +301,35 @@ export function removeEventListener(type, fn, optionsOrCapture) {
   if (!fn) {
     return;
   }
-  const options = normalizedOptions(optionsOrCapture);
+
+  // NOTE(valdrin) invoking external functions is costly, inline has better perf.
+  const options = {};
+  if (typeof optionsOrCapture === 'object') {
+    options.capture = Boolean(optionsOrCapture.capture);
+    options.once = Boolean(optionsOrCapture.once);
+    options.passive = Boolean(optionsOrCapture.passive);
+  } else {
+    options.capture = Boolean(optionsOrCapture);
+    options.once = false;
+    options.passive = false;
+  }
   // Search the wrapped function.
   let wrapperFn = undefined;
-  const wrapperIdx = getIndexOfWrapper(fn.__eventWrappers, {
-    node: this,
-    type: type,
-    options: options
-  });
-  if (wrapperIdx > -1) {
-    wrapperFn = fn.__eventWrappers[wrapperIdx].wrapperFn;
-    fn.__eventWrappers.splice(wrapperIdx, 1);
-    // Cleanup.
-    if (!fn.__eventWrappers.length) {
-      fn.__eventWrappers = undefined;
+  if (fn.__eventWrappers) {
+    for (let i = 0; i < fn.__eventWrappers.length; i++) {
+      if (fn.__eventWrappers[i].node === this &&
+          fn.__eventWrappers[i].type === type &&
+          fn.__eventWrappers[i].options.capture === options.capture &&
+          fn.__eventWrappers[i].options.once === options.once &&
+          fn.__eventWrappers[i].options.passive === options.passive) {
+        wrapperFn = fn.__eventWrappers[i].wrapperFn;
+        fn.__eventWrappers.splice(i, 1);
+        // Cleanup.
+        if (!fn.__eventWrappers.length) {
+          fn.__eventWrappers = undefined;
+        }
+        break;
+      }
     }
   }
 
