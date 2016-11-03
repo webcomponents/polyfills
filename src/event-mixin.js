@@ -222,39 +222,34 @@ export function addEventListener(type, fn, optionsOrCapture) {
   // `fn` itself rather than the node (we assume that the same callback is used
   // for few nodes at most, whereas a node will likely have many event listeners).
   // NOTE(valdrin) invoking external functions is costly, inline has better perf.
-  const options = {};
+  let capture, once, passive;
   if (typeof optionsOrCapture === 'object') {
-    options.capture = Boolean(optionsOrCapture.capture);
-    options.once = Boolean(optionsOrCapture.once);
-    options.passive = Boolean(optionsOrCapture.passive);
+    capture = Boolean(optionsOrCapture.capture);
+    once = Boolean(optionsOrCapture.once);
+    passive = Boolean(optionsOrCapture.passive);
   } else {
-    options.capture = Boolean(optionsOrCapture);
-    options.once = false;
-    options.passive = false;
+    capture = Boolean(optionsOrCapture);
+    once = false;
+    passive = false;
   }
   if (fn.__eventWrappers) {
     // Stop if the wrapper function has already been created.
     for (let i = 0; i < fn.__eventWrappers.length; i++) {
       if (fn.__eventWrappers[i].node === this &&
           fn.__eventWrappers[i].type === type &&
-          fn.__eventWrappers[i].options.capture === options.capture &&
-          fn.__eventWrappers[i].options.once === options.once &&
-          fn.__eventWrappers[i].options.passive === options.passive) {
+          fn.__eventWrappers[i].capture === capture &&
+          fn.__eventWrappers[i].once === once &&
+          fn.__eventWrappers[i].passive === passive) {
         return;
       }
     }
+  } else {
+    fn.__eventWrappers = [];
   }
-
-  // TODO: investigate if this is worth tracking, as it is only used for
-  // deciding if the `slotchanged` event should be fired
-  if (!this.__eventListenerCount) {
-    this.__eventListenerCount = 0;
-  }
-  this.__eventListenerCount++;
 
   const wrapperFn = function(e) {
     // Support `once` option.
-    if (options.once) {
+    if (once) {
       this.removeEventListener(type, fn, optionsOrCapture);
     }
     if (!e.__target) {
@@ -276,18 +271,19 @@ export function addEventListener(type, fn, optionsOrCapture) {
     }
   };
   // Store the wrapper information.
-  fn.__eventWrappers = fn.__eventWrappers || [];
   fn.__eventWrappers.push({
     node: this,
     type: type,
-    options: options,
+    capture: capture,
+    once: once,
+    passive: passive,
     wrapperFn: wrapperFn
   });
 
   if (nonBubblingEventsToRetarget[type]) {
     this.__handlers = this.__handlers || {};
     this.__handlers[type] = this.__handlers[type] || {capture: [], bubble: []};
-    if (options.capture) {
+    if (capture) {
       this.__handlers[type].capture.push(wrapperFn);
     } else {
       this.__handlers[type].bubble.push(wrapperFn);
@@ -303,15 +299,15 @@ export function removeEventListener(type, fn, optionsOrCapture) {
   }
 
   // NOTE(valdrin) invoking external functions is costly, inline has better perf.
-  const options = {};
+  let capture, once, passive;
   if (typeof optionsOrCapture === 'object') {
-    options.capture = Boolean(optionsOrCapture.capture);
-    options.once = Boolean(optionsOrCapture.once);
-    options.passive = Boolean(optionsOrCapture.passive);
+    capture = Boolean(optionsOrCapture.capture);
+    once = Boolean(optionsOrCapture.once);
+    passive = Boolean(optionsOrCapture.passive);
   } else {
-    options.capture = Boolean(optionsOrCapture);
-    options.once = false;
-    options.passive = false;
+    capture = Boolean(optionsOrCapture);
+    once = false;
+    passive = false;
   }
   // Search the wrapped function.
   let wrapperFn = undefined;
@@ -319,9 +315,9 @@ export function removeEventListener(type, fn, optionsOrCapture) {
     for (let i = 0; i < fn.__eventWrappers.length; i++) {
       if (fn.__eventWrappers[i].node === this &&
           fn.__eventWrappers[i].type === type &&
-          fn.__eventWrappers[i].options.capture === options.capture &&
-          fn.__eventWrappers[i].options.once === options.once &&
-          fn.__eventWrappers[i].options.passive === options.passive) {
+          fn.__eventWrappers[i].capture === capture &&
+          fn.__eventWrappers[i].once === once &&
+          fn.__eventWrappers[i].passive === passive) {
         wrapperFn = fn.__eventWrappers[i].wrapperFn;
         fn.__eventWrappers.splice(i, 1);
         // Cleanup.
@@ -335,12 +331,11 @@ export function removeEventListener(type, fn, optionsOrCapture) {
 
   origRemoveEventListener.call(this, type, wrapperFn || fn, optionsOrCapture);
   if (wrapperFn) {
-    this.__eventListenerCount--;
     if (nonBubblingEventsToRetarget[type]) {
       if (this.__handlers) {
         if (this.__handlers[type]) {
           let idx;
-          if (options.capture) {
+          if (capture) {
             idx = this.__handlers[type].capture.indexOf(wrapperFn);
             if (idx > -1) {
               this.__handlers[type].capture.splice(idx, 1);
