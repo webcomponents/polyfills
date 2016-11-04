@@ -283,11 +283,7 @@ export function addEventListener(type, fn, optionsOrCapture) {
   if (nonBubblingEventsToRetarget[type]) {
     this.__handlers = this.__handlers || {};
     this.__handlers[type] = this.__handlers[type] || {capture: [], bubble: []};
-    if (capture) {
-      this.__handlers[type].capture.push(wrapperFn);
-    } else {
-      this.__handlers[type].bubble.push(wrapperFn);
-    }
+    this.__handlers[type][capture ? 'capture' : 'bubble'].push(wrapperFn);
   } else {
     origAddEventListener.call(this, type, wrapperFn, optionsOrCapture);
   }
@@ -318,8 +314,7 @@ export function removeEventListener(type, fn, optionsOrCapture) {
           fn.__eventWrappers[i].capture === capture &&
           fn.__eventWrappers[i].once === once &&
           fn.__eventWrappers[i].passive === passive) {
-        wrapperFn = fn.__eventWrappers[i].wrapperFn;
-        fn.__eventWrappers.splice(i, 1);
+        wrapperFn = fn.__eventWrappers.splice(i, 1)[0].wrapperFn;
         // Cleanup.
         if (!fn.__eventWrappers.length) {
           fn.__eventWrappers = undefined;
@@ -330,24 +325,12 @@ export function removeEventListener(type, fn, optionsOrCapture) {
   }
 
   origRemoveEventListener.call(this, type, wrapperFn || fn, optionsOrCapture);
-  if (wrapperFn) {
-    if (nonBubblingEventsToRetarget[type]) {
-      if (this.__handlers) {
-        if (this.__handlers[type]) {
-          let idx;
-          if (capture) {
-            idx = this.__handlers[type].capture.indexOf(wrapperFn);
-            if (idx > -1) {
-              this.__handlers[type].capture.splice(idx, 1);
-            }
-          } else {
-            idx = this.__handlers[type].bubble.indexOf(wrapperFn);
-            if (idx > -1) {
-              this.__handlers[type].bubble.splice(idx, 1);
-            }
-          }
-        }
-      }
+  if (wrapperFn && nonBubblingEventsToRetarget[type] &&
+      this.__handlers && this.__handlers[type]) {
+    const arr = this.__handlers[type][capture ? 'capture' : 'bubble'];
+    const idx = arr.indexOf(wrapperFn);
+    if (idx > -1) {
+      arr.splice(idx, 1);
     }
   }
 }
