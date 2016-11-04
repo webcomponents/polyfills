@@ -196,17 +196,30 @@ function retargetNonBubblingEvent(e) {
   });
   for (let i = path.length - 1; i >= 0; i--) {
     node = path[i];
+    // capture phase fires all capture handlers
     fireHandlers(e, node, 'capture');
     if (e.__propagationStopped) {
       return;
     }
   }
-  Object.defineProperty(e, 'eventPhase', {value: Event.BUBBLING_PHASE});
+
+  // set the event phase to `AT_TARGET` as in spec
+  Object.defineProperty(e, 'eventPhase', {value: Event.AT_TARGET});
+
+  // the event only needs to be fired when owner roots change when iterating the event path
+  // keep track of the last seen owner root
+  let lastFiredRoot;
   for (let i = 0; i < path.length; i++) {
     node = path[i];
-    fireHandlers(e, node, 'bubble');
-    if (e.__propagationStopped) {
-      return;
+    if (i === 0 || (node.shadowRoot && node.shadowRoot === lastFiredRoot)) {
+      fireHandlers(e, node, 'bubble');
+      // don't bother with window, it doesn't have `getRootNode` and will be last in the path anyway
+      if (node !== window) {
+        lastFiredRoot = node.getRootNode();
+      }
+      if (e.__propagationStopped) {
+        return;
+      }
     }
   }
 }
