@@ -60,6 +60,11 @@ export function mixin(target, source) {
   return target;
 }
 
+let setPrototypeOf = Object.setPrototypeOf || function(obj, proto) {
+  obj.__proto__ = proto;
+  return obj;
+}
+
 export function patchPrototype(obj, mixin) {
   let proto = Object.getPrototypeOf(obj);
   if (!proto.hasOwnProperty('__patchProto')) {
@@ -68,12 +73,12 @@ export function patchPrototype(obj, mixin) {
     extend(patchProto, mixin);
     proto.__patchProto = patchProto;
   }
-  Object.setPrototypeOf(obj, proto.__patchProto);
+  setPrototypeOf(obj, proto.__patchProto);
 }
 
 export function unpatchPrototype(obj) {
   if (obj.__sourceProto) {
-    Object.setPrototypeOf(obj, obj.__sourceProto);
+    setPrototypeOf(obj, obj.__sourceProto);
   }
 }
 
