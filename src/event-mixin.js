@@ -211,22 +211,47 @@ function retargetNonBubblingEvent(e) {
   }
 }
 
-function shouldCapture(optionsOrCapture) {
-  return Boolean(typeof optionsOrCapture === 'object' ?
-    optionsOrCapture.capture : optionsOrCapture);
-}
-
 export function addEventListener(type, fn, optionsOrCapture) {
   if (!fn) {
     return;
   }
-  // TODO: investigate if this is worth tracking, as it is only used for
-  // deciding if the `slotchanged` event should be fired
-  if (!this.__eventListenerCount) {
-    this.__eventListenerCount = 0;
+
+  // The callback `fn` might be used for multiple nodes/events. Since we generate
+  // a wrapper function, we need to keep track of it when we remove the listener.
+  // It's more efficient to store the node/type/options information as Array in
+  // `fn` itself rather than the node (we assume that the same callback is used
+  // for few nodes at most, whereas a node will likely have many event listeners).
+  // NOTE(valdrin) invoking external functions is costly, inline has better perf.
+  let capture, once, passive;
+  if (typeof optionsOrCapture === 'object') {
+    capture = Boolean(optionsOrCapture.capture);
+    once = Boolean(optionsOrCapture.once);
+    passive = Boolean(optionsOrCapture.passive);
+  } else {
+    capture = Boolean(optionsOrCapture);
+    once = false;
+    passive = false;
   }
-  this.__eventListenerCount++;
-  let wrappedFn = function(e) {
+  if (fn.__eventWrappers) {
+    // Stop if the wrapper function has already been created.
+    for (let i = 0; i < fn.__eventWrappers.length; i++) {
+      if (fn.__eventWrappers[i].node === this &&
+          fn.__eventWrappers[i].type === type &&
+          fn.__eventWrappers[i].capture === capture &&
+          fn.__eventWrappers[i].once === once &&
+          fn.__eventWrappers[i].passive === passive) {
+        return;
+      }
+    }
+  } else {
+    fn.__eventWrappers = [];
+  }
+
+  const wrapperFn = function(e) {
+    // Support `once` option.
+    if (once) {
+      this.removeEventListener(type, fn, optionsOrCapture);
+    }
     if (!e.__target) {
       e.__target = e.target;
       e.__relatedTarget = e.relatedTarget;
@@ -245,17 +270,22 @@ export function addEventListener(type, fn, optionsOrCapture) {
       return fn(e);
     }
   };
-  fn.__eventWrapper = wrappedFn;
+  // Store the wrapper information.
+  fn.__eventWrappers.push({
+    node: this,
+    type: type,
+    capture: capture,
+    once: once,
+    passive: passive,
+    wrapperFn: wrapperFn
+  });
+
   if (nonBubblingEventsToRetarget[type]) {
     this.__handlers = this.__handlers || {};
     this.__handlers[type] = this.__handlers[type] || {capture: [], bubble: []};
-    if (shouldCapture(optionsOrCapture)) {
-      this.__handlers[type].capture.push(wrappedFn);
-    } else {
-      this.__handlers[type].bubble.push(wrappedFn);
-    }
+    this.__handlers[type][capture ? 'capture' : 'bubble'].push(wrapperFn);
   } else {
-    origAddEventListener.call(this, type, wrappedFn, optionsOrCapture);
+    origAddEventListener.call(this, type, wrapperFn, optionsOrCapture);
   }
 }
 
@@ -263,28 +293,44 @@ export function removeEventListener(type, fn, optionsOrCapture) {
   if (!fn) {
     return;
   }
-  let wrapper = fn.__eventWrapper;
-  origRemoveEventListener.call(this, type, wrapper || fn, optionsOrCapture);
-  if (wrapper) {
-    fn.__eventWrapper = null;
-    this.__eventListenerCount--;
-    if (nonBubblingEventsToRetarget[type]) {
-      if (this.__handlers) {
-        if (this.__handlers[type]) {
-          let idx;
-          if (shouldCapture(optionsOrCapture)) {
-            idx = this.__handlers[type].capture.indexOf(wrapper);
-            if (idx > -1) {
-              this.__handlers[type].capture.splice(idx, 1);
-            }
-          } else {
-            idx = this.__handlers[type].bubble.indexOf(wrapper);
-            if (idx > -1) {
-              this.__handlers[type].bubble.splice(idx, 1);
-            }
-          }
+
+  // NOTE(valdrin) invoking external functions is costly, inline has better perf.
+  let capture, once, passive;
+  if (typeof optionsOrCapture === 'object') {
+    capture = Boolean(optionsOrCapture.capture);
+    once = Boolean(optionsOrCapture.once);
+    passive = Boolean(optionsOrCapture.passive);
+  } else {
+    capture = Boolean(optionsOrCapture);
+    once = false;
+    passive = false;
+  }
+  // Search the wrapped function.
+  let wrapperFn = undefined;
+  if (fn.__eventWrappers) {
+    for (let i = 0; i < fn.__eventWrappers.length; i++) {
+      if (fn.__eventWrappers[i].node === this &&
+          fn.__eventWrappers[i].type === type &&
+          fn.__eventWrappers[i].capture === capture &&
+          fn.__eventWrappers[i].once === once &&
+          fn.__eventWrappers[i].passive === passive) {
+        wrapperFn = fn.__eventWrappers.splice(i, 1)[0].wrapperFn;
+        // Cleanup.
+        if (!fn.__eventWrappers.length) {
+          fn.__eventWrappers = undefined;
         }
+        break;
       }
+    }
+  }
+
+  origRemoveEventListener.call(this, type, wrapperFn || fn, optionsOrCapture);
+  if (wrapperFn && nonBubblingEventsToRetarget[type] &&
+      this.__handlers && this.__handlers[type]) {
+    const arr = this.__handlers[type][capture ? 'capture' : 'bubble'];
+    const idx = arr.indexOf(wrapperFn);
+    if (idx > -1) {
+      arr.splice(idx, 1);
     }
   }
 }
