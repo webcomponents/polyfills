@@ -17,34 +17,38 @@ export let flush = function() {};
 
 if (!nativeShadow) {
   let handler = (mxns) => {
-    mxns.forEach((mxn) => {
+    for (let x=0; x < mxns.length; x++) {
+      let mxn = mxns[x];
       for (let i=0; i < mxn.addedNodes.length; i++) {
         let n = mxn.addedNodes[i];
-        if (n.nodeType !== Node.ELEMENT_NODE ||
-            n.classList.contains('style-scope')) {
-          continue;
-        }
-        let root = n.getRootNode();
-        if (root.nodeType === Node.DOCUMENT_FRAGMENT_NODE) {
-          let host = root.host;
-          let scope = host.is || host.localName;
-          StyleTransformer.dom(n, scope);
+        // ensure node is still connected
+        if (n.nodeType === Node.ELEMENT_NODE && n.isConnected &&
+            !n.classList.contains(StyleTransformer.SCOPE_NAME)) {
+          let root = n.getRootNode();
+          if (root.nodeType === Node.DOCUMENT_FRAGMENT_NODE) {
+            let host = root.host;
+            let scope = host.is || host.localName;
+            StyleTransformer.dom(n, scope);
+          }
         }
       }
       for (let i=0; i < mxn.removedNodes.length; i++) {
         let n = mxn.removedNodes[i];
-        if (n.nodeType !== Node.ELEMENT_NODE) {
-          continue;
-        }
-        let classIdx = Array.from(n.classList).indexOf(StyleTransformer.SCOPE_NAME);
-        if (classIdx >= 0) {
-          let scope = n.classList[classIdx + 1];
-          if (scope) {
-            StyleTransformer.dom(n, scope, true);
+        // ensure node is still not connected.
+        if (n.nodeType === Node.ELEMENT_NODE && !n.isConnected) {
+          let classIdx = Array.from(n.classList)
+            .indexOf(StyleTransformer.SCOPE_NAME);
+          if (classIdx >= 0) {
+            // NOTE: relies on the scoping class always being adjacent to the
+            // SCOPE_NAME class.
+            let scope = n.classList[classIdx + 1];
+            if (scope) {
+              StyleTransformer.dom(n, scope, true);
+            }
           }
         }
       }
-    });
+    }
   };
 
   let observer = new MutationObserver(handler);

@@ -308,19 +308,25 @@ export let ShadyCSS = {
     // example: padding: 2px -> " 2px"
     return value.trim();
   },
-  setElementClass(element, selector) {
-    // clear
+  // given an element and a classString, replaces
+  // the element's class with the provided classString and adds
+  // any necessary ShadyCSS static and property based scoping selectors
+  // NOTE: this method is suitable to be called in an environment in which
+  // setAttribute('class', ...) and className setter have been overridden so
+  // it cannot rely on those methods.
+  setElementClass(element, classString) {
+    // use classList to clear existing classes
     while (element.classList.length) {
       element.classList.remove(element.classList[0]);
     }
-    // add user selector
-    element.classList.add(...selector.split(' '));
-    // scope by shadyRoot
+    // add user classString
+    element.classList.add(...classString.split(' '));
+    // add static scoping: scope by shadyRoot
     let root = element.getRootNode();
     if (root.host) {
       element.classList.add(StyleTransformer.SCOPE_NAME, root.host.localName);
     }
-    // add property scoping
+    // add property scoping: scope by special selector
     if (!this.nativeCss) {
       let styleInfo = StyleInfo.get(element);
       if (styleInfo && styleInfo.scopeSelector) {
