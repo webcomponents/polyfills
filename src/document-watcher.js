@@ -21,21 +21,22 @@ if (!nativeShadow) {
       let mxn = mxns[x];
       for (let i=0; i < mxn.addedNodes.length; i++) {
         let n = mxn.addedNodes[i];
-        // ensure node is still connected
-        if (n.nodeType === Node.ELEMENT_NODE && n.isConnected &&
+        if (n.nodeType === Node.ELEMENT_NODE &&
             !n.classList.contains(StyleTransformer.SCOPE_NAME)) {
           let root = n.getRootNode();
           if (root.nodeType === Node.DOCUMENT_FRAGMENT_NODE) {
+            // may no longer be in a shadowroot
             let host = root.host;
-            let scope = host.is || host.localName;
-            StyleTransformer.dom(n, scope);
+            if (host) {
+              let scope = host.is || host.localName;
+              StyleTransformer.dom(n, scope);
+            }
           }
         }
       }
       for (let i=0; i < mxn.removedNodes.length; i++) {
         let n = mxn.removedNodes[i];
-        // ensure node is still not connected.
-        if (n.nodeType === Node.ELEMENT_NODE && !n.isConnected) {
+        if (n.nodeType === Node.ELEMENT_NODE) {
           let classIdx = Array.from(n.classList)
             .indexOf(StyleTransformer.SCOPE_NAME);
           if (classIdx >= 0) {
