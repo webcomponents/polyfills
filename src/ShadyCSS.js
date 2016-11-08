@@ -334,6 +334,9 @@ export let ShadyCSS = {
           styleInfo.scopeSelector);
       }
     }
+  },
+  _styleInfoForNode(node) {
+    return StyleInfo.get(node);
   }
 }
 
