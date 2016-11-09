@@ -33,6 +33,8 @@ import {nativeShadow} from './style-settings'
 * :host(:dir[rtl]) -> scopeName:dir(rtl) -> [dir="rtl"] scopeName, scopeName[dir="rtl"]
 
 */
+let SCOPE_NAME = 'style-scope';
+
 export let StyleTransformer = {
 
   // Given a node and scope name, add a scoping class to each node
@@ -52,7 +54,7 @@ export let StyleTransformer = {
     }
     let c$ = (node.localName === 'template') ?
       (node.content || node._content).childNodes :
-      node.children;
+      node.children || node.childNodes;
     if (c$) {
       for (let i=0; i<c$.length; i++) {
         this._transformDom(c$[i], selector, shouldRemoveScope);
@@ -264,11 +266,11 @@ export let StyleTransformer = {
     return selector.match(SLOTTED) ?
       this._transformComplexSelector(selector, SCOPE_DOC_SELECTOR) :
       this._transformSimpleSelector(selector.trim(), SCOPE_DOC_SELECTOR);
-  }
+  },
+  SCOPE_NAME: SCOPE_NAME
 };
 
 let NTH = /:(nth[-\w]+)\(([^)]+)\)/;
-let SCOPE_NAME = 'style-scope';
 let SCOPE_DOC_SELECTOR = `:not(.${SCOPE_NAME})`;
 let COMPLEX_SELECTOR_SEP = ',';
 let SIMPLE_SELECTOR_SEP = /(^|[\s>+~]+)((?:\[.+?\]|[^\s>+~=\[])+)/g;

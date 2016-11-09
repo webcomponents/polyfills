@@ -228,7 +228,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     suite('invalidation on new definitions', function() {
       var style, ast, template;
       suiteSetup(function() {
-        template = document.querySelector('template#element');
+        template = document.querySelector('template#element').cloneNode(true);
         window.ShadyCSS.prepareTemplate(template, 'x-element');
         var info = prep('element', 'x-element');
         style = info.style;

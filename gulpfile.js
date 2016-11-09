@@ -25,7 +25,7 @@ let rename = require('gulp-rename');
 
 let babelSettings = {presets: [['es2015', {modules: false}]], plugins: ['external-helpers']};
 
-gulp.task('build', () => {
+gulp.task('closure', () => {
   return gulp.src(['./src/*.js'], {base: './'})
     .pipe(sourcemaps.init())
     .pipe(closureCompiler({
@@ -95,4 +95,4 @@ gulp.task('test-modules', moduleTasks);
 
 gulp.task('clean-test-modules', () => del(['tests/module/generated']));
 
-gulp.task('default', ['build', 'test-modules']);
+gulp.task('default', ['debug', 'test-modules']);
