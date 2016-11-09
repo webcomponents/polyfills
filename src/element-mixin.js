@@ -33,7 +33,6 @@ let mixinImpl = {
       if (ipAdded) {
         ownerRoot._skipUpdateInsertionPoints = false;
       }
-      this._addedNode(node, ownerRoot);
     }
     if (tree.Logical.hasChildNodes(container)) {
       tree.Logical.recordInsertBefore(node, container, ref_node);
@@ -66,9 +65,6 @@ let mixinImpl = {
       }
     }
     this._removeOwnerShadyRoot(node);
-    if (ownerRoot) {
-      this._removedNode(node, ownerRoot);
-    }
     return distributed;
   },
 
@@ -199,23 +195,6 @@ let mixinImpl = {
     return node && node.shadyRoot &&
       node.shadyRoot.hasInsertionPoint();
   },
-
-  // TODO(sorvell): needed for style scoping, use MO?
-  _addedNode() {},
-  _removedNode() {},
-  /*
-  _addedNode(node, root) {
-    // if (ShadyDOM.addedNode) {
-    //   ShadyDOM.addedNode(node, root);
-    // }
-  },
-
-  _removedNode(node, root) {
-    if (ShadyDOM.removedNode) {
-      ShadyDOM.removedNode(node, root);
-    }
-  },
-  */
 
   _removeDistributedChildren(root, container) {
     let hostNeedsDist;
