@@ -164,7 +164,9 @@ export let StyleTransformer = {
   _transformComplexSelector: function(selector, scope, hostScope) {
     let stop = false;
     selector = selector.trim();
-    selector = selector.replace(SLOTTED_START, `${HOST} $1`)
+    // Remove spaces inside of selectors like `:nth-of-type` because it confuses SIMPLE_SELECTOR_SEP
+    selector = selector.replace(NTH, (m, type, inner) => `:${type}(${inner.replace(/\s/g, '')})`);
+    selector = selector.replace(SLOTTED_START, `${HOST} $1`);
     selector = selector.replace(SIMPLE_SELECTOR_SEP, (m, c, s) => {
       if (!stop) {
         let info = this._transformCompoundSelector(s, c, scope, hostScope);
@@ -268,6 +270,7 @@ export let StyleTransformer = {
   SCOPE_NAME: SCOPE_NAME
 };
 
+let NTH = /:(nth[-\w]+)\(([^)]+)\)/;
 let SCOPE_DOC_SELECTOR = `:not(.${SCOPE_NAME})`;
 let COMPLEX_SELECTOR_SEP = ',';
 let SIMPLE_SELECTOR_SEP = /(^|[\s>+~]+)((?:\[.+?\]|[^\s>+~=\[])+)/g;
