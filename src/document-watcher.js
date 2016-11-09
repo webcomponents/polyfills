@@ -53,15 +53,16 @@ if (!nativeShadow) {
   };
 
   let observer = new MutationObserver(handler);
+  const startState = 'interactive';
 
-  let start = () => observer.observe(document, {childList: true, subtree: true});
+  let start = () => observer.observe(document.body, {childList: true, subtree: true});
   if (window.HTMLImports) {
     window.HTMLImports.whenReady(start);
-  } else if (document.readyState === 'complete') {
+  } else if (document.readyState === startState) {
     requestAnimationFrame(start);
   } else {
     document.addEventListener('readystatechange', function() {
-      if (document.readyState === 'complete') {
+      if (document.readyState === startState) {
         start();
       }
     });
