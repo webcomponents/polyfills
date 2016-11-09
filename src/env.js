@@ -108,7 +108,7 @@ if (utils.settings.inUse) {
       return this.getAttribute('class');
     },
     set(value) {
-      setAttribute.call(this, 'class', value);
+      this.setAttribute('class', value);
     },
     configurable: true
   });

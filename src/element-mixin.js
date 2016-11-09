@@ -265,10 +265,11 @@ let mixinImpl = {
   },
 
   maybeDistributeAttributeChange(node, name) {
-    let distribute = (node.localName === 'slot' && name === 'name');
-    if (distribute) {
-      let root = this.getRootNode(node);
-      if (root.update) {
+    if (name === 'slot') {
+      this.maybeDistributeParent(node);
+    } else if (node.localName === 'slot' && name === 'name') {
+      let root = this.ownerShadyRootForNode(node);
+      if (root) {
         root.update();
       }
     }
@@ -644,16 +645,12 @@ let ElementMixin = {
 
   setAttribute(name, value) {
     setAttribute.call(this, name, value);
-    if (!mixinImpl.maybeDistributeParent(this)) {
-      mixinImpl.maybeDistributeAttributeChange(this, name);
-    }
+    mixinImpl.maybeDistributeAttributeChange(this, name);
   },
 
   removeAttribute(name) {
     nativeRemoveAttribute.call(this, name);
-    if (!mixinImpl.maybeDistributeParent(this)) {
-      mixinImpl.maybeDistributeAttributeChange(this, name);
-    }
+    mixinImpl.maybeDistributeAttributeChange(this, name);
   }
 
 };
