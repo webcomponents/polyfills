@@ -320,7 +320,10 @@ export let ShadyCSS = {
       element.classList.remove(element.classList[0]);
     }
     // add user classString
-    element.classList.add(...classString.split(' '));
+    let classes = classString.split(' ').filter((c) => c);
+    if (classes.length) {
+      element.classList.add(...classes);
+    }
     // add static scoping: scope by shadyRoot
     let root = element.getRootNode();
     if (root.host) {

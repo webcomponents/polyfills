@@ -605,6 +605,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       assertComputed(d, '0px');
       d.setAttribute('class', 'computed');
       assertComputed(d, '15px');
+      d.setAttribute('class', '', 'empty class attr does not remove class');
+      assertComputed(d, '0px');
+      d.setAttribute('class', 'computed ', 'class attr with space does not apply');
+      assertComputed(d, '15px');
       document.body.removeChild(el);
     });
 
