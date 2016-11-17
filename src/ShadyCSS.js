@@ -324,6 +324,8 @@ export let ShadyCSS = {
       // if scope not found and element is currently scoped,
       // use existing scope (helps catch elements that set `class` while
       // inside a disconnected dom fragment)
+      // NOTE: relies on the scoping class always being adjacent to the
+      // SCOPE_NAME class.
       if (!scopeName && k == StyleTransformer.SCOPE_NAME) {
         scopeName = element.classList[1];
       }
@@ -331,12 +333,13 @@ export let ShadyCSS = {
     }
     // add user classString
     let classes = classString.split(' ').filter((c) => c);
+    if (scopeName) {
+      classes.push(StyleTransformer.SCOPE_NAME, scopeName);
+    }
     if (classes.length) {
       element.classList.add(...classes);
     }
-    if (scopeName) {
-      element.classList.add(StyleTransformer.SCOPE_NAME, scopeName);
-    }
+
     // add property scoping: scope by special selector
     if (!this.nativeCss) {
       let styleInfo = StyleInfo.get(element);
