@@ -19,6 +19,10 @@ if (!nativeShadow) {
   let handler = (mxns) => {
     for (let x=0; x < mxns.length; x++) {
       let mxn = mxns[x];
+      if (mxn.target === document.documentElement ||
+        mxn.target === document.head) {
+        continue;
+      }
       for (let i=0; i < mxn.addedNodes.length; i++) {
         let n = mxn.addedNodes[i];
         if (n.nodeType === Node.ELEMENT_NODE &&
@@ -53,19 +57,39 @@ if (!nativeShadow) {
   };
 
   let observer = new MutationObserver(handler);
-  const startState = 'interactive';
-
-  let start = () => observer.observe(document.body, {childList: true, subtree: true});
-  if (window.HTMLImports) {
-    window.HTMLImports.whenReady(start);
-  } else if (document.readyState === startState) {
-    requestAnimationFrame(start);
+  let start = (node) => {
+    observer.observe(node, {childList: true, subtree: true});
+  }
+  let nativeCustomElements = (window.customElements &&
+    !window.customElements.flush);
+  // need to start immediately with native custom elements
+  // TODO(dfreedm): with polyfilled HTMLImports and native custom elements
+  // excessive mutations may be observed; this can be optimized via cooperation
+  // with the HTMLImports polyfill.
+  if (nativeCustomElements) {
+    start(document);
   } else {
-    document.addEventListener('readystatechange', function() {
-      if (document.readyState === startState) {
-        start();
-      }
-    });
+    let delayedStart = () => {
+      start(document.body);
+    }
+    // use polyfill timing if it's available
+    if (window.HTMLImports) {
+      window.HTMLImports.whenReady(delayedStart);
+    // otherwise push beyond native imports being ready
+    // which requires RAF + readystate interactive.
+    } else {
+      requestAnimationFrame(function() {
+        if (document.readyState === 'loading') {
+          let listener = function() {
+            delayedStart();
+            document.removeEventListener('readystatechange', listener);
+          }
+          document.addEventListener('readystatechange', listener);
+        } else {
+          delayedStart();
+        }
+      });
+    }
   }
 
   flush = function() {
