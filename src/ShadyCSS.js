@@ -315,17 +315,31 @@ export let ShadyCSS = {
   // setAttribute('class', ...) and className setter have been overridden so
   // it cannot rely on those methods.
   setElementClass(element, classString) {
+    // scope by shadyRoot host
+    let root = element.getRootNode();
+    let scopeName = root.host && root.host.localName;
     // use classList to clear existing classes
     while (element.classList.length) {
-      element.classList.remove(element.classList[0]);
+      let k = element.classList[0];
+      // if scope not found and element is currently scoped,
+      // use existing scope (helps catch elements that set `class` while
+      // inside a disconnected dom fragment)
+      // NOTE: relies on the scoping class always being adjacent to the
+      // SCOPE_NAME class.
+      if (!scopeName && k == StyleTransformer.SCOPE_NAME) {
+        scopeName = element.classList[1];
+      }
+      element.classList.remove(k);
     }
     // add user classString
-    element.classList.add(...classString.split(' '));
-    // add static scoping: scope by shadyRoot
-    let root = element.getRootNode();
-    if (root.host) {
-      element.classList.add(StyleTransformer.SCOPE_NAME, root.host.localName);
+    let classes = classString.split(' ').filter((c) => c);
+    if (scopeName) {
+      classes.push(StyleTransformer.SCOPE_NAME, scopeName);
     }
+    if (classes.length) {
+      element.classList.add(...classes);
+    }
+
     // add property scoping: scope by special selector
     if (!this.nativeCss) {
       let styleInfo = StyleInfo.get(element);
