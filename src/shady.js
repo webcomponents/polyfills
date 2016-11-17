@@ -49,89 +49,82 @@ let ShadyMixin = {
     tree.Logical.saveChildNodes(host);
     tree.Logical.saveChildNodes(this);
     // state flags
-    this._clean = true;
+    this._renderPending = false;
     this._hasRendered = false;
     this._distributor = new Distributor(this);
     this.update();
   },
 
-  // async render the "top" distributor (this is all that is needed to
-  // distribute this host).
+  // async render
   update() {
-    // TODO(sorvell): instead the root should always be enqueued to helps record that it is dirty.
-    // Then, in `render`, the top most (in the distribution tree) "dirty" root should be rendered.
-    let distributionRoot = this._findDistributionRoot(this.host);
-    //console.log('update from', this.host, 'root', distributionRoot.host, distributionRoot._clean);
-    if (distributionRoot._clean) {
-      distributionRoot._clean = false;
-      enqueue(function() {
-        distributionRoot.render();
-      });
+    if (!this._renderPending) {
+      this._renderPending = true;
+      enqueue(() => this.render());
     }
   },
 
-  // TODO(sorvell): this may not return a shadowRoot (for example if the element is in a docFragment)
-  // this should only return a shadowRoot.
-  // returns the host that's the top of this host's distribution tree
-  _findDistributionRoot(element) {
-    let root = element.shadyRoot;
-    while (element && this._elementNeedsDistribution(element)) {
-      root = element.getRootNode();
-      element = root && root.host;
-    }
-    return root;
+  _getRenderRoot() {
+    let root = this._rendererForHost();
+    return root ? root._getRenderRoot() : this;
   },
 
-  // Return true if a host's children includes
-  // an insertion point that selects selectively
-  _elementNeedsDistribution(element) {
-    let c$ = tree.Logical.getChildNodes(element);
-    for (let i=0, c; i < c$.length; i++) {
-      c = c$[i];
-      if (this._distributor.isInsertionPoint(c)) {
-        return element.getRootNode();
+  // Returns the shadyRoot `this.host` if `this.host`
+  // has children that require distribution.
+  _rendererForHost() {
+    let root = this.host.getRootNode();
+    if (utils.isShadyRoot(root)) {
+      let c$ = tree.Logical.getChildNodes(this.host);
+      for (let i=0, c; i < c$.length; i++) {
+        c = c$[i];
+        if (this._distributor.isInsertionPoint(c)) {
+          return root;
+        }
       }
     }
   },
 
   render() {
-    if (!this._clean) {
-      this._clean = true;
-      if (!this._skipUpdateInsertionPoints) {
-        this.updateInsertionPoints();
-      } else if (!this._hasRendered) {
-        this._insertionPoints = [];
-      }
-      this._skipUpdateInsertionPoints = false;
-      // TODO(sorvell): previous ShadyDom had a fast path here
-      // that would avoid distribution for initial render if
-      // no insertion points exist. We cannot currently do this because
-      // it relies on elements being in the physical shadowRoot element
-      // so that native methods will be used. The current append code
-      // simply provokes distribution in this case and does not put the
-      // nodes in the shadowRoot. This could be done but we'll need to
-      // consider if the special processing is worth the perf gain.
-      // if (!this._hasRendered && !this._insertionPoints.length) {
-      //   tree.Composed.clearChildNodes(this.host);
-      //   tree.Composed.appendChild(this.host, this);
-      // } else {
-      // logical
-      this.distribute();
-      // physical
-      this.compose();
-      this._hasRendered = true;
+    if (this._renderPending) {
+      this._getRenderRoot()._render();
     }
   },
 
+  _render() {
+    this._renderPending = false;
+    if (!this._skipUpdateInsertionPoints) {
+      this.updateInsertionPoints();
+    } else if (!this._hasRendered) {
+      this._insertionPoints = [];
+    }
+    this._skipUpdateInsertionPoints = false;
+    // TODO(sorvell): previous ShadyDom had a fast path here
+    // that would avoid distribution for initial render if
+    // no insertion points exist. We cannot currently do this because
+    // it relies on elements being in the physical shadowRoot element
+    // so that native methods will be used. The current append code
+    // simply provokes distribution in this case and does not put the
+    // nodes in the shadowRoot. This could be done but we'll need to
+    // consider if the special processing is worth the perf gain.
+    // if (!this._hasRendered && !this._insertionPoints.length) {
+    //   tree.Composed.clearChildNodes(this.host);
+    //   tree.Composed.appendChild(this.host, this);
+    // } else {
+    // logical
+    this.distribute();
+    // physical
+    this.compose();
+    this._hasRendered = true;
+  },
+
   forceRender() {
-    this._clean = false;
+    this._renderPending = true;
     this.render();
   },
 
   distribute() {
     let dirtyRoots = this._distributor.distribute();
     for (let i=0; i<dirtyRoots.length; i++) {
-      dirtyRoots[i].forceRender();
+      dirtyRoots[i]._render();
     }
   },
 
@@ -154,6 +147,7 @@ let ShadyMixin = {
     // c. for parents of insertion points
     for (let i=0, c; i < i$.length; i++) {
       c = i$[i];
+      c.__shady = c.__shady || {};
       tree.Logical.saveChildNodes(c);
       tree.Logical.saveChildNodes(tree.Logical.getParentNode(c));
     }
@@ -204,8 +198,8 @@ let ShadyMixin = {
     for (let i = 0; i < c$.length; i++) {
       let child = c$[i];
       if (this._distributor.isInsertionPoint(child)) {
-        let distributedNodes = child._distributedNodes ||
-          (child._distributedNodes = []);
+        let distributedNodes = child.__shady.distributedNodes ||
+          (child.__shady.distributedNodes = []);
         for (let j = 0; j < distributedNodes.length; j++) {
           let distributedNode = distributedNodes[j];
           if (this.isFinalDestination(child, distributedNode)) {

@@ -1504,11 +1504,12 @@ suite('non-distributed elements', function() {
     assert.equal(test.getRootNode(), c1, 'getOwnerRoot incorrect for child moved from a root to no root');
   });
 
-  test('assignedNodes on non-content element', function() {
+  test('assignedNodes while distributing', function() {
+    var testElement = createEnabledElement('x-project');
     var d = document.createElement('div');
-    ShadyDOM.patch(d);
-    assert.equal(d.assignedNodes({flatten: true}).length, 0);
-        assert.equal(document.assignedNodes({flatten: true}).length, 0);
+    testElement.appendChild(d);
+    var slot = testElement.shadowRoot.querySelector('slot');
+    assert.deepEqual(slot.assignedNodes({flatten: true}), [d]);
   });
 
   test('insertion points on non-distributable element', function() {

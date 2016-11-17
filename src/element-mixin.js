@@ -70,7 +70,7 @@ let mixinImpl = {
 
 
   _scheduleObserver(node, addedNode, removedNode) {
-    let observer = node.__dom && node.__dom.observer;
+    let observer = node.__shady && node.__shady.observer;
     if (observer) {
       if (addedNode) {
         observer.addedNodes.push(addedNode);
@@ -342,6 +342,13 @@ let mixinImpl = {
       // activeRoot.
       return activeRoot === node ? active : null;
     }
+  },
+
+  renderRootNode(element) {
+    var root = element.getRootNode();
+    if (utils.isShadyRoot(root)) {
+      root.render();
+    }
   }
 
 };
@@ -407,7 +414,7 @@ Object.defineProperties(NodeMixin, {
 
   assignedSlot: {
     get() {
-      return this._assignedSlot;
+      return this.__shady && this.__shady.assignedSlot;
     },
     configurable: true
   }
@@ -638,8 +645,13 @@ let ElementMixin = {
 
   // TODO(sorvell): should only exist on <slot>
   assignedNodes(options) {
-    return (options && options.flatten ? this._distributedNodes :
-      this._assignedNodes) || [];
+    if (this.localName === 'slot') {
+      mixinImpl.renderRootNode(this);
+      return this.__shady ?
+        ((options && options.flatten ? this.__shady.distributedNodes :
+        this.__shady.assignedNodes) || []) :
+        [];
+    }
   },
 
 
@@ -782,11 +794,11 @@ class AsyncObserver {
 // subtree child mutations.
 export let observeChildren = function(node, callback) {
   utils.common.patchNode(node);
-  if (!node.__dom.observer) {
-    node.__dom.observer = new AsyncObserver();
+  if (!node.__shady.observer) {
+    node.__shady.observer = new AsyncObserver();
   }
-  node.__dom.observer.callbacks.add(callback);
-  let observer = node.__dom.observer;
+  node.__shady.observer.callbacks.add(callback);
+  let observer = node.__shady.observer;
   return {
     _callback: callback,
     _observer: observer,
@@ -802,7 +814,7 @@ export let unobserveChildren = function(handle) {
   if (observer) {
     observer.callbacks.delete(handle._callback);
     if (!observer.callbacks.size) {
-      handle._node.__dom.observer = null;
+      handle._node.__shady.observer = null;
     }
   }
 }

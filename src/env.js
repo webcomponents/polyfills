@@ -96,7 +96,7 @@ if (utils.settings.inUse) {
 
   Object.defineProperty(Node.prototype, 'assignedSlot', {
     get() {
-      return this._assignedSlot || null;
+      return (this.__shady && this.__shady.assignedSlot) || null;
     },
     configurable: true
   });
