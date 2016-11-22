@@ -61,6 +61,10 @@ export let tree = {
       tree.Composed.saveComposedData(node);
     }
     tree.Composed.saveChildNodes(node);
+  },
+
+  needsChildren(node) {
+    return (node.__patched >= patchedChildren);
   }
 
 };
@@ -208,7 +212,7 @@ tree.Logical = {
   // NOTE: ensure `node` is patched...
   recordInsertBefore(node, container, ref_node) {
     container.__shady = container.__shady || {};
-    if (container.__patched >= patchedChildren) {
+    if (tree.needsChildren(container)) {
       container.__shady.childNodes = null;
     }
     // handle document fragments
@@ -314,7 +318,7 @@ tree.Composed = {
   },
 
   getChildNodes(node) {
-    return (node.__patched >= patchedChildren) ?
+    return tree.needsChildren(node) ?
       this._getChildNodes(node) :
       tree.arrayCopy(node.childNodes);
   },
@@ -466,7 +470,7 @@ tree.Composed = {
     }
     // update node <-> container
     node.__shady.$parentNode = container;
-    //if (container.__patched) {
+    if (tree.needsChildren(container)) {
       if (ref_node) {
         if (ref_node === container.__shady.$firstChild) {
           container.__shady.$firstChild = node;
@@ -477,7 +481,7 @@ tree.Composed = {
           container.__shady.$firstChild = node;
         }
       }
-    //}
+    }
     // remove caching of childNodes
     container.__shady.$childNodes = null;
 
@@ -486,14 +490,14 @@ tree.Composed = {
   recordRemoveChild(node, container) {
     node.__shady = node.__shady || {};
     container.__shady = container.__shady || {};
-    //if (container.__patched) {
+    if (tree.needsChildren(container)) {
       if (node === container.__shady.$firstChild) {
         container.__shady.$firstChild = node.__shady.$nextSibling;
       }
       if (node === container.__shady.$lastChild) {
         container.__shady.$lastChild = node.__shady.$previousSibling;
       }
-    //}
+    }
     let p = node.__shady.$previousSibling;
     let n = node.__shady.$nextSibling;
     if (p) {
