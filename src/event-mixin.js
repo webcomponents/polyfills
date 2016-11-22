@@ -109,7 +109,7 @@ function retarget(refNode, path) {
 
 let EventMixin = {
 
-  __patched: 'Event',
+  __patched: 5,
 
   get composed() {
     if (this.isTrusted && this.__composed === undefined) {

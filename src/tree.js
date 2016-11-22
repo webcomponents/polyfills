@@ -56,7 +56,6 @@ export let tree = {
     tree.Logical.saveChildNodes(node);
     if (!tree.Composed.hasParentNode(node)) {
       tree.Composed.saveComposedData(node);
-      //tree.Composed.saveParentNode(node);
     }
     tree.Composed.saveChildNodes(node);
   }
@@ -205,6 +204,7 @@ tree.Logical = {
   // already been distributed.
   // NOTE: ensure `node` is patched...
   recordInsertBefore(node, container, ref_node) {
+    container.__shady = container.__shady || {};
     container.__shady.childNodes = null;
     // handle document fragments
     if (node.nodeType === Node.DOCUMENT_FRAGMENT_NODE) {
@@ -231,39 +231,44 @@ tree.Logical = {
     }
     // update ref_node.previousSibling <-> node
     node.__shady.previousSibling = ref_node ? ref_node.__shady.previousSibling :
-      container.__shady.lastChild;
-    if (node.__shady.previousSibling) {
-      node.__shady.previousSibling.__shady.nextSibling = node;
+      this.getLastChild(container);
+    let ps = node.__shady.previousSibling;
+    if (ps && ps.__shady) {
+      ps.__shady.nextSibling = node;
     }
     // update node <-> ref_node
-    node.__shady.nextSibling = ref_node;
-    if (node.__shady.nextSibling) {
-      node.__shady.nextSibling.__shady.previousSibling = node;
+    let ns = node.__shady.nextSibling = ref_node;
+    if (ns && ns.__shady) {
+      ns.__shady.previousSibling = node;
     }
     // update node <-> container
     node.__shady.parentNode = container;
-    if (ref_node) {
-      if (ref_node === container.__shady.firstChild) {
-        container.__shady.firstChild = node;
+    if (container.__patched) {
+      if (ref_node) {
+        if (ref_node === container.__shady.firstChild) {
+          container.__shady.firstChild = node;
+        }
+      } else {
+        container.__shady.lastChild = node;
+        if (!this.getFirstChild(container)) {
+          container.__shady.firstChild = node;
+        }
       }
-    } else {
-      container.__shady.lastChild = node;
-      if (!container.__shady.firstChild) {
-        container.__shady.firstChild = node;
-      }
+      // remove caching of childNodes
+      container.__shady.childNodes = null;
     }
-    // remove caching of childNodes
-    container.__shady.childNodes = null;
   },
 
   recordRemoveChild(node, container) {
     node.__shady = node.__shady || {};
-    container.__shady = container.__shady || {};
-    if (node === container.__shady.firstChild) {
-      container.__shady.firstChild = node.__shady.nextSibling;
-    }
-    if (node === container.__shady.lastChild) {
-      container.__shady.lastChild = node.__shady.previousSibling;
+    if (container.__patched) {
+      container.__shady = container.__shady || {};
+      if (node === container.__shady.firstChild) {
+        container.__shady.firstChild = node.__shady.nextSibling;
+      }
+      if (node === container.__shady.lastChild) {
+        container.__shady.lastChild = node.__shady.previousSibling;
+      }
     }
     let p = node.__shady.previousSibling;
     let n = node.__shady.nextSibling;
@@ -280,8 +285,10 @@ tree.Logical = {
     // from `null` which is set if info is null.
     node.__shady.parentNode = node.__shady.previousSibling =
       node.__shady.nextSibling = null;
-    // remove caching of childNodes
-    container.__shady.childNodes = null;
+    if (container.__patched) {
+      // remove caching of childNodes
+      container.__shady.childNodes = null;
+    }
   }
 
 }
@@ -440,40 +447,46 @@ tree.Composed = {
     }
     // update ref_node.previousSibling <-> node
     node.__shady.$previousSibling = ref_node ? ref_node.__shady.$previousSibling :
-      container.__shady.$lastChild;
-    if (node.__shady.$previousSibling) {
-      node.__shady.$previousSibling.__shady.$nextSibling = node;
+      this.getLastChild(container);
+    let ps = node.__shady.$previousSibling;
+    if (ps && ps.__shady) {
+      ps.__shady.$nextSibling = node;
     }
     // update node <-> ref_node
-    node.__shady.$nextSibling = ref_node;
-    if (node.__shady.$nextSibling) {
-      node.__shady.$nextSibling.__shady.$previousSibling = node;
+    let ns = node.__shady.$nextSibling = ref_node;
+    if (ns && ns.__shady) {
+      ns.__shady.$previousSibling = node;
     }
     // update node <-> container
     node.__shady.$parentNode = container;
-    if (ref_node) {
-      if (ref_node === container.__shady.$firstChild) {
-        container.__shady.$firstChild = node;
+    //if (container.__patched) {
+      if (ref_node) {
+        if (ref_node === container.__shady.$firstChild) {
+          container.__shady.$firstChild = node;
+        }
+      } else {
+        container.__shady.$lastChild = node;
+        if (!this.getFirstChild(container)) {
+          container.__shady.$firstChild = node;
+        }
       }
-    } else {
-      container.__shady.$lastChild = node;
-      if (!container.__shady.$firstChild) {
-        container.__shady.$firstChild = node;
-      }
-    }
+    //}
     // remove caching of childNodes
     container.__shady.$childNodes = null;
+
   },
 
   recordRemoveChild(node, container) {
     node.__shady = node.__shady || {};
     container.__shady = container.__shady || {};
-    if (node === container.__shady.$firstChild) {
-      container.__shady.$firstChild = node.__shady.$nextSibling;
-    }
-    if (node === container.__shady.$lastChild) {
-      container.__shady.$lastChild = node.__shady.$previousSibling;
-    }
+    //if (container.__patched) {
+      if (node === container.__shady.$firstChild) {
+        container.__shady.$firstChild = node.__shady.$nextSibling;
+      }
+      if (node === container.__shady.$lastChild) {
+        container.__shady.$lastChild = node.__shady.$previousSibling;
+      }
+    //}
     let p = node.__shady.$previousSibling;
     let n = node.__shady.$nextSibling;
     if (p) {

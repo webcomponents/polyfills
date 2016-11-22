@@ -20,25 +20,30 @@ let mixinImpl = {
   // distribution iff needed. Return true if the add is handled.
   addNode(container, node, ref_node) {
     let ownerRoot = this.ownerShadyRootForNode(container);
+    let ipAdded;
     if (ownerRoot) {
       // optimization: special insertion point tracking
-      if (node.__noInsertionPoint && ownerRoot._clean) {
+      if (node.__noInsertionPoint && !ownerRoot._renderPending) {
         ownerRoot._skipUpdateInsertionPoints = true;
       }
       // note: we always need to see if an insertion point is added
       // since this saves logical tree info; however, invalidation state
       // needs
-      let ipAdded = this._maybeAddInsertionPoint(node, container, ownerRoot);
+      ipAdded = this._maybeAddInsertionPoint(node, container, ownerRoot);
       // invalidate insertion points IFF not already invalid!
       if (ipAdded) {
         ownerRoot._skipUpdateInsertionPoints = false;
       }
     }
-    if (tree.Logical.hasChildNodes(container)) {
+    // TODO(sorvell): review: always record logical info if all elements are
+    // at least partially patched.
+    //if (tree.Logical.hasChildNodes(container)) {
       tree.Logical.recordInsertBefore(node, container, ref_node);
-    }
+    //}
     // if not distributing and not adding to host, do a fast path addition
-    let handled = this._maybeDistribute(node, container, ownerRoot) ||
+    // TODO(sorvell): revisit flow since `ipAdded` needed here if
+    // node is a fragment that has a patched QSA.
+    let handled = this._maybeDistribute(node, container, ownerRoot, ipAdded) ||
       container.shadyRoot;
     return handled;
   },
@@ -126,7 +131,7 @@ let mixinImpl = {
     }
   },
 
-  _maybeDistribute(node, container, ownerRoot) {
+  _maybeDistribute(node, container, ownerRoot, ipAdded) {
     // TODO(sorvell): technically we should check non-fragment nodes for
     // <content> children but since this case is assumed to be exceedingly
     // rare, we avoid the cost and will address with some specific api
@@ -147,7 +152,7 @@ let mixinImpl = {
     // 2. children being inserted into parent with a shady root (parent
     //    needs distribution)
     // 3. container is an insertionPoint
-    if (hasContent || (container.localName === insertionPointTag)) {
+    if (hasContent || (container.localName === insertionPointTag) || ipAdded) {
       if (ownerRoot) {
         // note, insertion point list update is handled after node
         // mutations are complete
@@ -702,18 +707,25 @@ Object.defineProperties(UnderActiveElementMixin, {
   _activeElement: activeElementDescriptor
 });
 
+export let MixinTypes = {
+  NODE: 1,
+  FRAGMENT: 2,
+  ELEMENT: 3,
+  DOCUMENT: 4
+}
+
 export let Mixins = {
 
-  Node: utils.extendAll({__patched: 'Node'}, NodeMixin),
+  Node: utils.extendAll({__patched: MixinTypes.NODE}, NodeMixin),
 
-  Fragment: utils.extendAll({__patched: 'Fragment'},
+  Fragment: utils.extendAll({__patched: MixinTypes.FRAGMENT},
     NodeMixin, FragmentMixin, ActiveElementMixin),
 
-  Element: utils.extendAll({__patched: 'Element'},
+  Element: utils.extendAll({__patched: MixinTypes.ELEMENT},
     NodeMixin, FragmentMixin, ElementMixin, ActiveElementMixin),
 
   // Note: activeElement cannot be patched on document!
-  Document: utils.extendAll({__patched: 'Document'},
+  Document: utils.extendAll({__patched: MixinTypes.DOCUMENT},
     NodeMixin, FragmentMixin, ElementMixin, UnderActiveElementMixin)
 
 };

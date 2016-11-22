@@ -23,7 +23,7 @@ import * as utils from './utils'
 import {ShadyRoot, flush, enqueue} from './shady'
 import * as patch from './patch'
 import {getRootNode, filterMutations, observeChildren, unobserveChildren,
-  setAttribute} from './element-mixin'
+  setAttribute, Mixins} from './element-mixin'
 import * as events from './event-mixin'
 import {tree, getNativeProperty} from './tree'
 
@@ -113,11 +113,15 @@ if (utils.settings.inUse) {
     configurable: true
   });
 
-  // TODO(sorvell): super experimental auto patching of document fragment
-  // via appendChild. This either needs to be expanded or contracted.
-  // DocumentFragment.prototype.appendChild = function(node) {
-  //   patchNode(this);
-  //   return this.appendChild(node);
-  // }
+  // Patch mutation methods on ALL dom prototypes.
+  for (let p in Mixins.Fragment) {
+    let method = Mixins.Fragment[p];
+    if (typeof method == 'function') {
+      Element.prototype[p] = method;
+      DocumentFragment.prototype[p] = method;
+      Document.prototype[p] = method;
+    }
+  }
+
 
 }

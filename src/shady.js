@@ -65,6 +65,7 @@ let ShadyMixin = {
 
   _getRenderRoot() {
     let root = this._rendererForHost();
+    // TODO(sorvell): actually want the highest dirty root in distribution tree
     return root ? root._getRenderRoot() : this;
   },
 
