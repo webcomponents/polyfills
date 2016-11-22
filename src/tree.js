@@ -20,6 +20,9 @@ let nativeInsertBefore = Element.prototype.insertBefore;
 let nativeAppendChild = Element.prototype.appendChild;
 let nativeRemoveChild = Element.prototype.removeChild;
 
+// if `__patched` is >= this then children must be patched.
+let patchedChildren = 2;
+
 /**
  * `tree` is a dom manipulation library used by ShadyDom to
  * manipulate composed and logical trees.
@@ -205,7 +208,9 @@ tree.Logical = {
   // NOTE: ensure `node` is patched...
   recordInsertBefore(node, container, ref_node) {
     container.__shady = container.__shady || {};
-    container.__shady.childNodes = null;
+    if (container.__patched >= patchedChildren) {
+      container.__shady.childNodes = null;
+    }
     // handle document fragments
     if (node.nodeType === Node.DOCUMENT_FRAGMENT_NODE) {
       let c$ = tree.arrayCopyChildNodes(node);
@@ -214,8 +219,9 @@ tree.Logical = {
       }
       // cleanup logical dom in doc fragment.
       node.__shady = node.__shady || {};
-      node.__shady.firstChild = node.__shady.lastChild = null;
-      node.__shady.childNodes = null;
+      let resetTo = node.__patched ? null : undefined;
+      node.__shady.firstChild = node.__shady.lastChild = resetTo;
+      node.__shady.childNodes = resetTo;
     } else {
       this._linkNode(node, container, ref_node);
     }
@@ -308,8 +314,9 @@ tree.Composed = {
   },
 
   getChildNodes(node) {
-    return this.hasChildNodes(node) ? this._getChildNodes(node) :
-      (!node.__patched && tree.arrayCopy(node.childNodes));
+    return (node.__patched >= patchedChildren) ?
+      this._getChildNodes(node) :
+      tree.arrayCopy(node.childNodes);
   },
 
   _getChildNodes(node) {
