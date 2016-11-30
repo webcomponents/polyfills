@@ -352,7 +352,8 @@ let nativeSetAttribute = Element.prototype.setAttribute;
 let nativeRemoveAttribute = Element.prototype.removeAttribute;
 
 export let setAttribute = function(attr, value) {
-  if (window.ShadyCSS && attr === 'class') {
+  // avoid scoping elements in non-main document to avoid template documents
+  if (window.ShadyCSS && attr === 'class' && this.ownerDocument === document) {
     window.ShadyCSS.setElementClass(this, value);
   } else {
     nativeSetAttribute.call(this, attr, value);

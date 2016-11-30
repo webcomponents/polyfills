@@ -101,9 +101,13 @@ if (utils.settings.inUse) {
     configurable: true
   });
 
+  let nativeSetAttribute = Element.prototype.setAttribute;
   Element.prototype.setAttribute = setAttribute;
+  // NOTE: expose native setAttribute to allow hooking native method
+  // (e.g. this is done in ShadyCSS)
+  Element.prototype.__nativeSetAttribute = nativeSetAttribute;
 
-  Object.defineProperty(Element.prototype, 'className', {
+  let classNameDescriptor = {
     get() {
       return this.getAttribute('class');
     },
@@ -111,13 +115,19 @@ if (utils.settings.inUse) {
       this.setAttribute('class', value);
     },
     configurable: true
-  });
+  };
 
-  // TODO(sorvell): super experimental auto patching of document fragment
-  // via appendChild. This either needs to be expanded or contracted.
-  // DocumentFragment.prototype.appendChild = function(node) {
-  //   patchNode(this);
-  //   return this.appendChild(node);
-  // }
-
+  // Safari 9 `className` is not configurable
+  let cn = Object.getOwnPropertyDescriptor(Element.prototype, 'className');
+  if (cn && cn.configurable) {
+    Object.defineProperty(Element.prototype, 'className', classNameDescriptor);
+  } else {
+    // on IE `className` is on Element
+    let h = window.customElements && window.customElements.nativeHTMLElement ||
+      HTMLElement;
+    cn = Object.getOwnPropertyDescriptor(h.prototype, 'className');
+    if (cn && cn.configurable) {
+      Object.defineProperty(h.prototype, 'className', classNameDescriptor);
+    }
+  }
 }
