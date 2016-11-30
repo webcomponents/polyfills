@@ -315,6 +315,17 @@ export let ShadyCSS = {
   // setAttribute('class', ...) and className setter have been overridden so
   // it cannot rely on those methods.
   setElementClass(element, classString) {
+    // TODO(sorvell): revisit if it's necessary to have these 2 code paths,
+    // presumably using classList is faster.
+    if (!element.classList) {
+      if (element instanceof SVGElement) {
+        this._setElementClassViaAttr(element, classString);
+      }
+    } else {
+      this._setElementClassViaClassList(element, classString);
+    }
+  },
+  _setElementClassViaClassList(element, classString) {
     // scope by shadyRoot host
     let root = element.getRootNode();
     let scopeName = root.host && root.host.localName;
@@ -336,17 +347,67 @@ export let ShadyCSS = {
     if (scopeName) {
       classes.push(StyleTransformer.SCOPE_NAME, scopeName);
     }
-    if (classes.length) {
-      element.classList.add(...classes);
-    }
-
     // add property scoping: scope by special selector
     if (!this.nativeCss) {
       let styleInfo = StyleInfo.get(element);
       if (styleInfo && styleInfo.scopeSelector) {
-        element.classList.add(StyleProperties.XSCOPE_NAME,
+        classes.push(StyleProperties.XSCOPE_NAME,
           styleInfo.scopeSelector);
       }
+    }
+    if (classes.length) {
+      // TODO(sorvell): IE11 does not support multiple classes to add
+      for (let i=0; i < classes.length; i++) {
+        element.classList.add(classes[i]);
+      }
+    }
+  },
+  _setElementClassViaAttr(element, classString) {
+    let root = element.getRootNode();
+    let scopeName = root.host && root.host.localName;
+    let classes = [];
+    // apply non-scoping selectors from input classString
+    // (cleans scoping selectors)
+    if (classString) {
+      let k$ = classString.split(/\s/);
+      for (let i=0; i < k$.length; i++) {
+        let k = k$[i];
+        if (k === StyleTransformer.SCOPE_NAME ||
+          k === StyleProperties.XSCOPE_NAME) {
+          i++;
+        } else {
+          classes.push(k);
+        }
+      }
+    }
+    // try to discover scope name form existing class
+    if (!scopeName) {
+      var classAttr = element.getAttribute('class');
+      if (classAttr) {
+        let k$ = classAttr.split(/\s/);
+        for (let i=0; i < k$.length; i++) {
+          if (k$[i] === StyleTransformer.SCOPE_NAME) {
+            scopeName = k$[i+1];
+            break;
+          }
+        }
+      }
+    }
+    if (scopeName) {
+      classes.push(StyleTransformer.SCOPE_NAME, scopeName);
+    }
+    if (!this.nativeCss) {
+      let styleInfo = StyleInfo.get(element);
+      if (styleInfo && styleInfo.scopeSelector) {
+        classes.push(StyleProperties.XSCOPE_NAME, styleInfo.scopeSelector);
+      }
+    }
+    let out = classes.join(' ');
+    // use native setAttribute provided by ShadyDOM when setAttribute is patched
+    if (element.__nativeSetAttribute) {
+      element.__nativeSetAttribute('class', out);
+    } else {
+      element.setAttribute(out);
     }
   },
   _styleInfoForNode(node) {

@@ -49,7 +49,7 @@ export let StyleTransformer = {
   },
 
   _transformDom: function(node, selector, shouldRemoveScope) {
-    if (node.classList) {
+    if (node.nodeType === Node.ELEMENT_NODE) {
       this.element(node, selector, shouldRemoveScope);
     }
     let c$ = (node.localName === 'template') ?
