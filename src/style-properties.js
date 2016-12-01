@@ -438,7 +438,12 @@ export let StyleProperties = {
     }
     v += (v ? ' ' : '') + this.XSCOPE_NAME + ' ' + selector;
     if (c !== v) {
-      element.setAttribute('class', v);
+      // hook from ShadyDOM
+      if (element.__nativeSetAttribute) {
+        element.__nativeSetAttribute('class', v);
+      } else {
+        element.setAttribute('class', v);
+      }
     }
   },
 

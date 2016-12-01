@@ -311,76 +311,13 @@ export let ShadyCSS = {
   // given an element and a classString, replaces
   // the element's class with the provided classString and adds
   // any necessary ShadyCSS static and property based scoping selectors
-  // NOTE: this method is suitable to be called in an environment in which
-  // setAttribute('class', ...) and className setter have been overridden so
-  // it cannot rely on those methods.
   setElementClass(element, classString) {
-    // TODO(sorvell): revisit if it's necessary to have these 2 code paths,
-    // presumably using classList is faster.
-    if (!element.classList) {
-      if (element instanceof SVGElement) {
-        this._setElementClassViaAttr(element, classString);
-      }
-    } else {
-      this._setElementClassViaClassList(element, classString);
-    }
-  },
-  _setElementClassViaClassList(element, classString) {
-    // scope by shadyRoot host
     let root = element.getRootNode();
+    let classes = classString ? classString.split(/\s/) : [];
     let scopeName = root.host && root.host.localName;
-    // use classList to clear existing classes
-    while (element.classList.length) {
-      let k = element.classList[0];
-      // if scope not found and element is currently scoped,
-      // use existing scope (helps catch elements that set `class` while
-      // inside a disconnected dom fragment)
-      // NOTE: relies on the scoping class always being adjacent to the
-      // SCOPE_NAME class.
-      if (!scopeName && k == StyleTransformer.SCOPE_NAME) {
-        scopeName = element.classList[1];
-      }
-      element.classList.remove(k);
-    }
-    // add user classString
-    let classes = classString.split(' ').filter((c) => c);
-    if (scopeName) {
-      classes.push(StyleTransformer.SCOPE_NAME, scopeName);
-    }
-    // add property scoping: scope by special selector
-    if (!this.nativeCss) {
-      let styleInfo = StyleInfo.get(element);
-      if (styleInfo && styleInfo.scopeSelector) {
-        classes.push(StyleProperties.XSCOPE_NAME,
-          styleInfo.scopeSelector);
-      }
-    }
-    if (classes.length) {
-      // TODO(sorvell): IE11 does not support multiple classes to add
-      for (let i=0; i < classes.length; i++) {
-        element.classList.add(classes[i]);
-      }
-    }
-  },
-  _setElementClassViaAttr(element, classString) {
-    let root = element.getRootNode();
-    let scopeName = root.host && root.host.localName;
-    let classes = [];
-    // apply non-scoping selectors from input classString
-    // (cleans scoping selectors)
-    if (classString) {
-      let k$ = classString.split(/\s/);
-      for (let i=0; i < k$.length; i++) {
-        let k = k$[i];
-        if (k === StyleTransformer.SCOPE_NAME ||
-          k === StyleProperties.XSCOPE_NAME) {
-          i++;
-        } else {
-          classes.push(k);
-        }
-      }
-    }
-    // try to discover scope name form existing class
+    // If no scope, try to discover scope name from existing class.
+    // This can occur if, for example, a template stamped element that
+    // has been scoped is manipulated when not in a root.
     if (!scopeName) {
       var classAttr = element.getAttribute('class');
       if (classAttr) {
@@ -407,7 +344,7 @@ export let ShadyCSS = {
     if (element.__nativeSetAttribute) {
       element.__nativeSetAttribute('class', out);
     } else {
-      element.setAttribute(out);
+      element.setAttribute('class', out);
     }
   },
   _styleInfoForNode(node) {
