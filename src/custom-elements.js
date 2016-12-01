@@ -653,6 +653,7 @@ let Deferred;
 
   /** @const */
   const origHTMLElement = win.HTMLElement;
+  CustomElementRegistry.prototype['nativeHTMLElement'] = origHTMLElement;
   /**
    * @type {function(new: HTMLElement)}
    */
