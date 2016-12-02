@@ -804,6 +804,22 @@ class AsyncObserver {
 
 }
 
+export let getComposedInnerHTML = function(node) {
+  if (utils.common.isNodePatched(node)) {
+    return getInnerHTML(node, function(n) {
+      return tree.Composed.getChildNodes(n);
+    })
+  } else {
+    return node.innerHTML;
+  }
+}
+
+export let getComposedChildNodes = function(node) {
+  return utils.common.isNodePatched(node) ?
+    tree.Composed.getChildNodes(node) :
+    node.childNodes;
+}
+
 // TODO(sorvell): consider instead polyfilling MutationObserver
 // directly so that users do not have to fork their code.
 // Supporting the entire api may be challenging: e.g. filtering out

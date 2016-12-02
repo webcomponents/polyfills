@@ -23,7 +23,8 @@ import * as utils from './utils'
 import {ShadyRoot, flush, enqueue} from './shady'
 import * as patch from './patch'
 import {getRootNode, filterMutations, observeChildren, unobserveChildren,
-  setAttribute, Mixins} from './element-mixin'
+  setAttribute, Mixins,
+  getComposedInnerHTML, getComposedChildNodes} from './element-mixin'
 import * as events from './event-mixin'
 import {tree, getNativeProperty} from './tree'
 
@@ -34,6 +35,8 @@ if (utils.settings.inUse) {
     getNativeProperty: getNativeProperty,
     patch: patch.patchNode,
     isPatched: patch.isNodePatched,
+    getComposedInnerHTML: getComposedInnerHTML,
+    getComposedChildNodes: getComposedChildNodes,
     unpatch: patch.unpatchNode,
     isShadyRoot: utils.isShadyRoot,
     enqueue: enqueue,
