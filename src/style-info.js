@@ -22,7 +22,7 @@ export default class StyleInfo {
     this.styleRules = ast || null;
     this.placeholder = placeholder || null;
     this.ownStylePropertyNames = ownStylePropertyNames || [];
-    this.overrideStyleProperties = {};
+    this.overrideStyleProperties = null;
     this.elementName = elementName || '';
     this.cssBuild = cssBuild || '';
     this.typeExtension = typeExtension || '';
