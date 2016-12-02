@@ -1123,15 +1123,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   });
 
   function getComposedChildNodes(node) {
-    var patched = ShadyDOM.isPatched(node);
-    if (patched) {
-      ShadyDOM.unpatch(node);
-    }
-    var childNodes = node.childNodes;
-    if (patched) {
-      ShadyDOM.patch(node);
-    }
-    return childNodes;
+    return ShadyDOM.getComposedChildNodes(node);
   }
 
 </script>
