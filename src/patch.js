@@ -49,7 +49,7 @@ let patchImpl = {
       utils.patchPrototype(node, this.mixinForObject(node));
     } else {
       window.console.warn('Patching instance rather than prototype', node);
-      utils.extend(node, this.mixinForNode(node));
+      utils.extend(node, this.mixinForObject(node));
     }
   },
 
@@ -87,6 +87,10 @@ export function patchNode(node) {
   }
 }
 
+export function canUnpatchNode() {
+  return Boolean(patchImpl.hasPrototypeDescriptors);
+}
+
 export function unpatchNode(node) {
   patchImpl.unpatch(node);
 }
@@ -97,4 +101,5 @@ export function isNodePatched(node) {
 
 // TODO(sorvell): fake export
 utils.common.patchNode = patchNode;
+utils.common.canUnpatchNode = canUnpatchNode;
 utils.common.isNodePatched = isNodePatched;
