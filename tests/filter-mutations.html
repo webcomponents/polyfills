@@ -46,7 +46,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     test('mutation observer does not see nodes outside observed scope', function(done) {
       var d = document.createElement('div');
       makeShadowRootWithSlot(d);
-      let mutationCount = 0;
+      var mutationCount = 0;
       new MutationObserver(function(mutations) {
         mutations = ShadyDOM.filterMutations(mutations, d);
         if (mutations.length) {
