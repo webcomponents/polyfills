@@ -352,7 +352,8 @@ let nativeSetAttribute = Element.prototype.setAttribute;
 let nativeRemoveAttribute = Element.prototype.removeAttribute;
 
 export let setAttribute = function(attr, value) {
-  if (window.ShadyCSS && attr === 'class') {
+  // avoid scoping elements in non-main document to avoid template documents
+  if (window.ShadyCSS && attr === 'class' && this.ownerDocument === document) {
     window.ShadyCSS.setElementClass(this, value);
   } else {
     nativeSetAttribute.call(this, attr, value);
@@ -712,20 +713,24 @@ export let getRootNode = function(node) {
 
 export function filterMutations(mutations, target) {
   const targetRootNode = getRootNode(target);
-  return mutations.filter(function(mutation) {
+  return mutations.map(function(mutation) {
     const mutationInScope = (targetRootNode === getRootNode(mutation.target));
     if (mutationInScope && mutation.addedNodes) {
       let nodes = Array.from(mutation.addedNodes).filter(function(n) {
         return (targetRootNode === getRootNode(n));
       });
-      Object.defineProperty(mutation, 'addedNodes', {
-        value: nodes,
-        configurable: true
-      });
+      if (nodes.length) {
+        mutation = Object.create(mutation);
+        Object.defineProperty(mutation, 'addedNodes', {
+          value: nodes,
+          configurable: true
+        });
+        return mutation;
+      }
+    } else if (mutationInScope) {
+      return mutation;
     }
-    return mutationInScope &&
-      (!mutation.addedNodes || mutation.addedNodes.length);
-  });
+  }).filter(function(m) { return m});
 }
 
 // const promise = Promise.resolve();
