@@ -311,42 +311,40 @@ export let ShadyCSS = {
   // given an element and a classString, replaces
   // the element's class with the provided classString and adds
   // any necessary ShadyCSS static and property based scoping selectors
-  // NOTE: this method is suitable to be called in an environment in which
-  // setAttribute('class', ...) and className setter have been overridden so
-  // it cannot rely on those methods.
   setElementClass(element, classString) {
-    // scope by shadyRoot host
     let root = element.getRootNode();
+    let classes = classString ? classString.split(/\s/) : [];
     let scopeName = root.host && root.host.localName;
-    // use classList to clear existing classes
-    while (element.classList.length) {
-      let k = element.classList[0];
-      // if scope not found and element is currently scoped,
-      // use existing scope (helps catch elements that set `class` while
-      // inside a disconnected dom fragment)
-      // NOTE: relies on the scoping class always being adjacent to the
-      // SCOPE_NAME class.
-      if (!scopeName && k == StyleTransformer.SCOPE_NAME) {
-        scopeName = element.classList[1];
+    // If no scope, try to discover scope name from existing class.
+    // This can occur if, for example, a template stamped element that
+    // has been scoped is manipulated when not in a root.
+    if (!scopeName) {
+      var classAttr = element.getAttribute('class');
+      if (classAttr) {
+        let k$ = classAttr.split(/\s/);
+        for (let i=0; i < k$.length; i++) {
+          if (k$[i] === StyleTransformer.SCOPE_NAME) {
+            scopeName = k$[i+1];
+            break;
+          }
+        }
       }
-      element.classList.remove(k);
     }
-    // add user classString
-    let classes = classString.split(' ').filter((c) => c);
     if (scopeName) {
       classes.push(StyleTransformer.SCOPE_NAME, scopeName);
     }
-    if (classes.length) {
-      element.classList.add(...classes);
-    }
-
-    // add property scoping: scope by special selector
     if (!this.nativeCss) {
       let styleInfo = StyleInfo.get(element);
       if (styleInfo && styleInfo.scopeSelector) {
-        element.classList.add(StyleProperties.XSCOPE_NAME,
-          styleInfo.scopeSelector);
+        classes.push(StyleProperties.XSCOPE_NAME, styleInfo.scopeSelector);
       }
+    }
+    let out = classes.join(' ');
+    // use native setAttribute provided by ShadyDOM when setAttribute is patched
+    if (element.__nativeSetAttribute) {
+      element.__nativeSetAttribute('class', out);
+    } else {
+      element.setAttribute('class', out);
     }
   },
   _styleInfoForNode(node) {

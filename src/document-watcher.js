@@ -16,6 +16,14 @@ import {StyleTransformer} from './style-transformer'
 export let flush = function() {};
 
 if (!nativeShadow) {
+  let elementNeedsScoping = (element) => {
+    return (element.classList &&
+      !element.classList.contains(StyleTransformer.SCOPE_NAME) ||
+      // note: necessary for IE11
+      (element instanceof SVGElement &&
+      element.getAttribute('class').indexOf(StyleTransformer.SCOPE_NAME) < 0));
+  }
+
   let handler = (mxns) => {
     for (let x=0; x < mxns.length; x++) {
       let mxn = mxns[x];
@@ -25,8 +33,7 @@ if (!nativeShadow) {
       }
       for (let i=0; i < mxn.addedNodes.length; i++) {
         let n = mxn.addedNodes[i];
-        if (n.nodeType === Node.ELEMENT_NODE &&
-            !n.classList.contains(StyleTransformer.SCOPE_NAME)) {
+        if (elementNeedsScoping(n)) {
           let root = n.getRootNode();
           if (root.nodeType === Node.DOCUMENT_FRAGMENT_NODE) {
             // may no longer be in a shadowroot

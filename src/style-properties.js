@@ -431,10 +431,19 @@ export let StyleProperties = {
 
   applyElementScopeSelector: function(element, selector, old) {
     let c = element.getAttribute('class') || '';
-    let v = old ? c.replace(old, selector) :
-      (c ? c + ' ' : '') + this.XSCOPE_NAME + ' ' + selector;
+    let v = c;
+    if (old) {
+      v = c.replace(
+        new RegExp('\\s*' + this.XSCOPE_NAME + '\\s*' + old + '\\s*', 'g'), ' ');
+    }
+    v += (v ? ' ' : '') + this.XSCOPE_NAME + ' ' + selector;
     if (c !== v) {
-      element.setAttribute('class', v);
+      // hook from ShadyDOM
+      if (element.__nativeSetAttribute) {
+        element.__nativeSetAttribute('class', v);
+      } else {
+        element.setAttribute('class', v);
+      }
     }
   },
 

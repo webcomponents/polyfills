@@ -21,6 +21,6 @@
   },
   "devDependencies": {
     "web-component-tester": "^4.3.5",
-    "shadydom": "webcomponents/shadydom"
+    "webcomponentsjs": "webcomponents/webcomponentsjs#v1"
   }
 }
