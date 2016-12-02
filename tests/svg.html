@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>SVG</title>
+  <script src="../../web-component-tester/browser.js"></script>
+  <script>
+    window.ShadyDOM = {force: true};
+    window.ShadyCSS = {shimshadow: true};
+  </script>
+  <script src="../../webcomponentsjs/webcomponents-lite.js"></script>
+</head>
+<body>
+  <template id="svg-in-shadow">
+    <style>
+      :host {
+        display: inline-block;
+        background-color: #ccc;
+      }
+
+      div {
+        border: 1px solid black;
+      }
+    </style>
+    <div>
+      <svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="100px" height="100px" viewBox="0 0 100 100"></svg>
+    </div>
+  </template>
+  <script>
+    window.addEventListener('WebComponentsReady', function() {
+      const LOCAL_NAME = 'svg-in-shadow';
+      const TEMPLATE = document.querySelector('template[id="' + LOCAL_NAME + '"]');
+      window.ShadyCSS.prepareTemplate(TEMPLATE, LOCAL_NAME);
+
+      class SVGInShadow extends HTMLElement {
+        connectedCallback() {
+          this.attachShadow({mode: 'open'});
+          this.shadowRoot.appendChild(document.importNode(TEMPLATE.content, true));
+          window.ShadyCSS.applyStyle(this);
+        }
+
+        addCircle() {
+          const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+          const x = 10 + Math.floor(80 * Math.random());
+          const y = 10 + Math.floor(80 * Math.random());
+          circle.setAttribute('cx', String(x));
+          circle.setAttribute('cy', String(y));
+          circle.setAttribute('r', '10');
+          circle.setAttribute('fill', 'black');
+          this.shadowRoot.querySelector('svg').appendChild(circle);
+        }
+      }
+
+      window.customElements.define(LOCAL_NAME, SVGInShadow);
+    });
+  </script>
+
+  <script>
+    suite('SVG', function() {
+      test('Create an element with an SVG element in its shadow root', function() {
+        const elt = document.createElement('svg-in-shadow');
+        document.body.appendChild(elt);
+        window.ShadyDOM.flush();
+        window.ShadyCSS.flush();
+        elt.addCircle();
+        window.ShadyDOM.flush();
+        window.ShadyCSS.flush();
+        document.body.removeChild(elt);
+      });
+    });
+  </script>
+</body>
+</html>
