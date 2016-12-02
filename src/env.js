@@ -38,6 +38,7 @@ if (utils.settings.inUse) {
     getComposedInnerHTML: getComposedInnerHTML,
     getComposedChildNodes: getComposedChildNodes,
     unpatch: patch.unpatchNode,
+    canUnpatch: patch.canUnpatchNode,
     isShadyRoot: utils.isShadyRoot,
     enqueue: enqueue,
     flush: flush,
