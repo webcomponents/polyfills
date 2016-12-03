@@ -12,7 +12,131 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 import * as utils from './utils'
 import {getInnerHTML} from './innerHTML'
-import {tree} from './tree'
+
+function getLogical(node, prop) {
+  return node.__shady && node.__shady[prop];
+}
+
+function hasLogical(node, prop) {
+  return getLogical(node, prop) !== undefined;
+}
+
+function getNative(node, prop) {
+  return node.__nativeProps[prop].get.call(this);
+}
+
+function setNative(node, prop, value) {
+  node.__nativeProps[prop].set.call(this, value);
+}
+
+function nativeMethod(node, prop, args) {
+  return node.__nativeProps[prop].apply(this, args);
+}
+
+function recordInsertBefore(node, container, ref_node) {
+  container.__shady = container.__shady || {};
+  if (hasLogical(container, 'firstChild')) {
+    container.__shady.childNodes = null;
+  }
+  // handle document fragments
+  if (node.nodeType === Node.DOCUMENT_FRAGMENT_NODE) {
+    let c$ = node.childNodes;
+    for (let i=0; i < c$.length; i++) {
+      linkNode(c$[i], container, ref_node);
+    }
+    // cleanup logical dom in doc fragment.
+    node.__shady = node.__shady || {};
+    let resetTo = hasLogical(node, 'firstChild') ? null : undefined;
+    node.__shady.firstChild = node.__shady.lastChild = resetTo;
+    node.__shady.childNodes = resetTo;
+  } else {
+    linkNode(node, container, ref_node);
+  }
+}
+
+function linkNode(node, container, ref_node) {
+  ref_node = ref_node || null;
+  node.__shady = node.__shady || {};
+  container.__shady = container.__shady || {};
+  if (ref_node) {
+    ref_node.__shady = ref_node.__shady || {};
+  }
+  // update ref_node.previousSibling <-> node
+  node.__shady.previousSibling = ref_node ? ref_node.__shady.previousSibling :
+    container.lastChild;
+  let ps = node.__shady.previousSibling;
+  if (ps && ps.__shady) {
+    ps.__shady.nextSibling = node;
+  }
+  // update node <-> ref_node
+  let ns = node.__shady.nextSibling = ref_node;
+  if (ns && ns.__shady) {
+    ns.__shady.previousSibling = node;
+  }
+  // update node <-> container
+  node.__shady.parentNode = container;
+  if (container.__patched) {
+    if (ref_node) {
+      if (ref_node === container.__shady.firstChild) {
+        container.__shady.firstChild = node;
+      }
+    } else {
+      container.__shady.lastChild = node;
+      if (!this.getFirstChild(container)) {
+        container.__shady.firstChild = node;
+      }
+    }
+    // remove caching of childNodes
+    container.__shady.childNodes = null;
+  }
+}
+
+function recordRemoveChild(node, container) {
+  node.__shady = node.__shady || {};
+  if (container.__patched) {
+    container.__shady = container.__shady || {};
+    if (node === container.__shady.firstChild) {
+      container.__shady.firstChild = node.__shady.nextSibling;
+    }
+    if (node === container.__shady.lastChild) {
+      container.__shady.lastChild = node.__shady.previousSibling;
+    }
+  }
+  let p = node.__shady.previousSibling;
+  let n = node.__shady.nextSibling;
+  if (p) {
+    p.__shady = p.__shady || {};
+    p.__shady.nextSibling = n;
+  }
+  if (n) {
+    n.__shady = n.__shady || {};
+    n.__shady.previousSibling = p;
+  }
+  // When an element is removed, logical data is no longer tracked.
+  // Explicitly set `undefined` here to indicate this. This is disginguished
+  // from `null` which is set if info is null.
+  node.__shady.parentNode = node.__shady.previousSibling =
+    node.__shady.nextSibling = null;
+  if (hasLogical(container, 'childNodes')) {
+    // remove caching of childNodes
+    container.__shady.childNodes = null;
+  }
+}
+
+function saveChildNodes(node) {
+  if (!hasLogical('firstChild')) {
+    node.__shady = node.__shady || {};
+    node.__shady.firstChild = node.firstChild;
+    node.__shady.lastChild = node.lastChild;
+    let c$ = node.__shady.childNodes = Array.from(node.childNodes);
+    for (let i=0, n; (i<c$.length) && (n=c$[i]); i++) {
+      n.__shady = n.__shady || {};
+      n.__shady.parentNode = node;
+      n.__shady.nextSibling = c$[i+1] || null;
+      n.__shady.previousSibling = c$[i-1] || null;
+    }
+  }
+}
 
 let mixinImpl = {
 
@@ -35,11 +159,9 @@ let mixinImpl = {
         ownerRoot._skipUpdateInsertionPoints = false;
       }
     }
-    // TODO(sorvell): review: always record logical info if all elements are
-    // at least partially patched.
-    //if (tree.Logical.hasChildNodes(container)) {
-      tree.Logical.recordInsertBefore(node, container, ref_node);
-    //}
+    if (hasLogical(container, 'firstChild')) {
+      recordInsertBefore(node, container, ref_node);
+    }
     // if not distributing and not adding to host, do a fast path addition
     // TODO(sorvell): revisit flow since `ipAdded` needed here if
     // node is a fragment that has a patched QSA.
@@ -54,14 +176,14 @@ let mixinImpl = {
   // to require distribution... both cases are handled here.
   removeNode(node) {
     // important that we want to do this only if the node has a logical parent
-    let logicalParent = tree.Logical.hasParentNode(node) &&
-      tree.Logical.getParentNode(node);
+    let logicalParent = hasLogical(node, 'parentNode') &&
+      getLogical(node, 'parentNode');
     let distributed;
     let ownerRoot = this.ownerShadyRootForNode(node);
     if (logicalParent) {
       // distribute node's parent iff needed
       distributed = this.maybeDistributeParent(node);
-      tree.Logical.recordRemoveChild(node, logicalParent);
+      recordRemoveChild(node, logicalParent);
       // remove node from root and distribute it iff needed
       if (ownerRoot && (this._removeDistributedChildren(ownerRoot, node) ||
         logicalParent.localName === ownerRoot.getInsertionPointTag())) {
@@ -109,7 +231,7 @@ let mixinImpl = {
       if (utils.isShadyRoot(node)) {
         root = node;
       } else {
-        let parent = tree.Logical.getParentNode(node);
+        let parent = node.parentNode;
         root = parent ? this.getRootNode(parent) : node;
       }
       // memo-ize result for performance but only memo-ize
@@ -143,7 +265,7 @@ let mixinImpl = {
       !node.__noInsertionPoint &&
       insertionPointTag && node.querySelector(insertionPointTag);
     let wrappedContent = fragContent &&
-      (tree.Logical.getParentNode(fragContent).nodeType !==
+      (fragContent.parentNode.nodeType !==
       Node.DOCUMENT_FRAGMENT_NODE);
     let hasContent = fragContent || (node.localName === insertionPointTag);
     // There are 3 possible cases where a distribution may need to occur:
@@ -180,7 +302,7 @@ let mixinImpl = {
       !node.__noInsertionPoint) {
       let c$ = node.querySelectorAll(insertionPointTag);
       for (let i=0, n, np, na; (i<c$.length) && (n=c$[i]); i++) {
-        np = tree.Logical.getParentNode(n);
+        np = n.parentNode;
         // don't allow node's parent to be fragment itself
         if (np === node) {
           np = parent;
@@ -189,8 +311,8 @@ let mixinImpl = {
         added = added || na;
       }
     } else if (node.localName === insertionPointTag) {
-      tree.Logical.saveChildNodes(parent);
-      tree.Logical.saveChildNodes(node);
+      saveChildNodes(parent);
+      saveChildNodes(node);
       added = true;
     }
     return added;
@@ -211,9 +333,9 @@ let mixinImpl = {
         for (let j=0; j<dc$.length; j++) {
           hostNeedsDist = true;
           let node = dc$[j];
-          let parent = tree.Composed.getParentNode(node);
+          let parent = getNative(node, 'parentNode');
           if (parent) {
-            tree.Composed.removeChild(parent, node);
+            nativeMethod(parent, 'removeChild', [node]);
           }
         }
       }
@@ -226,14 +348,14 @@ let mixinImpl = {
       if (node == container) {
         return true;
       }
-      node = tree.Logical.getParentNode(node);
+      node = node.parentNode;
     }
   },
 
   _removeOwnerShadyRoot(node) {
     // optimization: only reset the tree if node is actually in a root
     if (this._hasCachedOwnerRoot(node)) {
-      let c$ = tree.Logical.getChildNodes(node);
+      let c$ = node.childNodes;
       for (let i=0, l=c$.length, n; (i<l) && (n=c$[i]); i++) {
         this._removeOwnerShadyRoot(n);
       }
@@ -262,7 +384,7 @@ let mixinImpl = {
   },
 
   maybeDistributeParent(node) {
-    let parent = tree.Logical.getParentNode(node);
+    let parent = node.parentNode;
     if (this._nodeNeedsDistribution(parent)) {
       parent.shadyRoot.update();
       return true;
@@ -285,7 +407,7 @@ let mixinImpl = {
   // and is used by Polymer's styling system.
   query(node, matcher, halter) {
     let list = [];
-    this._queryElements(tree.Logical.getChildNodes(node), matcher,
+    this._queryElements(node.childNodes, matcher,
       halter, list);
     return list;
   },
@@ -307,7 +429,7 @@ let mixinImpl = {
     if (halter && halter(result)) {
       return result;
     }
-    this._queryElements(tree.Logical.getChildNodes(node), matcher,
+    this._queryElements(node.childNodes, matcher,
       halter, list);
   },
 
@@ -360,7 +482,6 @@ let mixinImpl = {
 
 let nativeCloneNode = Element.prototype.cloneNode;
 let nativeImportNode = Document.prototype.importNode;
-let nativeSetAttribute = Element.prototype.setAttribute;
 let nativeRemoveAttribute = Element.prototype.removeAttribute;
 
 export let setAttribute = function(attr, value) {
@@ -368,7 +489,17 @@ export let setAttribute = function(attr, value) {
   if (window.ShadyCSS && attr === 'class' && this.ownerDocument === document) {
     window.ShadyCSS.setElementClass(this, value);
   } else {
-    nativeSetAttribute.call(this, attr, value);
+    nativeMethod(this, 'setAttribute', [attr, value]);
+  }
+}
+
+function generateSimpleDescriptor(prop) {
+  return {
+    get() {
+      let l = getLogical(this, prop);
+      return l !== undefined ? l : getNative(this, prop);
+    },
+    configurable: true
   }
 }
 
@@ -376,44 +507,40 @@ let NodeMixin = {};
 
 Object.defineProperties(NodeMixin, {
 
-  parentElement: {
-    get() {
-      return tree.Logical.getParentNode(this);
-    },
-    configurable: true
-  },
+  parentElement: generateSimpleDescriptor('parentElement'),
 
-  parentNode: {
-    get() {
-      return tree.Logical.getParentNode(this);
-    },
-    configurable: true
-  },
+  parentNode: generateSimpleDescriptor('parentNode'),
 
-  nextSibling: {
-    get() {
-      return tree.Logical.getNextSibling(this);
-    },
-    configurable: true
-  },
+  nextSibling: generateSimpleDescriptor('nextSibling'),
 
-  previousSibling: {
-    get() {
-      return tree.Logical.getPreviousSibling(this);
-    },
-    configurable: true
-  },
+  previousSibling: generateSimpleDescriptor('previousSibling'),
 
   nextElementSibling: {
     get() {
-      return tree.Logical.getNextElementSibling(this);
+      if (hasLogical(this, 'nextSibling')) {
+        let n = this.nextSibling;
+        while (n && n.nodeType !== Node.ELEMENT_NODE) {
+          n = n.nextSibling;
+        }
+        return n;
+      } else {
+        return getNative(this, 'nextElementSibling');
+      }
     },
     configurable: true
   },
 
   previousElementSibling: {
     get() {
-      return tree.Logical.getPreviousElementSibling(this);
+      if (hasLogical(this, 'previousSibling')) {
+        let n = this.previousSibling;
+        while (n && n.nodeType !== Node.ELEMENT_NODE) {
+          n = n.previousSibling;
+        }
+        return n;
+      } else {
+        return getNative(this, 'previousElementSibling');
+      }
     },
     configurable: true
   },
@@ -439,13 +566,13 @@ let FragmentMixin = {
   // container to container.host.
   // 3. node is <content> (host of container needs distribution)
   insertBefore(node, ref_node) {
-    if (ref_node && tree.Logical.getParentNode(ref_node) !== this) {
+    if (ref_node && getLogical(ref_node, 'parentNode') !== this) {
       throw Error('The ref_node to be inserted before is not a child ' +
         'of this node');
     }
     // remove node from its current position iff it's in a tree.
     if (node.nodeType !== Node.DOCUMENT_FRAGMENT_NODE) {
-      let parent = tree.Logical.getParentNode(node);
+      let parent = getLogical(node, 'parentNode');
       mixinImpl.removeNodeFromParent(node, parent);
     }
     if (!mixinImpl.addNode(this, node, ref_node)) {
@@ -461,9 +588,9 @@ let FragmentMixin = {
       let container = utils.isShadyRoot(this) ?
         this.host : this;
       if (ref_node) {
-        tree.Composed.insertBefore(container, node, ref_node);
+        nativeMethod(container, 'insertBefore', [node, ref_node]);
       } else {
-        tree.Composed.appendChild(container, node);
+        nativeMethod(container, 'appendChild', [node]);
       }
     }
     mixinImpl._scheduleObserver(this, node);
@@ -475,7 +602,7 @@ let FragmentMixin = {
     This method also performs dom composition.
   */
   removeChild(node) {
-    if (tree.Logical.getParentNode(node) !== this) {
+    if (node.parentNode !== this) {
       throw Error('The node to be removed is not a child of this node: ' +
         node);
     }
@@ -486,9 +613,9 @@ let FragmentMixin = {
         this;
       // not guaranteed to physically be in container; e.g.
       // undistributed nodes.
-      let parent = tree.Composed.getParentNode(node);
+      let parent = getNative(node, 'parentNode');
       if (container === parent) {
-        tree.Composed.removeChild(container, node);
+        nativeMethod(container, 'removeChild', [node]);
       }
     }
     mixinImpl._scheduleObserver(this, null, node);
@@ -540,8 +667,7 @@ let FragmentMixin = {
       this.ownerDocument;
     let n = nativeImportNode.call(doc, externalNode, false);
     if (deep) {
-      let c$ = tree.Logical.getChildNodes(externalNode);
-      utils.common.patchNode(n);
+      let c$ = externalNode.childNodes;
       for (let i=0, nc; i < c$.length; i++) {
         nc = doc.importNode(c$[i], true);
         n.appendChild(nc);
@@ -555,49 +681,64 @@ Object.defineProperties(FragmentMixin, {
 
   childNodes: {
     get() {
-      let c$ = tree.Logical.getChildNodes(this);
-      return Array.isArray(c$) ? c$ : tree.arrayCopyChildNodes(this);
+      if (hasLogical(this, 'firstChild')) {
+        if (!this.__shady.childNodes) {
+          this.__shady.childNodes = [];
+          for (let n=this.firstChild; n; n=this.nextSibling(n)) {
+            node.__shady.childNodes.push(n);
+          }
+        }
+        return this.__shady.childNodes;
+      } else {
+        getNative(this, 'childNodes');
+      }
     },
     configurable: true
   },
 
   children: {
     get() {
-      if (tree.Logical.hasChildNodes(this)) {
+      if (hasLogical(this, 'firstChild')) {
         return Array.prototype.filter.call(this.childNodes, function(n) {
           return (n.nodeType === Node.ELEMENT_NODE);
         });
       } else {
-        return tree.arrayCopyChildren(this);
+        return getNative(this, 'children');
       }
     },
     configurable: true
   },
 
-  firstChild: {
-    get() {
-      return tree.Logical.getFirstChild(this);
-    },
-    configurable: true
-  },
+  firstChild: generateSimpleDescriptor('firstChild'),
 
-  lastChild: {
-    get() {
-      return tree.Logical.getLastChild(this);
-    },
-    configurable: true
-  },
+  lastChild: generateSimpleDescriptor('lastChild'),
 
   firstElementChild: {
     get() {
-      return tree.Logical.getFirstElementChild(this);
+      if (hasLogical(this, 'firstChild')) {
+        let n = this.firstChild;
+        while (n && n.nodeType !== Node.ELEMENT_NODE) {
+          n = n.nextSibling;
+        }
+        return n;
+      } else {
+        return getNative(this, 'firstElementChild');
+      }
     },
     configurable: true
   },
 
   lastElementChild: {
     get() {
-      return tree.Logical.getLastElementChild(this);
+      if (hasLogical(this, 'lastChild')) {
+        let n = this.lastChild;
+        while (n && n.nodeType !== Node.ELEMENT_NODE) {
+          n = n.previousSibling;
+        }
+        return n;
+      } else {
+        return getNative(this, 'lastElementChild');
+      }
     },
     configurable: true
   },
@@ -607,7 +748,7 @@ Object.defineProperties(FragmentMixin, {
   // textContent / innerHTML
   textContent: {
     get() {
-      if (this.childNodes) {
+      if (hasLogical(this, 'firstChild')) {
         let tc = [];
         for (let i = 0, cn = this.childNodes, c; (c = cn[i]); i++) {
           if (c.nodeType !== Node.COMMENT_NODE) {
@@ -615,13 +756,18 @@ Object.defineProperties(FragmentMixin, {
           }
         }
         return tc.join('');
+      } else {
+        return getNative(this, 'textContent');
       }
-      return '';
     },
     set(text) {
-      mixinImpl.clearNode(this);
-      if (text) {
-        this.appendChild(document.createTextNode(text));
+      if (hasLogical(this, 'firstChild')) {
+        mixinImpl.clearNode(this);
+        if (text) {
+          this.appendChild(document.createTextNode(text));
+        }
+      } else {
+        setNative(this, 'textContent', text);
       }
     },
     configurable: true
@@ -629,66 +775,31 @@ Object.defineProperties(FragmentMixin, {
 
   innerHTML: {
     get() {
-      return getInnerHTML(this);
+      if (hasLogical('firstChild')) {
+        return getInnerHTML(this);
+      } else {
+        return getNative(this, 'innerHTML');
+      }
     },
     set(text) {
-      mixinImpl.clearNode(this);
-      let d = document.createElement('div');
-      d.innerHTML = text;
-      // here, appendChild may move nodes async so we cannot rely
-      // on node position when copying
-      let c$ = tree.arrayCopyChildNodes(d);
-      for (let i=0; i < c$.length; i++) {
-        this.appendChild(c$[i]);
+      if (hasLogical('firstChild')) {
+        mixinImpl.clearNode(this);
+        let d = document.createElement('div');
+        d.innerHTML = text;
+        // here, appendChild may move nodes async so we cannot rely
+        // on node position when copying
+        let c$ = d.childNodes;
+        for (let i=0; i < c$.length; i++) {
+          this.appendChild(c$[i]);
+        }
+      } else {
+        setNative(this, 'innerHTML', text);
       }
     },
     configurable: true
   }
 
 });
-
-let DefaultMixin = {
-  appendChild(node) {
-    this.insertBefore(node);
-  },
-
-  insertBefore(node, ref_node) {
-    // remove node from its current position iff it's in a tree.
-    if (node.nodeType !== Node.DOCUMENT_FRAGMENT_NODE && node.parentNode) {
-      mixinImpl.removeNodeFromParent(node, node.parentNode);
-    }
-    if (node.__patched) {
-      tree.Logical.recordInsertBefore(node, this, ref_node);
-    }
-    // TODO: must used composed here so tracking is cleaned up.
-    if (ref_node) {
-      tree.Composed.insertBefore(this, node, ref_node);
-    } else {
-      tree.Composed.appendChild(this, node);
-    }
-    return node;
-  },
-
-  removeChild(node) {
-    if (!mixinImpl.removeNode(node)) {
-      tree.Composed.removeChild(this, node);
-    }
-    return node;
-  },
-
-  replaceChild(node, ref_node) {
-    this.insertBefore(node, ref_node);
-    this.removeChild(ref_node);
-    return node;
-  },
-
-  querySelector: FragmentMixin.querySelector,
-
-  querySelectorAll: FragmentMixin.querySelectorAll,
-
-  cloneNode: FragmentMixin.cloneNode,
-  // TODO(sorvell): add importNode for non-fragments
-}
 
 let ElementMixin = {
 
@@ -717,12 +828,6 @@ let ElementMixin = {
 };
 
 Object.defineProperties(ElementMixin, {
-
-  shadowRoot: {
-    get() {
-      return this.shadyRoot;
-    }
-  },
 
   slot: {
     get() {
@@ -760,21 +865,34 @@ export let MixinTypes = {
 
 export let Mixins = {
 
-  Default: DefaultMixin,
+  Node: utils.extendAll({}, NodeMixin),
 
-  Node: utils.extendAll({__patched: MixinTypes.NODE}, NodeMixin),
-
-  Fragment: utils.extendAll({__patched: MixinTypes.FRAGMENT},
+  Fragment: utils.extendAll({},
     NodeMixin, FragmentMixin, ActiveElementMixin),
 
-  Element: utils.extendAll({__patched: MixinTypes.ELEMENT},
+  Element: utils.extendAll({},
     NodeMixin, FragmentMixin, ElementMixin, ActiveElementMixin),
 
   // Note: activeElement cannot be patched on document!
-  Document: utils.extendAll({__patched: MixinTypes.DOCUMENT},
+  Document: utils.extendAll({},
     NodeMixin, FragmentMixin, ElementMixin, UnderActiveElementMixin)
 
 };
+
+export let patchProto = function(proto, mixin) {
+  proto.__nativeProps = {};
+  let n$ = Object.getOwnPropertyNames(mixin);
+  for (let i=0, n; (i<n$.length) && (n=n$[i]); i++) {
+    let sd = Object.getOwnPropertyDescriptor(proto, n);
+    if (sd && sd.configurable) {
+      proto.__nativeProps[n] = sd;
+      let md = Object.getOwnPropertyDescriptor(mixin, n);
+      Object.defineProperty(proto, n, md);
+    } else {
+      window.console.warn('Could not patch', n, 'on', proto);
+    }
+  }
+}
 
 export let getRootNode = function(node) {
   return mixinImpl.getRootNode(node);
@@ -850,9 +968,9 @@ class AsyncObserver {
 }
 
 export let getComposedInnerHTML = function(node) {
-  if (utils.common.isNodePatched(node)) {
+  if (hasLogical(node, 'firstChild')) {
     return getInnerHTML(node, function(n) {
-      return tree.Composed.getChildNodes(n);
+      return getNative(n, 'childNodes');
     })
   } else {
     return node.innerHTML;
@@ -860,8 +978,8 @@ export let getComposedInnerHTML = function(node) {
 }
 
 export let getComposedChildNodes = function(node) {
-  return utils.common.isNodePatched(node) ?
-    tree.Composed.getChildNodes(node) :
+  return hasLogical(node, 'firstChild') ?
+    getNative(n, 'childNodes') :
     node.childNodes;
 }
 

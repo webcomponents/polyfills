@@ -25,6 +25,7 @@ import * as patch from './patch'
 import {getRootNode, filterMutations, observeChildren, unobserveChildren,
   setAttribute, Mixins,
   getComposedInnerHTML, getComposedChildNodes} from './element-mixin'
+import {Mixins as GlobalMixin} from './global-mixin'
 import * as events from './event-mixin'
 import {tree, getNativeProperty} from './tree'
 
