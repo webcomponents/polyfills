@@ -80,12 +80,12 @@ export let StyleTransformer = {
         let c = element.getAttribute(CLASS);
         if (shouldRemoveScope) {
           if (c) {
-            element.setAttribute(CLASS, c.replace(SCOPE_NAME, '')
-            .replace(scope, ''));
+            let newValue = c.replace(SCOPE_NAME, '').replace(scope, '');
+            StyleUtil.setElementClassRaw(element, newValue);
           }
         } else {
-          element.setAttribute(CLASS, (c ? c + ' ' : '') +
-          SCOPE_NAME + ' ' + scope);
+          let newValue = (c ? c + ' ' : '') + SCOPE_NAME + ' ' + scope;
+          StyleUtil.setElementClassRaw(element, newValue);
         }
       }
     }
