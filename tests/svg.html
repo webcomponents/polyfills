@@ -32,42 +32,41 @@
       class="test-class"
     ></svg>
   </template>
-  <script>
-    window.addEventListener('WebComponentsReady', function() {
-      const LOCAL_NAME = 'svg-in-shadow';
-      const TEMPLATE = document.querySelector('template[id="' + LOCAL_NAME + '"]');
-      window.ShadyCSS.prepareTemplate(TEMPLATE, LOCAL_NAME);
-
-      class SVGInShadow extends HTMLElement {
-        connectedCallback() {
-          this.attachShadow({mode: 'open'});
-          this.shadowRoot.appendChild(document.importNode(TEMPLATE.content, true));
-          window.ShadyCSS.applyStyle(this);
-        }
-
-        get svg() {
-          return this.shadowRoot.querySelector('svg');
-        }
-
-        addCircle() {
-          const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-          const x = 10 + Math.floor(80 * Math.random());
-          const y = 10 + Math.floor(80 * Math.random());
-          circle.setAttribute('cx', String(x));
-          circle.setAttribute('cy', String(y));
-          circle.setAttribute('r', '10');
-          this.svg.appendChild(circle);
-          return circle;
-        }
-      }
-
-      window.customElements.define(LOCAL_NAME, SVGInShadow);
-    });
-  </script>
 
   <script>
     suite('SVG', function() {
       const STYLE_SCOPE_CLASS = 'style-scope';
+
+      suiteSetup(function() {
+        const LOCAL_NAME = 'svg-in-shadow';
+        const TEMPLATE = document.querySelector('template[id="' + LOCAL_NAME + '"]');
+        window.ShadyCSS.prepareTemplate(TEMPLATE, LOCAL_NAME);
+
+        class SVGInShadow extends HTMLElement {
+          connectedCallback() {
+            this.attachShadow({mode: 'open'});
+            this.shadowRoot.appendChild(document.importNode(TEMPLATE.content, true));
+            window.ShadyCSS.applyStyle(this);
+          }
+
+          get svg() {
+            return this.shadowRoot.querySelector('svg');
+          }
+
+          addCircle() {
+            const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            const x = 10 + Math.floor(80 * Math.random());
+            const y = 10 + Math.floor(80 * Math.random());
+            circle.setAttribute('cx', String(x));
+            circle.setAttribute('cy', String(y));
+            circle.setAttribute('r', '10');
+            this.svg.appendChild(circle);
+            return circle;
+          }
+        }
+
+        window.customElements.define(LOCAL_NAME, SVGInShadow);
+      });
 
       test('SVG elements within a style scope should have style scoping classes.', function() {
         const elementWithSVG = document.createElement('svg-in-shadow');
