@@ -25,33 +25,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   </style>
 </head>
 <body>
-  <script>
-    function makeElement(name, connected) {
-      var template = document.querySelector('#' + name);
-      window.ShadyCSS.prepareTemplate(template, name);
-      window.customElements.define(name, class extends HTMLElement {
-        connectedCallback() {
-          if (!this.shadowRoot) {
-            this.attachShadow({mode: 'open'});
-            this.shadowRoot.appendChild(document.importNode(template.content, true));
-          }
-          window.ShadyCSS.applyStyle(this);
-          if (connected) {
-            connected.call(this);
-          }
-        }
-      });
-    }
-  </script>
 
 <template id="x-gchild">
   <style>
   </style>
   <div id="target">x-gchild</div>
 </template>
-<script>
-  makeElement('x-gchild');
-</script>
 
 <template id="x-child">
   <div id="simple">simple</div>
@@ -63,11 +42,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <x-gchild id="gchild1"></x-gchild>
   <x-gchild id="gchild2" class="wide"></x-gchild>
 </template>
-<script>
-  makeElement('x-child', function() {
-    this.classList.add('nug');
-  });
-</script>
 
 <template id="x-child2">
   <style>
@@ -77,16 +51,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   </style>
   <div id="target">x-child2</div>
 </template>
-<script>
-  makeElement('x-child2');
-</script>
 
 <template id="x-scope-class">
   <div id="scope">Trivial</div>
 </template>
-<script>
-  makeElement('x-scope-class');
-</script>
 
 <template id="x-scoped">
   <style>
@@ -186,9 +154,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <x-keyframes id="keyframes"></x-keyframes>
   <x-keyframes id="keyframes2"></x-keyframes>
 </template>
-<script>
-  makeElement('x-scoped');
-</script>
 
 <template id="x-slotted">
   <style>
@@ -207,9 +172,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     <slot name="container"></slot>
   </div>
 </template>
-<script>
-  makeElement('x-slotted');
-</script>
 
 <template id="dynamic">
   <div class="added">
@@ -232,18 +194,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   </style>
   <div id="container"></div>
 </template>
-<script>
-(function() {
-  var dynamic = document.querySelector('template#dynamic');
-
-  makeElement('x-dynamic-scope',
-    function() {
-    // simulate 3rd party action by using normal dom to add to element.
-    var dom = document.importNode(dynamic.content, true);
-    this.shadowRoot.querySelector('#container').appendChild(dom);
-  });
-})();
-</script>
 
 <template id="x-keyframes">
   <style>
@@ -287,9 +237,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   </style>
   x-keyframes
 </template>
-<script>
-  makeElement('x-keyframes');
-</script>
 
 <template id="x-attr-selector">
   <style>
@@ -312,9 +259,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <div id="foo3" attr="foo3" a="a"></div>
   <div id="bar3" attr="bar3" a="a">bar3</div>
 </template>
-<script>
-  makeElement('x-attr-selector');
-</script>
 
 <template id="svg">
   <svg class="svg" viewBox="0 0 24 24">
@@ -335,17 +279,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   </style>
   <div id="container"></div>
 </template>
-<script>
-  (function() {
-    var template = document.querySelector('template#svg');
-
-    makeElement('x-dynamic-svg', function() {
-      var dom = document.importNode(template.content, true);
-      this.shadowRoot.querySelector('#container').appendChild(dom);
-    });
-  })();
-</script>
-
 
 <template id="x-specificity">
   <style>
@@ -358,12 +291,26 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   </style>
   <slot></slot>
 </template>
-<script>
-  makeElement('x-specificity');
-</script>
 
 <script>
 (function() {
+  function makeElement(name, connected) {
+    var template = document.querySelector('#' + name);
+    window.ShadyCSS.prepareTemplate(template, name);
+    window.customElements.define(name, class extends HTMLElement {
+      connectedCallback() {
+        if (!this.shadowRoot) {
+          this.attachShadow({mode: 'open'});
+          this.shadowRoot.appendChild(document.importNode(template.content, true));
+        }
+        window.ShadyCSS.applyStyle(this);
+        if (connected) {
+          connected.call(this);
+        }
+      }
+    });
+  }
+
   function assertComputed(element, value, property, pseudo) {
     var computed = getComputedStyle(element, pseudo);
     property = property || 'border-top-width';
@@ -398,6 +345,38 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   }
 
   suite('scoped-styling', function() {
+
+    suiteSetup(function() {
+      makeElement('x-gchild');
+      makeElement('x-child', function() {
+        this.classList.add('nug');
+      });
+      makeElement('x-child2');
+      makeElement('x-scope-class');
+      makeElement('x-scoped');
+      makeElement('x-slotted');
+      (function() {
+        var dynamic = document.querySelector('template#dynamic');
+
+        makeElement('x-dynamic-scope',
+          function() {
+          // simulate 3rd party action by using normal dom to add to element.
+          var dom = document.importNode(dynamic.content, true);
+          this.shadowRoot.querySelector('#container').appendChild(dom);
+        });
+      })();
+      makeElement('x-keyframes');
+      makeElement('x-attr-selector');
+      (function() {
+        var template = document.querySelector('template#svg');
+
+        makeElement('x-dynamic-svg', function() {
+          var dom = document.importNode(template.content, true);
+          this.shadowRoot.querySelector('#container').appendChild(dom);
+        });
+      })();
+      makeElement('x-specificity');
+    });
 
     var el;
     setup(function() {
@@ -647,6 +626,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
         xKeyframes.classList.add('special');
         xKeyframes.setAttribute('animated', '');
+        window.ShadyCSS.applyStyle(xKeyframes);
       };
       xKeyframes.addEventListener('animationend', onAnimationEnd);
       xKeyframes.addEventListener('webkitAnimationEnd', onAnimationEnd);

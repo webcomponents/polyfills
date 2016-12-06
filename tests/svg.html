@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>SVG</title>
+  <script src="../../web-component-tester/browser.js"></script>
+  <script>
+    window.ShadyDOM = {force: true};
+    window.ShadyCSS = {shimshadow: true};
+  </script>
+  <script src="../../webcomponentsjs/webcomponents-lite.js"></script>
+</head>
+<body>
+  <template id="svg-in-shadow">
+    <style>
+      :host {
+        display: inline-block;
+        background-color: #ccc;
+      }
+
+      .test-class {
+        border: 3px solid blue;
+      }
+
+      circle {
+        fill: blue;
+      }
+    </style>
+    <svg
+      xmlns="http://www.w3.org/2000/svg" version="1.1"
+      width="100px" height="100px" viewBox="0 0 100 100"
+      class="test-class"
+    ></svg>
+  </template>
+
+  <script>
+    suite('SVG', function() {
+      const STYLE_SCOPE_CLASS = 'style-scope';
+
+      suiteSetup(function() {
+        const LOCAL_NAME = 'svg-in-shadow';
+        const TEMPLATE = document.querySelector('template[id="' + LOCAL_NAME + '"]');
+        window.ShadyCSS.prepareTemplate(TEMPLATE, LOCAL_NAME);
+
+        class SVGInShadow extends HTMLElement {
+          connectedCallback() {
+            this.attachShadow({mode: 'open'});
+            this.shadowRoot.appendChild(document.importNode(TEMPLATE.content, true));
+            window.ShadyCSS.applyStyle(this);
+          }
+
+          get svg() {
+            return this.shadowRoot.querySelector('svg');
+          }
+
+          addCircle() {
+            const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            const x = 10 + Math.floor(80 * Math.random());
+            const y = 10 + Math.floor(80 * Math.random());
+            circle.setAttribute('cx', String(x));
+            circle.setAttribute('cy', String(y));
+            circle.setAttribute('r', '10');
+            this.svg.appendChild(circle);
+            return circle;
+          }
+        }
+
+        window.customElements.define(LOCAL_NAME, SVGInShadow);
+      });
+
+      test('SVG elements within a style scope should have style scoping classes.', function() {
+        const elementWithSVG = document.createElement('svg-in-shadow');
+        // Force upgrade.
+        document.body.appendChild(elementWithSVG);
+        window.ShadyDOM.flush();
+        window.ShadyCSS.flush();
+        const svg = elementWithSVG.svg;
+        // The svg element should have a style scope.
+        assert(svg.getAttribute('class').indexOf(STYLE_SCOPE_CLASS) > -1);
+        const circle = elementWithSVG.addCircle();
+        window.ShadyDOM.flush();
+        window.ShadyCSS.flush();
+        // The circle should also have a style scope.
+        assert(circle.getAttribute('class').indexOf(STYLE_SCOPE_CLASS) > -1);
+        // Clean up.
+        document.body.removeChild(elementWithSVG);
+      });
+
+      test('SVG elements removed from style scopes should have scoping classes removed.', function() {
+        const elementWithSVG = document.createElement('svg-in-shadow');
+        // Force upgrade.
+        document.body.appendChild(elementWithSVG);
+        window.ShadyDOM.flush();
+        window.ShadyCSS.flush();
+        // Get references to test elements.
+        const svg = elementWithSVG.svg;
+        const circle = elementWithSVG.addCircle();
+        window.ShadyDOM.flush();
+        window.ShadyCSS.flush();
+        // Move the SVG element out of the shadow root.
+        svg.parentNode.removeChild(svg);
+        document.body.appendChild(svg);
+        window.ShadyDOM.flush();
+        window.ShadyCSS.flush();
+        // The svg element should keep the class that was not involved in style scoping.
+        assert.equal(svg.getAttribute('class').trim(), 'test-class');
+        // The svg element and circle should not have style scope classes.
+        if (svg.hasAttribute('class')) {
+          assert(svg.getAttribute('class').indexOf(STYLE_SCOPE_CLASS) === -1);
+        }
+        if (circle.hasAttribute('class')) {
+          assert(circle.getAttribute('class').indexOf(STYLE_SCOPE_CLASS) === -1);
+        }
+        // Clean up.
+        document.body.removeChild(elementWithSVG);
+        document.body.removeChild(svg);
+      });
+    });
+  </script>
+</body>
+</html>
