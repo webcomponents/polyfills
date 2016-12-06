@@ -163,6 +163,15 @@ export function processVariableAndFallback(str, callback) {
   return callback(prefix, value, fallback, suffix);
 }
 
+export function setElementClassRaw(element, value) {
+  // use native setAttribute provided by ShadyDOM when setAttribute is patched
+  if (element.__nativeSetAttribute) {
+    element.__nativeSetAttribute('class', value);
+  } else {
+    element.setAttribute('class', value);
+  }
+}
+
 export let rx = {
   VAR_ASSIGN: /(?:^|[;\s{]\s*)(--[\w-]*?)\s*:\s*(?:([^;{]*)|{([^}]*)})(?:(?=[;\s}])|$)/gi,
   MIXIN_MATCH: /(?:^|\W+)@apply\s*\(?([^);\n]*)\)?/gi,

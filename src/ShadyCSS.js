@@ -339,13 +339,7 @@ export let ShadyCSS = {
         classes.push(StyleProperties.XSCOPE_NAME, styleInfo.scopeSelector);
       }
     }
-    let out = classes.join(' ');
-    // use native setAttribute provided by ShadyDOM when setAttribute is patched
-    if (element.__nativeSetAttribute) {
-      element.__nativeSetAttribute('class', out);
-    } else {
-      element.setAttribute('class', out);
-    }
+    StyleUtil.setElementClassRaw(element, classes.join(' '));
   },
   _styleInfoForNode(node) {
     return StyleInfo.get(node);

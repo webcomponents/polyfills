@@ -20,8 +20,8 @@ if (!nativeShadow) {
     return (element.classList &&
       !element.classList.contains(StyleTransformer.SCOPE_NAME) ||
       // note: necessary for IE11
-      (element instanceof SVGElement &&
-      element.getAttribute('class').indexOf(StyleTransformer.SCOPE_NAME) < 0));
+      (element instanceof SVGElement && (!element.hasAttribute('class') ||
+      element.getAttribute('class').indexOf(StyleTransformer.SCOPE_NAME) < 0)));
   }
 
   let handler = (mxns) => {
@@ -48,14 +48,21 @@ if (!nativeShadow) {
       for (let i=0; i < mxn.removedNodes.length; i++) {
         let n = mxn.removedNodes[i];
         if (n.nodeType === Node.ELEMENT_NODE) {
-          let classIdx = Array.from(n.classList)
-            .indexOf(StyleTransformer.SCOPE_NAME);
-          if (classIdx >= 0) {
+          let classes = undefined;
+          if (n.classList) {
+            classes = Array.from(n.classList);
+          } else if (n.hasAttribute('class')) {
+            classes = n.getAttribute('class').split(/\s+/);
+          }
+          if (classes !== undefined) {
             // NOTE: relies on the scoping class always being adjacent to the
             // SCOPE_NAME class.
-            let scope = n.classList[classIdx + 1];
-            if (scope) {
-              StyleTransformer.dom(n, scope, true);
+            let classIdx = classes.indexOf(StyleTransformer.SCOPE_NAME);
+            if (classIdx >= 0) {
+              let scope = classes[classIdx + 1];
+              if (scope) {
+                StyleTransformer.dom(n, scope, true);
+              }
             }
           }
         }
