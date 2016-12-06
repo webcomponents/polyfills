@@ -146,10 +146,15 @@ export let ShadyCSS = {
       }
     }
     let styleInfo = StyleInfo.get(host);
+    let hasApplied = Boolean(styleInfo);
     if (!styleInfo) {
       styleInfo = this._prepareHost(host);
     }
-    Object.assign(styleInfo.overrideStyleProperties, overrideProps);
+    if (overrideProps) {
+      styleInfo.overrideStyleProperties =
+        styleInfo.overrideStyleProperties || {};
+      Object.assign(styleInfo.overrideStyleProperties, overrideProps);
+    }
     if (this.nativeCss) {
       let template = templateMap[is];
       if (template && template.__applyShimInvalid && template._style) {
@@ -171,10 +176,12 @@ export let ShadyCSS = {
         this._applyStyleProperties(host, styleInfo);
       }
     }
-    let root = this._isRootOwner(host) ? host : host.shadowRoot;
-    // note: some elements may not have a root!
-    if (root) {
-      this._applyToDescendants(root);
+    if (hasApplied) {
+      let root = this._isRootOwner(host) ? host : host.shadowRoot;
+      // note: some elements may not have a root!
+      if (root) {
+        this._applyToDescendants(root);
+      }
     }
   },
   _applyToDescendants(root) {
