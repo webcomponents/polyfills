@@ -853,13 +853,13 @@ class AsyncObserver {
 let walker = document.createTreeWalker(document, NodeFilter.SHOW_ALL);
 export let getComposedChildNodes = function(node) {
   let nodes = [];
-    walker.currentNode = node;
-    let n = walker.firstChild();
-    while (n) {
-      nodes.push(n);
-      n = walker.nextSibling();
-    }
-    return nodes;
+  walker.currentNode = node;
+  let n = walker.firstChild();
+  while (n) {
+    nodes.push(n);
+    n = walker.nextSibling();
+  }
+  return nodes;
 }
 
 export let getComposedInnerHTML = function(node) {
