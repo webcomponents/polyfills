@@ -849,20 +849,25 @@ class AsyncObserver {
 
 }
 
+// use a TreeWalker to get composed dom information.
+let walker = document.createTreeWalker(document, NodeFilter.SHOW_ALL);
+export let getComposedChildNodes = function(node) {
+  let nodes = [];
+    walker.currentNode = node;
+    let n = walker.firstChild();
+    while (n) {
+      nodes.push(n);
+      n = walker.nextSibling();
+    }
+    return nodes;
+}
+
 export let getComposedInnerHTML = function(node) {
   if (utils.common.isNodePatched(node)) {
-    return getInnerHTML(node, function(n) {
-      return tree.Composed.getChildNodes(n);
-    })
+    return getInnerHTML(node, getComposedChildNodes);
   } else {
     return node.innerHTML;
   }
-}
-
-export let getComposedChildNodes = function(node) {
-  return utils.common.isNodePatched(node) ?
-    tree.Composed.getChildNodes(node) :
-    node.childNodes;
 }
 
 // TODO(sorvell): consider instead polyfilling MutationObserver

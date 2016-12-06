@@ -25,7 +25,7 @@ import * as patch from './patch'
 import {getRootNode, filterMutations, observeChildren, unobserveChildren,
   setAttribute, Mixins,
   getComposedInnerHTML, getComposedChildNodes} from './element-mixin'
-import {Mixins as GlobalMixin} from './global-mixin'
+import {Mixins as GlobalMixins, patchProto, getNative} from './global-mixin'
 import * as events from './event-mixin'
 import {tree, getNativeProperty} from './tree'
 
@@ -33,7 +33,7 @@ if (utils.settings.inUse) {
 
   window.ShadyDOM = {
     tree: tree,
-    getNativeProperty: getNativeProperty,
+    getNativeProperty: getNative,
     patch: patch.patchNode,
     isPatched: patch.isNodePatched,
     getComposedInnerHTML: getComposedInnerHTML,
@@ -137,14 +137,15 @@ if (utils.settings.inUse) {
     }
   }
 
-    // Patch mutation methods on ALL dom prototypes.
-  for (let p in Mixins.Fragment) {
-    let method = Mixins.Fragment[p];
-    if (typeof method == 'function') {
-      Element.prototype[p] = method;
-      DocumentFragment.prototype[p] = method;
-      Document.prototype[p] = method;
-    }
+  // Patch mutation methods on ALL dom prototypes.
+  for (let p in Mixins.Default) {
+    let method = Mixins.Default[p];
+    Element.prototype[p] = method;
+    DocumentFragment.prototype[p] = method;
+    Document.prototype[p] = method;
   }
+
+  // patchProto(Node.prototype, GlobalMixins.Node);
+  // patchProto(Element.prototype, GlobalMixins.Element);
 
 }

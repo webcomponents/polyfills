@@ -21,16 +21,16 @@ function hasLogical(node, prop) {
   return getLogical(node, prop) !== undefined;
 }
 
-function getNative(node, prop) {
-  return node.__nativeProps[prop].get.call(this);
+export function getNative(node, prop) {
+  return node.__nativeProps[prop].get.call(node);
 }
 
 function setNative(node, prop, value) {
-  node.__nativeProps[prop].set.call(this, value);
+  node.__nativeProps[prop].set.call(node, value);
 }
 
 function nativeMethod(node, prop, args) {
-  return node.__nativeProps[prop].apply(this, args);
+  return node.__nativeProps[prop].value.apply(node, args);
 }
 
 function recordInsertBefore(node, container, ref_node) {
@@ -503,58 +503,7 @@ function generateSimpleDescriptor(prop) {
   }
 }
 
-let NodeMixin = {};
-
-Object.defineProperties(NodeMixin, {
-
-  parentElement: generateSimpleDescriptor('parentElement'),
-
-  parentNode: generateSimpleDescriptor('parentNode'),
-
-  nextSibling: generateSimpleDescriptor('nextSibling'),
-
-  previousSibling: generateSimpleDescriptor('previousSibling'),
-
-  nextElementSibling: {
-    get() {
-      if (hasLogical(this, 'nextSibling')) {
-        let n = this.nextSibling;
-        while (n && n.nodeType !== Node.ELEMENT_NODE) {
-          n = n.nextSibling;
-        }
-        return n;
-      } else {
-        return getNative(this, 'nextElementSibling');
-      }
-    },
-    configurable: true
-  },
-
-  previousElementSibling: {
-    get() {
-      if (hasLogical(this, 'previousSibling')) {
-        let n = this.previousSibling;
-        while (n && n.nodeType !== Node.ELEMENT_NODE) {
-          n = n.previousSibling;
-        }
-        return n;
-      } else {
-        return getNative(this, 'previousElementSibling');
-      }
-    },
-    configurable: true
-  },
-
-  assignedSlot: {
-    get() {
-      return this.__shady && this.__shady.assignedSlot;
-    },
-    configurable: true
-  }
-});
-
-let FragmentMixin = {
-
+let NodeMixin = {
   appendChild(node) {
     return this.insertBefore(node);
   },
@@ -628,6 +577,91 @@ let FragmentMixin = {
     return node;
   },
 
+  cloneNode(deep) {
+    if (this.localName == 'template') {
+      return nativeCloneNode.call(this, deep);
+    } else {
+      let n = nativeCloneNode.call(this, false);
+      if (deep) {
+        let c$ = this.childNodes;
+        for (let i=0, nc; i < c$.length; i++) {
+          nc = c$[i].cloneNode(true);
+          n.appendChild(nc);
+        }
+      }
+      return n;
+    }
+  }
+};
+
+Object.defineProperties(NodeMixin, {
+
+  parentElement: generateSimpleDescriptor('parentElement'),
+
+  parentNode: generateSimpleDescriptor('parentNode'),
+
+  nextSibling: generateSimpleDescriptor('nextSibling'),
+
+  previousSibling: generateSimpleDescriptor('previousSibling'),
+
+  childNodes: {
+    get() {
+      if (hasLogical(this, 'firstChild')) {
+        if (!this.__shady.childNodes) {
+          this.__shady.childNodes = [];
+          for (let n=this.firstChild; n; n=this.nextSibling) {
+            this.__shady.childNodes.push(n);
+          }
+        }
+        return this.__shady.childNodes;
+      } else {
+        return getNative(this, 'childNodes');
+      }
+    },
+    configurable: true
+  },
+
+  firstChild: generateSimpleDescriptor('firstChild'),
+
+  lastChild: generateSimpleDescriptor('lastChild'),
+
+  textContent: {
+    get() {
+      if (hasLogical(this, 'firstChild')) {
+        let tc = [];
+        for (let i = 0, cn = this.childNodes, c; (c = cn[i]); i++) {
+          if (c.nodeType !== Node.COMMENT_NODE) {
+            tc.push(c.textContent);
+          }
+        }
+        return tc.join('');
+      } else {
+        return getNative(this, 'textContent');
+      }
+    },
+    set(text) {
+      if (hasLogical(this, 'firstChild')) {
+        mixinImpl.clearNode(this);
+        if (text) {
+          this.appendChild(document.createTextNode(text));
+        }
+      } else {
+        setNative(this, 'textContent', text);
+      }
+    },
+    configurable: true
+  },
+
+  assignedSlot: {
+    get() {
+      return getLogical(this, 'assignedSlot') || null;
+    },
+    configurable: true
+  }
+});
+
+let ElementMixin = {
+
   // TODO(sorvell): consider doing native QSA and filtering results.
   querySelector(selector) {
     // match selector and halt on first result.
@@ -645,56 +679,45 @@ let FragmentMixin = {
     });
   },
 
-  cloneNode(deep) {
-    if (this.localName == 'template') {
-      return nativeCloneNode.call(this, deep);
-    } else {
-      let n = nativeCloneNode.call(this, false);
-      if (deep) {
-        let c$ = this.childNodes;
-        for (let i=0, nc; i < c$.length; i++) {
-          nc = c$[i].cloneNode(true);
-          n.appendChild(nc);
-        }
-      }
-      return n;
-    }
+  // importNode(externalNode, deep) {
+  //   // for convenience use this node's ownerDoc if the node isn't a document
+  //   let doc = this instanceof Document ? this :
+  //     this.ownerDocument;
+  //   let n = nativeImportNode.call(doc, externalNode, false);
+  //   if (deep) {
+  //     let c$ = externalNode.childNodes;
+  //     for (let i=0, nc; i < c$.length; i++) {
+  //       nc = doc.importNode(c$[i], true);
+  //       n.appendChild(nc);
+  //     }
+  //   }
+  //   return n;
+  // },
+
+  // TODO(sorvell): should only exist on <slot>
+  // assignedNodes(options) {
+  //   if (this.localName === 'slot') {
+  //     mixinImpl.renderRootNode(this);
+  //     return this.__shady ?
+  //       ((options && options.flatten ? this.__shady.distributedNodes :
+  //       this.__shady.assignedNodes) || []) :
+  //       [];
+  //   }
+  // },
+
+  setAttribute(name, value) {
+    setAttribute.call(this, name, value);
+    mixinImpl.maybeDistributeAttributeChange(this, name);
   },
 
-  importNode(externalNode, deep) {
-    // for convenience use this node's ownerDoc if the node isn't a document
-    let doc = this instanceof Document ? this :
-      this.ownerDocument;
-    let n = nativeImportNode.call(doc, externalNode, false);
-    if (deep) {
-      let c$ = externalNode.childNodes;
-      for (let i=0, nc; i < c$.length; i++) {
-        nc = doc.importNode(c$[i], true);
-        n.appendChild(nc);
-      }
-    }
-    return n;
+  removeAttribute(name) {
+    nativeRemoveAttribute.call(this, name);
+    mixinImpl.maybeDistributeAttributeChange(this, name);
   }
+
 };
 
-Object.defineProperties(FragmentMixin, {
-
-  childNodes: {
-    get() {
-      if (hasLogical(this, 'firstChild')) {
-        if (!this.__shady.childNodes) {
-          this.__shady.childNodes = [];
-          for (let n=this.firstChild; n; n=this.nextSibling(n)) {
-            node.__shady.childNodes.push(n);
-          }
-        }
-        return this.__shady.childNodes;
-      } else {
-        getNative(this, 'childNodes');
-      }
-    },
-    configurable: true
-  },
+Object.defineProperties(ElementMixin, {
 
   children: {
     get() {
@@ -708,10 +731,6 @@ Object.defineProperties(FragmentMixin, {
     },
     configurable: true
   },
-
-  firstChild: generateSimpleDescriptor('firstChild'),
-
-  lastChild: generateSimpleDescriptor('lastChild'),
 
   firstElementChild: {
     get() {
@@ -743,31 +762,31 @@ Object.defineProperties(FragmentMixin, {
     configurable: true
   },
 
-  // TODO(srovell): strictly speaking fragments do not have textContent
-  // or innerHTML but ShadowRoots do and are not easily distinguishable.
-  // textContent / innerHTML
-  textContent: {
+  nextElementSibling: {
     get() {
-      if (hasLogical(this, 'firstChild')) {
-        let tc = [];
-        for (let i = 0, cn = this.childNodes, c; (c = cn[i]); i++) {
-          if (c.nodeType !== Node.COMMENT_NODE) {
-            tc.push(c.textContent);
-          }
+      if (hasLogical(this, 'nextSibling')) {
+        let n = this.nextSibling;
+        while (n && n.nodeType !== Node.ELEMENT_NODE) {
+          n = n.nextSibling;
         }
-        return tc.join('');
+        return n;
       } else {
-        return getNative(this, 'textContent');
+        return getNative(this, 'nextElementSibling');
       }
     },
-    set(text) {
-      if (hasLogical(this, 'firstChild')) {
-        mixinImpl.clearNode(this);
-        if (text) {
-          this.appendChild(document.createTextNode(text));
+    configurable: true
+  },
+
+  previousElementSibling: {
+    get() {
+      if (hasLogical(this, 'previousSibling')) {
+        let n = this.previousSibling;
+        while (n && n.nodeType !== Node.ELEMENT_NODE) {
+          n = n.previousSibling;
         }
+        return n;
       } else {
-        setNative(this, 'textContent', text);
+        return getNative(this, 'previousElementSibling');
       }
     },
     configurable: true
@@ -797,37 +816,7 @@ Object.defineProperties(FragmentMixin, {
       }
     },
     configurable: true
-  }
-
-});
-
-let ElementMixin = {
-
-  // TODO(sorvell): should only exist on <slot>
-  assignedNodes(options) {
-    if (this.localName === 'slot') {
-      mixinImpl.renderRootNode(this);
-      return this.__shady ?
-        ((options && options.flatten ? this.__shady.distributedNodes :
-        this.__shady.assignedNodes) || []) :
-        [];
-    }
   },
-
-
-  setAttribute(name, value) {
-    setAttribute.call(this, name, value);
-    mixinImpl.maybeDistributeAttributeChange(this, name);
-  },
-
-  removeAttribute(name) {
-    nativeRemoveAttribute.call(this, name);
-    mixinImpl.maybeDistributeAttributeChange(this, name);
-  }
-
-};
-
-Object.defineProperties(ElementMixin, {
 
   slot: {
     get() {
@@ -865,22 +854,18 @@ export let MixinTypes = {
 
 export let Mixins = {
 
-  Node: utils.extendAll({}, NodeMixin),
+  Node: NodeMixin,
 
-  Fragment: utils.extendAll({},
-    NodeMixin, FragmentMixin, ActiveElementMixin),
-
-  Element: utils.extendAll({},
-    NodeMixin, FragmentMixin, ElementMixin, ActiveElementMixin),
+  Element: ElementMixin,
 
   // Note: activeElement cannot be patched on document!
   Document: utils.extendAll({},
-    NodeMixin, FragmentMixin, ElementMixin, UnderActiveElementMixin)
+    UnderActiveElementMixin)
 
 };
 
 export let patchProto = function(proto, mixin) {
-  proto.__nativeProps = {};
+  proto.__nativeProps = Object.create(proto.__nativeProps || {});
   let n$ = Object.getOwnPropertyNames(mixin);
   for (let i=0, n; (i<n$.length) && (n=n$[i]); i++) {
     let sd = Object.getOwnPropertyDescriptor(proto, n);

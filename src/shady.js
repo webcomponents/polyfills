@@ -13,6 +13,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 import {calculateSplices} from './array-splice'
 import * as utils from './utils'
 import {tree} from './tree'
+import {getComposedChildNodes} from './element-mixin'
 import Distributor from './distributor'
 
 /**
@@ -221,20 +222,9 @@ let ShadyMixin = {
 
   // Ensures that the rendered node list inside `container` is `children`.
   _updateChildNodes(container, children) {
-    let composed;
-    if (utils.isShadyRoot(container)) {
-      composed = tree.Logical.getChildNodes(container);
-    } else {
-      let patched = container.__patched;
-      if (patched) {
-        utils.common.unpatchNode(container);
-      }
-      composed = tree.arrayCopy(container.childNodes);
-      if (patched) {
-        utils.common.patchNode(container);
-      }
-    }
-    //let composed = tree.Composed.getChildNodes(container);
+    let composed = utils.isShadyRoot(container) ?
+      tree.Logical.getChildNodes(container) :
+      getComposedChildNodes(container);
     let splices = calculateSplices(children, composed);
     // process removals
     for (let i=0, d=0, s; (i<splices.length) && (s=splices[i]); i++) {
