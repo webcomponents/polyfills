@@ -79,8 +79,11 @@ export let ShadyCSS = {
     if (!this.nativeShadow) {
       StyleTransformer.dom(template.content, elementName);
     }
+    // check if the styling has mixin definitions or uses
+    let hasMixins = ApplyShim.detectMixin(cssText);
     let ast = parse(cssText);
-    if (this.nativeCss && !this.nativeCssApply) {
+    // only run the applyshim transforms if there is a mixin involved
+    if (hasMixins && this.nativeCss && !this.nativeCssApply) {
       ApplyShim.transformRules(ast, elementName);
     }
     template._styleAst = ast;
@@ -156,19 +159,29 @@ export let ShadyCSS = {
       Object.assign(styleInfo.overrideStyleProperties, overrideProps);
     }
     if (this.nativeCss) {
+      this._updateNativeProperties(host, styleInfo.overrideStyleProperties);
       let template = templateMap[is];
-      if (template && template.__applyShimInvalid && template._style) {
+      // bail early if there is no shadowroot for this element
+      if (!template) {
+        return;
+      }
+      if (template._applyShimInvalid && template._style) {
         // update template
-        ApplyShim.transformRules(template._styleAst, is);
-        template._style.textContent = StyleTransformer.elementStyles(host, styleInfo.styleRules);
+        if (!template._invalidating) {
+          ApplyShim.transformRules(template._styleAst, is);
+          template._style.textContent = StyleTransformer.elementStyles(host, styleInfo.styleRules);
+          StyleInfo.validate(is);
+        }
         // update instance if native shadowdom
         if (this.nativeShadow) {
-          let style = host.shadowRoot.querySelector('style');
-          style.textContent = StyleTransformer.elementStyles(host, styleInfo.styleRules);
+          let root = host.shadowRoot;
+          if (root) {
+            let style = root.querySelector('style');
+            style.textContent = StyleTransformer.elementStyles(host, styleInfo.styleRules);
+          }
         }
         styleInfo.styleRules = template._styleAst;
       }
-      this._updateNativeProperties(host, styleInfo.overrideStyleProperties);
     } else {
       this._updateProperties(host, styleInfo);
       if (styleInfo.ownStylePropertyNames && styleInfo.ownStylePropertyNames.length) {
