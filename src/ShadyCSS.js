@@ -159,7 +159,9 @@ export let ShadyCSS = {
       Object.assign(styleInfo.overrideStyleProperties, overrideProps);
     }
     if (this.nativeCss) {
-      this._updateNativeProperties(host, styleInfo.overrideStyleProperties);
+      if (styleInfo.overrideStyleProperties) {
+        this._updateNativeProperties(host, styleInfo.overrideStyleProperties);
+      }
       let template = templateMap[is];
       // bail early if there is no shadowroot for this element
       if (!template) {

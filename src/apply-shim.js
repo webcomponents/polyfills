@@ -117,7 +117,11 @@ class ApplyShim {
   }
   // return true if `cssText` contains a mixin definition or consumption
   detectMixin(cssText) {
-    return MIXIN_MATCH.test(cssText) || VAR_ASSIGN.test(cssText);
+    const has = MIXIN_MATCH.test(cssText) || VAR_ASSIGN.test(cssText);
+    // reset state of the regexes
+    MIXIN_MATCH.lastIndex = 0;
+    VAR_ASSIGN.lastIndex = 0;
+    return has;
   }
   transformStyle(style, elementName) {
     let ast = rulesForStyle(style);
@@ -253,7 +257,7 @@ class ApplyShim {
 
   _invalidateMixinEntry(mixinEntry) {
     for (let elementName in mixinEntry.dependants) {
-      if (!this.currentTemplate || elementName !== this._currentTemplate.name) {
+      if (!this._currentTemplate || elementName !== this._currentTemplate.name) {
         StyleInfo.invalidate(elementName);
       }
     }

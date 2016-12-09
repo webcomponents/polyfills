@@ -64,6 +64,7 @@ let modules = [
   'apply-shim',
   'css-parse',
   'custom-style',
+  'make-element',
   'style-cache',
   'style-info',
   'style-placeholder',
@@ -71,6 +72,7 @@ let modules = [
   'style-settings',
   'style-transformer',
   'style-util',
+  'svg-in-shadow'
 ];
 
 let moduleTasks = modules.map((m) => {
