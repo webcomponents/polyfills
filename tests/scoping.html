@@ -17,6 +17,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     window.ShadyCSS = {shimshadow: true};
   </script>
   <script src="../../webcomponentsjs/webcomponents-lite.js"></script>
+  <script>
+    if (window.customElements) {
+      document.write('<script src="../../custom-elements/src/native-shim.js"></s' + 'cript>');
+    }
+  </script>
   <script src="module/generated/make-element.js"></script>
 
   <style>
