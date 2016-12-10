@@ -43,7 +43,7 @@ function enqueueDocumentValidation() {
   if (window.HTMLImports) {
     window.HTMLImports.whenReady(validateDocument);
   } else if (document.readyState === 'complete') {
-    requestAnimationFrame(validateDocument);
+    validateDocument();
   } else {
     document.addEventListener('readystatechange', function() {
       if (document.readyState === 'complete') {
@@ -53,20 +53,13 @@ function enqueueDocumentValidation() {
   }
 }
 
-// NOTE: Make sure to enqueue eagerly. This is an optimization that
-// helps ensure that the first run of validateDocument will actually
-// have access to all the custom-style's created via loading imports.
-// If the first created custom-style calls enqueue and HTMLImports.ready
-// is true at that time (which is the case when HTMLImports are polyfilled),
-// then the enqueue immediately calls validateDocument and work that could be
-// batched is not.
-enqueueDocumentValidation();
-
 function validateDocument() {
-  if (enqueued) {
-    ShadyCSS.updateStyles();
-    enqueued = false;
-  }
+  requestAnimationFrame(() => {
+    if (enqueued) {
+      ShadyCSS.updateStyles();
+      enqueued = false;
+    }
+  });
 }
 
 function CustomStyle() {
