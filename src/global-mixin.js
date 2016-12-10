@@ -176,13 +176,18 @@ let mixinImpl = {
       getLogical(node, 'parentNode');
     let distributed;
     let ownerRoot = this.ownerShadyRootForNode(node);
-    if (logicalParent) {
+    if (logicalParent || ownerRoot) {
       // distribute node's parent iff needed
       distributed = this.maybeDistributeParent(node);
-      recordRemoveChild(node, logicalParent);
+      if (logicalParent) {
+        recordRemoveChild(node, logicalParent);
+      }
       // remove node from root and distribute it iff needed
-      if (ownerRoot && (this._removeDistributedChildren(ownerRoot, node) ||
-        logicalParent.localName === ownerRoot.getInsertionPointTag())) {
+      let removedDistributed = ownerRoot &&
+        this._removeDistributedChildren(ownerRoot, node);
+      let addedInsertionPoint = (logicalParent && ownerRoot &&
+        logicalParent.localName === ownerRoot.getInsertionPointTag());
+      if (removedDistributed || addedInsertionPoint) {
         ownerRoot._skipUpdateInsertionPoints = false;
         ownerRoot.update();
       }
