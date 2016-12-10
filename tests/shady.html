@@ -570,18 +570,7 @@ function getEffectiveChildNodes(node) {
 }
 
 function getComposedHTML(node) {
-  if (ShadyDOM.isPatched(node)) {
-    if (ShadyDOM.canUnpatch(node)) {
-      ShadyDOM.unpatch(node);
-      var html = node.innerHTML;
-      ShadyDOM.patch(node);
-      return html;
-    } else {
-      return ShadyDOM.getComposedInnerHTML(node);
-    }
-  } else {
-    return node.innerHTML;
-  }
+  return ShadyDOM.getComposedInnerHTML(node);
 }
 
 function getComposedChildAtIndex(node, index) {

@@ -23,16 +23,14 @@ import * as utils from './utils'
 import {ShadyRoot, flush, enqueue} from './shady'
 import * as patch from './patch'
 import {getRootNode, filterMutations, observeChildren, unobserveChildren,
-  setAttribute, Mixins,
-  getComposedInnerHTML, getComposedChildNodes} from './element-mixin'
-import {Mixins as GlobalMixins, patchProto, getNative} from './global-mixin'
+  setAttribute } from './element-mixin'
+import {Mixins as GlobalMixins, patchProto, getNative,
+    getComposedInnerHTML, getComposedChildNodes} from './global-mixin'
 import * as events from './event-mixin'
-import {tree, getNativeProperty} from './tree'
 
 if (utils.settings.inUse) {
 
   window.ShadyDOM = {
-    tree: tree,
     getNativeProperty: getNative,
     patch: patch.patchNode,
     isPatched: patch.isNodePatched,
@@ -61,9 +59,9 @@ if (utils.settings.inUse) {
     //   patchNode(ancestor);
     //   ancestor = ancestor.parentNode || ancestor.host;
     // }
-    patch.patchNode(node);
+    //patch.patchNode(node);
     let root = new ShadyRoot(node);
-    patch.patchNode(root);
+    //patch.patchNode(root);
     return root;
   }
 
@@ -138,14 +136,20 @@ if (utils.settings.inUse) {
   }
 
   // Patch mutation methods on ALL dom prototypes.
-  for (let p in Mixins.Default) {
-    let method = Mixins.Default[p];
-    Element.prototype[p] = method;
-    DocumentFragment.prototype[p] = method;
-    Document.prototype[p] = method;
-  }
+  // for (let p in Mixins.Default) {
+  //   let method = Mixins.Default[p];
+  //   Element.prototype[p] = method;
+  //   DocumentFragment.prototype[p] = method;
+  //   Document.prototype[p] = method;
+  // }
 
-  // patchProto(Node.prototype, GlobalMixins.Node);
-  // patchProto(Element.prototype, GlobalMixins.Element);
+  patchProto(Node.prototype, GlobalMixins.Node);
+  patchProto(Text.prototype, GlobalMixins.Text);
+  patchProto(DocumentFragment.prototype, GlobalMixins.Fragment);
+  patchProto(Element.prototype, GlobalMixins.Element);
+  patchProto(Document.prototype, GlobalMixins.Element);
+  if (HTMLSlotElement) {
+    patchProto(HTMLSlotElement.prototype, GlobalMixins.Slot);
+  }
 
 }

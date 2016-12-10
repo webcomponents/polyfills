@@ -78,12 +78,12 @@ gulp.task('debug', () => {
     format: 'iife',
     plugins: [buble()],
     moduleName: 'shadydom',
-    sourceMap: true
+    //sourceMap: true
   })
   .pipe(source('env.js', './src/'))
   .pipe(buffer())
   .pipe(rename('shadydom.min.js'))
   .pipe(sourcemaps.init({loadMaps: true}))
-  .pipe(sourcemaps.write('.'))
+  //.pipe(sourcemaps.write('.'))
   .pipe(gulp.dest('./'))
 });

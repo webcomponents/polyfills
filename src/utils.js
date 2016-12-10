@@ -16,6 +16,15 @@ settings.hasNativeShadowDOM = Boolean(Element.prototype.attachShadow && Node.pro
 
 settings.inUse = settings.force || !settings.hasNativeShadowDOM;
 
+export function arrayCopy(a$) {
+  let l = a$.length;
+  let copy = new Array(l);
+  for (let i=0; i < l; i++) {
+    copy[i] = a$[i];
+  }
+  return copy;
+}
+
 export function isShadyRoot(obj) {
   return Boolean(obj.__localName === 'ShadyRoot');
 }

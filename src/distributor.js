@@ -10,7 +10,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 'use strict';
 
-import {tree} from './tree'
+import {arrayCopy} from './utils'
+import {getNative, nativeMethod} from './global-mixin'
 
 // NOTE: normalize event contruction where necessary (IE11)
 let NormalizedEvent = typeof Event === 'function' ? Event :
@@ -51,8 +52,7 @@ export default class {
   // Gather the pool of nodes that should be distributed. We will combine
   // these with the "content root" to arrive at the composed tree.
   collectPool() {
-    return tree.arrayCopy(
-      tree.Logical.getChildNodes(this.root.host));
+    return arrayCopy(this.root.host.childNodes);
   }
 
   // perform "logical" distribution; note, no actual dom is moved here,
@@ -67,7 +67,7 @@ export default class {
       // must do this on all candidate hosts since distribution in this
       // scope invalidates their distribution.
       // only get logical parent.
-      let parent = tree.Logical.getParentNode(p);
+      let parent = p.parentNode;
       if (parent && parent.shadyRoot &&
           this.hasInsertionPoint(parent.shadyRoot)) {
         dirtyRoots.push(parent.shadyRoot);
@@ -79,9 +79,9 @@ export default class {
         p.__shady = p.__shady || {};
         p.__shady.assignedSlot = undefined;
         // remove undistributed elements from physical dom.
-        let parent = tree.Composed.getParentNode(p);
+        let parent = getNative(p, 'parentNode');
         if (parent) {
-          tree.Composed.removeChild(parent, p);
+          nativeMethod(parent, 'removeChild', [p]);
         }
       }
     }
@@ -117,7 +117,7 @@ export default class {
     }
     // Fallback content if nothing was distributed here
     if (!anyDistributed) {
-      let children = tree.Logical.getChildNodes(insertionPoint);
+      let children = insertionPoint.childNodes;
       for (let j = 0, node; j < children.length; j++) {
         node = children[j];
         if (node.__shady._prevAssignedSlot != insertionPoint) {

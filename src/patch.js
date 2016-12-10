@@ -78,11 +78,12 @@ let patchImpl = {
 };
 
 export function patchNode(node) {
+  return;
   if (!utils.settings.inUse) {
     return;
   }
   if (!isNodePatched(node) && patchImpl.canPatchNode(node)) {
-    tree.saveChildNodes(node);
+    tree.Logical.saveChildNodes(node);
     patchImpl.patch(node);
   }
 }

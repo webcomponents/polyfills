@@ -46,23 +46,6 @@ export let tree = {
     return copy;
   },
 
-  arrayCopy(a$) {
-    let l = a$.length;
-    let copy = new Array(l);
-    for (let i=0; i < l; i++) {
-      copy[i] = a$[i];
-    }
-    return copy;
-  },
-
-  saveChildNodes(node) {
-    tree.Logical.saveChildNodes(node);
-    if (!tree.Composed.hasParentNode(node)) {
-      tree.Composed.saveComposedData(node);
-    }
-    tree.Composed.saveChildNodes(node);
-  },
-
   needsChildren(node) {
     return (node.__patched >= patchedChildren);
   }
@@ -192,6 +175,7 @@ tree.Logical = {
   // actual children will be treated as the rendered state once this function
   // has been called.
   saveChildNodes(node) {
+    return;
     if (!this.hasChildNodes(node)) {
       node.__shady = node.__shady || {};
       node.__shady.firstChild = node.firstChild;
@@ -211,6 +195,7 @@ tree.Logical = {
   // already been distributed.
   // NOTE: ensure `node` is patched...
   recordInsertBefore(node, container, ref_node) {
+    return;
     container.__shady = container.__shady || {};
     if (tree.needsChildren(container)) {
       container.__shady.childNodes = null;
@@ -232,6 +217,7 @@ tree.Logical = {
   },
 
   _linkNode(node, container, ref_node) {
+    return;
     utils.common.patchNode(node);
     ref_node = ref_node || null;
     node.__shady = node.__shady || {};
@@ -270,6 +256,7 @@ tree.Logical = {
   },
 
   recordRemoveChild(node, container) {
+    return;
     node.__shady = node.__shady || {};
     if (container.__patched) {
       container.__shady = container.__shady || {};

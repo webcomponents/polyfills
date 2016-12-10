@@ -29,7 +29,7 @@ function setNative(node, prop, value) {
   node.__nativeProps[prop].set.call(node, value);
 }
 
-function nativeMethod(node, prop, args) {
+export function nativeMethod(node, prop, args) {
   return node.__nativeProps[prop].value.apply(node, args);
 }
 
@@ -75,32 +75,28 @@ function linkNode(node, container, ref_node) {
   }
   // update node <-> container
   node.__shady.parentNode = container;
-  if (container.__patched) {
-    if (ref_node) {
-      if (ref_node === container.__shady.firstChild) {
-        container.__shady.firstChild = node;
-      }
-    } else {
-      container.__shady.lastChild = node;
-      if (!this.getFirstChild(container)) {
-        container.__shady.firstChild = node;
-      }
+  if (ref_node) {
+    if (ref_node === container.__shady.firstChild) {
+      container.__shady.firstChild = node;
     }
-    // remove caching of childNodes
-    container.__shady.childNodes = null;
+  } else {
+    container.__shady.lastChild = node;
+    if (!container.__shady.firstChild) {
+      container.__shady.firstChild = node;
+    }
   }
+  // remove caching of childNodes
+  container.__shady.childNodes = null;
 }
 
 function recordRemoveChild(node, container) {
   node.__shady = node.__shady || {};
-  if (container.__patched) {
-    container.__shady = container.__shady || {};
-    if (node === container.__shady.firstChild) {
-      container.__shady.firstChild = node.__shady.nextSibling;
-    }
-    if (node === container.__shady.lastChild) {
-      container.__shady.lastChild = node.__shady.previousSibling;
-    }
+  container.__shady = container.__shady || {};
+  if (node === container.__shady.firstChild) {
+    container.__shady.firstChild = node.__shady.nextSibling;
+  }
+  if (node === container.__shady.lastChild) {
+    container.__shady.lastChild = node.__shady.previousSibling;
   }
   let p = node.__shady.previousSibling;
   let n = node.__shady.nextSibling;
@@ -116,19 +112,19 @@ function recordRemoveChild(node, container) {
   // Explicitly set `undefined` here to indicate this. This is disginguished
   // from `null` which is set if info is null.
   node.__shady.parentNode = node.__shady.previousSibling =
-    node.__shady.nextSibling = null;
+    node.__shady.nextSibling = undefined;
   if (hasLogical(container, 'childNodes')) {
     // remove caching of childNodes
     container.__shady.childNodes = null;
   }
 }
 
-function saveChildNodes(node) {
-  if (!hasLogical('firstChild')) {
+export let saveChildNodes = function(node) {
+  if (!hasLogical(node, 'firstChild')) {
     node.__shady = node.__shady || {};
-    node.__shady.firstChild = node.firstChild;
-    node.__shady.lastChild = node.lastChild;
-    let c$ = node.__shady.childNodes = Array.from(node.childNodes);
+    node.__shady.firstChild = getNative(node, 'firstChild');
+    node.__shady.lastChild = getNative(node, 'lastChild');
+    let c$ = node.__shady.childNodes = Array.from(getNative(node, 'childNodes'));
     for (let i=0, n; (i<c$.length) && (n=c$[i]); i++) {
       n.__shady = n.__shady || {};
       n.__shady.parentNode = node;
@@ -503,7 +499,15 @@ function generateSimpleDescriptor(prop) {
   }
 }
 
+let assignedSlotDesc = {
+  get() {
+    return getLogical(this, 'assignedSlot') || null;
+  },
+  configurable: true
+};
+
 let NodeMixin = {
+
   appendChild(node) {
     return this.insertBefore(node);
   },
@@ -515,9 +519,12 @@ let NodeMixin = {
   // container to container.host.
   // 3. node is <content> (host of container needs distribution)
   insertBefore(node, ref_node) {
-    if (ref_node && getLogical(ref_node, 'parentNode') !== this) {
-      throw Error('The ref_node to be inserted before is not a child ' +
-        'of this node');
+    if (ref_node) {
+      let p = getLogical(ref_node, 'parentNode');
+      if (p !== undefined && p !== this) {
+        throw Error('The ref_node to be inserted before is not a child ' +
+          'of this node');
+      }
     }
     // remove node from its current position iff it's in a tree.
     if (node.nodeType !== Node.DOCUMENT_FRAGMENT_NODE) {
@@ -609,7 +616,7 @@ Object.defineProperties(NodeMixin, {
       if (hasLogical(this, 'firstChild')) {
         if (!this.__shady.childNodes) {
           this.__shady.childNodes = [];
-          for (let n=this.firstChild; n; n=this.nextSibling) {
+          for (let n=this.firstChild; n; n=n.nextSibling) {
             this.__shady.childNodes.push(n);
           }
         }
@@ -650,17 +657,16 @@ Object.defineProperties(NodeMixin, {
       }
     },
     configurable: true
-  },
-
-  assignedSlot: {
-    get() {
-      return getLogical(this, 'assignedSlot') || null;
-    },
-    configurable: true
   }
 });
 
-let ElementMixin = {
+// NOTE: For some reason `Text` redefines `assignedSlot`
+let TextMixin = utils.extend({}, NodeMixin);
+Object.defineProperties(TextMixin, {
+  assignedSlot: assignedSlotDesc
+})
+
+let FragmentMixin = {
 
   // TODO(sorvell): consider doing native QSA and filtering results.
   querySelector(selector) {
@@ -677,47 +683,11 @@ let ElementMixin = {
     return mixinImpl.query(this, function(n) {
       return utils.matchesSelector(n, selector);
     });
-  },
-
-  // importNode(externalNode, deep) {
-  //   // for convenience use this node's ownerDoc if the node isn't a document
-  //   let doc = this instanceof Document ? this :
-  //     this.ownerDocument;
-  //   let n = nativeImportNode.call(doc, externalNode, false);
-  //   if (deep) {
-  //     let c$ = externalNode.childNodes;
-  //     for (let i=0, nc; i < c$.length; i++) {
-  //       nc = doc.importNode(c$[i], true);
-  //       n.appendChild(nc);
-  //     }
-  //   }
-  //   return n;
-  // },
-
-  // TODO(sorvell): should only exist on <slot>
-  // assignedNodes(options) {
-  //   if (this.localName === 'slot') {
-  //     mixinImpl.renderRootNode(this);
-  //     return this.__shady ?
-  //       ((options && options.flatten ? this.__shady.distributedNodes :
-  //       this.__shady.assignedNodes) || []) :
-  //       [];
-  //   }
-  // },
-
-  setAttribute(name, value) {
-    setAttribute.call(this, name, value);
-    mixinImpl.maybeDistributeAttributeChange(this, name);
-  },
-
-  removeAttribute(name) {
-    nativeRemoveAttribute.call(this, name);
-    mixinImpl.maybeDistributeAttributeChange(this, name);
   }
 
 };
 
-Object.defineProperties(ElementMixin, {
+Object.defineProperties(FragmentMixin, {
 
   children: {
     get() {
@@ -727,6 +697,32 @@ Object.defineProperties(ElementMixin, {
         });
       } else {
         return getNative(this, 'children');
+      }
+    },
+    configurable: true
+  },
+
+  innerHTML: {
+    get() {
+      if (hasLogical(this, 'firstChild')) {
+        return getInnerHTML(this);
+      } else {
+        return getNative(this, 'innerHTML');
+      }
+    },
+    set(text) {
+      if (hasLogical(this, 'firstChild')) {
+        mixinImpl.clearNode(this);
+        let d = document.createElement('div');
+        d.innerHTML = text;
+        // here, appendChild may move nodes async so we cannot rely
+        // on node position when copying
+        let c$ = Array.from(d.childNodes);
+        for (let i=0; i < c$.length; i++) {
+          this.appendChild(c$[i]);
+        }
+      } else {
+        setNative(this, 'innerHTML', text);
       }
     },
     configurable: true
@@ -760,6 +756,63 @@ Object.defineProperties(ElementMixin, {
       }
     },
     configurable: true
+  }
+
+});
+
+let SlotMixin = {
+  assignedNodes(options) {
+    if (this.localName === 'slot') {
+      mixinImpl.renderRootNode(this);
+      return this.__shady ?
+        ((options && options.flatten ? this.__shady.distributedNodes :
+        this.__shady.assignedNodes) || []) :
+        [];
+    }
+  }
+}
+
+let ElementMixin = utils.extendAll({}, FragmentMixin, SlotMixin, {
+  // importNode(externalNode, deep) {
+  //   // for convenience use this node's ownerDoc if the node isn't a document
+  //   let doc = this instanceof Document ? this :
+  //     this.ownerDocument;
+  //   let n = nativeImportNode.call(doc, externalNode, false);
+  //   if (deep) {
+  //     let c$ = externalNode.childNodes;
+  //     for (let i=0, nc; i < c$.length; i++) {
+  //       nc = doc.importNode(c$[i], true);
+  //       n.appendChild(nc);
+  //     }
+  //   }
+  //   return n;
+  // },
+
+  // TODO(sorvell): should only exist on <slot>
+
+  setAttribute(name, value) {
+    setAttribute.call(this, name, value);
+    mixinImpl.maybeDistributeAttributeChange(this, name);
+  },
+
+  removeAttribute(name) {
+    nativeRemoveAttribute.call(this, name);
+    mixinImpl.maybeDistributeAttributeChange(this, name);
+  }
+});
+
+Object.defineProperties(ElementMixin, {
+
+  assignedSlot: assignedSlotDesc,
+
+  shadowRoot: {
+    get() {
+      return this.shadyRoot;
+    },
+    set(value) {
+      this.shadyRoot = value;
+    },
+    configurable: true
   },
 
   nextElementSibling: {
@@ -787,32 +840,6 @@ Object.defineProperties(ElementMixin, {
         return n;
       } else {
         return getNative(this, 'previousElementSibling');
-      }
-    },
-    configurable: true
-  },
-
-  innerHTML: {
-    get() {
-      if (hasLogical('firstChild')) {
-        return getInnerHTML(this);
-      } else {
-        return getNative(this, 'innerHTML');
-      }
-    },
-    set(text) {
-      if (hasLogical('firstChild')) {
-        mixinImpl.clearNode(this);
-        let d = document.createElement('div');
-        d.innerHTML = text;
-        // here, appendChild may move nodes async so we cannot rely
-        // on node position when copying
-        let c$ = d.childNodes;
-        for (let i=0; i < c$.length; i++) {
-          this.appendChild(c$[i]);
-        }
-      } else {
-        setNative(this, 'innerHTML', text);
       }
     },
     configurable: true
@@ -856,6 +883,12 @@ export let Mixins = {
 
   Node: NodeMixin,
 
+  Fragment: FragmentMixin,
+
+  Text: TextMixin,
+
+  Slot: SlotMixin,
+
   Element: ElementMixin,
 
   // Note: activeElement cannot be patched on document!
@@ -869,13 +902,15 @@ export let patchProto = function(proto, mixin) {
   let n$ = Object.getOwnPropertyNames(mixin);
   for (let i=0, n; (i<n$.length) && (n=n$[i]); i++) {
     let sd = Object.getOwnPropertyDescriptor(proto, n);
-    if (sd && sd.configurable) {
+    if (sd) {
+      if (!sd.configurable) {
+        window.console.warn('Could not patch', n, 'on', proto);
+        return;
+      }
       proto.__nativeProps[n] = sd;
-      let md = Object.getOwnPropertyDescriptor(mixin, n);
-      Object.defineProperty(proto, n, md);
-    } else {
-      window.console.warn('Could not patch', n, 'on', proto);
     }
+    let md = Object.getOwnPropertyDescriptor(mixin, n);
+    Object.defineProperty(proto, n, md);
   }
 }
 
@@ -954,9 +989,7 @@ class AsyncObserver {
 
 export let getComposedInnerHTML = function(node) {
   if (hasLogical(node, 'firstChild')) {
-    return getInnerHTML(node, function(n) {
-      return getNative(n, 'childNodes');
-    })
+    return getInnerHTML(node, (n) => getNative(n, 'childNodes'));
   } else {
     return node.innerHTML;
   }
@@ -964,7 +997,7 @@ export let getComposedInnerHTML = function(node) {
 
 export let getComposedChildNodes = function(node) {
   return hasLogical(node, 'firstChild') ?
-    getNative(n, 'childNodes') :
+    getNative(node, 'childNodes') :
     node.childNodes;
 }
 

@@ -12,8 +12,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 import {calculateSplices} from './array-splice'
 import * as utils from './utils'
-import {tree} from './tree'
-import {getComposedChildNodes} from './element-mixin'
+import {getComposedChildNodes, saveChildNodes, nativeMethod, getNative} from './global-mixin'
 import Distributor from './distributor'
 
 /**
@@ -44,11 +43,11 @@ let ShadyMixin = {
     // FF doesn't allow this to be `localName`
     this.__localName = 'ShadyRoot';
     // root <=> host
-    host.shadyRoot = this;
+    host.shadowRoot = this;
     this.host = host;
     // logical dom setup
-    tree.Logical.saveChildNodes(host);
-    tree.Logical.saveChildNodes(this);
+    saveChildNodes(host);
+    saveChildNodes(this);
     // state flags
     this._renderPending = false;
     this._hasRendered = false;
@@ -75,7 +74,7 @@ let ShadyMixin = {
   _rendererForHost() {
     let root = this.host.getRootNode();
     if (utils.isShadyRoot(root)) {
-      let c$ = tree.Logical.getChildNodes(this.host);
+      let c$ = this.host.childNodes;
       for (let i=0, c; i < c$.length; i++) {
         c = c$[i];
         if (this._distributor.isInsertionPoint(c)) {
@@ -150,8 +149,8 @@ let ShadyMixin = {
     for (let i=0, c; i < i$.length; i++) {
       c = i$[i];
       c.__shady = c.__shady || {};
-      tree.Logical.saveChildNodes(c);
-      tree.Logical.saveChildNodes(tree.Logical.getParentNode(c));
+      saveChildNodes(c);
+      saveChildNodes(c.parentNode);
     }
   },
 
@@ -186,7 +185,7 @@ let ShadyMixin = {
     this._updateChildNodes(this.host, this._composeNode(this.host));
     let p$ = this._insertionPoints || [];
     for (let i=0, l=p$.length, p, parent; (i<l) && (p=p$[i]); i++) {
-      parent = tree.Logical.getParentNode(p);
+      parent = p.parentNode;
       if ((parent !== this.host) && (parent !== this)) {
         this._updateChildNodes(parent, this._composeNode(parent));
       }
@@ -196,7 +195,7 @@ let ShadyMixin = {
   // Returns the list of nodes which should be rendered inside `node`.
   _composeNode(node) {
     let children = [];
-    let c$ = tree.Logical.getChildNodes(node.shadyRoot || node);
+    let c$ = (node.shadyRoot || node).childNodes;
     for (let i = 0; i < c$.length; i++) {
       let child = c$[i];
       if (this._distributor.isInsertionPoint(child)) {
@@ -222,9 +221,9 @@ let ShadyMixin = {
 
   // Ensures that the rendered node list inside `container` is `children`.
   _updateChildNodes(container, children) {
-    let composed = utils.isShadyRoot(container) ?
-      tree.Logical.getChildNodes(container) :
-      getComposedChildNodes(container);
+    let composed = Array.from(utils.isShadyRoot(container) ?
+      container.childNodes :
+      getComposedChildNodes(container));
     let splices = calculateSplices(children, composed);
     // process removals
     for (let i=0, d=0, s; (i<splices.length) && (s=splices[i]); i++) {
@@ -233,8 +232,8 @@ let ShadyMixin = {
         // to remove it; this can happen if we move a node and
         // then schedule its previous host for distribution resulting in
         // the node being removed here.
-        if (tree.Composed.getParentNode(n) === container) {
-          tree.Composed.removeChild(container, n);
+        if (getNative(n, 'parentNode') === container) {
+          nativeMethod(container, 'removeChild', [n]);
         }
         composed.splice(s.index + d, 1);
       }
@@ -245,7 +244,7 @@ let ShadyMixin = {
       next = composed[s.index];
       for (let j=s.index, n; j < s.index + s.addedCount; j++) {
         n = children[j];
-        tree.Composed.insertBefore(container, n, next);
+        nativeMethod(container, 'insertBefore', [n, next]);
         // TODO(sorvell): is this splice strictly needed?
         composed.splice(j, 0, n);
       }
