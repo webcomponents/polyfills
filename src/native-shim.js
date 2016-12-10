@@ -73,7 +73,7 @@
   const tagnameByConstructor = new Map();
 
   /**
-   * Map of tag anmes to user-provided constructors.
+   * Map of tag names to user-provided constructors.
    *
    * @type {Map<string, Function>}
    */
