@@ -719,7 +719,7 @@ let Deferred;
   document.createElementNS =
     /** @type {function(this:Document,(string|null),string):!Element} */
     (function(namespaceURI, qualifiedName) {
-      if (namespaceURI === 'http://www.w3.org/1999/xhtml') {
+      if (namespaceURI === HTMLNS) {
         return document.createElement(qualifiedName);
       } else {
         return _origCreateElementNS.call(document, namespaceURI, qualifiedName);
