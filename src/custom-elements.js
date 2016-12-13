@@ -674,9 +674,12 @@ let Deferred;
     throw new Error('Unknown constructor. Did you call customElements.define()?');
   }
   win.HTMLElement = newHTMLElement;
-  win.HTMLElement.prototype = Object.create(origHTMLElement.prototype, {
-    constructor: {value: win.HTMLElement, configurable: true, writable: true},
-  });
+  // By setting the patched HTMLElement's prototype property to the native
+  // HTMLElement's prototype we make sure that:
+  //     document.createElement('a') instanceof HTMLElement
+  // works because instanceof uses HTMLElement.prototype, which is on the
+  // ptototype chain of built-in elements.
+  win.HTMLElement.prototype = origHTMLElement.prototype;
 
   // patch doc.createElement
   // TODO(justinfagnani): why is the cast neccessary?

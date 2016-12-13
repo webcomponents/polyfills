@@ -106,9 +106,12 @@
     // HTMLElement.call() during initialization
     browserConstruction = false;
   };
-
-  window.HTMLElement.prototype = Object.create(NativeHTMLElement.prototype);
-  window.HTMLElement.prototype.constructor = window.HTMLElement;
+  // By setting the patched HTMLElement's prototype property to the native
+  // HTMLElement's prototype we make sure that:
+  //     document.createElement('a') instanceof HTMLElement
+  // works because instanceof uses HTMLElement.prototype, which is on the
+  // ptototype chain of built-in elements.
+  window.HTMLElement.prototype = NativeHTMLElement.prototype;
 
   window.customElements.define = (tagname, elementClass) => {
     const elementProto = elementClass.prototype;
