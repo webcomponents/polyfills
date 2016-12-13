@@ -34,16 +34,13 @@ let Deferred;
 (function() {
   'use strict';
 
-  const doc = document;
-  const win = window;
-
   /**
    * Gets 'customElement' from window so that it could be modified after
    * the polyfill loads.
    * @function
    * @return {CustomElementRegistry}
    */
-  const _customElements = () => win['customElements'];
+  const _customElements = () => window['customElements'];
 
   const _observerProp = '__$CE_observer';
   const _attachedProp = '__$CE_attached';
@@ -93,7 +90,7 @@ let Deferred;
     // IE 11 requires the third and fourth arguments be present. If the third
     // arg is null, it applies the default behaviour. However IE also requires
     // the fourth argument be present even though the other browsers ignore it.
-    return doc.createTreeWalker(root, NodeFilter.SHOW_ELEMENT, null, false);
+    return document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT, null, false);
   }
 
   /**
@@ -356,9 +353,9 @@ let Deferred;
         const onReady = () => {
           this._upgradeScheduled = false;
           if (!this._mainDocumentObserver) {
-            this._mainDocumentObserver = this._observeRoot(doc);
+            this._mainDocumentObserver = this._observeRoot(document);
           }
-          this._addNodes(doc.childNodes);
+          this._addNodes(document.childNodes);
 
         };
         if (window['HTMLImports']) {
@@ -652,7 +649,7 @@ let Deferred;
   // patch window.HTMLElement
 
   /** @const */
-  const origHTMLElement = win.HTMLElement;
+  const origHTMLElement = window.HTMLElement;
   CustomElementRegistry.prototype['nativeHTMLElement'] = origHTMLElement;
   /**
    * @type {function(new: HTMLElement)}
@@ -669,24 +666,24 @@ let Deferred;
     if (this.constructor) {
       // Find the tagname of the constructor and create a new element with it
       const tagName = customElements._constructors.get(this.constructor);
-      return _createElement(doc, tagName, undefined, false);
+      return _createElement(document, tagName, undefined, false);
     }
     throw new Error('Unknown constructor. Did you call customElements.define()?');
   }
-  win.HTMLElement = newHTMLElement;
+  window.HTMLElement = newHTMLElement;
   // By setting the patched HTMLElement's prototype property to the native
   // HTMLElement's prototype we make sure that:
   //     document.createElement('a') instanceof HTMLElement
   // works because instanceof uses HTMLElement.prototype, which is on the
   // ptototype chain of built-in elements.
-  win.HTMLElement.prototype = origHTMLElement.prototype;
+  window.HTMLElement.prototype = origHTMLElement.prototype;
 
   // patch doc.createElement
   // TODO(justinfagnani): why is the cast neccessary?
   // Can we fix the Closure DOM externs?
   const _origCreateElement =
     /** @type {function(this:Document, string, (Object|undefined)=): !HTMLElement}}*/
-    (doc.createElement);
+    (document.createElement);
 
   /**
    * Creates a new element and upgrades it if it's a custom element.
@@ -709,23 +706,23 @@ let Deferred;
     customElements._observeRoot(element);
     return element;
   };
-  doc.createElement = function(tagName, options) {
-    return _createElement(doc, tagName, options, true);
+  document.createElement = function(tagName, options) {
+    return _createElement(document, tagName, options, true);
   }
 
-  // patch doc.createElementNS
+  // patch document.createElementNS
 
   const HTMLNS = 'http://www.w3.org/1999/xhtml';
 
   /** @type {function(this:Document,string,string):Element} */
-  const _origCreateElementNS = doc.createElementNS;
-  doc.createElementNS =
+  const _origCreateElementNS = document.createElementNS;
+  document.createElementNS =
     /** @type {function(this:Document,(string|null),string):!Element} */
     (function(namespaceURI, qualifiedName) {
       if (namespaceURI === 'http://www.w3.org/1999/xhtml') {
-        return doc.createElement(qualifiedName);
+        return document.createElement(qualifiedName);
       } else {
-        return _origCreateElementNS.call(doc, namespaceURI, qualifiedName);
+        return _origCreateElementNS.call(document, namespaceURI, qualifiedName);
       }
     });
 
@@ -746,11 +743,11 @@ let Deferred;
     });
   }
 
-  // patch doc.importNode
+  // patch document.importNode
 
-  const rawImportNode = doc.importNode;
-  doc.importNode = function(node, deep) {
-    const clone = /** @type{!Node} */(rawImportNode.call(doc, node, deep));
+  const rawImportNode = document.importNode;
+  document.importNode = function(node, deep) {
+    const clone = /** @type{!Node} */(rawImportNode.call(document, node, deep));
     const customElements = _customElements();
     const nodes = isElement(clone) ? [clone] : clone.childNodes;
     /** @type {CustomElementRegistry} */(_customElements())._addNodes(nodes);
