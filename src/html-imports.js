@@ -483,7 +483,8 @@ function runScripts() {
         o.__baseURI + (s$.length > 1 ? i : '') + '.js';
     }
     if (o.src) {
-      c.setAttribute('src', o.getAttribute('src'));
+      var src = path.replaceAttrUrl(o.getAttribute('src'), o.__baseURI);
+      c.setAttribute('src', src);
     }
     o.parentNode.replaceChild(c, o);
   }
@@ -580,11 +581,25 @@ function watchImportsLoad(callback, doc) {
   var parsedCount = 0, importCount = imports.length, newImports = [], errorImports = [];
   function checkDone() {
     if (parsedCount == importCount && callback) {
-      callback({
-        allImports: imports,
-        loadedImports: newImports,
-        errorImports: errorImports
-      });
+      // If there is a script with src, wait for its load. Use a RAF which
+      // will trigger after that script is done. Handles the case of deferred/async
+      // scripts.
+      var scripts = doc.querySelectorAll(IMPORT_SELECTOR + ' script[src]');
+      if (scripts.length) {
+        window.requestAnimationFrame(function() {
+          callback({
+            allImports: imports,
+            loadedImports: newImports,
+            errorImports: errorImports
+          });
+        });
+      } else {
+        callback({
+          allImports: imports,
+          loadedImports: newImports,
+          errorImports: errorImports
+        });
+      }
     }
   }
   function loadedImport(e) {
@@ -707,5 +722,7 @@ if (!useNative) {
 // exports
 scope.useNative = useNative;
 scope.whenReady = whenReady;
+scope.importer = importer;
+scope.importLoader = importLoader;
 
 })(window.HTMLImports = (window.HTMLImports || {}));
