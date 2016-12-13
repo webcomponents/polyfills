@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+ * Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
  * This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
  * The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
  * The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
@@ -171,10 +171,6 @@ Loader.prototype = {
 
   require: function(elt) {
     var url = elt.src || elt.href;
-    // ensure we have a standard url that can be used
-    // reliably for deduping.
-    // TODO(sjmiles): ad-hoc
-    elt.__nodeUrl = url;
     // deduplication
     if (!this.dedupe(url, elt)) {
       // fetch this resource
@@ -206,9 +202,9 @@ Loader.prototype = {
   fetch: function(url, elt) {
     flags.log && console.log('fetch', url, elt);
     if (!url) {
-      setTimeout(function() {
-        this.receive(url, elt, {error: 'href must be specified'}, null);
-      }.bind(this), 0);
+      setTimeout(this.receive.bind(this, url, elt, {
+        error: 'href must be specified'
+      }, null), 0);
     } else if (url.match(/^data:/)) {
       // Handle Data URI Scheme
       var pieces = url.split(',');
@@ -219,14 +215,9 @@ Loader.prototype = {
       } else {
         body = decodeURIComponent(body);
       }
-      setTimeout(function() {
-          this.receive(url, elt, null, body);
-      }.bind(this), 0);
+      setTimeout(this.receive.bind(this, url, elt, null, body), 0);
     } else {
-      var receiveXhr = function(err, resource, redirectedUrl) {
-        this.receive(url, elt, err, resource, redirectedUrl);
-      }.bind(this);
-      xhr.load(url, receiveXhr);
+      xhr.load(url, this.receive.bind(this, url, elt));
     }
   },
 
@@ -354,7 +345,9 @@ var importer = {
         n.import.__firstImport = n;
         this._flatten(n.import);
         if (!n.import.parentNode) {
-          n.parentNode.insertBefore(n.import, n);
+          while (n.import.firstElementChild) {
+            n.appendChild(n.import.firstElementChild);
+          }
           if (document.contains(n.parentNode)) {
             // TODO(sorvell): need to coordinate with observer in document.head.
             //this.observe(n.import);
@@ -481,7 +474,7 @@ function markScripts(element, url) {
 
 // done for security reasons. TODO(valdrin) document
 function runScripts() {
-  var s$ = document.querySelectorAll('import-content script[type=' + scriptType + ']');
+  var s$ = document.querySelectorAll('link script[type=' + scriptType + ']');
   for (var i=0; i < s$.length; i++) {
     var o = s$[i];
     var c = document.createElement('script');
@@ -511,8 +504,8 @@ function makeDocument(resource, url) {
   // TODO(valdrin): better to use a disconnected document here so that
   // elements don't upgrade until inserted into main document,
   // however, this is blocked on https://bugs.webkit.org/show_bug.cgi?id=165617
-  // let doc = document.implementation.createHTMLDocuent();
-  var content = document.createElement('import-content');
+  // let doc = document.implementation.createHTMLDocument();
+  var content = document.createElement('div');
   content.setAttribute('import-href', url);
   content.style.display = 'none';
   content.innerHTML = resource;
@@ -582,7 +575,7 @@ function watchImportsLoad(callback, doc) {
   var imports = doc.querySelectorAll(IMPORT_SELECTOR);
   // only non-nested imports
   imports = Array.prototype.slice.call(imports).filter(function(n) {
-    return !n.matches('import-content ' + IMPORT_SELECTOR);
+    return !n.matches('link ' + IMPORT_SELECTOR);
   });
   var parsedCount = 0, importCount = imports.length, newImports = [], errorImports = [];
   function checkDone() {
