@@ -722,6 +722,8 @@ if (!useNative) {
 // exports
 scope.useNative = useNative;
 scope.whenReady = whenReady;
+// Needed for tests
+//TODO(valdrin) remove these, or make private.
 scope.importer = importer;
 scope.importLoader = importLoader;
 
