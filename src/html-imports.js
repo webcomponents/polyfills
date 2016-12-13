@@ -364,6 +364,8 @@ var importer = {
     }
   },
 
+// TODO(valdrin): if possible, fire in same order as native imports which is
+// probably bottom up.
   _fireEvents: function(element) {
     var n$ = element.querySelectorAll(IMPORT_SELECTOR);
     for (var i=0; i < n$.length; i++) {
@@ -477,6 +479,7 @@ function markScripts(element, url) {
   }
 }
 
+// done for security reasons. TODO(valdrin) document
 function runScripts() {
   var s$ = document.querySelectorAll('import-content script[type=' + scriptType + ']');
   for (var i=0; i < s$.length; i++) {
@@ -502,7 +505,13 @@ function fixDomModules(element, url) {
   }
 }
 
+
+
 function makeDocument(resource, url) {
+  // TODO(valdrin): better to use a disconnected document here so that
+  // elements don't upgrade until inserted into main document,
+  // however, this is blocked on https://bugs.webkit.org/show_bug.cgi?id=165617
+  // let doc = document.implementation.createHTMLDocuent();
   var content = document.createElement('import-content');
   content.setAttribute('import-href', url);
   content.style.display = 'none';
