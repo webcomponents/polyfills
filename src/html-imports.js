@@ -56,10 +56,7 @@ var CSS_IMPORT_REGEXP = /(@import[\s]+(?!url\())([^;]*)(;)/g;
 var path = {
 
   resolveUrlsInStyle: function(style, linkUrl) {
-    var doc = style.ownerDocument;
-    var resolver = doc.createElement('a');
-    style.textContent = this.resolveUrlsInCssText(style.textContent, linkUrl, resolver);
-    return style;
+    style.textContent = this.resolveUrlsInCssText(style.textContent, linkUrl);
   },
 
   resolveUrlsInCssText: function(cssText, linkUrl) {
@@ -345,9 +342,7 @@ var importer = {
         n.import.__firstImport = n;
         this._flatten(n.import);
         if (!n.import.parentNode) {
-          while (n.import.firstElementChild) {
-            n.appendChild(n.import.firstElementChild);
-          }
+          n.appendChild(n.import);
           if (document.contains(n.parentNode)) {
             // TODO(sorvell): need to coordinate with observer in document.head.
             //this.observe(n.import);
@@ -474,7 +469,7 @@ function markScripts(element, url) {
 
 // done for security reasons. TODO(valdrin) document
 function runScripts() {
-  var s$ = document.querySelectorAll('link script[type=' + scriptType + ']');
+  var s$ = document.querySelectorAll('import-content script[type=' + scriptType + ']');
   for (var i=0; i < s$.length; i++) {
     var o = s$[i];
     var c = document.createElement('script');
@@ -506,7 +501,7 @@ function makeDocument(resource, url) {
   // elements don't upgrade until inserted into main document,
   // however, this is blocked on https://bugs.webkit.org/show_bug.cgi?id=165617
   // let doc = document.implementation.createHTMLDocument();
-  var content = document.createElement('div');
+  var content = document.createElement('import-content');
   content.setAttribute('import-href', url);
   content.style.display = 'none';
   content.innerHTML = resource;
@@ -576,7 +571,7 @@ function watchImportsLoad(callback, doc) {
   var imports = doc.querySelectorAll(IMPORT_SELECTOR);
   // only non-nested imports
   imports = Array.prototype.slice.call(imports).filter(function(n) {
-    return !n.matches('link ' + IMPORT_SELECTOR);
+    return !n.matches('import-content ' + IMPORT_SELECTOR);
   });
   var parsedCount = 0, importCount = imports.length, newImports = [], errorImports = [];
   function checkDone() {
@@ -584,6 +579,7 @@ function watchImportsLoad(callback, doc) {
       // If there is a script with src, wait for its load. Use a RAF which
       // will trigger after that script is done. Handles the case of deferred/async
       // scripts.
+      // TODO(valdrin) verify if works with slow resources.
       var scripts = doc.querySelectorAll(IMPORT_SELECTOR + ' script[src]');
       if (scripts.length) {
         window.requestAnimationFrame(function() {
