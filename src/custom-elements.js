@@ -681,7 +681,7 @@ let Deferred;
   // patch doc.createElement
   // TODO(justinfagnani): why is the cast neccessary?
   // Can we fix the Closure DOM externs?
-  const _origCreateElement =
+  const _nativeCreateElement =
     /** @type {function(this:Document, string, (Object|undefined)=): !HTMLElement}}*/
     (document.createElement);
 
@@ -697,8 +697,8 @@ let Deferred;
    */
   function _createElement(doc, tagName, options, callConstructor) {
     const customElements = _customElements();
-    const element = options ? _origCreateElement.call(doc, tagName, options) :
-      _origCreateElement.call(doc, tagName);
+    const element = options ? _nativeCreateElement.call(doc, tagName, options) :
+      _nativeCreateElement.call(doc, tagName);
     const definition = customElements._definitions.get(tagName.toLowerCase());
     if (definition) {
       customElements._upgradeElement(element, definition, callConstructor);
@@ -715,26 +715,26 @@ let Deferred;
   const HTMLNS = 'http://www.w3.org/1999/xhtml';
 
   /** @type {function(this:Document,string,string):Element} */
-  const _origCreateElementNS = document.createElementNS;
+  const _nativeCreateElementNS = document.createElementNS;
   document.createElementNS =
     /** @type {function(this:Document,(string|null),string):!Element} */
     (function(namespaceURI, qualifiedName) {
       if (namespaceURI === HTMLNS) {
         return document.createElement(qualifiedName);
       } else {
-        return _origCreateElementNS.call(document, namespaceURI, qualifiedName);
+        return _nativeCreateElementNS.call(document, namespaceURI, qualifiedName);
       }
     });
 
   // patch Element.attachShadow
 
   /** @type {function({closed: boolean})} */
-  const _origAttachShadow = Element.prototype['attachShadow'];
-  if (_origAttachShadow) {
+  const _nativeAttachShadow = Element.prototype['attachShadow'];
+  if (_nativeAttachShadow) {
     Object.defineProperty(Element.prototype, 'attachShadow', {
       value: function(options) {
         /** @type {!Node} */
-        const root = _origAttachShadow.call(this, options);
+        const root = _nativeAttachShadow.call(this, options);
         /** @type {CustomElementRegistry} */
         const customElements = _customElements();
         customElements._observeRoot(root);
@@ -756,13 +756,13 @@ let Deferred;
 
   // patch Element.setAttribute & removeAttribute
 
-  const _origSetAttribute = Element.prototype.setAttribute;
+  const _nativeSetAttribute = Element.prototype.setAttribute;
   Element.prototype['setAttribute'] = function(name, value) {
-    changeAttribute(this, name, value, _origSetAttribute);
+    changeAttribute(this, name, value, _nativeSetAttribute);
   };
-  const _origRemoveAttribute = Element.prototype.removeAttribute;
+  const _nativeRemoveAttribute = Element.prototype.removeAttribute;
   Element.prototype['removeAttribute'] = function(name) {
-    changeAttribute(this, name, null, _origRemoveAttribute);
+    changeAttribute(this, name, null, _nativeRemoveAttribute);
   };
 
   function changeAttribute(element, name, value, operation) {
