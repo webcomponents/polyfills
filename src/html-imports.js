@@ -440,13 +440,10 @@ function fixUrls(element, base) {
   fixUrlsInTemplates(element, base);
 }
 
-var scriptType = 'import-pending';
-
 function markScripts(element, url) {
   var s$ = element.querySelectorAll('script');
   for (var i=0; i < s$.length; i++) {
     var o = s$[i];
-    o.setAttribute(scriptType, '');
     o.__baseURI = url;
     o.__parentImportContent = element;
   }
@@ -454,7 +451,7 @@ function markScripts(element, url) {
 
 // done for security reasons. TODO(valdrin) document
 function runScripts() {
-  var s$ = document.querySelectorAll('import-content script[' + scriptType + ']');
+  var s$ = document.querySelectorAll('import-content script');
   for (var i = 0; i < s$.length; i++) {
     var o = s$[i];
     var c = document.createElement('script');
@@ -590,7 +587,11 @@ function watchImportsLoad(callback, doc) {
   if (importCount) {
     for (var i=0, imp; i<importCount && (imp=imports[i]); i++) {
       if (isImportLoaded(imp)) {
-        newImports.push(this);
+        if (imp.import) {
+          newImports.push(imp);
+        } else {
+          errorImports.push(imp);
+        }
         parsedCount++;
         checkDone();
       } else {
@@ -696,9 +697,5 @@ if (!useNative) {
 // exports
 scope.useNative = useNative;
 scope.whenReady = whenReady;
-// Needed for tests
-//TODO(valdrin) remove these, or make private.
-scope.importer = importer;
-scope.importLoader = importLoader;
 
 })(window.HTMLImports = (window.HTMLImports || {}));

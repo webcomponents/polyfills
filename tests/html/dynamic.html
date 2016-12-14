@@ -33,6 +33,7 @@
       var ports = document.querySelectorAll('link[rel=import]');
       for (var i=0, l=ports.length, n; (i<l) && (n=ports[i]); i++) {
         n.addEventListener('load', function(e) {
+          console.log('load!!');
           loads++;
           if (loads == 2) {
             done();

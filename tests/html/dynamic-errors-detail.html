@@ -31,13 +31,15 @@
           var div = document.createElement('div');
           div.innerHTML = '<link rel="import" href="imports/load-1.html">' +
               '<link rel="import" href="imports/load-does-not-exist.html">';
-          document.body.appendChild(div);
+          // In Safari putting the div in <head> will not trigger
+          // MutationObservers on their subtree.
+          while (div.firstElementChild) {
+            document.head.appendChild(div.firstElementChild);
+          }
           var ports = document.querySelectorAll('link[rel=import]');
-          var loads = 0;
           for (var i=0, l=ports.length, n; (i<l) && (n=ports[i]); i++) {
             n.addEventListener('load', function(e) {
-              loads++;
-              chai.assert.ok(e.target.import);
+              assert.ok(e.target.import);
             });
           }
           ready();
@@ -46,12 +48,11 @@
 
       test('HTMLImports whenready errors', function(done) {
         HTMLImports.whenReady(function(detail) {
-          chai.assert.equal(detail.allImports.length, 2);
-          chai.assert.equal(detail.errorImports.length, 1);
-          chai.assert.equal(detail.loadedImports.length, 1);
-
+          assert.equal(detail.allImports.length, 2);
+          assert.equal(detail.loadedImports.length, 1);
+          assert.equal(detail.errorImports.length, 1);
           var errorImport = detail.errorImports[0];
-          chai.expect(errorImport.href).to.contain('imports/load-does-not-exist.html');
+          expect(errorImport.href).to.contain('imports/load-does-not-exist.html');
 
           done();
         });

@@ -31,13 +31,17 @@
           var div = document.createElement('div');
           div.innerHTML = '<link rel="import" href="imports/load-1.html">' +
               '<link rel="import" href="imports/load-2.html">';
-          document.body.appendChild(div);
+          // In Safari putting the div in <head> will not trigger
+          // MutationObservers on their subtree.
+          while (div.firstElementChild) {
+            document.head.appendChild(div.firstElementChild);
+          }
           var ports = document.querySelectorAll('link[rel=import]');
           var loads = 0;
           for (var i=0, l=ports.length, n; (i<l) && (n=ports[i]); i++) {
             n.addEventListener('load', function(e) {
               loads++;
-              chai.assert.ok(e.target.import);
+              assert.ok(e.target.import);
             });
           }
           ready();
@@ -46,12 +50,10 @@
 
       test('HTMLImports whenready detail', function(done) {
         HTMLImports.whenReady(function(detail) {
-          chai.assert.equal(detail.allImports.length, 2);
-          chai.assert.equal(detail.loadedImports.length, 2);
-
-          chai.expect(detail.allImports[0].href).to.contain('imports/load-1.html');
-          chai.expect(detail.allImports[1].href).to.contain('imports/load-2.html');
-
+          assert.equal(detail.allImports.length, 2);
+          assert.equal(detail.loadedImports.length, 2);
+          expect(detail.allImports[0].href).to.contain('imports/load-1.html');
+          expect(detail.allImports[1].href).to.contain('imports/load-2.html');
           done()
         });
       });
