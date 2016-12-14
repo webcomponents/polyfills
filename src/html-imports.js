@@ -263,35 +263,15 @@ var importer = {
 
   documents: {},
 
-  // nodes to load in the mian document
-  documentPreloadSelectors: IMPORT_SELECTOR,
-
-  // nodes to load in imports
-  importsPreloadSelectors: [
-    IMPORT_SELECTOR
-  ].join(','),
-
   loadNode: function(node) {
     importLoader.addNode(node);
   },
 
   // load all loadable elements within the parent element
   loadSubtree: function(parent) {
-    var nodes = this.marshalNodes(parent);
+    var nodes = parent.querySelectorAll(IMPORT_SELECTOR);
     // add these nodes to loader's queue
     importLoader.addNodes(nodes);
-  },
-
-  marshalNodes: function(parent) {
-    // all preloadable nodes in inDocument
-    return parent.querySelectorAll(this.loadSelectorsForNode(parent));
-  },
-
-  // find the proper set of load selectors for a given node
-  loadSelectorsForNode: function(node) {
-    var doc = node.ownerDocument || node;
-    return doc === rootDocument ? this.documentPreloadSelectors :
-        this.importsPreloadSelectors;
   },
 
   loaded: function(url, elt, resource, err, redirectedUrl) {
@@ -334,14 +314,16 @@ var importer = {
   },
 
   _flatten: function(element) {
-    var n$ = element.querySelectorAll(IMPORT_SELECTOR);
-    for (var i=0; i < n$.length; i++) {
-      var n = n$[i];
+    const n$ = element.querySelectorAll(IMPORT_SELECTOR);
+    for (let i = 0, l = n$.length, n; i < l && (n = n$[i]); i++) {
       n.import = this.documents[n.href];
       if (n.import && !n.import.__firstImport) {
         n.import.__firstImport = n;
         this._flatten(n.import);
         if (!n.import.parentNode) {
+          // Get pending stylesheets, init the __pendingResources array.
+          var styles = n.import.querySelectorAll('link[rel=stylesheet][href]');
+          n.import.__pendingResources = Array.from(styles).map(getLoadingDonePromise);
           n.appendChild(n.import);
           if (document.contains(n.parentNode)) {
             // TODO(sorvell): need to coordinate with observer in document.head.
@@ -352,38 +334,40 @@ var importer = {
     }
   },
 
-// TODO(valdrin): if possible, fire in same order as native imports which is
-// probably bottom up.
   _fireEvents: function(element) {
-    var n$ = element.querySelectorAll(IMPORT_SELECTOR);
-    for (var i=0; i < n$.length; i++) {
-      var n = n$[i];
-      if (!n.__loaded) {
-        flags.log && console.warn('fire', n.import ? 'load' : 'error', n.href);
-        n.__loaded = true;
-        n.dispatchEvent(new CustomEvent(n.import ? 'load' : 'error'));
+    const n$ = element.querySelectorAll(IMPORT_SELECTOR);
+    for (let i = 0, l = n$.length, n; i < l && (n = n$[i]); i++) {
+      if (n.__loaded === undefined) {
+        n.__loaded = false;
+        const eventType = n.import ? 'load' : 'error';
+        flags.log && console.warn('fire', eventType, n.href);
+        Promise.all(n.import ? n.import.__pendingResources : []).then(() => {
+          n.__loaded = true;
+          n.dispatchEvent(new CustomEvent(eventType));
+        });
       }
     }
   },
 
   observe: function(element) {
-    if (!element.__importObserver) {
-      element.__importObserver = new MutationObserver(function (mxns) {
-        mxns.forEach(function(m) {
-          if (m.addedNodes) {
-            for (var i=0; i < m.addedNodes.length; i++) {
-              var p = m.addedNodes[i];
-              // TODO(sorvell): x-platform matches
-              if (p.nodeType === Node.ELEMENT_NODE &&
-                  p.matches(IMPORT_SELECTOR)) {
-                importer.loadNode(p);
-              }
+    if (element.__importObserver) {
+      return;
+    }
+    element.__importObserver = new MutationObserver(function (mxns) {
+      mxns.forEach(function(m) {
+        if (m.addedNodes) {
+          for (var i=0; i < m.addedNodes.length; i++) {
+            var p = m.addedNodes[i];
+            // TODO(sorvell): x-platform matches
+            if (p.nodeType === Node.ELEMENT_NODE &&
+                p.matches(IMPORT_SELECTOR)) {
+              importer.loadNode(p);
             }
           }
-        });
+        }
       });
-      element.__importObserver.observe(element, {childList: true, subtree: true});
-    }
+    });
+    element.__importObserver.observe(element, {childList: true, subtree: true});
   }
 
 };
@@ -456,21 +440,22 @@ function fixUrls(element, base) {
   fixUrlsInTemplates(element, base);
 }
 
-var scriptType = "import-pending";
+var scriptType = 'import-pending';
 
 function markScripts(element, url) {
-  var s$ = element.querySelectorAll('script:not(type)');
+  var s$ = element.querySelectorAll('script');
   for (var i=0; i < s$.length; i++) {
     var o = s$[i];
-    o.type = scriptType;
+    o.setAttribute(scriptType, '');
     o.__baseURI = url;
+    o.__parentImportContent = element;
   }
 }
 
 // done for security reasons. TODO(valdrin) document
 function runScripts() {
-  var s$ = document.querySelectorAll('import-content script[type=' + scriptType + ']');
-  for (var i=0; i < s$.length; i++) {
+  var s$ = document.querySelectorAll('import-content script[' + scriptType + ']');
+  for (var i = 0; i < s$.length; i++) {
     var o = s$[i];
     var c = document.createElement('script');
     if (o.textContent) {
@@ -480,9 +465,17 @@ function runScripts() {
     if (o.src) {
       var src = path.replaceAttrUrl(o.getAttribute('src'), o.__baseURI);
       c.setAttribute('src', src);
+      o.__parentImportContent.__pendingResources.push(getLoadingDonePromise(c));
     }
     o.parentNode.replaceChild(c, o);
   }
+}
+
+function getLoadingDonePromise(element) {
+  return new Promise(resolve => {
+    element.addEventListener('load', resolve);
+    element.addEventListener('error', resolve);
+  });
 }
 
 function fixDomModules(element, url) {
@@ -576,26 +569,11 @@ function watchImportsLoad(callback, doc) {
   var parsedCount = 0, importCount = imports.length, newImports = [], errorImports = [];
   function checkDone() {
     if (parsedCount == importCount && callback) {
-      // If there is a script with src, wait for its load. Use a RAF which
-      // will trigger after that script is done. Handles the case of deferred/async
-      // scripts.
-      // TODO(valdrin) verify if works with slow resources.
-      var scripts = doc.querySelectorAll(IMPORT_SELECTOR + ' script[src]');
-      if (scripts.length) {
-        window.requestAnimationFrame(function() {
-          callback({
-            allImports: imports,
-            loadedImports: newImports,
-            errorImports: errorImports
-          });
-        });
-      } else {
-        callback({
-          allImports: imports,
-          loadedImports: newImports,
-          errorImports: errorImports
-        });
-      }
+      callback({
+        allImports: imports,
+        loadedImports: newImports,
+        errorImports: errorImports
+      });
     }
   }
   function loadedImport(e) {
@@ -667,7 +645,7 @@ if (useNative) {
   // when this script is run.
   (function() {
     if (document.readyState === 'loading') {
-      var imports = document.querySelectorAll('link[rel=import]');
+      var imports = document.querySelectorAll(IMPORT_SELECTOR);
       for (var i=0, l=imports.length, imp; (i<l) && (imp=imports[i]); i++) {
         handleImport(imp);
       }
