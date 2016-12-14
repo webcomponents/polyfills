@@ -147,8 +147,11 @@ if (utils.settings.inUse) {
   patchProto(Text.prototype, GlobalMixins.Text);
   patchProto(DocumentFragment.prototype, GlobalMixins.Fragment);
   patchProto(Element.prototype, GlobalMixins.Element);
-  patchProto(Document.prototype, GlobalMixins.Element);
-  if (HTMLSlotElement) {
+  let he = (window.customElements && customElements.nativeHTMLElement) ||
+    HTMLElement;
+  patchProto(he.prototype, GlobalMixins.HTMLElement, true);
+  patchProto(Document.prototype, GlobalMixins.Document);
+  if (window.HTMLSlotElement) {
     patchProto(HTMLSlotElement.prototype, GlobalMixins.Slot);
   }
 

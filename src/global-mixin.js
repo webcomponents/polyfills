@@ -25,7 +25,7 @@ export function getNative(node, prop) {
   return node.__nativeProps[prop].get.call(node);
 }
 
-function setNative(node, prop, value) {
+export function setNative(node, prop, value) {
   node.__nativeProps[prop].set.call(node, value);
 }
 
@@ -143,7 +143,9 @@ let mixinImpl = {
     let ipAdded;
     if (ownerRoot) {
       // optimization: special insertion point tracking
-      if (node.__noInsertionPoint && !ownerRoot._renderPending) {
+      // TODO(sorvell): verify that the renderPending check here should not be needed.
+      // if (node.__noInsertionPoint && !ownerRoot._renderPending) {
+      if (node.__noInsertionPoint) {
         ownerRoot._skipUpdateInsertionPoints = true;
       }
       // note: we always need to see if an insertion point is added
@@ -435,7 +437,7 @@ let mixinImpl = {
   },
 
   activeElementForNode(node) {
-    let active = document.activeElement;
+    let active = getNative(document, 'activeElement');
     if (!active) {
       return null;
     }
@@ -692,46 +694,50 @@ let FragmentMixin = {
 
 };
 
+let childrenDescriptor = {
+  get() {
+    if (hasLogical(this, 'firstChild')) {
+      return Array.prototype.filter.call(this.childNodes, function(n) {
+        return (n.nodeType === Node.ELEMENT_NODE);
+      });
+    } else {
+      return getNative(this, 'children');
+    }
+  },
+  configurable: true
+};
+
+let innerHTMLDescriptor = {
+  get() {
+    if (hasLogical(this, 'firstChild')) {
+      return getInnerHTML(this);
+    } else {
+      return getNative(this, 'innerHTML');
+    }
+  },
+  set(text) {
+    if (hasLogical(this, 'firstChild')) {
+      mixinImpl.clearNode(this);
+      let d = document.createElement('div');
+      d.innerHTML = text;
+      // here, appendChild may move nodes async so we cannot rely
+      // on node position when copying
+      let c$ = Array.from(d.childNodes);
+      for (let i=0; i < c$.length; i++) {
+        this.appendChild(c$[i]);
+      }
+    } else {
+      setNative(this, 'innerHTML', text);
+    }
+  },
+  configurable: true
+};
+
 Object.defineProperties(FragmentMixin, {
 
-  children: {
-    get() {
-      if (hasLogical(this, 'firstChild')) {
-        return Array.prototype.filter.call(this.childNodes, function(n) {
-          return (n.nodeType === Node.ELEMENT_NODE);
-        });
-      } else {
-        return getNative(this, 'children');
-      }
-    },
-    configurable: true
-  },
+  children: childrenDescriptor,
 
-  innerHTML: {
-    get() {
-      if (hasLogical(this, 'firstChild')) {
-        return getInnerHTML(this);
-      } else {
-        return getNative(this, 'innerHTML');
-      }
-    },
-    set(text) {
-      if (hasLogical(this, 'firstChild')) {
-        mixinImpl.clearNode(this);
-        let d = document.createElement('div');
-        d.innerHTML = text;
-        // here, appendChild may move nodes async so we cannot rely
-        // on node position when copying
-        let c$ = Array.from(d.childNodes);
-        for (let i=0; i < c$.length; i++) {
-          this.appendChild(c$[i]);
-        }
-      } else {
-        setNative(this, 'innerHTML', text);
-      }
-    },
-    configurable: true
-  },
+  innerHTML: innerHTMLDescriptor,
 
   firstElementChild: {
     get() {
@@ -861,7 +867,17 @@ Object.defineProperties(ElementMixin, {
 
 });
 
-let activeElementDescriptor = {
+let HTMLElementMixin = {};
+
+Object.defineProperties(HTMLElementMixin, {
+
+  children: childrenDescriptor,
+
+  innerHTML: innerHTMLDescriptor
+
+});
+
+export let activeElementDescriptor = {
   get() {
     return mixinImpl.activeElementForNode(this);
   }
@@ -896,13 +912,15 @@ export let Mixins = {
 
   Element: ElementMixin,
 
+  HTMLElement: HTMLElementMixin,
+
   // Note: activeElement cannot be patched on document!
-  Document: utils.extendAll({},
-    UnderActiveElementMixin)
+  Document: utils.extendAll({}, ElementMixin,
+    UnderActiveElementMixin, ActiveElementMixin)
 
 };
 
-export let patchProto = function(proto, mixin) {
+export let patchProto = function(proto, mixin, ifExists) {
   proto.__nativeProps = Object.create(proto.__nativeProps || {});
   let n$ = Object.getOwnPropertyNames(mixin);
   for (let i=0, n; (i<n$.length) && (n=n$[i]); i++) {
@@ -914,8 +932,10 @@ export let patchProto = function(proto, mixin) {
       }
       proto.__nativeProps[n] = sd;
     }
-    let md = Object.getOwnPropertyDescriptor(mixin, n);
-    Object.defineProperty(proto, n, md);
+    if (!ifExists || (sd && sd.configurable)) {
+      let md = Object.getOwnPropertyDescriptor(mixin, n);
+      Object.defineProperty(proto, n, md);
+    }
   }
 }
 
@@ -993,17 +1013,24 @@ class AsyncObserver {
 }
 
 export let getComposedInnerHTML = function(node) {
-  if (hasLogical(node, 'firstChild')) {
-    return getInnerHTML(node, (n) => getNative(n, 'childNodes'));
-  } else {
-    return node.innerHTML;
-  }
+  //if (hasLogical(node, 'firstChild')) {
+    return getInnerHTML(node, (n) => getComposedChildNodes(n));
+  // } else {
+  //   return node.innerHTML;
+  // }
 }
 
+let walker = document.createTreeWalker(document, NodeFilter.SHOW_ALL,
+  null, false);
 export let getComposedChildNodes = function(node) {
-  return hasLogical(node, 'firstChild') ?
-    getNative(node, 'childNodes') :
-    node.childNodes;
+  let nodes = [];
+  walker.currentNode = node;
+  let n = walker.firstChild();
+  while (n) {
+    nodes.push(n);
+    n = walker.nextSibling();
+  }
+  return nodes;
 }
 
 // TODO(sorvell): consider instead polyfilling MutationObserver

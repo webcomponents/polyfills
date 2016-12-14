@@ -12,7 +12,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 import {calculateSplices} from './array-splice'
 import * as utils from './utils'
-import {getComposedChildNodes, saveChildNodes, nativeMethod, getNative} from './global-mixin'
+import {getComposedChildNodes, saveChildNodes,
+  nativeMethod, getNative, activeElementDescriptor} from './global-mixin'
 import Distributor from './distributor'
 
 /**
@@ -98,18 +99,12 @@ let ShadyMixin = {
       this._insertionPoints = [];
     }
     this._skipUpdateInsertionPoints = false;
-    // TODO(sorvell): previous ShadyDom had a fast path here
-    // that would avoid distribution for initial render if
-    // no insertion points exist. We cannot currently do this because
-    // it relies on elements being in the physical shadowRoot element
-    // so that native methods will be used. The current append code
-    // simply provokes distribution in this case and does not put the
-    // nodes in the shadowRoot. This could be done but we'll need to
-    // consider if the special processing is worth the perf gain.
-    // if (!this._hasRendered && !this._insertionPoints.length) {
-    //   tree.Composed.clearChildNodes(this.host);
-    //   tree.Composed.appendChild(this.host, this);
-    // } else {
+    // TODO(sorvell): can add a first render optimization here
+    // to use if there are no insertion points
+    // 1. clear host node of composed children
+    // 2. appendChild the shadowRoot itself or (more robust) its logical children
+    // NOTE: this didn't seem worth it in perf testing
+    // but not ready to delete this info.
     // logical
     this.distribute();
     // physical
@@ -259,16 +254,8 @@ let ShadyMixin = {
 
 let ShadyFragmentMixin = Object.create(DocumentFragment.prototype);
 utils.extend(ShadyFragmentMixin, ShadyMixin);
+Object.defineProperty(ShadyFragmentMixin, 'activeElement', activeElementDescriptor);
 
-// let needsUpgrade = window.CustomElements && !CustomElements.useNative;
-
-// function upgradeLogicalChildren(children) {
-//   if (needsUpgrade && children) {
-//     for (let i=0; i < children.length; i++) {
-//       CustomElements.upgrade(children[i]);
-//     }
-//   }
-// }
 
 // render enqueuer/flusher
 let customElements = window.customElements;

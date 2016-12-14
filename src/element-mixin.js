@@ -850,7 +850,8 @@ class AsyncObserver {
 }
 
 // use a TreeWalker to get composed dom information.
-let walker = document.createTreeWalker(document, NodeFilter.SHOW_ALL);
+let walker = document.createTreeWalker(document, NodeFilter.SHOW_ALL,
+  null, false);
 export let getComposedChildNodes = function(node) {
   let nodes = [];
   walker.currentNode = node;

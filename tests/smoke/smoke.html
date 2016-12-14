@@ -14,15 +14,20 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <script>
     ShadyDOM = {force: true};
   </script>
+  <script src="../../../webcomponentsjs/src/WebComponents/dom.js"></script>
+  <script src="../../../webcomponentsjs/src/WebComponents/lang.js"></script>
   <script src="../../shadydom.min.js"></script>
 </head>
 <body>
 
 <div id="simple"><div>simple</div></div>
 
+<hr>
 <div id="dist">
   distribution content
 </div>
+
+<hr>
 
 <script>
   simple.attachShadow({mode: 'open'});
@@ -33,6 +38,15 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   dist.attachShadow({mode: 'open'});
   //dist.shadowRoot.appendChild(document.createElement('slot'));
   dist.shadowRoot.innerHTML = 'before<slot></slot>';
+
+  var host = document.createElement('div');
+  host.id = 'host';
+  host.attachShadow({mode: 'open'});
+  // Populate the initial pool of light DOM children.
+  host.innerHTML = 'abc';
+  document.body.appendChild(host);
+  host.shadowRoot.innerHTML = '<slot>fallback</slot>';
+  ShadyDOM.flush();
 </script>
 
 </body>
