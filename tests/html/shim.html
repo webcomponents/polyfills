@@ -17,6 +17,12 @@
 
   suite('Native Shim', () => {
 
+    // Do nothing if the browser does not natively support custom elements.
+    if (!window.customElements) {
+      test.skip('The native shim does not apply to this browser.', () => {});
+      return;
+    }
+
     test('works with createElement()', () => {
       function ES5Element1() {
         return HTMLElement.apply(this);
