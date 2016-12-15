@@ -24,6 +24,7 @@ gulp.task('default', () => {
           warning_level: 'VERBOSE',
           language_in: 'ECMASCRIPT6_STRICT',
           language_out: 'ECMASCRIPT5_STRICT',
+          externs: ['externs/html-imports.js'],
           js_output_file: 'html-imports.min.js',
           new_type_inf: true,
           rewrite_polyfills: false,
