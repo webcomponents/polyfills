@@ -322,7 +322,8 @@ var importer = {
         this._flatten(n.import);
         if (!n.import.parentNode) {
           // Get pending stylesheets, init the __pendingResources array.
-          var styles = n.import.querySelectorAll('link[rel=stylesheet][href]');
+          // TODO(valdrin) should it check for @import in textContent?
+          var styles = n.import.querySelectorAll('link[rel=stylesheet][href]:not([type])');
           n.import.__pendingResources = Array.from(styles).map(getLoadingDonePromise);
           n.appendChild(n.import);
           if (document.contains(n.parentNode)) {
