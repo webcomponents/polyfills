@@ -566,11 +566,11 @@ function watchImportsLoad(callback, doc) {
   var parsedCount = 0, importCount = imports.length, newImports = [], errorImports = [];
   function checkDone() {
     if (parsedCount == importCount && callback) {
-      callback({
+      callback(/*@type {HTMLImportInfo} */({
         allImports: imports,
         loadedImports: newImports,
         errorImports: errorImports
-      });
+      }));
     }
   }
   function loadedImport(e) {
