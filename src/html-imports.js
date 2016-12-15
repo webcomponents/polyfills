@@ -320,34 +320,34 @@ var importer = {
       if (n.import && !n.import.__firstImport) {
         n.import.__firstImport = n;
         this._flatten(n.import);
-        if (!n.import.parentNode) {
-          // Get pending stylesheets, init the __pendingResources array.
-          // TODO(valdrin) should it check for @import in textContent?
-          var styles = n.import.querySelectorAll('link[rel=stylesheet][href]:not([type])');
-          n.import.__pendingResources = Array.from(styles).map(getLoadingDonePromise);
-          n.appendChild(n.import);
-          if (document.contains(n.parentNode)) {
-            // TODO(sorvell): need to coordinate with observer in document.head.
-            //this.observe(n.import);
-          }
+        n.appendChild(n.import);
+        if (document.contains(n.parentNode)) {
+          // TODO(sorvell): need to coordinate with observer in document.head.
+          //this.observe(n.import);
         }
       }
     }
   },
 
   _fireEvents: function(element) {
-    const n$ = element.querySelectorAll(IMPORT_SELECTOR);
-    for (let i = 0, l = n$.length, n; i < l && (n = n$[i]); i++) {
-      if (n.__loaded === undefined) {
-        n.__loaded = false;
-        const eventType = n.import ? 'load' : 'error';
-        flags.log && console.warn('fire', eventType, n.href);
-        Promise.all(n.import ? n.import.__pendingResources : []).then(() => {
+    // Wait for pending resources to finish loading before we can fire load/error.
+    // TODO(valdrin) should it check for @import in textContent?
+    var pending = element.querySelectorAll(
+      `${IMPORT_SELECTOR} link[rel=stylesheet][href]:not([type]),
+       ${IMPORT_SELECTOR} script[src]:not([type])`);
+    Promise.all(Array.from(pending).map(getLoadingDonePromise)).then(() => {
+      const n$ = element.querySelectorAll(IMPORT_SELECTOR);
+      // Inverse order to have events firing bottom-up.
+      for (let i = n$.length - 1, n; i >= 0 && (n = n$[i]); i--) {
+        // Don't fire twice same event.
+        if (!n.__loaded) {
+          const eventType = n.import ? 'load' : 'error';
+          flags.log && console.warn('fire', eventType, n.href);
           n.__loaded = true;
           n.dispatchEvent(new CustomEvent(eventType));
-        });
+        }
       }
-    }
+    });
   },
 
   observe: function(element) {
@@ -445,34 +445,38 @@ function markScripts(element, url) {
   var s$ = element.querySelectorAll('script');
   for (var i=0; i < s$.length; i++) {
     var o = s$[i];
-    o.__baseURI = url;
-    o.__parentImportContent = element;
+    if (o.textContent) {
+      o.textContent = o.textContent + `\n//# sourceURL=${url}`;
+    }
+    if (o.src) {
+      o.setAttribute('src', path.replaceAttrUrl(o.getAttribute('src'), url));
+    }
   }
 }
 
 // done for security reasons. TODO(valdrin) document
 function runScripts() {
   var s$ = document.querySelectorAll('import-content script');
-  for (var i = 0; i < s$.length; i++) {
-    var o = s$[i];
-    var c = document.createElement('script');
-    if (o.textContent) {
-      c.textContent = o.textContent + '\n//# sourceURL=' +
-        o.__baseURI + (s$.length > 1 ? i : '') + '.js';
-    }
-    if (o.src) {
-      var src = path.replaceAttrUrl(o.getAttribute('src'), o.__baseURI);
-      c.setAttribute('src', src);
-      o.__parentImportContent.__pendingResources.push(getLoadingDonePromise(c));
-    }
-    o.parentNode.replaceChild(c, o);
+  for (let  i = 0; i < s$.length; i++) {
+    const script = s$[i];
+    const clone = document.createElement('script');
+    clone.textContent = script.textContent;
+    script.src && clone.setAttribute('src', script.getAttribute('src'));
+    script.parentNode.replaceChild(clone, script);
   }
 }
 
 function getLoadingDonePromise(element) {
   return new Promise(resolve => {
-    element.addEventListener('load', resolve);
-    element.addEventListener('error', resolve);
+    if (element.__loaded) {
+      resolve();
+    } else {
+      element.addEventListener('load', resolve);
+      element.addEventListener('error', resolve);
+    }
+  }).then((event) => {
+    element.__loaded = true;
+    return event;
   });
 }
 

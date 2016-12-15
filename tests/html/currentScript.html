@@ -20,10 +20,11 @@
   <body>
     <script>
       var cs = document._currentScript;
-      test('currentScript', function() {
+      test('currentScript', function(done) {
         chai.assert.equal(cs.parentNode, document.body, '_currentScript set in main document');
         addEventListener('HTMLImportsLoaded', function() {
           chai.assert.equal(window.remoteCurrentScriptExecuted, 2, 'remote script executed from import and main document');
+          done();
         });
       });
     </script>
