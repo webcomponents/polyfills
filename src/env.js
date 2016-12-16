@@ -30,6 +30,10 @@ import * as events from './event-mixin'
 if (utils.settings.inUse) {
 
   window.ShadyDOM = {
+    // TODO(sorvell): remove when Polymer does not depend on this.
+    inUse: utils.settings.inUse,
+    // TODO(sorvell): remove when Polymer does not depend on this.
+    patch: function(node) { return node; },
     getComposedInnerHTML: getComposedInnerHTML,
     getComposedChildNodes: getComposedChildNodes,
     isShadyRoot: utils.isShadyRoot,
