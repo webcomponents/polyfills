@@ -24,14 +24,13 @@ import {ShadyRoot, flush, enqueue} from './shady'
 import * as patch from './patch'
 import {getRootNode, filterMutations, observeChildren, unobserveChildren,
   setAttribute } from './element-mixin'
-import {Mixins as GlobalMixins, patchProto, getNative,
+import {Mixins as GlobalMixins, patchProto,
     getComposedInnerHTML, getComposedChildNodes} from './global-mixin'
 import * as events from './event-mixin'
 
 if (utils.settings.inUse) {
 
   window.ShadyDOM = {
-    getNativeProperty: getNative,
     patch: patch.patchNode,
     isPatched: patch.isNodePatched,
     getComposedInnerHTML: getComposedInnerHTML,
@@ -135,14 +134,6 @@ if (utils.settings.inUse) {
     }
   }
 
-  // Patch mutation methods on ALL dom prototypes.
-  // for (let p in Mixins.Default) {
-  //   let method = Mixins.Default[p];
-  //   Element.prototype[p] = method;
-  //   DocumentFragment.prototype[p] = method;
-  //   Document.prototype[p] = method;
-  // }
-
   patchProto(Node.prototype, GlobalMixins.Node);
   patchProto(Text.prototype, GlobalMixins.Text);
   patchProto(DocumentFragment.prototype, GlobalMixins.Fragment);
@@ -154,5 +145,10 @@ if (utils.settings.inUse) {
   if (window.HTMLSlotElement) {
     patchProto(HTMLSlotElement.prototype, GlobalMixins.Slot);
   }
+
+  // Safari 9 testing
+  // patchProto(Text.prototype, GlobalMixins.Node);
+  // patchProto(he.prototype, GlobalMixins.Node);
+  // patchProto(he.prototype, GlobalMixins.Element);
 
 }

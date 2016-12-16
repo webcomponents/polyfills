@@ -12,9 +12,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 import {calculateSplices} from './array-splice'
 import * as utils from './utils'
+import {nativeMethods} from './native-methods'
 import {nativeTree} from './native-tree'
 import {getComposedChildNodes, saveChildNodes,
-  nativeMethod, activeElementDescriptor} from './global-mixin'
+  activeElementDescriptor, Mixins} from './global-mixin'
 import Distributor from './distributor'
 
 /**
@@ -229,7 +230,7 @@ let ShadyMixin = {
         // then schedule its previous host for distribution resulting in
         // the node being removed here.
         if (nativeTree.parentNode(n) === container) {
-          nativeMethod(container, 'removeChild', [n]);
+          nativeMethods.removeChild(container, n);
         }
         composed.splice(s.index + d, 1);
       }
@@ -240,7 +241,7 @@ let ShadyMixin = {
       next = composed[s.index];
       for (let j=s.index, n; j < s.index + s.addedCount; j++) {
         n = children[j];
-        nativeMethod(container, 'insertBefore', [n, next]);
+        nativeMethods.insertBefore(container, n, next);
         // TODO(sorvell): is this splice strictly needed?
         composed.splice(j, 0, n);
       }
@@ -254,7 +255,7 @@ let ShadyMixin = {
 }
 
 let ShadyFragmentMixin = Object.create(DocumentFragment.prototype);
-utils.extend(ShadyFragmentMixin, ShadyMixin);
+utils.extendAll(ShadyFragmentMixin, ShadyMixin, Mixins.Fragment);
 Object.defineProperty(ShadyFragmentMixin, 'activeElement', activeElementDescriptor);
 
 

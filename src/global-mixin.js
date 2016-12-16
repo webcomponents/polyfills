@@ -12,6 +12,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 import * as utils from './utils'
 import {getInnerHTML} from './innerHTML'
+import {nativeMethods} from './native-methods'
 import {nativeTree} from './native-tree'
 
 function getLogical(node, prop) {
@@ -24,14 +25,6 @@ function hasLogical(node, prop) {
 
 export function getNative(node, prop) {
   return node.__nativeProps[prop].get.call(node);
-}
-
-export function setNative(node, prop, value) {
-  node.__nativeProps[prop].set.call(node, value);
-}
-
-export function nativeMethod(node, prop, args) {
-  return node.__nativeProps[prop].value.apply(node, args);
 }
 
 function recordInsertBefore(node, container, ref_node) {
@@ -339,7 +332,7 @@ let mixinImpl = {
           let node = dc$[j];
           let parent = nativeTree.parentNode(node);
           if (parent) {
-            nativeMethod(parent, 'removeChild', [node]);
+            nativeMethods.removeChild(parent, node);
           }
         }
       }
@@ -493,7 +486,7 @@ export let setAttribute = function(attr, value) {
   if (window.ShadyCSS && attr === 'class' && this.ownerDocument === document) {
     window.ShadyCSS.setElementClass(this, value);
   } else {
-    nativeMethod(this, 'setAttribute', [attr, value]);
+    nativeMethods.setAttribute(this, attr, value);
   }
 }
 
@@ -552,9 +545,9 @@ let NodeMixin = {
       let container = utils.isShadyRoot(this) ?
         this.host : this;
       if (ref_node) {
-        nativeMethod(container, 'insertBefore', [node, ref_node]);
+        nativeMethods.insertBefore(container, node, ref_node);
       } else {
-        nativeMethod(container, 'appendChild', [node]);
+        nativeMethods.appendChild(container, node);
       }
     }
     mixinImpl._scheduleObserver(this, node);
@@ -579,7 +572,7 @@ let NodeMixin = {
       // undistributed nodes.
       let parent = nativeTree.parentNode(node);
       if (container === parent) {
-        nativeMethod(container, 'removeChild', [node]);
+        nativeMethods.removeChild(container, node);
       }
     }
     mixinImpl._scheduleObserver(this, null, node);
@@ -1019,24 +1012,11 @@ class AsyncObserver {
 }
 
 export let getComposedInnerHTML = function(node) {
-  //if (hasLogical(node, 'firstChild')) {
-    return getInnerHTML(node, (n) => getComposedChildNodes(n));
-  // } else {
-  //   return node.innerHTML;
-  // }
+  return getInnerHTML(node, (n) => getComposedChildNodes(n));
 }
 
-let walker = document.createTreeWalker(document, NodeFilter.SHOW_ALL,
-  null, false);
 export let getComposedChildNodes = function(node) {
-  let nodes = [];
-  walker.currentNode = node;
-  let n = walker.firstChild();
-  while (n) {
-    nodes.push(n);
-    n = walker.nextSibling();
-  }
-  return nodes;
+  return nativeTree.childNodes(node);
 }
 
 // TODO(sorvell): consider instead polyfilling MutationObserver

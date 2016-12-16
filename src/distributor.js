@@ -11,8 +11,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 'use strict';
 
 import {arrayCopy} from './utils'
+import {nativeMethods} from './native-methods'
 import {nativeTree} from './native-tree'
-import {nativeMethod} from './global-mixin'
 
 // NOTE: normalize event contruction where necessary (IE11)
 let NormalizedEvent = typeof Event === 'function' ? Event :
@@ -82,7 +82,7 @@ export default class {
         // remove undistributed elements from physical dom.
         let parent = nativeTree.parentNode(p);
         if (parent) {
-          nativeMethod(parent, 'removeChild', [p]);
+          nativeMethods.removeChild(parent, p);
         }
       }
     }
