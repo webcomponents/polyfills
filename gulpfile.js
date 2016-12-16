@@ -16,26 +16,26 @@
 let gulp = require('gulp');
 let compilerPackage = require('google-closure-compiler');
 let sourcemaps = require('gulp-sourcemaps');
-let rollup = require('rollup-stream');
 let rename = require('gulp-rename');
-let source = require('vinyl-source-stream');
-let buffer = require('vinyl-buffer');
 let closureCompiler = compilerPackage.gulp();
-let uglify = require('gulp-uglify');
-let buble = require('rollup-plugin-buble')
-let header = require('gulp-header');
+let rollup = require('gulp-rollup');
+let babel = require('gulp-babel');
 
-let licenseHeader =
-`/*
-@license
-Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
-This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
-The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
-The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
-Code distributed by Google as part of the polymer project is also
-subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
-*/
-`;
+let hasLicense = false;
+let babiliConfig = {
+  presets: ['babili'],
+  shouldPrintComment: (c) => {
+    if (!hasLicense) {
+      hasLicense = true;
+      return /@license/.test(c)
+    }
+    return false;
+  }
+}
+
+let es5Config = {
+  presets: ['es2015']
+}
 
 gulp.task('closure', function() {
   return gulp.src(['./src/*.js'], {base: './'})
@@ -55,35 +55,31 @@ gulp.task('closure', function() {
 });
 
 gulp.task('default', () => {
-  return rollup({
-    entry: './src/env.js',
+  return gulp.src('src/*.js')
+  .pipe(sourcemaps.init())
+  .pipe(rollup({
+    entry: 'src/env.js',
     format: 'iife',
-    plugins: [buble()],
     moduleName: 'shadydom',
     sourceMap: true
-  })
-  .pipe(source('env.js', './src/'))
-  .pipe(buffer())
+  }))
+  .pipe(babel(babiliConfig))
   .pipe(rename('shadydom.min.js'))
-  .pipe(sourcemaps.init({loadMaps: true}))
-  .pipe(uglify())
-  .pipe(header(licenseHeader))
   .pipe(sourcemaps.write('.'))
   .pipe(gulp.dest('./'))
-});
+})
 
-gulp.task('debug', () => {
-  return rollup({
-    entry: './src/env.js',
+gulp.task('es5', () => {
+  return gulp.src('src/*.js')
+  .pipe(sourcemaps.init())
+  .pipe(rollup({
+    entry: 'src/env.js',
     format: 'iife',
-    plugins: [buble()],
     moduleName: 'shadydom',
-    //sourceMap: true
-  })
-  .pipe(source('env.js', './src/'))
-  .pipe(buffer())
+    sourceMap: true
+  }))
+  .pipe(babel(es5Config))
   .pipe(rename('shadydom.min.js'))
-  .pipe(sourcemaps.init({loadMaps: true}))
-  //.pipe(sourcemaps.write('.'))
+  .pipe(sourcemaps.write('.'))
   .pipe(gulp.dest('./'))
-});
+})
