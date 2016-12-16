@@ -241,7 +241,6 @@ suite('activeElement', function() {
 
   suiteSetup(function() {
     // NOTE: need to patch document for `activeElement`
-    ShadyDOM.patch(document);
     r = document.querySelector('x-shadow-host-root');
       r_l = r.querySelector('x-shadow-host-root-light');
       r_0 = r.shadowRoot.querySelector('x-shadow-host-root-0');

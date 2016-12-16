@@ -12,9 +12,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 import {calculateSplices} from './array-splice'
 import * as utils from './utils'
+import {recordChildNodes} from './logical-tree'
 import {nativeMethods} from './native-methods'
 import {nativeTree} from './native-tree'
-import {getComposedChildNodes, saveChildNodes,
+import {getComposedChildNodes,
   activeElementDescriptor, Mixins} from './global-mixin'
 import Distributor from './distributor'
 
@@ -49,8 +50,8 @@ let ShadyMixin = {
     host.shadowRoot = this;
     this.host = host;
     // logical dom setup
-    saveChildNodes(host);
-    saveChildNodes(this);
+    recordChildNodes(host);
+    recordChildNodes(this);
     // state flags
     this._renderPending = false;
     this._hasRendered = false;
@@ -146,8 +147,8 @@ let ShadyMixin = {
     for (let i=0, c; i < i$.length; i++) {
       c = i$[i];
       c.__shady = c.__shady || {};
-      saveChildNodes(c);
-      saveChildNodes(c.parentNode);
+      recordChildNodes(c);
+      recordChildNodes(c.parentNode);
     }
   },
 

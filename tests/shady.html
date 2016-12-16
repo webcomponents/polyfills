@@ -67,7 +67,6 @@ function testRender(descr, hostInnerHtml, shadowRootHtml, expectedHtml) {
 
 test('Node/Element accessors', function() {
   var div = document.createElement('div');
-  assert.isFalse(ShadyDOM.isPatched(div));
   assert.isFalse(div.isConnected);
   assert.equal(div.getRootNode(), div);
   div.slot = 'slot';

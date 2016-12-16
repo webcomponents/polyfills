@@ -21,26 +21,20 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 'use strict';
 import * as utils from './utils'
 import {ShadyRoot, flush, enqueue} from './shady'
-import * as patch from './patch'
-import {getRootNode, filterMutations, observeChildren, unobserveChildren,
-  setAttribute } from './element-mixin'
-import {Mixins as GlobalMixins, patchProto,
+import {observeChildren, unobserveChildren, filterMutations} from './observe-changes'
+import {getRootNode, setAttribute, Mixins, patchProto,
     getComposedInnerHTML, getComposedChildNodes} from './global-mixin'
 import * as events from './event-mixin'
 
 if (utils.settings.inUse) {
 
   window.ShadyDOM = {
-    patch: patch.patchNode,
-    isPatched: patch.isNodePatched,
     getComposedInnerHTML: getComposedInnerHTML,
     getComposedChildNodes: getComposedChildNodes,
-    unpatch: patch.unpatchNode,
-    canUnpatch: patch.canUnpatchNode,
     isShadyRoot: utils.isShadyRoot,
     enqueue: enqueue,
     flush: flush,
-    inUse: utils.settings.inUse,
+    settings: utils.settings,
     filterMutations: filterMutations,
     observeChildren: observeChildren,
     unobserveChildren: unobserveChildren
@@ -134,21 +128,21 @@ if (utils.settings.inUse) {
     }
   }
 
-  patchProto(Node.prototype, GlobalMixins.Node);
-  patchProto(Text.prototype, GlobalMixins.Text);
-  patchProto(DocumentFragment.prototype, GlobalMixins.Fragment);
-  patchProto(Element.prototype, GlobalMixins.Element);
+  patchProto(Node.prototype, Mixins.Node);
+  patchProto(Text.prototype, Mixins.Text);
+  patchProto(DocumentFragment.prototype, Mixins.Fragment);
+  patchProto(Element.prototype, Mixins.Element);
   let he = (window.customElements && customElements.nativeHTMLElement) ||
     HTMLElement;
-  patchProto(he.prototype, GlobalMixins.HTMLElement, true);
-  patchProto(Document.prototype, GlobalMixins.Document);
+  patchProto(he.prototype, Mixins.HTMLElement, true);
+  patchProto(Document.prototype, Mixins.Document);
   if (window.HTMLSlotElement) {
-    patchProto(HTMLSlotElement.prototype, GlobalMixins.Slot);
+    patchProto(HTMLSlotElement.prototype, Mixins.Slot);
   }
 
   // Safari 9 testing
-  // patchProto(Text.prototype, GlobalMixins.Node);
-  // patchProto(he.prototype, GlobalMixins.Node);
-  // patchProto(he.prototype, GlobalMixins.Element);
+  // patchProto(Text.prototype, Mixins.Node);
+  // patchProto(he.prototype, Mixins.Node);
+  // patchProto(he.prototype, Mixins.Element);
 
 }

@@ -14,6 +14,12 @@ export let settings = window.ShadyDOM || {};
 
 settings.hasNativeShadowDOM = Boolean(Element.prototype.attachShadow && Node.prototype.getRootNode);
 
+let desc = Object.getOwnPropertyDescriptor(Node.prototype, 'firstChild');
+
+settings.hasDescriptors = Boolean(desc && desc.configurable && desc.get);
+settings.hasNerfedDescriptors = Boolean(desc && !settings.hasDescriptors);
+
+
 settings.inUse = settings.force || !settings.hasNativeShadowDOM;
 
 export function arrayCopy(a$) {

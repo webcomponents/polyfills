@@ -12,119 +12,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 import * as utils from './utils'
 import {getInnerHTML} from './innerHTML'
+import * as logicalTree from './logical-tree'
 import {nativeMethods} from './native-methods'
 import {nativeTree} from './native-tree'
 
-function getLogical(node, prop) {
-  return node.__shady && node.__shady[prop];
-}
-
-function hasLogical(node, prop) {
-  return getLogical(node, prop) !== undefined;
-}
-
-export function getNative(node, prop) {
-  return node.__nativeProps[prop].get.call(node);
-}
-
-function recordInsertBefore(node, container, ref_node) {
-  container.__shady = container.__shady || {};
-  if (hasLogical(container, 'firstChild')) {
-    container.__shady.childNodes = null;
-  }
-  // handle document fragments
-  if (node.nodeType === Node.DOCUMENT_FRAGMENT_NODE) {
-    let c$ = node.childNodes;
-    for (let i=0; i < c$.length; i++) {
-      linkNode(c$[i], container, ref_node);
-    }
-    // cleanup logical dom in doc fragment.
-    node.__shady = node.__shady || {};
-    let resetTo = hasLogical(node, 'firstChild') ? null : undefined;
-    node.__shady.firstChild = node.__shady.lastChild = resetTo;
-    node.__shady.childNodes = resetTo;
-  } else {
-    linkNode(node, container, ref_node);
-  }
-}
-
-function linkNode(node, container, ref_node) {
-  ref_node = ref_node || null;
-  node.__shady = node.__shady || {};
-  container.__shady = container.__shady || {};
-  if (ref_node) {
-    ref_node.__shady = ref_node.__shady || {};
-  }
-  // update ref_node.previousSibling <-> node
-  node.__shady.previousSibling = ref_node ? ref_node.__shady.previousSibling :
-    container.lastChild;
-  let ps = node.__shady.previousSibling;
-  if (ps && ps.__shady) {
-    ps.__shady.nextSibling = node;
-  }
-  // update node <-> ref_node
-  let ns = node.__shady.nextSibling = ref_node;
-  if (ns && ns.__shady) {
-    ns.__shady.previousSibling = node;
-  }
-  // update node <-> container
-  node.__shady.parentNode = container;
-  if (ref_node) {
-    if (ref_node === container.__shady.firstChild) {
-      container.__shady.firstChild = node;
-    }
-  } else {
-    container.__shady.lastChild = node;
-    if (!container.__shady.firstChild) {
-      container.__shady.firstChild = node;
-    }
-  }
-  // remove caching of childNodes
-  container.__shady.childNodes = null;
-}
-
-function recordRemoveChild(node, container) {
-  node.__shady = node.__shady || {};
-  container.__shady = container.__shady || {};
-  if (node === container.__shady.firstChild) {
-    container.__shady.firstChild = node.__shady.nextSibling;
-  }
-  if (node === container.__shady.lastChild) {
-    container.__shady.lastChild = node.__shady.previousSibling;
-  }
-  let p = node.__shady.previousSibling;
-  let n = node.__shady.nextSibling;
-  if (p) {
-    p.__shady = p.__shady || {};
-    p.__shady.nextSibling = n;
-  }
-  if (n) {
-    n.__shady = n.__shady || {};
-    n.__shady.previousSibling = p;
-  }
-  // When an element is removed, logical data is no longer tracked.
-  // Explicitly set `undefined` here to indicate this. This is disginguished
-  // from `null` which is set if info is null.
-  node.__shady.parentNode = node.__shady.previousSibling =
-    node.__shady.nextSibling = undefined;
-  if (hasLogical(container, 'childNodes')) {
-    // remove caching of childNodes
-    container.__shady.childNodes = null;
-  }
-}
-
-export let saveChildNodes = function(node) {
-  if (!hasLogical(node, 'firstChild')) {
-    node.__shady = node.__shady || {};
-    node.__shady.firstChild = nativeTree.firstChild(node);
-    node.__shady.lastChild = nativeTree.lastChild(node);
-    let c$ = node.__shady.childNodes = nativeTree.childNodes(node);
-    for (let i=0, n; (i<c$.length) && (n=c$[i]); i++) {
-      n.__shady = n.__shady || {};
-      n.__shady.parentNode = node;
-      n.__shady.nextSibling = c$[i+1] || null;
-      n.__shady.previousSibling = c$[i-1] || null;
-    }
+let activeElementDesc = Object.getOwnPropertyDescriptor(Document.prototype, 'activeElement');
+function getDocumentActiveElement() {
+  if (activeElementDesc && activeElementDesc.get) {
+    return activeElementDesc.get.call(document);
   }
 }
 
@@ -151,8 +46,8 @@ let mixinImpl = {
         ownerRoot._skipUpdateInsertionPoints = false;
       }
     }
-    if (hasLogical(container, 'firstChild')) {
-      recordInsertBefore(node, container, ref_node);
+    if (logicalTree.hasProperty(container, 'firstChild')) {
+      logicalTree.recordInsertBefore(node, container, ref_node);
     }
     // if not distributing and not adding to host, do a fast path addition
     // TODO(sorvell): revisit flow since `ipAdded` needed here if
@@ -168,15 +63,15 @@ let mixinImpl = {
   // to require distribution... both cases are handled here.
   removeNode(node) {
     // important that we want to do this only if the node has a logical parent
-    let logicalParent = hasLogical(node, 'parentNode') &&
-      getLogical(node, 'parentNode');
+    let logicalParent = logicalTree.hasProperty(node, 'parentNode') &&
+      logicalTree.getProperty(node, 'parentNode');
     let distributed;
     let ownerRoot = this.ownerShadyRootForNode(node);
     if (logicalParent || ownerRoot) {
       // distribute node's parent iff needed
       distributed = this.maybeDistributeParent(node);
       if (logicalParent) {
-        recordRemoveChild(node, logicalParent);
+        logicalTree.recordRemoveChild(node, logicalParent);
       }
       // remove node from root and distribute it iff needed
       let removedDistributed = ownerRoot &&
@@ -308,8 +203,8 @@ let mixinImpl = {
         added = added || na;
       }
     } else if (node.localName === insertionPointTag) {
-      saveChildNodes(parent);
-      saveChildNodes(node);
+      logicalTree.recordChildNodes(parent);
+      logicalTree.recordChildNodes(node);
       added = true;
     }
     return added;
@@ -431,7 +326,7 @@ let mixinImpl = {
   },
 
   activeElementForNode(node) {
-    let active = getNative(document, 'activeElement');
+    let active = getDocumentActiveElement();
     if (!active) {
       return null;
     }
@@ -493,7 +388,7 @@ export let setAttribute = function(attr, value) {
 function generateSimpleDescriptor(prop) {
   return {
     get() {
-      let l = getLogical(this, prop);
+      let l = logicalTree.getProperty(this, prop);
       return l !== undefined ? l : nativeTree[prop](this);
     },
     configurable: true
@@ -502,7 +397,7 @@ function generateSimpleDescriptor(prop) {
 
 let assignedSlotDesc = {
   get() {
-    return getLogical(this, 'assignedSlot') || null;
+    return logicalTree.getProperty(this, 'assignedSlot') || null;
   },
   configurable: true
 };
@@ -521,7 +416,7 @@ let NodeMixin = {
   // 3. node is <content> (host of container needs distribution)
   insertBefore(node, ref_node) {
     if (ref_node) {
-      let p = getLogical(ref_node, 'parentNode');
+      let p = logicalTree.getProperty(ref_node, 'parentNode');
       if (p !== undefined && p !== this) {
         throw Error('The ref_node to be inserted before is not a child ' +
           'of this node');
@@ -529,7 +424,7 @@ let NodeMixin = {
     }
     // remove node from its current position iff it's in a tree.
     if (node.nodeType !== Node.DOCUMENT_FRAGMENT_NODE) {
-      let parent = getLogical(node, 'parentNode');
+      let parent = logicalTree.getProperty(node, 'parentNode');
       mixinImpl.removeNodeFromParent(node, parent);
     }
     if (!mixinImpl.addNode(this, node, ref_node)) {
@@ -614,7 +509,7 @@ Object.defineProperties(NodeMixin, {
 
   childNodes: {
     get() {
-      if (hasLogical(this, 'firstChild')) {
+      if (logicalTree.hasProperty(this, 'firstChild')) {
         if (!this.__shady.childNodes) {
           this.__shady.childNodes = [];
           for (let n=this.firstChild; n; n=n.nextSibling) {
@@ -635,7 +530,7 @@ Object.defineProperties(NodeMixin, {
 
   textContent: {
     get() {
-      if (hasLogical(this, 'firstChild')) {
+      if (logicalTree.hasProperty(this, 'firstChild')) {
         let tc = [];
         for (let i = 0, cn = this.childNodes, c; (c = cn[i]); i++) {
           if (c.nodeType !== Node.COMMENT_NODE) {
@@ -691,7 +586,7 @@ let FragmentMixin = {
 
 let childrenDescriptor = {
   get() {
-    if (hasLogical(this, 'firstChild')) {
+    if (logicalTree.hasProperty(this, 'firstChild')) {
       return Array.prototype.filter.call(this.childNodes, function(n) {
         return (n.nodeType === Node.ELEMENT_NODE);
       });
@@ -713,7 +608,7 @@ let insertDOMFrom = function(target, from) {
 
 let innerHTMLDescriptor = {
   get() {
-    if (hasLogical(this, 'firstChild')) {
+    if (logicalTree.hasProperty(this, 'firstChild')) {
       return getInnerHTML(this);
     } else {
       return nativeTree.innerHTML(this);
@@ -740,7 +635,7 @@ Object.defineProperties(FragmentMixin, {
 
   firstElementChild: {
     get() {
-      if (hasLogical(this, 'firstChild')) {
+      if (logicalTree.hasProperty(this, 'firstChild')) {
         let n = this.firstChild;
         while (n && n.nodeType !== Node.ELEMENT_NODE) {
           n = n.nextSibling;
@@ -755,7 +650,7 @@ Object.defineProperties(FragmentMixin, {
 
   lastElementChild: {
     get() {
-      if (hasLogical(this, 'lastChild')) {
+      if (logicalTree.hasProperty(this, 'lastChild')) {
         let n = this.lastChild;
         while (n && n.nodeType !== Node.ELEMENT_NODE) {
           n = n.previousSibling;
@@ -827,7 +722,7 @@ Object.defineProperties(ElementMixin, {
 
   nextElementSibling: {
     get() {
-      if (hasLogical(this, 'nextSibling')) {
+      if (logicalTree.hasProperty(this, 'nextSibling')) {
         let n = this.nextSibling;
         while (n && n.nodeType !== Node.ELEMENT_NODE) {
           n = n.nextSibling;
@@ -842,7 +737,7 @@ Object.defineProperties(ElementMixin, {
 
   previousElementSibling: {
     get() {
-      if (hasLogical(this, 'previousSibling')) {
+      if (logicalTree.hasProperty(this, 'previousSibling')) {
         let n = this.previousSibling;
         while (n && n.nodeType !== Node.ELEMENT_NODE) {
           n = n.previousSibling;
@@ -942,111 +837,10 @@ export let getRootNode = function(node) {
   return mixinImpl.getRootNode(node);
 }
 
-export function filterMutations(mutations, target) {
-  const targetRootNode = getRootNode(target);
-  return mutations.map(function(mutation) {
-    const mutationInScope = (targetRootNode === getRootNode(mutation.target));
-    if (mutationInScope && mutation.addedNodes) {
-      let nodes = Array.from(mutation.addedNodes).filter(function(n) {
-        return (targetRootNode === getRootNode(n));
-      });
-      if (nodes.length) {
-        mutation = Object.create(mutation);
-        Object.defineProperty(mutation, 'addedNodes', {
-          value: nodes,
-          configurable: true
-        });
-        return mutation;
-      }
-    } else if (mutationInScope) {
-      return mutation;
-    }
-  }).filter(function(m) { return m});
-}
-
-// const promise = Promise.resolve();
-
-class AsyncObserver {
-
-  constructor() {
-    this._scheduled = false;
-    this.addedNodes = [];
-    this.removedNodes = [];
-    this.callbacks = new Set();
-  }
-
-  schedule() {
-    if (!this._scheduled) {
-      this._scheduled = true;
-      utils.promish.then(() => {
-        this.flush();
-      });
-    }
-  }
-
-  flush() {
-    if (this._scheduled) {
-      this._scheduled = false;
-      let mutations = this.takeRecords();
-      if (mutations.length) {
-        this.callbacks.forEach(function(cb) {
-          cb(mutations);
-        });
-      }
-    }
-  }
-
-  takeRecords() {
-    if (this.addedNodes.length || this.removedNodes.length) {
-      let mutations = [{
-        addedNodes: this.addedNodes,
-        removedNodes: this.removedNodes
-      }];
-      this.addedNodes = [];
-      this.removedNodes = [];
-      return mutations;
-    }
-    return [];
-  }
-
-}
-
 export let getComposedInnerHTML = function(node) {
   return getInnerHTML(node, (n) => getComposedChildNodes(n));
 }
 
 export let getComposedChildNodes = function(node) {
   return nativeTree.childNodes(node);
-}
-
-// TODO(sorvell): consider instead polyfilling MutationObserver
-// directly so that users do not have to fork their code.
-// Supporting the entire api may be challenging: e.g. filtering out
-// removed nodes in the wrong scope and seeing non-distributing
-// subtree child mutations.
-export let observeChildren = function(node, callback) {
-  utils.common.patchNode(node);
-  if (!node.__shady.observer) {
-    node.__shady.observer = new AsyncObserver();
-  }
-  node.__shady.observer.callbacks.add(callback);
-  let observer = node.__shady.observer;
-  return {
-    _callback: callback,
-    _observer: observer,
-    _node: node,
-    takeRecords() {
-      return observer.takeRecords()
-    }
-  };
-}
-
-export let unobserveChildren = function(handle) {
-  let observer = handle && handle._observer;
-  if (observer) {
-    observer.callbacks.delete(handle._callback);
-    if (!observer.callbacks.size) {
-      handle._node.__shady.observer = null;
-    }
-  }
 }
