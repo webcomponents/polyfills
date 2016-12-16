@@ -69,6 +69,17 @@ gulp.task('default', () => {
   .pipe(gulp.dest('./'))
 })
 
+gulp.task('debug', () => {
+  return gulp.src('src/*.js')
+  .pipe(rollup({
+    entry: 'src/env.js',
+    format: 'iife',
+    moduleName: 'shadydom'
+  }))
+  .pipe(rename('shadydom.min.js'))
+  .pipe(gulp.dest('./'))
+})
+
 gulp.task('es5', () => {
   return gulp.src('src/*.js')
   .pipe(sourcemaps.init())
