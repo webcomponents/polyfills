@@ -11,7 +11,7 @@
 
   /********************* base setup *********************/
   const IMPORT_SELECTOR = 'link[rel=import]';
-  const useNative = Boolean('link' in document.createElement('link'));
+  const useNative = Boolean('import' in document.createElement('link'));
   const flags = {
     bust: false,
     log: false
@@ -381,7 +381,7 @@
     importer.loadedAll.bind(importer));
 
   function isImportLink(elt) {
-    return elt.matches(IMPORT_SELECTOR);
+    return elt.nodeType === Node.ELEMENT_NODE && elt.matches(IMPORT_SELECTOR);
   }
 
   /********************* vulcanize style inline processing  *********************/
