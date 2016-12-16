@@ -12,8 +12,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 import {calculateSplices} from './array-splice'
 import * as utils from './utils'
+import {nativeTree} from './native-tree'
 import {getComposedChildNodes, saveChildNodes,
-  nativeMethod, getNative, activeElementDescriptor} from './global-mixin'
+  nativeMethod, activeElementDescriptor} from './global-mixin'
 import Distributor from './distributor'
 
 /**
@@ -227,7 +228,7 @@ let ShadyMixin = {
         // to remove it; this can happen if we move a node and
         // then schedule its previous host for distribution resulting in
         // the node being removed here.
-        if (getNative(n, 'parentNode') === container) {
+        if (nativeTree.parentNode(n) === container) {
           nativeMethod(container, 'removeChild', [n]);
         }
         composed.splice(s.index + d, 1);

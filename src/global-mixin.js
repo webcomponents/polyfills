@@ -12,6 +12,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 import * as utils from './utils'
 import {getInnerHTML} from './innerHTML'
+import {nativeTree} from './native-tree'
 
 function getLogical(node, prop) {
   return node.__shady && node.__shady[prop];
@@ -122,9 +123,9 @@ function recordRemoveChild(node, container) {
 export let saveChildNodes = function(node) {
   if (!hasLogical(node, 'firstChild')) {
     node.__shady = node.__shady || {};
-    node.__shady.firstChild = getNative(node, 'firstChild');
-    node.__shady.lastChild = getNative(node, 'lastChild');
-    let c$ = node.__shady.childNodes = Array.from(getNative(node, 'childNodes'));
+    node.__shady.firstChild = nativeTree.firstChild(node);
+    node.__shady.lastChild = nativeTree.lastChild(node);
+    let c$ = node.__shady.childNodes = nativeTree.childNodes(node);
     for (let i=0, n; (i<c$.length) && (n=c$[i]); i++) {
       n.__shady = n.__shady || {};
       n.__shady.parentNode = node;
@@ -336,7 +337,7 @@ let mixinImpl = {
         for (let j=0; j<dc$.length; j++) {
           hostNeedsDist = true;
           let node = dc$[j];
-          let parent = getNative(node, 'parentNode');
+          let parent = nativeTree.parentNode(node);
           if (parent) {
             nativeMethod(parent, 'removeChild', [node]);
           }
@@ -500,7 +501,7 @@ function generateSimpleDescriptor(prop) {
   return {
     get() {
       let l = getLogical(this, prop);
-      return l !== undefined ? l : getNative(this, prop);
+      return l !== undefined ? l : nativeTree[prop](this);
     },
     configurable: true
   }
@@ -576,7 +577,7 @@ let NodeMixin = {
         this;
       // not guaranteed to physically be in container; e.g.
       // undistributed nodes.
-      let parent = getNative(node, 'parentNode');
+      let parent = nativeTree.parentNode(node);
       if (container === parent) {
         nativeMethod(container, 'removeChild', [node]);
       }
@@ -629,7 +630,7 @@ Object.defineProperties(NodeMixin, {
         }
         return this.__shady.childNodes;
       } else {
-        return getNative(this, 'childNodes');
+        return nativeTree.childNodes(this);
       }
     },
     configurable: true
@@ -650,17 +651,18 @@ Object.defineProperties(NodeMixin, {
         }
         return tc.join('');
       } else {
-        return getNative(this, 'textContent');
+        return nativeTree.textContent(this);
       }
     },
     set(text) {
-      if (hasLogical(this, 'firstChild')) {
+      if (this.nodeType !== Node.ELEMENT_NODE) {
+        // TODO(sorvell): can't do this if patch nodeValue.
+        this.nodeValue = text;
+      } else {
         mixinImpl.clearNode(this);
         if (text) {
           this.appendChild(document.createTextNode(text));
         }
-      } else {
-        setNative(this, 'textContent', text);
       }
     },
     configurable: true
@@ -701,33 +703,37 @@ let childrenDescriptor = {
         return (n.nodeType === Node.ELEMENT_NODE);
       });
     } else {
-      return getNative(this, 'children');
+      return nativeTree.children(this);
     }
   },
   configurable: true
 };
+
+let domParser = new DOMParser();
+
+let insertDOMFrom = function(target, from) {
+  let c$ = Array.from(from.childNodes);
+  for (let i=0; i < c$.length; i++) {
+    target.appendChild(c$[i]);
+  }
+}
 
 let innerHTMLDescriptor = {
   get() {
     if (hasLogical(this, 'firstChild')) {
       return getInnerHTML(this);
     } else {
-      return getNative(this, 'innerHTML');
+      return nativeTree.innerHTML(this);
     }
   },
   set(text) {
-    if (hasLogical(this, 'firstChild')) {
-      mixinImpl.clearNode(this);
-      let d = document.createElement('div');
-      d.innerHTML = text;
-      // here, appendChild may move nodes async so we cannot rely
-      // on node position when copying
-      let c$ = Array.from(d.childNodes);
-      for (let i=0; i < c$.length; i++) {
-        this.appendChild(c$[i]);
-      }
-    } else {
-      setNative(this, 'innerHTML', text);
+    mixinImpl.clearNode(this);
+    let doc = domParser.parseFromString(text, 'text/html');
+    if (doc.head) {
+      insertDOMFrom(this, doc.head);
+    }
+    if (doc.body) {
+      insertDOMFrom(this, doc.body);
     }
   },
   configurable: true
@@ -748,7 +754,7 @@ Object.defineProperties(FragmentMixin, {
         }
         return n;
       } else {
-        return getNative(this, 'firstElementChild');
+        return nativeTree.firstElementChild(this);
       }
     },
     configurable: true
@@ -763,7 +769,7 @@ Object.defineProperties(FragmentMixin, {
         }
         return n;
       } else {
-        return getNative(this, 'lastElementChild');
+        return nativeTree.lastElementChild(this);
       }
     },
     configurable: true
@@ -835,7 +841,7 @@ Object.defineProperties(ElementMixin, {
         }
         return n;
       } else {
-        return getNative(this, 'nextElementSibling');
+        return nativeTree.nextElementSibling(this);
       }
     },
     configurable: true
@@ -850,7 +856,7 @@ Object.defineProperties(ElementMixin, {
         }
         return n;
       } else {
-        return getNative(this, 'previousElementSibling');
+        return nativeTree.previousElementSibling(this);
       }
     },
     configurable: true
