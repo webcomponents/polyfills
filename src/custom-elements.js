@@ -745,9 +745,9 @@ let Deferred;
 
   // patch document.importNode
 
-  const rawImportNode = document.importNode;
+  const _nativeImportNode = document.importNode;
   document.importNode = function(node, deep) {
-    const clone = /** @type{!Node} */(rawImportNode.call(document, node, deep));
+    const clone = /** @type{!Node} */(_nativeImportNode.call(document, node, deep));
     const customElements = _customElements();
     const nodes = isElement(clone) ? [clone] : clone.childNodes;
     /** @type {CustomElementRegistry} */(_customElements())._addNodes(nodes);
