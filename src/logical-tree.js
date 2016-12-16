@@ -10,7 +10,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 'use strict';
 
-import {nativeTree} from './native-tree'
+import {firstChild, lastChild, childNodes} from './native-tree'
 
 export function getProperty(node, prop) {
   return node.__shady && node.__shady[prop];
@@ -109,9 +109,9 @@ export function recordRemoveChild(node, container) {
 export let recordChildNodes = function(node) {
   if (!hasProperty(node, 'firstChild')) {
     node.__shady = node.__shady || {};
-    node.__shady.firstChild = nativeTree.firstChild(node);
-    node.__shady.lastChild = nativeTree.lastChild(node);
-    let c$ = node.__shady.childNodes = nativeTree.childNodes(node);
+    node.__shady.firstChild = firstChild(node);
+    node.__shady.lastChild = lastChild(node);
+    let c$ = node.__shady.childNodes = childNodes(node);
     for (let i=0, n; (i<c$.length) && (n=c$[i]); i++) {
       n.__shady = n.__shady || {};
       n.__shady.parentNode = node;

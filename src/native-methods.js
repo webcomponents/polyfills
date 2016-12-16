@@ -10,26 +10,27 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 'use strict';
 
-let appendChild = Element.prototype.appendChild;
-let insertBefore = Element.prototype.insertBefore;
-let removeChild = Element.prototype.removeChild;
-let setAttribute = Element.prototype.setAttribute;
-let removeAttribute = Element.prototype.removeAttribute;
+let nativeAppendChild = Element.prototype.appendChild;
+let nativeInsertBefore = Element.prototype.insertBefore;
+let nativeRemoveChild = Element.prototype.removeChild;
+let nativeSetAttribute = Element.prototype.setAttribute;
+let nativeRemoveAttribute = Element.prototype.removeAttribute;
 
-export let nativeMethods = {
-  appendChild(parent, child) {
-    return appendChild.call(parent, child);
-  },
-  insertBefore(parent, child, ref_node) {
-    return insertBefore.call(parent, child, ref_node);
-  },
-  removeChild(parent, child) {
-    return removeChild.call(parent, child);
-  },
-  setAttribute(node, name, value) {
-    setAttribute.call(node, name, value);
-  },
-  removeAttribute(node, name) {
-    removeAttribute.call(node, name);
-  }
-};
+export function appendChild(parent, child) {
+  return nativeAppendChild.call(parent, child);
+}
+
+export function insertBefore(parent, child, ref_node) {
+  return nativeInsertBefore.call(parent, child, ref_node);
+}
+export function removeChild(parent, child) {
+  return nativeRemoveChild.call(parent, child);
+}
+
+export function setAttribute(node, name, value) {
+  nativeSetAttribute.call(node, name, value);
+}
+
+export function removeAttribute(node, name) {
+  nativeRemoveAttribute.call(node, name);
+}

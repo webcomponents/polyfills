@@ -10,9 +10,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 'use strict';
 
-import {arrayCopy} from './utils'
-import {nativeMethods} from './native-methods'
-import {nativeTree} from './native-tree'
+import {removeChild} from './native-methods'
+import {parentNode} from './native-tree'
 
 // NOTE: normalize event contruction where necessary (IE11)
 let NormalizedEvent = typeof Event === 'function' ? Event :
@@ -53,7 +52,12 @@ export default class {
   // Gather the pool of nodes that should be distributed. We will combine
   // these with the "content root" to arrive at the composed tree.
   collectPool() {
-    return arrayCopy(this.root.host.childNodes);
+    let host = this.root.host;
+    let pool=[], i=0;
+    for (let n=host.firstChild; n; n=n.nextSibling) {
+      pool[i++] = n;
+    }
+    return pool;
   }
 
   // perform "logical" distribution; note, no actual dom is moved here,
@@ -80,9 +84,9 @@ export default class {
         p.__shady = p.__shady || {};
         p.__shady.assignedSlot = undefined;
         // remove undistributed elements from physical dom.
-        let parent = nativeTree.parentNode(p);
+        let parent = parentNode(p);
         if (parent) {
-          nativeMethods.removeChild(parent, p);
+          removeChild(parent, p);
         }
       }
     }

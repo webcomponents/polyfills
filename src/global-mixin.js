@@ -13,8 +13,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 import * as utils from './utils'
 import {getInnerHTML} from './innerHTML'
 import * as logicalTree from './logical-tree'
-import {nativeMethods} from './native-methods'
-import {nativeTree} from './native-tree'
+import * as nativeMethods from './native-methods'
+import * as nativeTree from './native-tree'
 
 let activeElementDesc = Object.getOwnPropertyDescriptor(Document.prototype, 'activeElement');
 function getDocumentActiveElement() {

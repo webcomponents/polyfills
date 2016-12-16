@@ -20,7 +20,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 'use strict';
 import * as utils from './utils'
-import {ShadyRoot, flush, enqueue} from './shady'
+import {ShadyRoot} from './shady'
+import {flush, enqueue} from './flush'
 import {observeChildren, unobserveChildren, filterMutations} from './observe-changes'
 import {getRootNode, setAttribute, Mixins, patchProto,
     getComposedInnerHTML, getComposedChildNodes} from './global-mixin'
@@ -32,6 +33,7 @@ if (utils.settings.inUse) {
     getComposedInnerHTML: getComposedInnerHTML,
     getComposedChildNodes: getComposedChildNodes,
     isShadyRoot: utils.isShadyRoot,
+    // TODO(sorvell): exposed for testing only, worth it?
     enqueue: enqueue,
     flush: flush,
     settings: utils.settings,

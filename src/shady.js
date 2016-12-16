@@ -12,11 +12,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 import {calculateSplices} from './array-splice'
 import * as utils from './utils'
+import {enqueue} from './flush'
 import {recordChildNodes} from './logical-tree'
-import {nativeMethods} from './native-methods'
-import {nativeTree} from './native-tree'
-import {getComposedChildNodes,
-  activeElementDescriptor, Mixins} from './global-mixin'
+import {removeChild, insertBefore} from './native-methods'
+import {parentNode, childNodes} from './native-tree'
+import {activeElementDescriptor, Mixins} from './global-mixin'
 import Distributor from './distributor'
 
 /**
@@ -221,7 +221,7 @@ let ShadyMixin = {
   _updateChildNodes(container, children) {
     let composed = Array.from(utils.isShadyRoot(container) ?
       container.childNodes :
-      getComposedChildNodes(container));
+      childNodes(container));
     let splices = calculateSplices(children, composed);
     // process removals
     for (let i=0, d=0, s; (i<splices.length) && (s=splices[i]); i++) {
@@ -230,8 +230,8 @@ let ShadyMixin = {
         // to remove it; this can happen if we move a node and
         // then schedule its previous host for distribution resulting in
         // the node being removed here.
-        if (nativeTree.parentNode(n) === container) {
-          nativeMethods.removeChild(container, n);
+        if (parentNode(n) === container) {
+          removeChild(container, n);
         }
         composed.splice(s.index + d, 1);
       }
@@ -242,7 +242,7 @@ let ShadyMixin = {
       next = composed[s.index];
       for (let j=s.index, n; j < s.index + s.addedCount; j++) {
         n = children[j];
-        nativeMethods.insertBefore(container, n, next);
+        insertBefore(container, n, next);
         // TODO(sorvell): is this splice strictly needed?
         composed.splice(j, 0, n);
       }
@@ -258,40 +258,3 @@ let ShadyMixin = {
 let ShadyFragmentMixin = Object.create(DocumentFragment.prototype);
 utils.extendAll(ShadyFragmentMixin, ShadyMixin, Mixins.Fragment);
 Object.defineProperty(ShadyFragmentMixin, 'activeElement', activeElementDescriptor);
-
-
-// render enqueuer/flusher
-let customElements = window.customElements;
-let flushList = [];
-let scheduled;
-let flushCount = 0;
-let flushMax = 100;
-export function enqueue(callback) {
-  if (!scheduled) {
-    scheduled = true;
-    utils.promish.then(flush);
-  }
-  flushList.push(callback);
-}
-
-export function flush() {
-  scheduled = false;
-  flushCount++;
-  while (flushList.length) {
-    flushList.shift()();
-  }
-  if (customElements && customElements.flush) {
-    customElements.flush();
-  }
-  // continue flushing after elements are upgraded...
-  const isFlushedMaxed = (flushCount > flushMax);
-  if (flushList.length && !isFlushedMaxed) {
-      flush();
-  }
-  flushCount = 0;
-  if (isFlushedMaxed) {
-    throw new Error('Loop detected in ShadyDOM distribution, aborting.')
-  }
-}
-
-flush.list = flushList;

@@ -18,97 +18,93 @@ let nodeWalker = document.createTreeWalker(document, NodeFilter.SHOW_ALL,
 let elementWalker = document.createTreeWalker(document, NodeFilter.SHOW_ELEMENT,
   null, false);
 
-export let nativeTree = {
+export function parentNode(node) {
+  nodeWalker.currentNode = node;
+  return nodeWalker.parentNode();
+}
 
-  parentNode(node) {
-    nodeWalker.currentNode = node;
-    return nodeWalker.parentNode();
-  },
+export function firstChild(node) {
+  nodeWalker.currentNode = node;
+  return nodeWalker.firstChild();
+}
 
-  firstChild(node) {
-    nodeWalker.currentNode = node;
-    return nodeWalker.firstChild();
-  },
+export function lastChild(node) {
+  nodeWalker.currentNode = node;
+  return nodeWalker.lastChild();
+}
 
-  lastChild(node) {
-    nodeWalker.currentNode = node;
-    return nodeWalker.lastChild();
-  },
+export function previousSibling(node) {
+  nodeWalker.currentNode = node;
+  return nodeWalker.previousSibling();
+}
 
-  previousSibling(node) {
-    nodeWalker.currentNode = node;
-    return nodeWalker.previousSibling();
-  },
+export function nextSibling(node) {
+  nodeWalker.currentNode = node;
+  return nodeWalker.nextSibling();
+}
 
-  nextSibling(node) {
-    nodeWalker.currentNode = node;
-    return nodeWalker.nextSibling();
-  },
-
-  childNodes(node) {
-    let nodes = [];
-    nodeWalker.currentNode = node;
-    let n = nodeWalker.firstChild();
-    while (n) {
-      nodes.push(n);
-      n = nodeWalker.nextSibling();
-    }
-    return nodes;
-  },
-
-  parentElement(node) {
-    elementWalker.currentNode = node;
-    return elementWalker.parentNode();
-  },
-
-  firstElementChild(node) {
-    elementWalker.currentNode = node;
-    return elementWalker.firstChild();
-  },
-
-  lastElementChild(node) {
-    elementWalker.currentNode = node;
-    return elementWalker.lastChild();
-  },
-
-  previousElementSibling(node) {
-    elementWalker.currentNode = node;
-    return elementWalker.previousSibling();
-  },
-
-  nextElementSibling(node) {
-    elementWalker.currentNode = node;
-    return elementWalker.nextSibling();
-  },
-
-  children(node) {
-    let nodes = [];
-    elementWalker.currentNode = node;
-    let n = elementWalker.firstChild();
-    while (n) {
-      nodes.push(n);
-      n = elementWalker.nextSibling();
-    }
-    return nodes;
-  },
-
-  innerHTML(node) {
-    return getInnerHTML(node, (n) => this.childNodes(n));
-  },
-
-  textContent(node) {
-    if (node.nodeType !== Node.ELEMENT_NODE) {
-      return node.nodeValue;
-    }
-    let textWalker = document.createTreeWalker(node, NodeFilter.SHOW_TEXT,
-      null, false);
-    let content = '', n;
-    while ( (n = textWalker.nextNode()) ) {
-      // TODO(sorvell): can't use textContent since we patch it on Node.prototype!
-      // However, should probably patch it only on element.
-      content += n.nodeValue;
-    }
-    return content;
+export function childNodes(node) {
+  let nodes = [];
+  nodeWalker.currentNode = node;
+  let n = nodeWalker.firstChild();
+  while (n) {
+    nodes.push(n);
+    n = nodeWalker.nextSibling();
   }
+  return nodes;
+}
 
-};
+export function parentElement(node) {
+  elementWalker.currentNode = node;
+  return elementWalker.parentNode();
+}
+
+export function firstElementChild(node) {
+  elementWalker.currentNode = node;
+  return elementWalker.firstChild();
+}
+
+export function lastElementChild(node) {
+  elementWalker.currentNode = node;
+  return elementWalker.lastChild();
+}
+
+export function previousElementSibling(node) {
+  elementWalker.currentNode = node;
+  return elementWalker.previousSibling();
+}
+
+export function nextElementSibling(node) {
+  elementWalker.currentNode = node;
+  return elementWalker.nextSibling();
+}
+
+export function children(node) {
+  let nodes = [];
+  elementWalker.currentNode = node;
+  let n = elementWalker.firstChild();
+  while (n) {
+    nodes.push(n);
+    n = elementWalker.nextSibling();
+  }
+  return nodes;
+}
+
+export function innerHTML(node) {
+  return getInnerHTML(node, (n) => childNodes(n));
+}
+
+export function textContent(node) {
+  if (node.nodeType !== Node.ELEMENT_NODE) {
+    return node.nodeValue;
+  }
+  let textWalker = document.createTreeWalker(node, NodeFilter.SHOW_TEXT,
+    null, false);
+  let content = '', n;
+  while ( (n = textWalker.nextNode()) ) {
+    // TODO(sorvell): can't use textContent since we patch it on Node.prototype!
+    // However, should probably patch it only on element.
+    content += n.nodeValue;
+  }
+  return content;
+}
