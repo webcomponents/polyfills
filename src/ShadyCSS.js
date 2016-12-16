@@ -36,7 +36,7 @@ export let ShadyCSS = {
   _documentOwnerStyleInfo: StyleInfo.set(document.documentElement, new StyleInfo({rules: []})),
   _generateScopeSelector(name) {
     let id = this.scopeCounter[name] = (this.scopeCounter[name] || 0) + 1;
-    return name + '-' + id;
+    return `${name}-${id}`;
   },
   getStyleAst(style) {
     return StyleUtil.rulesForStyle(style);
@@ -145,7 +145,6 @@ export let ShadyCSS = {
           CS._revalidateApplyShim();
         }
         CS.applyStyles();
-        CS._documentDirty = false;
       }
     }
     let styleInfo = StyleInfo.get(host);
@@ -164,10 +163,10 @@ export let ShadyCSS = {
       }
       let template = templateMap[is];
       // bail early if there is no shadowroot for this element
-      if (!template) {
+      if (!template && is !== 'html') {
         return;
       }
-      if (template._applyShimInvalid && template._style) {
+      if (template && template._applyShimInvalid && template._style) {
         // update template
         if (!template._invalidating) {
           ApplyShim.transformRules(template._styleAst, is);
@@ -281,9 +280,6 @@ export let ShadyCSS = {
     }
   },
   updateStyles(properties) {
-    if (window.CustomStyle) {
-      window.CustomStyle._documentDirty = true;
-    }
     this.applyStyle(this._documentOwner, properties);
   },
   /* Custom Style operations */

@@ -12,6 +12,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 import templateMap from './template-map'
 
+const promise = Promise.resolve();
+
 export default class StyleInfo {
   static get(node) {
     return node.__styleInfo;
@@ -34,7 +36,7 @@ export default class StyleInfo {
     const template = templateMap[elementName];
     if (!template._invalidating) {
       template._invalidating = true;
-      Promise.resolve(() => {
+      promise.then(() => {
         template._applyShimInvalid = false;
         template._invalidating = false;
       });

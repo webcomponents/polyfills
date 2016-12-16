@@ -7,11 +7,9 @@ The complete set of contributors may be found at http://polymer.github.io/CONTRI
 Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 */
-'use strict';
 
 /*
-Small module to load ShadyCSS and CustomStyle together
+A simple shim to generate a testable module
 */
 
-import './ShadyCSS'
-import './custom-style'
+import '../../src/custom-style-element'
