@@ -79,6 +79,11 @@
 
     async: true,
 
+    /**
+     * @param {!string} url
+     * @param {!function(boolean, ?, string=)} callback
+     * @return {XMLHttpRequest}
+     */
     load: function(url, callback) {
       const request = new XMLHttpRequest();
       if (flags.bust) {
@@ -89,7 +94,7 @@
         if (request.readyState === 4) {
           // Servers redirecting an import can add a Location header to help us
           // polyfill correctly.
-          let redirectedUrl = null;
+          let redirectedUrl = undefined;
           try {
             const locationHeader = request.getResponseHeader('Location');
             if (locationHeader) {
@@ -100,8 +105,8 @@
           } catch (e) {
             console.error(e.message);
           }
-          callback(!Xhr._ok(request) && request,
-            request.response || request.responseText, redirectedUrl);
+          const resource = (request.response || request.responseText);
+          callback(!Xhr._ok(request), resource, redirectedUrl);
         }
       });
       request.send();
@@ -184,9 +189,9 @@
     fetch(url, elt) {
       flags.log && console.log('fetch', url, elt);
       if (!url) {
-        setTimeout(() => this.receive(url, elt, {
+        setTimeout(() => this.receive(url, elt, true, {
           error: 'href must be specified'
-        }, null), 0);
+        }), 0);
       } else if (url.match(/^data:/)) {
         // Handle Data URI Scheme
         const pieces = url.split(',');
@@ -197,7 +202,7 @@
         } else {
           body = decodeURIComponent(body);
         }
-        setTimeout(() => this.receive(url, elt, null, body), 0);
+        setTimeout(() => this.receive(url, elt, false, body), 0);
       } else {
         Xhr.load(url, (error, resource, redirectedUrl) =>
           this.receive(url, elt, error, resource, redirectedUrl));
@@ -207,7 +212,7 @@
     /**
      * @param {!string} url
      * @param {!Element} elt
-     * @param {Object=} err
+     * @param {boolean} err
      * @param {Object=} resource
      * @param {string=} redirectedUrl
      */
@@ -381,11 +386,11 @@
    * @type {Function}
    */
   const matches = Element.prototype.matches ||
-                  Element.prototype.matchesSelector ||
-                  Element.prototype.mozMatchesSelector ||
-                  Element.prototype.msMatchesSelector ||
-                  Element.prototype.oMatchesSelector ||
-                  Element.prototype.webkitMatchesSelector;
+    Element.prototype.matchesSelector ||
+    Element.prototype.mozMatchesSelector ||
+    Element.prototype.msMatchesSelector ||
+    Element.prototype.oMatchesSelector ||
+    Element.prototype.webkitMatchesSelector;
 
   function isImportLink(node) {
     return node.nodeType === Node.ELEMENT_NODE && matches.call(node, IMPORT_SELECTOR);
@@ -446,8 +451,7 @@
 
   function markScripts(element, url) {
     const s$ = element.querySelectorAll('script');
-    for (let i = 0; i < s$.length; i++) {
-      const o = s$[i];
+    for (let i = 0, l = s$.length, o; i < l && (o = s$[i]); i++) {
       if (o.textContent) {
         o.textContent = o.textContent + `\n//# sourceURL=${url}`;
       }
@@ -457,16 +461,19 @@
     }
   }
 
-  // done for security reasons. TODO(valdrin) document
+  /**
+   * Replaces all the imported scripts with a clone in order to execute them.
+   * Updates the `currentScript`.
+   */
   function runScripts() {
     const s$ = document.querySelectorAll('import-content script');
-    for (let i = 0; i < s$.length; i++) {
-      const script = s$[i];
-      const clone = document.createElement('script');
-      currentScript = clone;
-      clone.textContent = script.textContent;
-      script.src && clone.setAttribute('src', script.getAttribute('src'));
-      script.parentNode.replaceChild(clone, script);
+    for (let i = 0, l = s$.length, o; i < l && (o = s$[i]); i++) {
+      currentScript = document.createElement('script');
+      currentScript.textContent = o.textContent;
+      if (o.src) {
+        currentScript.setAttribute('src', o.getAttribute('src'));
+      }
+      o.parentNode.replaceChild(currentScript, o);
     }
     currentScript = null;
   }
