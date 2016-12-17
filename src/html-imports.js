@@ -392,6 +392,10 @@
     Element.prototype.oMatchesSelector ||
     Element.prototype.webkitMatchesSelector;
 
+  /**
+   * @param {!Node} node
+   * @return {boolean}
+   */
   function isImportLink(node) {
     return node.nodeType === Node.ELEMENT_NODE && matches.call(node, IMPORT_SELECTOR);
   }
@@ -478,19 +482,44 @@
     currentScript = null;
   }
 
+  /**
+   * Waits for an element to finish loading. If already done loading, it will
+   * mark the elemnt accordingly.
+   * @param {!Element} element
+   * @return {Promise}
+   */
   function getLoadingDonePromise(element) {
     return new Promise(resolve => {
-      if (element.__loaded) {
+      if (isElementLoaded(element)) {
+        // Mark it no matter what.
+        element.__loaded = true;
         resolve();
       } else {
         //TODO(valdrin) should it update currentScript if it is a <script> ?
-        element.addEventListener('load', resolve);
-        element.addEventListener('error', resolve);
+        element.addEventListener('load', () => {
+          element.__loaded = true;
+          element.__errored = false;
+          resolve();
+        });
+        element.addEventListener('error', () => {
+          element.__loaded = true;
+          element.__errored = true;
+          resolve();
+        });
       }
-    }).then((event) => {
-      element.__loaded = true;
-      return event;
     });
+  }
+
+  /**
+   * @param {!Element} element
+   * @return {boolean}
+   */
+  function isElementLoaded(element) {
+    if (useNative && isImportLink(element)) {
+      return element.__loaded ||
+        (element.import && element.import.readyState !== 'loading');
+    }
+    return element.__loaded;
   }
 
   function fixDomModules(element, url) {
@@ -531,6 +560,8 @@
    */
 
   const isIE = /Trident/.test(navigator.userAgent);
+  const requiredReadyState = isIE ? 'complete' : 'interactive';
+  const READY_EVENT = 'readystatechange';
 
   // call a callback when all HTMLImports in the document at call time
   // (or at least document ready) have loaded.
@@ -543,10 +574,6 @@
       watchImportsLoad(callback, doc);
     }, doc);
   }
-
-  // call the callback when the document is in a ready state (has dom)
-  const requiredReadyState = isIE ? 'complete' : 'interactive';
-  const READY_EVENT = 'readystatechange';
 
   function isDocumentReady(doc) {
     return (doc.readyState === 'complete' ||
@@ -580,57 +607,18 @@
     imports = Array.prototype.slice.call(imports).filter(function(n) {
       return !matches.call(n, 'import-content ' + IMPORT_SELECTOR);
     });
-    let parsedCount = 0,
-      importCount = imports.length,
-      newImports = [],
-      errorImports = [];
-
-    function checkDone() {
-      if (parsedCount == importCount && callback) {
-        callback( /**@type {HTMLImportInfo} */ ({
-          allImports: imports,
-          loadedImports: newImports,
-          errorImports: errorImports
-        }));
-      }
-    }
-
-    function loadedImport(e) {
-      markTargetLoaded(e);
-      newImports.push(this);
-      parsedCount++;
-      checkDone();
-    }
-
-    function errorLoadingImport(e) {
-      errorImports.push(this);
-      parsedCount++;
-      checkDone();
-    }
-    if (importCount) {
-      for (let i = 0, imp; i < importCount && (imp = imports[i]); i++) {
-        if (isImportLoaded(imp)) {
-          if (imp.import) {
-            newImports.push(imp);
-          } else {
-            errorImports.push(imp);
-          }
-          parsedCount++;
-          checkDone();
-        } else {
-          imp.addEventListener('load', loadedImport);
-          imp.addEventListener('error', errorLoadingImport);
-        }
-      }
-    } else {
-      checkDone();
-    }
-  }
-
-  function isImportLoaded(link) {
-    return useNative ? link.__loaded ||
-      (link.import && link.import.readyState !== 'loading') :
-      link.__loaded;
+    Promise.all(imports.map(getLoadingDonePromise)).then(() => {
+      const newImports = [];
+      const errorImports = [];
+      imports.forEach((imp) => {
+        (imp.__errored ? errorImports : newImports).push(imp);
+      });
+      callback( /** @type {!HTMLImportInfo} */ ({
+        allImports: imports,
+        loadedImports: newImports,
+        errorImports: errorImports
+      }));
+    });
   }
 
   // make `whenReady` work with native HTMLImports
@@ -644,7 +632,7 @@
         if (m.addedNodes) {
           for (let i = 0, l = m.addedNodes.length; i < l; i++) {
             if (isImportLink(m.addedNodes[i])) {
-              handleImport(m.addedNodes[i]);
+              getLoadingDonePromise(/** @type {!Element} */ (m.addedNodes[i]));
             }
           }
         }
@@ -655,26 +643,13 @@
       childList: true
     });
 
-    function handleImport(element) {
-      const loaded = element.import;
-      if (loaded) {
-        markTargetLoaded({
-          target: element
-        });
-      } else {
-        element.addEventListener('load', markTargetLoaded);
-        element.addEventListener('error', markTargetLoaded);
-      }
-    }
-
     // make sure to catch any imports that are in the process of loading
     // when this script is run.
     (function() {
       if (document.readyState === 'loading') {
         const imports = document.querySelectorAll(IMPORT_SELECTOR);
-        for (let i = 0, l = imports.length, imp;
-          (i < l) && (imp = imports[i]); i++) {
-          handleImport(imp);
+        for (let i = 0, l = imports.length; i < l; i++) {
+          getLoadingDonePromise(imports[i]);
         }
       }
     })();
@@ -686,7 +661,7 @@
   // behavior of native imports. A main document script that needs to be sure
   // imports have loaded should wait for this event.
   whenReady(function(detail) {
-    const evt = /** @type {CustomEvent} */ (document.createEvent('CustomEvent'));
+    const evt = /** @type {!CustomEvent} */ (document.createEvent('CustomEvent'));
     evt.initCustomEvent('HTMLImportsLoaded', true, true, detail);
     document.dispatchEvent(evt);
   });
