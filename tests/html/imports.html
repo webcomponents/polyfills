@@ -12,8 +12,7 @@
   <head>
     <title>Custom Elements: imports integration</title>
     <script>
-      window.customElements = window.customElements || {};
-      window.customElements.forcePolyfill = true;
+      (window.customElements = window.customElements || {}).forcePolyfill = true;
 
       var _HTMLImportsLoaded = false;
 
