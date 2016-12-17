@@ -339,7 +339,7 @@
       const pending = element.querySelectorAll(
         `${IMPORT_SELECTOR} link[rel=stylesheet][href]:not([type]),
        ${IMPORT_SELECTOR} script[src]:not([type])`);
-      Promise.all(Array.from(pending).map(getLoadingDonePromise)).then(() => {
+      Promise.all(Array.from(pending).map(whenElementLoaded)).then(() => {
         const n$ = element.querySelectorAll(IMPORT_SELECTOR);
         // Inverse order to have events firing bottom-up.
         for (let i = n$.length - 1, n; i >= 0 && (n = n$[i]); i--) {
@@ -488,23 +488,23 @@
    * @param {!Element} element
    * @return {Promise}
    */
-  function getLoadingDonePromise(element) {
+  function whenElementLoaded(element) {
     return new Promise(resolve => {
       if (isElementLoaded(element)) {
         // Mark it no matter what.
         element.__loaded = true;
-        resolve();
+        resolve(element);
       } else {
         //TODO(valdrin) should it update currentScript if it is a <script> ?
         element.addEventListener('load', () => {
           element.__loaded = true;
           element.__errored = false;
-          resolve();
+          resolve(element);
         });
         element.addEventListener('error', () => {
           element.__loaded = true;
           element.__errored = true;
-          resolve();
+          resolve(element);
         });
       }
     });
@@ -515,6 +515,7 @@
    * @return {boolean}
    */
   function isElementLoaded(element) {
+    // TODO(valdrin) check if this complexity is needed.
     if (useNative && isImportLink(element)) {
       return element.__loaded ||
         (element.import && element.import.readyState !== 'loading');
@@ -607,7 +608,7 @@
     imports = Array.prototype.slice.call(imports).filter(function(n) {
       return !matches.call(n, 'import-content ' + IMPORT_SELECTOR);
     });
-    Promise.all(imports.map(getLoadingDonePromise)).then(() => {
+    Promise.all(imports.map(whenElementLoaded)).then(() => {
       const newImports = [];
       const errorImports = [];
       imports.forEach((imp) => {
@@ -623,7 +624,6 @@
 
   // make `whenReady` work with native HTMLImports
   if (useNative) {
-
     /**
      * @param {Array<MutationRecord>} mutations
      */
@@ -632,7 +632,7 @@
         if (m.addedNodes) {
           for (let i = 0, l = m.addedNodes.length; i < l; i++) {
             if (isImportLink(m.addedNodes[i])) {
-              getLoadingDonePromise(/** @type {!Element} */ (m.addedNodes[i]));
+              whenElementLoaded(/** @type {!Element} */ (m.addedNodes[i]));
             }
           }
         }
@@ -649,24 +649,12 @@
       if (document.readyState === 'loading') {
         const imports = document.querySelectorAll(IMPORT_SELECTOR);
         for (let i = 0, l = imports.length; i < l; i++) {
-          getLoadingDonePromise(imports[i]);
+          whenElementLoaded(imports[i]);
         }
       }
     })();
 
-  }
-
-  // Fire the 'HTMLImportsLoaded' event when imports in document at load time
-  // have loaded. This event is required to simulate the script blocking
-  // behavior of native imports. A main document script that needs to be sure
-  // imports have loaded should wait for this event.
-  whenReady(function(detail) {
-    const evt = /** @type {!CustomEvent} */ (document.createEvent('CustomEvent'));
-    evt.initCustomEvent('HTMLImportsLoaded', true, true, detail);
-    document.dispatchEvent(evt);
-  });
-
-  if (!useNative) {
+  } else {
     let importer;
 
     function bootstrap() {
@@ -681,6 +669,16 @@
       document.addEventListener('DOMContentLoaded', bootstrap);
     }
   }
+
+  // Fire the 'HTMLImportsLoaded' event when imports in document at load time
+  // have loaded. This event is required to simulate the script blocking
+  // behavior of native imports. A main document script that needs to be sure
+  // imports have loaded should wait for this event.
+  whenReady(function(detail) {
+    const evt = /** @type {!CustomEvent} */ (document.createEvent('CustomEvent'));
+    evt.initCustomEvent('HTMLImportsLoaded', true, true, detail);
+    document.dispatchEvent(evt);
+  });
 
   // exports
   scope.useNative = useNative;
