@@ -19,15 +19,15 @@
 
   /**
     Support `currentScript` on all browsers as `document._currentScript.`
-
     NOTE: We cannot polyfill `document.currentScript` because it's not possible
     both to override and maintain the ability to capture the native value.
     Therefore we choose to expose `_currentScript` both when native imports
     and the polyfill are in use.
   */
+  let currentScript = null;
   Object.defineProperty(document, '_currentScript', {
     get: function() {
-      return scope.currentScript || document.currentScript ||
+      return currentScript || document.currentScript ||
         // NOTE: only works when called in synchronously executing code.
         // readyState should check if `loading` but IE10 is
         // interactive when scripts run so we cheat.
@@ -44,15 +44,14 @@
 
   // path fixup: style elements in imports must be made relative to the main
   // document. We fixup url's in url() and @import.
-  const path = {
-
+  const Path = {
     resolveUrlsInStyle: function(style, linkUrl) {
-      style.textContent = path.resolveUrlsInCssText(style.textContent, linkUrl);
+      style.textContent = Path.resolveUrlsInCssText(style.textContent, linkUrl);
     },
 
     resolveUrlsInCssText: function(cssText, linkUrl) {
-      let r = path.replaceUrls(cssText, linkUrl, CSS_URL_REGEXP);
-      r = path.replaceUrls(r, linkUrl, CSS_IMPORT_REGEXP);
+      let r = Path.replaceUrls(cssText, linkUrl, CSS_URL_REGEXP);
+      r = Path.replaceUrls(r, linkUrl, CSS_IMPORT_REGEXP);
       return r;
     },
 
@@ -73,26 +72,20 @@
         return new URL(text, linkUrl).href;
       }
     }
-
   };
 
-  /********************* xhr processor *********************/
-  const xhr = {
+  /********************* Xhr processor *********************/
+  const Xhr = {
+
     async: true,
 
-    ok: function(request) {
-      return (request.status >= 200 && request.status < 300) ||
-        (request.status === 304) ||
-        (request.status === 0);
-    },
-
-    load: function(url, next, nextContext) {
+    load: function(url, callback) {
       const request = new XMLHttpRequest();
       if (flags.bust) {
         url += '?' + Math.random();
       }
-      request.open('GET', url, xhr.async);
-      request.addEventListener('readystatechange', function(e) {
+      request.open('GET', url, Xhr.async);
+      request.addEventListener('readystatechange', (e) => {
         if (request.readyState === 4) {
           // Servers redirecting an import can add a Location header to help us
           // polyfill correctly.
@@ -100,15 +93,14 @@
           try {
             const locationHeader = request.getResponseHeader('Location');
             if (locationHeader) {
+              // Relative or full path.
               redirectedUrl = (locationHeader.substr(0, 1) === '/') ?
-                location.origin + locationHeader // Location is a relative path
-                :
-                locationHeader; // Full path
+                location.origin + locationHeader : locationHeader;
             }
           } catch (e) {
             console.error(e.message);
           }
-          next.call(nextContext, !xhr.ok(request) && request,
+          callback(!Xhr._ok(request) && request,
             request.response || request.responseText, redirectedUrl);
         }
       });
@@ -116,10 +108,11 @@
       return request;
     },
 
-    loadDocument: function(url, next, nextContext) {
-      xhr.load(url, next, nextContext).responseType = 'document';
+    _ok: function(request) {
+      return (request.status >= 200 && request.status < 300) ||
+        (request.status === 304) ||
+        (request.status === 0);
     }
-
   };
 
   /********************* loader *********************/
@@ -206,7 +199,8 @@
         }
         setTimeout(() => this.receive(url, elt, null, body), 0);
       } else {
-        xhr.load(url, this.receive.bind(this, url, elt));
+        Xhr.load(url, (error, resource, redirectedUrl) =>
+          this.receive(url, elt, error, resource, redirectedUrl));
       }
     }
 
@@ -259,22 +253,30 @@
   // - whenever an import is loaded, prompts the parser to try to parse
   // - observes imported documents for new elements (these are handled via the
   // dynamic importer)
-  const importer = {
+  class Importer {
+    constructor() {
+      this.documents = {};
+      this._loaded = this._loaded.bind(this);
+      this._loadedAll = this._loadedAll.bind(this);
+      this._importLoader = new Loader(this._loaded, this._loadedAll);
+    }
 
-    documents: {},
+    bootDocument(doc) {
+      this._loadSubtree(doc);
+    }
 
-    loadNode: function(node) {
-      importLoader.addNode(node);
-    },
+    loadNode(node) {
+      this._importLoader.addNode(node);
+    }
 
     // load all loadable elements within the parent element
-    loadSubtree: function(parent) {
+    _loadSubtree(parent) {
       const nodes = parent.querySelectorAll(IMPORT_SELECTOR);
       // add these nodes to loader's queue
-      importLoader.addNodes(nodes);
-    },
+      this._importLoader.addNodes(nodes);
+    }
 
-    loaded: function(url, elt, resource, err, redirectedUrl) {
+    _loaded(url, elt, resource, err, redirectedUrl) {
       flags.log && console.log('loaded', url, elt);
       // store generic resource
       // TODO(sorvell): fails for nodes inside <template>.content
@@ -282,7 +284,7 @@
       elt.__resource = resource;
       elt.__error = err;
       if (isImportLink(elt)) {
-        let doc = importer.documents[url];
+        let doc = this.documents[url];
         // if we've never seen a document at this url
         if (doc === undefined) {
           // generate an HTMLDocument from data
@@ -291,45 +293,42 @@
             doc.__importLink = elt;
             // note, we cannot use MO to detect parsed nodes because
             // SD polyfill does not report these as mutations.
-            importer.bootDocument(doc);
+            this._loadSubtree(doc);
           }
           // cache document
-          importer.documents[url] = doc;
+          this.documents[url] = doc;
         }
         // don't store import record until we're actually loaded
         // store document resource
         elt.__doc = doc;
       }
-    },
+    }
 
-    bootDocument: function(doc) {
-      importer.loadSubtree(doc);
-    },
-
-    loadedAll: function() {
-      importer._flatten(document);
+    _loadedAll() {
+      this._flatten(document);
+      //TODO bring it into this class?
       runScripts();
-      importer._fireEvents(document);
-      importer.observe(document.head);
-    },
+      this._fireEvents(document);
+      this._observe(document.head);
+    }
 
-    _flatten: function(element) {
+    _flatten(element) {
       const n$ = element.querySelectorAll(IMPORT_SELECTOR);
       for (let i = 0, l = n$.length, n; i < l && (n = n$[i]); i++) {
-        n.import = importer.documents[n.href];
+        n.import = this.documents[n.href];
         if (n.import && !n.import.__firstImport) {
           n.import.__firstImport = n;
-          importer._flatten(n.import);
+          this._flatten(n.import);
           n.appendChild(n.import);
           if (document.contains(n.parentNode)) {
             // TODO(sorvell): need to coordinate with observer in document.head.
-            //importer.observe(n.import);
+            //this.observe(n.import);
           }
         }
       }
-    },
+    }
 
-    _fireEvents: function(element) {
+    _fireEvents(element) {
       // Wait for pending resources to finish loading before we can fire load/error.
       // TODO(valdrin) should it check for @import in textContent?
       const pending = element.querySelectorAll(
@@ -348,56 +347,63 @@
           }
         }
       });
-    },
+    }
 
-    observe: function(element) {
+    _observe(element) {
       if (element.__importObserver) {
         return;
       }
-      element.__importObserver = new MutationObserver(function(mxns) {
-        mxns.forEach(function(m) {
-          if (m.addedNodes) {
-            for (let i = 0; i < m.addedNodes.length; i++) {
-              const p = m.addedNodes[i];
-              // TODO(sorvell): x-platform matches
-              if (p.nodeType === Node.ELEMENT_NODE &&
-                p.matches(IMPORT_SELECTOR)) {
-                importer.loadNode(p);
-              }
-            }
-          }
-        });
-      });
+      element.__importObserver = new MutationObserver(this._onMutation.bind(this));
       element.__importObserver.observe(element, {
         childList: true,
         subtree: true
       });
     }
 
-  };
+    /**
+     * @param {Array<MutationRecord>} mutations
+     */
+    _onMutation(mutations) {
+      for (let j = 0, m; j < mutations.length && (m = mutations[j]); j++) {
+        if (m.addedNodes) {
+          for (let i = 0, l = m.addedNodes.length; i < l; i++) {
+            if (isImportLink(m.addedNodes[i])) {
+              this.loadNode(m.addedNodes[i]);
+            }
+          }
+        }
+      }
+    }
 
-  // loader singleton to handle loading imports
-  const importLoader = new Loader(importer.loaded.bind(importer),
-    importer.loadedAll.bind(importer));
+  }
 
-  function isImportLink(elt) {
-    return elt.nodeType === Node.ELEMENT_NODE && elt.matches(IMPORT_SELECTOR);
+  /**
+   * @type {Function}
+   */
+  const matches = Element.prototype.matches ||
+                  Element.prototype.matchesSelector ||
+                  Element.prototype.mozMatchesSelector ||
+                  Element.prototype.msMatchesSelector ||
+                  Element.prototype.oMatchesSelector ||
+                  Element.prototype.webkitMatchesSelector;
+
+  function isImportLink(node) {
+    return node.nodeType === Node.ELEMENT_NODE && matches.call(node, IMPORT_SELECTOR);
   }
 
   /********************* vulcanize style inline processing  *********************/
   const attrs = ['action', 'src', 'href', 'url', 'style'];
 
   function fixUrlAttributes(element, base) {
-    for (let i = 0, l = attrs.length, a, at, v;
-      (i < l) && (a = attrs[i]); i++) {
-      at = element.attributes[a];
-      v = at && at.value;
+    attrs.forEach((a) => {
+      const at = element.attributes[a];
+      const v = at && at.value;
       if (v && (v.search(/({{|\[\[)/) < 0)) {
         at.value = (a === 'style') ?
-          path.resolveUrlsInCssText(v, base) :
-          path.replaceAttrUrl(v, base);
+          Path.resolveUrlsInCssText(v, base) :
+          Path.replaceAttrUrl(v, base);
       }
-    }
+    });
   }
 
   function fixUrlsInTemplate(template, base) {
@@ -406,7 +412,7 @@
     for (let i = 0; i < n$.length; i++) {
       const n = n$[i];
       if (n.localName == 'style') {
-        path.resolveUrlsInStyle(n, base);
+        Path.resolveUrlsInStyle(n, base);
       } else {
         fixUrlAttributes(n, base);
       }
@@ -432,7 +438,7 @@
         n.src = new URL(n.getAttribute('src'), base);
       }
       if (n.localName == 'style') {
-        path.resolveUrlsInStyle(n, base);
+        Path.resolveUrlsInStyle(n, base);
       }
     }
     fixUrlsInTemplates(element, base);
@@ -446,7 +452,7 @@
         o.textContent = o.textContent + `\n//# sourceURL=${url}`;
       }
       if (o.src) {
-        o.setAttribute('src', path.replaceAttrUrl(o.getAttribute('src'), url));
+        o.setAttribute('src', Path.replaceAttrUrl(o.getAttribute('src'), url));
       }
     }
   }
@@ -457,12 +463,12 @@
     for (let i = 0; i < s$.length; i++) {
       const script = s$[i];
       const clone = document.createElement('script');
-      scope.currentScript = clone;
+      currentScript = clone;
       clone.textContent = script.textContent;
       script.src && clone.setAttribute('src', script.getAttribute('src'));
       script.parentNode.replaceChild(clone, script);
     }
-    scope.currentScript = null;
+    currentScript = null;
   }
 
   function getLoadingDonePromise(element) {
@@ -470,6 +476,7 @@
       if (element.__loaded) {
         resolve();
       } else {
+        //TODO(valdrin) should it update currentScript if it is a <script> ?
         element.addEventListener('load', resolve);
         element.addEventListener('error', resolve);
       }
@@ -484,11 +491,9 @@
     for (let i = 0; i < s$.length; i++) {
       const o = s$[i];
       const assetpath = o.getAttribute('assetpath') || '';
-      o.setAttribute('assetpath', path.replaceAttrUrl(assetpath, url));
+      o.setAttribute('assetpath', Path.replaceAttrUrl(assetpath, url));
     }
   }
-
-
 
   function makeDocument(resource, url) {
     // TODO(valdrin): better to use a disconnected document here so that
@@ -566,7 +571,7 @@
     let imports = doc.querySelectorAll(IMPORT_SELECTOR);
     // only non-nested imports
     imports = Array.prototype.slice.call(imports).filter(function(n) {
-      return !n.matches('import-content ' + IMPORT_SELECTOR);
+      return !matches.call(n, 'import-content ' + IMPORT_SELECTOR);
     });
     let parsedCount = 0,
       importCount = imports.length,
@@ -623,25 +628,25 @@
 
   // make `whenReady` work with native HTMLImports
   if (useNative) {
-    new MutationObserver(function(mxns) {
-      for (let i = 0, l = mxns.length, m;
-        (i < l) && (m = mxns[i]); i++) {
-        if (m.addedNodes) {
-          handleImports(m.addedNodes);
-        }
-      }
-    }).observe(document.head, {
-      childList: true
-    });
 
-    function handleImports(nodes) {
-      for (let i = 0, l = nodes.length, n;
-        (i < l) && (n = nodes[i]); i++) {
-        if (isImportLink(n)) {
-          handleImport(n);
+    /**
+     * @param {Array<MutationRecord>} mutations
+     */
+    function handleMutations(mutations) {
+      for (let j = 0, m; j < mutations.length && (m = mutations[j]); j++) {
+        if (m.addedNodes) {
+          for (let i = 0, l = m.addedNodes.length; i < l; i++) {
+            if (isImportLink(m.addedNodes[i])) {
+              handleImport(m.addedNodes[i]);
+            }
+          }
         }
       }
     }
+
+    new MutationObserver(handleMutations).observe(document.head, {
+      childList: true
+    });
 
     function handleImport(element) {
       const loaded = element.import;
@@ -674,15 +679,16 @@
   // behavior of native imports. A main document script that needs to be sure
   // imports have loaded should wait for this event.
   whenReady(function(detail) {
-    scope.ready = true;
-    scope.readyTime = new Date().getTime();
     const evt = /** @type {CustomEvent} */ (document.createEvent('CustomEvent'));
     evt.initCustomEvent('HTMLImportsLoaded', true, true, detail);
     document.dispatchEvent(evt);
   });
 
   if (!useNative) {
+    let importer;
+
     function bootstrap() {
+      importer = importer || new Importer();
       importer.bootDocument(document);
     }
 
