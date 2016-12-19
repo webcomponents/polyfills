@@ -11,36 +11,28 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 'use strict';
 
 let nativeAppendChild = Element.prototype.appendChild;
+export let appendChild = nativeAppendChild;
+
 let nativeInsertBefore = Element.prototype.insertBefore;
+export let insertBefore = nativeInsertBefore;
+
 let nativeRemoveChild = Element.prototype.removeChild;
+export let removeChild = nativeRemoveChild;
+
 let nativeSetAttribute = Element.prototype.setAttribute;
+export let setAttribute = nativeSetAttribute;
+
 let nativeRemoveAttribute = Element.prototype.removeAttribute;
+export let removeAttribute = nativeRemoveAttribute;
+
 let nativeCloneNode = Element.prototype.cloneNode;
+export let cloneNode = nativeCloneNode;
+
 let nativeImportNode = Document.prototype.importNode;
+export let importNode = nativeImportNode;
 
-export function appendChild(parent, child) {
-  return nativeAppendChild.call(parent, child);
-}
+let nativeAddEventListener = Element.prototype.addEventListener;
+export let addEventListener = nativeAddEventListener;
 
-export function insertBefore(parent, child, ref_node) {
-  return nativeInsertBefore.call(parent, child, ref_node);
-}
-export function removeChild(parent, child) {
-  return nativeRemoveChild.call(parent, child);
-}
-
-export function setAttribute(node, name, value) {
-  nativeSetAttribute.call(node, name, value);
-}
-
-export function removeAttribute(node, name) {
-  nativeRemoveAttribute.call(node, name);
-}
-
-export function cloneNode(node, deep) {
-  return nativeCloneNode.call(node, deep);
-}
-
-export function importNode(node, deep) {
-  return nativeImportNode.call(document, node, deep);
-}
+let nativeRemoveEventListener = Element.prototype.removeEventListener;
+export let removeEventListener = nativeRemoveEventListener;

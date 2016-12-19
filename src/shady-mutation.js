@@ -217,7 +217,7 @@ function _removeDistributedChildren(root, container) {
         let node = dc$[j];
         let parent = parentNode(node);
         if (parent) {
-          nativeMethods.removeChild(parent, node);
+          nativeMethods.removeChild.call(parent, node);
         }
       }
     }
@@ -379,13 +379,13 @@ export function setAttribute(node, attr, value) {
   if (window.ShadyCSS && attr === 'class' && node.ownerDocument === document) {
     window.ShadyCSS.setElementClass(node, value);
   } else {
-    nativeMethods.setAttribute(node, attr, value);
+    nativeMethods.setAttribute.call(node, attr, value);
     distributeAttributeChange(node, attr);
   }
 }
 
 export function removeAttribute(node, attr) {
-  nativeMethods.removeAttribute(node, attr);
+  nativeMethods.removeAttribute.call(node, attr);
   distributeAttributeChange(node, name);
 }
 
@@ -421,9 +421,9 @@ export function insertBefore(parent, node, ref_node) {
     let container = utils.isShadyRoot(parent) ?
       parent.host : parent;
     if (ref_node) {
-      nativeMethods.insertBefore(container, node, ref_node);
+      nativeMethods.insertBefore.call(container, node, ref_node);
     } else {
-      nativeMethods.appendChild(container, node);
+      nativeMethods.appendChild.call(container, node);
     }
   }
   _scheduleObserver(parent, node);
@@ -448,7 +448,7 @@ export function removeChild(parent, node) {
     // undistributed nodes.
     let nativeParent = parentNode(node);
     if (container === nativeParent) {
-      nativeMethods.removeChild(container, node);
+      nativeMethods.removeChild.call(container, node);
     }
   }
   _scheduleObserver(parent, null, node);
@@ -457,9 +457,9 @@ export function removeChild(parent, node) {
 
 export function cloneNode(node, deep) {
   if (node.localName == 'template') {
-    return nativeMethods.cloneNode(node, deep);
+    return nativeMethods.cloneNode.call(node, deep);
   } else {
-    let n = nativeMethods.cloneNode(node, false);
+    let n = nativeMethods.cloneNode.call(node, false);
     if (deep) {
       let c$ = node.childNodes;
       for (let i=0, nc; i < c$.length; i++) {
@@ -472,7 +472,7 @@ export function cloneNode(node, deep) {
 }
 
 export function importNode(node, deep) {
-  let n = nativeMethods.importNode(node, false);
+  let n = nativeMethods.importNode.call(document, node, false);
   if (deep) {
     let c$ = node.childNodes;
     for (let i=0, nc; i < c$.length; i++) {

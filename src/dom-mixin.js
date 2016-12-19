@@ -15,6 +15,22 @@ import * as mutation from './shady-mutation'
 import {getInnerHTML} from './innerHTML'
 import * as logicalTree from './logical-tree'
 import * as nativeTree from './native-tree'
+import * as events from './event-mixin'
+
+// TODO(sorvell): remove when conditional accessor mixin is generalized
+// Safari 9 `className` is not configurable
+// let cn = Object.getOwnPropertyDescriptor(Element.prototype, 'className');
+// if (cn && cn.configurable) {
+//   Object.defineProperty(Element.prototype, 'className', classNameDescriptor);
+// } else {
+//   // on IE `className` is on Element
+//   let h = window.customElements && window.customElements.nativeHTMLElement ||
+//     HTMLElement;
+//   cn = Object.getOwnPropertyDescriptor(h.prototype, 'className');
+//   if (cn && cn.configurable) {
+//     Object.defineProperty(h.prototype, 'className', classNameDescriptor);
+//   }
+// }
 
 function generateSimpleDescriptor(prop) {
   return {
@@ -34,6 +50,14 @@ let assignedSlotDesc = {
 };
 
 let NodeMixin = {
+
+  addEventListener: events.addEventListener,
+
+  removeEventListener: events.removeEventListener,
+
+  getRootNode(options) {
+    return mutation.getRootNode(this, options);
+  },
 
   appendChild(node) {
     return mutation.insertBefore(this, node);
@@ -119,7 +143,15 @@ Object.defineProperties(NodeMixin, {
       }
     },
     configurable: true
+  },
+
+  isConnected: {
+    get() {
+      return document.documentElement.contains(this);
+    },
+    configurable: true
   }
+
 });
 
 // NOTE: For some reason `Text` redefines `assignedSlot`
@@ -257,6 +289,16 @@ Object.defineProperties(ElementMixin, {
 
   assignedSlot: assignedSlotDesc,
 
+  className: {
+    get() {
+      return this.getAttribute('class');
+    },
+    set(value) {
+      this.setAttribute('class', value);
+    },
+    configurable: true
+  },
+
   shadowRoot: {
     get() {
       return this.shadyRoot;
@@ -303,7 +345,8 @@ Object.defineProperties(ElementMixin, {
     },
     set(value) {
       this.setAttribute('slot', value);
-    }
+    },
+    configurable: true
   }
 
 });

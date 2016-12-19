@@ -11,9 +11,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 'use strict';
 
 import * as utils from './utils'
-
-let origAddEventListener = Element.prototype.addEventListener;
-let origRemoveEventListener = Element.prototype.removeEventListener;
+import {addEventListener as nativeAddEventListener,
+  removeEventListener as nativeRemoveEventListener} from './native-methods'
 
 // https://github.com/w3c/webcomponents/issues/513#issuecomment-224183937
 let alwaysComposed = {
@@ -298,7 +297,7 @@ export function addEventListener(type, fn, optionsOrCapture) {
     this.__handlers[type] = this.__handlers[type] || {capture: [], bubble: []};
     this.__handlers[type][capture ? 'capture' : 'bubble'].push(wrapperFn);
   } else {
-    origAddEventListener.call(this, type, wrapperFn, optionsOrCapture);
+    nativeAddEventListener.call(this, type, wrapperFn, optionsOrCapture);
   }
 }
 
@@ -337,7 +336,7 @@ export function removeEventListener(type, fn, optionsOrCapture) {
     }
   }
 
-  origRemoveEventListener.call(this, type, wrapperFn || fn, optionsOrCapture);
+  nativeRemoveEventListener.call(this, type, wrapperFn || fn, optionsOrCapture);
   if (wrapperFn && nonBubblingEventsToRetarget[type] &&
       this.__handlers && this.__handlers[type]) {
     const arr = this.__handlers[type][capture ? 'capture' : 'bubble'];

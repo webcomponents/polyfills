@@ -86,7 +86,7 @@ export default class {
         // remove undistributed elements from physical dom.
         let parent = parentNode(p);
         if (parent) {
-          removeChild(parent, p);
+          removeChild.call(parent, p);
         }
       }
     }

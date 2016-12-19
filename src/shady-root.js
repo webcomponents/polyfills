@@ -232,7 +232,7 @@ let ShadyMixin = {
         // then schedule its previous host for distribution resulting in
         // the node being removed here.
         if (parentNode(n) === container) {
-          removeChild(container, n);
+          removeChild.call(container, n);
         }
         composed.splice(s.index + d, 1);
       }
@@ -243,7 +243,7 @@ let ShadyMixin = {
       next = composed[s.index];
       for (let j=s.index, n; j < s.index + s.addedCount; j++) {
         n = children[j];
-        insertBefore(container, n, next);
+        insertBefore.call(container, n, next);
         // TODO(sorvell): is this splice strictly needed?
         composed.splice(j, 0, n);
       }
