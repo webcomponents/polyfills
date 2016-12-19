@@ -37,6 +37,17 @@
     configurable: true
   });
 
+  // Polyfill document.baseURI for browsers without it.
+  if (!document.baseURI) {
+    Object.defineProperty(document, 'baseURI', {
+      get: function() {
+        const base = /** @type {HTMLBaseElement} */ (document.querySelector('base'));
+        return base ? base.href : window.location.href;
+      },
+      configurable: true
+    });
+  }
+
   // CustomEvent polyfill.
   (function() {
 
@@ -397,7 +408,7 @@
       for (let j = 0, m; j < mutations.length && (m = mutations[j]); j++) {
         if (m.addedNodes) {
           for (let i = 0, l = m.addedNodes.length; i < l; i++) {
-            if (isImportLink(m.addedNodes[i])) {
+            if (m.addedNodes[i] && isImportLink(m.addedNodes[i])) {
               this.loadNode(m.addedNodes[i]);
             }
           }
