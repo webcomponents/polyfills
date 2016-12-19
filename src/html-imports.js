@@ -343,7 +343,8 @@
       // Wait for pending resources to finish loading, then fire load/error.
       const pending = document.querySelectorAll(pendingImportsSelectors);
       Promise.all(Array.from(pending).map(whenElementLoaded)).then(() => {
-        const n$ = document.querySelectorAll(IMPORT_SELECTOR);
+        const n$ = /** @type {!NodeList<!HTMLLinkElement>} */
+          (document.querySelectorAll(IMPORT_SELECTOR));
         // Inverse order to have events firing bottom-up.
         for (let i = n$.length - 1, n; i >= 0 && (n = n$[i]); i--) {
           // Don't fire twice same event.
@@ -494,8 +495,6 @@
   function whenElementLoaded(element) {
     return new Promise(resolve => {
       if (isElementLoaded(element)) {
-        // Mark it no matter what.
-        element.__loaded = true;
         resolve(element);
       } else {
         //TODO(valdrin) should it update currentScript if it is a <script> ?
@@ -519,10 +518,36 @@
    * @return {boolean}
    */
   function isElementLoaded(element) {
-    // TODO(valdrin) check if this complexity is needed.
-    if (useNative && isImportLink(element)) {
-      return element.__loaded ||
-        (element.import && element.import.readyState !== 'loading');
+    if (!element.__loaded) {
+      if (useNative && isImportLink(element) && element.import &&
+        element.import.readyState !== 'loading') {
+        flags.log && console.log('delayed flagging of import loaded..');
+        element.__loaded = true;
+      } else if (isIE && element.localName === 'style') {
+        // NOTE: IE does not fire "load" event for styles that have already
+        // loaded. This is in violation of the spec, so we try our hardest to
+        // work around it.
+        let fakeLoad = false;
+        // If there's not @import in the textContent, assume it has loaded
+        if (element.textContent.indexOf('@import') == -1) {
+          fakeLoad = true;
+          // if we have a sheet, we have been parsed
+        } else if (element.sheet) {
+          fakeLoad = true;
+          const csr = element.sheet.cssRules;
+          // search the rules for @import's
+          for (let i = 0, l = csr ? csr.length : 0; i < l && fakeLoad; i++) {
+            if (csr[i].type === CSSRule.IMPORT_RULE) {
+              // if every @import has resolved, fake the load
+              fakeLoad = Boolean(csr[i].styleSheet);
+            }
+          }
+        }
+        if (fakeLoad) {
+          flags.log && console.log('delayed flagging of style w/ imports loaded..');
+          element.__loaded = true;
+        }
+      }
     }
     return element.__loaded;
   }
