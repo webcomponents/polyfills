@@ -37,6 +37,27 @@
     configurable: true
   });
 
+  // CustomEvent polyfill.
+  (function() {
+
+    if (typeof window.CustomEvent === 'function') return false;
+
+    function CustomEvent(event, params) {
+      params = params || {
+        bubbles: false,
+        cancelable: false,
+        detail: undefined
+      };
+      const evt = /** @type {CustomEvent} */ (document.createEvent('CustomEvent'));
+      evt.initCustomEvent(event, params.bubbles, params.cancelable, params.detail);
+      return evt;
+    }
+
+    CustomEvent.prototype = window.Event.prototype;
+
+    window.CustomEvent = /** @type {CustomEvent} */ (CustomEvent);
+  })();
+
   /********************* path fixup *********************/
   const ABS_URL_TEST = /(^\/)|(^#)|(^[\w-\d]*:)/;
   const CSS_URL_REGEXP = /(url\()([^)]*)(\))/g;
@@ -342,7 +363,7 @@
     _fireEvents() {
       // Wait for pending resources to finish loading, then fire load/error.
       const pending = document.querySelectorAll(pendingImportsSelectors);
-      Promise.all(Array.from(pending).map(whenElementLoaded)).then(() => {
+      Promise.all(Array.prototype.slice.call(pending).map(whenElementLoaded)).then(() => {
         const n$ = /** @type {!NodeList<!HTMLLinkElement>} */
           (document.querySelectorAll(IMPORT_SELECTOR));
         // Inverse order to have events firing bottom-up.
@@ -421,6 +442,9 @@
 
   function fixUrlsInTemplate(template, base) {
     const content = template.content;
+    if (!content) { // Template not supported.
+      return;
+    }
     const n$ = content.querySelectorAll('style, form[action], [src], [href], [url], [style]');
     for (let i = 0; i < n$.length; i++) {
       const n = n$[i];
@@ -521,7 +545,7 @@
     if (!element.__loaded) {
       if (useNative && isImportLink(element) && element.import &&
         element.import.readyState !== 'loading') {
-        flags.log && console.log('delayed flagging of import loaded..');
+        flags.log && console.log('delayed flagging of import loaded', element);
         element.__loaded = true;
       } else if (isIE && element.localName === 'style') {
         // NOTE: IE does not fire "load" event for styles that have already
@@ -544,7 +568,7 @@
           }
         }
         if (fakeLoad) {
-          flags.log && console.log('delayed flagging of style w/ imports loaded..');
+          flags.log && console.log('delayed flagging of style w/ imports loaded', element);
           element.__loaded = true;
         }
       }
@@ -704,9 +728,11 @@
   // behavior of native imports. A main document script that needs to be sure
   // imports have loaded should wait for this event.
   whenReady(function(detail) {
-    const evt = /** @type {!CustomEvent} */ (document.createEvent('CustomEvent'));
-    evt.initCustomEvent('HTMLImportsLoaded', true, true, detail);
-    document.dispatchEvent(evt);
+    document.dispatchEvent(new CustomEvent('HTMLImportsLoaded', {
+      cancelable: true,
+      bubbles: true,
+      detail: detail
+    }));
   });
 
   // exports
