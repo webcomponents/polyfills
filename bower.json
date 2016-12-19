@@ -17,6 +17,7 @@
   "ignore": [],
   "devDependencies": {
     "web-component-tester": "^5.0.0",
-    "polymer": "2.0-preview"
+    "polymer": "2.0-preview",
+    "url": "webcomponents/URL#^0.5.7"
   }
 }
