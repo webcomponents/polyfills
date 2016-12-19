@@ -16,7 +16,7 @@
   "license": "BSD",
   "ignore": [],
   "devDependencies": {
-    "web-component-tester": "^4.0.1",
+    "web-component-tester": "^5.0.0",
     "polymer": "2.0-preview"
   }
 }
