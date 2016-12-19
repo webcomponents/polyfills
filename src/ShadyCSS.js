@@ -12,9 +12,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 import {parse} from './css-parse'
 import {nativeShadow, nativeCssVariables, nativeCssApply} from './style-settings'
-import {StyleTransformer} from './style-transformer'
+import StyleTransformer from './style-transformer'
 import * as StyleUtil from './style-util'
-import {StyleProperties} from './style-properties'
+import StyleProperties from './style-properties'
 import templateMap from './template-map'
 import placeholderMap from './style-placeholder'
 import StyleInfo from './style-info'
@@ -26,24 +26,34 @@ import {flush} from './document-watcher'
 
 let styleCache = new StyleCache();
 
-export let ShadyCSS = {
-  flush: flush,
-  scopeCounter: {},
-  nativeShadow: nativeShadow,
-  nativeCss: nativeCssVariables,
-  nativeCssApply: nativeCssApply,
-  _documentOwner: document.documentElement,
-  _documentOwnerStyleInfo: StyleInfo.set(document.documentElement, new StyleInfo({rules: []})),
+class ShadyCSS {
+  constructor() {
+    this.scopeCounter = {};
+    this._documentOwner = document.documentElement;
+    this._documentOwnerStyleInfo = StyleInfo.set(document.documentElement, new StyleInfo({rules: []}));
+  }
+  get nativeShadow() {
+    return nativeShadow;
+  }
+  get nativeCss() {
+    return nativeCssVariables;
+  }
+  get nativeCssApply() {
+    return nativeCssApply;
+  }
+  flush() {
+    flush();
+  }
   _generateScopeSelector(name) {
     let id = this.scopeCounter[name] = (this.scopeCounter[name] || 0) + 1;
     return `${name}-${id}`;
-  },
+  }
   getStyleAst(style) {
     return StyleUtil.rulesForStyle(style);
-  },
+  }
   styleAstToString(ast) {
     return StyleUtil.toCssText(ast);
-  },
+  }
   _gatherStyles(template) {
     let styles = template.content.querySelectorAll('style');
     let cssText = [];
@@ -53,14 +63,14 @@ export let ShadyCSS = {
       s.parentNode.removeChild(s);
     }
     return cssText.join('').trim();
-  },
+  }
   _getCssBuild(template) {
     let style = template.content.querySelector('style');
     if (!style) {
       return '';
     }
     return style.getAttribute('css-build') || '';
-  },
+  }
   prepareTemplate(template, elementName, typeExtension) {
     if (template._prepared) {
       return;
@@ -99,13 +109,13 @@ export let ShadyCSS = {
       template._style = style;
     }
     template._ownPropertyNames = ownPropertyNames;
-  },
+  }
   _generateStaticStyle(info, rules, shadowroot, placeholder) {
     let cssText = StyleTransformer.elementStyles(info, rules);
     if (cssText.length) {
       return StyleUtil.applyCss(cssText, info.is, shadowroot, placeholder);
     }
-  },
+  }
   _prepareHost(host) {
     let is = host.getAttribute('is') || host.localName;
     let typeExtension;
@@ -132,7 +142,7 @@ export let ShadyCSS = {
         cssBuild
       )
     );
-  },
+  }
   applyStyle(host, overrideProps) {
     let is = host.getAttribute('is') || host.localName;
     if (window.CustomStyle) {
@@ -197,7 +207,7 @@ export let ShadyCSS = {
         this._applyToDescendants(root);
       }
     }
-  },
+  }
   _applyToDescendants(root) {
     let c$ = root.children;
     for (let i = 0, c; i < c$.length; i++) {
@@ -207,7 +217,7 @@ export let ShadyCSS = {
       }
       this._applyToDescendants(c);
     }
-  },
+  }
   _styleOwnerForNode(node) {
     let root = node.getRootNode();
     let host = root.host;
@@ -219,10 +229,10 @@ export let ShadyCSS = {
       }
     }
     return this._documentOwner;
-  },
+  }
   _isRootOwner(node) {
     return (node === this._documentOwner);
-  },
+  }
   _applyStyleProperties(host, styleInfo) {
     let is = host.getAttribute('is') || host.localName;
     let cacheEntry = styleCache.fetch(is, styleInfo.styleProperties, styleInfo.ownStylePropertyNames);
@@ -239,7 +249,7 @@ export let ShadyCSS = {
       styleCache.store(is, styleInfo.styleProperties, style, styleInfo.scopeSelector);
     }
     return style;
-  },
+  }
   _updateProperties(host, styleInfo) {
     let owner = this._styleOwnerForNode(host);
     let ownerStyleInfo = StyleInfo.get(owner);
@@ -257,7 +267,7 @@ export let ShadyCSS = {
     this._mixinOverrideStyles(props, styleInfo.overrideStyleProperties);
     StyleProperties.reify(props);
     styleInfo.styleProperties = props;
-  },
+  }
   _mixinOverrideStyles(props, overrides) {
     for (let p in overrides) {
       let v = overrides[p];
@@ -267,7 +277,7 @@ export let ShadyCSS = {
         props[p] = v;
       }
     }
-  },
+  }
   _updateNativeProperties(element, properties) {
     // remove previous properties
     for (let p in properties) {
@@ -278,10 +288,10 @@ export let ShadyCSS = {
         element.style.setProperty(p, properties[p]);
       }
     }
-  },
+  }
   updateStyles(properties) {
     this.applyStyle(this._documentOwner, properties);
-  },
+  }
   /* Custom Style operations */
   _transformCustomStyleForDocument(style) {
     let ast = StyleUtil.rulesForStyle(style);
@@ -300,19 +310,19 @@ export let ShadyCSS = {
     } else {
       this._documentOwnerStyleInfo.styleRules.rules.push(ast);
     }
-  },
+  }
   _revalidateApplyShim(style) {
     if (this.nativeCss && !this.nativeCssApply) {
       let ast = StyleUtil.rulesForStyle(style);
       ApplyShim.transformRules(ast);
       style.textContent = StyleUtil.toCssText(ast);
     }
-  },
+  }
   _applyCustomStyleToDocument(style) {
     if (!this.nativeCss) {
       StyleProperties.applyCustomStyle(style, this._documentOwnerStyleInfo.styleProperties);
     }
-  },
+  }
   getComputedStyleValue(element, property) {
     let value;
     if (!this.nativeCss) {
@@ -325,7 +335,7 @@ export let ShadyCSS = {
     // trim whitespace that can come after the `:` in css
     // example: padding: 2px -> " 2px"
     return value.trim();
-  },
+  }
   // given an element and a classString, replaces
   // the element's class with the provided classString and adds
   // any necessary ShadyCSS static and property based scoping selectors
@@ -358,10 +368,10 @@ export let ShadyCSS = {
       }
     }
     StyleUtil.setElementClassRaw(element, classes.join(' '));
-  },
+  }
   _styleInfoForNode(node) {
     return StyleInfo.get(node);
   }
 }
 
-window['ShadyCSS'] = ShadyCSS;
+window['ShadyCSS'] = new ShadyCSS();

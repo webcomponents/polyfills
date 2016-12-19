@@ -12,23 +12,27 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 import {removeCustomPropAssignment} from './css-parse'
 import {nativeShadow} from './style-settings'
-import {StyleTransformer} from './style-transformer'
+import StyleTransformer from './style-transformer'
 import * as StyleUtil from './style-util'
 import StyleInfo from './style-info'
 
 // TODO: dedupe with shady
-let p = window.Element.prototype;
-let matchesSelector = p.matches || p.matchesSelector ||
+const p = window.Element.prototype;
+const matchesSelector = p.matches || p.matchesSelector ||
   p.mozMatchesSelector || p.msMatchesSelector ||
   p.oMatchesSelector || p.webkitMatchesSelector;
 
-let IS_IE = navigator.userAgent.match('Trident');
+const IS_IE = navigator.userAgent.match('Trident');
 
-export let StyleProperties = {
+const XSCOPE_NAME = 'x-scope';
 
+class StyleProperties {
+  get XSCOPE_NAME() {
+    return XSCOPE_NAME;
+  }
   // decorates styles with rule info and returns an array of used style
   // property names
-  decorateStyles: function(rules) {
+  decorateStyles(rules) {
     let self = this, props = {}, keyframes = [], ruleIndex = 0;
     StyleUtil.forEachRule(rules, function(rule) {
       self.decorateRule(rule);
@@ -46,10 +50,10 @@ export let StyleProperties = {
       names.push(i);
     }
     return names;
-  },
+  }
 
   // decorate a single rule with property info
-  decorateRule: function(rule) {
+  decorateRule(rule) {
     if (rule.propertyInfo) {
       return rule.propertyInfo;
     }
@@ -63,10 +67,10 @@ export let StyleProperties = {
     info.cssText = this.collectCssText(rule);
     rule.propertyInfo = info;
     return info;
-  },
+  }
 
   // collects the custom properties from a rule's cssText
-  collectProperties: function(rule, properties) {
+  collectProperties(rule, properties) {
     let info = rule.propertyInfo;
     if (info) {
       if (info.properties) {
@@ -74,7 +78,7 @@ export let StyleProperties = {
         return true;
       }
     } else {
-      let m, rx = this.rx.VAR_ASSIGN;
+      let m, rx = StyleUtil.rx.VAR_ASSIGN;
       let cssText = rule.parsedCssText;
       let value;
       let any;
@@ -90,23 +94,23 @@ export let StyleProperties = {
       return any;
     }
 
-  },
+  }
 
   // returns cssText of properties that consume variables/mixins
-  collectCssText: function(rule) {
+  collectCssText(rule) {
     return this.collectConsumingCssText(rule.parsedCssText);
-  },
+  }
 
   // NOTE: we support consumption inside mixin assignment
   // but not production, so strip out {...}
-  collectConsumingCssText: function(cssText) {
-    return cssText.replace(this.rx.BRACKETED, '')
-      .replace(this.rx.VAR_ASSIGN, '');
-  },
+  collectConsumingCssText(cssText) {
+    return cssText.replace(StyleUtil.rx.BRACKETED, '')
+      .replace(StyleUtil.rx.VAR_ASSIGN, '');
+  }
 
-  collectPropertiesInCssText: function(cssText, props) {
+  collectPropertiesInCssText(cssText, props) {
     let m;
-    while ((m = this.rx.VAR_CONSUMED.exec(cssText))) {
+    while ((m = StyleUtil.rx.VAR_CONSUMED.exec(cssText))) {
       let name = m[1];
       // This regex catches all variable names, and following non-whitespace char
       // If next char is not ':', then variable is a consumer
@@ -114,10 +118,10 @@ export let StyleProperties = {
         props[name] = true;
       }
     }
-  },
+  }
 
   // turns custom properties into realized values.
-  reify: function(props) {
+  reify(props) {
     // big perf optimization here: reify only *own* properties
     // since this object has __proto__ of the element's scope properties
     let names = Object.getOwnPropertyNames(props);
@@ -125,7 +129,7 @@ export let StyleProperties = {
       n = names[i];
       props[n] = this.valueForProperty(props[n], props);
     }
-  },
+  }
 
   // given a property value, returns the reified value
   // a property value may be:
@@ -134,7 +138,7 @@ export let StyleProperties = {
   // var(--a, var(--b));
   // (3) a literal mixin value like { properties }. Each of these properties
   // can have values that are: (a) literal, (b) variables, (c) @apply mixins.
-  valueForProperty: function(property, props) {
+  valueForProperty(property, props) {
     // case (1) default
     // case (3) defines a mixin and we have to reify the internals
     if (property) {
@@ -165,15 +169,15 @@ export let StyleProperties = {
       }
     }
     return property && property.trim() || '';
-  },
+  }
 
   // note: we do not yet support mixin within mixin
-  valueForProperties: function(property, props) {
+  valueForProperties(property, props) {
     let parts = property.split(';');
     for (let i=0, p, m; i<parts.length; i++) {
       if ((p = parts[i])) {
-        this.rx.MIXIN_MATCH.lastIndex = 0;
-        m = this.rx.MIXIN_MATCH.exec(p);
+        StyleUtil.rx.MIXIN_MATCH.lastIndex = 0;
+        m = StyleUtil.rx.MIXIN_MATCH.exec(p);
         if (m) {
           p = this.valueForProperty(props[m[1]], props);
         } else {
@@ -192,9 +196,9 @@ export let StyleProperties = {
       }
     }
     return parts.join(';');
-  },
+  }
 
-  applyProperties: function(rule, props) {
+  applyProperties(rule, props) {
     let output = '';
     // dynamically added sheets may not be decorated so ensure they are.
     if (!rule.propertyInfo) {
@@ -204,17 +208,17 @@ export let StyleProperties = {
       output = this.valueForProperties(rule.propertyInfo.cssText, props);
     }
     rule.cssText = output;
-  },
+  }
 
   // Apply keyframe transformations to the cssText of a given rule. The
   // keyframeTransforms object is a map of keyframe names to transformer
   // functions which take in cssText and spit out transformed cssText.
-  applyKeyframeTransforms: function(rule, keyframeTransforms) {
+  applyKeyframeTransforms(rule, keyframeTransforms) {
     let input = rule.cssText;
     let output = rule.cssText;
     if (rule.hasAnimations == null) {
       // Cache whether or not the rule has any animations to begin with:
-      rule.hasAnimations = this.rx.ANIMATION_MATCH.test(input);
+      rule.hasAnimations = StyleUtil.rx.ANIMATION_MATCH.test(input);
     }
     // If there are no animations referenced, we can skip transforms:
     if (rule.hasAnimations) {
@@ -244,11 +248,11 @@ export let StyleProperties = {
       }
     }
     rule.cssText = output;
-  },
+  }
 
   // Test if the rules in these styles matches the given `element` and if so,
   // collect any custom properties into `props`.
-  propertyDataFromStyles: function(rules, element) {
+  propertyDataFromStyles(rules, element) {
     let props = {}, self = this;
     // generates a unique key for these matches
     let o = [];
@@ -272,9 +276,9 @@ export let StyleProperties = {
       }
     }, null, true);
     return {properties: props, key: o};
-  },
+  }
 
-  whenHostOrRootRule: function(scope, rule, cssBuild, callback) {
+  whenHostOrRootRule(scope, rule, cssBuild, callback) {
     if (!rule.propertyInfo) {
       this.decorateRule(rule);
     }
@@ -323,9 +327,9 @@ export let StyleProperties = {
       isHost: isHost,
       isRoot: isRoot
     });
-  },
+  }
 
-  hostAndRootPropertiesForScope: function(scope, rules) {
+  hostAndRootPropertiesForScope(scope, rules) {
     let hostProps = {}, rootProps = {}, self = this;
     // note: active rules excludes non-matching @media rules
     let cssBuild = rules && rules.__cssBuild;
@@ -343,17 +347,17 @@ export let StyleProperties = {
       });
     }, null, true);
     return {rootProps: rootProps, hostProps: hostProps};
-  },
+  }
 
-  transformStyles: function(element, properties, scopeSelector) {
+  transformStyles(element, properties, scopeSelector) {
     let self = this;
     let hostSelector = StyleTransformer
       ._calcHostScope(element.is, element.extends);
     let rxHostSelector = element.extends ?
       '\\' + hostSelector.slice(0, -1) + '\\]' :
       hostSelector;
-    let hostRx = new RegExp(this.rx.HOST_PREFIX + rxHostSelector +
-      this.rx.HOST_SUFFIX);
+    let hostRx = new RegExp(StyleUtil.rx.HOST_PREFIX + rxHostSelector +
+      StyleUtil.rx.HOST_SUFFIX);
     let rules = StyleInfo.get(element).styleRules;
     let keyframeTransforms =
       this._elementKeyframeTransforms(element, rules, scopeSelector);
@@ -368,9 +372,9 @@ export let StyleProperties = {
         self._scopeSelector(rule, hostRx, hostSelector, scopeSelector);
       }
     });
-  },
+  }
 
-  _elementKeyframeTransforms: function(element, rules, scopeSelector) {
+  _elementKeyframeTransforms(element, rules, scopeSelector) {
     let keyframesRules = rules._keyframes;
     let keyframeTransforms = {};
     if (!nativeShadow && keyframesRules) {
@@ -386,27 +390,27 @@ export let StyleProperties = {
       }
     }
     return keyframeTransforms;
-  },
+  }
 
   // Generate a factory for transforming a chunk of CSS text to handle a
   // particular scoped keyframes rule.
-  _keyframesRuleTransformer: function(keyframesRule) {
+  _keyframesRuleTransformer(keyframesRule) {
     return function(cssText) {
       return cssText.replace(
           keyframesRule.keyframesNameRx,
           keyframesRule.transformedKeyframesName);
     };
-  },
+  }
 
   // Transforms `@keyframes` names to be unique for the current host.
   // Example: @keyframes foo-anim -> @keyframes foo-anim-x-foo-0
-  _scopeKeyframes: function(rule, scopeId) {
+  _scopeKeyframes(rule, scopeId) {
     rule.keyframesNameRx = new RegExp(rule.keyframesName, 'g');
     rule.transformedKeyframesName = rule.keyframesName + '-' + scopeId;
     rule.transformedSelector = rule.transformedSelector || rule.selector;
     rule.selector = rule.transformedSelector.replace(
         rule.keyframesName, rule.transformedKeyframesName);
-  },
+  }
 
   // Strategy: x scope shim a selector e.g. to scope `.x-foo-42` (via classes):
   // non-host selector: .a.x-foo -> .x-foo-42 .a.x-foo
@@ -416,7 +420,7 @@ export let StyleProperties = {
   // have low specificity. They are overrideable by class selectors but,
   // unfortunately, not by type selectors (e.g. overriding via
   // `.special` is ok, but not by `x-foo`).
-  _scopeSelector: function(rule, hostRx, hostSelector, scopeId) {
+  _scopeSelector(rule, hostRx, hostSelector, scopeId) {
     rule.transformedSelector = rule.transformedSelector || rule.selector;
     let selector = rule.transformedSelector;
     let scope = '.' + scopeId;
@@ -427,16 +431,16 @@ export let StyleProperties = {
         scope + ' ' + p;
     }
     rule.selector = parts.join(',');
-  },
+  }
 
-  applyElementScopeSelector: function(element, selector, old) {
+  applyElementScopeSelector(element, selector, old) {
     let c = element.getAttribute('class') || '';
     let v = c;
     if (old) {
       v = c.replace(
-        new RegExp('\\s*' + this.XSCOPE_NAME + '\\s*' + old + '\\s*', 'g'), ' ');
+        new RegExp('\\s*' + XSCOPE_NAME + '\\s*' + old + '\\s*', 'g'), ' ');
     }
-    v += (v ? ' ' : '') + this.XSCOPE_NAME + ' ' + selector;
+    v += (v ? ' ' : '') + XSCOPE_NAME + ' ' + selector;
     if (c !== v) {
       // hook from ShadyDOM
       if (element.__nativeSetAttribute) {
@@ -445,9 +449,9 @@ export let StyleProperties = {
         element.setAttribute('class', v);
       }
     }
-  },
+  }
 
-  applyElementStyle: function(element, properties, selector, style) {
+  applyElementStyle(element, properties, selector, style) {
     // calculate cssText to apply
     let cssText = style ? style.textContent || '' :
       this.transformStyles(element, properties, selector);
@@ -503,9 +507,9 @@ export let StyleProperties = {
       style.textContent = style.textContent;
     }
     return style;
-  },
+  }
 
-  applyCustomStyle: function(style, properties) {
+  applyCustomStyle(style, properties) {
     let rules = StyleUtil.rulesForStyle(style);
     let self = this;
     style.textContent = StyleUtil.toCssText(rules, function(rule) {
@@ -524,14 +528,13 @@ export let StyleProperties = {
         rule.cssText = self.valueForProperties(css, properties);
       }
     });
-  },
-
-  rx: StyleUtil.rx,
-  XSCOPE_NAME: 'x-scope'
-};
+  }
+}
 
 function addToBitMask(n, bits) {
   let o = parseInt(n / 32);
   let v = 1 << (n % 32);
   bits[o] = (bits[o] || 0) | v;
 }
+
+export default new StyleProperties();

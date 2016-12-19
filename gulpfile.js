@@ -25,8 +25,8 @@ const babiliConfig = {
   presets: ['babili'],
   shouldPrintComment: (c) => {
     if (!hasLicense) {
-      hasLicense = true;
-      return /@license/.test(c)
+     hasLicense = /@license/.test(c)
+     return hasLicense;
     }
     return false;
   }
@@ -34,12 +34,12 @@ const babiliConfig = {
 
 gulp.task('minify', () => {
   return gulp.src(['index.js', 'src/**/*.js'])
-  .pipe(sourcemaps.init({loadMaps: true}))
+  .pipe(sourcemaps.init())
   .pipe(rollupGulp({
     entry: 'index.js',
-    sourceMap: true,
     format: 'iife',
-    moduleName: 'shadycss'
+    moduleName: 'shadycss',
+    sourceMap: true
   }))
   .pipe(babel(babiliConfig))
   .pipe(rename('shadycss.min.js'))
