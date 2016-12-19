@@ -20,11 +20,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 'use strict';
 import * as utils from './utils'
-import {ShadyRoot} from './shady'
+import {ShadyRoot} from './shady-root'
 import {flush, enqueue} from './flush'
 import {observeChildren, unobserveChildren, filterMutations} from './observe-changes'
-import {getRootNode, setAttribute, Mixins, patchProto,
-    getComposedInnerHTML, getComposedChildNodes} from './global-mixin'
+import * as nativeMethods from './native-methods'
+// TODO(sorvell): remove when code that depends on this is moved to dom-mixin
+import {getRootNode, setAttribute} from './shady-mutation'
+import { Mixins, patchProto,
+  getComposedInnerHTML, getComposedChildNodes} from './dom-mixin'
 import * as events from './event-mixin'
 
 if (utils.settings.inUse) {
@@ -43,7 +46,8 @@ if (utils.settings.inUse) {
     settings: utils.settings,
     filterMutations: filterMutations,
     observeChildren: observeChildren,
-    unobserveChildren: unobserveChildren
+    unobserveChildren: unobserveChildren,
+    nativeMethods: nativeMethods
   };
 
   let createRootAndEnsurePatched = function(node) {
@@ -103,11 +107,10 @@ if (utils.settings.inUse) {
     configurable: true
   });
 
-  let nativeSetAttribute = Element.prototype.setAttribute;
-  Element.prototype.setAttribute = setAttribute;
+  // let nativeSetAttribute = Element.prototype.setAttribute;
+  // Element.prototype.setAttribute = setAttribute;
   // NOTE: expose native setAttribute to allow hooking native method
   // (e.g. this is done in ShadyCSS)
-  Element.prototype.__nativeSetAttribute = nativeSetAttribute;
 
   let classNameDescriptor = {
     get() {

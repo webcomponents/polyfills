@@ -15,6 +15,8 @@ let nativeInsertBefore = Element.prototype.insertBefore;
 let nativeRemoveChild = Element.prototype.removeChild;
 let nativeSetAttribute = Element.prototype.setAttribute;
 let nativeRemoveAttribute = Element.prototype.removeAttribute;
+let nativeCloneNode = Element.prototype.cloneNode;
+let nativeImportNode = Document.prototype.importNode;
 
 export function appendChild(parent, child) {
   return nativeAppendChild.call(parent, child);
@@ -33,4 +35,12 @@ export function setAttribute(node, name, value) {
 
 export function removeAttribute(node, name) {
   nativeRemoveAttribute.call(node, name);
+}
+
+export function cloneNode(node, deep) {
+  return nativeCloneNode.call(node, deep);
+}
+
+export function importNode(node, deep) {
+  return nativeImportNode.call(document, node, deep);
 }

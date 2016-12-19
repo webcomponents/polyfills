@@ -16,7 +16,8 @@ import {enqueue} from './flush'
 import {recordChildNodes} from './logical-tree'
 import {removeChild, insertBefore} from './native-methods'
 import {parentNode, childNodes} from './native-tree'
-import {activeElementDescriptor, Mixins} from './global-mixin'
+import {activeElementDescriptor} from './shady-mutation'
+import {Mixins} from './dom-mixin'
 import Distributor from './distributor'
 
 /**
