@@ -107,7 +107,8 @@
 
         test('CustomElements only upgrades a <link rel=import> once', function() {
           var observedSubImports = observedRoots.filter(function(n) {
-            return n.baseURI.endsWith('sub-import.html');
+            var suffix = 'sub-import.html';
+            return n.baseURI.substring(n.baseURI.length - suffix.length) === suffix;
           });
           // check that we only observe an imported document once
           chai.assert.equal(observedSubImports.length, 1);
