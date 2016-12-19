@@ -13,9 +13,11 @@ suite('patching', function() {
   suite('HTMLElement', function () {
 
     test('constructor is configurable and writable', function() {
+      var nativeHTMLElement = customElements.nativeHTMLElement;
+      var nativeDescriptor = Object.getOwnPropertyDescriptor(nativeHTMLElement.prototype, 'constructor')
       var descriptor = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'constructor');
-      assert.isTrue(descriptor.configurable);
-      assert.isTrue(descriptor.writable);
+      assert.equal(nativeDescriptor.configurable, descriptor.configurable);
+      assert.equal(nativeDescriptor.writable, descriptor.writable);
     });
 
   });
