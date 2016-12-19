@@ -30,6 +30,6 @@
     "gulp-rename": "^1.2.2",
     "gulp-rollup": "^2.5.1",
     "gulp-sourcemaps": "^1.9.1",
-    "web-component-tester": "^6.0.0-prerelease.2"
+    "web-component-tester": "^6.0.0-prerelease.4"
   }
 }
