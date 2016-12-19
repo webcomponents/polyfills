@@ -251,6 +251,12 @@
     'script[type="text/javascript"]'
   ].join(',');
 
+  const pendingImportsSelectors = `${IMPORT_SELECTOR} style:not([type]),
+    ${IMPORT_SELECTOR} link[rel=stylesheet][href]:not([type]),
+    ${IMPORT_SELECTOR} script[src]:not([type]),
+    ${IMPORT_SELECTOR} script[src][type="application/javascript"],
+    ${IMPORT_SELECTOR} script[src][type="text/javascript"]`;
+
   // importer
   // highlander object to manage loading of imports
   // for any document, importer:
@@ -313,7 +319,7 @@
       this._flatten(document);
       //TODO bring it into this class?
       runScripts();
-      this._fireEvents(document);
+      this._fireEvents();
       this._observe(document.head);
     }
 
@@ -333,14 +339,11 @@
       }
     }
 
-    _fireEvents(element) {
-      // Wait for pending resources to finish loading before we can fire load/error.
-      // TODO(valdrin) should it check for @import in textContent?
-      const pending = element.querySelectorAll(
-        `${IMPORT_SELECTOR} link[rel=stylesheet][href]:not([type]),
-       ${IMPORT_SELECTOR} script[src]:not([type])`);
+    _fireEvents() {
+      // Wait for pending resources to finish loading, then fire load/error.
+      const pending = document.querySelectorAll(pendingImportsSelectors);
       Promise.all(Array.from(pending).map(whenElementLoaded)).then(() => {
-        const n$ = element.querySelectorAll(IMPORT_SELECTOR);
+        const n$ = document.querySelectorAll(IMPORT_SELECTOR);
         // Inverse order to have events firing bottom-up.
         for (let i = n$.length - 1, n; i >= 0 && (n = n$[i]); i--) {
           // Don't fire twice same event.
@@ -385,7 +388,7 @@
   /**
    * @type {Function}
    */
-  const matches = Element.prototype.matches ||
+  const MATCHES = Element.prototype.matches ||
     Element.prototype.matchesSelector ||
     Element.prototype.mozMatchesSelector ||
     Element.prototype.msMatchesSelector ||
@@ -397,7 +400,7 @@
    * @return {boolean}
    */
   function isImportLink(node) {
-    return node.nodeType === Node.ELEMENT_NODE && matches.call(node, IMPORT_SELECTOR);
+    return node.nodeType === Node.ELEMENT_NODE && MATCHES.call(node, IMPORT_SELECTOR);
   }
 
   /********************* vulcanize style inline processing  *********************/
@@ -496,6 +499,7 @@
         resolve(element);
       } else {
         //TODO(valdrin) should it update currentScript if it is a <script> ?
+        //TODO(valdrin) should check if isIE and it is a loaded style.
         element.addEventListener('load', () => {
           element.__loaded = true;
           element.__errored = false;
@@ -606,7 +610,7 @@
     let imports = doc.querySelectorAll(IMPORT_SELECTOR);
     // only non-nested imports
     imports = Array.prototype.slice.call(imports).filter(function(n) {
-      return !matches.call(n, 'import-content ' + IMPORT_SELECTOR);
+      return !MATCHES.call(n, 'import-content ' + IMPORT_SELECTOR);
     });
     Promise.all(imports.map(whenElementLoaded)).then(() => {
       const newImports = [];
@@ -632,7 +636,7 @@
         if (m.addedNodes) {
           for (let i = 0, l = m.addedNodes.length; i < l; i++) {
             if (isImportLink(m.addedNodes[i])) {
-              whenElementLoaded(/** @type {!Element} */ (m.addedNodes[i]));
+              whenElementLoaded( /** @type {!Element} */ (m.addedNodes[i]));
             }
           }
         }
