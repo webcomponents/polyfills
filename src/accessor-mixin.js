@@ -10,6 +10,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 'use strict';
 
+import * as utils from './utils'
 import * as mutation from './shady-mutation'
 import {getInnerHTML} from './innerHTML'
 import * as logicalTree from './logical-tree'
@@ -34,8 +35,7 @@ let insertDOMFrom = function(target, from) {
   }
 }
 
-export let AccessorDescriptors = {
-
+export let OutsideAccessors = {
   // node...
   parentElement: generateSimpleDescriptor('parentElement'),
 
@@ -45,6 +45,18 @@ export let AccessorDescriptors = {
 
   previousSibling: generateSimpleDescriptor('previousSibling'),
 
+  className: {
+    get() {
+      return this.getAttribute('class');
+    },
+    set(value) {
+      this.setAttribute('class', value);
+    },
+    configurable: true
+  }
+};
+
+export let InsideAccessors = {
   childNodes: {
     get() {
       if (logicalTree.hasProperty(this, 'firstChild')) {
@@ -188,17 +200,10 @@ export let AccessorDescriptors = {
       }
     },
     configurable: true
-  },
+  }
+};
 
-  className: {
-    get() {
-      return this.getAttribute('class');
-    },
-    set(value) {
-      this.setAttribute('class', value);
-    },
-    configurable: true
-  },
+export let OtherAccessors = {
 
   activeElement: mutation.activeElementDescriptor
 
@@ -212,12 +217,38 @@ export let getComposedChildNodes = function(node) {
   return nativeTree.childNodes(node);
 }
 
-export function tryExtendAccessors(proto, accessors) {
-  accessors = accessors || AccessorDescriptors;
+export function tryExtend(obj, accessors, force) {
   for (let p in accessors) {
-    let protoDesc = Object.getOwnPropertyDescriptor(proto, p);
-    if ((protoDesc && protoDesc.configurable)) {
-      Object.defineProperty(proto, p, accessors[p]);
+    let objDesc = Object.getOwnPropertyDescriptor(obj, p);
+    if ((objDesc && objDesc.configurable) ||
+      (!objDesc && force)) {
+      Object.defineProperty(obj, p, accessors[p]);
+    } else if (force) {
+      console.warn('Could not define', p, 'on', obj);
     }
   }
 }
+
+export function tryExtendAccessors(proto) {
+  tryExtend(proto, OutsideAccessors);
+  tryExtend(proto, InsideAccessors);
+  tryExtend(proto, OtherAccessors);
+}
+
+export let ensureOutsideAccessors = utils.settings.hasDescriptors ?
+  function() {} : function(element) {
+    if (!element.__shady && !element.__shady.__outsideAccessors) {
+      element.__shady = element.__shady || {};
+      element.__shady.__outsideAccessors = true;
+      tryExtend(element, OutsideAccessors, true);
+    }
+  }
+
+export let ensureInsideAccessors = utils.settings.hasDescriptors ?
+  function() {} : function(element) {
+    if (!element.__shady && !element.__shady.__insideAccessors) {
+      element.__shady = element.__shady || {};
+      element.__shady.__insideAccessors = true;
+      tryExtend(element, InsideAccessors, true);
+    }
+  }
