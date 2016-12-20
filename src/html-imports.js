@@ -299,9 +299,9 @@
   class Importer {
     constructor() {
       this.documents = {};
-      this._loaded = this._loaded.bind(this);
-      this._loadedAll = this._loadedAll.bind(this);
-      this._loader = new Loader(this._loaded, this._loadedAll);
+      this._onLoaded = this._onLoaded.bind(this);
+      this._onLoadedAll = this._onLoadedAll.bind(this);
+      this._loader = new Loader(this._onLoaded, this._onLoadedAll);
     }
 
     bootDocument(doc) {
@@ -310,7 +310,7 @@
       this._loader.addNodes(nodes);
     }
 
-    _loaded(url, elt, resource, err, redirectedUrl) {
+    _onLoaded(url, elt, resource, err, redirectedUrl) {
       flags.log && console.log('loaded', url, elt);
       if (isImportLink(elt)) {
         let doc = this.documents[url];
@@ -319,7 +319,6 @@
           // generate an HTMLDocument from data
           doc = err ? null : makeDocument(resource, redirectedUrl || url);
           if (doc) {
-            doc.__importLink = elt;
             // note, we cannot use MO to detect parsed nodes because
             // SD polyfill does not report these as mutations.
             this.bootDocument(doc);
@@ -327,13 +326,10 @@
           // cache document
           this.documents[url] = doc;
         }
-        // don't store import record until we're actually loaded
-        // store document resource
-        elt.__doc = doc;
       }
     }
 
-    _loadedAll() {
+    _onLoadedAll() {
       this._flatten(document);
       //TODO bring it into this class?
       runScripts();
@@ -625,9 +621,7 @@
   function whenReady(callback, doc) {
     doc = doc || document;
     // if document is loading, wait and try again
-    whenDocumentReady(function() {
-      watchImportsLoad(callback, doc);
-    }, doc);
+    whenDocumentReady(doc).then(watchImportsLoad).then(callback);
   }
 
   function isDocumentReady(doc) {
@@ -636,43 +630,39 @@
   }
 
   // call <callback> when we ensure the document is in a ready state
-  function whenDocumentReady(callback, doc) {
-    if (!isDocumentReady(doc)) {
-      const checkReady = function() {
-        if (doc.readyState === 'complete' ||
-          doc.readyState === requiredReadyState) {
-          doc.removeEventListener(READY_EVENT, checkReady);
-          whenDocumentReady(callback, doc);
-        }
-      };
-      doc.addEventListener(READY_EVENT, checkReady);
-    } else if (callback) {
-      callback();
-    }
-  }
-
-  function markTargetLoaded(event) {
-    event.target.__loaded = true;
+  function whenDocumentReady(doc) {
+    return new Promise((resolve) => {
+      if (isDocumentReady(doc)) {
+        resolve(doc);
+      } else {
+        doc.addEventListener(READY_EVENT, function checkReady() {
+          if (isDocumentReady(doc)) {
+            doc.removeEventListener(READY_EVENT, checkReady);
+            resolve(doc);
+          }
+        });
+      }
+    });
   }
 
   // call <callback> when we ensure all imports have loaded
-  function watchImportsLoad(callback, doc) {
+  function watchImportsLoad(doc) {
     let imports = doc.querySelectorAll(IMPORT_SELECTOR);
     // only non-nested imports
     imports = Array.prototype.slice.call(imports).filter(function(n) {
       return !MATCHES.call(n, 'import-content ' + IMPORT_SELECTOR);
     });
-    Promise.all(imports.map(whenElementLoaded)).then(() => {
+    return Promise.all(imports.map(whenElementLoaded)).then(() => {
       const newImports = [];
       const errorImports = [];
       imports.forEach((imp) => {
         (imp.__errored ? errorImports : newImports).push(imp);
       });
-      callback( /** @type {!HTMLImportInfo} */ ({
+      return /** @type {!HTMLImportInfo} */ ({
         allImports: imports,
         loadedImports: newImports,
         errorImports: errorImports
-      }));
+      });
     });
   }
 
