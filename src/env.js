@@ -48,9 +48,9 @@ if (utils.settings.inUse) {
     nativeMethods: nativeMethods
   };
 
-  Event = events.PatchedEvent;
-  CustomEvent = events.PatchedCustomEvent;
-  MouseEvent = events.PatchedMouseEvent;
+  window.Event = events.PatchedEvent;
+  window.CustomEvent = events.PatchedCustomEvent;
+  window.MouseEvent = events.PatchedMouseEvent;
   events.activateFocusEventOverrides();
 
   mixins.extendGlobal(Node.prototype, mixins.Node);
@@ -59,7 +59,7 @@ if (utils.settings.inUse) {
   mixins.extendGlobal(Element.prototype, mixins.Element);
   mixins.extendGlobal(Document.prototype, mixins.Document);
   if (window.HTMLSlotElement) {
-    mixins.extendGlobal(HTMLSlotElement.prototype, mixins.Slot);
+    mixins.extendGlobal(window.HTMLSlotElement.prototype, mixins.Slot);
   }
 
   tryExtendAccessors(Node.prototype);
@@ -72,7 +72,7 @@ if (utils.settings.inUse) {
   tryExtendAccessors(nativeHTMLElement.prototype);
   tryExtendAccessors(Document.prototype);
   if (window.HTMLSlotElement) {
-    tryExtendAccessors(HTMLSlotElement.prototype);
+    tryExtendAccessors(window.HTMLSlotElement.prototype);
   }
 
   if (!utils.settings.hasDescriptors) {

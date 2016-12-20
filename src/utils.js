@@ -18,8 +18,6 @@ let desc = Object.getOwnPropertyDescriptor(Node.prototype, 'firstChild');
 
 settings.hasDescriptors = Boolean(desc && desc.configurable && desc.get);
 settings.hasNerfedDescriptors = Boolean(desc && !settings.hasDescriptors);
-
-
 settings.inUse = settings.force || !settings.hasNativeShadowDOM;
 
 export function isShadyRoot(obj) {
