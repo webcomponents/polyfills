@@ -22,17 +22,15 @@ settings.hasNerfedDescriptors = Boolean(desc && !settings.hasDescriptors);
 
 settings.inUse = settings.force || !settings.hasNativeShadowDOM;
 
-export function arrayCopy(a$) {
-  let l = a$.length;
-  let copy = new Array(l);
-  for (let i=0; i < l; i++) {
-    copy[i] = a$[i];
-  }
-  return copy;
-}
-
 export function isShadyRoot(obj) {
   return Boolean(obj.__localName === 'ShadyRoot');
+}
+
+export function ownerShadyRootForNode(node) {
+  let root = node.getRootNode();
+  if (isShadyRoot(root)) {
+    return root;
+  }
 }
 
 let p = Element.prototype;
@@ -75,11 +73,6 @@ export function mixin(target, source) {
   return target;
 }
 
-let setPrototypeOf = Object.setPrototypeOf || function(obj, proto) {
-  obj.__proto__ = proto;
-  return obj;
-}
-
 export function patchPrototype(obj, mixin) {
   let proto = Object.getPrototypeOf(obj);
   if (!proto.hasOwnProperty('__patchProto')) {
@@ -88,16 +81,9 @@ export function patchPrototype(obj, mixin) {
     extend(patchProto, mixin);
     proto.__patchProto = patchProto;
   }
-  setPrototypeOf(obj, proto.__patchProto);
+  // old browsers don't have setPrototypeOf
+  obj.__proto__ = proto.__patchProto;
 }
-
-export function unpatchPrototype(obj) {
-  if (obj.__sourceProto) {
-    setPrototypeOf(obj, obj.__sourceProto);
-  }
-}
-
-export let common = {};
 
 // TODO(sorvell): actually rely on a real Promise polyfill...
 export let promish;

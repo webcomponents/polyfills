@@ -11,6 +11,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 'use strict';
 
 import * as utils from './utils'
+import {getProperty, hasProperty} from './logical-properties'
 import * as logicalTree from './logical-tree'
 import * as nativeMethods from './native-methods'
 import {parentNode} from './native-tree'
@@ -18,7 +19,7 @@ import {parentNode} from './native-tree'
 // Try to add node. Record logical info, track insertion points, perform
 // distribution iff needed. Return true if the add is handled.
 function addNode(container, node, ref_node) {
-  let ownerRoot = ownerShadyRootForNode(container);
+  let ownerRoot = utils.ownerShadyRootForNode(container);
   let ipAdded;
   if (ownerRoot) {
     // optimization: special insertion point tracking
@@ -36,7 +37,7 @@ function addNode(container, node, ref_node) {
       ownerRoot._skipUpdateInsertionPoints = false;
     }
   }
-  if (logicalTree.hasProperty(container, 'firstChild')) {
+  if (hasProperty(container, 'firstChild')) {
     logicalTree.recordInsertBefore(node, container, ref_node);
   }
   // if not distributing and not adding to host, do a fast path addition
@@ -53,10 +54,10 @@ function addNode(container, node, ref_node) {
 // to require distribution... both cases are handled here.
 function removeNode(node) {
   // important that we want to do this only if the node has a logical parent
-  let logicalParent = logicalTree.hasProperty(node, 'parentNode') &&
-    logicalTree.getProperty(node, 'parentNode');
+  let logicalParent = hasProperty(node, 'parentNode') &&
+    getProperty(node, 'parentNode');
   let distributed;
-  let ownerRoot = ownerShadyRootForNode(node);
+  let ownerRoot = utils.ownerShadyRootForNode(node);
   if (logicalParent || ownerRoot) {
     // distribute node's parent iff needed
     distributed = maybeDistributeParent(node);
@@ -126,13 +127,6 @@ export function getRootNode(node) {
     }
   }
   return root;
-}
-
-function ownerShadyRootForNode(node) {
-  let root = getRootNode(node);
-  if (utils.isShadyRoot(root)) {
-    return root;
-  }
 }
 
 function _maybeDistribute(node, container, ownerRoot, ipAdded) {
@@ -259,12 +253,6 @@ function firstComposedNode(insertionPoint) {
   }
 }
 
-export function clearNode(node) {
-  while (node.firstChild) {
-    node.removeChild(node.firstChild);
-  }
-}
-
 function maybeDistributeParent(node) {
   let parent = node.parentNode;
   if (_nodeNeedsDistribution(parent)) {
@@ -277,7 +265,7 @@ function distributeAttributeChange(node, name) {
   if (name === 'slot') {
     maybeDistributeParent(node);
   } else if (node.localName === 'slot' && name === 'name') {
-    let root = ownerShadyRootForNode(node);
+    let root = utils.ownerShadyRootForNode(node);
     if (root) {
       root.update();
     }
@@ -315,59 +303,6 @@ function _queryElement(node, matcher, halter, list) {
     halter, list);
 }
 
-let nativeActiveElementDescriptor = Object.getOwnPropertyDescriptor(
-  Document.prototype, 'activeElement');
-function getDocumentActiveElement() {
-  if (nativeActiveElementDescriptor && nativeActiveElementDescriptor.get) {
-    return nativeActiveElementDescriptor.get.call(document);
-  }
-}
-
-function activeElementForNode(node) {
-  let active = getDocumentActiveElement();
-  if (!active) {
-    return null;
-  }
-  let isShadyRoot = !!(utils.isShadyRoot(node));
-  if (node !== document) {
-    // If this node isn't a document or shady root, then it doesn't have
-    // an active element.
-    if (!isShadyRoot) {
-      return null;
-    }
-    // If this shady root's host is the active element or the active
-    // element is not a descendant of the host (in the composed tree),
-    // then it doesn't have an active element.
-    if (node.host === active ||
-        !node.host.contains(active)) {
-      return null;
-    }
-  }
-  // This node is either the document or a shady root of which the active
-  // element is a (composed) descendant of its host; iterate upwards to
-  // find the active element's most shallow host within it.
-  let activeRoot = ownerShadyRootForNode(active);
-  while (activeRoot && activeRoot !== node) {
-    active = activeRoot.host;
-    activeRoot = ownerShadyRootForNode(active);
-  }
-  if (node === document) {
-    // This node is the document, so activeRoot should be null.
-    return activeRoot ? null : active;
-  } else {
-    // This node is a non-document shady root, and it should be
-    // activeRoot.
-    return activeRoot === node ? active : null;
-  }
-}
-
-export let activeElementDescriptor = {
-  get() {
-    return activeElementForNode(this);
-  },
-  configurable: true
-}
-
 export function renderRootNode(element) {
   var root = element.getRootNode();
   if (utils.isShadyRoot(root)) {
@@ -398,7 +333,7 @@ export function removeAttribute(node, attr) {
 // 3. node is <content> (host of container needs distribution)
 export function insertBefore(parent, node, ref_node) {
   if (ref_node) {
-    let p = logicalTree.getProperty(ref_node, 'parentNode');
+    let p = getProperty(ref_node, 'parentNode');
     if (p !== undefined && p !== parent) {
       throw Error('The ref_node to be inserted before is not a child ' +
         'of this node');
@@ -406,13 +341,13 @@ export function insertBefore(parent, node, ref_node) {
   }
   // remove node from its current position iff it's in a tree.
   if (node.nodeType !== Node.DOCUMENT_FRAGMENT_NODE) {
-    let parent = logicalTree.getProperty(node, 'parentNode');
+    let parent = getProperty(node, 'parentNode');
     removeNodeFromParent(node, parent);
   }
   if (!addNode(parent, node, ref_node)) {
     if (ref_node) {
       // if ref_node is an insertion point replace with first distributed node
-      let root = ownerShadyRootForNode(ref_node);
+      let root = utils.ownerShadyRootForNode(ref_node);
       if (root) {
         ref_node = ref_node.localName === root.getInsertionPointTag() ?
           firstComposedNode(ref_node) : ref_node;

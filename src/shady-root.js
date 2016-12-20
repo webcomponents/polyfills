@@ -46,12 +46,12 @@ let ShadyMixin = {
     // distinguished from a DocumentFragment when patching.
     // FF doesn't allow this to be `localName`
     this.__localName = 'ShadyRoot';
-    // root <=> host
-    host.shadowRoot = this;
-    this.host = host;
     // logical dom setup
     recordChildNodes(host);
     recordChildNodes(this);
+    // root <=> host
+    host.shadowRoot = this;
+    this.host = host;
     // state flags
     this._renderPending = false;
     this._hasRendered = false;

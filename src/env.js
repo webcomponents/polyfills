@@ -23,7 +23,7 @@ import * as utils from './utils'
 import {flush, enqueue} from './flush'
 import {observeChildren, unobserveChildren, filterMutations} from './observe-changes'
 import * as nativeMethods from './native-methods'
-import * as Mixins from './global-mixin'
+import * as mixins from './global-mixin'
 import { tryExtendAccessors,
   getComposedInnerHTML, getComposedChildNodes} from './accessor-mixin'
 import * as events from './event-mixin'
@@ -53,13 +53,13 @@ if (utils.settings.inUse) {
   MouseEvent = events.PatchedMouseEvent;
   events.activateFocusEventOverrides();
 
-  utils.extend(Node.prototype, Mixins.Node);
-  utils.extend(Text.prototype, Mixins.Text);
-  utils.extend(DocumentFragment.prototype, Mixins.Fragment);
-  utils.extend(Element.prototype, Mixins.Element);
-  utils.extend(Document.prototype, Mixins.Document);
+  mixins.extendGlobal(Node.prototype, mixins.Node);
+  mixins.extendGlobal(Text.prototype, mixins.Text);
+  mixins.extendGlobal(DocumentFragment.prototype, mixins.Fragment);
+  mixins.extendGlobal(Element.prototype, mixins.Element);
+  mixins.extendGlobal(Document.prototype, mixins.Document);
   if (window.HTMLSlotElement) {
-    utils.extend(HTMLSlotElement.prototype, Mixins.Slot);
+    mixins.extendGlobal(HTMLSlotElement.prototype, mixins.Slot);
   }
 
   tryExtendAccessors(Node.prototype);

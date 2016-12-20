@@ -63,7 +63,6 @@ class AsyncObserver {
 // removed nodes in the wrong scope and seeing non-distributing
 // subtree child mutations.
 export let observeChildren = function(node, callback) {
-  //utils.common.patchNode(node);
   if (!node.__shady.observer) {
     node.__shady.observer = new AsyncObserver();
   }

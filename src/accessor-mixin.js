@@ -11,15 +11,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 'use strict';
 
 import * as utils from './utils'
-import * as mutation from './shady-mutation'
 import {getInnerHTML} from './innerHTML'
-import * as logicalTree from './logical-tree'
+import {getProperty, hasProperty} from './logical-properties'
 import * as nativeTree from './native-tree'
 
 function generateSimpleDescriptor(prop) {
   return {
     get() {
-      let l = logicalTree.getProperty(this, prop);
+      let l = getProperty(this, prop);
       return l !== undefined ? l : nativeTree[prop](this);
     },
     configurable: true
@@ -28,10 +27,62 @@ function generateSimpleDescriptor(prop) {
 
 let domParser = new DOMParser();
 
-let insertDOMFrom = function(target, from) {
+function insertDOMFrom(target, from) {
   let c$ = Array.from(from.childNodes);
   for (let i=0; i < c$.length; i++) {
     target.appendChild(c$[i]);
+  }
+}
+
+function clearNode(node) {
+  while (node.firstChild) {
+    node.removeChild(node.firstChild);
+  }
+}
+
+let nativeActiveElementDescriptor = Object.getOwnPropertyDescriptor(
+  Document.prototype, 'activeElement');
+function getDocumentActiveElement() {
+  if (nativeActiveElementDescriptor && nativeActiveElementDescriptor.get) {
+    return nativeActiveElementDescriptor.get.call(document);
+  }
+}
+
+function activeElementForNode(node) {
+  let active = getDocumentActiveElement();
+  if (!active) {
+    return null;
+  }
+  let isShadyRoot = !!(utils.isShadyRoot(node));
+  if (node !== document) {
+    // If this node isn't a document or shady root, then it doesn't have
+    // an active element.
+    if (!isShadyRoot) {
+      return null;
+    }
+    // If this shady root's host is the active element or the active
+    // element is not a descendant of the host (in the composed tree),
+    // then it doesn't have an active element.
+    if (node.host === active ||
+        !node.host.contains(active)) {
+      return null;
+    }
+  }
+  // This node is either the document or a shady root of which the active
+  // element is a (composed) descendant of its host; iterate upwards to
+  // find the active element's most shallow host within it.
+  let activeRoot = utils.ownerShadyRootForNode(active);
+  while (activeRoot && activeRoot !== node) {
+    active = activeRoot.host;
+    activeRoot = utils.ownerShadyRootForNode(active);
+  }
+  if (node === document) {
+    // This node is the document, so activeRoot should be null.
+    return activeRoot ? null : active;
+  } else {
+    // This node is a non-document shady root, and it should be
+    // activeRoot.
+    return activeRoot === node ? active : null;
   }
 }
 
@@ -59,7 +110,7 @@ export let OutsideAccessors = {
 export let InsideAccessors = {
   childNodes: {
     get() {
-      if (logicalTree.hasProperty(this, 'firstChild')) {
+      if (hasProperty(this, 'firstChild')) {
         if (!this.__shady.childNodes) {
           this.__shady.childNodes = [];
           for (let n=this.firstChild; n; n=n.nextSibling) {
@@ -80,7 +131,7 @@ export let InsideAccessors = {
 
   textContent: {
     get() {
-      if (logicalTree.hasProperty(this, 'firstChild')) {
+      if (hasProperty(this, 'firstChild')) {
         let tc = [];
         for (let i = 0, cn = this.childNodes, c; (c = cn[i]); i++) {
           if (c.nodeType !== Node.COMMENT_NODE) {
@@ -97,7 +148,7 @@ export let InsideAccessors = {
         // TODO(sorvell): can't do this if patch nodeValue.
         this.nodeValue = text;
       } else {
-        mutation.clearNode(this);
+        clearNode(this);
         if (text) {
           this.appendChild(document.createTextNode(text));
         }
@@ -109,7 +160,7 @@ export let InsideAccessors = {
   // fragment, element, document
   firstElementChild: {
     get() {
-      if (logicalTree.hasProperty(this, 'firstChild')) {
+      if (hasProperty(this, 'firstChild')) {
         let n = this.firstChild;
         while (n && n.nodeType !== Node.ELEMENT_NODE) {
           n = n.nextSibling;
@@ -124,7 +175,7 @@ export let InsideAccessors = {
 
   lastElementChild: {
     get() {
-      if (logicalTree.hasProperty(this, 'lastChild')) {
+      if (hasProperty(this, 'lastChild')) {
         let n = this.lastChild;
         while (n && n.nodeType !== Node.ELEMENT_NODE) {
           n = n.previousSibling;
@@ -139,7 +190,7 @@ export let InsideAccessors = {
 
   nextElementSibling: {
     get() {
-      if (logicalTree.hasProperty(this, 'nextSibling')) {
+      if (hasProperty(this, 'nextSibling')) {
         let n = this.nextSibling;
         while (n && n.nodeType !== Node.ELEMENT_NODE) {
           n = n.nextSibling;
@@ -154,7 +205,7 @@ export let InsideAccessors = {
 
   previousElementSibling: {
     get() {
-      if (logicalTree.hasProperty(this, 'previousSibling')) {
+      if (hasProperty(this, 'previousSibling')) {
         let n = this.previousSibling;
         while (n && n.nodeType !== Node.ELEMENT_NODE) {
           n = n.previousSibling;
@@ -169,7 +220,7 @@ export let InsideAccessors = {
 
   children: {
     get() {
-      if (logicalTree.hasProperty(this, 'firstChild')) {
+      if (hasProperty(this, 'firstChild')) {
         return Array.prototype.filter.call(this.childNodes, function(n) {
           return (n.nodeType === Node.ELEMENT_NODE);
         });
@@ -183,14 +234,14 @@ export let InsideAccessors = {
   // element (HTMLElement on IE11)
   innerHTML: {
     get() {
-      if (logicalTree.hasProperty(this, 'firstChild')) {
+      if (hasProperty(this, 'firstChild')) {
         return getInnerHTML(this);
       } else {
         return nativeTree.innerHTML(this);
       }
     },
     set(text) {
-      mutation.clearNode(this);
+      clearNode(this);
       let doc = domParser.parseFromString(text, 'text/html');
       if (doc.head) {
         insertDOMFrom(this, doc.head);
@@ -203,9 +254,26 @@ export let InsideAccessors = {
   }
 };
 
+export let ExtraInsideAccessors = {
+  shadowRoot: {
+    get() {
+      return this.shadyRoot;
+    },
+    set(value) {
+      this.shadyRoot = value;
+    },
+    configurable: true
+  }
+};
+
 export let OtherAccessors = {
 
-  activeElement: mutation.activeElementDescriptor
+  activeElement: {
+    get() {
+      return activeElementForNode(this);
+    },
+    configurable: true
+  }
 
 };
 
@@ -237,7 +305,7 @@ export function tryExtendAccessors(proto) {
 
 export let ensureOutsideAccessors = utils.settings.hasDescriptors ?
   function() {} : function(element) {
-    if (!element.__shady && !element.__shady.__outsideAccessors) {
+    if (!(element.__shady && element.__shady.__outsideAccessors)) {
       element.__shady = element.__shady || {};
       element.__shady.__outsideAccessors = true;
       tryExtend(element, OutsideAccessors, true);
@@ -246,9 +314,10 @@ export let ensureOutsideAccessors = utils.settings.hasDescriptors ?
 
 export let ensureInsideAccessors = utils.settings.hasDescriptors ?
   function() {} : function(element) {
-    if (!element.__shady && !element.__shady.__insideAccessors) {
+    if (!(element.__shady && element.__shady.__insideAccessors)) {
       element.__shady = element.__shady || {};
       element.__shady.__insideAccessors = true;
       tryExtend(element, InsideAccessors, true);
+      tryExtend(element, ExtraInsideAccessors, true);
     }
   }

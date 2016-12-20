@@ -12,13 +12,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 import * as utils from './utils'
 import * as mutation from './shady-mutation'
-import * as logicalTree from './logical-tree'
+import {OtherAccessors, ExtraInsideAccessors} from './accessor-mixin'
+import {getProperty} from './logical-properties'
 import * as events from './event-mixin'
 import {ShadyRoot} from './shady-root'
 
 let assignedSlotDesc = {
   get() {
-    return logicalTree.getProperty(this, 'assignedSlot') || null;
+    return getProperty(this, 'assignedSlot') || null;
   },
   configurable: true
 };
@@ -128,15 +129,7 @@ Object.defineProperties(Element, {
 
   assignedSlot: assignedSlotDesc,
 
-  shadowRoot: {
-    get() {
-      return this.shadyRoot;
-    },
-    set(value) {
-      this.shadyRoot = value;
-    },
-    configurable: true
-  },
+  shadowRoot: ExtraInsideAccessors.shadowRoot,
 
   slot: {
     get() {
@@ -152,6 +145,19 @@ Object.defineProperties(Element, {
 // TODO(sorvell): importNode
 export let Document = utils.extendAll({}, Fragment);
 
+export function extendGlobal(proto, obj) {
+  let n$ = Object.getOwnPropertyNames(obj);
+  for (let i=0; i < n$.length; i++) {
+    let n = n$[i];
+    let d = Object.getOwnPropertyDescriptor(obj, n);
+    if (d.value) {
+      proto[n] = d.value;
+    } else {
+      Object.defineProperty(proto, n, d);
+    }
+  }
+}
+
 Object.defineProperties(Document, {
-  _activeElement: mutation.activeElementDescriptor
+  _activeElement: OtherAccessors.activeElement
 });
