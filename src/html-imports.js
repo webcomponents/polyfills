@@ -301,31 +301,17 @@
       this.documents = {};
       this._loaded = this._loaded.bind(this);
       this._loadedAll = this._loadedAll.bind(this);
-      this._importLoader = new Loader(this._loaded, this._loadedAll);
+      this._loader = new Loader(this._loaded, this._loadedAll);
     }
 
     bootDocument(doc) {
-      this._loadSubtree(doc);
-    }
-
-    loadNode(node) {
-      this._importLoader.addNode(node);
-    }
-
-    // load all loadable elements within the parent element
-    _loadSubtree(parent) {
-      const nodes = parent.querySelectorAll(IMPORT_SELECTOR);
+      const nodes = doc.querySelectorAll(IMPORT_SELECTOR);
       // add these nodes to loader's queue
-      this._importLoader.addNodes(nodes);
+      this._loader.addNodes(nodes);
     }
 
     _loaded(url, elt, resource, err, redirectedUrl) {
       flags.log && console.log('loaded', url, elt);
-      // store generic resource
-      // TODO(sorvell): fails for nodes inside <template>.content
-      // see https://code.google.com/p/chromium/issues/detail?id=249381.
-      elt.__resource = resource;
-      elt.__error = err;
       if (isImportLink(elt)) {
         let doc = this.documents[url];
         // if we've never seen a document at this url
@@ -336,7 +322,7 @@
             doc.__importLink = elt;
             // note, we cannot use MO to detect parsed nodes because
             // SD polyfill does not report these as mutations.
-            this._loadSubtree(doc);
+            this.bootDocument(doc);
           }
           // cache document
           this.documents[url] = doc;
@@ -409,7 +395,7 @@
         if (m.addedNodes) {
           for (let i = 0, l = m.addedNodes.length; i < l; i++) {
             if (m.addedNodes[i] && isImportLink(m.addedNodes[i])) {
-              this.loadNode(m.addedNodes[i]);
+              this._loader.addNode(m.addedNodes[i]);
             }
           }
         }
@@ -538,8 +524,6 @@
       if (isElementLoaded(element)) {
         resolve(element);
       } else {
-        //TODO(valdrin) should it update currentScript if it is a <script> ?
-        //TODO(valdrin) should check if isIE and it is a loaded style.
         element.addEventListener('load', () => {
           element.__loaded = true;
           element.__errored = false;
