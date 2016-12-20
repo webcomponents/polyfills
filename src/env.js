@@ -23,9 +23,9 @@ import * as utils from './utils'
 import {flush, enqueue} from './flush'
 import {observeChildren, unobserveChildren, filterMutations} from './observe-changes'
 import * as nativeMethods from './native-methods'
-import {ShadyRoot} from './shady-root'
-import { Mixins, patchProto,
-  getComposedInnerHTML, getComposedChildNodes} from './dom-mixin'
+import * as Mixins from './global-mixin'
+import { tryExtendAccessors,
+  getComposedInnerHTML, getComposedChildNodes} from './accessor-mixin'
 import * as events from './event-mixin'
 
 if (utils.settings.inUse) {
@@ -53,21 +53,26 @@ if (utils.settings.inUse) {
   MouseEvent = events.PatchedMouseEvent;
   events.activateFocusEventOverrides();
 
-  // yay, add shadowRoot support!
-  Element.prototype.attachShadow = function() {
-    return new ShadyRoot(this);
-  };
-
-  patchProto(Node.prototype, Mixins.Node);
-  patchProto(Text.prototype, Mixins.Text);
-  patchProto(DocumentFragment.prototype, Mixins.Fragment);
-  patchProto(Element.prototype, Mixins.Element);
-  let he = (window.customElements && customElements.nativeHTMLElement) ||
-    HTMLElement;
-  patchProto(he.prototype, Mixins.HTMLElement, true);
-  patchProto(Document.prototype, Mixins.Document);
+  utils.extend(Node.prototype, Mixins.Node);
+  utils.extend(Text.prototype, Mixins.Text);
+  utils.extend(DocumentFragment.prototype, Mixins.Fragment);
+  utils.extend(Element.prototype, Mixins.Element);
+  utils.extend(Document.prototype, Mixins.Document);
   if (window.HTMLSlotElement) {
-    patchProto(HTMLSlotElement.prototype, Mixins.Slot);
+    utils.extend(HTMLSlotElement.prototype, Mixins.Slot);
+  }
+
+  tryExtendAccessors(Node.prototype);
+  tryExtendAccessors(Text.prototype);
+  tryExtendAccessors(DocumentFragment.prototype);
+  tryExtendAccessors(Element.prototype);
+  let nativeHTMLElement =
+    (window.customElements && customElements.nativeHTMLElement) ||
+    HTMLElement;
+  tryExtendAccessors(nativeHTMLElement.prototype);
+  tryExtendAccessors(Document.prototype);
+  if (window.HTMLSlotElement) {
+    tryExtendAccessors(HTMLSlotElement.prototype);
   }
 
 }

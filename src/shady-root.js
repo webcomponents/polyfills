@@ -17,7 +17,7 @@ import {recordChildNodes} from './logical-tree'
 import {removeChild, insertBefore} from './native-methods'
 import {parentNode, childNodes} from './native-tree'
 import {activeElementDescriptor} from './shady-mutation'
-import {Mixins} from './dom-mixin'
+import {AccessorDescriptors} from './accessor-mixin'
 import Distributor from './distributor'
 
 /**
@@ -257,5 +257,12 @@ let ShadyMixin = {
 }
 
 let ShadyFragmentMixin = Object.create(DocumentFragment.prototype);
-utils.extendAll(ShadyFragmentMixin, ShadyMixin, Mixins.Fragment);
-Object.defineProperty(ShadyFragmentMixin, 'activeElement', activeElementDescriptor);
+utils.extendAll(ShadyFragmentMixin, ShadyMixin);
+// ensure element descriptors (IE/Edge don't have em)
+Object.defineProperties(ShadyFragmentMixin, {
+  activeElement: AccessorDescriptors.activeElement,
+  innerHTML: AccessorDescriptors.innerHTML,
+  firstElementChild: AccessorDescriptors.firstElementChild,
+  lastElementChild: AccessorDescriptors.lastElementChild,
+  children: AccessorDescriptors.children
+});

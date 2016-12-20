@@ -364,7 +364,8 @@ function activeElementForNode(node) {
 export let activeElementDescriptor = {
   get() {
     return activeElementForNode(this);
-  }
+  },
+  configurable: true
 }
 
 export function renderRootNode(element) {
