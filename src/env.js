@@ -24,7 +24,7 @@ import {flush, enqueue} from './flush'
 import {observeChildren, unobserveChildren, filterMutations} from './observe-changes'
 import * as nativeMethods from './native-methods'
 import * as mixins from './global-mixin'
-import { tryExtendAccessors,
+import { tryExtendAccessors, tryExtend, OtherAccessors,
   getComposedInnerHTML, getComposedChildNodes} from './accessor-mixin'
 import * as events from './event-mixin'
 
@@ -73,6 +73,10 @@ if (utils.settings.inUse) {
   tryExtendAccessors(Document.prototype);
   if (window.HTMLSlotElement) {
     tryExtendAccessors(HTMLSlotElement.prototype);
+  }
+
+  if (!utils.settings.hasDescriptors) {
+    Object.defineProperty(document, '_activeElement', OtherAccessors.activeElement);
   }
 
 }

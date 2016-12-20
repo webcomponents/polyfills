@@ -472,10 +472,9 @@ suite('activeElement', function() {
 
   test('setting activeElement on document has no effect', function() {
     r_1_1.focus();
-
-    assert.throws(function() {
+    try {
       document.activeElement = "abc";
-    });
+    } catch(e) {}
     assert.equal(document._activeElement, r, 'document.activeElement === r');
     assert.equal(r.shadowRoot.activeElement, r_1, 'r.shadowRoot.activeElement === r_1');
     assert.equal(r_0.shadowRoot.activeElement, null, 'r_0.shadowRoot.activeElement === null');
@@ -488,10 +487,9 @@ suite('activeElement', function() {
 
   test('setting activeElement on a shadow root has no effect', function() {
     r_1_1.focus();
-
-    assert.throws(function() {
+    try {
       r_1.shadowRoot.activeElement = "abc";
-    });
+    } catch(e) {}
     assert.equal(document._activeElement, r, 'document.activeElement === r');
     assert.equal(r.shadowRoot.activeElement, r_1, 'r.shadowRoot.activeElement === r_1');
     assert.equal(r_0.shadowRoot.activeElement, null, 'r_0.shadowRoot.activeElement === null');

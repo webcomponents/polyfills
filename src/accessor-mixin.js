@@ -45,6 +45,8 @@ let nativeActiveElementDescriptor = Object.getOwnPropertyDescriptor(
 function getDocumentActiveElement() {
   if (nativeActiveElementDescriptor && nativeActiveElementDescriptor.get) {
     return nativeActiveElementDescriptor.get.call(document);
+  } else if (!utils.settings.hasDescriptors) {
+    return document.activeElement;
   }
 }
 
@@ -272,6 +274,7 @@ export let OtherAccessors = {
     get() {
       return activeElementForNode(this);
     },
+    set() {},
     configurable: true
   }
 
