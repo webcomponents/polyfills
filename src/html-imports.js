@@ -17,25 +17,16 @@
     log: false
   };
 
-  /**
-    Support `currentScript` on all browsers as `document._currentScript.`
-    NOTE: We cannot polyfill `document.currentScript` because it's not possible
-    both to override and maintain the ability to capture the native value.
-    Therefore we choose to expose `_currentScript` both when native imports
-    and the polyfill are in use.
-  */
+  // Polyfill `currentScript` for browsers without it.
   let currentScript = null;
-  Object.defineProperty(document, '_currentScript', {
-    get: function() {
-      return currentScript || document.currentScript ||
-        // NOTE: only works when called in synchronously executing code.
-        // readyState should check if `loading` but IE10 is
-        // interactive when scripts run so we cheat.
-        (document.readyState !== 'complete' ?
-          document.scripts[document.scripts.length - 1] : null);
-    },
-    configurable: true
-  });
+  if ('currentScript' in document === false) {
+    Object.defineProperty(document, 'currentScript', {
+      get: function() {
+        return currentScript;
+      },
+      configurable: true
+    });
+  }
 
   // Polyfill document.baseURI for browsers without it.
   if (!document.baseURI) {
@@ -283,12 +274,6 @@
     'script[type="text/javascript"]'
   ].join(',');
 
-  const pendingImportsSelectors = `${IMPORT_SELECTOR} style:not([type]),
-    ${IMPORT_SELECTOR} link[rel=stylesheet][href]:not([type]),
-    ${IMPORT_SELECTOR} script[src]:not([type]),
-    ${IMPORT_SELECTOR} script[src][type="application/javascript"],
-    ${IMPORT_SELECTOR} script[src][type="text/javascript"]`;
-
   // importer
   // highlander object to manage loading of imports
   // for any document, importer:
@@ -331,10 +316,13 @@
 
     _onLoadedAll() {
       this._flatten(document);
-      //TODO bring it into this class?
-      runScripts();
-      this._fireEvents();
-      this._observe(document.head);
+      Promise.all([
+        runScripts(),
+        waitForStyles()
+      ]).then(() => {
+        fireEvents();
+        this._observe(document.head);
+      });
     }
 
     _flatten(element) {
@@ -351,25 +339,6 @@
           }
         }
       }
-    }
-
-    _fireEvents() {
-      // Wait for pending resources to finish loading, then fire load/error.
-      const pending = document.querySelectorAll(pendingImportsSelectors);
-      Promise.all(Array.prototype.slice.call(pending).map(whenElementLoaded)).then(() => {
-        const n$ = /** @type {!NodeList<!HTMLLinkElement>} */
-          (document.querySelectorAll(IMPORT_SELECTOR));
-        // Inverse order to have events firing bottom-up.
-        for (let i = n$.length - 1, n; i >= 0 && (n = n$[i]); i--) {
-          // Don't fire twice same event.
-          if (!n.__loaded) {
-            const eventType = n.import ? 'load' : 'error';
-            flags.log && console.warn('fire', eventType, n.href);
-            n.__loaded = true;
-            n.dispatchEvent(new CustomEvent(eventType));
-          }
-        }
-      });
     }
 
     _observe(element) {
@@ -493,19 +462,52 @@
 
   function runScripts() {
     const s$ = document.querySelectorAll('import-content script');
+    let promise = Promise.resolve();
     for (let i = 0, l = s$.length, o; i < l && (o = s$[i]); i++) {
-      const c = document.createElement('script');
-      c.textContent = o.textContent;
-      if (o.src) {
-        c.setAttribute('src', o.getAttribute('src'));
-      }
-      o.parentNode.replaceChild(c, o);
-      currentScript = c;
-      whenElementLoaded(c).then((script) => {
-        if (script === currentScript) {
-          currentScript = null;
+      promise = promise.then(() => {
+        const c = document.createElement('script');
+        c.textContent = o.textContent;
+        if (o.src) {
+          c.setAttribute('src', o.getAttribute('src'));
         }
+        o.parentNode.replaceChild(c, o);
+        currentScript = c;
+        return whenElementLoaded(c).then((script) => {
+          if (script === currentScript) {
+            currentScript = null;
+          }
+          return script;
+        });
       });
+    }
+    return promise.then(() => {
+      return s$;
+    });
+  }
+
+  function waitForStyles() {
+    const pendingStyles = document.querySelectorAll(`
+      ${IMPORT_SELECTOR} style:not([type]),
+      ${IMPORT_SELECTOR} link[rel=stylesheet][href]:not([type])`);
+    const promises = [];
+    for (let i = 0; i < pendingStyles.length; i++) {
+      promises.push(whenElementLoaded(pendingStyles[i]));
+    }
+    return Promise.all(promises);
+  }
+
+  function fireEvents() {
+    const n$ = /** @type {!NodeList<!HTMLLinkElement>} */
+      (document.querySelectorAll(IMPORT_SELECTOR));
+    // Inverse order to have events firing bottom-up.
+    for (let i = n$.length - 1, n; i >= 0 && (n = n$[i]); i--) {
+      // Don't fire twice same event.
+      if (!n.__loaded) {
+        const eventType = n.import ? 'load' : 'error';
+        flags.log && console.warn('fire', eventType, n.href);
+        n.__loaded = true;
+        n.dispatchEvent(new CustomEvent(eventType));
+      }
     }
   }
 
@@ -516,21 +518,20 @@
    * @return {Promise}
    */
   function whenElementLoaded(element) {
+    if (isElementLoaded(element)) {
+      return Promise.resolve(element);
+    }
     return new Promise(resolve => {
-      if (isElementLoaded(element)) {
+      element.addEventListener('load', () => {
+        element.__loaded = true;
+        element.__errored = false;
         resolve(element);
-      } else {
-        element.addEventListener('load', () => {
-          element.__loaded = true;
-          element.__errored = false;
-          resolve(element);
-        });
-        element.addEventListener('error', () => {
-          element.__loaded = true;
-          element.__errored = true;
-          resolve(element);
-        });
-      }
+      });
+      element.addEventListener('error', () => {
+        element.__loaded = true;
+        element.__errored = true;
+        resolve(element);
+      });
     });
   }
 
@@ -568,6 +569,8 @@
           flags.log && console.log('delayed flagging of style w/ imports loaded', element);
           element.__loaded = true;
         }
+      } else if (element.localName === 'script' && !element.src) {
+        element.__loaded = true;
       }
     }
     return element.__loaded;

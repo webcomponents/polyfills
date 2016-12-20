@@ -22,7 +22,7 @@
   </head>
   <body>
     <script>
-      var cs = document._currentScript;
+      var cs = document.currentScript;
       test('currentScript', function(done) {
         chai.assert.equal(cs.parentNode, document.body, '_currentScript set in main document');
         HTMLImports.whenReady(function() {

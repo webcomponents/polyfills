@@ -15,6 +15,7 @@
       window.loadEvents = 0;
       (function() {
         function importLoaded(event) {
+          console.log('loaded!!', event.target);
           window.loadEvents++;
           if (event.type === 'load' && event.target.import) {
             var s = event.target.import.querySelector('script');
@@ -23,6 +24,7 @@
         }
 
         function importError(event) {
+          console.log('fail!!', event.target);
           window.loadEvents++;
         }
 
@@ -37,7 +39,11 @@
     <script>
       WCT = {
         waitFor: function(callback) {
-          HTMLImports.whenReady(callback);
+          console.log('waitinig....');
+          HTMLImports.whenReady(function(data) {
+            console.log('is ready!!!!');
+            callback(data);
+          });
         }
       };
     </script>
