@@ -1,8 +1,8 @@
 /**
  * @typedef {{
- *   allImports: !Node,
- *   loadedImports: !Array<!Node>,
- *   errorImports: !Array<!Node>
+ *   allImports: !Array<!HTMLLinkElement>,
+ *   loadedImports: !Array<!HTMLLinkElement>,
+ *   errorImports: !Array<!HTMLLinkElement>
  * }}
  */
 var HTMLImportInfo;
