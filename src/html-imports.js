@@ -634,17 +634,16 @@
 
   // call <callback> when we ensure the document is in a ready state
   function whenDocumentReady(doc) {
+    if (isDocumentReady(doc)) {
+      return Promise.resolve(doc);
+    }
     return new Promise((resolve) => {
-      if (isDocumentReady(doc)) {
-        resolve(doc);
-      } else {
-        doc.addEventListener(READY_EVENT, function checkReady() {
-          if (isDocumentReady(doc)) {
-            doc.removeEventListener(READY_EVENT, checkReady);
-            resolve(doc);
-          }
-        });
-      }
+      doc.addEventListener(READY_EVENT, function checkReady() {
+        if (isDocumentReady(doc)) {
+          doc.removeEventListener(READY_EVENT, checkReady);
+          resolve(doc);
+        }
+      });
     });
   }
 
