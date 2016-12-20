@@ -508,17 +508,23 @@
    * Replaces all the imported scripts with a clone in order to execute them.
    * Updates the `currentScript`.
    */
+
   function runScripts() {
     const s$ = document.querySelectorAll('import-content script');
     for (let i = 0, l = s$.length, o; i < l && (o = s$[i]); i++) {
-      currentScript = document.createElement('script');
-      currentScript.textContent = o.textContent;
+      const c = document.createElement('script');
+      c.textContent = o.textContent;
       if (o.src) {
-        currentScript.setAttribute('src', o.getAttribute('src'));
+        c.setAttribute('src', o.getAttribute('src'));
       }
-      o.parentNode.replaceChild(currentScript, o);
+      o.parentNode.replaceChild(c, o);
+      currentScript = c;
+      whenElementLoaded(c).then((script) => {
+        if (script === currentScript) {
+          currentScript = null;
+        }
+      });
     }
-    currentScript = null;
   }
 
   /**
