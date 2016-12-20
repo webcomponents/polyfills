@@ -18,7 +18,9 @@ const sourcemaps = require('gulp-sourcemaps');
 const babel = require('gulp-babel');
 const del = require('del');
 const rename = require('gulp-rename');
-const rollupGulp = require('gulp-rollup');
+const rollup = require('rollup-stream');
+const buffer = require('vinyl-buffer');
+const source = require('vinyl-source-stream');
 
 let hasLicense = false;
 const babiliConfig = {
@@ -33,19 +35,35 @@ const babiliConfig = {
 };
 
 gulp.task('minify', () => {
-  return gulp.src(['index.js', 'src/**/*.js'])
-  .pipe(sourcemaps.init())
-  .pipe(rollupGulp({
+  return rollup({
     entry: 'index.js',
     format: 'iife',
     moduleName: 'shadycss',
     sourceMap: true
-  }))
+  })
+  .pipe(source('index.js'))
+  .pipe(buffer())
+  .pipe(sourcemaps.init({loadMaps: true}))
   .pipe(babel(babiliConfig))
   .pipe(rename('shadycss.min.js'))
   .pipe(sourcemaps.write('.'))
   .pipe(gulp.dest('./'))
 });
+
+gulp.task('debug', () => {
+  return rollup({
+    entry: 'index.js',
+    format: 'iife',
+    moduleName: 'shadycss',
+    sourceMap: true
+  })
+  .pipe(source('index.js'))
+  .pipe(buffer())
+  .pipe(sourcemaps.init({loadMaps: true}))
+  .pipe(rename('shadycss.min.js'))
+  .pipe(sourcemaps.write('.'))
+  .pipe(gulp.dest('./'))
+})
 
 const modules = [
   'apply-shim',
@@ -64,12 +82,12 @@ const modules = [
 
 const moduleTasks = modules.map((m) => {
   gulp.task(`test-module-${m}`, () => {
-    return gulp.src(['src/**/*.js', `tests/module/${m}.js`])
-    .pipe(rollupGulp({
-      entry: `./tests/module/${m}.js`,
+    return rollup({
+      entry: `tests/module/${m}.js`,
       format: 'iife',
-      moduleName: `${m}`,
-    }))
+      moduleName: m
+    })
+    .pipe(source(`${m}.js`, 'tests/module'))
     .pipe(gulp.dest('./tests/module/generated'))
   });
   return `test-module-${m}`;

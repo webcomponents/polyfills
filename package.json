@@ -28,8 +28,10 @@
     "gulp": "^3.8.8",
     "gulp-babel": "^6.1.2",
     "gulp-rename": "^1.2.2",
-    "gulp-rollup": "^2.5.1",
-    "gulp-sourcemaps": "^1.9.1",
+    "gulp-sourcemaps": "1.9.0",
+    "rollup-stream": "^1.14.0",
+    "vinyl-buffer": "^1.0.0",
+    "vinyl-source-stream": "^1.1.0",
     "web-component-tester": "^6.0.0-prerelease.4"
   }
 }

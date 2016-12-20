@@ -15,9 +15,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <custom-style>
   <style>
   html {
-    --foo: {
-      background-color: rgb(123, 123, 123);
-    };
+    --foo: rgb(123, 123, 123);
+    --bar: {
+      border: 2px solid red;
+    }
   }
   </style>
 </custom-style>
@@ -28,8 +29,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       display: block;
       height: 100px;
       width: 100px;
-      @apply --foo;
-      @apply --late;
+      border: 4px solid blue;
+      background-color: var(--foo);
+      @apply --bar;
     }
   </style>
 </template>
@@ -38,25 +40,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <style>
   :host {
     display: block;
-    @apply --late;
+    @apply --bar;
   }
   </style>
   <x-inner></x-inner>
 </template>
 
 <x-outer id="target"></x-outer>
-
-<template id="late">
-  <custom-style>
-    <style>
-    html {
-      --late: {
-        border: 2px solid red;
-      };
-    }
-    </style>
-  </custom-style>
-</template>
 
 <script>
   suite('Custom Style upgrades', function() {
@@ -69,16 +59,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       var inner = target.shadowRoot.querySelector('x-inner');
       assert.equal(getComputedStyle(inner).backgroundColor, 'rgb(123, 123, 123)');
     });
-    test('late custom-style forces a tree recalc', function(done) {
+    test('custom-style applied mixins update', function() {
       var target = document.querySelector('#target');
       var inner = target.shadowRoot.querySelector('x-inner');
-      var late = document.querySelector('template#late');
-      document.body.appendChild(document.importNode(late.content, true));
-      setTimeout(function() {
-        assert.equal(getComputedStyle(target).borderTopWidth.trim(), '2px');
-        assert.equal(getComputedStyle(inner).borderTopWidth.trim(), '2px');
-        done();
-      }, 1000);
+      assert.equal(getComputedStyle(target).borderTopWidth.trim(), '2px');
+      assert.equal(getComputedStyle(inner).borderTopWidth.trim(), '2px');
     });
   });
 </script>

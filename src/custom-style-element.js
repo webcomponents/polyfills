@@ -31,8 +31,6 @@ let customStyles = [];
 
 let hookFn = null;
 
-let registered = false;
-
 let readying = false;
 
 /*
@@ -71,9 +69,6 @@ function validateDocument() {
 }
 
 class CustomStyle extends HTMLElement {
-  static get registered() {
-    return registered;
-  }
   static get _customStyles() {
     return customStyles;
   }
@@ -81,28 +76,50 @@ class CustomStyle extends HTMLElement {
     return hookFn;
   }
   static set processHook(fn) {
-    hookFn = fn;
-    return fn
+    return hookFn = fn;
   }
   static get _documentDirty() {
     return enqueued;
   }
   static findStyles() {
     for (let i = 0; i < customStyles.length; i++) {
-      customStyles[i]._findStyle();
+      let c = customStyles[i];
+      if (!c._style) {
+        let style = c.querySelector('style');
+        if (!style) {
+          continue;
+        }
+        // HTMLImports polyfill may have cloned the style into the main document,
+        // which is referenced with __appliedElement.
+        // Also, we must copy over the attributes.
+        if (style.__appliedElement) {
+          for (let i = 0; i < style.attributes.length; i++) {
+            let attr = style.attributes[i];
+            style.__appliedElement.setAttribute(attr.name, attr.value);
+          }
+        }
+        c._style = style.__appliedElement || style;
+        if (hookFn) {
+          hookFn(c._style);
+        }
+        ShadyCSS._transformCustomStyleForDocument(c._style);
+      }
     }
   }
   static _revalidateApplyShim() {
     for (let i = 0; i < customStyles.length; i++) {
-      let s = customStyles[i];
-      if (s._style) {
-        ShadyCSS._revalidateApplyShim(s._style);
+      let c = customStyles[i];
+      if (c._style) {
+        ShadyCSS._revalidateApplyShim(c._style);
       }
     }
   }
   static applyStyles() {
     for (let i = 0; i < customStyles.length; i++) {
-      customStyles[i]._applyStyle();
+      let c = customStyles[i];
+      if (c._style) {
+        ShadyCSS._applyCustomStyleToDocument(c._style);
+      }
     }
     enqueued = false;
   }
@@ -111,33 +128,7 @@ class CustomStyle extends HTMLElement {
     customStyles.push(this);
     enqueueDocumentValidation();
   }
-  _findStyle() {
-    if (!this._style) {
-      let style = this.querySelector('style');
-      if (!style) {
-        return;
-      }
-      // HTMLImports polyfill may have cloned the style into the main document,
-      // which is referenced with __appliedElement.
-      // Also, we must copy over the attributes.
-      if (style.__appliedElement) {
-        for (let i = 0; i < style.attributes.length; i++) {
-          let attr = style.attributes[i];
-          style.__appliedElement.setAttribute(attr.name, attr.value);
-        }
-      }
-      this._style = style.__appliedElement || style;
-      if (hookFn) {
-        hookFn(this._style);
-      }
-      ShadyCSS._transformCustomStyleForDocument(this._style);
-    }
-  }
-  _applyStyle() {
-    if (this._style) {
-      ShadyCSS._applyCustomStyleToDocument(this._style);
-    }
-  }
 }
+
 window['CustomStyle'] = CustomStyle;
 window.customElements.define('custom-style', CustomStyle);

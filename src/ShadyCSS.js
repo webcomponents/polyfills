@@ -26,6 +26,8 @@ import {flush} from './document-watcher'
 
 let styleCache = new StyleCache();
 
+let elementsHaveApplied = false;
+
 class ShadyCSS {
   constructor() {
     this.scopeCounter = {};
@@ -145,6 +147,14 @@ class ShadyCSS {
   }
   applyStyle(host, overrideProps) {
     let is = host.getAttribute('is') || host.localName;
+    let styleInfo = StyleInfo.get(host);
+    let hasApplied = Boolean(styleInfo);
+    if (!styleInfo) {
+      styleInfo = this._prepareHost(host);
+    }
+    if (!this._isRootOwner(host)) {
+      elementsHaveApplied = true;
+    }
     if (window.CustomStyle) {
       let CS = window.CustomStyle;
       if (CS._documentDirty) {
@@ -155,12 +165,19 @@ class ShadyCSS {
           CS._revalidateApplyShim();
         }
         CS.applyStyles();
+        // if no elements have booted yet, we can just update the document and be done
+        if (!elementsHaveApplied) {
+          return;
+        }
+        // if no native css custom properties, we must recalculate the whole tree
+        if (!nativeCssVariables) {
+          this.updateStyles();
+          // make sure not to recurse back into this element subtree, unless it is the first time
+          if (hasApplied) {
+            return;
+          }
+        }
       }
-    }
-    let styleInfo = StyleInfo.get(host);
-    let hasApplied = Boolean(styleInfo);
-    if (!styleInfo) {
-      styleInfo = this._prepareHost(host);
     }
     if (overrideProps) {
       styleInfo.overrideStyleProperties =
