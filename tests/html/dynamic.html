@@ -11,7 +11,7 @@
 <html>
   <head>
     <title>HTML Imports Dynamic</title>
-    <script src="../../html-imports.min.js"></script>
+    <script src="../../src/html-imports.js"></script>
     <script>
       WCT = {
         waitFor: function(callback) {
@@ -33,7 +33,6 @@
       var ports = document.querySelectorAll('link[rel=import]');
       for (var i=0, l=ports.length, n; (i<l) && (n=ports[i]); i++) {
         n.addEventListener('load', function(e) {
-          console.log('load!!');
           loads++;
           if (loads == 2) {
             done();
