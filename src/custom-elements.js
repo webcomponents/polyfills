@@ -8,3 +8,14 @@
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
+import CustomElementRegistry from './CustomElementRegistry';
+
+if (!window['customElements'] || window['customElements']['forcePolyfill']) {
+  const customElements = new CustomElementRegistry();
+
+  Object.defineProperty(window, 'customElements', {
+    configurable: true,
+    enumerable: true,
+    value: customElements,
+  });
+}
