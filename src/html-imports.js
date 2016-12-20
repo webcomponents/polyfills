@@ -621,7 +621,10 @@
   function whenReady(callback, doc) {
     doc = doc || document;
     // if document is loading, wait and try again
-    whenDocumentReady(doc).then(watchImportsLoad).then(callback);
+    return whenDocumentReady(doc).then(watchImportsLoad).then((importInfo) => {
+      callback && callback(importInfo);
+      return importInfo;
+    });
   }
 
   function isDocumentReady(doc) {
