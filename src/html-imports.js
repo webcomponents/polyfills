@@ -677,7 +677,7 @@
       for (let j = 0, m; j < mutations.length && (m = mutations[j]); j++) {
         if (m.addedNodes) {
           for (let i = 0, l = m.addedNodes.length; i < l; i++) {
-            if (isImportLink(m.addedNodes[i])) {
+            if (m.addedNodes[i] && isImportLink(m.addedNodes[i])) {
               whenElementLoaded( /** @type {!Element} */ (m.addedNodes[i]));
             }
           }
@@ -701,10 +701,9 @@
     })();
 
   } else {
-    let importer;
 
     function bootstrap() {
-      importer = importer || new Importer();
+      const importer = new Importer();
       importer.bootDocument(document);
     }
 
