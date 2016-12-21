@@ -5,7 +5,6 @@ import {
 
 const randomString = () => Math.random().toString(32).substring(2);
 
-export const constructedFlag = 'constructed_' + randomString();
 export const elementStateFlag = 'elementState_' + randomString();
 
 /**
@@ -98,5 +97,4 @@ export class CustomElementInternals {
   }
 }
 
-CustomElementInternals.constructedFlag = constructedFlag;
 CustomElementInternals.elementStateFlag = elementStateFlag;
