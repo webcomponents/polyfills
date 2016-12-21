@@ -55,6 +55,7 @@ let ShadyMixin = {
     // state flags
     this._renderPending = false;
     this._hasRendered = false;
+    this._changePending = false;
     this._distributor = new Distributor(this);
     this.update();
   },
@@ -96,6 +97,7 @@ let ShadyMixin = {
 
   _render() {
     this._renderPending = false;
+    this._changePending = false;
     if (!this._skipUpdateInsertionPoints) {
       this.updateInsertionPoints();
     } else if (!this._hasRendered) {

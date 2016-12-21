@@ -24,8 +24,7 @@ function addNode(container, node, ref_node) {
   if (ownerRoot) {
     // optimization: special insertion point tracking
     // TODO(sorvell): verify that the renderPending check here should not be needed.
-    // if (node.__noInsertionPoint && !ownerRoot._renderPending) {
-    if (node.__noInsertionPoint) {
+    if (node.__noInsertionPoint && !ownerRoot._changePending) {
       ownerRoot._skipUpdateInsertionPoints = true;
     }
     // note: we always need to see if an insertion point is added
@@ -71,7 +70,7 @@ function removeNode(node) {
       logicalParent.localName === ownerRoot.getInsertionPointTag());
     if (removedDistributed || addedInsertionPoint) {
       ownerRoot._skipUpdateInsertionPoints = false;
-      ownerRoot.update();
+      updateRootViaContentChange(ownerRoot);
     }
   }
   _removeOwnerShadyRoot(node);
@@ -154,12 +153,12 @@ function _maybeDistribute(node, container, ownerRoot, ipAdded) {
     if (ownerRoot) {
       // note, insertion point list update is handled after node
       // mutations are complete
-      ownerRoot.update();
+      updateRootViaContentChange(ownerRoot);
     }
   }
   let needsDist = _nodeNeedsDistribution(container);
   if (needsDist) {
-    container.shadyRoot.update();
+    updateRootViaContentChange(container.shadyRoot);
   }
   // Return true when distribution will fully handle the composition
   // Note that if a content was being inserted that was wrapped by a node,
@@ -256,9 +255,15 @@ function firstComposedNode(insertionPoint) {
 function maybeDistributeParent(node) {
   let parent = node.parentNode;
   if (_nodeNeedsDistribution(parent)) {
-    parent.shadyRoot.update();
+    updateRootViaContentChange(parent.shadyRoot);
     return true;
   }
+}
+
+function updateRootViaContentChange(root) {
+  // mark root as mutation based on a mutation
+  root._changePending = true;
+  root.update();
 }
 
 function distributeAttributeChange(node, name) {
