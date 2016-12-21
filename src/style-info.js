@@ -10,6 +10,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 'use strict';
 
+import templateMap from './template-map'
+
+const promise = Promise.resolve();
+
 export default class StyleInfo {
   static get(node) {
     return node.__styleInfo;
@@ -17,6 +21,26 @@ export default class StyleInfo {
   static set(node, styleInfo) {
     node.__styleInfo = styleInfo;
     return styleInfo;
+  }
+  static invalidate(elementName) {
+    if (templateMap[elementName]) {
+      templateMap[elementName]._applyShimInvalid = true;
+    }
+  }
+  /*
+  the template is marked as `validating` for one microtask so that all instances
+  found in the tree crawl of `applyStyle` will update themselves,
+  but the template will only be updated once.
+  */
+  static startValidating(elementName) {
+    const template = templateMap[elementName];
+    if (!template._validating) {
+      template._validating = true;
+      promise.then(() => {
+        template._applyShimInvalid = false;
+        template._validating = false;
+      });
+    }
   }
   constructor(ast, placeholder, ownStylePropertyNames, elementName, typeExtension, cssBuild) {
     this.styleRules = ast || null;

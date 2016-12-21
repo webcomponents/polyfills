@@ -11,7 +11,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 'use strict';
 
 import {nativeShadow} from './style-settings'
-import {StyleTransformer} from './style-transformer'
+import StyleTransformer from './style-transformer'
 
 export let flush = function() {};
 

@@ -13,57 +13,63 @@
 /* eslint-env node */
 /* eslint-disable no-console */
 
-let gulp = require('gulp');
-let closureCompiler = require('google-closure-compiler').gulp();
-let sourcemaps = require('gulp-sourcemaps');
-let rollup = require('rollup-stream');
-let babel = require('rollup-plugin-babel');
-let source = require('vinyl-source-stream');
-let buffer = require('vinyl-buffer');
-let del = require('del');
-let rename = require('gulp-rename');
+const gulp = require('gulp');
+const sourcemaps = require('gulp-sourcemaps');
+const babel = require('gulp-babel');
+const del = require('del');
+const rename = require('gulp-rename');
+const rollup = require('rollup-stream');
+const buffer = require('vinyl-buffer');
+const source = require('vinyl-source-stream');
 
-let babelSettings = {presets: [['es2015', {modules: false}]], plugins: ['external-helpers']};
+let hasLicense = false;
+const babiliConfig = {
+  presets: ['babili'],
+  shouldPrintComment: (c) => {
+    if (!hasLicense) {
+     hasLicense = /@license/.test(c)
+     return hasLicense;
+    }
+    return false;
+  }
+};
 
-gulp.task('closure', () => {
-  return gulp.src(['./src/*.js'], {base: './'})
-    .pipe(sourcemaps.init())
-    .pipe(closureCompiler({
-      dependency_mode: 'STRICT',
-      new_type_inf: true,
-      compilation_level: 'SIMPLE',
-      language_in: 'ES6_STRICT',
-      language_out: 'ES5_STRICT',
-      output_wrapper: '(function(){\n%output%\n}).call(this)',
-      entry_point: ['/src/ShadyCSS', '/src/custom-style'],
-      // entry_point: ['/src/entry'],
-      js_output_file: 'shadycss.min.js'
-    }))
-    .on('error', (e) => console.error(e))
-    .pipe(sourcemaps.write('/'))
-    .pipe(gulp.dest('./'))
-});
-
-gulp.task('debug', () => {
+gulp.task('minify', () => {
   return rollup({
-    entry: './src/entry.js',
-    plugins: [babel(babelSettings)],
+    entry: 'index.js',
     format: 'iife',
     moduleName: 'shadycss',
     sourceMap: true
   })
-  .pipe(source('entry.js', './src'))
+  .pipe(source('index.js'))
   .pipe(buffer())
   .pipe(sourcemaps.init({loadMaps: true}))
+  .pipe(babel(babiliConfig))
   .pipe(rename('shadycss.min.js'))
   .pipe(sourcemaps.write('.'))
   .pipe(gulp.dest('./'))
 });
 
-let modules = [
+gulp.task('debug', () => {
+  return rollup({
+    entry: 'index.js',
+    format: 'iife',
+    moduleName: 'shadycss',
+    sourceMap: true
+  })
+  .pipe(source('index.js'))
+  .pipe(buffer())
+  .pipe(sourcemaps.init({loadMaps: true}))
+  .pipe(rename('shadycss.min.js'))
+  .pipe(sourcemaps.write('.'))
+  .pipe(gulp.dest('./'))
+})
+
+const modules = [
   'apply-shim',
   'css-parse',
-  'custom-style',
+  'custom-style-element',
+  'make-element',
   'style-cache',
   'style-info',
   'style-placeholder',
@@ -71,21 +77,17 @@ let modules = [
   'style-settings',
   'style-transformer',
   'style-util',
+  'svg-in-shadow'
 ];
 
-let moduleTasks = modules.map((m) => {
+const moduleTasks = modules.map((m) => {
   gulp.task(`test-module-${m}`, () => {
     return rollup({
-      entry: `./tests/module/${m}.js`,
-      plugins: [babel(babelSettings)],
+      entry: `tests/module/${m}.js`,
       format: 'iife',
-      moduleName: `${m}`,
-      sourceMap: true
+      moduleName: m
     })
-    .pipe(source(`${m}.js`, './tests/module/'))
-    .pipe(buffer())
-    .pipe(sourcemaps.init({loadMaps: true}))
-    .pipe(sourcemaps.write('.'))
+    .pipe(source(`${m}.js`, 'tests/module'))
     .pipe(gulp.dest('./tests/module/generated'))
   });
   return `test-module-${m}`;
@@ -95,4 +97,4 @@ gulp.task('test-modules', moduleTasks);
 
 gulp.task('clean-test-modules', () => del(['tests/module/generated']));
 
-gulp.task('default', ['debug', 'test-modules']);
+gulp.task('default', ['minify', 'test-modules']);

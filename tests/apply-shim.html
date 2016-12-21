@@ -237,13 +237,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       });
 
       test('Defining the mixin invalidates the element', function() {
-        prep('element2');
-        assert.equal(template.__applyShimInvalid, true);
+        var template2 = document.querySelector('template#element2').cloneNode(true);
+        window.ShadyCSS.prepareTemplate(template2, 'x-element-2');
+        prep('element2', 'x-element-2');
+        assert.equal(template._applyShimInvalid, true);
       });
 
       test('Revalidating Apply Shim on element template fills in properties', function() {
         ast = window.ApplyShim.transformStyle(style, 'x-element');
-        assert.equal(template.__applyShimInvalid, false);
         assert.match(ast.rules[0].cssText, /border:\s*var\(--my-mixin_-_border\)/);
       });
     });
