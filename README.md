@@ -18,10 +18,13 @@ To use ShadyCSS:
 1. First, call `ShadyCSS.prepareTemplate(template, name)` on a
 `<template>` element that will be imported into a `shadowRoot`.
 
-2. Then, after the shadowRoot is created and whenever dynamic
-updates are required, call `ShadyCSS.applyStyle(element)`.
+2. When the element instance is connected, call `ShadyCSS.applyStyle(element)`
 
-3. If a styling change is made that may affect the whole document, call
+3. Create and stamp the element's shadowRoot
+
+4. Whenever dynamic updates are required, call `ShadyCSS.applyStyle(element)`.
+
+5. If a styling change is made that may affect the whole document, call
 `ShadyCSS.updateStyles()`.
 
 ### Example
@@ -54,10 +57,12 @@ The following example uses ShadyCSS and ShadyDOM to define a custom element.
   ShadyCSS.prepareTemplate(myElementTemplate, 'my-element');
   class MyElement extends HTMLElement {
     connectedCallback() {
-      this.attachShadow({mode: 'open'});
-      this.shadowRoot.appendChild(
-        document.importNode(myElementTemplate.content, true));
       ShadyCSS.applyStyle(this);
+      if (!this.shadowRoot) {
+        this.attachShadow({mode: 'open'});
+        this.shadowRoot.appendChild(
+          document.importNode(myElementTemplate.content, true));
+      }
     }
   }
 
@@ -98,10 +103,12 @@ element name to `prepareTemplate` as a third argument.
   ShadyCSS.prepareTemplate(myElementTemplate, 'my-element', 'div');
   class MyElement extends HTMLDivElement {
     connectedCallback() {
-      this.attachShadow({mode: 'open'});
-      this.shadowRoot.appendChild(
-        document.importNode(myElementTemplate.content, true));
       ShadyCSS.applyStyle(this);
+      if (!this.shadowRoot) {
+        this.attachShadow({mode: 'open'});
+        this.shadowRoot.appendChild(
+          document.importNode(myElementTemplate.content, true));
+      }
     }
   }
 
@@ -177,3 +184,9 @@ This means that there may be a flash of unstyled content on the first load.
 
 If there are only `<custom-style>` elements in the page, you may call
 `ShadyCSS.updateStyles()` to remove the flash of unstyled content.
+
+### Mixins do not cascade throught `<slot>`
+
+Crawling the DOM and updating styles is very expensive, and we found that trying to
+update mixins through `<slot>` insertion points to be too expensive to justify for both
+polyfilled CSS Mixins and polyfilled CSS Custom Properties.
