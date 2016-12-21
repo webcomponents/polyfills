@@ -435,11 +435,6 @@
     const n$ = element.querySelectorAll(importsSelectors);
     for (let i = 0; i < n$.length; i++) {
       const n = n$[i];
-      // IE won't send load/error events, so ensure we add load/error listeners
-      // before modifying href or contents in styles (which triggers the reload).
-      if (MATCHES.call(n, 'style,link[rel=stylesheet]')) {
-        whenElementLoaded(n);
-      }
       if (n.href) {
         n.href = new URL(n.getAttribute('href'), base);
       }
@@ -451,6 +446,13 @@
       }
     }
     fixUrlsInTemplates(element, base);
+  }
+
+  function markStyles(element) {
+    const s$ = element.querySelectorAll('style:not([type]), link[rel=stylesheet][href]:not([type])');
+    for (let i = 0, l = s$.length; i < l; i++) {
+      whenElementLoaded(s$[i]);
+    }
   }
 
   function markScripts(element, url) {
@@ -496,8 +498,7 @@
   }
 
   function waitForStyles() {
-    const pendingStyles = document.querySelectorAll(`
-      ${IMPORT_SELECTOR} style:not([type]),
+    const pendingStyles = document.querySelectorAll(`${IMPORT_SELECTOR} style:not([type]),
       ${IMPORT_SELECTOR} link[rel=stylesheet][href]:not([type])`);
     const promises = [];
     for (let i = 0; i < pendingStyles.length; i++) {
@@ -506,9 +507,7 @@
     return Promise.all(promises).then(() => {
       // IE and Edge require styles/links to be siblings in order to apply correctly.
       if (isIE || isEdge) {
-        const n$ = document.head.querySelectorAll(`
-          style:not([type]),
-          link[rel=stylesheet][href]:not([type])`);
+        const n$ = document.head.querySelectorAll('style:not([type]),link[rel=stylesheet][href]:not([type])');
         for (let i = 0, l = n$.length, n; i < l && (n = n$[i]); i++) {
           n.parentNode.removeChild(n);
           document.head.appendChild(n);
@@ -620,7 +619,13 @@
     content.setAttribute('import-href', url);
     content.style.display = 'none';
     content.innerHTML = resource;
+
     markScripts(content, url);
+    // IE won't send load/error events, so ensure we add load/error listeners
+    // before modifying href or contents in styles (which triggers the reload).
+    if (isIE || isEdge) {
+      markStyles(content);
+    }
     // TODO(sorvell): this is specific to users (Polymer) of the dom-module element.
     fixDomModules(content, url);
     fixUrls(content, url);
