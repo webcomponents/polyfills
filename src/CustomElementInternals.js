@@ -72,9 +72,8 @@ export class CustomElementInternals {
     const definition = this.localNameToDefinition(element.localName);
     if (!definition) return;
 
-    // Enqueue attributes.
-
-    // Enqueue connected.
+    // TODO(bicknellr): Enqueue attributes.
+    // TODO(bicknellr): Enqueue connected.
 
     definition.constructionStack.push(element);
 
