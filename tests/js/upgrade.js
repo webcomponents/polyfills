@@ -12,8 +12,6 @@ suite('Upgrades', function() {
   var work;
   var assert = chai.assert;
 
-  customElements.enableFlush = true;
-
   setup(function() {
     work = document.createElement('div');
     document.body.appendChild(work);
@@ -27,7 +25,6 @@ suite('Upgrades', function() {
     work.innerHTML = '<x-markup-1><x-markup-2></x-markup-2></x-markup-1>';
     var e1 = work.firstChild;
     var e2 = e1.firstChild;
-    customElements.flush();
 
     class X1 extends HTMLElement {}
     class X2 extends HTMLElement {}
@@ -42,8 +39,6 @@ suite('Upgrades', function() {
     var e1 = document.createElement('x-disconnected-1');
     var e2 = document.createElement('x-disconnected-2');
     e1.appendChild(e2);
-    // make sure that mutation records for the append are flushed
-    customElements.flush();
 
     class X1 extends HTMLElement {}
     class X2 extends HTMLElement {}
@@ -56,7 +51,6 @@ suite('Upgrades', function() {
 
     // they should upgrade when connected
     work.appendChild(e1);
-    customElements.flush();
     assert.instanceOf(e1, X1);
     assert.instanceOf(e2, X2);
   });

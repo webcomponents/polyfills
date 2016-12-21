@@ -13,8 +13,6 @@ suite('Custom Element Reactions', function() {
   var assert = chai.assert;
   var HTMLNS = 'http://www.w3.org/1999/xhtml';
 
-  customElements.enableFlush = true;
-
   setup(function() {
     work = document.createElement('div');
     document.body.appendChild(work);
@@ -175,7 +173,6 @@ suite('Custom Element Reactions', function() {
       customElements.define('x-inner', XInner);
       var div = document.createElement('div');
       div.innerHTML = '<x-inner></x-inner>';
-      customElements.flush();
       assert.isTrue(passed);
     });
 
@@ -236,7 +233,6 @@ suite('Custom Element Reactions', function() {
       work.appendChild(element);
 
       customElements.define('x-boo-at1', XBoo);
-      customElements.flush();
 
       assert.equal(changed.length, 1, 'should only trigger for observed attributes');
       assert.equal(changed[0].name, 'test1', 'name');
@@ -268,13 +264,11 @@ suite('Custom Element Reactions', function() {
       var parent = new XConnected();
       var child = new XConnected();
       parent.appendChild(child);
-      customElements.flush();
       assert.equal(connectedCount, 0);
     });
 
     test('called when appended to main document', function() {
       work.appendChild(new XConnected());
-      customElements.flush();
       assert.equal(connectedCount, 1);
     });
 
@@ -283,7 +277,6 @@ suite('Custom Element Reactions', function() {
       work.appendChild(el);
       work.removeChild(el);
       work.appendChild(el);
-      customElements.flush();
       assert.equal(connectedCount, 2);
     });
 
@@ -307,7 +300,6 @@ suite('Custom Element Reactions', function() {
             '</x-ordering>' +
           '</x-ordering>';
 
-      customElements.flush();
       assert.deepEqual(log, ['a', 'b', 'c', 'd', 'e']);
     });
 
@@ -326,9 +318,7 @@ suite('Custom Element Reactions', function() {
       var xboo = new XBoo();
       assert(!removed, 'removed must be false [XBoo]');
       work.appendChild(xboo);
-      customElements.flush();
       work.removeChild(xboo);
-      customElements.flush();
       assert(removed, 'removed must be true [XBoo]');
 
       ready = inserted = removed = false;
@@ -341,9 +331,7 @@ suite('Custom Element Reactions', function() {
       var xbooboo = new XBooBoo();
       assert(!removed, 'removed must be false [XBooBoo]');
       work.appendChild(xbooboo);
-      customElements.flush();
       work.removeChild(xbooboo);
-      customElements.flush();
       assert(removed, 'removed must be true [XBooBoo]');
     });
 
@@ -365,9 +353,7 @@ suite('Custom Element Reactions', function() {
             '</x-ordering2>' +
           '</x-ordering2>';
 
-        customElements.flush();
         work.removeChild(work.firstElementChild);
-        customElements.flush();
         assert.deepEqual(['a', 'b', 'c', 'd', 'e'], log);
     });
 
@@ -382,11 +368,9 @@ suite('Custom Element Reactions', function() {
       // most imports happen on nodes in a different document, but elements
       // in another document woudn't be customized in the first place
       var original = document.createElement('x-imported');
-      customElements.flush();
       assert.instanceOf(original, XImported);
 
       var imported = document.importNode(original, true);
-      customElements.flush();
       assert.instanceOf(imported, XImported);
     });
 
@@ -395,11 +379,9 @@ suite('Custom Element Reactions', function() {
       customElements.define('x-cloned', XCloned);
 
       var original = document.createElement('x-cloned');
-      customElements.flush();
       assert.instanceOf(original, XCloned);
 
       var imported = original.cloneNode(true);
-      customElements.flush();
       assert.instanceOf(imported, XCloned);
     });
 
@@ -409,12 +391,10 @@ suite('Custom Element Reactions', function() {
 
       var otherDoc = document.implementation.createHTMLDocument('adopt');
       var original = otherDoc.createElement('x-adopted');
-      customElements.flush();
       // x-adopted is not defined in its document
       assert.notInstanceOf(original, XAdopted);
 
       var imported = document.adoptNode(original);
-      customElements.flush();
       assert.notInstanceOf(imported, XAdopted);
     });
 
@@ -444,12 +424,10 @@ suite('Custom Element Reactions', function() {
       assert.isFalse(e.disconnected);
 
       work.appendChild(e);
-      customElements.flush();
       assert.isTrue(e.connected);
       assert.isFalse(e.disconnected);
 
       work.removeChild(e);
-      customElements.flush();
       assert.isTrue(e.connected);
       assert.isTrue(e.disconnected);
     });
@@ -473,19 +451,16 @@ suite('Custom Element Reactions', function() {
       customElements.define(tagName, XEnteredLeft);
 
       var element = document.createElement(tagName);
-      customElements.flush();
       assert.deepEqual(invocations, ['constructor'], 'created but not entered view');
 
       // // note, cannot use instanceof due to IE
       assert.equal(element.__proto__, XEnteredLeft.prototype, 'element is correct type');
 
       work.appendChild(element)
-      customElements.flush();
       assert.deepEqual(invocations, ['constructor', 'entered'],
           'created and entered view');
 
       element.parentNode.removeChild(element);
-      customElements.flush();
       assert.deepEqual(invocations, ['constructor', 'entered', 'left'],
           'created, entered then left view');
     });
@@ -504,9 +479,7 @@ suite('Custom Element Reactions', function() {
       customElements.define('x-ad', XAD);
       var el = document.createElement('x-ad');
       work.appendChild(el);
-      customElements.flush();
       work.removeChild(el);
-      customElements.flush();
       assert.deepEqual(log, ['connected', 'disconnected']);
     });
 
@@ -523,11 +496,9 @@ suite('Custom Element Reactions', function() {
       customElements.define('x-da', XDA);
       var el = document.createElement('x-da');
       work.appendChild(el);
-      customElements.flush();
       log = [];
       work.removeChild(el);
       work.appendChild(el);
-      customElements.flush();
       assert.deepEqual(log, ['disconnected', 'connected']);
     });
 
