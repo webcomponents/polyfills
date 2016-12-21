@@ -62,20 +62,20 @@ if (utils.settings.inUse) {
     mixins.extendGlobal(window.HTMLSlotElement.prototype, mixins.Slot);
   }
 
-  tryExtendAccessors(Node.prototype);
-  tryExtendAccessors(Text.prototype);
-  tryExtendAccessors(DocumentFragment.prototype);
-  tryExtendAccessors(Element.prototype);
-  let nativeHTMLElement =
-    (window.customElements && customElements.nativeHTMLElement) ||
-    HTMLElement;
-  tryExtendAccessors(nativeHTMLElement.prototype);
-  tryExtendAccessors(Document.prototype);
-  if (window.HTMLSlotElement) {
-    tryExtendAccessors(window.HTMLSlotElement.prototype);
-  }
-
-  if (!utils.settings.hasDescriptors) {
+  if (utils.settings.hasDescriptors) {
+    tryExtendAccessors(Node.prototype);
+    tryExtendAccessors(Text.prototype);
+    tryExtendAccessors(DocumentFragment.prototype);
+    tryExtendAccessors(Element.prototype);
+    let nativeHTMLElement =
+      (window.customElements && customElements.nativeHTMLElement) ||
+      HTMLElement;
+    tryExtendAccessors(nativeHTMLElement.prototype);
+    tryExtendAccessors(Document.prototype);
+    if (window.HTMLSlotElement) {
+      tryExtendAccessors(window.HTMLSlotElement.prototype);
+    }
+  } else {
     Object.defineProperty(document, '_activeElement', OtherAccessors.activeElement);
   }
 

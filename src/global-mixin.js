@@ -19,6 +19,7 @@ import {ShadyRoot} from './shady-root'
 
 let assignedSlotDesc = {
   get() {
+    mutation.renderRootNode(this);
     return getProperty(this, 'assignedSlot') || null;
   },
   configurable: true
