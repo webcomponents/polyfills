@@ -1,27 +1,7 @@
 import {CustomElementDefinition} from './CustomElementDefinition';
 import {CustomElementInternals} from './CustomElementInternals';
 import Deferred from './Deferred';
-
-const reservedTagList = new Set([
-  'annotation-xml',
-  'color-profile',
-  'font-face',
-  'font-face-src',
-  'font-face-uri',
-  'font-face-format',
-  'font-face-name',
-  'missing-glyph',
-]);
-
-/**
- * @param {string} localName
- * @returns {boolean}
- */
-function isValidCustomElementName(localName) {
-  const reserved = reservedTagList.has(localName);
-  const validForm = /^[a-z][.0-9_a-z]*-[\-.0-9_a-z]*$/.test(localName);
-  return !reserved && validForm;
-}
+import * as Utilities from './Utilities';
 
 class CustomElementRegistry {
 
@@ -59,7 +39,7 @@ class CustomElementRegistry {
       throw new TypeError('Custom element constructors must be functions.');
     }
 
-    if (!isValidCustomElementName(localName)) {
+    if (!Utilities.isValidCustomElementName(localName)) {
       throw new SyntaxError(`The element name '${localName}' is not valid.`);
     }
 
@@ -143,7 +123,7 @@ class CustomElementRegistry {
    * @return {!Promise<undefined>}
    */
   whenDefined(localName) {
-    if (!isValidCustomElementName(localName)) {
+    if (!Utilities.isValidCustomElementName(localName)) {
       return Promise.reject(new SyntaxError(`'${localName}' is not a valid custom element name.`));
     }
 
