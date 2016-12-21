@@ -1,9 +1,6 @@
-import {
-  CustomElementDefinition
-} from './CustomElementDefinition';
-import {
-  CustomElementInternals
-} from './CustomElementInternals';
+import {CustomElementDefinition} from './CustomElementDefinition';
+import {CustomElementInternals} from './CustomElementInternals';
+import Deferred from './Deferred';
 
 const reservedTagList = new Set([
   'annotation-xml',
@@ -44,6 +41,11 @@ class CustomElementRegistry {
      * @type {!CustomElementInternals}
      */
     this._internals = internals;
+
+    /**
+     * @type {!Map<string, !Deferred<undefined>>}
+     */
+    this._whenDefinedDeferred = new Map();
   }
 
   /**
@@ -117,7 +119,10 @@ class CustomElementRegistry {
     // TODO(bicknellr): Upgrade elements matching this definition.
     this._internals.upgradeTree(document);
 
-    // TODO(bicknellr): whenDefined promise map
+    const deferred = this._whenDefinedDeferred.get(localName);
+    if (deferred) {
+      deferred.resolve(undefined);
+    }
   }
 
   /**
@@ -132,11 +137,37 @@ class CustomElementRegistry {
 
     return undefined;
   }
+
+  /**
+   * @param {string} localName
+   * @return {!Promise<undefined>}
+   */
+  whenDefined(localName) {
+    if (!isValidCustomElementName(localName)) {
+      return Promise.reject(new SyntaxError(`'${localName}' is not a valid custom element name.`));
+    }
+
+    const prior = this._whenDefinedDeferred.get(localName);
+    if (prior) {
+      return prior.toPromise();
+    }
+
+    const deferred = new Deferred();
+    this._whenDefinedDeferred.set(localName, deferred);
+
+    const definition = this._internals.localNameToDefinition(localName);
+    if (definition) {
+      deferred.resolve(undefined);
+    }
+
+    return deferred.toPromise();
+  }
 }
 
 // Closure compiler exports.
 window['CustomElementRegistry'] = CustomElementRegistry;
 CustomElementRegistry.prototype['define'] = CustomElementRegistry.prototype.define;
 CustomElementRegistry.prototype['get'] = CustomElementRegistry.prototype.get;
+CustomElementRegistry.prototype['whenDefined'] = CustomElementRegistry.prototype.whenDefined;
 
 export default CustomElementRegistry;
