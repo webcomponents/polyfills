@@ -5,7 +5,7 @@ import {
 
 const randomString = () => Math.random().toString(32).substring(2);
 
-export const elementStateFlag = 'elementState_' + randomString();
+export const elementState = 'elementState_' + randomString();
 
 /**
  * @enum {number}
@@ -65,8 +65,8 @@ export class CustomElementInternals {
    */
   upgradeElement(element) {
     if (
-      element[elementStateFlag] === CustomElementState.custom ||
-      element[elementStateFlag] === CustomElementState.failed
+      element[elementState] === CustomElementState.custom ||
+      element[elementState] === CustomElementState.failed
     ) return;
 
     const definition = this.localNameToDefinition(element.localName);
@@ -88,12 +88,12 @@ export class CustomElementInternals {
         definition.constructionStack.pop();
       }
     } catch (e) {
-      element[elementStateFlag] = CustomElementState.failed;
+      element[elementState] = CustomElementState.failed;
       throw e;
     }
 
-    element[elementStateFlag] = CustomElementState.custom;
+    element[elementState] = CustomElementState.custom;
   }
 }
 
-CustomElementInternals.elementStateFlag = elementStateFlag;
+CustomElementInternals.elementState = elementState;

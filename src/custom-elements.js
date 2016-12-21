@@ -15,7 +15,7 @@ import {
 import {
   CustomElementInternals,
   CustomElementState,
-  elementStateFlag,
+  elementState,
 } from './CustomElementInternals';
 import CustomElementRegistry from './CustomElementRegistry';
 
@@ -57,7 +57,7 @@ if (!window['customElements'] || window['customElements']['forcePolyfill']) {
       if (constructionStack.length === 0) {
         const self = native_Document_createElement.call(document, definition.localName);
         Object.setPrototypeOf(self, constructor.prototype);
-        self[elementStateFlag] = CustomElementState.custom;
+        self[elementState] = CustomElementState.custom;
         return self;
       }
 
