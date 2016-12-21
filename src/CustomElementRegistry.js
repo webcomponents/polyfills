@@ -119,6 +119,19 @@ class CustomElementRegistry {
 
     // TODO(bicknellr): whenDefined promise map
   }
+
+  /**
+   * @param {string} localName
+   * @return {Function|undefined}
+   */
+  get(localName) {
+    const definition = this._internals.localNameToDefinition(localName);
+    if (definition) {
+      return definition.constructor;
+    }
+
+    return undefined;
+  }
 }
 
 // Closure compiler exports.
