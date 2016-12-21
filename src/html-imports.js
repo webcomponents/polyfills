@@ -506,7 +506,7 @@
     }
     return Promise.all(promises).then(() => {
       // IE and Edge require styles/links to be siblings in order to apply correctly.
-      if (isIE || isEdge) {
+      if ((isIE || isEdge) && pendingStyles.length) {
         const n$ = document.head.querySelectorAll('style:not([type]),link[rel=stylesheet][href]:not([type])');
         for (let i = 0, l = n$.length, n; i < l && (n = n$[i]); i++) {
           n.parentNode.removeChild(n);
