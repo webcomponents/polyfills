@@ -7,46 +7,35 @@ class CustomElementInternals {
     console.log('CustomElementInternals constructed');
 
     /** @type {!Map<string, !CustomElementDefinition>} */
-    this._nameToDefinition = new Map();
+    this._localNameToDefinition = new Map();
 
     /** @type {!Map<!Function, string>} */
-    this._constructorToName = new Map();
+    this._constructorToLocalName = new Map();
   }
 
   /**
-   * @param {string} name
+   * @param {string} localName
    * @param {!CustomElementDefinition} definition
    */
-  setDefinition(name, definition) {
-    this._nameToDefinition.set(name, definition);
-    this._constructorToName.set(definition.constructor, name);
+  setDefinition(localName, definition) {
+    this._localNameToDefinition.set(localName, definition);
+    this._constructorToLocalName.set(definition.constructor, localName);
   }
 
   /**
-   * @param {string} name
-   */
-  hasDefinitionForName(name) {
-    return this._nameToDefinition.has(name);
-  }
-
-  /**
-   * @param {string} name
+   * @param {string} localName
    * @return {?CustomElementDefinition}
    */
-  getDefinitionByName(name) {
-    return this._nameToDefinition.get(name);
+  localNameToDefinition(localName) {
+    return this._localNameToDefinition.get(localName);
   }
 
   /**
    * @param {!Function} constructor
-   * @return {!CustomElementDefinition|undefined}
+   * @return {string}
    */
-  getDefinitionByConstructor(constructor) {
-    const name = this._constructorToName.get(constructor);
-    if (!name) {
-      return undefined;
-    }
-    return this._nameToDefinition.get(name);
+  constructorToLocalName(constructor) {
+    return this._constructorToLocalName.get(constructor);
   }
 
   /**
@@ -66,7 +55,7 @@ class CustomElementInternals {
   upgradeElement(element) {
     if (element[upgraded]) return;
 
-    const definition = this._nameToDefinition.get(element.localName);
+    const definition = this._localNameToDefinition.get(element.localName);
     if (!definition) return;
 
     console.log('UPGRADE:', element);

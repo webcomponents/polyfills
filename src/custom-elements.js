@@ -24,13 +24,11 @@ if (!window['customElements'] || window['customElements']['forcePolyfill']) {
      * @type {function(new: HTMLElement): !HTMLElement}
      */
     function HTMLElement() {
-      const maybeDefinition = internals.getDefinitionByConstructor(this.constructor);
-      if (!maybeDefinition) {
+      const localName = internals.constructorToLocalName(this.constructor);
+      if (!localName) {
         throw new Error('This element\'s constructor is not a known custom element constructor.');
       }
-      const definition = /** @type {!CustomElementDefinition} */ (maybeDefinition);
-
-      const self = document.createElement(definition.localName);
+      const self = document.createElement(/** @type {string} */ (localName));
 
       // TODO(bicknellr): Upgrade element.
 

@@ -57,7 +57,7 @@ class CustomElementRegistry {
       throw new SyntaxError(`The element name '${localName}' is not valid.`);
     }
 
-    if (this._internals.hasDefinitionForName(localName)) {
+    if (this._internals.localNameToDefinition(localName)) {
       throw new Error(`A custom element with name '${localName}' has already been defined.`);
     }
 
