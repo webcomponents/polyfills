@@ -16,8 +16,10 @@ import {
   CustomElementInternals,
   CustomElementState,
   elementState,
+  elementDefinition,
 } from './CustomElementInternals';
 import CustomElementRegistry from './CustomElementRegistry';
+import * as Utilities from './Utilities';
 
 if (!window['customElements'] || window['customElements']['forcePolyfill']) {
   /** @type {!CustomElementInternals} */
@@ -32,12 +34,20 @@ if (!window['customElements'] || window['customElements']['forcePolyfill']) {
     value: customElements,
   });
 
+  // TODO(bicknellr): Is there a better way to know when the whole document is
+  // available to attempt upgrades on elements that weren't in the document as
+  // of the last call to `CustomElementsRegistry#define`?
+  document.addEventListener('DOMContentLoaded', function() {
+    internals.upgradeTree(document);
+  });
+
 
   // PATCHING
 
   const native_HTMLElement = window.HTMLElement;
   const native_Document_createElement = window.Document.prototype.createElement;
   const native_Document_createElementNS = window.Document.prototype.createElementNS;
+  const native_Node_insertBefore = window.Node.prototype.insertBefore;
 
   window['HTMLElement'] = (function() {
     /**
@@ -58,6 +68,7 @@ if (!window['customElements'] || window['customElements']['forcePolyfill']) {
         const self = native_Document_createElement.call(document, definition.localName);
         Object.setPrototypeOf(self, constructor.prototype);
         self[elementState] = CustomElementState.custom;
+        self[elementDefinition] = definition;
         return self;
       }
 
@@ -78,6 +89,10 @@ if (!window['customElements'] || window['customElements']['forcePolyfill']) {
     return HTMLElement;
   })();
 
+  /**
+   * @param {string} localName
+   * @return {!Element}
+   */
   Document.prototype.createElement = function(localName) {
     const definition = internals.localNameToDefinition(localName);
     if (definition) {
@@ -89,11 +104,59 @@ if (!window['customElements'] || window['customElements']['forcePolyfill']) {
 
   const NS_HTML = "http://www.w3.org/1999/xhtml";
 
+  /**
+   * @param {?string} namespace
+   * @param {string} localName
+   * @return {!Element}
+   */
   Document.prototype.createElementNS = function(namespace, localName) {
     if (namespace === null || namespace === NS_HTML) {
       return this.createElement(localName);
     }
 
     return native_Document_createElementNS.call(this, namespace, localName);
+  };
+
+  /**
+   * @param {!Node} node
+   * @param {?Node} refNode
+   * @return {!Node}
+   */
+  Node.prototype.insertBefore = function(node, refNode) {
+    let nodes;
+    if (node instanceof DocumentFragment) {
+      nodes = [...node.childNodes];
+    } else {
+      nodes = [node];
+    }
+
+    for (const node of nodes) {
+      native_Node_insertBefore.call(this, node, refNode);
+    }
+
+    const connected = Utilities.isConnected(this);
+    if (connected) {
+      const walker = document.createTreeWalker(this, NodeFilter.SHOW_ELEMENT);
+      do {
+        const currentNode = /** @type {!Element} */ (walker.currentNode);
+        if (currentNode === this) continue;
+
+        if (currentNode[elementState] === CustomElementState.custom) {
+          internals.connectedCallback(currentNode);
+        } else {
+          internals.upgradeElement(currentNode);
+        }
+      } while (walker.nextNode());
+    }
+
+    return node;
+  };
+
+  /**
+   * @param {!Node} node
+   * @return {!Node}
+   */
+  Node.prototype.appendChild = function(node) {
+    return Node.prototype.insertBefore.call(this, node, null);
   };
 }

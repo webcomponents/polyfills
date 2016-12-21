@@ -2,10 +2,12 @@ import {
   AlreadyConstructedMarker,
   CustomElementDefinition,
 } from './CustomElementDefinition';
+import * as Utilities from './Utilities';
 
 const randomString = () => Math.random().toString(32).substring(2);
 
 export const elementState = 'elementState_' + randomString();
+export const elementDefinition = 'elementDefinition_' + randomString();
 
 /**
  * @enum {number}
@@ -72,9 +74,6 @@ export class CustomElementInternals {
     const definition = this.localNameToDefinition(element.localName);
     if (!definition) return;
 
-    // TODO(bicknellr): Enqueue attributes.
-    // TODO(bicknellr): Enqueue connected.
-
     definition.constructionStack.push(element);
 
     const constructor = definition.constructor;
@@ -93,6 +92,24 @@ export class CustomElementInternals {
     }
 
     element[elementState] = CustomElementState.custom;
+    element[elementDefinition] = definition;
+
+    if (Utilities.isConnected(element)) {
+      this.connectedCallback(element);
+    }
+
+    // TODO(bicknellr): Run attributeChangedCallback for set attributes.
+  }
+
+  /**
+   * @param {!Element} element
+   */
+  connectedCallback(element) {
+    if (element[elementState] === CustomElementState.custom) {
+      const definition = element[elementDefinition];
+      if (!(definition && definition.connectedCallback)) return;
+      definition.connectedCallback.call(element);
+    }
   }
 }
 
