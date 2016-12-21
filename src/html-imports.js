@@ -22,7 +22,12 @@
   if ('currentScript' in document === false) {
     Object.defineProperty(document, 'currentScript', {
       get: function() {
-        return currentScript;
+        return currentScript ||
+          // NOTE: only works when called in synchronously executing code.
+          // readyState should check if `loading` but IE10 is
+          // interactive when scripts run so we cheat.
+          (document.readyState !== 'complete' ?
+            document.scripts[document.scripts.length - 1] : null);
       },
       configurable: true
     });
@@ -430,6 +435,11 @@
     const n$ = element.querySelectorAll(importsSelectors);
     for (let i = 0; i < n$.length; i++) {
       const n = n$[i];
+      // IE won't send load/error events, so ensure we add load/error listeners
+      // before modifying href or contents in styles (which triggers the reload).
+      if (MATCHES.call(n, 'style,link[rel=stylesheet]')) {
+        whenElementLoaded(n);
+      }
       if (n.href) {
         n.href = new URL(n.getAttribute('href'), base);
       }
@@ -470,8 +480,8 @@
         if (o.src) {
           c.setAttribute('src', o.getAttribute('src'));
         }
-        o.parentNode.replaceChild(c, o);
         currentScript = c;
+        o.parentNode.replaceChild(c, o);
         return whenElementLoaded(c).then((script) => {
           if (script === currentScript) {
             currentScript = null;
@@ -506,7 +516,12 @@
         const eventType = n.import ? 'load' : 'error';
         flags.log && console.warn('fire', eventType, n.href);
         n.__loaded = true;
-        n.dispatchEvent(new CustomEvent(eventType));
+        n.__errored = !n.import;
+        n.dispatchEvent(new CustomEvent(eventType, {
+          bubbles: false,
+          cancelable: false,
+          detail: undefined
+        }));
       }
     }
   }
@@ -518,21 +533,27 @@
    * @return {Promise}
    */
   function whenElementLoaded(element) {
-    if (isElementLoaded(element)) {
-      return Promise.resolve(element);
-    }
-    return new Promise(resolve => {
-      element.addEventListener('load', () => {
+    if (!element.__loadPromise) {
+      if (isElementLoaded(element)) {
         element.__loaded = true;
         element.__errored = false;
-        resolve(element);
-      });
-      element.addEventListener('error', () => {
-        element.__loaded = true;
-        element.__errored = true;
-        resolve(element);
-      });
-    });
+        element.__loadPromise = Promise.resolve(element);
+      } else {
+        element.__loadPromise = new Promise(resolve => {
+          element.addEventListener('load', () => {
+            element.__loaded = true;
+            element.__errored = false;
+            resolve(element);
+          });
+          element.addEventListener('error', () => {
+            element.__loaded = true;
+            element.__errored = true;
+            resolve(element);
+          });
+        });
+      }
+    }
+    return element.__loadPromise;
   }
 
   /**
@@ -540,40 +561,33 @@
    * @return {boolean}
    */
   function isElementLoaded(element) {
-    if (!element.__loaded) {
-      if (useNative && isImportLink(element) && element.import &&
-        element.import.readyState !== 'loading') {
-        flags.log && console.log('delayed flagging of import loaded', element);
-        element.__loaded = true;
-      } else if (isIE && element.localName === 'style') {
-        // NOTE: IE does not fire "load" event for styles that have already
-        // loaded. This is in violation of the spec, so we try our hardest to
-        // work around it.
-        let fakeLoad = false;
-        // If there's not @import in the textContent, assume it has loaded
-        if (element.textContent.indexOf('@import') == -1) {
-          fakeLoad = true;
-          // if we have a sheet, we have been parsed
-        } else if (element.sheet) {
-          fakeLoad = true;
-          const csr = element.sheet.cssRules;
-          // search the rules for @import's
-          for (let i = 0, l = csr ? csr.length : 0; i < l && fakeLoad; i++) {
-            if (csr[i].type === CSSRule.IMPORT_RULE) {
-              // if every @import has resolved, fake the load
-              fakeLoad = Boolean(csr[i].styleSheet);
-            }
+    let isLoaded = false;
+    if (useNative && isImportLink(element) && element.import &&
+      element.import.readyState !== 'loading') {
+      isLoaded = true;
+    } else if (isIE && element.localName === 'style') {
+      // NOTE: IE does not fire "load" event for styles that have already
+      // loaded. This is in violation of the spec, so we try our hardest to
+      // work around it.
+      // If there's not @import in the textContent, assume it has loaded
+      if (element.textContent.indexOf('@import') == -1) {
+        isLoaded = true;
+        // if we have a sheet, we have been parsed
+      } else if (element.sheet) {
+        isLoaded = true;
+        const csr = element.sheet.cssRules;
+        // search the rules for @import's
+        for (let i = 0, l = csr ? csr.length : 0; i < l && isLoaded; i++) {
+          if (csr[i].type === CSSRule.IMPORT_RULE) {
+            // if every @import has resolved, fake the load
+            isLoaded = Boolean(csr[i].styleSheet);
           }
         }
-        if (fakeLoad) {
-          flags.log && console.log('delayed flagging of style w/ imports loaded', element);
-          element.__loaded = true;
-        }
-      } else if (element.localName === 'script' && !element.src) {
-        element.__loaded = true;
       }
+    } else if (element.localName === 'script' && !element.src) {
+      isLoaded = true;
     }
-    return element.__loaded;
+    return isLoaded;
   }
 
   function fixDomModules(element, url) {
@@ -654,8 +668,8 @@
   function watchImportsLoad(doc) {
     let imports = doc.querySelectorAll(IMPORT_SELECTOR);
     // only non-nested imports
-    imports = Array.prototype.slice.call(imports).filter(function(n) {
-      return !MATCHES.call(n, 'import-content ' + IMPORT_SELECTOR);
+    imports = Array.prototype.slice.call(imports).filter((imp) => {
+      return !MATCHES.call(imp, 'import-content ' + IMPORT_SELECTOR);
     });
     return Promise.all(imports.map(whenElementLoaded)).then(() => {
       const newImports = [];
