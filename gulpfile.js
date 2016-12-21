@@ -22,19 +22,20 @@ let rollup = require('gulp-rollup');
 let babel = require('gulp-babel');
 
 let hasLicense = false;
-let babiliConfig = {
-  presets: ['babili'],
-  shouldPrintComment: (c) => {
+let shouldPrintComment = (c) => {
     if (!hasLicense) {
-      hasLicense = true;
-      return /@license/.test(c)
+      return hasLicense = /@license/.test(c);
     }
     return false;
   }
+let babiliConfig = {
+  presets: ['babili'],
+  shouldPrintComment
 }
 
 let es5Config = {
-  presets: ['es2015']
+  presets: ['babili', 'es2015'],
+  shouldPrintComment
 }
 
 gulp.task('closure', function() {
