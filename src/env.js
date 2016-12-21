@@ -23,8 +23,9 @@ import * as utils from './utils'
 import {flush, enqueue} from './flush'
 import {observeChildren, unobserveChildren, filterMutations} from './observe-changes'
 import * as nativeMethods from './native-methods'
+import * as nativeTree from './native-tree'
 import * as mixins from './global-mixin'
-import { tryExtendAccessors, tryExtend, OtherAccessors,
+import { tryExtendAccessors, OtherAccessors,
   getComposedInnerHTML, getComposedChildNodes} from './accessor-mixin'
 import * as events from './event-mixin'
 
@@ -45,7 +46,8 @@ if (utils.settings.inUse) {
     filterMutations: filterMutations,
     observeChildren: observeChildren,
     unobserveChildren: unobserveChildren,
-    nativeMethods: nativeMethods
+    nativeMethods: nativeMethods,
+    nativeTree: nativeTree
   };
 
   window.Event = events.PatchedEvent;

@@ -322,7 +322,7 @@ export function setAttribute(node, attr, value) {
 
 export function removeAttribute(node, attr) {
   nativeMethods.removeAttribute.call(node, attr);
-  distributeAttributeChange(node, name);
+  distributeAttributeChange(node, attr);
 }
 
 // cases in which we may not be able to just do standard native call

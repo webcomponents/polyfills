@@ -236,20 +236,22 @@ export let InsideAccessors = {
   // element (HTMLElement on IE11)
   innerHTML: {
     get() {
+      let content = this.localName === 'template' ? this.content : this;
       if (hasProperty(this, 'firstChild')) {
-        return getInnerHTML(this);
+        return getInnerHTML(content);
       } else {
-        return nativeTree.innerHTML(this);
+        return nativeTree.innerHTML(content);
       }
     },
     set(text) {
-      clearNode(this);
+      let content = this.localName === 'template' ? this.content : this;
+      clearNode(content);
       let doc = domParser.parseFromString(text, 'text/html');
       if (doc.head) {
-        insertDOMFrom(this, doc.head);
+        insertDOMFrom(content, doc.head);
       }
       if (doc.body) {
-        insertDOMFrom(this, doc.body);
+        insertDOMFrom(content, doc.body);
       }
     },
     configurable: true

@@ -277,8 +277,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     return r;
   }
 
-  var checkUnpatchedDom = false;
-
   suite('ShadyDOM', function() {
 
   var testElement;
@@ -594,21 +592,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     rere.appendChild(s);
     assert.equal(rere.querySelector('#light'), s);
     assert.equal(s.parentNode, rere);
-    if (checkUnpatchedDom) {
-      assert.notEqual(Polymer.TreeApi.Composed.getParentNode(s), rere);
-    }
-    forceRender(testElement);
-    if (checkUnpatchedDom) {
-      assert.equal(Polymer.TreeApi.Composed.getParentNode(s), p);
-    }
+    assert.notEqual(ShadyDOM.nativeTree.parentNode(s), rere);
+    ShadyDOM.flush();
+    assert.equal(ShadyDOM.nativeTree.parentNode(s), p);
     rere.removeChild(s);
-    if (checkUnpatchedDom) {
-      assert.equal(Polymer.TreeApi.Composed.getParentNode(s), p);
-    }
-    forceRender(testElement);
-    if (checkUnpatchedDom) {
-      assert.equal(Polymer.TreeApi.Composed.getParentNode(s), null);
-    }
+    assert.equal(ShadyDOM.nativeTree.parentNode(s), p);
+    ShadyDOM.flush();
+    assert.equal(ShadyDOM.nativeTree.parentNode(s), null);
   });
 
   test('querySelector', function() {
@@ -635,46 +625,56 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   test('cloneNode shallow', function() {
     var a = document.createElement('div');
     a.innerHTML = '<x-clonate><span>1</span><span>2</span></x-clonate>';
+    document.body.appendChild(a);
+    if (customElements.flush) {
+      customElements.flush();
+    }
+    ShadyDOM.flush();
     var b = a.firstElementChild.cloneNode();
     document.body.appendChild(b);
-    assert.equal(b.childNodes.length, 0, 'shallow copy has incorrect children');
-    if (checkUnpatchedDom) {
-      assert.equal(b.children.length, 2, 'shallow copy has incorrect composed children');
+    if (customElements.flush) {
+      customElements.flush();
     }
+    ShadyDOM.flush();
+    assert.equal(b.childNodes.length, 0, 'shallow copy has incorrect children');
+    assert.equal(ShadyDOM.nativeTree.children(b).length, 2, 'shallow copy has incorrect composed children');
   });
 
   test('cloneNode deep', function() {
     var a = document.createElement('div');
     a.innerHTML = '<x-clonate><span>1</span><span>2</span></x-clonate>';
+    document.body.appendChild(a);
+    if (customElements.flush) {
+      customElements.flush();
+    }
+    ShadyDOM.flush();
     var b = a.cloneNode(true);
     document.body.appendChild(b);
-    assert.equal(b.firstElementChild.childNodes.length, 2, 'deep copy has incorrect children');
-    if (checkUnpatchedDom) {
-      assert.equal(b.children.length, 4, 'deep copy has incorrect composed children');
+    if (customElements.flush) {
+      customElements.flush();
     }
+    ShadyDOM.flush();
+    assert.equal(b.firstElementChild.childNodes.length, 2, 'deep copy has incorrect children');
+    assert.equal(ShadyDOM.nativeTree.children(b.firstElementChild).length, 4, 'deep copy has incorrect composed children');
   });
 
-  test('importNode shallow', function() {
+  test.skip('importNode shallow', function() {
     var a = document.createElement('div');
     a.innerHTML = '<x-clonate><span>1</span><span>2</span></x-clonate>';
     // NOTE: Safari defaults do `deep` true for importNode so be explicit here.
     var b = document.importNode(a.firstElementChild, false);
     document.body.appendChild(b);
     assert.equal(b.childNodes.length, 0, 'shallow import has incorrect children');
-    if (checkUnpatchedDom) {
-      assert.equal(b.children.length, 2, 'shallow import has incorrect composed children');
-    }
+    assert.equal(ShadyDOM.nativeTree.children(b).length, 2, 'shallow import has incorrect composed children');
   });
 
-  test('importNode deep', function() {
+  test.skip('importNode deep', function() {
     var a = document.createElement('div');
     a.innerHTML = '<x-clonate><span>1</span><span>2</span></x-clonate>';
     var b = document.importNode(a, true);
     document.body.appendChild(b);
     assert.equal(b.firstElementChild.childNodes.length, 2, 'deep copy has incorrect children');
-    if (checkUnpatchedDom) {
-      assert.equal(b.children.length, 4, 'deep copy has incorrect composed children');
-    }
+    assert.equal(ShadyDOM.nativeTree.children(b).length, 4, 'deep copy has incorrect composed children');
   });
 
   test('flush reentrancy', function() {
@@ -845,14 +845,24 @@ suite('Accessors', function() {
     assert.equal(element.previousElementSibling, null, 'previousElementSibling incorrect');
   });
 
+  test('template accessors (innerHTML)', function() {
+    var template = document.createElement('template');
+    template.innerHTML = '<div></div>';
+    assert.notOk(template.firstChild);
+    assert.ok(template.content.firstChild);
+    assert.equal(template.innerHTML, '<div></div>');
+  });
+
   test('textContent', function() {
     var testElement = document.createElement('x-project');
     testElement.textContent = 'Hello World';
     assert.equal(testElement.textContent, 'Hello World', 'textContent getter incorrect');
-    if (checkUnpatchedDom) {
-      ShadyDOM.flush();
-      assert.equal(Polymer.TreeApi.Composed.getChildNodes(testElement)[1].textContent, 'Hello World', 'text content setter incorrect');
+    document.body.appendChild(testElement);
+    if (customElements.flush) {
+      customElements.flush();
     }
+    ShadyDOM.flush();
+    assert.equal(ShadyDOM.nativeTree.childNodes(testElement)[1].textContent, 'Hello World', 'text content setter incorrect');
     testElement = createEnabledElement('x-commented');
     assert.equal(testElement.shadowRoot.textContent, '[]', 'text content getter with comment incorrect');
 
@@ -873,13 +883,15 @@ suite('Accessors', function() {
     var added = testElement.firstChild;
     assert.equal(added.textContent , 'Hello World', 'innerHTML setter incorrect');
     assert.equal(testElement.innerHTML , '<div>Hello World</div><div>2</div><div>3</div>', 'innerHTML getter incorrect');
-    if (checkUnpatchedDom) {
-      ShadyDOM.flush();
-      var children = Polymer.TreeApi.Composed.getChildNodes(testElement);
-      assert.equal(children[1], added, 'innerHTML setter composed incorrectly');
-      assert.equal(children[2].textContent, '2', 'innerHTML setter composed incorrectly');
-      assert.equal(children[3].textContent, '3', 'innerHTML setter composed incorrectly');
+    document.body.appendChild(testElement);
+    if (customElements.flush) {
+      customElements.flush();
     }
+    ShadyDOM.flush();
+    var children = ShadyDOM.nativeTree.childNodes(testElement);
+    assert.equal(children[1], added, 'innerHTML setter composed incorrectly');
+    assert.equal(children[2].textContent, '2', 'innerHTML setter composed incorrectly');
+    assert.equal(children[3].textContent, '3', 'innerHTML setter composed incorrectly');
   });
 
   test('innerHTML (non-composed)', function() {
@@ -941,15 +953,9 @@ suite('non-distributed elements', function() {
   test('correctly distributes changes to light dom', function() {
     function testNoAttr() {
       assert.equal(allInsertionPoints(child)[0], d.shadowRoot.querySelector('#notTestContent'), 'child not distributed logically');
-      if (checkUnpatchedDom) {
-        assert.equal(Polymer.TreeApi.Composed.getParentNode(child), d.shadowRoot.querySelector('#notTestContainer'), 'child not rendered in composed dom');
-      }
     }
     function testWithAttr() {
       assert.equal(allInsertionPoints(child)[0], d.shadowRoot.querySelector('#testContent'), 'child not distributed logically');
-      if (checkUnpatchedDom) {
-        assert.equal(Polymer.TreeApi.Composed.getParentNode(child), d.shadowRoot.querySelector('#testContainer'), 'child not rendered in composed dom');
-      }
     }
     // test with x-distribute
     var d = document.createElement('x-distribute');
@@ -964,17 +970,14 @@ suite('non-distributed elements', function() {
     testNoAttr();
     // set / unset `test` attr and see if it distributes properly
     child.setAttribute('slot', 'test');
-    updateRoot(d);
     ShadyDOM.flush();
     testWithAttr();
     //
     child.removeAttribute('slot');
-    updateRoot(d);
     ShadyDOM.flush();
     testNoAttr();
     //
     child.setAttribute('slot', 'test');
-    updateRoot(d);
     ShadyDOM.flush();
     testWithAttr();
   });
