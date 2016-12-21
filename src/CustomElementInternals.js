@@ -55,6 +55,7 @@ export class CustomElementInternals {
    * @param {!Node} root
    */
   upgradeTree(root) {
+    // TODO(bicknellr): Walk shadow roots.
     const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT);
     do {
       const currentNode = /** @type {!Element} */ (walker.currentNode);
@@ -107,8 +108,21 @@ export class CustomElementInternals {
   connectedCallback(element) {
     if (element[elementState] === CustomElementState.custom) {
       const definition = element[elementDefinition];
-      if (!(definition && definition.connectedCallback)) return;
-      definition.connectedCallback.call(element);
+      if (definition && definition.connectedCallback) {
+        definition.connectedCallback.call(element);
+      }
+    }
+  }
+
+  /**
+   * @param {!Element} element
+   */
+  disconnectedCallback(element) {
+    if (element[elementState] === CustomElementState.custom) {
+      const definition = element[elementDefinition];
+      if (definition && definition.disconnectedCallback) {
+        definition.disconnectedCallback.call(element);
+      }
     }
   }
 }

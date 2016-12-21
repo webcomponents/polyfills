@@ -48,6 +48,7 @@ if (!window['customElements'] || window['customElements']['forcePolyfill']) {
   const native_Document_createElement = window.Document.prototype.createElement;
   const native_Document_createElementNS = window.Document.prototype.createElementNS;
   const native_Node_insertBefore = window.Node.prototype.insertBefore;
+  const native_Node_removeChild = window.Node.prototype.removeChild;
 
   window['HTMLElement'] = (function() {
     /**
@@ -134,6 +135,7 @@ if (!window['customElements'] || window['customElements']['forcePolyfill']) {
       native_Node_insertBefore.call(this, node, refNode);
     }
 
+    // TODO(bicknellr): Walk shadow roots.
     const connected = Utilities.isConnected(this);
     if (connected) {
       const walker = document.createTreeWalker(this, NodeFilter.SHOW_ELEMENT);
@@ -157,6 +159,39 @@ if (!window['customElements'] || window['customElements']['forcePolyfill']) {
    * @return {!Node}
    */
   Node.prototype.appendChild = function(node) {
+    // TODO(bicknellr): Potentially capture the `insertBefore` created above
+    // so that if it's patched again, we don't also call the new patch.
     return Node.prototype.insertBefore.call(this, node, null);
+  };
+
+  /**
+   * @param {!Node} node
+   * @return {!Node}
+   */
+  Node.prototype.removeChild = function(node) {
+    const nativeResult = native_Node_removeChild.call(this, node);
+
+    // TODO(bicknellr): Walk shadow roots.
+    const walker = document.createTreeWalker(node, NodeFilter.SHOW_ELEMENT);
+    do {
+      const currentNode = /** @type {!Element} */ (walker.currentNode);
+      if (currentNode[elementState] === CustomElementState.custom) {
+        internals.disconnectedCallback(currentNode);
+      }
+    } while (walker.nextNode());
+
+    return nativeResult;
+  };
+
+  /**
+   * @param {!Node} nodeToInsert
+   * @param {?Node} nodeToRemove
+   * @return {!Node}
+   */
+  Node.prototype.replaceChild = function(nodeToInsert, nodeToRemove) {
+    const refChild = nodeToRemove.nextSibling;
+    Node.prototype.removeChild.call(this, nodeToRemove);
+    Node.prototype.insertBefore.call(this, nodeToInsert, refChild);
+    return nodeToRemove;
   };
 }
