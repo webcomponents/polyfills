@@ -22,17 +22,16 @@ import StyleCache from './style-cache'
 
 // TODO(dfreedm): consider spliting into separate global
 import ApplyShim from './apply-shim'
-import {flush} from './document-watcher'
+import {flush as watcherFlush} from './document-watcher'
 
 let styleCache = new StyleCache();
 
-let elementsHaveApplied = false;
-
 class ShadyCSS {
   constructor() {
-    this.scopeCounter = {};
+    this._scopeCounter = {};
     this._documentOwner = document.documentElement;
     this._documentOwnerStyleInfo = StyleInfo.set(document.documentElement, new StyleInfo({rules: []}));
+    this._elementsHaveApplied = false;
   }
   get nativeShadow() {
     return nativeShadow;
@@ -44,10 +43,10 @@ class ShadyCSS {
     return nativeCssApply;
   }
   flush() {
-    flush();
+    watcherFlush();
   }
   _generateScopeSelector(name) {
-    let id = this.scopeCounter[name] = (this.scopeCounter[name] || 0) + 1;
+    let id = this._scopeCounter[name] = (this._scopeCounter[name] || 0) + 1;
     return `${name}-${id}`;
   }
   getStyleAst(style) {
@@ -152,8 +151,9 @@ class ShadyCSS {
     if (!styleInfo) {
       styleInfo = this._prepareHost(host);
     }
+    // Only trip the `elementsHaveApplied` flag if a node other that the root document has `applyStyle` called
     if (!this._isRootOwner(host)) {
-      elementsHaveApplied = true;
+      this._elementsHaveApplied = true;
     }
     if (window.CustomStyle) {
       let CS = window.CustomStyle;
@@ -166,13 +166,16 @@ class ShadyCSS {
         }
         CS.applyStyles();
         // if no elements have booted yet, we can just update the document and be done
-        if (!elementsHaveApplied) {
+        if (!this._elementsHaveApplied) {
           return;
         }
         // if no native css custom properties, we must recalculate the whole tree
-        if (!nativeCssVariables) {
+        if (!this.nativeCss) {
           this.updateStyles();
-          // make sure not to recurse back into this element subtree, unless it is the first time
+          /*
+          When updateStyles() runs, this element may not have a shadowroot yet.
+          If not, we need to make sure that this element runs `applyStyle` on itself at least once to generate a style
+          */
           if (hasApplied) {
             return;
           }
@@ -190,15 +193,15 @@ class ShadyCSS {
       }
       let template = templateMap[is];
       // bail early if there is no shadowroot for this element
-      if (!template && is !== 'html') {
+      if (!template && !this._isRootOwner(host)) {
         return;
       }
       if (template && template._applyShimInvalid && template._style) {
         // update template
-        if (!template._invalidating) {
+        if (!template._validating) {
           ApplyShim.transformRules(template._styleAst, is);
           template._style.textContent = StyleTransformer.elementStyles(host, styleInfo.styleRules);
-          StyleInfo.validate(is);
+          StyleInfo.startValidating(is);
         }
         // update instance if native shadowdom
         if (this.nativeShadow) {
@@ -213,7 +216,6 @@ class ShadyCSS {
     } else {
       this._updateProperties(host, styleInfo);
       if (styleInfo.ownStylePropertyNames && styleInfo.ownStylePropertyNames.length) {
-        // TODO: use caching
         this._applyStyleProperties(host, styleInfo);
       }
     }

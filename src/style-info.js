@@ -28,17 +28,17 @@ export default class StyleInfo {
     }
   }
   /*
-  the template is marked as `invalidating` for one microtask so that all instances
+  the template is marked as `validating` for one microtask so that all instances
   found in the tree crawl of `applyStyle` will update themselves,
   but the template will only be updated once.
   */
-  static validate(elementName) {
+  static startValidating(elementName) {
     const template = templateMap[elementName];
-    if (!template._invalidating) {
-      template._invalidating = true;
+    if (!template._validating) {
+      template._validating = true;
       promise.then(() => {
         template._applyShimInvalid = false;
-        template._invalidating = false;
+        template._validating = false;
       });
     }
   }
@@ -53,6 +53,5 @@ export default class StyleInfo {
     this.styleProperties = null;
     this.scopeSelector = null;
     this.customStyle = null;
-    this.shouldRecalculate = true;
   }
 }

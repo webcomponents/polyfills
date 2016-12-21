@@ -25,13 +25,9 @@ let ShadyCSS = window.ShadyCSS;
 
 let enqueued = false;
 
-let alwaysUpdate = false;
-
 let customStyles = [];
 
 let hookFn = null;
-
-let readying = false;
 
 /*
 If a page only has <custom-style> elements, it will flash unstyled content,
@@ -48,8 +44,7 @@ function enqueueDocumentValidation() {
     window.HTMLImports.whenReady(validateDocument);
   } else if (document.readyState === 'complete') {
    validateDocument();
-  } else if (!readying) {
-    readying = true;
+  } else {
     document.addEventListener('readystatechange', () => {
       if (document.readyState === 'complete') {
         validateDocument();
@@ -60,11 +55,10 @@ function enqueueDocumentValidation() {
 
 function validateDocument() {
   requestAnimationFrame(() => {
-    if (enqueued || alwaysUpdate) {
+    if (enqueued || ShadyCSS._elementsHaveApplied) {
       ShadyCSS.updateStyles();
     }
     enqueued = false;
-    alwaysUpdate = true;
   });
 }
 
@@ -76,7 +70,7 @@ class CustomStyle extends HTMLElement {
     return hookFn;
   }
   static set processHook(fn) {
-    return hookFn = fn;
+    hookFn = fn;
   }
   static get _documentDirty() {
     return enqueued;
