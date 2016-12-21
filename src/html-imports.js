@@ -503,7 +503,19 @@
     for (let i = 0; i < pendingStyles.length; i++) {
       promises.push(whenElementLoaded(pendingStyles[i]));
     }
-    return Promise.all(promises);
+    return Promise.all(promises).then(() => {
+      // IE and Edge require styles/links to be siblings in order to apply correctly.
+      if (isIE || isEdge) {
+        const n$ = document.head.querySelectorAll(`
+          style:not([type]),
+          link[rel=stylesheet][href]:not([type])`);
+        for (let i = 0, l = n$.length, n; i < l && (n = n$[i]); i++) {
+          n.parentNode.removeChild(n);
+          document.head.appendChild(n);
+        }
+      }
+      return pendingStyles;
+    });
   }
 
   function fireEvents() {
@@ -628,6 +640,7 @@
    */
 
   const isIE = /Trident/.test(navigator.userAgent);
+  const isEdge = !isIE && /Edge\/\d./i.test(navigator.userAgent);
   const requiredReadyState = isIE ? 'complete' : 'interactive';
   const READY_EVENT = 'readystatechange';
 
