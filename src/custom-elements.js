@@ -8,10 +8,39 @@
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
+import CustomElementDefinition from './CustomElementDefinition';
+import CustomElementInternals from './CustomElementInternals';
 import CustomElementRegistry from './CustomElementRegistry';
 
 if (!window['customElements'] || window['customElements']['forcePolyfill']) {
-  const customElements = new CustomElementRegistry();
+  /** @type {!CustomElementInternals} */
+  const internals = new CustomElementInternals();
+
+  /** @type {!CustomElementRegistry} */
+  const customElements = new CustomElementRegistry(internals);
+
+  window['HTMLElement'] = (function(native_HTMLElement) {
+    /**
+     * @type {function(new: HTMLElement): !HTMLElement}
+     */
+    function HTMLElement() {
+      const maybeDefinition = internals.getDefinitionByConstructor(this.constructor);
+      if (!maybeDefinition) {
+        throw new Error('This element\'s constructor is not a known custom element constructor.');
+      }
+      const definition = /** @type {!CustomElementDefinition} */ (maybeDefinition);
+
+      const self = document.createElement(definition.localName);
+
+      // TODO(bicknellr): Upgrade element.
+
+      return self;
+    }
+
+    HTMLElement.prototype = native_HTMLElement.prototype;
+
+    return HTMLElement;
+  })(window['HTMLElement']);
 
   Object.defineProperty(window, 'customElements', {
     configurable: true,

@@ -1,3 +1,6 @@
+import CustomElementDefinition from './CustomElementDefinition';
+import CustomElementInternals from './CustomElementInternals';
+
 const reservedTagList = new Set([
   'annotation-xml',
   'color-profile',
@@ -9,43 +12,54 @@ const reservedTagList = new Set([
   'missing-glyph',
 ]);
 
-function isValidCustomElementName(name) {
-  const reserved = reservedTagList.has(name);
-  const validForm = /^[a-z][.0-9_a-z]*-[\-.0-9_a-z]*$/.test(name);
+/**
+ * @param {string} localName
+ * @returns {boolean}
+ */
+function isValidCustomElementName(localName) {
+  const reserved = reservedTagList.has(localName);
+  const validForm = /^[a-z][.0-9_a-z]*-[\-.0-9_a-z]*$/.test(localName);
   return !reserved && validForm;
 }
 
 class CustomElementRegistry {
-  constructor() {
+
+  /**
+   * @param {!CustomElementInternals} internals
+   */
+  constructor(internals) {
     console.log('CustomElementRegistry constructed');
 
-    /** @type {!Map<string, !Object>} */
-    this._definitions = new Map();
-
-    /** @type {boolean} */
+    /**
+     * @private
+     * @type {boolean}
+     */
     this._elementDefinitionIsRunning = false;
+
+    /**
+     * @type {!CustomElementInternals}
+     */
+    this._internals = internals;
   }
 
   /**
-   * @param {string} name
+   * @param {string} localName
    * @param {!Function} constructor
    */
-  define(name, constructor) {
-    console.log('customElements.define', name);
+  define(localName, constructor) {
+    console.log('customElements.define', localName);
 
     if (!(constructor instanceof Function)) {
       throw new TypeError('Custom element constructors must be functions.');
     }
 
-    if (!isValidCustomElementName(name)) {
-      throw new SyntaxError(`The element name '${name}' is not valid.`);
+    if (!isValidCustomElementName(localName)) {
+      throw new SyntaxError(`The element name '${localName}' is not valid.`);
     }
 
-    if (this._definitions.has(name)) {
-      throw new Error(`A custom element with name '${name}' has already been defined.`);
+    if (this._internals.hasDefinitionForName(localName)) {
+      throw new Error(`A custom element with name '${localName}' has already been defined.`);
     }
-
-    const localName = name;
 
     if (this._elementDefinitionIsRunning) {
       throw new Error('A custom element is already being defined.');
@@ -84,7 +98,6 @@ class CustomElementRegistry {
     }
 
     const definition = {
-      name,
       localName,
       constructor,
       connectedCallback,
@@ -94,9 +107,10 @@ class CustomElementRegistry {
       observedAttributes,
     };
 
-    this._definitions.set(name, definition);
+    this._internals.setDefinition(localName, definition);
 
     // TODO(bicknellr): Upgrade elements matching this definition.
+    this._internals.upgradeTree(document);
 
     // TODO(bicknellr): whenDefined promise map
   }
