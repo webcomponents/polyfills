@@ -43,7 +43,7 @@ function enqueueDocumentValidation() {
   if (window.HTMLImports) {
     window.HTMLImports.whenReady(validateDocument);
   } else if (document.readyState === 'complete') {
-   validateDocument();
+    validateDocument();
   } else {
     document.addEventListener('readystatechange', () => {
       if (document.readyState === 'complete') {

@@ -269,7 +269,7 @@ class StyleTransformer {
       this._transformComplexSelector(selector, SCOPE_DOC_SELECTOR) :
       this._transformSimpleSelector(selector.trim(), SCOPE_DOC_SELECTOR);
   }
-};
+}
 
 let NTH = /:(nth[-\w]+)\(([^)]+)\)/;
 let SCOPE_DOC_SELECTOR = `:not(.${SCOPE_NAME})`;

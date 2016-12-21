@@ -3,6 +3,11 @@
 ShadyCSS provides a shim for, CSS Custom Properties, CSS Mixins with `@apply` support,
 and ShadowDOM V1 style encapsulation with the ShadyDOM library.
 
+## Requirements
+ShadyCSS requires support for CustomElements, ShadowDOM, MutationObserver, Promise, Object.assign
+
+This library is distributed as ES2016 only, due to the included `<custom-style>` element definition.
+
 ## Usage
 
 The shim will transparently no-op if some or all native support is available.
