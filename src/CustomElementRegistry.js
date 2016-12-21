@@ -135,6 +135,8 @@ class CustomElementRegistry {
 }
 
 // Closure compiler exports.
+window['CustomElementRegistry'] = CustomElementRegistry;
 CustomElementRegistry.prototype['define'] = CustomElementRegistry.prototype.define;
+CustomElementRegistry.prototype['get'] = CustomElementRegistry.prototype.get;
 
 export default CustomElementRegistry;
