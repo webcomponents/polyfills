@@ -26,7 +26,20 @@ if (!window['customElements'] || window['customElements']['forcePolyfill']) {
   /** @type {!CustomElementRegistry} */
   const customElements = new CustomElementRegistry(internals);
 
-  window['HTMLElement'] = (function(native_HTMLElement) {
+  Object.defineProperty(window, 'customElements', {
+    configurable: true,
+    enumerable: true,
+    value: customElements,
+  });
+
+
+  // PATCHING
+
+  const native_HTMLElement = window.HTMLElement;
+  const native_Document_createElement = window.Document.prototype.createElement;
+  const native_Document_createElementNS = window.Document.prototype.createElementNS;
+
+  window['HTMLElement'] = (function() {
     /**
      * @type {function(new: HTMLElement): !HTMLElement}
      */
@@ -42,7 +55,7 @@ if (!window['customElements'] || window['customElements']['forcePolyfill']) {
       const constructionStack = definition.constructionStack;
 
       if (constructionStack.length === 0) {
-        const self = document.createElement(definition.localName);
+        const self = native_Document_createElement.call(document, definition.localName);
         Object.setPrototypeOf(self, constructor.prototype);
         self[elementStateFlag] = CustomElementState.custom;
         return self;
@@ -63,11 +76,24 @@ if (!window['customElements'] || window['customElements']['forcePolyfill']) {
     HTMLElement.prototype = native_HTMLElement.prototype;
 
     return HTMLElement;
-  })(window['HTMLElement']);
+  })();
 
-  Object.defineProperty(window, 'customElements', {
-    configurable: true,
-    enumerable: true,
-    value: customElements,
-  });
+  Document.prototype.createElement = function(localName) {
+    const definition = internals.localNameToDefinition(localName);
+    if (definition) {
+      return new (definition.constructor)();
+    }
+
+    return native_Document_createElement.call(this, localName);
+  };
+
+  const NS_HTML = "http://www.w3.org/1999/xhtml";
+
+  Document.prototype.createElementNS = function(namespace, localName) {
+    if (namespace === null || namespace === NS_HTML) {
+      return this.createElement(localName);
+    }
+
+    return native_Document_createElementNS.call(this, namespace, localName);
+  };
 }
