@@ -8,8 +8,15 @@
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
-import CustomElementDefinition from './CustomElementDefinition';
-import CustomElementInternals from './CustomElementInternals';
+import {
+  AlreadyConstructedMarker,
+  CustomElementDefinition,
+} from './CustomElementDefinition';
+import {
+  CustomElementInternals,
+  CustomElementState,
+  elementStateFlag,
+} from './CustomElementInternals';
 import CustomElementRegistry from './CustomElementRegistry';
 
 if (!window['customElements'] || window['customElements']['forcePolyfill']) {
@@ -24,15 +31,33 @@ if (!window['customElements'] || window['customElements']['forcePolyfill']) {
      * @type {function(new: HTMLElement): !HTMLElement}
      */
     function HTMLElement() {
-      const localName = internals.constructorToLocalName(this.constructor);
-      if (!localName) {
-        throw new Error('This element\'s constructor is not a known custom element constructor.');
+      /** @type {!Function} */
+      const constructor = this.constructor;
+
+      const definition = internals.constructorToDefinition(constructor);
+      if (!definition) {
+        throw new Error('The custom element being constructed was not registered with `customElements`.');
       }
-      const self = document.createElement(/** @type {string} */ (localName));
 
-      // TODO(bicknellr): Upgrade element.
+      const constructionStack = definition.constructionStack;
 
-      return self;
+      if (constructionStack.length === 0) {
+        const self = document.createElement(definition.localName);
+        Object.setPrototypeOf(self, constructor.prototype);
+        self[elementStateFlag] = CustomElementState.custom;
+        return self;
+      }
+
+      const lastIndex = constructionStack.length - 1;
+      const element = constructionStack[lastIndex];
+      if (element === AlreadyConstructedMarker) {
+        throw new Error('The HTMLElement constructor was either called reentrantly for this constructor or called multiple times.');
+      }
+      constructionStack[lastIndex] = AlreadyConstructedMarker;
+
+      Object.setPrototypeOf(element, constructor.prototype);
+
+      return element;
     }
 
     HTMLElement.prototype = native_HTMLElement.prototype;

@@ -1,16 +1,28 @@
-import CustomElementDefinition from './CustomElementDefinition';
+import {
+  AlreadyConstructedMarker,
+  CustomElementDefinition,
+} from './CustomElementDefinition';
 
-const upgraded = '__CE__upgraded_' + Math.random().toString(32).substring(2);
+const randomString = () => Math.random().toString(32).substring(2);
 
-class CustomElementInternals {
+export const constructedFlag = 'constructed_' + randomString();
+export const elementStateFlag = 'elementState_' + randomString();
+
+/**
+ * @enum {number}
+ */
+export const CustomElementState = {
+  custom: 1,
+  failed: 2,
+};
+
+export class CustomElementInternals {
   constructor() {
-    console.log('CustomElementInternals constructed');
-
     /** @type {!Map<string, !CustomElementDefinition>} */
     this._localNameToDefinition = new Map();
 
-    /** @type {!Map<!Function, string>} */
-    this._constructorToLocalName = new Map();
+    /** @type {!Map<!Function, !CustomElementDefinition>} */
+    this._constructorToDefinition = new Map();
   }
 
   /**
@@ -19,12 +31,12 @@ class CustomElementInternals {
    */
   setDefinition(localName, definition) {
     this._localNameToDefinition.set(localName, definition);
-    this._constructorToLocalName.set(definition.constructor, localName);
+    this._constructorToDefinition.set(definition.constructor, definition);
   }
 
   /**
    * @param {string} localName
-   * @return {?CustomElementDefinition}
+   * @return {!CustomElementDefinition|undefined}
    */
   localNameToDefinition(localName) {
     return this._localNameToDefinition.get(localName);
@@ -32,10 +44,10 @@ class CustomElementInternals {
 
   /**
    * @param {!Function} constructor
-   * @return {string}
+   * @return {!CustomElementDefinition|undefined}
    */
-  constructorToLocalName(constructor) {
-    return this._constructorToLocalName.get(constructor);
+  constructorToDefinition(constructor) {
+    return this._constructorToDefinition.get(constructor);
   }
 
   /**
@@ -53,16 +65,38 @@ class CustomElementInternals {
    * @param {!Element} element
    */
   upgradeElement(element) {
-    if (element[upgraded]) return;
+    if (
+      element[elementStateFlag] === CustomElementState.custom ||
+      element[elementStateFlag] === CustomElementState.failed
+    ) return;
 
-    const definition = this._localNameToDefinition.get(element.localName);
+    const definition = this.localNameToDefinition(element.localName);
     if (!definition) return;
 
-    console.log('UPGRADE:', element);
-    // TODO(bicknellr): Actually upgrade.
+    // Enqueue attributes.
 
-    element[upgraded] = true;
+    // Enqueue connected.
+
+    definition.constructionStack.push(element);
+
+    const constructor = definition.constructor;
+    try {
+      try {
+        let result = new (constructor)();
+        if (result !== element) {
+          throw new Error('The custom element constructor did not produce the element being upgraded.');
+        }
+      } finally {
+        definition.constructionStack.pop();
+      }
+    } catch (e) {
+      element[elementStateFlag] = CustomElementState.failed;
+      throw e;
+    }
+
+    element[elementStateFlag] = CustomElementState.custom;
   }
 }
 
-export default CustomElementInternals;
+CustomElementInternals.constructedFlag = constructedFlag;
+CustomElementInternals.elementStateFlag = elementStateFlag;

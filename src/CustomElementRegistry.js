@@ -1,5 +1,9 @@
-import CustomElementDefinition from './CustomElementDefinition';
-import CustomElementInternals from './CustomElementInternals';
+import {
+  CustomElementDefinition
+} from './CustomElementDefinition';
+import {
+  CustomElementInternals
+} from './CustomElementInternals';
 
 const reservedTagList = new Set([
   'annotation-xml',
@@ -105,6 +109,7 @@ class CustomElementRegistry {
       adoptedCallback,
       attributeChangedCallback,
       observedAttributes,
+      constructionStack: [],
     };
 
     this._internals.setDefinition(localName, definition);

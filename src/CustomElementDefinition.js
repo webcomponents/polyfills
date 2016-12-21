@@ -1,3 +1,5 @@
+export const AlreadyConstructedMarker = {"AlreadyConstructedMarker": true};
+
 /**
  * @typedef {{
  *  localName: string,
@@ -7,8 +9,7 @@
  *  adoptedCallback: Function,
  *  attributeChangedCallback: Function,
  *  observedAttributes: !Array<string>,
+ *  constructionStack: !Array<!HTMLElement|null>,
  * }}
  */
-let CustomElementDefinition;
-
-export default CustomElementDefinition;
+export let CustomElementDefinition;
