@@ -44,27 +44,6 @@
     });
   }
 
-  // CustomEvent polyfill.
-  (function() {
-
-    if (typeof window.CustomEvent === 'function') return false;
-
-    function CustomEvent(event, params) {
-      params = params || {
-        bubbles: false,
-        cancelable: false,
-        detail: undefined
-      };
-      const evt = /** @type {CustomEvent} */ (document.createEvent('CustomEvent'));
-      evt.initCustomEvent(event, params.bubbles, params.cancelable, params.detail);
-      return evt;
-    }
-
-    CustomEvent.prototype = window.Event.prototype;
-
-    window.CustomEvent = /** @type {CustomEvent} */ (CustomEvent);
-  })();
-
   /********************* path fixup *********************/
   const ABS_URL_TEST = /(^\/)|(^#)|(^[\w-\d]*:)/;
   const CSS_URL_REGEXP = /(url\()([^)]*)(\))/g;
@@ -299,14 +278,19 @@
   // - observes imported documents for new elements (these are handled via the
   // dynamic importer)
   class Importer {
-    constructor() {
+    constructor(doc) {
       this.documents = {};
-      this._onLoaded = this._onLoaded.bind(this);
-      this._onLoadedAll = this._onLoadedAll.bind(this);
-      this._loader = new Loader(this._onLoaded, this._onLoadedAll);
+      this._loader = new Loader(
+        this._onLoaded.bind(this), this._onLoadedAll.bind(this)
+      );
+      this._loadSubtree(doc);
+      // Observe only document head
+      new MutationObserver(this._onMutation.bind(this)).observe(doc.head, {
+        childList: true
+      });
     }
 
-    bootDocument(doc) {
+    _loadSubtree(doc) {
       const nodes = doc.querySelectorAll(IMPORT_SELECTOR);
       // add these nodes to loader's queue
       this._loader.addNodes(nodes);
@@ -323,7 +307,7 @@
           if (doc) {
             // note, we cannot use MO to detect parsed nodes because
             // SD polyfill does not report these as mutations.
-            this.bootDocument(doc);
+            this._loadSubtree(doc);
           }
           // cache document
           this.documents[url] = doc;
@@ -336,10 +320,7 @@
       Promise.all([
         runScripts(),
         waitForStyles()
-      ]).then(() => {
-        fireEvents();
-        this._observe(document.head);
-      });
+      ]).then(fireEvents);
     }
 
     _flatten(element) {
@@ -478,6 +459,8 @@
       if (o.src) {
         o.setAttribute('src', Path.replaceAttrUrl(o.getAttribute('src'), url));
       }
+      // NOTE: we override the type here, might need to keep track of original
+      // type and apply it to clone when running the script.
       o.setAttribute('type', scriptType);
     }
   }
@@ -496,14 +479,18 @@
         if (o.src) {
           c.setAttribute('src', o.getAttribute('src'));
         }
+        // Listen for load/error events before adding the clone to the document.
+        const whenLoadedPromise = whenElementLoaded(c);
+        // Update currentScript and replace original with clone script.
         currentScript = c;
         o.parentNode.replaceChild(c, o);
-        return whenElementLoaded(c).then((script) => {
+        // After is loaded, reset currentScript.
+        return whenLoadedPromise.then((script) => {
           if (script === currentScript) {
             currentScript = null;
           }
           return script;
-        });
+        });;
       });
     }
     return promise.then(() => {
@@ -634,11 +621,9 @@
     content.innerHTML = resource;
 
     markScripts(content, url);
-    // IE won't send load/error events, so ensure we add load/error listeners
-    // before modifying href or contents in styles (which triggers the reload).
-    if (isIE || isEdge) {
-      markStyles(content);
-    }
+    // Ensure we add load/error listeners before modifying urls or appending
+    // these to the main document.
+    markStyles(content);
     // TODO(sorvell): this is specific to users (Polymer) of the dom-module element.
     fixDomModules(content, url);
     fixUrls(content, url);
@@ -751,8 +736,7 @@
   } else {
 
     function bootstrap() {
-      const importer = new Importer();
-      importer.bootDocument(document);
+      new Importer(document);
     }
 
     if (document.readyState === 'complete' ||
