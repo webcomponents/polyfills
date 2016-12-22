@@ -3,19 +3,8 @@ import {
   CustomElementDefinition,
 } from './CustomElementDefinition';
 import * as Utilities from './Utilities';
-
-const randomString = () => Math.random().toString(32).substring(2);
-
-export const elementState = 'elementState_' + randomString();
-export const elementDefinition = 'elementDefinition_' + randomString();
-
-/**
- * @enum {number}
- */
-export const CustomElementState = {
-  custom: 1,
-  failed: 2,
-};
+import * as CustomElementInternalSymbols from './CustomElementInternalSymbols';
+const CustomElementState = CustomElementInternalSymbols.CustomElementState;
 
 export class CustomElementInternals {
   constructor() {
@@ -68,8 +57,8 @@ export class CustomElementInternals {
    */
   upgradeElement(element) {
     if (
-      element[elementState] === CustomElementState.custom ||
-      element[elementState] === CustomElementState.failed
+      element[CustomElementInternalSymbols.state] === CustomElementState.custom ||
+      element[CustomElementInternalSymbols.state] === CustomElementState.failed
     ) return;
 
     const definition = this.localNameToDefinition(element.localName);
@@ -88,12 +77,12 @@ export class CustomElementInternals {
         definition.constructionStack.pop();
       }
     } catch (e) {
-      element[elementState] = CustomElementState.failed;
+      element[CustomElementInternalSymbols.state] = CustomElementState.failed;
       throw e;
     }
 
-    element[elementState] = CustomElementState.custom;
-    element[elementDefinition] = definition;
+    element[CustomElementInternalSymbols.state] = CustomElementState.custom;
+    element[CustomElementInternalSymbols.definition] = definition;
 
     if (Utilities.isConnected(element)) {
       this.connectedCallback(element);
@@ -113,8 +102,8 @@ export class CustomElementInternals {
    * @param {!Element} element
    */
   connectedCallback(element) {
-    if (element[elementState] === CustomElementState.custom) {
-      const definition = element[elementDefinition];
+    if (element[CustomElementInternalSymbols.state] === CustomElementState.custom) {
+      const definition = element[CustomElementInternalSymbols.definition];
       if (definition && definition.connectedCallback) {
         definition.connectedCallback.call(element);
       }
@@ -125,8 +114,8 @@ export class CustomElementInternals {
    * @param {!Element} element
    */
   disconnectedCallback(element) {
-    if (element[elementState] === CustomElementState.custom) {
-      const definition = element[elementDefinition];
+    if (element[CustomElementInternalSymbols.state] === CustomElementState.custom) {
+      const definition = element[CustomElementInternalSymbols.definition];
       if (definition && definition.disconnectedCallback) {
         definition.disconnectedCallback.call(element);
       }
@@ -141,8 +130,8 @@ export class CustomElementInternals {
    * @param {?string} namespace
    */
   attributeChangedCallback(element, name, oldValue, newValue, namespace) {
-    if (element[elementState] === CustomElementState.custom) {
-      const definition = element[elementDefinition];
+    if (element[CustomElementInternalSymbols.state] === CustomElementState.custom) {
+      const definition = element[CustomElementInternalSymbols.definition];
       if (
         definition &&
         definition.attributeChangedCallback &&
@@ -153,5 +142,3 @@ export class CustomElementInternals {
     }
   }
 }
-
-CustomElementInternals.elementState = elementState;

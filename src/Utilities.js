@@ -1,3 +1,5 @@
+import * as CustomElementInternalSymbols from './CustomElementInternalSymbols';
+
 const reservedTagList = new Set([
   'annotation-xml',
   'color-profile',

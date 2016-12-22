@@ -14,10 +14,9 @@ import {
 } from './CustomElementDefinition';
 import {
   CustomElementInternals,
-  CustomElementState,
-  elementState,
-  elementDefinition,
 } from './CustomElementInternals';
+import * as CustomElementInternalSymbols from './CustomElementInternalSymbols';
+const CustomElementState = CustomElementInternalSymbols.CustomElementState;
 import CustomElementRegistry from './CustomElementRegistry';
 import * as Utilities from './Utilities';
 
@@ -72,8 +71,8 @@ if (!window['customElements'] || window['customElements']['forcePolyfill']) {
       if (constructionStack.length === 0) {
         const self = native_Document_createElement.call(document, definition.localName);
         Object.setPrototypeOf(self, constructor.prototype);
-        self[elementState] = CustomElementState.custom;
-        self[elementDefinition] = definition;
+        self[CustomElementInternalSymbols.state] = CustomElementState.custom;
+        self[CustomElementInternalSymbols.definition] = definition;
         return self;
       }
 
@@ -147,7 +146,7 @@ if (!window['customElements'] || window['customElements']['forcePolyfill']) {
         const currentNode = /** @type {!Element} */ (walker.currentNode);
         if (currentNode === this) continue;
 
-        if (currentNode[elementState] === CustomElementState.custom) {
+        if (currentNode[CustomElementInternalSymbols.state] === CustomElementState.custom) {
           internals.connectedCallback(currentNode);
         } else {
           internals.upgradeElement(currentNode);
@@ -179,7 +178,7 @@ if (!window['customElements'] || window['customElements']['forcePolyfill']) {
     const walker = document.createTreeWalker(node, NodeFilter.SHOW_ELEMENT);
     do {
       const currentNode = /** @type {!Element} */ (walker.currentNode);
-      if (currentNode[elementState] === CustomElementState.custom) {
+      if (currentNode[CustomElementInternalSymbols.state] === CustomElementState.custom) {
         internals.disconnectedCallback(currentNode);
       }
     } while (walker.nextNode());
