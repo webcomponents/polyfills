@@ -154,15 +154,15 @@ if (!window['customElements'] || window['customElements']['forcePolyfill']) {
 
     const connected = Utilities.isConnected(this);
     if (connected) {
-      Utilities.walkDeepDescendantElements(this, element => {
-        if (element === this) return;
-
-        if (element[CustomElementInternalSymbols.state] === CustomElementState.custom) {
-          internals.connectedCallback(element);
-        } else {
-          internals.upgradeElement(element);
-        }
-      });
+      for (const node of nodes) {
+        Utilities.walkDeepDescendantElements(node, element => {
+          if (element[CustomElementInternalSymbols.state] === CustomElementState.custom) {
+            internals.connectedCallback(element);
+          } else {
+            internals.upgradeElement(element);
+          }
+        });
+      }
     }
 
     return node;
