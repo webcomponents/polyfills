@@ -168,14 +168,15 @@ if (!window['customElements'] || window['customElements']['forcePolyfill']) {
     return node;
   };
 
+  // Keep a reference in case `Node#insertBefore` is patched again.
+  const CE_Node_insertBefore = Node.prototype.insertBefore;
+
   /**
    * @param {!Node} node
    * @return {!Node}
    */
   Node.prototype.appendChild = function(node) {
-    // TODO(bicknellr): Potentially capture the `insertBefore` created above
-    // so that if it's patched again, we don't also call the new patch.
-    return Node.prototype.insertBefore.call(this, node, null);
+    return CE_Node_insertBefore.call(this, node, null);
   };
 
   /**
