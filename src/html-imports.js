@@ -217,9 +217,7 @@
     fetch(url, elt) {
       flags.log && console.log('fetch', url, elt);
       if (!url) {
-        setTimeout(() => this.receive(url, elt, true, {
-          error: 'href must be specified'
-        }), 0);
+        this.receive(url, elt, true, 'error: href must be specified');
       } else if (url.match(/^data:/)) {
         // Handle Data URI Scheme
         const pieces = url.split(',');
@@ -230,7 +228,7 @@
         } else {
           body = decodeURIComponent(body);
         }
-        setTimeout(() => this.receive(url, elt, false, body), 0);
+        this.receive(url, elt, false, body);
       } else {
         Xhr.load(url, (error, resource, redirectedUrl) =>
           this.receive(url, elt, error, resource, redirectedUrl));
@@ -241,7 +239,7 @@
      * @param {!string} url
      * @param {!Element} elt
      * @param {boolean} err
-     * @param {Object=} resource
+     * @param {string=} resource
      * @param {string=} redirectedUrl
      */
     receive(url, elt, err, resource, redirectedUrl) {
