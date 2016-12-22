@@ -442,7 +442,7 @@ class StyleProperties {
     }
     v += (v ? ' ' : '') + XSCOPE_NAME + ' ' + selector;
     if (c !== v) {
-      StyleUtil.setAttributeNative(element, 'class', v);
+      StyleUtil.setElementClassRaw(element, v);
     }
   }
 
