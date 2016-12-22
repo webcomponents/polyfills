@@ -526,8 +526,8 @@
       if (!n.__loaded) {
         const eventType = n.import ? 'load' : 'error';
         flags.log && console.warn('fire', eventType, n.href);
-        n.__loaded = true;
-        n.__errored = !n.import;
+        // Listens for load/error event and sets __loaded.
+        whenElementLoaded(n);
         n.dispatchEvent(new CustomEvent(eventType, {
           bubbles: false,
           cancelable: false,
