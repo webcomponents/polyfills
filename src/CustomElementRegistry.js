@@ -9,8 +9,6 @@ class CustomElementRegistry {
    * @param {!CustomElementInternals} internals
    */
   constructor(internals) {
-    console.log('CustomElementRegistry constructed');
-
     /**
      * @private
      * @type {boolean}
@@ -33,8 +31,6 @@ class CustomElementRegistry {
    * @param {!Function} constructor
    */
   define(localName, constructor) {
-    console.log('customElements.define', localName);
-
     if (!(constructor instanceof Function)) {
       throw new TypeError('Custom element constructors must be functions.');
     }
