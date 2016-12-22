@@ -47,6 +47,7 @@ if (!window['customElements'] || window['customElements']['forcePolyfill']) {
   const native_Document_createElement = window.Document.prototype.createElement;
   const native_Document_createElementNS = window.Document.prototype.createElementNS;
   const native_Document_importNode = window.Document.prototype.importNode;
+  const native_Node_cloneNode = window.Node.prototype.cloneNode;
   const native_Node_insertBefore = window.Node.prototype.insertBefore;
   const native_Node_removeChild = window.Node.prototype.removeChild;
   const native_Element_attachShadow = window.Element.prototype['attachShadow'];
@@ -175,6 +176,16 @@ if (!window['customElements'] || window['customElements']['forcePolyfill']) {
     // TODO(bicknellr): Potentially capture the `insertBefore` created above
     // so that if it's patched again, we don't also call the new patch.
     return Node.prototype.insertBefore.call(this, node, null);
+  };
+
+  /**
+   * @param {boolean=} deep
+   * @return {!Node}
+   */
+  Node.prototype.cloneNode = function(deep) {
+    const clone = native_Node_cloneNode.call(this, deep);
+    internals.upgradeTree(clone);
+    return clone;
   };
 
   /**
