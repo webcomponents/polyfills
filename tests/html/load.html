@@ -35,9 +35,7 @@
     <script>
       WCT = {
         waitFor: function(callback) {
-          HTMLImports.whenReady(function(data) {
-            callback(data);
-          });
+          HTMLImports.whenReady(callback);
         }
       };
     </script>

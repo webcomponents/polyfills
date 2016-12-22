@@ -480,7 +480,8 @@
           c.setAttribute('src', o.getAttribute('src'));
         }
         // Listen for load/error events before adding the clone to the document.
-        const whenLoadedPromise = whenElementLoaded(c);
+        // Catch failures, always return c.
+        const whenLoadedPromise = whenElementLoaded(c).catch(() => c);
         // Update currentScript and replace original with clone script.
         currentScript = c;
         o.parentNode.replaceChild(c, o);
@@ -499,21 +500,24 @@
   }
 
   function waitForStyles() {
-    const pendingStyles = document.querySelectorAll(stylesInImportsSelector);
+    const s$ = document.querySelectorAll(stylesInImportsSelector);
     const promises = [];
-    for (let i = 0; i < pendingStyles.length; i++) {
-      promises.push(whenElementLoaded(pendingStyles[i]));
+    for (let i = 0, l = s$.length, s; i < l && (s = s$[i]); i++) {
+      // Catch failures, always return s
+      promises.push(
+        whenElementLoaded(s).catch(() => s)
+      );
     }
     return Promise.all(promises).then(() => {
       // IE and Edge require styles/links to be siblings in order to apply correctly.
-      if ((isIE || isEdge) && pendingStyles.length) {
+      if ((isIE || isEdge) && s$.length) {
         const n$ = document.head.querySelectorAll(stylesSelector);
         for (let i = 0, l = n$.length, n; i < l && (n = n$[i]); i++) {
           n.parentNode.removeChild(n);
           document.head.appendChild(n);
         }
       }
-      return pendingStyles;
+      return s$;
     });
   }
 
@@ -523,10 +527,11 @@
     // Inverse order to have events firing bottom-up.
     for (let i = n$.length - 1, n; i >= 0 && (n = n$[i]); i--) {
       // Don't fire twice same event.
-      if (!n.__loaded) {
+      if (!n.__fired) {
+        n.__fired = true;
         const eventType = n.import ? 'load' : 'error';
         flags.log && console.warn('fire', eventType, n.href);
-        // Listens for load/error event and sets __loaded.
+        // Listens for load/error event and sets the promise.
         whenElementLoaded(n);
         n.dispatchEvent(new CustomEvent(eventType, {
           bubbles: false,
@@ -545,24 +550,14 @@
    */
   function whenElementLoaded(element) {
     if (!element.__loadPromise) {
-      if (isElementLoaded(element)) {
-        element.__loaded = true;
-        element.__errored = false;
-        element.__loadPromise = Promise.resolve(element);
-      } else {
-        element.__loadPromise = new Promise(resolve => {
-          element.addEventListener('load', () => {
-            element.__loaded = true;
-            element.__errored = false;
-            resolve(element);
-          });
-          element.addEventListener('error', () => {
-            element.__loaded = true;
-            element.__errored = true;
-            resolve(element);
-          });
-        });
-      }
+      element.__loadPromise = new Promise((resolve, reject) => {
+        if (isElementLoaded(element)) {
+          resolve(element);
+        } else {
+          element.addEventListener('load', () => resolve(element));
+          element.addEventListener('error', () => reject(element));
+        }
+      });
     }
     return element.__loadPromise;
   }
@@ -683,22 +678,29 @@
   // call <callback> when we ensure all imports have loaded
   function watchImportsLoad(doc) {
     let imports = doc.querySelectorAll(IMPORT_SELECTOR);
-    // only non-nested imports
-    imports = Array.prototype.slice.call(imports).filter((imp) => {
-      return !MATCHES.call(imp, `${IMPORT_SELECTOR} ${IMPORT_SELECTOR}`);
+    const promises = [];
+    const importInfo = /** @type {!HTMLImportInfo} */ ({
+      allImports: [],
+      loadedImports: [],
+      errorImports: []
     });
-    return Promise.all(imports.map(whenElementLoaded)).then(() => {
-      const newImports = [];
-      const errorImports = [];
-      imports.forEach((imp) => {
-        (imp.__errored ? errorImports : newImports).push(imp);
-      });
-      return /** @type {!HTMLImportInfo} */ ({
-        allImports: imports,
-        loadedImports: newImports,
-        errorImports: errorImports
-      });
-    });
+    for (let i = 0, l = imports.length, imp; i < l && (imp = imports[i]); i++) {
+      // Skip nested imports.
+      if (MATCHES.call(imp, `${IMPORT_SELECTOR} ${IMPORT_SELECTOR}`)) {
+        continue;
+      }
+      importInfo.allImports.push(imp);
+      promises.push(whenElementLoaded(imp).then((imp) => {
+        importInfo.loadedImports.push(imp);
+        return imp;
+      }).catch((imp) => {
+        importInfo.errorImports.push(imp);
+        // Capture failures, always return imp.
+        return imp;
+      }));
+    }
+    // Return aggregated info.
+    return Promise.all(promises).then(() => importInfo);
   }
 
   // make `whenReady` work with native HTMLImports
