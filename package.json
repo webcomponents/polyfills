@@ -23,7 +23,6 @@
   "devDependencies": {
     "google-closure-compiler": "^20160822.1.0",
     "gulp": "^3.8.8",
-    "gulp-sourcemaps": "^1.6.0",
-    "web-component-tester": "^5.0.0"
+    "gulp-sourcemaps": "^1.6.0"
   }
 }
