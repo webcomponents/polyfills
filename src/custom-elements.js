@@ -205,6 +205,9 @@ if (!window['customElements'] || window['customElements']['forcePolyfill']) {
     return nativeResult;
   };
 
+  // Keep a reference in case `Node#removeChild` is patched again.
+  const CE_Node_removeChild = Node.prototype.removeChild;
+
   /**
    * @param {!Node} nodeToInsert
    * @param {?Node} nodeToRemove
@@ -212,8 +215,8 @@ if (!window['customElements'] || window['customElements']['forcePolyfill']) {
    */
   Node.prototype.replaceChild = function(nodeToInsert, nodeToRemove) {
     const refChild = nodeToRemove.nextSibling;
-    Node.prototype.removeChild.call(this, nodeToRemove);
-    Node.prototype.insertBefore.call(this, nodeToInsert, refChild);
+    CE_Node_removeChild.call(this, nodeToRemove);
+    CE_Node_insertBefore.call(this, nodeToInsert, refChild);
     return nodeToRemove;
   };
 
