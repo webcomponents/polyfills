@@ -76,7 +76,7 @@ class CustomElementRegistry {
       disconnectedCallback = getCallback('disconnectedCallback');
       adoptedCallback = getCallback('adoptedCallback');
       attributeChangedCallback = getCallback('attributeChangedCallback');
-      observedAttributes = constructor.observedAttributes || [];
+      observedAttributes = constructor['observedAttributes'] || [];
     } catch (e) {
       return;
     } finally {
