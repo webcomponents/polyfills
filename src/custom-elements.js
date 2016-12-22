@@ -53,8 +53,10 @@ if (!window['customElements'] || window['customElements']['forcePolyfill']) {
   const native_Element_attachShadow = window.Element.prototype['attachShadow'];
   const native_Element_getAttribute = window.Element.prototype.getAttribute;
   const native_Element_setAttribute = window.Element.prototype.setAttribute;
+  const native_Element_removeAttribute = window.Element.prototype.removeAttribute;
   const native_Element_getAttributeNS = window.Element.prototype.getAttributeNS;
   const native_Element_setAttributeNS = window.Element.prototype.setAttributeNS;
+  const native_Element_removeAttributeNS = window.Element.prototype.removeAttributeNS;
 
   window['HTMLElement'] = (function() {
     /**
@@ -252,6 +254,31 @@ if (!window['customElements'] || window['customElements']['forcePolyfill']) {
     native_Element_setAttributeNS.call(this, namespace, name, newValue);
     if (oldValue !== newValue) {
       internals.attributeChangedCallback(this, name, oldValue, newValue, namespace);
+    }
+  };
+
+  /**
+   * @param {string} name
+   * @param {string} newValue
+   */
+  Element.prototype.removeAttribute = function(name) {
+    const oldValue = native_Element_getAttribute.call(this, name);
+    native_Element_removeAttribute.call(this, name);
+    if (oldValue !== null) {
+      internals.attributeChangedCallback(this, name, oldValue, null, null);
+    }
+  };
+
+  /**
+   * @param {?string} namespace
+   * @param {string} name
+   * @param {string} newValue
+   */
+  Element.prototype.removeAttributeNS = function(namespace, name) {
+    const oldValue = native_Element_getAttributeNS.call(this, namespace, name);
+    native_Element_removeAttributeNS.call(this, namespace, name);
+    if (oldValue !== null) {
+      internals.attributeChangedCallback(this, name, oldValue, null, namespace);
     }
   };
 }
