@@ -13,6 +13,15 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 import {nativeShadow, nativeCssVariables} from './style-settings'
 import {parse, stringify, types} from './css-parse'
 
+
+export function setAttributeNative(element, name, value) {
+  if (window.ShadyDOM) {
+    window.ShadyDOM.nativeMethods.setAttribute.call(element, name, value);
+  } else {
+    element.setAttribute(name, value);
+  }
+}
+
 export function toCssText (rules, callback) {
   if (typeof rules === 'string') {
     rules = parse(rules);
@@ -165,11 +174,7 @@ export function processVariableAndFallback(str, callback) {
 
 export function setElementClassRaw(element, value) {
   // use native setAttribute provided by ShadyDOM when setAttribute is patched
-  if (element.__nativeSetAttribute) {
-    element.__nativeSetAttribute('class', value);
-  } else {
-    element.setAttribute('class', value);
-  }
+  setAttributeNative(element, 'class', value);
 }
 
 export let rx = {
