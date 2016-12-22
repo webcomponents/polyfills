@@ -51,6 +51,7 @@ if (!window['customElements'] || window['customElements']['forcePolyfill']) {
   const native_Node_insertBefore = window.Node.prototype.insertBefore;
   const native_Node_removeChild = window.Node.prototype.removeChild;
   const native_Element_attachShadow = window.Element.prototype['attachShadow'];
+  const native_Element_innerHTML = Object.getOwnPropertyDescriptor(window.Element.prototype, 'innerHTML');
   const native_Element_getAttribute = window.Element.prototype.getAttribute;
   const native_Element_setAttribute = window.Element.prototype.setAttribute;
   const native_Element_removeAttribute = window.Element.prototype.removeAttribute;
@@ -229,6 +230,17 @@ if (!window['customElements'] || window['customElements']['forcePolyfill']) {
     this[CustomElementInternalSymbols.shadowRoot] = shadowRoot;
     return shadowRoot;
   };
+
+  Object.defineProperty(Element.prototype, 'innerHTML', {
+    enumerable: native_Element_innerHTML.enumerable,
+    configurable: true,
+    get: native_Element_innerHTML.get,
+    set: function(htmlString) {
+      native_Element_innerHTML.set.call(this, htmlString);
+      internals.upgradeTree(this);
+      return htmlString;
+    },
+  });
 
   /**
    * @param {string} name
