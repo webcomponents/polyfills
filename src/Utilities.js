@@ -31,3 +31,22 @@ export function isConnected(node) {
   }
   return node === document;
 }
+
+/**
+ * @param {!Node} root
+ * @param {!function(!Element)} callback
+ */
+export function walkDeepDescendantElements(root, callback) {
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT);
+  do {
+    const element = /** @type {!Element} */ (walker.currentNode);
+    callback(element);
+    const shadowRoot = element[CustomElementInternalSymbols.shadowRoot];
+    if (shadowRoot) {
+      const children = shadowRoot.children;
+      for (var i = 0; i < children.length; i++) {
+        walkDeepDescendantElements(children[i], callback);
+      }
+    }
+  } while (walker.nextNode());
+}

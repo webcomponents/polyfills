@@ -48,6 +48,7 @@ if (!window['customElements'] || window['customElements']['forcePolyfill']) {
   const native_Document_createElementNS = window.Document.prototype.createElementNS;
   const native_Node_insertBefore = window.Node.prototype.insertBefore;
   const native_Node_removeChild = window.Node.prototype.removeChild;
+  const native_Element_attachShadow = window.Element.prototype['attachShadow'];
   const native_Element_getAttribute = window.Element.prototype.getAttribute;
   const native_Element_setAttribute = window.Element.prototype.setAttribute;
   const native_Element_getAttributeNS = window.Element.prototype.getAttributeNS;
@@ -138,20 +139,17 @@ if (!window['customElements'] || window['customElements']['forcePolyfill']) {
       native_Node_insertBefore.call(this, node, refNode);
     }
 
-    // TODO(bicknellr): Walk shadow roots.
     const connected = Utilities.isConnected(this);
     if (connected) {
-      const walker = document.createTreeWalker(this, NodeFilter.SHOW_ELEMENT);
-      do {
-        const currentNode = /** @type {!Element} */ (walker.currentNode);
-        if (currentNode === this) continue;
+      Utilities.walkDeepDescendantElements(this, element => {
+        if (element === this) return;
 
-        if (currentNode[CustomElementInternalSymbols.state] === CustomElementState.custom) {
-          internals.connectedCallback(currentNode);
+        if (element[CustomElementInternalSymbols.state] === CustomElementState.custom) {
+          internals.connectedCallback(element);
         } else {
-          internals.upgradeElement(currentNode);
+          internals.upgradeElement(element);
         }
-      } while (walker.nextNode());
+      });
     }
 
     return node;
@@ -174,14 +172,11 @@ if (!window['customElements'] || window['customElements']['forcePolyfill']) {
   Node.prototype.removeChild = function(node) {
     const nativeResult = native_Node_removeChild.call(this, node);
 
-    // TODO(bicknellr): Walk shadow roots.
-    const walker = document.createTreeWalker(node, NodeFilter.SHOW_ELEMENT);
-    do {
-      const currentNode = /** @type {!Element} */ (walker.currentNode);
-      if (currentNode[CustomElementInternalSymbols.state] === CustomElementState.custom) {
-        internals.disconnectedCallback(currentNode);
+    Utilities.walkDeepDescendantElements(node, element => {
+      if (element[CustomElementInternalSymbols.state] === CustomElementState.custom) {
+        internals.disconnectedCallback(element);
       }
-    } while (walker.nextNode());
+    });
 
     return nativeResult;
   };
@@ -196,6 +191,16 @@ if (!window['customElements'] || window['customElements']['forcePolyfill']) {
     Node.prototype.removeChild.call(this, nodeToRemove);
     Node.prototype.insertBefore.call(this, nodeToInsert, refChild);
     return nodeToRemove;
+  };
+
+  /**
+   * @param {!{mode: string}} init
+   * @return {ShadowRoot}
+   */
+  Element.prototype['attachShadow'] = function(init) {
+    const shadowRoot = native_Element_attachShadow.call(this, init);
+    this[CustomElementInternalSymbols.shadowRoot] = shadowRoot;
+    return shadowRoot;
   };
 
   /**

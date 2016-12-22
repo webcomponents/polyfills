@@ -44,12 +44,7 @@ export class CustomElementInternals {
    * @param {!Node} root
    */
   upgradeTree(root) {
-    // TODO(bicknellr): Walk shadow roots.
-    const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT);
-    do {
-      const currentNode = /** @type {!Element} */ (walker.currentNode);
-      this.upgradeElement(currentNode);
-    } while (walker.nextNode());
+    Utilities.walkDeepDescendantElements(root, element => this.upgradeElement(element));
   }
 
   /**
