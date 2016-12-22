@@ -99,7 +99,14 @@ export class CustomElementInternals {
       this.connectedCallback(element);
     }
 
-    // TODO(bicknellr): Run attributeChangedCallback for set attributes.
+    if (definition.attributeChangedCallback) {
+      for (const name of definition.observedAttributes) {
+        const value = element.getAttribute(name);
+        if (value !== null) {
+          this.attributeChangedCallback(element, name, null, value, null);
+        }
+      }
+    }
   }
 
   /**
@@ -122,6 +129,26 @@ export class CustomElementInternals {
       const definition = element[elementDefinition];
       if (definition && definition.disconnectedCallback) {
         definition.disconnectedCallback.call(element);
+      }
+    }
+  }
+
+  /**
+   * @param {!Element} element
+   * @param {string} name
+   * @param {?string} oldValue
+   * @param {?string} newValue
+   * @param {?string} namespace
+   */
+  attributeChangedCallback(element, name, oldValue, newValue, namespace) {
+    if (element[elementState] === CustomElementState.custom) {
+      const definition = element[elementDefinition];
+      if (
+        definition &&
+        definition.attributeChangedCallback &&
+        definition.observedAttributes.indexOf(name) > -1
+      ) {
+        definition.attributeChangedCallback.call(element, name, oldValue, newValue, namespace);
       }
     }
   }

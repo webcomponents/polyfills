@@ -96,7 +96,6 @@ class CustomElementRegistry {
 
     this._internals.setDefinition(localName, definition);
 
-    // TODO(bicknellr): Upgrade elements matching this definition.
     this._internals.upgradeTree(document);
 
     const deferred = this._whenDefinedDeferred.get(localName);

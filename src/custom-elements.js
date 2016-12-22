@@ -49,6 +49,10 @@ if (!window['customElements'] || window['customElements']['forcePolyfill']) {
   const native_Document_createElementNS = window.Document.prototype.createElementNS;
   const native_Node_insertBefore = window.Node.prototype.insertBefore;
   const native_Node_removeChild = window.Node.prototype.removeChild;
+  const native_Element_getAttribute = window.Element.prototype.getAttribute;
+  const native_Element_setAttribute = window.Element.prototype.setAttribute;
+  const native_Element_getAttributeNS = window.Element.prototype.getAttributeNS;
+  const native_Element_setAttributeNS = window.Element.prototype.setAttributeNS;
 
   window['HTMLElement'] = (function() {
     /**
@@ -193,5 +197,30 @@ if (!window['customElements'] || window['customElements']['forcePolyfill']) {
     Node.prototype.removeChild.call(this, nodeToRemove);
     Node.prototype.insertBefore.call(this, nodeToInsert, refChild);
     return nodeToRemove;
+  };
+
+  /**
+   * @param {string} name
+   * @param {string} newValue
+   */
+  Element.prototype.setAttribute = function(name, newValue) {
+    const oldValue = native_Element_getAttribute.call(this, name);
+    native_Element_setAttribute.call(this, name, newValue);
+    if (oldValue !== newValue) {
+      internals.attributeChangedCallback(this, name, oldValue, newValue, null);
+    }
+  };
+
+  /**
+   * @param {?string} namespace
+   * @param {string} name
+   * @param {string} newValue
+   */
+  Element.prototype.setAttributeNS = function(namespace, name, newValue) {
+    const oldValue = native_Element_getAttributeNS.call(this, namespace, name);
+    native_Element_setAttributeNS.call(this, namespace, name, newValue);
+    if (oldValue !== newValue) {
+      internals.attributeChangedCallback(this, name, oldValue, newValue, namespace);
+    }
   };
 }
