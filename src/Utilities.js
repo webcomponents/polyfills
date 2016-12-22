@@ -26,10 +26,10 @@ export function isValidCustomElementName(localName) {
  * @param {!Node} node
  */
 export function isConnected(node) {
-  while (node && node !== document) {
+  while (node && !(node instanceof Document)) {
     node = node.parentNode || (node instanceof ShadowRoot ? node.host : undefined);
   }
-  return node === document;
+  return node instanceof Document;
 }
 
 /**
