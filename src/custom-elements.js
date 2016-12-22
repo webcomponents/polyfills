@@ -150,9 +150,7 @@ if (!window['customElements'] || window['customElements']['forcePolyfill']) {
       nodes = [node];
     }
 
-    for (const node of nodes) {
-      native_Node_insertBefore.call(this, node, refNode);
-    }
+    const nativeResult = native_Node_insertBefore.call(this, node, refNode);
 
     const connected = Utilities.isConnected(this);
     if (connected) {
@@ -167,7 +165,7 @@ if (!window['customElements'] || window['customElements']['forcePolyfill']) {
       }
     }
 
-    return node;
+    return nativeResult;
   };
 
   // Keep a reference in case `Node#insertBefore` is patched again.
