@@ -268,13 +268,27 @@
   }
 
   /********************* importer *********************/
-  const importsSelectors = [
-    IMPORT_SELECTOR,
-    'link[rel=stylesheet]:not([type])',
+
+  const stylesSelector = [
     'style:not([type])',
+    'link[rel=stylesheet][href]:not([type])'
+  ].join(',');
+
+  const stylesInImportsSelector = [
+    `${IMPORT_SELECTOR} style:not([type])`,
+    `${IMPORT_SELECTOR} link[rel=stylesheet][href]:not([type])`
+  ].join(',');
+
+  const scriptsSelector = [
     'script:not([type])',
     'script[type="application/javascript"]',
     'script[type="text/javascript"]'
+  ].join(',');
+
+  const importsSelectors = [
+    IMPORT_SELECTOR,
+    stylesSelector,
+    scriptsSelector
   ].join(',');
 
   // importer
@@ -447,14 +461,16 @@
   }
 
   function markStyles(element) {
-    const s$ = element.querySelectorAll('style:not([type]), link[rel=stylesheet][href]:not([type])');
+    const s$ = element.querySelectorAll(stylesSelector);
     for (let i = 0, l = s$.length; i < l; i++) {
       whenElementLoaded(s$[i]);
     }
   }
 
+  const scriptType = 'import-script';
+
   function markScripts(element, url) {
-    const s$ = element.querySelectorAll('script');
+    const s$ = element.querySelectorAll(scriptsSelector);
     for (let i = 0, l = s$.length, o; i < l && (o = s$[i]); i++) {
       if (o.textContent) {
         o.textContent = o.textContent + `\n//# sourceURL=${url}`;
@@ -462,6 +478,7 @@
       if (o.src) {
         o.setAttribute('src', Path.replaceAttrUrl(o.getAttribute('src'), url));
       }
+      o.setAttribute('type', scriptType);
     }
   }
 
@@ -469,9 +486,8 @@
    * Replaces all the imported scripts with a clone in order to execute them.
    * Updates the `currentScript`.
    */
-
   function runScripts() {
-    const s$ = document.querySelectorAll('import-content script');
+    const s$ = document.querySelectorAll(`script[type=${scriptType}]`);
     let promise = Promise.resolve();
     for (let i = 0, l = s$.length, o; i < l && (o = s$[i]); i++) {
       promise = promise.then(() => {
@@ -496,8 +512,7 @@
   }
 
   function waitForStyles() {
-    const pendingStyles = document.querySelectorAll(`${IMPORT_SELECTOR} style:not([type]),
-      ${IMPORT_SELECTOR} link[rel=stylesheet][href]:not([type])`);
+    const pendingStyles = document.querySelectorAll(stylesInImportsSelector);
     const promises = [];
     for (let i = 0; i < pendingStyles.length; i++) {
       promises.push(whenElementLoaded(pendingStyles[i]));
@@ -505,7 +520,7 @@
     return Promise.all(promises).then(() => {
       // IE and Edge require styles/links to be siblings in order to apply correctly.
       if ((isIE || isEdge) && pendingStyles.length) {
-        const n$ = document.head.querySelectorAll('style:not([type]),link[rel=stylesheet][href]:not([type])');
+        const n$ = document.head.querySelectorAll(stylesSelector);
         for (let i = 0, l = n$.length, n; i < l && (n = n$[i]); i++) {
           n.parentNode.removeChild(n);
           document.head.appendChild(n);
@@ -685,7 +700,7 @@
     let imports = doc.querySelectorAll(IMPORT_SELECTOR);
     // only non-nested imports
     imports = Array.prototype.slice.call(imports).filter((imp) => {
-      return !MATCHES.call(imp, 'import-content ' + IMPORT_SELECTOR);
+      return !MATCHES.call(imp, `${IMPORT_SELECTOR} ${IMPORT_SELECTOR}`);
     });
     return Promise.all(imports.map(whenElementLoaded)).then(() => {
       const newImports = [];
