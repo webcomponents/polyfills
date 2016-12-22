@@ -22,17 +22,24 @@ const rollup = require('rollup-stream');
 const buffer = require('vinyl-buffer');
 const source = require('vinyl-source-stream');
 
-let hasLicense = false;
+function singleLicenseComment() {
+  let hasLicense = false;
+  return (comment) => {
+    if (hasLicense) {
+      return false;
+    }
+    return hasLicense = /@license/.test(comment);
+  }
+}
+
 const babiliConfig = {
   presets: ['babili'],
-  shouldPrintComment: (c) => {
-    if (!hasLicense) {
-     hasLicense = /@license/.test(c)
-     return hasLicense;
-    }
-    return false;
-  }
+  shouldPrintComment: singleLicenseComment()
 };
+
+const es5Config = {
+  presets: ['es2015']
+}
 
 gulp.task('minify', () => {
   return rollup({
@@ -60,6 +67,22 @@ gulp.task('debug', () => {
   .pipe(source('index.js'))
   .pipe(buffer())
   .pipe(sourcemaps.init({loadMaps: true}))
+  .pipe(rename('shadycss.min.js'))
+  .pipe(sourcemaps.write('.'))
+  .pipe(gulp.dest('./'))
+})
+
+gulp.task('es5', () => {
+  return rollup({
+    entry: 'index.js',
+    format: 'iife',
+    moduleName: 'shadycss',
+    sourceMap: true
+  })
+  .pipe(source('index.js'))
+  .pipe(buffer())
+  .pipe(sourcemaps.init({loadMaps: true}))
+  .pipe(babel(es5Config))
   .pipe(rename('shadycss.min.js'))
   .pipe(sourcemaps.write('.'))
   .pipe(gulp.dest('./'))
