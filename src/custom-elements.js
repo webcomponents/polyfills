@@ -46,6 +46,7 @@ if (!window['customElements'] || window['customElements']['forcePolyfill']) {
   const native_HTMLElement = window.HTMLElement;
   const native_Document_createElement = window.Document.prototype.createElement;
   const native_Document_createElementNS = window.Document.prototype.createElementNS;
+  const native_Document_importNode = window.Document.prototype.importNode;
   const native_Node_insertBefore = window.Node.prototype.insertBefore;
   const native_Node_removeChild = window.Node.prototype.removeChild;
   const native_Element_attachShadow = window.Element.prototype['attachShadow'];
@@ -105,6 +106,17 @@ if (!window['customElements'] || window['customElements']['forcePolyfill']) {
     }
 
     return native_Document_createElement.call(this, localName);
+  };
+
+  /**
+   * @param {!Node} node
+   * @param {boolean=} deep
+   * @return {!Node}
+   */
+  Document.prototype.importNode = function(node, deep) {
+    const clone = native_Document_importNode.call(this, node, deep);
+    internals.upgradeTree(clone);
+    return clone;
   };
 
   const NS_HTML = "http://www.w3.org/1999/xhtml";
