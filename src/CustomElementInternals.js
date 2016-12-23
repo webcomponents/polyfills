@@ -79,10 +79,6 @@ export class CustomElementInternals {
     element[CustomElementInternalSymbols.state] = CustomElementState.custom;
     element[CustomElementInternalSymbols.definition] = definition;
 
-    if (Utilities.isConnected(element)) {
-      this.connectedCallback(element);
-    }
-
     if (definition.attributeChangedCallback) {
       for (const name of definition.observedAttributes) {
         const value = element.getAttribute(name);
@@ -90,6 +86,10 @@ export class CustomElementInternals {
           this.attributeChangedCallback(element, name, null, value, null);
         }
       }
+    }
+
+    if (Utilities.isConnected(element)) {
+      this.connectedCallback(element);
     }
   }
 
