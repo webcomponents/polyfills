@@ -18,6 +18,7 @@ import {
 import * as CustomElementInternalSymbols from './CustomElementInternalSymbols';
 const CustomElementState = CustomElementInternalSymbols.CustomElementState;
 import CustomElementRegistry from './CustomElementRegistry';
+import DocumentConstructionObserver from './DocumentConstructionObserver';
 import * as Utilities from './Utilities';
 
 if (!window['customElements'] || window['customElements']['forcePolyfill']) {
@@ -33,13 +34,8 @@ if (!window['customElements'] || window['customElements']['forcePolyfill']) {
     value: customElements,
   });
 
-  // TODO(bicknellr): Is there a better way to know when the whole document is
-  // available to attempt upgrades on elements that weren't in the document as
-  // of the last call to `CustomElementsRegistry#define`?
-  document.addEventListener('DOMContentLoaded', function() {
-    internals.upgradeTree(document);
-  });
-
+  /** @type {!DocumentConstructionObserver} */
+  const constructionObserver = new DocumentConstructionObserver(internals, document);
 
   // PATCHING
 
@@ -64,6 +60,9 @@ if (!window['customElements'] || window['customElements']['forcePolyfill']) {
      * @type {function(new: HTMLElement): !HTMLElement}
      */
     function HTMLElement() {
+      // This should really be `new.target` but `new.target` can't be emulated
+      // in ES5. Assuming the user keeps the default value of the constructor's
+      // prototype's `constructor` property, this is equivalent.
       /** @type {!Function} */
       const constructor = this.constructor;
 
