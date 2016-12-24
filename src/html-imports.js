@@ -278,16 +278,28 @@
   // - observes imported documents for new elements (these are handled via the
   // dynamic importer)
   class Importer {
+    /**
+     * @param {HTMLDocument} doc
+     */
     constructor(doc) {
       this.documents = {};
-      this._loader = new Loader(
-        this._onLoaded.bind(this), this._onLoadedAll.bind(this)
-      );
-      this._loadSubtree(doc);
+      // make sure to catch any imports that are in the process of loading
+      // when this script is run.
+      const imports = doc.querySelectorAll(IMPORT_SELECTOR);
+      for (let i = 0, l = imports.length; i < l; i++) {
+        whenElementLoaded(imports[i]);
+      }
       // Observe only document head
       new MutationObserver(this._onMutation.bind(this)).observe(doc.head, {
         childList: true
       });
+
+      if (!useNative) {
+        this._loader = new Loader(
+          this._onLoaded.bind(this), this._onLoadedAll.bind(this)
+        );
+        whenDocumentReady(doc).then(() => this._loadSubtree(doc));
+      }
     }
 
     _loadSubtree(doc) {
@@ -331,10 +343,11 @@
           n.import.__firstImport = n;
           this._flatten(n.import);
           n.appendChild(n.import);
-          if (document.contains(n.parentNode)) {
-            // TODO(sorvell): need to coordinate with observer in document.head.
-            //this.observe(n.import);
-          }
+          // If in the main document, observe for any imports added later.
+          // TODO(valdrin) test in IE11
+          // if (document.contains(n.parentNode)) {
+          //   this._observe(n.import);
+          // }
         }
       }
     }
@@ -355,9 +368,14 @@
      */
     _onMutation(mutations) {
       for (let j = 0, m; j < mutations.length && (m = mutations[j]); j++) {
-        if (m.addedNodes) {
-          for (let i = 0, l = m.addedNodes.length; i < l; i++) {
-            if (m.addedNodes[i] && isImportLink(m.addedNodes[i])) {
+        if (!m.addedNodes) {
+          continue;
+        }
+        for (let i = 0, l = m.addedNodes.length; i < l; i++) {
+          if (m.addedNodes[i] && isImportLink(m.addedNodes[i])) {
+            if (useNative) {
+              whenElementLoaded( /** @type {!Element} */ (m.addedNodes[i]));
+            } else {
               this._loader.addNode(m.addedNodes[i]);
             }
           }
@@ -703,63 +721,18 @@
     return Promise.all(promises).then(() => importInfo);
   }
 
-  // make `whenReady` work with native HTMLImports
-  if (useNative) {
-    /**
-     * @param {Array<MutationRecord>} mutations
-     */
-    function handleMutations(mutations) {
-      for (let j = 0, m; j < mutations.length && (m = mutations[j]); j++) {
-        if (m.addedNodes) {
-          for (let i = 0, l = m.addedNodes.length; i < l; i++) {
-            if (m.addedNodes[i] && isImportLink(m.addedNodes[i])) {
-              whenElementLoaded( /** @type {!Element} */ (m.addedNodes[i]));
-            }
-          }
-        }
-      }
-    }
-
-    new MutationObserver(handleMutations).observe(document.head, {
-      childList: true
-    });
-
-    // make sure to catch any imports that are in the process of loading
-    // when this script is run.
-    (function() {
-      if (document.readyState === 'loading') {
-        const imports = document.querySelectorAll(IMPORT_SELECTOR);
-        for (let i = 0, l = imports.length; i < l; i++) {
-          whenElementLoaded(imports[i]);
-        }
-      }
-    })();
-
-  } else {
-
-    function bootstrap() {
-      new Importer(document);
-    }
-
-    if (document.readyState === 'complete' ||
-      (document.readyState === 'interactive' && !window.attachEvent)) {
-      bootstrap();
-    } else {
-      document.addEventListener('DOMContentLoaded', bootstrap);
-    }
-  }
+  new Importer(document);
 
   // Fire the 'HTMLImportsLoaded' event when imports in document at load time
   // have loaded. This event is required to simulate the script blocking
   // behavior of native imports. A main document script that needs to be sure
   // imports have loaded should wait for this event.
-  whenReady(function(detail) {
+  whenReady((detail) =>
     document.dispatchEvent(new CustomEvent('HTMLImportsLoaded', {
       cancelable: true,
       bubbles: true,
       detail: detail
-    }));
-  });
+    })));
 
   // exports
   scope.useNative = useNative;
