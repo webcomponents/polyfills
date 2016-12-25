@@ -344,10 +344,9 @@
           this._flatten(n.import);
           n.appendChild(n.import);
           // If in the main document, observe for any imports added later.
-          // TODO(valdrin) test in IE11
-          // if (document.contains(n.parentNode)) {
-          //   this._observe(n.import);
-          // }
+          if (element === document) {
+            this._observe(n.import);
+          }
         }
       }
     }
