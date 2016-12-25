@@ -258,16 +258,12 @@
     `${IMPORT_SELECTOR} link[rel=stylesheet][href]:not([type])`
   ].join(',');
 
-  const scriptsSelector = [
-    'script:not([type])',
-    'script[type="application/javascript"]',
-    'script[type="text/javascript"]'
-  ].join(',');
-
   const importsSelectors = [
     IMPORT_SELECTOR,
     stylesSelector,
-    scriptsSelector
+    'script:not([type])',
+    'script[type="application/javascript"]',
+    'script[type="text/javascript"]'
   ].join(',');
 
   // importer
@@ -310,20 +306,19 @@
 
     _onLoaded(url, elt, resource, err, redirectedUrl) {
       flags.log && console.log('loaded', url, elt);
-      if (isImportLink(elt)) {
-        let doc = this.documents[url];
-        // if we've never seen a document at this url
-        if (doc === undefined) {
-          // generate an HTMLDocument from data
-          doc = err ? null : makeDocument(resource, redirectedUrl || url);
-          if (doc) {
-            // note, we cannot use MO to detect parsed nodes because
-            // SD polyfill does not report these as mutations.
-            this._loadSubtree(doc);
-          }
-          // cache document
-          this.documents[url] = doc;
-        }
+      // We've already seen a document at this url, return.
+      if (this.documents[url] !== undefined) {
+        return;
+      }
+      if (err) {
+        this.documents[url] = null;
+      } else {
+        // Generate an HTMLDocument from data.
+        const doc = makeDocument(resource, redirectedUrl || url);
+        // note, we cannot use MO to detect parsed nodes because
+        // SD polyfill does not report these as mutations.
+        this._loadSubtree(doc);
+        this.documents[url] = doc;
       }
     }
 
@@ -367,15 +362,13 @@
      */
     _onMutation(mutations) {
       for (let j = 0, m; j < mutations.length && (m = mutations[j]); j++) {
-        if (!m.addedNodes) {
-          continue;
-        }
-        for (let i = 0, l = m.addedNodes.length; i < l; i++) {
-          if (m.addedNodes[i] && isImportLink(m.addedNodes[i])) {
+        for (let i = 0, l = m.addedNodes ? m.addedNodes.length : 0; i < l; i++) {
+          const n = /** @type {Element} */ (m.addedNodes[i]);
+          if (n && isImportLink(n)) {
             if (useNative) {
-              whenElementLoaded( /** @type {!Element} */ (m.addedNodes[i]));
+              whenElementLoaded(n);
             } else {
-              this._loader.addNode(m.addedNodes[i]);
+              this._loader.addNode(n);
             }
           }
         }
@@ -441,79 +434,64 @@
     }
   }
 
+  const scriptType = 'import-script';
+
   function fixUrls(element, base) {
     const n$ = element.querySelectorAll(importsSelectors);
-    for (let i = 0; i < n$.length; i++) {
-      const n = n$[i];
+    for (let i = 0, l = n$.length, n; i < l && (n = n$[i]); i++) {
+      // Ensure we add load/error listeners before modifying urls or appending
+      // these to the main document.
+      whenElementLoaded(n);
       if (n.href) {
-        n.href = new URL(n.getAttribute('href'), base);
+        n.setAttribute('href', Path.replaceAttrUrl(n.getAttribute('href'), base));
       }
       if (n.src) {
-        n.src = new URL(n.getAttribute('src'), base);
+        n.setAttribute('src', Path.replaceAttrUrl(n.getAttribute('src'), base));
       }
       if (n.localName == 'style') {
         Path.resolveUrlsInStyle(n, base);
+      } else if (n.localName === 'script') {
+        if (n.textContent) {
+          n.textContent += `\n//# sourceURL=${base}`;
+        }
+        // NOTE: we override the type here, might need to keep track of original
+        // type and apply it to clone when running the script.
+        n.setAttribute('type', scriptType);
       }
     }
     fixUrlsInTemplates(element, base);
   }
 
-  function markStyles(element) {
-    const s$ = element.querySelectorAll(stylesSelector);
-    for (let i = 0, l = s$.length; i < l; i++) {
-      whenElementLoaded(s$[i]);
-    }
-  }
-
-  const scriptType = 'import-script';
-
-  function markScripts(element, url) {
-    const s$ = element.querySelectorAll(scriptsSelector);
-    for (let i = 0, l = s$.length, o; i < l && (o = s$[i]); i++) {
-      if (o.textContent) {
-        o.textContent = o.textContent + `\n//# sourceURL=${url}`;
-      }
-      if (o.src) {
-        o.setAttribute('src', Path.replaceAttrUrl(o.getAttribute('src'), url));
-      }
-      // NOTE: we override the type here, might need to keep track of original
-      // type and apply it to clone when running the script.
-      o.setAttribute('type', scriptType);
-    }
-  }
-
   /**
    * Replaces all the imported scripts with a clone in order to execute them.
    * Updates the `currentScript`.
+   * @return {Promise} Resolved when scripts are loaded.
    */
   function runScripts() {
     const s$ = document.querySelectorAll(`script[type=${scriptType}]`);
     let promise = Promise.resolve();
-    for (let i = 0, l = s$.length, o; i < l && (o = s$[i]); i++) {
+    for (let i = 0, l = s$.length, s; i < l && (s = s$[i]); i++) {
       promise = promise.then(() => {
         const c = document.createElement('script');
-        c.textContent = o.textContent;
-        if (o.src) {
-          c.setAttribute('src', o.getAttribute('src'));
+        c.textContent = s.textContent;
+        if (s.src) {
+          c.setAttribute('src', s.getAttribute('src'));
         }
         // Listen for load/error events before adding the clone to the document.
         // Catch failures, always return c.
         const whenLoadedPromise = whenElementLoaded(c).catch(() => c);
         // Update currentScript and replace original with clone script.
         currentScript = c;
-        o.parentNode.replaceChild(c, o);
+        s.parentNode.replaceChild(c, s);
         // After is loaded, reset currentScript.
         return whenLoadedPromise.then((script) => {
           if (script === currentScript) {
             currentScript = null;
           }
-          return script;
-        });;
+        });
       });
     }
-    return promise.then(() => {
-      return s$;
-    });
+    return promise;
   }
 
   function waitForStyles() {
@@ -548,8 +526,6 @@
         n.__fired = true;
         const eventType = n.import ? 'load' : 'error';
         flags.log && console.warn('fire', eventType, n.href);
-        // Listens for load/error event and sets the promise.
-        whenElementLoaded(n);
         n.dispatchEvent(new CustomEvent(eventType, {
           bubbles: false,
           cancelable: false,
@@ -632,10 +608,6 @@
     content.style.display = 'none';
     content.innerHTML = resource;
 
-    markScripts(content, url);
-    // Ensure we add load/error listeners before modifying urls or appending
-    // these to the main document.
-    markStyles(content);
     // TODO(sorvell): this is specific to users (Polymer) of the dom-module element.
     fixDomModules(content, url);
     fixUrls(content, url);
