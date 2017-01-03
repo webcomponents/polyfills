@@ -8,20 +8,10 @@
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
-import {
-  AlreadyConstructedMarker,
-  CustomElementDefinition,
-} from './CustomElementDefinition';
-import {
-  CustomElementInternals,
-} from './CustomElementInternals';
-import * as CustomElementInternalSymbols from './CustomElementInternalSymbols';
-const CustomElementState = CustomElementInternalSymbols.CustomElementState;
+import {CustomElementInternals} from './CustomElementInternals';
 import CustomElementRegistry from './CustomElementRegistry';
 import DocumentConstructionObserver from './DocumentConstructionObserver';
-import * as Utilities from './Utilities';
 
-import BuiltIn from './Patch/BuiltIn';
 import PatchHTMLElement from './Patch/HTMLElement';
 import PatchDocument from './Patch/Document';
 import PatchNode from './Patch/Node';
