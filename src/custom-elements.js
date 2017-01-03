@@ -21,6 +21,9 @@ import CustomElementRegistry from './CustomElementRegistry';
 import DocumentConstructionObserver from './DocumentConstructionObserver';
 import * as Utilities from './Utilities';
 
+import BuiltIn from './Patch/BuiltIn';
+import PatchDocument from './Patch/Document';
+
 if (!window['customElements'] || window['customElements']['forcePolyfill']) {
   /** @type {!CustomElementInternals} */
   const internals = new CustomElementInternals();
@@ -40,9 +43,6 @@ if (!window['customElements'] || window['customElements']['forcePolyfill']) {
   // PATCHING
 
   const native_HTMLElement = window.HTMLElement;
-  const native_Document_createElement = window.Document.prototype.createElement;
-  const native_Document_createElementNS = window.Document.prototype.createElementNS;
-  const native_Document_importNode = window.Document.prototype.importNode;
   const native_Node_cloneNode = window.Node.prototype.cloneNode;
   const native_Node_insertBefore = window.Node.prototype.insertBefore;
   const native_Node_removeChild = window.Node.prototype.removeChild;
@@ -77,7 +77,7 @@ if (!window['customElements'] || window['customElements']['forcePolyfill']) {
       const constructionStack = definition.constructionStack;
 
       if (constructionStack.length === 0) {
-        const self = native_Document_createElement.call(document, definition.localName);
+        const self = BuiltIn.Document_createElement.call(document, definition.localName);
         Object.setPrototypeOf(self, constructor.prototype);
         self[CustomElementInternalSymbols.state] = CustomElementState.custom;
         self[CustomElementInternalSymbols.definition] = definition;
@@ -101,44 +101,7 @@ if (!window['customElements'] || window['customElements']['forcePolyfill']) {
     return HTMLElement;
   })();
 
-  /**
-   * @param {string} localName
-   * @return {!Element}
-   */
-  Document.prototype.createElement = function(localName) {
-    const definition = internals.localNameToDefinition(localName);
-    if (definition) {
-      return new (definition.constructor)();
-    }
-
-    return native_Document_createElement.call(this, localName);
-  };
-
-  /**
-   * @param {!Node} node
-   * @param {boolean=} deep
-   * @return {!Node}
-   */
-  Document.prototype.importNode = function(node, deep) {
-    const clone = native_Document_importNode.call(this, node, deep);
-    internals.upgradeTree(clone);
-    return clone;
-  };
-
-  const NS_HTML = "http://www.w3.org/1999/xhtml";
-
-  /**
-   * @param {?string} namespace
-   * @param {string} localName
-   * @return {!Element}
-   */
-  Document.prototype.createElementNS = function(namespace, localName) {
-    if (namespace === null || namespace === NS_HTML) {
-      return this.createElement(localName);
-    }
-
-    return native_Document_createElementNS.call(this, namespace, localName);
-  };
+  PatchDocument(internals);
 
   /**
    * @param {!Node} node
