@@ -23,6 +23,7 @@ import * as Utilities from './Utilities';
 
 import BuiltIn from './Patch/BuiltIn';
 import PatchDocument from './Patch/Document';
+import PatchNode from './Patch/Node';
 
 if (!window['customElements'] || window['customElements']['forcePolyfill']) {
   /** @type {!CustomElementInternals} */
@@ -43,9 +44,6 @@ if (!window['customElements'] || window['customElements']['forcePolyfill']) {
   // PATCHING
 
   const native_HTMLElement = window.HTMLElement;
-  const native_Node_cloneNode = window.Node.prototype.cloneNode;
-  const native_Node_insertBefore = window.Node.prototype.insertBefore;
-  const native_Node_removeChild = window.Node.prototype.removeChild;
   const native_Element_attachShadow = window.Element.prototype['attachShadow'];
   const native_Element_id = Object.getOwnPropertyDescriptor(window.Element.prototype, 'id');
   const native_Element_className = Object.getOwnPropertyDescriptor(window.Element.prototype, 'className');
@@ -102,89 +100,7 @@ if (!window['customElements'] || window['customElements']['forcePolyfill']) {
   })();
 
   PatchDocument(internals);
-
-  /**
-   * @param {!Node} node
-   * @param {?Node} refNode
-   * @return {!Node}
-   */
-  Node.prototype.insertBefore = function(node, refNode) {
-    let nodes;
-    if (node instanceof DocumentFragment) {
-      nodes = [...node.childNodes];
-    } else {
-      nodes = [node];
-    }
-
-    const nativeResult = native_Node_insertBefore.call(this, node, refNode);
-
-    const connected = Utilities.isConnected(this);
-    if (connected) {
-      for (const node of nodes) {
-        Utilities.walkDeepDescendantElements(node, element => {
-          if (element[CustomElementInternalSymbols.state] === CustomElementState.custom) {
-            internals.connectedCallback(element);
-          } else {
-            internals.upgradeElement(element);
-          }
-        });
-      }
-    }
-
-    return nativeResult;
-  };
-
-  // Keep a reference in case `Node#insertBefore` is patched again.
-  const CE_Node_insertBefore = Node.prototype.insertBefore;
-
-  /**
-   * @param {!Node} node
-   * @return {!Node}
-   */
-  Node.prototype.appendChild = function(node) {
-    return CE_Node_insertBefore.call(this, node, null);
-  };
-
-  /**
-   * @param {boolean=} deep
-   * @return {!Node}
-   */
-  Node.prototype.cloneNode = function(deep) {
-    const clone = native_Node_cloneNode.call(this, deep);
-    internals.upgradeTree(clone);
-    return clone;
-  };
-
-  /**
-   * @param {!Node} node
-   * @return {!Node}
-   */
-  Node.prototype.removeChild = function(node) {
-    const nativeResult = native_Node_removeChild.call(this, node);
-
-    Utilities.walkDeepDescendantElements(node, element => {
-      if (element[CustomElementInternalSymbols.state] === CustomElementState.custom) {
-        internals.disconnectedCallback(element);
-      }
-    });
-
-    return nativeResult;
-  };
-
-  // Keep a reference in case `Node#removeChild` is patched again.
-  const CE_Node_removeChild = Node.prototype.removeChild;
-
-  /**
-   * @param {!Node} nodeToInsert
-   * @param {?Node} nodeToRemove
-   * @return {!Node}
-   */
-  Node.prototype.replaceChild = function(nodeToInsert, nodeToRemove) {
-    const refChild = nodeToRemove.nextSibling;
-    CE_Node_removeChild.call(this, nodeToRemove);
-    CE_Node_insertBefore.call(this, nodeToInsert, refChild);
-    return nodeToRemove;
-  };
+  PatchNode(internals);
 
   /**
    * @param {!{mode: string}} init
