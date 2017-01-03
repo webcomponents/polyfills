@@ -7,7 +7,7 @@ The complete set of contributors may be found at http://polymer.github.io/CONTRI
 Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 */
-/**
+/*
  * The apply shim simulates the behavior of `@apply` proposed at
  * https://tabatkins.github.io/specs/css-apply-rule/.
  * The approach is to convert a property like this:
@@ -220,7 +220,7 @@ class ApplyShim {
       if (match[1]) {
         // initial
         // replace `initial` with the concrete initial value for this property
-        value = ApplyShim._getInitialValueForProperty(property);
+        value = this._getInitialValueForProperty(property);
       } else {
         // inherit
         // with this purposfully illegal value, the variable will be invalid at

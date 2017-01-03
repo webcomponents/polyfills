@@ -10,17 +10,19 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 'use strict';
 
-import {removeCustomPropAssignment} from './css-parse'
+import {removeCustomPropAssignment, StyleNode} from './css-parse'
 import {nativeShadow} from './style-settings'
 import StyleTransformer from './style-transformer'
 import * as StyleUtil from './style-util'
 import StyleInfo from './style-info'
 
 // TODO: dedupe with shady
-const p = window.Element.prototype;
-const matchesSelector = p.matches || p.matchesSelector ||
+/**
+ * @const {function(string):boolean}
+ */
+const matchesSelector = ((p) => p.matches || p.matchesSelector ||
   p.mozMatchesSelector || p.msMatchesSelector ||
-  p.oMatchesSelector || p.webkitMatchesSelector;
+p.oMatchesSelector || p.webkitMatchesSelector)(window.Element.prototype);
 
 const IS_IE = navigator.userAgent.match('Trident');
 
@@ -328,7 +330,11 @@ class StyleProperties {
       isRoot: isRoot
     });
   }
-
+/**
+ * @param {string} scope
+ * @param {StyleNode} rules
+ * @return {Object}
+ */
   hostAndRootPropertiesForScope(scope, rules) {
     let hostProps = {}, rootProps = {}, self = this;
     // note: active rules excludes non-matching @media rules
@@ -532,7 +538,7 @@ class StyleProperties {
 }
 
 function addToBitMask(n, bits) {
-  let o = parseInt(n / 32);
+  let o = parseInt(n / 32, 10);
   let v = 1 << (n % 32);
   bits[o] = (bits[o] || 0) | v;
 }

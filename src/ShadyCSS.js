@@ -24,7 +24,10 @@ import StyleCache from './style-cache'
 import ApplyShim from './apply-shim'
 import {flush as watcherFlush} from './document-watcher'
 
-let styleCache = new StyleCache();
+/**
+ * @const {StyleCache}
+ */
+const styleCache = new StyleCache();
 
 class ShadyCSS {
   constructor() {
@@ -72,6 +75,13 @@ class ShadyCSS {
     }
     return style.getAttribute('css-build') || '';
   }
+  /**
+   * Prepare the styling and template for the given element type
+   *
+   * @param {HTMLTemplateElement} template
+   * @param {string} elementName
+   * @param {string=} typeExtension
+   */
   prepareTemplate(template, elementName, typeExtension) {
     if (template._prepared) {
       return;
@@ -98,6 +108,7 @@ class ShadyCSS {
       ApplyShim.transformRules(ast, elementName);
     }
     template._styleAst = ast;
+    template._cssBuild = cssBuild;
 
     let ownPropertyNames = [];
     if (!this.nativeCss) {
@@ -144,6 +155,12 @@ class ShadyCSS {
       )
     );
   }
+  /**
+   * Apply styles for the given element
+   *
+   * @param {!HTMLElement} host
+   * @param {Object=} overrideProps
+   */
   applyStyle(host, overrideProps) {
     let is = host.getAttribute('is') || host.localName;
     let styleInfo = StyleInfo.get(host);
@@ -156,7 +173,7 @@ class ShadyCSS {
       this._elementsHaveApplied = true;
     }
     if (window.CustomStyle) {
-      let CS = window.CustomStyle;
+      let CS = window['CustomStyle'];
       if (CS._documentDirty) {
         CS.findStyles();
         if (!this.nativeCss) {
@@ -308,6 +325,11 @@ class ShadyCSS {
       }
     }
   }
+  /**
+   * Update styles of the whole document
+   *
+   * @param {Object=} properties
+   */
   updateStyles(properties) {
     this.applyStyle(this._documentOwner, properties);
   }
@@ -392,5 +414,10 @@ class ShadyCSS {
     return StyleInfo.get(node);
   }
 }
+
+ShadyCSS.prototype['flush'] = ShadyCSS.prototype.flush;
+ShadyCSS.prototype['prepareTemplate'] = ShadyCSS.prototype.prepareTemplate;
+ShadyCSS.prototype['applyStyle'] = ShadyCSS.prototype.applyStyle;
+ShadyCSS.prototype['updateStyles'] = ShadyCSS.prototype.updateStyles;
 
 window['ShadyCSS'] = new ShadyCSS();

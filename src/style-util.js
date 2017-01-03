@@ -11,8 +11,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 'use strict';
 
 import {nativeShadow, nativeCssVariables} from './style-settings'
-import {parse, stringify, types} from './css-parse'
+import {parse, stringify, types, StyleNode} from './css-parse'
 
+/**
+ * @param {string|StyleNode} rules
+ * @param {function(!Array<Object>)=} callback
+ */
 export function toCssText (rules, callback) {
   if (typeof rules === 'string') {
     rules = parse(rules);
@@ -23,6 +27,10 @@ export function toCssText (rules, callback) {
   return stringify(rules, nativeCssVariables);
 }
 
+/**
+ * @param {HTMLStyleElement} style
+ * @return {StyleNode}
+ */
 export function rulesForStyle(style) {
   if (!style.__cssRules && style.textContent) {
     style.__cssRules = parse(style.textContent);
@@ -33,11 +41,21 @@ export function rulesForStyle(style) {
 // Tests if a rule is a keyframes selector, which looks almost exactly
 // like a normal selector but is not (it has nothing to do with scoping
 // for example).
+/**
+ * @param {StyleNode} rule
+ * @return {boolean}
+ */
 export function isKeyframesSelector(rule) {
   return rule.parent &&
   rule.parent.type === types.KEYFRAMES_RULE;
 }
 
+/**
+ * @param {StyleNode} node
+ * @param {Function=} styleRuleCallback
+ * @param {Function=} keyframesRuleCallback
+ * @param {boolean=} onlyActiveRules
+ */
 export function forEachRule(node, styleRuleCallback, keyframesRuleCallback, onlyActiveRules) {
   if (!node) {
     return;
@@ -111,19 +129,17 @@ export function isTargetedBuild(buildType) {
   return nativeShadow ? buildType === 'shadow' : buildType === 'shady';
 }
 
-// cssBuildTypeForModule: function (module) {
-//   let dm = Polymer.DomModule.import(module);
-//   if (dm) {
-//     return getCssBuildType(dm);
-//   }
-// },
-//
 export function getCssBuildType(element) {
   return element.getAttribute('css-build');
 }
 
-// Walk from text[start] matching parens
-// returns position of the outer end paren
+/**
+ * Walk from text[start] matching parens and
+ * returns position of the outer end paren
+ * @param {string} text
+ * @param {number} start
+ * @return {number}
+ */
 function findMatchingParen(text, start) {
   let level = 0;
   for (let i=start, l=text.length; i < l; i++) {

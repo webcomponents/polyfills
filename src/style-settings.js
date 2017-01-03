@@ -16,18 +16,12 @@ export let nativeShadow = !(window.ShadyDOM && window.ShadyDOM.inUse);
 export let nativeCssVariables = (!navigator.userAgent.match('AppleWebKit/601') &&
 window.CSS && CSS.supports && CSS.supports('box-shadow', '0 0 0 var(--foo)'));
 
-// experimental support for native @apply
-function detectNativeApply() {
-  let style = document.createElement('style');
-  style.textContent = '.foo { @apply --foo }';
-  document.head.appendChild(style);
-  let nativeCssApply = (style.sheet.cssRules[0].cssText.indexOf('apply') >= 0);
-  document.head.removeChild(style);
-  return nativeCssApply;
-}
+// TODO(dfreedm): remove
+export let nativeCssApply = false;
 
-export let nativeCssApply = false && detectNativeApply();
-
+/**
+ * @param {?Object} settings
+ */
 function parseSettings(settings) {
   if (settings) {
     nativeCssVariables = nativeCssVariables && !settings.shimcssproperties;

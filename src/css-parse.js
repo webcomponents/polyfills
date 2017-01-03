@@ -15,18 +15,51 @@ and definitely not necessarily correct =).
 
 'use strict';
 
+/** @record */
+export let StyleNode = function(){};
+/** @type {number} */
+StyleNode.prototype.start;
+/** @type {number} */
+StyleNode.prototype.end;
+/** @type {StyleNode|undefined} */
+StyleNode.prototype.previous
+/** @type {Array<StyleNode>|undefined} */
+StyleNode.prototype.rules;
+/** @type {string|undefined} */
+StyleNode.prototype.parsedCssText;
+/** @type {string|undefined} */
+StyleNode.prototype.cssText;
+/** @type {boolean|undefined} */
+StyleNode.prototype.atRule;
+/** @type {number|undefined} */
+StyleNode.prototype.type;
+/** @type {string|undefined} */
+StyleNode.prototype.keyframesName;
+
 // given a string of css, return a simple rule tree
+/**
+ * @param {string} text
+ * @return {StyleNode}
+ */
 export function parse(text) {
   text = clean(text);
   return parseCss(lex(text), text);
 }
 
 // remove stuff we don't care about that may hinder parsing
+/**
+ * @param {string} cssText
+ * @return {string}
+ */
 function clean(cssText) {
   return cssText.replace(RX.comments, '').replace(RX.port, '');
 }
 
 // super simple {...} lexer that returns a node tree
+/**
+ * @param {string} text
+ * @return {StyleNode}
+ */
 function lex(text) {
   let root = {
     start: 0,
@@ -55,6 +88,11 @@ function lex(text) {
 }
 
 // add selectors/cssText to node tree
+/**
+ * @param {StyleNode} node
+ * @param {string} text
+ * @return {StyleNode}
+ */
 function parseCss(node, text) {
   let t = text.substring(node.start, node.end - 1);
   node.parsedCssText = node.cssText = t.trim();
@@ -108,7 +146,13 @@ function _expandUnicodeEscapes(s) {
   });
 }
 
-// stringify parsed css.
+/**
+ * stringify parsed css.
+ * @param {StyleNode} node
+ * @param {boolean=} preserveProperties
+ * @param {string=} text
+ * @return {string}
+ */
 export function stringify(node, preserveProperties, text) {
   text = text || '';
   // calc rule cssText

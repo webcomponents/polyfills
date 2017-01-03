@@ -20,10 +20,13 @@ if (!nativeShadow) {
     return (element.classList &&
       !element.classList.contains(StyleTransformer.SCOPE_NAME) ||
       // note: necessary for IE11
-      (element instanceof SVGElement && (!element.hasAttribute('class') ||
+      (element instanceof window.SVGElement && (!element.hasAttribute('class') ||
       element.getAttribute('class').indexOf(StyleTransformer.SCOPE_NAME) < 0)));
   }
 
+/**
+ * @param {Array<MutationRecord|null>|null} mxns
+ */
   let handler = (mxns) => {
     for (let x=0; x < mxns.length; x++) {
       let mxn = mxns[x];
@@ -37,7 +40,7 @@ if (!nativeShadow) {
           let root = n.getRootNode();
           if (root.nodeType === Node.DOCUMENT_FRAGMENT_NODE) {
             // may no longer be in a shadowroot
-            let host = root.host;
+            let host = /** @type {ShadowRoot} */(root).host;
             if (host) {
               let scope = host.is || host.localName;
               StyleTransformer.dom(n, scope);
@@ -46,7 +49,7 @@ if (!nativeShadow) {
         }
       }
       for (let i=0; i < mxn.removedNodes.length; i++) {
-        let n = mxn.removedNodes[i];
+        let n = /** @type {HTMLElement} */(mxn.removedNodes[i]);
         if (n.nodeType === Node.ELEMENT_NODE) {
           let classes = undefined;
           if (n.classList) {

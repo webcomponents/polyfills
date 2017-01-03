@@ -143,7 +143,14 @@ class StyleTransformer {
       scope, hostScope);
   }
 
-  // transforms a css rule to a scoped rule.
+  /**
+   * transforms a css rule to a scoped rule.
+   *
+   * @param {Object} rule
+   * @param {Function} transformer
+   * @param {string=} scope
+   * @param {string=} hostScope
+   */
   _transformRule(rule, transformer, scope, hostScope) {
     // NOTE: save transformedSelector for subsequent matching of elements
     // against selectors (e.g. when calculating style properties)
@@ -163,6 +170,11 @@ class StyleTransformer {
     return p$.join(COMPLEX_SELECTOR_SEP);
   }
 
+/**
+ * @param {string} selector
+ * @param {string} scope
+ * @param {string=} hostScope
+ */
   _transformComplexSelector(selector, scope, hostScope) {
     let stop = false;
     selector = selector.trim();
@@ -264,6 +276,9 @@ class StyleTransformer {
     }
   }
 
+/**
+ * @param {string} selector
+ */
   _transformDocumentSelector(selector) {
     return selector.match(SLOTTED) ?
       this._transformComplexSelector(selector, SCOPE_DOC_SELECTOR) :

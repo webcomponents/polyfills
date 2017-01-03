@@ -12,14 +12,17 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 import templateMap from './template-map'
 
+/**
+ * @const {Promise}
+ */
 const promise = Promise.resolve();
 
 export default class StyleInfo {
   static get(node) {
-    return node.__styleInfo;
+    return node['__styleInfo'];
   }
   static set(node, styleInfo) {
-    node.__styleInfo = styleInfo;
+    node['__styleInfo'] = styleInfo;
     return styleInfo;
   }
   static invalidate(elementName) {
@@ -33,6 +36,9 @@ export default class StyleInfo {
   but the template will only be updated once.
   */
   static startValidating(elementName) {
+    /**
+     * @const {?Element}
+     */
     const template = templateMap[elementName];
     if (!template._validating) {
       template._validating = true;

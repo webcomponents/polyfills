@@ -121,3 +121,23 @@ gulp.task('test-modules', moduleTasks);
 gulp.task('clean-test-modules', () => del(['tests/module/generated']));
 
 gulp.task('default', ['minify', 'test-modules']);
+
+gulp.task('closure', () => {
+  const closure = require('google-closure-compiler').gulp();
+  return gulp.src('src/*.js')
+  .pipe(sourcemaps.init())
+  .pipe(closure({
+    new_type_inf: true,
+    compilation_level: 'ADVANCED',
+    language_in: 'ES6_STRICT',
+    language_out: 'ES5_STRICT',
+    output_wrapper: '(function(){\n%output%\n}).call(self)',
+    js_output_file: 'closure.min.js',
+    entry_point: ['/src/ShadyCSS.js', '/src/custom-style-element.js'],
+    dependency_mode: 'STRICT',
+    rewrite_polyfills: false
+  }))
+  .on('error', (e) => console.error(e))
+  .pipe(sourcemaps.write('.'))
+  .pipe(gulp.dest('.'))
+})
