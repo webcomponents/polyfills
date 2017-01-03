@@ -16,4 +16,5 @@ export default {
   Element_getAttributeNS: window.Element.prototype.getAttributeNS,
   Element_setAttributeNS: window.Element.prototype.setAttributeNS,
   Element_removeAttributeNS: window.Element.prototype.removeAttributeNS,
+  HTMLElement: window.HTMLElement,
 };
