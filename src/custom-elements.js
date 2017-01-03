@@ -49,6 +49,7 @@ if (!window['customElements'] || window['customElements']['forcePolyfill']) {
   const native_Element_attachShadow = window.Element.prototype['attachShadow'];
   const native_Element_id = Object.getOwnPropertyDescriptor(window.Element.prototype, 'id');
   const native_Element_className = Object.getOwnPropertyDescriptor(window.Element.prototype, 'className');
+  const native_Element_slot = Object.getOwnPropertyDescriptor(window.Element.prototype, 'slot');
   const native_Element_innerHTML = Object.getOwnPropertyDescriptor(window.Element.prototype, 'innerHTML');
   const native_Element_getAttribute = window.Element.prototype.getAttribute;
   const native_Element_setAttribute = window.Element.prototype.setAttribute;
@@ -267,6 +268,20 @@ if (!window['customElements'] || window['customElements']['forcePolyfill']) {
       newValue = native_Element_className.get.call(this);
       if (oldValue !== newValue) {
         internals.attributeChangedCallback(this, 'class', oldValue, newValue, null);
+      }
+    },
+  });
+
+  Object.defineProperty(Element.prototype, 'slot', {
+    enumerable: native_Element_slot.enumerable,
+    configurable: true,
+    get: native_Element_slot.get,
+    set: function(newValue) {
+      const oldValue = native_Element_slot.get.call(this);
+      native_Element_slot.set.call(this, newValue);
+      newValue = native_Element_slot.get.call(this);
+      if (oldValue !== newValue) {
+        internals.attributeChangedCallback(this, 'slot', oldValue, newValue, null);
       }
     },
   });
