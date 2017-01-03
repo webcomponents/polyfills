@@ -16,6 +16,7 @@ import PatchHTMLElement from './Patch/HTMLElement';
 import PatchDocument from './Patch/Document';
 import PatchNode from './Patch/Node';
 import PatchElement from './Patch/Element';
+import PatchDOMTokenList from './Patch/DOMTokenList';
 
 if (!window['customElements'] || window['customElements']['forcePolyfill']) {
   /** @type {!CustomElementInternals} */
@@ -37,4 +38,5 @@ if (!window['customElements'] || window['customElements']['forcePolyfill']) {
   PatchDocument(internals);
   PatchNode(internals);
   PatchElement(internals);
+  PatchDOMTokenList(internals);
 }

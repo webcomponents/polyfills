@@ -41,6 +41,19 @@ export default function(internals) {
     },
   });
 
+  Object.defineProperty(Element.prototype, 'classList', {
+    enumerable: BuiltIn.Element_classList.enumerable,
+    configurable: true,
+    get: function() {
+      const classList = BuiltIn.Element_classList.get.call(this);
+      if (!classList[CustomElementInternalSymbols.elementForDOMTokenList]) {
+        classList[CustomElementInternalSymbols.elementForDOMTokenList] = this;
+      }
+      return classList;
+    },
+    set: BuiltIn.Element_classList.set,
+  });
+
   Object.defineProperty(Element.prototype, 'className', {
     enumerable: BuiltIn.Element_className.enumerable,
     configurable: true,

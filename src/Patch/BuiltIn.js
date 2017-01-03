@@ -7,6 +7,7 @@ export default {
   Node_removeChild: window.Node.prototype.removeChild,
   Element_attachShadow: window.Element.prototype['attachShadow'],
   Element_id: Object.getOwnPropertyDescriptor(window.Element.prototype, 'id'),
+  Element_classList: Object.getOwnPropertyDescriptor(window.Element.prototype, 'classList'),
   Element_className: Object.getOwnPropertyDescriptor(window.Element.prototype, 'className'),
   Element_slot: Object.getOwnPropertyDescriptor(window.Element.prototype, 'slot'),
   Element_innerHTML: Object.getOwnPropertyDescriptor(window.Element.prototype, 'innerHTML'),
@@ -17,4 +18,9 @@ export default {
   Element_setAttributeNS: window.Element.prototype.setAttributeNS,
   Element_removeAttributeNS: window.Element.prototype.removeAttributeNS,
   HTMLElement: window.HTMLElement,
+  DOMTokenList_add: window.DOMTokenList.prototype.add,
+  DOMTokenList_remove: window.DOMTokenList.prototype.remove,
+  DOMTokenList_toggle: window.DOMTokenList.prototype.toggle,
+  DOMTokenList_replace: window.DOMTokenList.prototype.replace,
+  DOMTokenList_value: Object.getOwnPropertyDescriptor(window.DOMTokenList.prototype, 'value'),
 };

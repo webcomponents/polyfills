@@ -12,3 +12,4 @@ export const CustomElementState = {
 
 export const definition = '_CE_definition_' + randomString();
 export const shadowRoot = '_CE_shadowRoot_' + randomString();
+export const elementForDOMTokenList = '_CE_elementForDOMTokenList_' + randomString();
