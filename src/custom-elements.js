@@ -263,6 +263,7 @@ if (!window['customElements'] || window['customElements']['forcePolyfill']) {
   Element.prototype.setAttribute = function(name, newValue) {
     const oldValue = native_Element_getAttribute.call(this, name);
     native_Element_setAttribute.call(this, name, newValue);
+    newValue = native_Element_getAttribute.call(this, name);
     if (oldValue !== newValue) {
       internals.attributeChangedCallback(this, name, oldValue, newValue, null);
     }
@@ -276,6 +277,7 @@ if (!window['customElements'] || window['customElements']['forcePolyfill']) {
   Element.prototype.setAttributeNS = function(namespace, name, newValue) {
     const oldValue = native_Element_getAttributeNS.call(this, namespace, name);
     native_Element_setAttributeNS.call(this, namespace, name, newValue);
+    newValue = native_Element_getAttributeNS.call(this, namespace, name);
     if (oldValue !== newValue) {
       internals.attributeChangedCallback(this, name, oldValue, newValue, namespace);
     }
