@@ -1,5 +1,7 @@
 import BuiltIn from './BuiltIn';
+import {CustomElementInternals} from '../CustomElementInternals';
 import * as CustomElementInternalSymbols from '../CustomElementInternalSymbols';
+/** @type {CustomElementInternalSymbols.CustomElementState} */
 const CustomElementState = CustomElementInternalSymbols.CustomElementState;
 import * as Utilities from '../Utilities';
 
@@ -11,6 +13,7 @@ export default function(internals) {
    * @param {!Node} node
    * @param {?Node} refNode
    * @return {!Node}
+   * @suppress {duplicate}
    */
   Node.prototype.insertBefore = function(node, refNode) {
     let nodes;
@@ -44,6 +47,7 @@ export default function(internals) {
   /**
    * @param {!Node} node
    * @return {!Node}
+   * @suppress {duplicate}
    */
   Node.prototype.appendChild = function(node) {
     return CE_Node_insertBefore.call(this, node, null);
@@ -52,6 +56,7 @@ export default function(internals) {
   /**
    * @param {boolean=} deep
    * @return {!Node}
+   * @suppress {duplicate}
    */
   Node.prototype.cloneNode = function(deep) {
     const clone = BuiltIn.Node_cloneNode.call(this, deep);
@@ -62,6 +67,7 @@ export default function(internals) {
   /**
    * @param {!Node} node
    * @return {!Node}
+   * @suppress {duplicate}
    */
   Node.prototype.removeChild = function(node) {
     const nativeResult = BuiltIn.Node_removeChild.call(this, node);
@@ -82,6 +88,7 @@ export default function(internals) {
    * @param {!Node} nodeToInsert
    * @param {?Node} nodeToRemove
    * @return {!Node}
+   * @suppress {duplicate}
    */
   Node.prototype.replaceChild = function(nodeToInsert, nodeToRemove) {
     const refChild = nodeToRemove.nextSibling;

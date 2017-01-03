@@ -1,4 +1,5 @@
 import BuiltIn from './BuiltIn';
+import {CustomElementInternals} from '../CustomElementInternals';
 
 /**
  * @param {!CustomElementInternals} internals
@@ -7,6 +8,7 @@ export default function(internals) {
   /**
    * @param {string} localName
    * @return {!Element}
+   * @suppress {duplicate}
    */
   Document.prototype.createElement = function(localName) {
     const definition = internals.localNameToDefinition(localName);
@@ -21,6 +23,7 @@ export default function(internals) {
    * @param {!Node} node
    * @param {boolean=} deep
    * @return {!Node}
+   * @suppress {duplicate}
    */
   Document.prototype.importNode = function(node, deep) {
     const clone = BuiltIn.Document_importNode.call(this, node, deep);
@@ -34,6 +37,7 @@ export default function(internals) {
    * @param {?string} namespace
    * @param {string} localName
    * @return {!Element}
+   * @suppress {duplicate}
    */
   Document.prototype.createElementNS = function(namespace, localName) {
     if (namespace === null || namespace === NS_HTML) {

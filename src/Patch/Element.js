@@ -1,4 +1,5 @@
 import BuiltIn from './BuiltIn';
+import {CustomElementInternals} from '../CustomElementInternals';
 import * as CustomElementInternalSymbols from '../CustomElementInternalSymbols';
 
 /**
@@ -71,6 +72,7 @@ export default function(internals) {
   /**
    * @param {string} name
    * @param {string} newValue
+   * @suppress {duplicate}
    */
   Element.prototype.setAttribute = function(name, newValue) {
     const oldValue = BuiltIn.Element_getAttribute.call(this, name);
@@ -85,6 +87,7 @@ export default function(internals) {
    * @param {?string} namespace
    * @param {string} name
    * @param {string} newValue
+   * @suppress {duplicate}
    */
   Element.prototype.setAttributeNS = function(namespace, name, newValue) {
     const oldValue = BuiltIn.Element_getAttributeNS.call(this, namespace, name);
@@ -97,7 +100,7 @@ export default function(internals) {
 
   /**
    * @param {string} name
-   * @param {string} newValue
+   * @suppress {duplicate}
    */
   Element.prototype.removeAttribute = function(name) {
     const oldValue = BuiltIn.Element_getAttribute.call(this, name);
@@ -110,7 +113,7 @@ export default function(internals) {
   /**
    * @param {?string} namespace
    * @param {string} name
-   * @param {string} newValue
+   * @suppress {duplicate}
    */
   Element.prototype.removeAttributeNS = function(namespace, name) {
     const oldValue = BuiltIn.Element_getAttributeNS.call(this, namespace, name);
