@@ -47,6 +47,7 @@ if (!window['customElements'] || window['customElements']['forcePolyfill']) {
   const native_Node_insertBefore = window.Node.prototype.insertBefore;
   const native_Node_removeChild = window.Node.prototype.removeChild;
   const native_Element_attachShadow = window.Element.prototype['attachShadow'];
+  const native_Element_id = Object.getOwnPropertyDescriptor(window.Element.prototype, 'id');
   const native_Element_innerHTML = Object.getOwnPropertyDescriptor(window.Element.prototype, 'innerHTML');
   const native_Element_getAttribute = window.Element.prototype.getAttribute;
   const native_Element_setAttribute = window.Element.prototype.setAttribute;
@@ -238,6 +239,20 @@ if (!window['customElements'] || window['customElements']['forcePolyfill']) {
       native_Element_innerHTML.set.call(this, htmlString);
       internals.upgradeTree(this);
       return htmlString;
+    },
+  });
+
+  Object.defineProperty(Element.prototype, 'id', {
+    enumerable: native_Element_id.enumerable,
+    configurable: true,
+    get: native_Element_id.get,
+    set: function(newValue) {
+      const oldValue = native_Element_id.get.call(this);
+      native_Element_id.set.call(this, newValue);
+      newValue = native_Element_id.get.call(this);
+      if (oldValue !== newValue) {
+        internals.attributeChangedCallback(this, 'id', oldValue, newValue, null);
+      }
     },
   });
 
