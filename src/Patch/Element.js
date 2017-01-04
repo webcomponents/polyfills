@@ -49,8 +49,8 @@ export default function(internals) {
     configurable: true,
     get: function() {
       const classList = BuiltIn.Element_classList.get.call(this);
-      if (!classList[CustomElementInternalSymbols.elementForDOMTokenList]) {
-        classList[CustomElementInternalSymbols.elementForDOMTokenList] = this;
+      if (!classList[CustomElementInternalSymbols.associatedElement]) {
+        classList[CustomElementInternalSymbols.associatedElement] = this;
       }
       return classList;
     },
