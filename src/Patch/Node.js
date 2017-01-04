@@ -66,11 +66,13 @@ export default function(internals) {
   Node.prototype.removeChild = function(node) {
     const nativeResult = BuiltIn.Node_removeChild.call(this, node);
 
-    Utilities.walkDeepDescendantElements(node, element => {
-      if (element[CustomElementInternalSymbols.state] === CustomElementState.custom) {
-        internals.disconnectedCallback(element);
-      }
-    });
+    if (Utilities.isConnected(this)) {
+      Utilities.walkDeepDescendantElements(node, element => {
+        if (element[CustomElementInternalSymbols.state] === CustomElementState.custom) {
+          internals.disconnectedCallback(element);
+        }
+      });
+    }
 
     return nativeResult;
   };
