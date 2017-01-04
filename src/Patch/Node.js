@@ -28,13 +28,7 @@ export default function(internals) {
     const connected = Utilities.isConnected(this);
     if (connected) {
       for (const node of nodes) {
-        Utilities.walkDeepDescendantElements(node, element => {
-          if (element[CustomElementInternalSymbols.state] === CustomElementState.custom) {
-            internals.connectedCallback(element);
-          } else {
-            internals.upgradeElement(element);
-          }
-        });
+        internals.connectTree(node);
       }
     }
 

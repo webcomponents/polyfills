@@ -29,13 +29,7 @@ export default function(internals, destination, builtIn) {
       for (const node of nodes) {
         if (!(node instanceof Element)) continue;
 
-        Utilities.walkDeepDescendantElements(node, element => {
-          if (element[CustomElementInternalSymbols.state] === CustomElementState.custom) {
-            internals.connectedCallback(element);
-          } else {
-            internals.upgradeElement(element);
-          }
-        });
+        internals.connectTree(node);
       }
     }
   };
@@ -51,13 +45,7 @@ export default function(internals, destination, builtIn) {
       for (const node of nodes) {
         if (!(node instanceof Element)) continue;
 
-        Utilities.walkDeepDescendantElements(node, element => {
-          if (element[CustomElementInternalSymbols.state] === CustomElementState.custom) {
-            internals.connectedCallback(element);
-          } else {
-            internals.upgradeElement(element);
-          }
-        });
+        internals.connectTree(node);
       }
     }
   };
