@@ -7,11 +7,24 @@ import * as CustomElementInternalSymbols from '../CustomElementInternalSymbols';
  */
 export default function(internals) {
   /**
+   * This function only exists to suppress Closure's warnings about applying the
+   * `[]` operator to a DOMTokenList, which is assumed to always accept a number
+   * and always return a string.
+   *
+   * @param {DOMTokenList} domTokenList
+   * @return {!Element|undefined}
+   * @suppress {checkTypes}
+   */
+  function getAssociatedElement(domTokenList) {
+    return /** @type {!Element|undefined} */ (domTokenList[CustomElementInternalSymbols.associatedElement]);
+  }
+
+  /**
    * @param {...string} tokens
    * @suppress {duplicate}
    */
   DOMTokenList.prototype.add = function(...tokens) {
-    const element = this[CustomElementInternalSymbols.associatedElement];
+    const element = getAssociatedElement(this);
     if (!element) {
       return BuiltIn.DOMTokenList_add.apply(this, arguments);
     }
@@ -29,7 +42,7 @@ export default function(internals) {
    * @suppress {duplicate}
    */
   DOMTokenList.prototype.remove = function(...tokens) {
-    const element = this[CustomElementInternalSymbols.associatedElement];
+    const element = getAssociatedElement(this);
     if (!element) {
       return BuiltIn.DOMTokenList_remove.apply(this, arguments);
     }
@@ -48,7 +61,7 @@ export default function(internals) {
    * @suppress {duplicate}
    */
   DOMTokenList.prototype.toggle = function(token, force) {
-    const element = this[CustomElementInternalSymbols.associatedElement];
+    const element = getAssociatedElement(this);
     if (!element) {
       return BuiltIn.DOMTokenList_toggle.call(this, token, force);
     }
@@ -67,7 +80,7 @@ export default function(internals) {
    * @suppress {duplicate}
    */
   DOMTokenList.prototype.replace = function(token, newToken) {
-    const element = this[CustomElementInternalSymbols.associatedElement];
+    const element = getAssociatedElement(this);
     if (!element) {
       return BuiltIn.DOMTokenList_replace.call(this, token, newToken);
     }
@@ -85,7 +98,7 @@ export default function(internals) {
     configurable: true,
     get: BuiltIn.DOMTokenList_value.get,
     set: /** @this {DOMTokenList} */ function() {
-      const element = this[CustomElementInternalSymbols.associatedElement];
+      const element = getAssociatedElement(this);
       if (!element) {
         BuiltIn.DOMTokenList_value.set.apply(this, arguments);
         return;
