@@ -16,18 +16,11 @@ export default function(internals) {
    * @suppress {duplicate}
    */
   Node.prototype.insertBefore = function(node, refNode) {
-    let nodes;
-    if (node instanceof DocumentFragment) {
-      nodes = [...node.childNodes];
-    } else {
-      nodes = [node];
-    }
-
+    const inserted = node instanceof DocumentFragment ? [...node.childNodes] : [node];
     const nativeResult = BuiltIn.Node_insertBefore.call(this, node, refNode);
 
-    const connected = Utilities.isConnected(this);
-    if (connected) {
-      for (const node of nodes) {
+    if (Utilities.isConnected(this)) {
+      for (const node of inserted) {
         internals.connectTree(node);
       }
     }
@@ -41,17 +34,11 @@ export default function(internals) {
    * @suppress {duplicate}
    */
   Node.prototype.appendChild = function(node) {
-    let nodes;
-    if (node instanceof DocumentFragment) {
-      nodes = [...node.childNodes];
-    } else {
-      nodes = [node];
-    }
-
+    const inserted = node instanceof DocumentFragment ? [...node.childNodes] : [node];
     const nativeResult = BuiltIn.Node_appendChild.call(this, node);
 
     if (Utilities.isConnected(this)) {
-      for (const node of nodes) {
+      for (const node of inserted) {
         internals.connectTree(node);
       }
     }
