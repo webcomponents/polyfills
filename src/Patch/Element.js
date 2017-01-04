@@ -135,4 +135,56 @@ export default function(internals) {
       internals.attributeChangedCallback(this, name, oldValue, null, namespace);
     }
   };
+
+  /**
+   * @param {!Attr} attr
+   * @return {?Attr}
+   * @suppress {duplicate}
+   */
+  Element.prototype.setAttributeNode = function(attr) {
+    const attrName = attr.name;
+    const oldValue = BuiltIn.Element_getAttribute.call(this, attrName);
+    const oldAttr = BuiltIn.Element_setAttributeNode.call(this, attr);
+    const newValue = BuiltIn.Element_getAttribute.call(this, attrName);
+    if (oldValue !== newValue) {
+      internals.attributeChangedCallback(this, attrName, oldValue, newValue, null);
+    }
+    return oldAttr;
+  };
+
+  /**
+   * @param {!Attr} attr
+   * @return {?Attr}
+   * @suppress {duplicate}
+   */
+  Element.prototype.setAttributeNodeNS = function(attr) {
+    const attrNS = attr.namespaceURI;
+    const attrName = attr.name;
+    const oldValue = BuiltIn.Element_getAttributeNS.call(this, attrNS, attrName);
+    const oldAttr = BuiltIn.Element_setAttributeNodeNS.call(this, attr);
+    const newValue = BuiltIn.Element_getAttributeNS.call(this, attrNS, attrName);
+    if (oldValue !== newValue) {
+      internals.attributeChangedCallback(this, attrName, oldValue, newValue, attrNS);
+    }
+    return oldAttr;
+  };
+
+  /**
+   * @param {!Attr} attr
+   * @return {!Attr}
+   * @suppress {duplicate}
+   */
+  Element.prototype.removeAttributeNode = function(attr) {
+    const attrNS = attr.namespaceURI;
+    const attrName = attr.name;
+    const oldValue =
+      (attrNS === null)
+      ? BuiltIn.Element_getAttribute.call(this, attrName)
+      : BuiltIn.Element_getAttributeNS.call(this, attrNS, attrName);
+    const oldAttr = BuiltIn.Element_removeAttributeNode.call(this, attr);
+    if (oldValue !== null) {
+      internals.attributeChangedCallback(this, attrName, oldValue, null, attrNS);
+    }
+    return oldAttr;
+  };
 };
