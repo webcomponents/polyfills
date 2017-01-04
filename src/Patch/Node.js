@@ -73,19 +73,20 @@ export default function(internals) {
     return nativeResult;
   };
 
-  // Keep a reference in case `Node#removeChild` is patched again.
-  const CE_Node_removeChild = Node.prototype.removeChild;
-
   /**
    * @param {!Node} nodeToInsert
-   * @param {?Node} nodeToRemove
+   * @param {!Node} nodeToRemove
    * @return {!Node}
    * @suppress {duplicate}
    */
   Node.prototype.replaceChild = function(nodeToInsert, nodeToRemove) {
-    const refChild = nodeToRemove.nextSibling;
-    CE_Node_removeChild.call(this, nodeToRemove);
-    CE_Node_insertBefore.call(this, nodeToInsert, refChild);
+    const nativeResult = BuiltIn.Node_replaceChild.call(this, nodeToInsert, nodeToRemove);
+
+    if (Utilities.isConnected(this)) {
+      internals.disconnectTree(nodeToRemove);
+      internals.connectTree(nodeToInsert);
+    }
+
     return nodeToRemove;
   };
 };
