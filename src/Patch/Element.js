@@ -5,6 +5,8 @@ import * as CustomElementInternalSymbols from '../CustomElementInternalSymbols';
 const CustomElementState = CustomElementInternalSymbols.CustomElementState;
 import * as Utilities from '../Utilities';
 
+import PatchParentNode from './Interface/ParentNode';
+
 /**
  * @param {!CustomElementInternals} internals
  */
@@ -225,4 +227,9 @@ export default function(internals) {
     }
     return insertedElement;
   };
+
+  PatchParentNode(internals, Element.prototype, {
+    prepend: BuiltIn.Element_prepend,
+    append: BuiltIn.Element_append,
+  });
 };

@@ -1,6 +1,8 @@
 import BuiltIn from './BuiltIn';
 import {CustomElementInternals} from '../CustomElementInternals';
 
+import PatchParentNode from './Interface/ParentNode';
+
 /**
  * @param {!CustomElementInternals} internals
  */
@@ -46,4 +48,9 @@ export default function(internals) {
 
     return BuiltIn.Document_createElementNS.call(this, namespace, localName);
   };
+
+  PatchParentNode(internals, Document.prototype, {
+    prepend: BuiltIn.Document_prepend,
+    append: BuiltIn.Document_append,
+  });
 };
