@@ -20,6 +20,7 @@ export default {
   Element_setAttributeNode: window.Element.prototype.setAttributeNode,
   Element_setAttributeNodeNS: window.Element.prototype.setAttributeNodeNS,
   Element_removeAttributeNode: window.Element.prototype.removeAttributeNode,
+  Element_insertAdjacentElement: window.Element.prototype['insertAdjacentElement'],
   HTMLElement: window.HTMLElement,
   DOMTokenList_add: window.DOMTokenList.prototype.add,
   DOMTokenList_remove: window.DOMTokenList.prototype.remove,

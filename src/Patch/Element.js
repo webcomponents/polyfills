@@ -1,6 +1,9 @@
 import BuiltIn from './BuiltIn';
 import {CustomElementInternals} from '../CustomElementInternals';
 import * as CustomElementInternalSymbols from '../CustomElementInternalSymbols';
+/** @type {CustomElementInternalSymbols.CustomElementState} */
+const CustomElementState = CustomElementInternalSymbols.CustomElementState;
+import * as Utilities from '../Utilities';
 
 /**
  * @param {!CustomElementInternals} internals
@@ -186,5 +189,27 @@ export default function(internals) {
       internals.attributeChangedCallback(this, attrName, oldValue, null, attrNS);
     }
     return oldAttr;
+  };
+
+  /**
+   * @param {string} where
+   * @param {!Element} element
+   * @return {?Element}
+   */
+  Element.prototype['insertAdjacentElement'] = function(where, element) {
+    const insertedElement = /** @type {!Element} */
+      (BuiltIn.Element_insertAdjacentElement.call(this, where, element));
+
+    const connected = Utilities.isConnected(insertedElement);
+    if (connected) {
+      Utilities.walkDeepDescendantElements(insertedElement, element => {
+        if (element[CustomElementInternalSymbols.state] === CustomElementState.custom) {
+          internals.connectedCallback(element);
+        } else {
+          internals.upgradeElement(element);
+        }
+      });
+    }
+    return insertedElement;
   };
 };
