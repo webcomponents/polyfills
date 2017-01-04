@@ -6,6 +6,7 @@ const CustomElementState = CustomElementInternalSymbols.CustomElementState;
 import * as Utilities from '../Utilities';
 
 import PatchParentNode from './Interface/ParentNode';
+import PatchChildNode from './Interface/ChildNode';
 
 /**
  * @param {!CustomElementInternals} internals
@@ -225,5 +226,9 @@ export default function(internals) {
   PatchParentNode(internals, Element.prototype, {
     prepend: BuiltIn.Element_prepend,
     append: BuiltIn.Element_append,
+  });
+
+  PatchChildNode(internals, Element.prototype, {
+    before: BuiltIn.Element_before,
   });
 };
