@@ -4,6 +4,7 @@ import * as Utilities from '../../Utilities';
 /**
  * @typedef {{
  *   before: !function(...(!Node|string)),
+ *   after: !function(...(!Node|string)),
  * }}
  */
 let ChildNodeBuiltIns;
@@ -19,6 +20,21 @@ export default function(internals, destination, builtIn) {
    */
   destination['before'] = function(...nodes) {
     builtIn.before.apply(this, nodes);
+
+    if (Utilities.isConnected(this)) {
+      for (const node of nodes) {
+        if (node instanceof Element) {
+          internals.connectTree(node);
+        }
+      }
+    }
+  };
+
+  /**
+   * @param {...(!Node|string)} nodes
+   */
+  destination['after'] = function(...nodes) {
+    builtIn.after.apply(this, nodes);
 
     if (Utilities.isConnected(this)) {
       for (const node of nodes) {

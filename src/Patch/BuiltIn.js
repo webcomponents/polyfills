@@ -29,6 +29,7 @@ export default {
   Element_prepend: window.Element.prototype['prepend'],
   Element_append: window.Element.prototype['append'],
   Element_before: window.Element.prototype['before'],
+  Element_after: window.Element.prototype['after'],
   HTMLElement: window.HTMLElement,
   DOMTokenList_add: window.DOMTokenList.prototype.add,
   DOMTokenList_remove: window.DOMTokenList.prototype.remove,
