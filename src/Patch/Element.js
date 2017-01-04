@@ -19,6 +19,19 @@ export default function(internals) {
     return shadowRoot;
   };
 
+  Object.defineProperty(Element.prototype, 'attributes', {
+    enumerable: BuiltIn.Element_attributes.enumerable,
+    configurable: true,
+    get: function() {
+      const attributes = BuiltIn.Element_attributes.get.call(this);
+      if (!attributes[CustomElementInternalSymbols.associatedElement]) {
+        attributes[CustomElementInternalSymbols.associatedElement] = this;
+      }
+      return attributes;
+    },
+    set: BuiltIn.Element_attributes.set,
+  });
+
   Object.defineProperty(Element.prototype, 'innerHTML', {
     enumerable: BuiltIn.Element_innerHTML.enumerable,
     configurable: true,

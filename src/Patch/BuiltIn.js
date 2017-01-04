@@ -6,6 +6,7 @@ export default {
   Node_insertBefore: window.Node.prototype.insertBefore,
   Node_removeChild: window.Node.prototype.removeChild,
   Element_attachShadow: window.Element.prototype['attachShadow'],
+  Element_attributes: Object.getOwnPropertyDescriptor(window.Element.prototype, 'attributes'),
   Element_id: Object.getOwnPropertyDescriptor(window.Element.prototype, 'id'),
   Element_classList: Object.getOwnPropertyDescriptor(window.Element.prototype, 'classList'),
   Element_className: Object.getOwnPropertyDescriptor(window.Element.prototype, 'className'),
@@ -28,4 +29,8 @@ export default {
   DOMTokenList_replace: window.DOMTokenList.prototype.replace,
   DOMTokenList_value: Object.getOwnPropertyDescriptor(window.DOMTokenList.prototype, 'value'),
   Attr_value: Object.getOwnPropertyDescriptor(window.Attr.prototype, 'value'),
+  NamedNodeMap_setNamedItem: window.NamedNodeMap.prototype.setNamedItem,
+  NamedNodeMap_setNamedItemNS: window.NamedNodeMap.prototype['setNamedItemNS'],
+  NamedNodeMap_removeNamedItem: window.NamedNodeMap.prototype.removeNamedItem,
+  NamedNodeMap_removeNamedItemNS: window.NamedNodeMap.prototype['removeNamedItemNS'],
 };
