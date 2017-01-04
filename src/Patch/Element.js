@@ -232,5 +232,6 @@ export default function(internals) {
     before: BuiltIn.Element_before,
     after: BuiltIn.Element_after,
     replaceWith: BuiltIn.Element_replaceWith,
+    remove: BuiltIn.Element_remove,
   });
 };

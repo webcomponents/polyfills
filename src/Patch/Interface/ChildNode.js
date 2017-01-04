@@ -6,6 +6,7 @@ import * as Utilities from '../../Utilities';
  *   before: !function(...(!Node|string)),
  *   after: !function(...(!Node|string)),
  *   replaceWith: !function(...(!Node|string)),
+ *   remove: !function(),
  * }}
  */
 let ChildNodeBuiltIns;
@@ -61,6 +62,16 @@ export default function(internals, destination, builtIn) {
           internals.connectTree(node);
         }
       }
+    }
+  };
+
+  destination['remove'] = function() {
+    const wasConnected = Utilities.isConnected(this);
+
+    builtIn.remove.call(this);
+
+    if (wasConnected) {
+      internals.disconnectTree(this);
     }
   };
 };
