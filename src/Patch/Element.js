@@ -231,5 +231,6 @@ export default function(internals) {
   PatchChildNode(internals, Element.prototype, {
     before: BuiltIn.Element_before,
     after: BuiltIn.Element_after,
+    replaceWith: BuiltIn.Element_replaceWith,
   });
 };
