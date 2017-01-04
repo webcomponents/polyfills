@@ -5,6 +5,7 @@ export default {
   Document_prepend: window.Document.prototype['prepend'],
   Document_append: window.Document.prototype['append'],
   Node_cloneNode: window.Node.prototype.cloneNode,
+  Node_appendChild: window.Node.prototype.appendChild,
   Node_insertBefore: window.Node.prototype.insertBefore,
   Node_removeChild: window.Node.prototype.removeChild,
   Node_replaceChild: window.Node.prototype.replaceChild,

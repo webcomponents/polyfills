@@ -35,16 +35,28 @@ export default function(internals) {
     return nativeResult;
   };
 
-  // Keep a reference in case `Node#insertBefore` is patched again.
-  const CE_Node_insertBefore = Node.prototype.insertBefore;
-
   /**
    * @param {!Node} node
    * @return {!Node}
    * @suppress {duplicate}
    */
   Node.prototype.appendChild = function(node) {
-    return CE_Node_insertBefore.call(this, node, null);
+    let nodes;
+    if (node instanceof DocumentFragment) {
+      nodes = [...node.childNodes];
+    } else {
+      nodes = [node];
+    }
+
+    const nativeResult = BuiltIn.Node_appendChild.call(this, node);
+
+    if (Utilities.isConnected(this)) {
+      for (const node of nodes) {
+        internals.connectTree(node);
+      }
+    }
+
+    return nativeResult;
   };
 
   /**
