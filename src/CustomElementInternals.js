@@ -55,6 +55,17 @@ export class CustomElementInternals {
   }
 
   /**
+   * @param {!Node} root
+   */
+  disconnectTree(root) {
+    Utilities.walkDeepDescendantElements(root, element => {
+      if (element[CustomElementInternalSymbols.state] === CustomElementState.custom) {
+        this.disconnectedCallback(element);
+      }
+    });
+  }
+
+  /**
    * Upgrades all uncustomized custom elements at and below a root node for
    * which there is a definition. When custom element reaction callbacks are
    * assumed to be called synchronously (which, by the current DOM / HTML spec

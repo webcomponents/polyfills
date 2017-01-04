@@ -67,11 +67,7 @@ export default function(internals) {
     const nativeResult = BuiltIn.Node_removeChild.call(this, node);
 
     if (Utilities.isConnected(this)) {
-      Utilities.walkDeepDescendantElements(node, element => {
-        if (element[CustomElementInternalSymbols.state] === CustomElementState.custom) {
-          internals.disconnectedCallback(element);
-        }
-      });
+      internals.disconnectTree(node);
     }
 
     return nativeResult;
