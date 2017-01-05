@@ -20,6 +20,7 @@ export default function(internals, destination, builtIn) {
    */
   destination['prepend'] = function(...nodes) {
     const connectedBefore = /** @type {!Array<!Node>} */ (nodes.filter(node => {
+      // DocumentFragments are not connected and will not be added to the list.
       return node instanceof Node && Utilities.isConnected(node);
     }));
 
@@ -43,6 +44,7 @@ export default function(internals, destination, builtIn) {
    */
   destination['append'] = function(...nodes) {
     const connectedBefore = /** @type {!Array<!Node>} */ (nodes.filter(node => {
+      // DocumentFragments are not connected and will not be added to the list.
       return node instanceof Node && Utilities.isConnected(node);
     }));
 
