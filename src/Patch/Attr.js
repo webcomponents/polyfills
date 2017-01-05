@@ -43,4 +43,24 @@ export default function(internals) {
       }
     },
   });
+
+  Object.defineProperty(Attr.prototype, 'textContent', {
+    enumerable: BuiltIn.Attr_textContent.enumerable,
+    configurable: true,
+    get: BuiltIn.Attr_textContent.get,
+    set: /** @this {!Attr} */ function(assignedValue) {
+      if (!this.ownerElement) {
+        BuiltIn.Attr_textContent.set.call(this, assignedValue);
+        return;
+      }
+
+      const oldValue = BuiltIn.Attr_textContent.get.call(this);
+      BuiltIn.Attr_textContent.set.call(this, assignedValue);
+      const newValue = BuiltIn.Attr_textContent.get.call(this);
+
+      if (oldValue !== newValue) {
+        internals.attributeChangedCallback(this.ownerElement, this.name, oldValue, newValue, null);
+      }
+    },
+  });
 };

@@ -39,13 +39,17 @@ export default {
   DOMTokenList_replace: window.DOMTokenList.prototype.replace,
   DOMTokenList_value: Object.getOwnPropertyDescriptor(window.DOMTokenList.prototype, 'value'),
   Attr_value: Object.getOwnPropertyDescriptor(window.Attr.prototype, 'value'),
-  // NOTE: Chrome doesn't match the DOM spec and adds the `nodeValue` setter to
-  // `Attr`. Also, we patch `Attr` instead of `Node` with a switch because the
-  // general case (a context object of type `Element` or `Node` itself) has no
-  // effect on custom elements.
+  // NOTE: Chrome doesn't match the DOM spec and adds the `nodeValue` and
+  // `textContent` setters to `Attr` in addition to `Node`. To work around this
+  // and to prevent overhead in other cases that don't affect custom elements
+  // these setters are only implemented on the prototypes for which they have
+  // observable effects.
   Attr_nodeValue:
     Object.getOwnPropertyDescriptor(window.Attr.prototype, 'nodeValue') ||
     Object.getOwnPropertyDescriptor(window.Node.prototype, 'nodeValue'),
+  Attr_textContent:
+    Object.getOwnPropertyDescriptor(window.Attr.prototype, 'textContent') ||
+    Object.getOwnPropertyDescriptor(window.Node.prototype, 'textContent'),
   NamedNodeMap_setNamedItem: window.NamedNodeMap.prototype.setNamedItem,
   NamedNodeMap_setNamedItemNS: window.NamedNodeMap.prototype['setNamedItemNS'],
   NamedNodeMap_removeNamedItem: window.NamedNodeMap.prototype.removeNamedItem,

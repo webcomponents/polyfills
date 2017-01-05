@@ -10,6 +10,7 @@ import * as Utilities from '../Utilities';
  */
 export default function(internals) {
   // `Node#nodeValue` is implemented on `Attr`.
+  // `Node#textContent` is implemented on `Attr`, `Element`.
 
   /**
    * @param {!Node} node
