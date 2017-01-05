@@ -88,7 +88,7 @@ function activeElementForNode(node) {
   }
 }
 
-export let OutsideAccessors = {
+let OutsideAccessors = {
   // node...
   parentElement: generateSimpleDescriptor('parentElement'),
 
@@ -106,10 +106,43 @@ export let OutsideAccessors = {
       this.setAttribute('class', value);
     },
     configurable: true
+  },
+
+  // fragment, element, document
+  nextElementSibling: {
+    get() {
+      if (hasProperty(this, 'nextSibling')) {
+        let n = this.nextSibling;
+        while (n && n.nodeType !== Node.ELEMENT_NODE) {
+          n = n.nextSibling;
+        }
+        return n;
+      } else {
+        return nativeTree.nextElementSibling(this);
+      }
+    },
+    configurable: true
+  },
+
+  previousElementSibling: {
+    get() {
+      if (hasProperty(this, 'previousSibling')) {
+        let n = this.previousSibling;
+        while (n && n.nodeType !== Node.ELEMENT_NODE) {
+          n = n.previousSibling;
+        }
+        return n;
+      } else {
+        return nativeTree.previousElementSibling(this);
+      }
+    },
+    configurable: true
   }
+
 };
 
-export let InsideAccessors = {
+let InsideAccessors = {
+
   childNodes: {
     get() {
       if (hasProperty(this, 'firstChild')) {
@@ -190,36 +223,6 @@ export let InsideAccessors = {
     configurable: true
   },
 
-  nextElementSibling: {
-    get() {
-      if (hasProperty(this, 'nextSibling')) {
-        let n = this.nextSibling;
-        while (n && n.nodeType !== Node.ELEMENT_NODE) {
-          n = n.nextSibling;
-        }
-        return n;
-      } else {
-        return nativeTree.nextElementSibling(this);
-      }
-    },
-    configurable: true
-  },
-
-  previousElementSibling: {
-    get() {
-      if (hasProperty(this, 'previousSibling')) {
-        let n = this.previousSibling;
-        while (n && n.nodeType !== Node.ELEMENT_NODE) {
-          n = n.previousSibling;
-        }
-        return n;
-      } else {
-        return nativeTree.previousElementSibling(this);
-      }
-    },
-    configurable: true
-  },
-
   children: {
     get() {
       if (hasProperty(this, 'firstChild')) {
@@ -255,10 +258,8 @@ export let InsideAccessors = {
       }
     },
     configurable: true
-  }
-};
+  },
 
-export let ExtraInsideAccessors = {
   shadowRoot: {
     get() {
       return this.shadyRoot;
@@ -268,9 +269,10 @@ export let ExtraInsideAccessors = {
     },
     configurable: true
   }
+
 };
 
-export let OtherAccessors = {
+export let ActiveElementAccessor = {
 
   activeElement: {
     get() {
@@ -282,47 +284,49 @@ export let OtherAccessors = {
 
 };
 
-export let getComposedInnerHTML = function(node) {
-  return getInnerHTML(node, (n) => nativeTree.childNodes(n));
-}
-
-export let getComposedChildNodes = function(node) {
-  return nativeTree.childNodes(node);
-}
-
-export function tryExtend(obj, accessors, force) {
-  for (let p in accessors) {
+// patch a group of descriptors on an object only if it exists or if the `force`
+// argument is true.
+function patchAccessorGroup(obj, descriptors, force) {
+  for (let p in descriptors) {
     let objDesc = Object.getOwnPropertyDescriptor(obj, p);
     if ((objDesc && objDesc.configurable) ||
       (!objDesc && force)) {
-      Object.defineProperty(obj, p, accessors[p]);
+      Object.defineProperty(obj, p, descriptors[p]);
     } else if (force) {
       console.warn('Could not define', p, 'on', obj);
     }
   }
 }
 
-export function tryExtendAccessors(proto) {
-  tryExtend(proto, OutsideAccessors);
-  tryExtend(proto, InsideAccessors);
-  tryExtend(proto, OtherAccessors);
+// patch dom accessors on proto where they exist
+export function patchAccessors(proto) {
+  patchAccessorGroup(proto, OutsideAccessors);
+  patchAccessorGroup(proto, InsideAccessors);
+  patchAccessorGroup(proto, ActiveElementAccessor);
 }
 
-export let ensureOutsideAccessors = utils.settings.hasDescriptors ?
+// ensure element descriptors (IE/Edge don't have em)
+export function patchShadowRootAccessors(proto) {
+  patchAccessorGroup(proto, InsideAccessors, true);
+  patchAccessorGroup(proto, ActiveElementAccessor, true);
+}
+
+// ensure an element has patched "outside" accessors; no-op when not needed
+export let patchOutsideElementAccessors = utils.settings.hasDescriptors ?
   function() {} : function(element) {
     if (!(element.__shady && element.__shady.__outsideAccessors)) {
       element.__shady = element.__shady || {};
       element.__shady.__outsideAccessors = true;
-      tryExtend(element, OutsideAccessors, true);
+      patchAccessorGroup(element, OutsideAccessors, true);
     }
   }
 
-export let ensureInsideAccessors = utils.settings.hasDescriptors ?
+// ensure an element has patched "inside" accessors; no-op when not needed
+export let patchInsideElementAccessors = utils.settings.hasDescriptors ?
   function() {} : function(element) {
     if (!(element.__shady && element.__shady.__insideAccessors)) {
       element.__shady = element.__shady || {};
       element.__shady.__insideAccessors = true;
-      tryExtend(element, InsideAccessors, true);
-      tryExtend(element, ExtraInsideAccessors, true);
+      patchAccessorGroup(element, InsideAccessors, true);
     }
   }

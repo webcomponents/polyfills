@@ -16,7 +16,7 @@ import {enqueue} from './flush'
 import {recordChildNodes} from './logical-tree'
 import {removeChild, insertBefore} from './native-methods'
 import {parentNode, childNodes} from './native-tree'
-import {InsideAccessors, OtherAccessors} from './accessor-mixin'
+import {patchShadowRootAccessors} from './patch-accessors'
 import Distributor from './distributor'
 
 /**
@@ -32,14 +32,15 @@ export class ShadyRoot {
     // NOTE: this strange construction is necessary because
     // DocumentFragment cannot be subclassed on older browsers.
     let frag = document.createDocumentFragment();
-    frag.__proto__ = ShadyFragmentMixin;
+    frag.__proto__ = ShadyRootPrototype;
     frag._init(host);
     return frag;
   }
 
 }
 
-let ShadyMixin = {
+let ShadyRootPrototype = Object.create(DocumentFragment.prototype);
+utils.extendAll(ShadyRootPrototype, {
 
   _init(host) {
     // NOTE: set a fake local name so this element can be
@@ -255,15 +256,6 @@ let ShadyMixin = {
     return this._distributor.insertionPointTag;
   }
 
-}
-
-let ShadyFragmentMixin = Object.create(DocumentFragment.prototype);
-utils.extendAll(ShadyFragmentMixin, ShadyMixin);
-// ensure element descriptors (IE/Edge don't have em)
-Object.defineProperties(ShadyFragmentMixin, {
-  activeElement: OtherAccessors.activeElement,
-  innerHTML: InsideAccessors.innerHTML,
-  firstElementChild: InsideAccessors.firstElementChild,
-  lastElementChild: InsideAccessors.lastElementChild,
-  children: InsideAccessors.children
 });
+
+patchShadowRootAccessors(ShadyRootPrototype);

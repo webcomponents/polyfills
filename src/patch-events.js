@@ -106,7 +106,7 @@ function retarget(refNode, path) {
   }
 }
 
-let EventMixin = {
+let eventMixin = {
 
   get composed() {
     if (this.isTrusted && this.__composed === undefined) {
@@ -265,7 +265,7 @@ export function addEventListener(type, fn, optionsOrCapture) {
     if (!e.__target) {
       e.__target = e.target;
       e.__relatedTarget = e.relatedTarget;
-      utils.patchPrototype(e, EventMixin);
+      utils.patchPrototype(e, eventMixin);
     }
     // There are two critera that should stop events from firing on this node
     // 1. the event is not composed and the current node is not in the same root as the target
@@ -345,13 +345,13 @@ export function removeEventListener(type, fn, optionsOrCapture) {
   }
 }
 
-export function activateFocusEventOverrides() {
+function activateFocusEventOverrides() {
   for (let ev in nonBubblingEventsToRetarget) {
     window.addEventListener(ev, function(e) {
       if (!e.__target) {
         e.__target = e.target;
         e.__relatedTarget = e.relatedTarget;
-        utils.patchPrototype(e, EventMixin);
+        utils.patchPrototype(e, eventMixin);
         retargetNonBubblingEvent(e);
         e.stopImmediatePropagation();
       }
@@ -359,7 +359,13 @@ export function activateFocusEventOverrides() {
   }
 }
 
-export let OriginalEvent = Event;
-export let PatchedEvent = mixinComposedFlag(Event);
-export let PatchedCustomEvent = mixinComposedFlag(CustomEvent);
-export let PatchedMouseEvent = mixinComposedFlag(MouseEvent);
+let PatchedEvent = mixinComposedFlag(window.Event);
+let PatchedCustomEvent = mixinComposedFlag(window.CustomEvent);
+let PatchedMouseEvent = mixinComposedFlag(window.MouseEvent);
+
+export function patchEvents() {
+  window.Event = PatchedEvent;
+  window.CustomEvent = PatchedCustomEvent;
+  window.MouseEvent = PatchedMouseEvent;
+  activateFocusEventOverrides();
+}

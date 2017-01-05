@@ -12,9 +12,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 import * as utils from './utils'
 import * as mutation from './shady-mutation'
-import {OtherAccessors, ExtraInsideAccessors} from './accessor-mixin'
+import {ActiveElementAccessor, patchAccessors} from './patch-accessors'
 import {getProperty} from './logical-properties'
-import * as events from './event-mixin'
+import {addEventListener, removeEventListener} from './patch-events'
 import {ShadyRoot} from './shady-root'
 
 let assignedSlotDesc = {
@@ -25,11 +25,11 @@ let assignedSlotDesc = {
   configurable: true
 };
 
-export let Node = {
+let nodeMixin = {
 
-  addEventListener: events.addEventListener,
+  addEventListener: addEventListener,
 
-  removeEventListener: events.removeEventListener,
+  removeEventListener: removeEventListener,
 
   appendChild(node) {
     return mutation.insertBefore(this, node);
@@ -55,27 +55,22 @@ export let Node = {
 
   getRootNode(options) {
     return mutation.getRootNode(this, options);
+  },
+
+  get isConnected() {
+    return document.documentElement.contains(this)
   }
 
 };
 
-Object.defineProperties(Node, {
-  isConnected: {
-    get() {
-      return document.documentElement.contains(this);
-    },
-    configurable: true
-  }
-});
-
 // NOTE: For some reason `Text` redefines `assignedSlot`
-export let Text = {};
+let textMixin = {};
 
 Object.defineProperties(Text, {
   assignedSlot: assignedSlotDesc
 });
 
-export let Fragment = {
+let fragmentMixin = {
 
   // TODO(sorvell): consider doing native QSA and filtering results.
   querySelector(selector) {
@@ -106,11 +101,11 @@ let assignedNodes = function(options) {
   }
 };
 
-export let Slot = {
+let slotMixin = {
   assignedNodes: assignedNodes
 };
 
-export let Element = utils.extendAll({}, Fragment, Slot, {
+let elementMixin = utils.extendAll({}, fragmentMixin, slotMixin, {
 
   setAttribute(name, value) {
     mutation.setAttribute(this, name, value);
@@ -122,35 +117,39 @@ export let Element = utils.extendAll({}, Fragment, Slot, {
 
   attachShadow() {
     return new ShadyRoot(this);
+  },
+
+  get slot() {
+    return this.getAttribute('slot');
+  },
+
+  set slot(value) {
+    this.setAttribute('slot', value);
   }
 
 });
 
-Object.defineProperties(Element, {
+Object.defineProperties(elementMixin, {
 
-  assignedSlot: assignedSlotDesc,
+  assignedSlot: assignedSlotDesc
 
-  shadowRoot: ExtraInsideAccessors.shadowRoot,
-
-  slot: {
-    get() {
-      return this.getAttribute('slot');
-    },
-    set(value) {
-      this.setAttribute('slot', value);
-    },
-    configurable: true
-  }
-})
+});
 
 // TODO(sorvell): importNode
-export let Document = utils.extendAll({}, Fragment);
+let documentMixin = utils.extendAll({}, fragmentMixin);
 
-export function extendGlobal(proto, obj) {
+Object.defineProperties(documentMixin, {
+  _activeElement: ActiveElementAccessor.activeElement
+});
+
+function patchBuiltin(proto, obj) {
   let n$ = Object.getOwnPropertyNames(obj);
   for (let i=0; i < n$.length; i++) {
     let n = n$[i];
     let d = Object.getOwnPropertyDescriptor(obj, n);
+    // NOTE: we prefer writing directly here because some browsers
+    // have descriptors that are writable but not configurable (e.g.
+    // `appendChild` on older browsers)
     if (d.value) {
       proto[n] = d.value;
     } else {
@@ -159,6 +158,40 @@ export function extendGlobal(proto, obj) {
   }
 }
 
-Object.defineProperties(Document, {
-  _activeElement: OtherAccessors.activeElement
-});
+
+// Apply patches to builtins (e.g. Element.prototype). Some of these patches
+// can be done unconditionally (mostly methods like
+// `Element.prototype.appendChild`) and some can only be done when the browser
+// has proper descriptors on the builtin prototype
+// (e.g. `Element.prototype.firstChild`)`. When descriptors are not available,
+// elements are individually patched when needed.
+export function patchBuiltins() {
+  // These patches can always be done, for all supported browsers.
+  patchBuiltin(window.Node.prototype, nodeMixin);
+  patchBuiltin(window.Text.prototype, textMixin);
+  patchBuiltin(window.DocumentFragment.prototype, fragmentMixin);
+  patchBuiltin(window.Element.prototype, elementMixin);
+  patchBuiltin(window.Document.prototype, documentMixin);
+  if (window.HTMLSlotElement) {
+    patchBuiltin(window.HTMLSlotElement.prototype, slotMixin);
+  }
+  // These patches can *only* be done
+  // on browsers that have proper property descriptors on builtin prototypes.
+  // This includes: IE11, Edge, Chrome >= 4?; Safari >= 10, Firefox
+  // On older browsers (Chrome <= 4?, Safari 9), a per element patching
+  // strategy is used for patching accessors.
+  if (utils.settings.hasDescriptors) {
+    patchAccessors(window.Node.prototype);
+    patchAccessors(window.Text.prototype);
+    patchAccessors(window.DocumentFragment.prototype);
+    patchAccessors(window.Element.prototype);
+    let nativeHTMLElement =
+      (window.customElements && customElements.nativeHTMLElement) ||
+      HTMLElement;
+    patchAccessors(nativeHTMLElement.prototype);
+    patchAccessors(window.Document.prototype);
+    if (window.HTMLSlotElement) {
+      patchAccessors(window.HTMLSlotElement.prototype);
+    }
+  }
+}

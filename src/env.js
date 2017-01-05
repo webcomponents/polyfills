@@ -24,10 +24,8 @@ import {flush, enqueue} from './flush'
 import {observeChildren, unobserveChildren, filterMutations} from './observe-changes'
 import * as nativeMethods from './native-methods'
 import * as nativeTree from './native-tree'
-import * as mixins from './global-mixin'
-import { tryExtendAccessors, OtherAccessors,
-  getComposedInnerHTML, getComposedChildNodes} from './accessor-mixin'
-import * as events from './event-mixin'
+import {patchBuiltins} from './patch-builtins'
+import {patchEvents} from './patch-events'
 
 if (utils.settings.inUse) {
 
@@ -36,10 +34,7 @@ if (utils.settings.inUse) {
     inUse: utils.settings.inUse,
     // TODO(sorvell): remove when Polymer does not depend on this.
     patch: function(node) { return node; },
-    getComposedInnerHTML: getComposedInnerHTML,
-    getComposedChildNodes: getComposedChildNodes,
     isShadyRoot: utils.isShadyRoot,
-    // TODO(sorvell): exposed for testing only, worth it?
     enqueue: enqueue,
     flush: flush,
     settings: utils.settings,
@@ -50,35 +45,9 @@ if (utils.settings.inUse) {
     nativeTree: nativeTree
   };
 
-  window.Event = events.PatchedEvent;
-  window.CustomEvent = events.PatchedCustomEvent;
-  window.MouseEvent = events.PatchedMouseEvent;
-  events.activateFocusEventOverrides();
-
-  mixins.extendGlobal(Node.prototype, mixins.Node);
-  mixins.extendGlobal(Text.prototype, mixins.Text);
-  mixins.extendGlobal(DocumentFragment.prototype, mixins.Fragment);
-  mixins.extendGlobal(Element.prototype, mixins.Element);
-  mixins.extendGlobal(Document.prototype, mixins.Document);
-  if (window.HTMLSlotElement) {
-    mixins.extendGlobal(window.HTMLSlotElement.prototype, mixins.Slot);
-  }
-
-  if (utils.settings.hasDescriptors) {
-    tryExtendAccessors(Node.prototype);
-    tryExtendAccessors(Text.prototype);
-    tryExtendAccessors(DocumentFragment.prototype);
-    tryExtendAccessors(Element.prototype);
-    let nativeHTMLElement =
-      (window.customElements && customElements.nativeHTMLElement) ||
-      HTMLElement;
-    tryExtendAccessors(nativeHTMLElement.prototype);
-    tryExtendAccessors(Document.prototype);
-    if (window.HTMLSlotElement) {
-      tryExtendAccessors(window.HTMLSlotElement.prototype);
-    }
-  } else {
-    Object.defineProperty(document, '_activeElement', OtherAccessors.activeElement);
-  }
+  // Apply patches to events...
+  patchEvents();
+  // Apply patches to builtins (e.g. Element.prototype) where applicable.
+  patchBuiltins();
 
 }

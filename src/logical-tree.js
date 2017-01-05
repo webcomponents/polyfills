@@ -11,11 +11,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 'use strict';
 
 import {hasProperty} from './logical-properties'
-import {ensureInsideAccessors, ensureOutsideAccessors} from './accessor-mixin'
+import {patchInsideElementAccessors, patchOutsideElementAccessors} from './patch-accessors'
 import {firstChild, lastChild, childNodes} from './native-tree'
 
 export function recordInsertBefore(node, container, ref_node) {
-  ensureInsideAccessors(container);
+  patchInsideElementAccessors(container);
   container.__shady = container.__shady || {};
   if (hasProperty(container, 'firstChild')) {
     container.__shady.childNodes = null;
@@ -37,7 +37,7 @@ export function recordInsertBefore(node, container, ref_node) {
 }
 
 function linkNode(node, container, ref_node) {
-  ensureOutsideAccessors(node);
+  patchOutsideElementAccessors(node);
   ref_node = ref_node || null;
   node.__shady = node.__shady || {};
   container.__shady = container.__shady || {};
@@ -107,14 +107,14 @@ export let recordChildNodes = function(node) {
     node.__shady = node.__shady || {};
     node.__shady.firstChild = firstChild(node);
     node.__shady.lastChild = lastChild(node);
-    ensureInsideAccessors(node);
+    patchInsideElementAccessors(node);
     let c$ = node.__shady.childNodes = childNodes(node);
     for (let i=0, n; (i<c$.length) && (n=c$[i]); i++) {
       n.__shady = n.__shady || {};
       n.__shady.parentNode = node;
       n.__shady.nextSibling = c$[i+1] || null;
       n.__shady.previousSibling = c$[i-1] || null;
-      ensureOutsideAccessors(n);
+      patchOutsideElementAccessors(n);
     }
   }
 }
