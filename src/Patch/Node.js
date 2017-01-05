@@ -20,7 +20,13 @@ export default function(internals) {
    */
   Node.prototype.insertBefore = function(node, refNode) {
     const inserted = node instanceof DocumentFragment ? [...node.childNodes] : [node];
+    const wasConnected = !(node instanceof DocumentFragment) && Utilities.isConnected(node);
+
     const nativeResult = BuiltIn.Node_insertBefore.call(this, node, refNode);
+
+    if (wasConnected) {
+      internals.disconnectTree(node);
+    }
 
     if (Utilities.isConnected(this)) {
       for (const node of inserted) {
@@ -38,7 +44,13 @@ export default function(internals) {
    */
   Node.prototype.appendChild = function(node) {
     const inserted = node instanceof DocumentFragment ? [...node.childNodes] : [node];
+    const wasConnected = !(node instanceof DocumentFragment) && Utilities.isConnected(node);
+
     const nativeResult = BuiltIn.Node_appendChild.call(this, node);
+
+    if (wasConnected) {
+      internals.disconnectTree(node);
+    }
 
     if (Utilities.isConnected(this)) {
       for (const node of inserted) {
@@ -82,11 +94,20 @@ export default function(internals) {
    * @suppress {duplicate}
    */
   Node.prototype.replaceChild = function(nodeToInsert, nodeToRemove) {
+    const inserted = nodeToInsert instanceof DocumentFragment ? [...nodeToInsert.childNodes] : [nodeToInsert];
+    const wasConnected = !(nodeToInsert instanceof DocumentFragment) && Utilities.isConnected(nodeToInsert);
+
     const nativeResult = BuiltIn.Node_replaceChild.call(this, nodeToInsert, nodeToRemove);
+
+    if (wasConnected) {
+      internals.disconnectTree(nodeToInsert);
+    }
 
     if (Utilities.isConnected(this)) {
       internals.disconnectTree(nodeToRemove);
-      internals.connectTree(nodeToInsert);
+      for (const node of inserted) {
+        internals.connectTree(node);
+      }
     }
 
     return nodeToRemove;

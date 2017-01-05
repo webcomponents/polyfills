@@ -213,11 +213,15 @@ export default function(internals) {
    * @return {?Element}
    */
   Element.prototype['insertAdjacentElement'] = function(where, element) {
+    const wasConnected = Utilities.isConnected(element);
     const insertedElement = /** @type {!Element} */
       (BuiltIn.Element_insertAdjacentElement.call(this, where, element));
 
-    const connected = Utilities.isConnected(insertedElement);
-    if (connected) {
+    if (wasConnected) {
+      internals.disconnectTree(element);
+    }
+
+    if (Utilities.isConnected(insertedElement)) {
       internals.connectTree(element);
     }
     return insertedElement;
