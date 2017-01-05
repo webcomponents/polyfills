@@ -17,13 +17,10 @@ import {getProperty} from './logical-properties'
 import {addEventListener, removeEventListener} from './patch-events'
 import {ShadyRoot} from './shady-root'
 
-let assignedSlotDesc = {
-  get() {
-    mutation.renderRootNode(this);
-    return getProperty(this, 'assignedSlot') || null;
-  },
-  configurable: true
-};
+function getAssignedSlot(node) {
+  mutation.renderRootNode(node);
+  return getProperty(node, 'assignedSlot') || null;
+}
 
 let nodeMixin = {
 
@@ -64,11 +61,11 @@ let nodeMixin = {
 };
 
 // NOTE: For some reason `Text` redefines `assignedSlot`
-let textMixin = {};
-
-Object.defineProperties(Text, {
-  assignedSlot: assignedSlotDesc
-});
+let textMixin = {
+  get assignedSlot() {
+    return getAssignedSlot(this);
+  }
+};
 
 let fragmentMixin = {
 
@@ -91,21 +88,21 @@ let fragmentMixin = {
 
 };
 
-let assignedNodes = function(options) {
-  if (this.localName === 'slot') {
-    mutation.renderRootNode(this);
-    return this.__shady ?
-      ((options && options.flatten ? this.__shady.distributedNodes :
-      this.__shady.assignedNodes) || []) :
-      [];
-  }
-};
-
 let slotMixin = {
-  assignedNodes: assignedNodes
+
+  assignedNodes(options) {
+    if (this.localName === 'slot') {
+      mutation.renderRootNode(this);
+      return this.__shady ?
+        ((options && options.flatten ? this.__shady.distributedNodes :
+        this.__shady.assignedNodes) || []) :
+        [];
+    }
+  }
+
 };
 
-let elementMixin = utils.extendAll({}, fragmentMixin, slotMixin, {
+let elementMixin = utils.extendAll({
 
   setAttribute(name, value) {
     mutation.setAttribute(this, name, value);
@@ -125,18 +122,21 @@ let elementMixin = utils.extendAll({}, fragmentMixin, slotMixin, {
 
   set slot(value) {
     this.setAttribute('slot', value);
+  },
+
+  get assignedSlot() {
+    return getAssignedSlot(this);
   }
 
-});
+}, fragmentMixin, slotMixin);
 
-Object.defineProperties(elementMixin, {
+let documentMixin = utils.extendAll({
 
-  assignedSlot: assignedSlotDesc
+  importNode(node, deep) {
+    return mutation.importNode(node, deep);
+  }
 
-});
-
-// TODO(sorvell): importNode
-let documentMixin = utils.extendAll({}, fragmentMixin);
+}, fragmentMixin);
 
 Object.defineProperties(documentMixin, {
   _activeElement: ActiveElementAccessor.activeElement

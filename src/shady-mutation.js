@@ -412,7 +412,15 @@ export function cloneNode(node, deep) {
   }
 }
 
+// note: Though not technically correct, we fast path `importNode`
+// when called on a node not owned by the main document.
+// This allows, for example, elements that cannot
+// contain custom elements and are therefore not likely to contain shadowRoots
+// to cloned natively. This is a fairly significant performance win.
 export function importNode(node, deep) {
+  if (node.ownerDocument !== document) {
+    return nativeMethods.importNode.call(document, node, deep);
+  }
   let n = nativeMethods.importNode.call(document, node, false);
   if (deep) {
     let c$ = node.childNodes;
