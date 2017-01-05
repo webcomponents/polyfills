@@ -9,7 +9,6 @@ export default {
   Node_insertBefore: window.Node.prototype.insertBefore,
   Node_removeChild: window.Node.prototype.removeChild,
   Node_replaceChild: window.Node.prototype.replaceChild,
-  Node_nodeValue: Object.getOwnPropertyDescriptor(window.Node.prototype, 'nodeValue'),
   Element_attachShadow: window.Element.prototype['attachShadow'],
   Element_attributes: Object.getOwnPropertyDescriptor(window.Element.prototype, 'attributes'),
   Element_id: Object.getOwnPropertyDescriptor(window.Element.prototype, 'id'),
@@ -40,6 +39,13 @@ export default {
   DOMTokenList_replace: window.DOMTokenList.prototype.replace,
   DOMTokenList_value: Object.getOwnPropertyDescriptor(window.DOMTokenList.prototype, 'value'),
   Attr_value: Object.getOwnPropertyDescriptor(window.Attr.prototype, 'value'),
+  // NOTE: Chrome doesn't match the DOM spec and adds the `nodeValue` setter to
+  // `Attr`. Also, we patch `Attr` instead of `Node` with a switch because the
+  // general case (a context object of type `Element` or `Node` itself) has no
+  // effect on custom elements.
+  Attr_nodeValue:
+    Object.getOwnPropertyDescriptor(window.Attr.prototype, 'nodeValue') ||
+    Object.getOwnPropertyDescriptor(window.Node.prototype, 'nodeValue'),
   NamedNodeMap_setNamedItem: window.NamedNodeMap.prototype.setNamedItem,
   NamedNodeMap_setNamedItemNS: window.NamedNodeMap.prototype['setNamedItemNS'],
   NamedNodeMap_removeNamedItem: window.NamedNodeMap.prototype.removeNamedItem,

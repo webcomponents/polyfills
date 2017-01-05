@@ -23,4 +23,24 @@ export default function(internals) {
       }
     },
   });
+
+  Object.defineProperty(Attr.prototype, 'nodeValue', {
+    enumerable: BuiltIn.Attr_nodeValue.enumerable,
+    configurable: true,
+    get: BuiltIn.Attr_nodeValue.get,
+    set: /** @this {!Attr} */ function(assignedValue) {
+      if (!this.ownerElement) {
+        BuiltIn.Attr_nodeValue.set.call(this, assignedValue);
+        return;
+      }
+
+      const oldValue = BuiltIn.Attr_nodeValue.get.call(this);
+      BuiltIn.Attr_nodeValue.set.call(this, assignedValue);
+      const newValue = BuiltIn.Attr_nodeValue.get.call(this);
+
+      if (oldValue !== newValue) {
+        internals.attributeChangedCallback(this.ownerElement, this.name, oldValue, newValue, null);
+      }
+    },
+  });
 };

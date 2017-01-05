@@ -9,6 +9,8 @@ import * as Utilities from '../Utilities';
  * @param {!CustomElementInternals} internals
  */
 export default function(internals) {
+  // `Node#nodeValue` is implemented on `Attr`.
+
   /**
    * @param {!Node} node
    * @param {?Node} refNode
@@ -88,25 +90,4 @@ export default function(internals) {
 
     return nodeToRemove;
   };
-
-  Object.defineProperty(Node.prototype, 'nodeValue', {
-    enumerable: BuiltIn.Node_nodeValue.enumerable,
-    configurable: true,
-    get: BuiltIn.Node_nodeValue.get,
-    set: /** @this {!Node} */ function(assignedValue) {
-      if (this instanceof Attr && this.ownerElement) {
-        const oldValue = BuiltIn.Node_nodeValue.get.call(this);
-        BuiltIn.Node_nodeValue.set.call(this, assignedValue);
-        const newValue = BuiltIn.Node_nodeValue.get.call(this);
-
-        if (oldValue !== newValue) {
-          internals.attributeChangedCallback(this.ownerElement, this.name, oldValue, newValue, null);
-        }
-
-        return;
-      }
-
-      BuiltIn.Node_nodeValue.set.call(this, assignedValue);
-    },
-  });
 };
