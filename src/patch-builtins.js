@@ -11,11 +11,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 'use strict';
 
 import * as utils from './utils'
-import * as mutation from './shady-mutation'
+import * as mutation from './logical-mutation'
 import {ActiveElementAccessor, patchAccessors} from './patch-accessors'
 import {getProperty} from './logical-properties'
 import {addEventListener, removeEventListener} from './patch-events'
-import {ShadyRoot} from './shady-root'
+import {attachShadow} from './attach-shadow'
 
 function getAssignedSlot(node) {
   mutation.renderRootNode(node);
@@ -113,7 +113,7 @@ let elementMixin = utils.extendAll({
   },
 
   attachShadow() {
-    return new ShadyRoot(this);
+    return attachShadow(this);
   },
 
   get slot() {

@@ -23,20 +23,16 @@ import Distributor from './distributor'
   Implements a pared down version of ShadowDOM's scoping, which is easy to
   polyfill across browsers.
 */
-export class ShadyRoot {
-
-  constructor(host) {
-    if (!host) {
-      throw 'Must provide a host';
-    }
-    // NOTE: this strange construction is necessary because
-    // DocumentFragment cannot be subclassed on older browsers.
-    let frag = document.createDocumentFragment();
-    frag.__proto__ = ShadyRootPrototype;
-    frag._init(host);
-    return frag;
+export function attachShadow(host, options) {
+  if (!host) {
+    throw 'Must provide a host';
   }
-
+  // NOTE: this strange construction is necessary because
+  // DocumentFragment cannot be subclassed on older browsers.
+  let shadowRoot = document.createDocumentFragment();
+  shadowRoot.__proto__ = ShadyRootPrototype;
+  shadowRoot._init(host);
+  return shadowRoot;
 }
 
 let ShadyRootPrototype = Object.create(DocumentFragment.prototype);
