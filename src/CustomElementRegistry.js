@@ -3,7 +3,7 @@ import CustomElementInternals from './CustomElementInternals';
 import Deferred from './Deferred';
 import * as Utilities from './Utilities';
 
-class CustomElementRegistry {
+export default class CustomElementRegistry {
 
   /**
    * @param {!CustomElementInternals} internals
@@ -144,5 +144,3 @@ window['CustomElementRegistry'] = CustomElementRegistry;
 CustomElementRegistry.prototype['define'] = CustomElementRegistry.prototype.define;
 CustomElementRegistry.prototype['get'] = CustomElementRegistry.prototype.get;
 CustomElementRegistry.prototype['whenDefined'] = CustomElementRegistry.prototype.whenDefined;
-
-export default CustomElementRegistry;
