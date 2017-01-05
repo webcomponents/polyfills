@@ -1,7 +1,4 @@
 import {CustomElementInternals} from '../../CustomElementInternals';
-import * as CustomElementInternalSymbols from '../../CustomElementInternalSymbols';
-/** @type {CustomElementInternalSymbols.CustomElementState} */
-const CustomElementState = CustomElementInternalSymbols.CustomElementState;
 import * as Utilities from '../../Utilities';
 
 /**
