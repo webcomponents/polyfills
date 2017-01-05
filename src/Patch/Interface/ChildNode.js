@@ -21,7 +21,15 @@ export default function(internals, destination, builtIn) {
    * @param {...(!Node|string)} nodes
    */
   destination['before'] = function(...nodes) {
+    const connectedBefore = /** @type {!Array<!Node>} */ (nodes.filter(node => {
+      return node instanceof Node && Utilities.isConnected(node);
+    }));
+
     builtIn.before.apply(this, nodes);
+
+    for (const node of connectedBefore) {
+      internals.disconnectTree(node);
+    }
 
     if (Utilities.isConnected(this)) {
       for (const node of nodes) {
@@ -36,7 +44,15 @@ export default function(internals, destination, builtIn) {
    * @param {...(!Node|string)} nodes
    */
   destination['after'] = function(...nodes) {
+    const connectedBefore = /** @type {!Array<!Node>} */ (nodes.filter(node => {
+      return node instanceof Node && Utilities.isConnected(node);
+    }));
+
     builtIn.after.apply(this, nodes);
+
+    for (const node of connectedBefore) {
+      internals.disconnectTree(node);
+    }
 
     if (Utilities.isConnected(this)) {
       for (const node of nodes) {
@@ -51,9 +67,17 @@ export default function(internals, destination, builtIn) {
    * @param {...(!Node|string)} nodes
    */
   destination['replaceWith'] = function(...nodes) {
+    const connectedBefore = /** @type {!Array<!Node>} */ (nodes.filter(node => {
+      return node instanceof Node && Utilities.isConnected(node);
+    }));
+
     const wasConnected = Utilities.isConnected(this);
 
     builtIn.replaceWith.apply(this, nodes);
+
+    for (const node of connectedBefore) {
+      internals.disconnectTree(node);
+    }
 
     if (wasConnected) {
       internals.disconnectTree(this);
