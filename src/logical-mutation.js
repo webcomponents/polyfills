@@ -425,7 +425,7 @@ export function importNode(node, deep) {
   if (deep) {
     let c$ = node.childNodes;
     for (let i=0, nc; i < c$.length; i++) {
-      nc = document.importNode(c$[i], true);
+      nc = importNode(c$[i], true);
       n.appendChild(nc);
     }
   }

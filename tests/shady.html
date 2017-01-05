@@ -169,11 +169,11 @@ suite('Mutate light DOM', function() {
     host = document.createElement('div');
     host.attachShadow({mode: 'open'});
     document.body.appendChild(host);
-      });
+  });
 
   teardown(function() {
     document.body.removeChild(host);
-  })
+  });
 
   test('removeAllChildNodes - mutate host', function() {
     host.innerHTML = '<a>Hello</a>';

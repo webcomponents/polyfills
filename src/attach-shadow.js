@@ -25,7 +25,10 @@ import Distributor from './distributor'
 */
 export function attachShadow(host, options) {
   if (!host) {
-    throw 'Must provide a host';
+    throw 'Must provide a host.';
+  }
+  if (!options) {
+    throw 'Not enough arguments.'
   }
   // NOTE: this strange construction is necessary because
   // DocumentFragment cannot be subclassed on older browsers.
@@ -65,10 +68,17 @@ utils.extendAll(ShadyRootPrototype, {
     }
   },
 
+  // returns the oldest renderPending ancestor root.
   _getRenderRoot() {
-    let root = this._rendererForHost();
-    // TODO(sorvell): actually want the highest dirty root in distribution tree
-    return root ? root._getRenderRoot() : this;
+    let renderRoot = this;
+    let root = this;
+    while (root) {
+      if (root._renderPending) {
+        renderRoot = root;
+      }
+      root = root._rendererForHost();
+    }
+    return renderRoot;
   },
 
   // Returns the shadyRoot `this.host` if `this.host`
@@ -218,9 +228,7 @@ utils.extendAll(ShadyRootPrototype, {
 
   // Ensures that the rendered node list inside `container` is `children`.
   _updateChildNodes(container, children) {
-    let composed = Array.from(utils.isShadyRoot(container) ?
-      container.childNodes :
-      childNodes(container));
+    let composed = childNodes(container);
     let splices = calculateSplices(children, composed);
     // process removals
     for (let i=0, d=0, s; (i<splices.length) && (s=splices[i]); i++) {

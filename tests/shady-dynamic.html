@@ -658,23 +658,41 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     assert.equal(ShadyDOM.nativeTree.children(b.firstElementChild).length, 4, 'deep copy has incorrect composed children');
   });
 
-  test.skip('importNode shallow', function() {
+  test('importNode shallow', function() {
     var a = document.createElement('div');
     a.innerHTML = '<x-clonate><span>1</span><span>2</span></x-clonate>';
+    document.body.appendChild(a);
+    if (customElements.flush) {
+      customElements.flush();
+    }
+    ShadyDOM.flush();
     // NOTE: Safari defaults do `deep` true for importNode so be explicit here.
     var b = document.importNode(a.firstElementChild, false);
     document.body.appendChild(b);
+    if (customElements.flush) {
+      customElements.flush();
+    }
+    ShadyDOM.flush();
     assert.equal(b.childNodes.length, 0, 'shallow import has incorrect children');
     assert.equal(ShadyDOM.nativeTree.children(b).length, 2, 'shallow import has incorrect composed children');
   });
 
-  test.skip('importNode deep', function() {
+  test('importNode deep', function() {
     var a = document.createElement('div');
     a.innerHTML = '<x-clonate><span>1</span><span>2</span></x-clonate>';
+    document.body.appendChild(a);
+    if (customElements.flush) {
+      customElements.flush();
+    }
+    ShadyDOM.flush();
     var b = document.importNode(a, true);
     document.body.appendChild(b);
+    if (customElements.flush) {
+      customElements.flush();
+    }
+    ShadyDOM.flush();
     assert.equal(b.firstElementChild.childNodes.length, 2, 'deep copy has incorrect children');
-    assert.equal(ShadyDOM.nativeTree.children(b).length, 4, 'deep copy has incorrect composed children');
+    assert.equal(ShadyDOM.nativeTree.children(b.firstElementChild).length, 4, 'deep copy has incorrect composed children');
   });
 
   test('flush reentrancy', function() {
@@ -1081,6 +1099,69 @@ suite('non-distributed elements', function() {
     assert.equal(allInsertionPoints(d).length, 0);
     assert.equal(allInsertionPoints(document).length, 0);
   });
+
+});
+
+suite('renders roots', function() {
+  var el, p, c;
+
+  setup(function() {
+    el = document.createElement('x-rereproject');
+    document.body.appendChild(el);
+    customElements.flush();
+    ShadyDOM.flush();
+    sinon.spy(el.shadowRoot, '_render');
+    p = el.shadowRoot.querySelector('x-reproject');
+    sinon.spy(p.shadowRoot, '_render');
+    c = p.shadowRoot.querySelector('x-project');
+    sinon.spy(c.shadowRoot, '_render');
+  });
+
+  teardown(function() {
+    document.body.removeChild(el);
+  });
+
+  test('renders all roots that are dirtied via distribution', function() {
+    el.appendChild(document.createElement('div'));
+    ShadyDOM.flush();
+    assert.equal(el.shadowRoot._render.callCount, 1);
+    assert.equal(p.shadowRoot._render.callCount, 1);
+    assert.equal(c.shadowRoot._render.callCount, 1);
+  });
+
+  test('renders only roots that are dirty', function() {
+    c.appendChild(document.createElement('div'));
+    ShadyDOM.flush();
+    assert.equal(el.shadowRoot._render.callCount, 0);
+    assert.equal(p.shadowRoot._render.callCount, 0);
+    assert.equal(c.shadowRoot._render.callCount, 1);
+    p.appendChild(document.createElement('div'));
+    ShadyDOM.flush();
+    assert.equal(el.shadowRoot._render.callCount, 0);
+    assert.equal(p.shadowRoot._render.callCount, 1);
+    assert.equal(c.shadowRoot._render.callCount, 2);
+    el.appendChild(document.createElement('div'));
+    ShadyDOM.flush();
+    assert.equal(el.shadowRoot._render.callCount, 1);
+    assert.equal(p.shadowRoot._render.callCount, 2);
+    assert.equal(c.shadowRoot._render.callCount, 3);
+  });
+
+  test('renders oldest dirty root', function() {
+    c.appendChild(document.createElement('div'));
+    p.appendChild(document.createElement('div'));
+    ShadyDOM.flush();
+    assert.equal(el.shadowRoot._render.callCount, 0);
+    assert.equal(p.shadowRoot._render.callCount, 1);
+    assert.equal(c.shadowRoot._render.callCount, 1);
+    el.appendChild(document.createElement('div'));
+    p.appendChild(document.createElement('div'));
+    ShadyDOM.flush();
+    assert.equal(el.shadowRoot._render.callCount, 1);
+    assert.equal(p.shadowRoot._render.callCount, 2);
+    assert.equal(c.shadowRoot._render.callCount, 2);
+  });
+
 
 });
 

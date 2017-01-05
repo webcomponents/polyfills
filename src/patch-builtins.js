@@ -112,8 +112,8 @@ let elementMixin = utils.extendAll({
     mutation.removeAttribute(this, name);
   },
 
-  attachShadow() {
-    return attachShadow(this);
+  attachShadow(options) {
+    return attachShadow(this, options);
   },
 
   get slot() {
@@ -131,10 +131,6 @@ let elementMixin = utils.extendAll({
 }, fragmentMixin, slotMixin);
 
 let documentMixin = utils.extendAll({
-
-  importNode(node, deep) {
-    return mutation.importNode(node, deep);
-  }
 
 }, fragmentMixin);
 
@@ -172,6 +168,12 @@ export function patchBuiltins() {
   patchBuiltin(window.DocumentFragment.prototype, fragmentMixin);
   patchBuiltin(window.Element.prototype, elementMixin);
   patchBuiltin(window.Document.prototype, documentMixin);
+  // patch this only on the instance because (1) main document is only
+  // one we care about; (2) better compatibility with other polyfills
+  // that may also patch the instance (e.g. CE)
+  document.importNode = function(node, deep) {
+    return mutation.importNode(node, deep);
+  }
   if (window.HTMLSlotElement) {
     patchBuiltin(window.HTMLSlotElement.prototype, slotMixin);
   }
