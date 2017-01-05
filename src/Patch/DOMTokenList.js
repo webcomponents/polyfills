@@ -1,5 +1,5 @@
 import BuiltIn from './BuiltIn';
-import {CustomElementInternals} from '../CustomElementInternals';
+import CustomElementInternals from '../CustomElementInternals';
 import * as CustomElementInternalSymbols from '../CustomElementInternalSymbols';
 
 /**

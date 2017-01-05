@@ -8,7 +8,7 @@
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
-import {CustomElementInternals} from './CustomElementInternals';
+import CustomElementInternals from './CustomElementInternals';
 import CustomElementRegistry from './CustomElementRegistry';
 import DocumentConstructionObserver from './DocumentConstructionObserver';
 

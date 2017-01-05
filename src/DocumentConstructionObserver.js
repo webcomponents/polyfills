@@ -1,4 +1,4 @@
-import {CustomElementInternals} from './CustomElementInternals';
+import CustomElementInternals from './CustomElementInternals';
 import * as CustomElementInternalSymbols from './CustomElementInternalSymbols';
 const CustomElementState = CustomElementInternalSymbols.CustomElementState;
 import * as Utilities from './Utilities';

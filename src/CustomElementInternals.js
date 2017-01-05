@@ -7,7 +7,7 @@ import * as CustomElementInternalSymbols from './CustomElementInternalSymbols';
 /** @type {CustomElementInternalSymbols.CustomElementState} */
 const CustomElementState = CustomElementInternalSymbols.CustomElementState;
 
-export class CustomElementInternals {
+export default class CustomElementInternals {
   constructor() {
     /** @type {!Map<string, !CustomElementDefinition>} */
     this._localNameToDefinition = new Map();

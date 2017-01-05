@@ -1,4 +1,4 @@
-import {CustomElementInternals} from '../../CustomElementInternals';
+import CustomElementInternals from '../../CustomElementInternals';
 import * as Utilities from '../../Utilities';
 
 /**
