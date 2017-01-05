@@ -1,7 +1,4 @@
 import CustomElementInternals from './CustomElementInternals';
-import * as CustomElementInternalSymbols from './CustomElementInternalSymbols';
-const CustomElementState = CustomElementInternalSymbols.CustomElementState;
-import * as Utilities from './Utilities';
 
 export default class DocumentConstructionObserver {
   constructor(internals, doc) {
