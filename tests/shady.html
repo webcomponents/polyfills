@@ -15,8 +15,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <script>
     ShadyDOM = {force: true};
   </script>
-  <script src="../../webcomponentsjs/src/WebComponents/dom.js"></script>
-  <script src="../shadydom.min.js"></script>
+  <script src="../../webcomponentsjs/webcomponents-lite.js"></script>
 </head>
 <body>
 <script>
@@ -66,7 +65,6 @@ function testRender(descr, hostInnerHtml, shadowRootHtml, expectedHtml) {
 
 test('Node/Element accessors', function() {
   var div = document.createElement('div');
-  assert.isFalse(ShadyDOM.isPatched(div));
   assert.isFalse(div.isConnected);
   assert.equal(div.getRootNode(), div);
   div.slot = 'slot';
@@ -145,14 +143,14 @@ test('Reproject', function() {
     assert.strictEqual(getComposedHTML(host),
         '<div id="p">a: <a></a>b: <b slot="b"></b></div>');
 
-    assertArrayEqual(host.__dom.childNodes, [a]);
-    assert.strictEqual(a.__dom.parentNode, host);
-    assertArrayEqual(host.shadowRoot.__dom.childNodes, [p]);
-    assert.strictEqual(p.__dom.parentNode, host.shadowRoot);
-    assertArrayEqual(p.__dom.childNodes, [b, content]);
-    assert.strictEqual(b.__dom.parentNode, p);
-    assert.strictEqual(content.__dom.parentNode, p);
-    assertArrayEqual(p.shadowRoot.__dom.childNodes,
+    assertArrayEqual(host.__shady.childNodes, [a]);
+    assert.strictEqual(a.__shady.parentNode, host);
+    assertArrayEqual(host.shadowRoot.__shady.childNodes, [p]);
+    assert.strictEqual(p.__shady.parentNode, host.shadowRoot);
+    assertArrayEqual(p.__shady.childNodes, [b, content]);
+    assert.strictEqual(b.__shady.parentNode, p);
+    assert.strictEqual(content.__shady.parentNode, p);
+    assertArrayEqual(p.shadowRoot.__shady.childNodes,
         [textNodeA, contentA, textNodeB, contentB]);
   }
 
@@ -169,11 +167,11 @@ suite('Mutate light DOM', function() {
     host = document.createElement('div');
     host.attachShadow({mode: 'open'});
     document.body.appendChild(host);
-      });
+  });
 
   teardown(function() {
     document.body.removeChild(host);
-  })
+  });
 
   test('removeAllChildNodes - mutate host', function() {
     host.innerHTML = '<a>Hello</a>';
@@ -570,18 +568,7 @@ function getEffectiveChildNodes(node) {
 }
 
 function getComposedHTML(node) {
-  if (ShadyDOM.isPatched(node)) {
-    if (ShadyDOM.canUnpatch(node)) {
-      ShadyDOM.unpatch(node);
-      var html = node.innerHTML;
-      ShadyDOM.patch(node);
-      return html;
-    } else {
-      return ShadyDOM.getComposedInnerHTML(node);
-    }
-  } else {
-    return node.innerHTML;
-  }
+  return ShadyDOM.nativeTree.innerHTML(node);
 }
 
 function getComposedChildAtIndex(node, index) {

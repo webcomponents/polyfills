@@ -10,7 +10,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 'use strict';
 
-import {tree} from './tree'
+import {removeChild} from './native-methods'
+import {parentNode} from './native-tree'
 
 // NOTE: normalize event contruction where necessary (IE11)
 let NormalizedEvent = typeof Event === 'function' ? Event :
@@ -51,8 +52,12 @@ export default class {
   // Gather the pool of nodes that should be distributed. We will combine
   // these with the "content root" to arrive at the composed tree.
   collectPool() {
-    return tree.arrayCopy(
-      tree.Logical.getChildNodes(this.root.host));
+    let host = this.root.host;
+    let pool=[], i=0;
+    for (let n=host.firstChild; n; n=n.nextSibling) {
+      pool[i++] = n;
+    }
+    return pool;
   }
 
   // perform "logical" distribution; note, no actual dom is moved here,
@@ -67,7 +72,7 @@ export default class {
       // must do this on all candidate hosts since distribution in this
       // scope invalidates their distribution.
       // only get logical parent.
-      let parent = tree.Logical.getParentNode(p);
+      let parent = p.parentNode;
       if (parent && parent.shadyRoot &&
           this.hasInsertionPoint(parent.shadyRoot)) {
         dirtyRoots.push(parent.shadyRoot);
@@ -76,11 +81,12 @@ export default class {
     for (let i=0; i < pool.length; i++) {
       let p = pool[i];
       if (p) {
-        p._assignedSlot = undefined;
+        p.__shady = p.__shady || {};
+        p.__shady.assignedSlot = undefined;
         // remove undistributed elements from physical dom.
-        let parent = tree.Composed.getParentNode(p);
+        let parent = parentNode(p);
         if (parent) {
-          tree.Composed.removeChild(parent, p);
+          removeChild.call(parent, p);
         }
       }
     }
@@ -88,11 +94,11 @@ export default class {
   }
 
   distributeInsertionPoint(insertionPoint, pool) {
-    let prevAssignedNodes = insertionPoint._assignedNodes;
+    let prevAssignedNodes = insertionPoint.__shady.assignedNodes;
     if (prevAssignedNodes) {
       this.clearAssignedSlots(insertionPoint, true);
     }
-    insertionPoint._assignedNodes = [];
+    insertionPoint.__shady.assignedNodes = [];
     let needsSlotChange = false;
     // distribute nodes from the pool that this selector matches
     let anyDistributed = false;
@@ -104,7 +110,7 @@ export default class {
       }
       // distribute this node if it matches
       if (this.matchesInsertionPoint(node, insertionPoint)) {
-        if (node.__prevAssignedSlot != insertionPoint) {
+        if (node.__shady._prevAssignedSlot != insertionPoint) {
           needsSlotChange = true;
         }
         this.distributeNodeInto(node, insertionPoint)
@@ -116,10 +122,10 @@ export default class {
     }
     // Fallback content if nothing was distributed here
     if (!anyDistributed) {
-      let children = tree.Logical.getChildNodes(insertionPoint);
+      let children = insertionPoint.childNodes;
       for (let j = 0, node; j < children.length; j++) {
         node = children[j];
-        if (node.__prevAssignedSlot != insertionPoint) {
+        if (node.__shady._prevAssignedSlot != insertionPoint) {
           needsSlotChange = true;
         }
         this.distributeNodeInto(node, insertionPoint);
@@ -132,9 +138,9 @@ export default class {
       // could instead by done with a Set and then we could
       // avoid needing to iterate here to clear the info.
       for (let i=0; i < prevAssignedNodes.length; i++) {
-        prevAssignedNodes[i].__prevAssignedSlot = null;
+        prevAssignedNodes[i].__shady._prevAssignedSlot = null;
       }
-      if (insertionPoint._assignedNodes.length < prevAssignedNodes.length) {
+      if (insertionPoint.__shady.assignedNodes.length < prevAssignedNodes.length) {
         needsSlotChange = true;
       }
     }
@@ -145,18 +151,18 @@ export default class {
   }
 
   clearAssignedSlots(slot, savePrevious) {
-    let n$ = slot._assignedNodes;
+    let n$ = slot.__shady.assignedNodes;
     if (n$) {
       for (let i=0; i < n$.length; i++) {
         let n = n$[i];
         if (savePrevious) {
-          n.__prevAssignedSlot = n._assignedSlot;
+          n.__shady._prevAssignedSlot = n.__shady.assignedSlot;
         }
         // only clear if it was previously set to this slot;
         // this helps ensure that if the node has otherwise been distributed
         // ignore it.
-        if (n._assignedSlot === slot) {
-          n._assignedSlot = null;
+        if (n.__shady.assignedSlot === slot) {
+          n.__shady.assignedSlot = null;
         }
       }
     }
@@ -171,23 +177,23 @@ export default class {
   }
 
   distributeNodeInto(child, insertionPoint) {
-    insertionPoint._assignedNodes.push(child);
-    child._assignedSlot = insertionPoint;
+    insertionPoint.__shady.assignedNodes.push(child);
+    child.__shady.assignedSlot = insertionPoint;
   }
 
   setDistributedNodesOnInsertionPoint(insertionPoint) {
-    let n$ = insertionPoint._assignedNodes;
-    insertionPoint._distributedNodes = [];
+    let n$ = insertionPoint.__shady.assignedNodes;
+    insertionPoint.__shady.distributedNodes = [];
     for (let i=0, n; (i<n$.length) && (n=n$[i]) ; i++) {
       if (this.isInsertionPoint(n)) {
-        let d$ = n._distributedNodes;
+        let d$ = n.__shady.distributedNodes;
         if (d$) {
           for (let j=0; j < d$.length; j++) {
-            insertionPoint._distributedNodes.push(d$[j]);
+            insertionPoint.__shady.distributedNodes.push(d$[j]);
           }
         }
       } else {
-        insertionPoint._distributedNodes.push(n$[i]);
+        insertionPoint.__shady.distributedNodes.push(n$[i]);
       }
     }
   }
@@ -197,13 +203,13 @@ export default class {
     // Safari tech preview does not bubble but chrome does
     // Spec says it bubbles (https://dom.spec.whatwg.org/#mutation-observers)
     insertionPoint.dispatchEvent(new NormalizedEvent('slotchange'));
-    if (insertionPoint._assignedSlot) {
-      this._fireSlotChange(insertionPoint._assignedSlot);
+    if (insertionPoint.__shady.assignedSlot) {
+      this._fireSlotChange(insertionPoint.__shady.assignedSlot);
     }
   }
 
   isFinalDestination(insertionPoint) {
-    return !(insertionPoint._assignedSlot);
+    return !(insertionPoint.__shady.assignedSlot);
   }
 
 }

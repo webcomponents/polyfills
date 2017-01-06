@@ -12,126 +12,127 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 import {calculateSplices} from './array-splice'
 import * as utils from './utils'
-import {tree} from './tree'
+import {enqueue} from './flush'
+import {recordChildNodes} from './logical-tree'
+import {removeChild, insertBefore} from './native-methods'
+import {parentNode, childNodes} from './native-tree'
+import {patchShadowRootAccessors} from './patch-accessors'
 import Distributor from './distributor'
 
 /**
   Implements a pared down version of ShadowDOM's scoping, which is easy to
   polyfill across browsers.
 */
-export class ShadyRoot {
-
-  constructor(host) {
-    if (!host) {
-      throw 'Must provide a host';
-    }
-    // NOTE: this strange construction is necessary because
-    // DocumentFragment cannot be subclassed on older browsers.
-    let frag = document.createDocumentFragment();
-    frag.__proto__ = ShadyFragmentMixin;
-    frag._init(host);
-    return frag;
+export function attachShadow(host, options) {
+  if (!host) {
+    throw 'Must provide a host.';
   }
-
+  if (!options) {
+    throw 'Not enough arguments.'
+  }
+  // NOTE: this strange construction is necessary because
+  // DocumentFragment cannot be subclassed on older browsers.
+  let shadowRoot = document.createDocumentFragment();
+  shadowRoot.__proto__ = ShadyRootPrototype;
+  shadowRoot._init(host);
+  return shadowRoot;
 }
 
-let ShadyMixin = {
+let ShadyRootPrototype = Object.create(DocumentFragment.prototype);
+utils.extendAll(ShadyRootPrototype, {
 
   _init(host) {
     // NOTE: set a fake local name so this element can be
     // distinguished from a DocumentFragment when patching.
     // FF doesn't allow this to be `localName`
     this.__localName = 'ShadyRoot';
-    // root <=> host
-    host.shadyRoot = this;
-    this.host = host;
     // logical dom setup
-    tree.Logical.saveChildNodes(host);
-    tree.Logical.saveChildNodes(this);
+    recordChildNodes(host);
+    recordChildNodes(this);
+    // root <=> host
+    host.shadowRoot = this;
+    this.host = host;
     // state flags
-    this._clean = true;
+    this._renderPending = false;
     this._hasRendered = false;
+    this._changePending = false;
     this._distributor = new Distributor(this);
     this.update();
   },
 
-  // async render the "top" distributor (this is all that is needed to
-  // distribute this host).
+  // async render
   update() {
-    // TODO(sorvell): instead the root should always be enqueued to helps record that it is dirty.
-    // Then, in `render`, the top most (in the distribution tree) "dirty" root should be rendered.
-    let distributionRoot = this._findDistributionRoot(this.host);
-    //console.log('update from', this.host, 'root', distributionRoot.host, distributionRoot._clean);
-    if (distributionRoot._clean) {
-      distributionRoot._clean = false;
-      enqueue(function() {
-        distributionRoot.render();
-      });
+    if (!this._renderPending) {
+      this._renderPending = true;
+      enqueue(() => this.render());
     }
   },
 
-  // TODO(sorvell): this may not return a shadowRoot (for example if the element is in a docFragment)
-  // this should only return a shadowRoot.
-  // returns the host that's the top of this host's distribution tree
-  _findDistributionRoot(element) {
-    let root = element.shadyRoot;
-    while (element && this._elementNeedsDistribution(element)) {
-      root = element.getRootNode();
-      element = root && root.host;
+  // returns the oldest renderPending ancestor root.
+  _getRenderRoot() {
+    let renderRoot = this;
+    let root = this;
+    while (root) {
+      if (root._renderPending) {
+        renderRoot = root;
+      }
+      root = root._rendererForHost();
     }
-    return root;
+    return renderRoot;
   },
 
-  // Return true if a host's children includes
-  // an insertion point that selects selectively
-  _elementNeedsDistribution(element) {
-    let c$ = tree.Logical.getChildNodes(element);
-    for (let i=0, c; i < c$.length; i++) {
-      c = c$[i];
-      if (this._distributor.isInsertionPoint(c)) {
-        return element.getRootNode();
+  // Returns the shadyRoot `this.host` if `this.host`
+  // has children that require distribution.
+  _rendererForHost() {
+    let root = this.host.getRootNode();
+    if (utils.isShadyRoot(root)) {
+      let c$ = this.host.childNodes;
+      for (let i=0, c; i < c$.length; i++) {
+        c = c$[i];
+        if (this._distributor.isInsertionPoint(c)) {
+          return root;
+        }
       }
     }
   },
 
   render() {
-    if (!this._clean) {
-      this._clean = true;
-      if (!this._skipUpdateInsertionPoints) {
-        this.updateInsertionPoints();
-      } else if (!this._hasRendered) {
-        this._insertionPoints = [];
-      }
-      this._skipUpdateInsertionPoints = false;
-      // TODO(sorvell): previous ShadyDom had a fast path here
-      // that would avoid distribution for initial render if
-      // no insertion points exist. We cannot currently do this because
-      // it relies on elements being in the physical shadowRoot element
-      // so that native methods will be used. The current append code
-      // simply provokes distribution in this case and does not put the
-      // nodes in the shadowRoot. This could be done but we'll need to
-      // consider if the special processing is worth the perf gain.
-      // if (!this._hasRendered && !this._insertionPoints.length) {
-      //   tree.Composed.clearChildNodes(this.host);
-      //   tree.Composed.appendChild(this.host, this);
-      // } else {
-      // logical
-      this.distribute();
-      // physical
-      this.compose();
-      this._hasRendered = true;
+    if (this._renderPending) {
+      this._getRenderRoot()._render();
     }
   },
 
+  _render() {
+    this._renderPending = false;
+    this._changePending = false;
+    if (!this._skipUpdateInsertionPoints) {
+      this.updateInsertionPoints();
+    } else if (!this._hasRendered) {
+      this._insertionPoints = [];
+    }
+    this._skipUpdateInsertionPoints = false;
+    // TODO(sorvell): can add a first render optimization here
+    // to use if there are no insertion points
+    // 1. clear host node of composed children
+    // 2. appendChild the shadowRoot itself or (more robust) its logical children
+    // NOTE: this didn't seem worth it in perf testing
+    // but not ready to delete this info.
+    // logical
+    this.distribute();
+    // physical
+    this.compose();
+    this._hasRendered = true;
+  },
+
   forceRender() {
-    this._clean = false;
+    this._renderPending = true;
     this.render();
   },
 
   distribute() {
     let dirtyRoots = this._distributor.distribute();
     for (let i=0; i<dirtyRoots.length; i++) {
-      dirtyRoots[i].forceRender();
+      dirtyRoots[i]._render();
     }
   },
 
@@ -154,8 +155,9 @@ let ShadyMixin = {
     // c. for parents of insertion points
     for (let i=0, c; i < i$.length; i++) {
       c = i$[i];
-      tree.Logical.saveChildNodes(c);
-      tree.Logical.saveChildNodes(tree.Logical.getParentNode(c));
+      c.__shady = c.__shady || {};
+      recordChildNodes(c);
+      recordChildNodes(c.parentNode);
     }
   },
 
@@ -190,7 +192,7 @@ let ShadyMixin = {
     this._updateChildNodes(this.host, this._composeNode(this.host));
     let p$ = this._insertionPoints || [];
     for (let i=0, l=p$.length, p, parent; (i<l) && (p=p$[i]); i++) {
-      parent = tree.Logical.getParentNode(p);
+      parent = p.parentNode;
       if ((parent !== this.host) && (parent !== this)) {
         this._updateChildNodes(parent, this._composeNode(parent));
       }
@@ -200,12 +202,12 @@ let ShadyMixin = {
   // Returns the list of nodes which should be rendered inside `node`.
   _composeNode(node) {
     let children = [];
-    let c$ = tree.Logical.getChildNodes(node.shadyRoot || node);
+    let c$ = (node.shadyRoot || node).childNodes;
     for (let i = 0; i < c$.length; i++) {
       let child = c$[i];
       if (this._distributor.isInsertionPoint(child)) {
-        let distributedNodes = child._distributedNodes ||
-          (child._distributedNodes = []);
+        let distributedNodes = child.__shady.distributedNodes ||
+          (child.__shady.distributedNodes = []);
         for (let j = 0; j < distributedNodes.length; j++) {
           let distributedNode = distributedNodes[j];
           if (this.isFinalDestination(child, distributedNode)) {
@@ -226,7 +228,7 @@ let ShadyMixin = {
 
   // Ensures that the rendered node list inside `container` is `children`.
   _updateChildNodes(container, children) {
-    let composed = tree.Composed.getChildNodes(container);
+    let composed = childNodes(container);
     let splices = calculateSplices(children, composed);
     // process removals
     for (let i=0, d=0, s; (i<splices.length) && (s=splices[i]); i++) {
@@ -235,8 +237,8 @@ let ShadyMixin = {
         // to remove it; this can happen if we move a node and
         // then schedule its previous host for distribution resulting in
         // the node being removed here.
-        if (tree.Composed.getParentNode(n) === container) {
-          tree.Composed.removeChild(container, n);
+        if (parentNode(n) === container) {
+          removeChild.call(container, n);
         }
         composed.splice(s.index + d, 1);
       }
@@ -247,7 +249,7 @@ let ShadyMixin = {
       next = composed[s.index];
       for (let j=s.index, n; j < s.index + s.addedCount; j++) {
         n = children[j];
-        tree.Composed.insertBefore(container, n, next);
+        insertBefore.call(container, n, next);
         // TODO(sorvell): is this splice strictly needed?
         composed.splice(j, 0, n);
       }
@@ -258,53 +260,6 @@ let ShadyMixin = {
     return this._distributor.insertionPointTag;
   }
 
-}
+});
 
-let ShadyFragmentMixin = Object.create(DocumentFragment.prototype);
-utils.extend(ShadyFragmentMixin, ShadyMixin);
-
-// let needsUpgrade = window.CustomElements && !CustomElements.useNative;
-
-// function upgradeLogicalChildren(children) {
-//   if (needsUpgrade && children) {
-//     for (let i=0; i < children.length; i++) {
-//       CustomElements.upgrade(children[i]);
-//     }
-//   }
-// }
-
-// render enqueuer/flusher
-let customElements = window.customElements;
-let flushList = [];
-let scheduled;
-let flushCount = 0;
-let flushMax = 100;
-export function enqueue(callback) {
-  if (!scheduled) {
-    scheduled = true;
-    utils.promish.then(flush);
-  }
-  flushList.push(callback);
-}
-
-export function flush() {
-  scheduled = false;
-  flushCount++;
-  while (flushList.length) {
-    flushList.shift()();
-  }
-  if (customElements && customElements.flush) {
-    customElements.flush();
-  }
-  // continue flushing after elements are upgraded...
-  const isFlushedMaxed = (flushCount > flushMax);
-  if (flushList.length && !isFlushedMaxed) {
-      flush();
-  }
-  flushCount = 0;
-  if (isFlushedMaxed) {
-    throw new Error('Loop detected in ShadyDOM distribution, aborting.')
-  }
-}
-
-flush.list = flushList;
+patchShadowRootAccessors(ShadyRootPrototype);

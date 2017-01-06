@@ -31,6 +31,37 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     element.shadowRoot.appendChild(document.createElement('slot'));
   }
 
+  test('observeChildren on element without shadowRoot', function() {
+    var d = document.createElement('div');
+    var recorded = [];
+    function handler(info) {
+      recorded = info;
+    }
+    var observer = ShadyDOM.observeChildren(d, handler);
+    var child1 = document.createElement('div');
+    d.appendChild(child1);
+    handler(observer.takeRecords());
+    assert.equal(recorded[0].addedNodes.length, 1);
+    assert.equal(recorded[0].addedNodes[0], child1);
+    recorded = [];
+    var child2 = document.createElement('div');
+    d.appendChild(child2);
+    handler(observer.takeRecords());
+    assert.equal(recorded[0].addedNodes.length, 1);
+    assert.equal(recorded[0].addedNodes[0], child2);
+    recorded = [];
+    d.removeChild(child1);
+    d.removeChild(child2);
+    handler(observer.takeRecords());
+    assert.equal(recorded[0].removedNodes.length, 2);
+    assert.deepEqual(recorded[0].removedNodes, [child1, child2]);
+    recorded = [];
+    ShadyDOM.unobserveChildren(observer);
+    d.appendChild(child1);
+    handler(observer.takeRecords());
+    assert.deepEqual(recorded, []);
+  });
+
   test('observeChildren via takeRecords', function() {
     var d = document.createElement('div');
     makeShadowRootWithSlot(d);

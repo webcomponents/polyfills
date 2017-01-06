@@ -41,8 +41,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         var path = event.composedPath();
         pathCompare([a, root, el, document.body, document.documentElement, document, window], path);
       });
-      // TODO(sorvell): This shouldn't be necessary right?
-      ShadyDOM.patch(document.body);
       document.body.appendChild(el);
       ShadyDOM.flush();
       var ev = new Event('foo', {bubbles: true, composed: true});

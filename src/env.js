@@ -20,117 +20,34 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 'use strict';
 import * as utils from './utils'
-import {ShadyRoot, flush, enqueue} from './shady'
-import * as patch from './patch'
-import {getRootNode, filterMutations, observeChildren, unobserveChildren,
-  setAttribute, getComposedInnerHTML, getComposedChildNodes} from './element-mixin'
-import * as events from './event-mixin'
-import {tree, getNativeProperty} from './tree'
+import {flush, enqueue} from './flush'
+import {observeChildren, unobserveChildren, filterMutations} from './observe-changes'
+import * as nativeMethods from './native-methods'
+import * as nativeTree from './native-tree'
+import {patchBuiltins} from './patch-builtins'
+import {patchEvents} from './patch-events'
 
 if (utils.settings.inUse) {
 
   window.ShadyDOM = {
-    tree: tree,
-    getNativeProperty: getNativeProperty,
-    patch: patch.patchNode,
-    isPatched: patch.isNodePatched,
-    getComposedInnerHTML: getComposedInnerHTML,
-    getComposedChildNodes: getComposedChildNodes,
-    unpatch: patch.unpatchNode,
-    canUnpatch: patch.canUnpatchNode,
+    // TODO(sorvell): remove when Polymer does not depend on this.
+    inUse: utils.settings.inUse,
+    // TODO(sorvell): remove when Polymer does not depend on this.
+    patch: function(node) { return node; },
     isShadyRoot: utils.isShadyRoot,
     enqueue: enqueue,
     flush: flush,
-    inUse: utils.settings.inUse,
+    settings: utils.settings,
     filterMutations: filterMutations,
     observeChildren: observeChildren,
-    unobserveChildren: unobserveChildren
+    unobserveChildren: unobserveChildren,
+    nativeMethods: nativeMethods,
+    nativeTree: nativeTree
   };
 
-  let createRootAndEnsurePatched = function(node) {
-    // TODO(sorvell): need to ensure ancestors are patched but this introduces
-    // a timing problem with gathering composed children.
-    // (1) currently the child list is crawled and patched when patching occurs
-    // (this needs to change)
-    // (2) we can only patch when an element has received its parsed children
-    // because we cannot detect them when inserted by parser.
-    // let ancestor = node;
-    // while (ancestor) {
-    //   patchNode(ancestor);
-    //   ancestor = ancestor.parentNode || ancestor.host;
-    // }
-    patch.patchNode(node);
-    let root = new ShadyRoot(node);
-    patch.patchNode(root);
-    return root;
-  }
+  // Apply patches to events...
+  patchEvents();
+  // Apply patches to builtins (e.g. Element.prototype) where applicable.
+  patchBuiltins();
 
-  Element.prototype.attachShadow = function() {
-    return createRootAndEnsurePatched(this);
-  }
-
-  Node.prototype.addEventListener = events.addEventListener;
-  Node.prototype.removeEventListener = events.removeEventListener;
-  Event = events.PatchedEvent;
-  CustomEvent = events.PatchedCustomEvent;
-  MouseEvent = events.PatchedMouseEvent;
-  events.activateFocusEventOverrides();
-
-  Object.defineProperty(Node.prototype, 'isConnected', {
-    get() {
-      return document.documentElement.contains(this);
-    },
-    configurable: true
-  });
-
-  Node.prototype.getRootNode = function(options) {
-    return getRootNode(this, options);
-  }
-
-  Object.defineProperty(Element.prototype, 'slot', {
-    get() {
-      return this.getAttribute('slot');
-    },
-    set(value) {
-      this.setAttribute('slot', value);
-    },
-    configurable: true
-  });
-
-  Object.defineProperty(Node.prototype, 'assignedSlot', {
-    get() {
-      return this._assignedSlot || null;
-    },
-    configurable: true
-  });
-
-  let nativeSetAttribute = Element.prototype.setAttribute;
-  Element.prototype.setAttribute = setAttribute;
-  // NOTE: expose native setAttribute to allow hooking native method
-  // (e.g. this is done in ShadyCSS)
-  Element.prototype.__nativeSetAttribute = nativeSetAttribute;
-
-  let classNameDescriptor = {
-    get() {
-      return this.getAttribute('class');
-    },
-    set(value) {
-      this.setAttribute('class', value);
-    },
-    configurable: true
-  };
-
-  // Safari 9 `className` is not configurable
-  let cn = Object.getOwnPropertyDescriptor(Element.prototype, 'className');
-  if (cn && cn.configurable) {
-    Object.defineProperty(Element.prototype, 'className', classNameDescriptor);
-  } else {
-    // on IE `className` is on Element
-    let h = window.customElements && window.customElements.nativeHTMLElement ||
-      HTMLElement;
-    cn = Object.getOwnPropertyDescriptor(h.prototype, 'className');
-    if (cn && cn.configurable) {
-      Object.defineProperty(h.prototype, 'className', classNameDescriptor);
-    }
-  }
 }

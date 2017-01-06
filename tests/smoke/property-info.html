@@ -1,0 +1,113 @@
+<!doctype html>
+<!--
+@license
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<html>
+<head>
+  <meta charset="utf-8">
+</head>
+<body>
+<div id="log"></div>
+
+<script>
+  var properties = [
+    'parentNode',
+    'firstChild',
+    'lastChild',
+    'nextSibling',
+    'previousSibling',
+    'childNodes',
+    'parentElement',
+    'firstElementChild',
+    'lastElementChild',
+    'nextElementSibling',
+    'previousElementSibling',
+    'children',
+    'textContent',
+    'innerHTML',
+    'activeElement',
+    'assignedSlot',
+    'slot',
+    'shadowRoot'
+  ];
+  var methods = [
+    'appendChild',
+    'insertBefore',
+    'removeChild',
+    'replaceChild',
+    'setAttribute',
+    'removeAttribute',
+    'querySelector',
+    'querySelectorAll',
+    'cloneNode',
+    'importNode',
+    'assignedNodes',
+    'remove',
+    'append'
+  ];
+
+  var protos = {
+    'Node': Node.prototype,
+    'Element': Element.prototype,
+    'HTMLElement': HTMLElement.prototype,
+    'DocumentFragment': DocumentFragment.prototype,
+    'Document': Document.prototype,
+    'Text': Text.prototype,
+    'HTMLUnknownElement': HTMLUnknownElement.prototype,
+  };
+
+  function recordProperty(name, proto, info, as) {
+    var desc = Object.getOwnPropertyDescriptor(proto, name);
+    if (desc) {
+      info[as] = desc;
+    }
+  }
+
+  function getPropertyInfo(name) {
+    var info = {};
+    for (var p in protos) {
+      var proto = protos[p];
+      recordProperty(name, proto, info, p);
+    }
+    return info;
+  }
+
+  function logMsg(msg, tag) {
+    var d = document.createElement(tag || 'div');
+    d.innerHTML = msg;
+    log.appendChild(d);
+  }
+
+  function logInfo(name, info, check1, check2) {
+    var out = ['<tr>'];
+    out.push('<td>' + name + '</td>');
+    out.push('<td>');
+    for (var p in info) {
+      var desc = info[p];
+      var c = Boolean(desc[check1]) ? '+' : '';
+      var o = Boolean(desc[check2]) ? '*' : '';
+      out.push(p + c + o + '\n');
+    }
+    out.push('</td></tr>');
+    return out;
+  }
+
+  var z = ['<table>']
+  properties.forEach(function(p) {
+    z.push(logInfo(p, getPropertyInfo(p), 'configurable', 'get').join(''));
+  });
+  methods.forEach(function(p) {
+    z.push(logInfo(p, getPropertyInfo(p), 'writable', 'value').join(''));
+  });
+  z.push('</table>');
+  logMsg(z.join(''));
+</script>
+
+</body>
+</html>
