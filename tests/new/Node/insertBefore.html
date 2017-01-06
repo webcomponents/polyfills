@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
 <head>
-<title>Node</title>
+<title>Node#insertBefore</title>
 <script>
   (window.customElements = window.customElements || {}).forcePolyfill = true;
 </script>
@@ -60,7 +60,7 @@
         assert.equal(element.disconnectedCallbackCount, 0);
       });
 
-    test('Inserting a customized element calls `connectedCallback`.',
+    test('Inserting a disconnected customized element calls `connectedCallback`.',
       function() {
         const localName = generateLocalName();
         // Define before creating to cause the element to be constructed.
@@ -75,6 +75,30 @@
 
         assert.equal(element.connectedCallbackCount, 1);
         assert.equal(element.disconnectedCallbackCount, 0);
+      });
+
+    test('Inserting a connected customized element calls `disconnectedCallback` ' +
+      'and `connectedCallback`.', function() {
+        const localName = generateLocalName();
+        // Define before creating to cause the element to be constructed.
+        defineWithLocalName(localName);
+        const element = document.createElement(localName);
+
+        assert(element.constructed);
+        assert.equal(element.connectedCallbackCount, 0);
+        assert.equal(element.disconnectedCallbackCount, 0);
+
+        connectedNode.insertBefore(element, null);
+
+        assert.equal(element.connectedCallbackCount, 1);
+        assert.equal(element.disconnectedCallbackCount, 0);
+
+        connectedNode.appendChild(document.createElement('hr'));
+
+        connectedNode.insertBefore(element, null);
+
+        assert.equal(element.connectedCallbackCount, 2);
+        assert.equal(element.disconnectedCallbackCount, 1);
       });
 
     test('Inserting a DocumentFragment containing uncustomized custom elements ' +
@@ -135,10 +159,17 @@
   });
 
   suite('Inserting into a disconnected Node.', function() {
+    let connectedNode;
     let disconnectedNode;
 
     setup(function() {
+      connectedNode = document.createElement('div');
+      document.body.appendChild(connectedNode);
       disconnectedNode = document.createElement('div');
+    });
+
+    teardown(function() {
+      document.body.removeChild(connectedNode);
     });
 
     test('Inserting an uncustomized element with a definition does nothing.',
@@ -155,7 +186,7 @@
         assert(!element.constructed);
       });
 
-    test('Inserting a customized element does nothing.', function() {
+    test('Inserting a disconnected customized element does nothing.', function() {
       const localName = generateLocalName();
       // Define before creating to cause the element to be constructed.
       defineWithLocalName(localName);
@@ -170,6 +201,28 @@
       assert.equal(element.connectedCallbackCount, 0);
       assert.equal(element.disconnectedCallbackCount, 0);
     });
+
+    test('Inserting a connected customized element calls `disconnectedCallback`.',
+      function() {
+        const localName = generateLocalName();
+        // Define before creating to cause the element to be constructed.
+        defineWithLocalName(localName);
+        const element = document.createElement(localName);
+
+        assert(element.constructed);
+        assert.equal(element.connectedCallbackCount, 0);
+        assert.equal(element.disconnectedCallbackCount, 0);
+
+        connectedNode.insertBefore(element, null);
+
+        assert.equal(element.connectedCallbackCount, 1);
+        assert.equal(element.disconnectedCallbackCount, 0);
+
+        disconnectedNode.insertBefore(element, null);
+
+        assert.equal(element.connectedCallbackCount, 1);
+        assert.equal(element.disconnectedCallbackCount, 1);
+      });
 
     test('Inserting a DocumentFragment containing uncustomized custom elements' +
       'with definitions does nothing.', function() {
