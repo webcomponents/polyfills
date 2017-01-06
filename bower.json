@@ -18,7 +18,7 @@
     "tests"
   ],
   "devDependencies": {
-    "web-component-tester": "^6.0.0-prerelease.3",
+    "web-component-tester": "^4.3.5",
     "webcomponentsjs": "webcomponents/webcomponentsjs#v1"
   }
 }
