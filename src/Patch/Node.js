@@ -20,15 +20,15 @@ export default function(internals) {
    */
   Node.prototype.insertBefore = function(node, refNode) {
     if (node instanceof DocumentFragment) {
-      const insertedNodes = [...node.childNodes];
+      const insertedNodes = Array.prototype.slice.apply(node.childNodes);
       const nativeResult = BuiltIn.Node_insertBefore.call(this, node, refNode);
 
       // DocumentFragments can't be connected, so `disconnectTree` will never
       // need to be called on a DocumentFragment's children after inserting it.
 
       if (Utilities.isConnected(this)) {
-        for (const node of insertedNodes) {
-          internals.connectTree(node);
+        for (let i = 0; i < insertedNodes.length; i++) {
+          internals.connectTree(insertedNodes[i]);
         }
       }
 
@@ -56,15 +56,15 @@ export default function(internals) {
    */
   Node.prototype.appendChild = function(node) {
     if (node instanceof DocumentFragment) {
-      const insertedNodes = [...node.childNodes];
+      const insertedNodes = Array.prototype.slice.apply(node.childNodes);
       const nativeResult = BuiltIn.Node_appendChild.call(this, node);
 
       // DocumentFragments can't be connected, so `disconnectTree` will never
       // need to be called on a DocumentFragment's children after inserting it.
 
       if (Utilities.isConnected(this)) {
-        for (const node of insertedNodes) {
-          internals.connectTree(node);
+        for (let i = 0; i < insertedNodes.length; i++) {
+          internals.connectTree(insertedNodes[i]);
         }
       }
 
@@ -120,7 +120,7 @@ export default function(internals) {
    */
   Node.prototype.replaceChild = function(nodeToInsert, nodeToRemove) {
     if (nodeToInsert instanceof DocumentFragment) {
-      const insertedNodes = [...nodeToInsert.childNodes];
+      const insertedNodes = Array.prototype.slice.apply(nodeToInsert.childNodes);
       const nativeResult = BuiltIn.Node_replaceChild.call(this, nodeToInsert, nodeToRemove);
 
       // DocumentFragments can't be connected, so `disconnectTree` will never
@@ -128,8 +128,8 @@ export default function(internals) {
 
       if (Utilities.isConnected(this)) {
         internals.disconnectTree(nodeToRemove);
-        for (const node of insertedNodes) {
-          internals.connectTree(node);
+        for (let i = 0; i < insertedNodes.length; i++) {
+          internals.connectTree(insertedNodes[i]);
         }
       }
 

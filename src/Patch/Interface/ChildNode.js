@@ -28,12 +28,13 @@ export default function(internals, destination, builtIn) {
 
     builtIn.before.apply(this, nodes);
 
-    for (const node of connectedBefore) {
-      internals.disconnectTree(node);
+    for (let i = 0; i < connectedBefore.length; i++) {
+      internals.disconnectTree(connectedBefore[i]);
     }
 
     if (Utilities.isConnected(this)) {
-      for (const node of nodes) {
+      for (let i = 0; i < nodes.length; i++) {
+        const node = nodes[i];
         if (node instanceof Element) {
           internals.connectTree(node);
         }
@@ -52,12 +53,13 @@ export default function(internals, destination, builtIn) {
 
     builtIn.after.apply(this, nodes);
 
-    for (const node of connectedBefore) {
-      internals.disconnectTree(node);
+    for (let i = 0; i < connectedBefore.length; i++) {
+      internals.disconnectTree(connectedBefore[i]);
     }
 
     if (Utilities.isConnected(this)) {
-      for (const node of nodes) {
+      for (let i = 0; i < nodes.length; i++) {
+        const node = nodes[i];
         if (node instanceof Element) {
           internals.connectTree(node);
         }
@@ -78,13 +80,14 @@ export default function(internals, destination, builtIn) {
 
     builtIn.replaceWith.apply(this, nodes);
 
-    for (const node of connectedBefore) {
-      internals.disconnectTree(node);
+    for (let i = 0; i < connectedBefore.length; i++) {
+      internals.disconnectTree(connectedBefore[i]);
     }
 
     if (wasConnected) {
       internals.disconnectTree(this);
-      for (const node of nodes) {
+      for (let i = 0; i < nodes.length; i++) {
+        const node = nodes[i];
         if (node instanceof Element) {
           internals.connectTree(node);
         }

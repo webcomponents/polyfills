@@ -164,7 +164,9 @@ export default class CustomElementInternals {
     element[CustomElementInternalSymbols.definition] = definition;
 
     if (definition.attributeChangedCallback) {
-      for (const name of definition.observedAttributes) {
+      const observedAttributes = definition.observedAttributes;
+      for (let i = 0; i < observedAttributes.length; i++) {
+        const name = observedAttributes[i];
         const value = element.getAttribute(name);
         if (value !== null) {
           this.attributeChangedCallback(element, name, null, value, null);
