@@ -12,7 +12,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 import * as utils from './utils'
 import * as mutation from './logical-mutation'
-import {ActiveElementAccessor, patchAccessors} from './patch-accessors'
+import {ActiveElementAccessor, ShadowRootAccessor, patchAccessors} from './patch-accessors'
 import {getProperty} from './logical-properties'
 import {addEventListener, removeEventListener} from './patch-events'
 import {attachShadow} from './attach-shadow'
@@ -129,6 +129,8 @@ let elementMixin = utils.extendAll({
   }
 
 }, fragmentMixin, slotMixin);
+
+Object.defineProperties(elementMixin, ShadowRootAccessor);
 
 let documentMixin = utils.extendAll({
 

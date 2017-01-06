@@ -258,8 +258,14 @@ let InsideAccessors = {
       }
     },
     configurable: true
-  },
+  }
 
+};
+
+// Note: Can be patched on element prototype on all browsers.
+// Must be patched on instance on browsers that support native Shadow DOM
+// but do not have builtin accessors (old Chrome).
+export let ShadowRootAccessor = {
   shadowRoot: {
     get() {
       return this.shadyRoot;
@@ -269,9 +275,11 @@ let InsideAccessors = {
     },
     configurable: true
   }
-
 };
 
+// Note: Can be patched on document prototype on browsers with builtin accessors.
+// Must be patched separately on simulated ShadowRoot.
+// Must be patched as `_activeElement` on browsers without builtin accessors.
 export let ActiveElementAccessor = {
 
   activeElement: {
@@ -328,5 +336,6 @@ export let patchInsideElementAccessors = utils.settings.hasDescriptors ?
       element.__shady = element.__shady || {};
       element.__shady.__insideAccessors = true;
       patchAccessorGroup(element, InsideAccessors, true);
+      patchAccessorGroup(element, ShadowRootAccessor, true);
     }
   }
