@@ -18,111 +18,98 @@ Example:
   </style>
 </custom-style>
 */
+(function() {
+  'use strict';
 
-'use strict';
+  let ShadyCSS = window.ShadyCSS;
 
-let ShadyCSS = window.ShadyCSS;
+  let enqueued = false;
 
-let enqueued = false;
+  let customStyles = [];
 
-let customStyles = [];
+  let hookFn = null;
 
-let hookFn = null;
+  /*
+  If a page only has <custom-style> elements, it will flash unstyled content,
+  as all the instances will boot asynchronously after page load.
 
-/*
-If a page only has <custom-style> elements, it will flash unstyled content,
-as all the instances will boot asynchronously after page load.
-
-Calling ShadyCSS.updateStyles() will force the work to happen synchronously
-*/
-function enqueueDocumentValidation() {
-  if (enqueued) {
-    return;
+  Calling ShadyCSS.updateStyles() will force the work to happen synchronously
+  */
+  function enqueueDocumentValidation() {
+    if (enqueued) {
+      return;
+    }
+    enqueued = true;
+    if (window.HTMLImports) {
+      window.HTMLImports.whenReady(validateDocument);
+    } else if (document.readyState === 'complete') {
+      validateDocument();
+    } else {
+      document.addEventListener('readystatechange', () => {
+        if (document.readyState === 'complete') {
+          validateDocument();
+        }
+      });
+    }
   }
-  enqueued = true;
-  if (window.HTMLImports) {
-    window.HTMLImports.whenReady(validateDocument);
-  } else if (document.readyState === 'complete') {
-    validateDocument();
-  } else {
-    document.addEventListener('readystatechange', () => {
-      if (document.readyState === 'complete') {
-        validateDocument();
+
+  function validateDocument() {
+    requestAnimationFrame(() => {
+      if (enqueued || ShadyCSS._elementsHaveApplied) {
+        ShadyCSS.updateStyles();
       }
+      enqueued = false;
     });
   }
-}
 
-function validateDocument() {
-  requestAnimationFrame(() => {
-    if (enqueued || ShadyCSS._elementsHaveApplied) {
-      ShadyCSS.updateStyles();
+  class CustomStyle extends HTMLElement {
+    static get processHook() {
+      return hookFn;
     }
-    enqueued = false;
-  });
-}
-
-class CustomStyle extends HTMLElement {
-  static get _customStyles() {
-    return customStyles;
-  }
-  static get processHook() {
-    return hookFn;
-  }
-  static set processHook(fn) {
-    hookFn = fn;
-  }
-  static get _documentDirty() {
-    return enqueued;
-  }
-  static findStyles() {
-    for (let i = 0; i < customStyles.length; i++) {
-      let c = customStyles[i];
-      if (!c._style) {
-        let style = c.querySelector('style');
-        if (!style) {
-          continue;
-        }
-        // HTMLImports polyfill may have cloned the style into the main document,
-        // which is referenced with __appliedElement.
-        // Also, we must copy over the attributes.
-        if (style.__appliedElement) {
-          for (let i = 0; i < style.attributes.length; i++) {
-            let attr = style.attributes[i];
-            style.__appliedElement.setAttribute(attr.name, attr.value);
+    static set processHook(fn) {
+      hookFn = fn;
+    }
+    static get _customStyles() {
+      return customStyles;
+    }
+    static get _documentDirty() {
+      return enqueued;
+    }
+    static set _documentDirty(value) {
+      enqueued = value;
+    }
+    static findStyles() {
+      for (let i = 0; i < customStyles.length; i++) {
+        let c = customStyles[i];
+        if (!c._style) {
+          let style = c.querySelector('style');
+          if (!style) {
+            continue;
           }
+          // HTMLImports polyfill may have cloned the style into the main document,
+          // which is referenced with __appliedElement.
+          // Also, we must copy over the attributes.
+          if (style.__appliedElement) {
+            for (let i = 0; i < style.attributes.length; i++) {
+              let attr = style.attributes[i];
+              style.__appliedElement.setAttribute(attr.name, attr.value);
+            }
+          }
+          c._style = style.__appliedElement || style;
+          if (hookFn) {
+            hookFn(c._style);
+          }
+          ShadyCSS._transformCustomStyleForDocument(c._style);
         }
-        c._style = style.__appliedElement || style;
-        if (hookFn) {
-          hookFn(c._style);
-        }
-        ShadyCSS._transformCustomStyleForDocument(c._style);
       }
     }
-  }
-  static _revalidateApplyShim() {
-    for (let i = 0; i < customStyles.length; i++) {
-      let c = customStyles[i];
-      if (c._style) {
-        ShadyCSS._revalidateApplyShim(c._style);
-      }
+    constructor() {
+      super();
+      customStyles.push(this);
+      enqueueDocumentValidation();
     }
   }
-  static applyStyles() {
-    for (let i = 0; i < customStyles.length; i++) {
-      let c = customStyles[i];
-      if (c._style) {
-        ShadyCSS._applyCustomStyleToDocument(c._style);
-      }
-    }
-    enqueued = false;
-  }
-  constructor() {
-    super();
-    customStyles.push(this);
-    enqueueDocumentValidation();
-  }
-}
 
-window['CustomStyle'] = CustomStyle;
-window.customElements.define('custom-style', CustomStyle);
+  window.CustomStyle = CustomStyle;
+  window.customElements.define('custom-style', CustomStyle);
+})();

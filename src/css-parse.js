@@ -35,6 +35,10 @@ StyleNode.prototype.atRule;
 StyleNode.prototype.type;
 /** @type {string|undefined} */
 StyleNode.prototype.keyframesName;
+/** @type {string|undefined} */
+StyleNode.prototype.selector;
+/** @type {string|undefined} */
+StyleNode.prototype.parsedSelector;
 
 // given a string of css, return a simple rule tree
 /**
@@ -186,8 +190,13 @@ export function stringify(node, preserveProperties, text) {
   return text;
 }
 
+/**
+ * @param {Array<StyleNode>} rules
+ * @return {boolean}
+ */
 function _hasMixinRules(rules) {
-  return rules[0].selector.indexOf(VAR_START) === 0;
+  let r = rules[0];
+  return Boolean(r) && Boolean(r.selector) && r.selector.indexOf(VAR_START) === 0;
 }
 
 function removeCustomProps(cssText) {

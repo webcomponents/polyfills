@@ -11,18 +11,24 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 'use strict';
 
 import templateMap from './template-map'
+import {StyleNode} from './css-parse'
 
 /**
  * @const {Promise}
  */
 const promise = Promise.resolve();
 
+/**
+ * @const {string}
+ */
+const infoKey = '__styleInfo';
+
 export default class StyleInfo {
   static get(node) {
-    return node['__styleInfo'];
+    return node[infoKey];
   }
   static set(node, styleInfo) {
-    node['__styleInfo'] = styleInfo;
+    node[infoKey] = styleInfo;
     return styleInfo;
   }
   static invalidate(elementName) {
@@ -37,7 +43,7 @@ export default class StyleInfo {
   */
   static startValidating(elementName) {
     /**
-     * @const {?Element}
+     * @const {Element|undefined}
      */
     const template = templateMap[elementName];
     if (!template._validating) {
@@ -49,15 +55,25 @@ export default class StyleInfo {
     }
   }
   constructor(ast, placeholder, ownStylePropertyNames, elementName, typeExtension, cssBuild) {
+    /** @type {?StyleNode} */
     this.styleRules = ast || null;
+    /** @type {?Node} */
     this.placeholder = placeholder || null;
+    /** @type {!Array<string>} */
     this.ownStylePropertyNames = ownStylePropertyNames || [];
+    /** @type {?Array<Object>} */
     this.overrideStyleProperties = null;
+    /** @type {string} */
     this.elementName = elementName || '';
+    /** @type {string} */
     this.cssBuild = cssBuild || '';
+    /** @type {string} */
     this.typeExtension = typeExtension || '';
+    /** @type {?Array<Object>} */
     this.styleProperties = null;
+    /** @type {?string} */
     this.scopeSelector = null;
+    /** @type {?Node} */
     this.customStyle = null;
   }
 }

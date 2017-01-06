@@ -465,8 +465,8 @@ class StyleProperties {
     let styleInfo = StyleInfo.get(element);
     let s = styleInfo.customStyle;
     if (s && !nativeShadow && (s !== style)) {
-      s._useCount--;
-      if (s._useCount <= 0 && s.parentNode) {
+      s['_useCount']--;
+      if (s['_useCount'] <= 0 && s.parentNode) {
         s.parentNode.removeChild(s);
       }
     }
@@ -481,7 +481,7 @@ class StyleProperties {
       } else if (cssText) {
         // apply css after the scope style of the element to help with
         // style precedence rules.
-        style = StyleUtil.applyCss(cssText, selector, element.shadowRoot,
+        style = StyleUtil.applyCss(cssText, selector, element['shadowRoot'],
           styleInfo.placeholder);
       }
     } else {
@@ -501,10 +501,10 @@ class StyleProperties {
     }
     // ensure this style is our custom style and increment its use count.
     if (style) {
-      style._useCount = style._useCount || 0;
+      style['_useCount'] = style['_useCount'] || 0;
       // increment use count if we changed styles
       if (styleInfo.customStyle != style) {
-        style._useCount++;
+        style['_useCount']++;
       }
       styleInfo.customStyle = style;
     }

@@ -124,7 +124,14 @@ gulp.task('default', ['minify', 'test-modules']);
 
 gulp.task('closure', () => {
   const closure = require('google-closure-compiler').gulp();
-  return gulp.src('src/*.js')
+  const mergeStream = require('ordered-merge-stream');
+  const concat = require('gulp-concat');
+
+  let customStyleStream = gulp.src('src/custom-style-element.js', {base: '.'})
+  .pipe(sourcemaps.init())
+  // .pipe(babel(babiliConfig));
+
+  let closureStream = gulp.src('src/*.js')
   .pipe(sourcemaps.init())
   .pipe(closure({
     new_type_inf: true,
@@ -132,12 +139,15 @@ gulp.task('closure', () => {
     language_in: 'ES6_STRICT',
     language_out: 'ES5_STRICT',
     output_wrapper: '(function(){\n%output%\n}).call(self)',
-    js_output_file: 'closure.min.js',
-    entry_point: ['/src/ShadyCSS.js', '/src/custom-style-element.js'],
+    js_output_file: 'shadycss.min.js',
+    entry_point: ['/src/ShadyCSS.js'],
     dependency_mode: 'STRICT',
-    rewrite_polyfills: false
-  }))
-  .on('error', (e) => console.error(e))
+    rewrite_polyfills: false,
+    formatting: 'PRETTY_PRINT'
+    }));
+
+return mergeStream([closureStream, customStyleStream])
+  .pipe(concat('shadycss.min.js', {newLine: ';'}))
   .pipe(sourcemaps.write('.'))
   .pipe(gulp.dest('.'))
 })

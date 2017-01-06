@@ -18,13 +18,13 @@ let placeholderMap = {};
 /**
  * @const {Object|undefined}
  */
-const ce = window.customElements;
+const ce = window['customElements'];
 if (ce && !nativeShadow) {
   /**
    * @const {function(string,Function,Object=)}
    */
-  const origDefine = ce.define;
-  ce.define = function(name, clazz, options) {
+  const origDefine = ce['define'];
+  ce['define'] = function(name, clazz, options) {
     placeholderMap[name] = applyStylePlaceHolder(name);
     return origDefine.call(ce, name, clazz, options);
   };

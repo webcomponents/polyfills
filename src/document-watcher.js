@@ -20,7 +20,7 @@ if (!nativeShadow) {
     return (element.classList &&
       !element.classList.contains(StyleTransformer.SCOPE_NAME) ||
       // note: necessary for IE11
-      (element instanceof window.SVGElement && (!element.hasAttribute('class') ||
+      (element instanceof window['SVGElement'] && (!element.hasAttribute('class') ||
       element.getAttribute('class').indexOf(StyleTransformer.SCOPE_NAME) < 0)));
   }
 
@@ -78,7 +78,7 @@ if (!nativeShadow) {
     observer.observe(node, {childList: true, subtree: true});
   }
   let nativeCustomElements = (window.customElements &&
-    !window.customElements.flush);
+    !window['customElements']['flush']);
   // need to start immediately with native custom elements
   // TODO(dfreedm): with polyfilled HTMLImports and native custom elements
   // excessive mutations may be observed; this can be optimized via cooperation
@@ -90,8 +90,8 @@ if (!nativeShadow) {
       start(document.body);
     }
     // use polyfill timing if it's available
-    if (window.HTMLImports) {
-      window.HTMLImports.whenReady(delayedStart);
+    if (window['HTMLImports']) {
+      window['HTMLImports']['whenReady'](delayedStart);
     // otherwise push beyond native imports being ready
     // which requires RAF + readystate interactive.
     } else {

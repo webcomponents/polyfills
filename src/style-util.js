@@ -32,10 +32,10 @@ export function toCssText (rules, callback) {
  * @return {StyleNode}
  */
 export function rulesForStyle(style) {
-  if (!style.__cssRules && style.textContent) {
-    style.__cssRules = parse(style.textContent);
+  if (!style['__cssRules'] && style.textContent) {
+    style['__cssRules'] = parse(style.textContent);
   }
-  return style.__cssRules;
+  return style['__cssRules'];
 }
 
 // Tests if a rule is a keyframes selector, which looks almost exactly
@@ -94,6 +94,12 @@ export function applyCss(cssText, moniker, target, contextNode) {
   return applyStyle(style, target, contextNode);
 }
 
+/**
+ * @param {Node} style
+ * @param {?Node} target
+ * @param {?Node} contextNode
+ * @return {Node}
+ */
 export function applyStyle(style, target, contextNode) {
   target = target || document.head;
   let after = (contextNode && contextNode.nextSibling) ||
@@ -118,7 +124,7 @@ export function applyStylePlaceHolder(moniker) {
   let placeHolder = document.createComment(' Shady DOM styles for ' +
     moniker + ' ');
   let after = lastHeadApplyNode ?
-    lastHeadApplyNode.nextSibling : null;
+    lastHeadApplyNode['nextSibling'] : null;
   let scope = document.head;
   scope.insertBefore(placeHolder, after || scope.firstChild);
   lastHeadApplyNode = placeHolder;
@@ -181,8 +187,8 @@ export function processVariableAndFallback(str, callback) {
 
 export function setElementClassRaw(element, value) {
   // use native setAttribute provided by ShadyDOM when setAttribute is patched
-  if (element.__nativeSetAttribute) {
-    element.__nativeSetAttribute('class', value);
+  if (element['__nativeSetAttribute']) {
+    element['__nativeSetAttribute']('class', value);
   } else {
     element.setAttribute('class', value);
   }

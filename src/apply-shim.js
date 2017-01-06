@@ -109,7 +109,6 @@ class ApplyShim {
     this._currentTemplate = null;
     this._measureElement = null;
     this._map = new MixinMap();
-    this._separator = MIXIN_VAR_SEP;
     this._boundProduceCssProperties = (
       matchText, propertyName, valueProperty, valueMixin) =>
         this._produceCssProperties(
@@ -327,6 +326,11 @@ class ApplyShim {
   }
 }
 
+Object.defineProperty(ApplyShim.prototype, '_separator', {
+  get() {
+    return MIXIN_VAR_SEP;
+  }
+});
 let applyShim = new ApplyShim();
 window['ApplyShim'] = applyShim;
 export default applyShim;

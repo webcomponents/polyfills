@@ -43,8 +43,8 @@ class StyleTransformer {
   // in the tree. This facilitates transforming css into scoped rules.
   dom(node, scope, shouldRemoveScope) {
     // one time optimization to skip scoping...
-    if (node.__styleScoped) {
-      node.__styleScoped = null;
+    if (node['__styleScoped']) {
+      node['__styleScoped'] = null;
     } else {
       this._transformDom(node, scope || '', shouldRemoveScope);
     }
@@ -135,7 +135,7 @@ class StyleTransformer {
   }
 
   _calcHostScope(scope, ext) {
-    return ext ? '[is=' +  scope + ']' : scope;
+    return ext ? `[is=${scope}]` : scope;
   }
 
   rule(rule, scope, hostScope) {
