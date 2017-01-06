@@ -162,7 +162,8 @@ function patchBuiltin(proto, obj) {
 // `Element.prototype.appendChild`) and some can only be done when the browser
 // has proper descriptors on the builtin prototype
 // (e.g. `Element.prototype.firstChild`)`. When descriptors are not available,
-// elements are individually patched when needed.
+// elements are individually patched when needed (see e.g.
+// `patchInside/OutsideElementAccessors` in `patch-accessors.js`).
 export function patchBuiltins() {
   // These patches can always be done, for all supported browsers.
   patchBuiltin(window.Node.prototype, nodeMixin);
