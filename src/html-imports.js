@@ -511,6 +511,8 @@
         n.__fired = true;
         const eventType = n.import ? 'load' : 'error';
         flags.log && console.warn('fire', eventType, n.href);
+        // Ensure the load promise is setup before firing the event.
+        whenElementLoaded(n);
         n.dispatchEvent(new CustomEvent(eventType, {
           bubbles: false,
           cancelable: false,
