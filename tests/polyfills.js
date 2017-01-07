@@ -27,6 +27,18 @@ if (typeof window.CustomEvent !== 'function') {
   window.CustomEvent = CustomEvent;
 }
 
+// document.baseURI polyfill.
+// TODO(valdrin) move it to a separate polyfill.
+if (!document.baseURI) {
+  Object.defineProperty(document, 'baseURI', {
+    get: function() {
+      const base = /** @type {HTMLBaseElement} */ (document.querySelector('base'));
+      return base ? base.href : window.location.href;
+    },
+    configurable: true
+  });
+}
+
 try {
   new URL(this.location.href);
 } catch (e) {

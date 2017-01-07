@@ -33,17 +33,6 @@
     });
   }
 
-  // Polyfill document.baseURI for browsers without it.
-  if (!document.baseURI) {
-    Object.defineProperty(document, 'baseURI', {
-      get: function() {
-        const base = /** @type {HTMLBaseElement} */ (document.querySelector('base'));
-        return base ? base.href : window.location.href;
-      },
-      configurable: true
-    });
-  }
-
   /********************* path fixup *********************/
   const ABS_URL_TEST = /(^\/)|(^#)|(^[\w-\d]*:)/;
   const CSS_URL_REGEXP = /(url\()([^)]*)(\))/g;
@@ -112,18 +101,14 @@
           } catch (e) {
             console.error(e.message);
           }
+          const isOk = ((request.status >= 200 && request.status < 300) ||
+            request.status === 304 || request.status === 0);
           const resource = (request.response || request.responseText);
-          callback(!Xhr._ok(request), resource, redirectedUrl);
+          callback(!isOk, resource, redirectedUrl);
         }
       });
       request.send();
       return request;
-    },
-
-    _ok: function(request) {
-      return (request.status >= 200 && request.status < 300) ||
-        (request.status === 304) ||
-        (request.status === 0);
     }
   };
 
@@ -279,7 +264,7 @@
      */
     constructor(doc) {
       this.documents = {};
-      // make sure to catch any imports that are in the process of loading
+      // Make sure to catch any imports that are in the process of loading
       // when this script is run.
       const imports = doc.querySelectorAll(IMPORT_SELECTOR);
       for (let i = 0, l = imports.length; i < l; i++) {
