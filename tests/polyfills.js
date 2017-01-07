@@ -34,7 +34,7 @@ try {
 }
 
 if (typeof window.Promise !== 'function') {
-  document.write('<script src="/bower_components/es6-promise/es6-promise.auto.min.js"></script>');
+  document.write('<script src="/bower_components/es6-promise/dist/es6-promise.auto.min.js"></script>');
 }
 
 if (typeof HTMLTemplateElement === 'undefined') {
