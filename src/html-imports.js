@@ -251,13 +251,13 @@
     'script[type="text/javascript"]'
   ].join(',');
 
-  // importer
-  // highlander object to manage loading of imports
-  // for any document, importer:
-  // - loads any linked import documents (with deduping)
-  // - whenever an import is loaded, prompts the parser to try to parse
-  // - observes imported documents for new elements (these are handled via the
-  // dynamic importer)
+  /**
+   * Importer will:
+   * - load any linked import documents (with deduping)
+   * - whenever an import is loaded, prompt the parser to try to parse
+   * - observe imported documents for new elements (these are handled via the
+   *   dynamic importer)
+   */
   class Importer {
     /**
      * @param {HTMLDocument} doc
@@ -447,6 +447,15 @@
     fixUrlsInTemplates(element, base);
   }
 
+  function fixDomModules(element, url) {
+    const s$ = element.querySelectorAll('dom-module');
+    for (let i = 0; i < s$.length; i++) {
+      const o = s$[i];
+      const assetpath = o.getAttribute('assetpath') || '';
+      o.setAttribute('assetpath', Path.replaceAttrUrl(assetpath, url));
+    }
+  }
+
   /**
    * Replaces all the imported scripts with a clone in order to execute them.
    * Updates the `currentScript`.
@@ -479,6 +488,10 @@
     return promise;
   }
 
+  /**
+   * Waits for all the imported stylesheets/styles to be loaded.
+   * @return {Promise}
+   */
   function waitForStyles() {
     const s$ = document.querySelectorAll(stylesInImportsSelector);
     const promises = [];
@@ -506,6 +519,9 @@
     });
   }
 
+  /**
+   * Fires load/error events for loaded imports.
+   */
   function fireEvents() {
     const n$ = /** @type {!NodeList<!HTMLLinkElement>} */
       (document.querySelectorAll(IMPORT_SELECTOR));
@@ -529,7 +545,7 @@
 
   /**
    * Waits for an element to finish loading. If already done loading, it will
-   * mark the elemnt accordingly.
+   * mark the element accordingly.
    * @param {!Element} element
    * @return {Promise}
    */
@@ -581,26 +597,19 @@
     return isLoaded;
   }
 
-  function fixDomModules(element, url) {
-    const s$ = element.querySelectorAll('dom-module');
-    for (let i = 0; i < s$.length; i++) {
-      const o = s$[i];
-      const assetpath = o.getAttribute('assetpath') || '';
-      o.setAttribute('assetpath', Path.replaceAttrUrl(assetpath, url));
-    }
-  }
-
+  /**
+   * Creates a new document containing resource and normalizes urls accordingly.
+   * @param {string} resource
+   * @param {string} url
+   * @return {Node}
+   */
   function makeDocument(resource, url) {
-    // TODO(valdrin): better to use a disconnected document here so that
-    // elements don't upgrade until inserted into main document,
-    // however, this is blocked on https://bugs.webkit.org/show_bug.cgi?id=165617
-    // let doc = document.implementation.createHTMLDocument();
     const content = document.createElement('import-content');
     content.setAttribute('import-href', url);
     content.style.display = 'none';
     content.innerHTML = resource;
 
-    // TODO(sorvell): this is specific to users (Polymer) of the dom-module element.
+    // TODO(sorvell): this is specific to users of <dom-module> (Polymer).
     fixDomModules(content, url);
     fixUrls(content, url);
     return content;
@@ -623,40 +632,56 @@
   const requiredReadyState = isIE ? 'complete' : 'interactive';
   const READY_EVENT = 'readystatechange';
 
-  // call a callback when all HTMLImports in the document at call time
-  // (or at least document ready) have loaded.
-  // 1. ensure the document is in a ready state (has dom), then
-  // 2. watch for loading of imports and call callback when done
+  /**
+   * Calls the callback when all HTMLImports in the document at call time
+   * (or at least document ready) have loaded.
+   * @param {function(!HTMLImportInfo)=} callback
+   * @param {HTMLDocument=} doc
+   * @return {Promise}
+   */
   function whenReady(callback, doc) {
     doc = doc || document;
-    // if document is loading, wait and try again
+    // 1. ensure the document is in a ready state (has dom), then
+    // 2. watch for loading of imports and call callback when done
     return whenDocumentReady(doc).then(watchImportsLoad).then((importInfo) => {
       callback && callback(importInfo);
       return importInfo;
     });
   }
 
+  /**
+   * @param {!HTMLDocument} doc
+   * @returns {boolean}
+   */
   function isDocumentReady(doc) {
     return (doc.readyState === 'complete' ||
       doc.readyState === requiredReadyState);
   }
 
-  // call <callback> when we ensure the document is in a ready state
+  /**
+   * Resolved when document is in ready state.
+   * @param {!HTMLDocument} doc
+   * @returns {Promise}
+   */
   function whenDocumentReady(doc) {
-    if (isDocumentReady(doc)) {
-      return Promise.resolve(doc);
-    }
     return new Promise((resolve) => {
-      doc.addEventListener(READY_EVENT, function checkReady() {
+      const checkReady = function checkReady() {
         if (isDocumentReady(doc)) {
           doc.removeEventListener(READY_EVENT, checkReady);
           resolve(doc);
         }
-      });
+      }
+      doc.addEventListener(READY_EVENT, checkReady);
+      checkReady();
     });
   }
 
-  // call <callback> when we ensure all imports have loaded
+  /**
+   * Resolved when all imports are done loading. The promise returns the import
+   * details as HTMLImportInfo object.
+   * @param {!HTMLDocument} doc
+   * @returns {Promise}
+   */
   function watchImportsLoad(doc) {
     let imports = doc.querySelectorAll(IMPORT_SELECTOR);
     const promises = [];
