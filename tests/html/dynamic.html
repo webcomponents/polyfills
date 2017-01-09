@@ -11,7 +11,8 @@
 <html>
   <head>
     <title>HTML Imports Dynamic</title>
-    <script src="../../src/html-imports.js"></script>
+    <script src="../polyfills.js"></script>
+    <script src="../../html-imports.min.js"></script>
     <script>
       WCT = {
         waitFor: function(callback) {
@@ -29,7 +30,11 @@
       var div = document.createElement('div');
       div.innerHTML = '<link rel="import" href="imports/load-1.html">' +
         '<link rel="import" href="imports/load-2.html">';
-      document.body.appendChild(div);
+      // In Safari putting the div in <head> will not trigger
+      // MutationObservers on their subtree.
+      while (div.firstElementChild) {
+        document.head.appendChild(div.firstElementChild);
+      }
       var ports = document.querySelectorAll('link[rel=import]');
       for (var i=0, l=ports.length, n; (i<l) && (n=ports[i]); i++) {
         n.addEventListener('load', function(e) {
