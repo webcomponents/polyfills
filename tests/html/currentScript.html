@@ -23,9 +23,7 @@
       var cs = document.currentScript;
       test('currentScript', function(done) {
         chai.assert.equal(cs.parentNode, document.body, '_currentScript set in main document');
-        HTMLImports.whenReady(function() {
-        // Event listener not working on IE11
-        // addEventListener('HTMLImportsLoaded', function() {
+        addEventListener('HTMLImportsLoaded', function() {
           chai.assert.equal(window.remoteCurrentScriptExecuted, 2, 'remote script executed from import and main document');
           done();
         });
