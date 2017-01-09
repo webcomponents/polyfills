@@ -603,16 +603,20 @@
 
   /**
    * Creates a new document containing resource and normalizes urls accordingly.
-   * @param {string} resource
-   * @param {string} url
-   * @return {Node}
+   * @param {string=} resource
+   * @param {string=} url
+   * @return {HTMLElement}
    */
   function makeDocument(resource, url) {
-    const content = document.createElement('import-content');
-    content.setAttribute('import-href', url);
+    const content = /** @type {HTMLElement} */
+      (document.createElement('import-content'));
     content.style.display = 'none';
-    content.innerHTML = resource;
-
+    if (url) {
+      content.setAttribute('import-href', url);
+    }
+    if (resource) {
+      content.innerHTML = resource;
+    }
     // TODO(sorvell): this is specific to users of <dom-module> (Polymer).
     fixDomModules(content, url);
     fixUrls(content, url);
