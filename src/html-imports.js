@@ -482,15 +482,20 @@
   function waitForStyles() {
     const s$ = document.querySelectorAll(stylesInImportsSelector);
     const promises = [];
+    let hasLinks = false;
     for (let i = 0, l = s$.length, s; i < l && (s = s$[i]); i++) {
+      hasLinks = hasLinks || s.localName === 'link';
       // Catch failures, always return s
       promises.push(
         whenElementLoaded(s).catch(() => s)
       );
     }
     return Promise.all(promises).then(() => {
-      // IE and Edge require styles/links to be siblings in order to apply correctly.
-      if ((isIE || isEdge) && s$.length) {
+      // NOTE(valdrin): When imports have link stylesheets, the dom order won't
+      // matter in IE/Edge. We remove then add all the styles and links in order
+      // to solve thi issue. We could also remove the styles before adding the
+      // imported links and add them back to the dom right after.
+      if ((isIE || isEdge) && hasLinks) {
         const n$ = document.head.querySelectorAll(stylesSelector);
         for (let i = 0, l = n$.length, n; i < l && (n = n$[i]); i++) {
           n.parentNode.removeChild(n);
