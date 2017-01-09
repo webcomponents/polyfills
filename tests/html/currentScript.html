@@ -23,7 +23,9 @@
       var cs = document.currentScript;
       test('currentScript', function(done) {
         chai.assert.equal(cs.parentNode, document.body, '_currentScript set in main document');
-        addEventListener('HTMLImportsLoaded', function() {
+        // In native HTMLImports the event 'HTMLImportsLoaded' might have already
+        // been fired by this time, so use HTMLImports.whenReady.
+        HTMLImports.whenReady(function() {
           chai.assert.equal(window.remoteCurrentScriptExecuted, 2, 'remote script executed from import and main document');
           done();
         });
