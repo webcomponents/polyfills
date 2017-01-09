@@ -12,30 +12,25 @@
 <meta charset="utf-8">
 <script src="../../web-component-tester/browser.js"></script>
 <script>
-  var suites = [
-  'html/parser.html',
-  'html/style-links.html',
-  'html/style-paths.html',
-  'html/load.html',
-  'html/load-404.html',
-  'html/load-empty.html',
-  'html/load-loop.html',
-  'html/base/load-base.html',
-  'html/currentScript.html',
-  'html/dedupe.html',
-  'html/dynamic.html',
-  'html/dynamic-all-imports-detail.html',
-  'html/dynamic-errors-detail.html',
-  'html/csp.html',
-  'html/encoding.html',
-  'html/HTMLImportsLoaded-native.html',
-  'html/lazy-import.html',
-  'html/unclosed.html',
-  ];
-  // NOTE: The MO polyfill does not function on disconnected documents
-  // like html imports so dynamic elements in imports are not supported.
-  if (!navigator.userAgent.match(/MSIE 10/)) {
-    suites.push('html/dynamic-elements.html');
-  }
-  WCT.loadSuites(suites);
+  WCT.loadSuites([
+    'html/HTMLImportsLoaded-native.html',
+    'html/parser.html',
+    'html/style-links.html',
+    'html/style-paths.html',
+    'html/load.html',
+    'html/load-404.html',
+    'html/load-empty.html',
+    'html/load-loop.html',
+    'html/base/load-base.html',
+    'html/currentScript.html',
+    'html/dedupe.html',
+    'html/dynamic.html',
+    'html/dynamic-all-imports-detail.html',
+    'html/dynamic-errors-detail.html',
+    'html/csp.html',
+    'html/encoding.html',
+    'html/dynamic-elements.html',
+    'html/lazy-import.html',
+    'html/unclosed.html'
+  ]);
 </script>
