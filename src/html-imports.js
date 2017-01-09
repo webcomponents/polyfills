@@ -260,10 +260,11 @@
    */
   class Importer {
     /**
-     * @param {HTMLDocument} doc
+     * @param {!HTMLDocument} doc
      */
     constructor(doc) {
       this.documents = {};
+      this._doc = doc;
       // Make sure to catch any imports that are in the process of loading
       // when this script is run.
       const imports = doc.querySelectorAll(IMPORT_SELECTOR);
@@ -308,11 +309,11 @@
     }
 
     _onLoadedAll() {
-      this._flatten(document);
+      this._flatten(this._doc);
       Promise.all([
-        runScripts(),
-        waitForStyles()
-      ]).then(fireEvents);
+        runScripts(this._doc),
+        waitForStyles(this._doc)
+      ]).then(() => fireEvents(this._doc));
     }
 
     _flatten(element) {
@@ -459,14 +460,15 @@
   /**
    * Replaces all the imported scripts with a clone in order to execute them.
    * Updates the `currentScript`.
+   * @param {!HTMLDocument} doc
    * @return {Promise} Resolved when scripts are loaded.
    */
-  function runScripts() {
-    const s$ = document.querySelectorAll(`script[type=${scriptType}]`);
+  function runScripts(doc) {
+    const s$ = doc.querySelectorAll(`script[type=${scriptType}]`);
     let promise = Promise.resolve();
     for (let i = 0, l = s$.length, s; i < l && (s = s$[i]); i++) {
       promise = promise.then(() => {
-        const c = document.createElement('script');
+        const c = doc.createElement('script');
         c.textContent = s.textContent;
         if (s.src) {
           c.setAttribute('src', s.getAttribute('src'));
@@ -490,10 +492,11 @@
 
   /**
    * Waits for all the imported stylesheets/styles to be loaded.
+   * @param {!HTMLDocument} doc
    * @return {Promise}
    */
-  function waitForStyles() {
-    const s$ = document.querySelectorAll(stylesInImportsSelector);
+  function waitForStyles(doc) {
+    const s$ = doc.querySelectorAll(stylesInImportsSelector);
     const promises = [];
     let hasLinks = false;
     for (let i = 0, l = s$.length, s; i < l && (s = s$[i]); i++) {
@@ -509,10 +512,10 @@
       // to solve thi issue. We could also remove the styles before adding the
       // imported links and add them back to the dom right after.
       if ((isIE || isEdge) && hasLinks) {
-        const n$ = document.head.querySelectorAll(stylesSelector);
+        const n$ = doc.head.querySelectorAll(stylesSelector);
         for (let i = 0, l = n$.length, n; i < l && (n = n$[i]); i++) {
           n.parentNode.removeChild(n);
-          document.head.appendChild(n);
+          doc.head.appendChild(n);
         }
       }
       return s$;
@@ -521,10 +524,11 @@
 
   /**
    * Fires load/error events for loaded imports.
+   * @param {!HTMLDocument} doc
    */
-  function fireEvents() {
+  function fireEvents(doc) {
     const n$ = /** @type {!NodeList<!HTMLLinkElement>} */
-      (document.querySelectorAll(IMPORT_SELECTOR));
+      (doc.querySelectorAll(IMPORT_SELECTOR));
     // Inverse order to have events firing bottom-up.
     for (let i = n$.length - 1, n; i >= 0 && (n = n$[i]); i--) {
       // Don't fire twice same event.
