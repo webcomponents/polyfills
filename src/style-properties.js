@@ -448,12 +448,7 @@ class StyleProperties {
     }
     v += (v ? ' ' : '') + XSCOPE_NAME + ' ' + selector;
     if (c !== v) {
-      // hook from ShadyDOM
-      if (element.__nativeSetAttribute) {
-        element.__nativeSetAttribute('class', v);
-      } else {
-        element.setAttribute('class', v);
-      }
+      StyleUtil.setElementClassRaw(element, v);
     }
   }
 

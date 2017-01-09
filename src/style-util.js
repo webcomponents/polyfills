@@ -187,8 +187,8 @@ export function processVariableAndFallback(str, callback) {
 
 export function setElementClassRaw(element, value) {
   // use native setAttribute provided by ShadyDOM when setAttribute is patched
-  if (element['__nativeSetAttribute']) {
-    element['__nativeSetAttribute']('class', value);
+  if (window.ShadyDOM) {
+    window.ShadyDOM.nativeMethods.setAttribute.call(element, 'class', value);
   } else {
     element.setAttribute('class', value);
   }
