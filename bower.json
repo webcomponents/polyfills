@@ -22,6 +22,6 @@
     "webcomponents-platform": "webcomponents/webcomponents-platform#master"
   },
   "devDependencies": {
-    "web-component-tester": "v6.0.0-prerelease.4"
+    "web-component-tester": "v6.0.0-prerelease.3"
   }
 }
