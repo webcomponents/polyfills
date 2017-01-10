@@ -310,6 +310,11 @@
 
     _onLoadedAll() {
       this._flatten(this._doc);
+      // In IE/Edge, when imports have link stylesheets/styles, the cascading order
+      // isn't respected https://developer.microsoft.com/en-us/microsoft-edge/platform/issues/10472273/
+      if (isIE || isEdge) {
+        cloneAndMoveStyles(this._doc);
+      }
       Promise.all([
         runScripts(this._doc),
         waitForStyles(this._doc)
@@ -498,28 +503,45 @@
   function waitForStyles(doc) {
     const s$ = doc.querySelectorAll(stylesInImportsSelector);
     const promises = [];
-    let hasLinks = false;
     for (let i = 0, l = s$.length, s; i < l && (s = s$[i]); i++) {
-      hasLinks = hasLinks || s.localName === 'link';
       // Catch failures, always return s
       promises.push(
         whenElementLoaded(s).catch(() => s)
       );
     }
-    return Promise.all(promises).then(() => {
-      // NOTE(valdrin): When imports have link stylesheets, the dom order won't
-      // matter in IE/Edge. We remove then add all the styles and links in order
-      // to solve thi issue. We could also remove the styles before adding the
-      // imported links and add them back to the dom right after.
-      if ((isIE || isEdge) && hasLinks) {
-        const n$ = doc.head.querySelectorAll(stylesSelector);
-        for (let i = 0, l = n$.length, n; i < l && (n = n$[i]); i++) {
-          n.parentNode.removeChild(n);
-          doc.head.appendChild(n);
-        }
+    return Promise.all(promises);
+  }
+
+  /**
+   * Clones styles and stylesheets links contained in imports and moves them
+   * as siblings of the root import link.
+   * @param {!HTMLDocument} doc
+   */
+  function cloneAndMoveStyles(doc) {
+    const n$ = doc.querySelectorAll(stylesInImportsSelector);
+    for (let i = 0, l = n$.length, n; i < l && (n = n$[i]); i++) {
+      const clone = doc.createElement(n.localName);
+      // Ensure we listen for load/error for this element.
+      whenElementLoaded(clone);
+      // Copy textContent and attributes.
+      clone.textContent = n.textContent;
+      for (let j = 0, ll = n.attributes.length; j < ll; j++) {
+        clone.setAttribute(n.attributes[j].name, n.attributes[j].value);
       }
-      return s$;
-    });
+
+      // Search for the root import.
+      let parent = n.parentNode;
+      let rootImport = null;
+      while (parent && parent !== document) {
+        if (isImportLink(parent)) {
+          rootImport = parent;
+        }
+        parent = parent.parentNode;
+      }
+      // Remove old, add new.
+      n.parentNode.removeChild(n);
+      rootImport.parentNode.insertBefore(clone, rootImport);
+    }
   }
 
   /**
