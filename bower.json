@@ -15,11 +15,13 @@
   ],
   "license": "BSD",
   "ignore": [],
-  "devDependencies": {
-    "web-component-tester": "v6.0.0-prerelease.4",
-    "polymer": "2.0-preview",
-    "url": "webcomponents/URL#master",
+  "dependencies": {
     "es6-promise": "stefanpenner/es6-promise#^4.0.0",
-    "template": "webcomponents/template#master"
+    "template": "webcomponents/template#master",
+    "URL": "webcomponents/URL#master",
+    "webcomponents-platform": "webcomponents/webcomponents-platform#master"
+  },
+  "devDependencies": {
+    "web-component-tester": "v6.0.0-prerelease.4"
   }
 }

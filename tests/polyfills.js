@@ -8,24 +8,8 @@
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
-// CustomEvent polyfill.
-// TODO(valdrin) move it to a separate polyfill.
-if (typeof window.CustomEvent !== 'function') {
-  function CustomEvent(event, params) {
-    params = params || {
-      bubbles: false,
-      cancelable: false,
-      detail: undefined
-    };
-    var evt = document.createEvent('CustomEvent');
-    evt.initCustomEvent(event, params.bubbles, params.cancelable, params.detail);
-    return evt;
-  }
-
-  CustomEvent.prototype = window.Event.prototype;
-
-  window.CustomEvent = CustomEvent;
-}
+// Includes CustomEvent polyfill.
+document.write('<script src="/bower_components/webcomponents-platform/webcomponents-platform.js"></script>');
 
 // document.baseURI polyfill.
 // TODO(valdrin) move it to a separate polyfill.
@@ -42,7 +26,7 @@ if (!document.baseURI) {
 try {
   new URL(this.location.href);
 } catch (e) {
-  document.write('<script src="/bower_components/url/url.js"></script>');
+  document.write('<script src="/bower_components/URL/url.js"></script>');
 }
 
 if (typeof window.Promise !== 'function') {
