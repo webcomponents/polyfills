@@ -310,11 +310,6 @@
 
     _onLoadedAll() {
       this._flatten(this._doc);
-      // In IE/Edge, when imports have link stylesheets/styles, the cascading order
-      // isn't respected https://developer.microsoft.com/en-us/microsoft-edge/platform/issues/10472273/
-      if (isIE || isEdge) {
-        cloneAndMoveStyles(this._doc);
-      }
       Promise.all([
         runScripts(this._doc),
         waitForStyles(this._doc)
@@ -328,11 +323,16 @@
         if (n.import && !n.import.__firstImport) {
           n.import.__firstImport = n;
           this._flatten(n.import);
-          n.appendChild(n.import);
           // If in the main document, observe for any imports added later.
           if (element === document) {
+            // In IE/Edge, when imports have link stylesheets/styles, the cascading order
+            // isn't respected https://developer.microsoft.com/en-us/microsoft-edge/platform/issues/10472273/
+            if (isIE || isEdge) {
+              cloneAndMoveStyles(n);
+            }
             this._observe(n.import);
           }
+          n.appendChild(n.import);
         }
       }
     }
@@ -515,12 +515,12 @@
   /**
    * Clones styles and stylesheets links contained in imports and moves them
    * as siblings of the root import link.
-   * @param {!HTMLDocument} doc
+   * @param {!HTMLLinkElement} importLink
    */
-  function cloneAndMoveStyles(doc) {
-    const n$ = doc.querySelectorAll(stylesInImportsSelector);
+  function cloneAndMoveStyles(importLink) {
+    const n$ = importLink.import.querySelectorAll(stylesSelector);
     for (let i = 0, l = n$.length, n; i < l && (n = n$[i]); i++) {
-      const clone = doc.createElement(n.localName);
+      const clone = document.createElement(n.localName);
       // Ensure we listen for load/error for this element.
       whenElementLoaded(clone);
       // Copy textContent and attributes.
@@ -529,18 +529,9 @@
         clone.setAttribute(n.attributes[j].name, n.attributes[j].value);
       }
 
-      // Search for the root import.
-      let parent = n.parentNode;
-      let rootImport = null;
-      while (parent && parent !== document) {
-        if (isImportLink(parent)) {
-          rootImport = parent;
-        }
-        parent = parent.parentNode;
-      }
       // Remove old, add new.
       n.parentNode.removeChild(n);
-      rootImport.parentNode.insertBefore(clone, rootImport);
+      importLink.parentNode.insertBefore(clone, importLink);
     }
   }
 
@@ -659,8 +650,6 @@
 
   const isIE = /Trident/.test(navigator.userAgent);
   const isEdge = !isIE && /Edge\/\d./i.test(navigator.userAgent);
-  const requiredReadyState = isIE ? 'complete' : 'interactive';
-  const READY_EVENT = 'readystatechange';
 
   /**
    * Calls the callback when all HTMLImports in the document at call time
@@ -679,14 +668,6 @@
     });
   }
 
-  /**
-   * @param {!HTMLDocument} doc
-   * @returns {boolean}
-   */
-  function isDocumentReady(doc) {
-    return (doc.readyState === 'complete' ||
-      doc.readyState === requiredReadyState);
-  }
 
   /**
    * Resolved when document is in ready state.
@@ -695,14 +676,15 @@
    */
   function whenDocumentReady(doc) {
     return new Promise((resolve) => {
-      const checkReady = function checkReady() {
-        if (isDocumentReady(doc)) {
-          doc.removeEventListener(READY_EVENT, checkReady);
-          resolve(doc);
-        }
+      if (doc.readyState !== 'loading') {
+        resolve(doc);
+      } else {
+        doc.addEventListener('readystatechange', () => {
+          if (doc.readyState !== 'loading') {
+            resolve(doc);
+          }
+        });
       }
-      doc.addEventListener(READY_EVENT, checkReady);
-      checkReady();
     });
   }
 
