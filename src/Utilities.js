@@ -27,7 +27,7 @@ export function isValidCustomElementName(localName) {
  */
 export function isConnected(node) {
   while (node && !(node instanceof Document)) {
-    node = node.parentNode || (node instanceof ShadowRoot ? node.host : undefined);
+    node = node.parentNode || (node.nodeType === Node.DOCUMENT_FRAGMENT_NODE ? node.host : undefined);
   }
   return node instanceof Document;
 }
@@ -37,7 +37,12 @@ export function isConnected(node) {
  * @param {!function(!Element)} callback
  */
 export function walkDeepDescendantElements(root, callback) {
-  const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT);
+  // IE throws on `walker.nextNode()` if the root given to TreeWalker is a text node.
+  if (root.nodeType === Node.TEXT_NODE) {
+    return;
+  }
+
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT, null, false);
   do {
     const element = /** @type {!Element} */ (walker.currentNode);
     callback(element);

@@ -16,22 +16,31 @@ export default function(internals) {
    * @param {!{mode: string}} init
    * @return {ShadowRoot}
    */
-  Element.prototype['attachShadow'] = function(init) {
-    const shadowRoot = BuiltIn.Element_attachShadow.call(this, init);
-    this[CustomElementInternalSymbols.shadowRoot] = shadowRoot;
-    return shadowRoot;
-  };
+  if (BuiltIn.Element_attachShadow) {
+    Element.prototype['attachShadow'] = function(init) {
+      const shadowRoot = BuiltIn.Element_attachShadow.call(this, init);
+      this[CustomElementInternalSymbols.shadowRoot] = shadowRoot;
+      return shadowRoot;
+    };
+  } else {
+    console.warn('Custom Elements: `Element#attachShadow` was not patched.');
+  }
 
-  Object.defineProperty(Element.prototype, 'innerHTML', {
-    enumerable: BuiltIn.Element_innerHTML.enumerable,
-    configurable: true,
-    get: BuiltIn.Element_innerHTML.get,
-    set: function(htmlString) {
-      BuiltIn.Element_innerHTML.set.call(this, htmlString);
-      internals.upgradeTree(this);
-      return htmlString;
-    },
-  });
+  // TODO: Patch instances in browsers without an `Element#innerHTML` descriptor (Early Chrome, IE).
+  if (BuiltIn.Element_innerHTML) {
+    Object.defineProperty(Element.prototype, 'innerHTML', {
+      enumerable: BuiltIn.Element_innerHTML.enumerable,
+      configurable: true,
+      get: BuiltIn.Element_innerHTML.get,
+      set: function(htmlString) {
+        BuiltIn.Element_innerHTML.set.call(this, htmlString);
+        internals.upgradeTree(this);
+        return htmlString;
+      },
+    });
+  } else {
+    console.warn('Custom Elements: `Element#innerHTML` was not patched.');
+  }
 
   /**
    * @param {string} name
