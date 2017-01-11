@@ -38,6 +38,7 @@
   const CSS_URL_REGEXP = /(url\()([^)]*)(\))/g;
   const CSS_IMPORT_REGEXP = /(@import[\s]+(?!url\())([^;]*)(;)/g;
 
+
   // path fixup: style elements in imports must be made relative to the main
   // document. We fixup url's in url() and @import.
   const Path = {
@@ -55,7 +56,7 @@
       return text.replace(regexp, function(m, pre, url, post) {
         let urlPath = url.replace(/["']/g, '');
         if (linkUrl) {
-          urlPath = (new URL(urlPath, linkUrl)).href;
+          urlPath = Path._resolveUrl(urlPath, linkUrl);
         }
         return pre + '\'' + urlPath + '\'' + post;
       });
@@ -65,8 +66,37 @@
       if (text && ABS_URL_TEST.test(text)) {
         return text;
       } else {
-        return new URL(text, linkUrl).href;
+        return Path._resolveUrl(text, linkUrl);
       }
+    },
+
+    _resolveUrl: function(url, base) {
+      // Lazy feature detection.
+      if (Path.__workingURL === undefined) {
+        Path.__workingURL = false;
+        try {
+          const u = new URL('b', 'http://a');
+          u.pathname = 'c%20d';
+          Path.__workingURL = (u.href === 'http://a/c%20d');
+        } catch (e) {}
+      }
+
+      if (Path.__workingURL) {
+        return (new URL(url, base)).href;
+      }
+
+      // Fallback to creating an anchor into a disconnected document.
+      let doc = Path.__tempDoc;
+      if (!doc) {
+        doc = document.implementation.createHTMLDocument('temp');
+        Path.__tempDoc = doc;
+        doc.__base = doc.createElement('base');
+        doc.head.appendChild(doc.__base);
+        doc.__anchor = doc.createElement('a');
+      }
+      doc.__base.href = base;
+      doc.__anchor.href = url;
+      return doc.__anchor.href || url;
     }
   };
 

@@ -23,12 +23,6 @@ if (!document.baseURI) {
   });
 }
 
-try {
-  new URL(this.location.href);
-} catch (e) {
-  document.write('<script src="/bower_components/URL/url.js"></script>');
-}
-
 if (typeof window.Promise !== 'function') {
   document.write('<script src="/bower_components/es6-promise/dist/es6-promise.auto.min.js"></script>');
 }

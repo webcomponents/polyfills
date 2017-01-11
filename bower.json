@@ -18,7 +18,6 @@
   "dependencies": {
     "es6-promise": "stefanpenner/es6-promise#^4.0.0",
     "template": "webcomponents/template#master",
-    "URL": "webcomponents/URL#master",
     "webcomponents-platform": "webcomponents/webcomponents-platform#master"
   },
   "devDependencies": {
