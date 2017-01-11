@@ -33,48 +33,6 @@ export default function(internals) {
     },
   });
 
-  Object.defineProperty(Element.prototype, 'id', {
-    enumerable: BuiltIn.Element_id.enumerable,
-    configurable: true,
-    get: BuiltIn.Element_id.get,
-    set: function(newValue) {
-      const oldValue = BuiltIn.Element_id.get.call(this);
-      BuiltIn.Element_id.set.call(this, newValue);
-      newValue = BuiltIn.Element_id.get.call(this);
-      if (oldValue !== newValue) {
-        internals.attributeChangedCallback(this, 'id', oldValue, newValue, null);
-      }
-    },
-  });
-
-  Object.defineProperty(Element.prototype, 'className', {
-    enumerable: BuiltIn.Element_className.enumerable,
-    configurable: true,
-    get: BuiltIn.Element_className.get,
-    set: function(newValue) {
-      const oldValue = BuiltIn.Element_className.get.call(this);
-      BuiltIn.Element_className.set.call(this, newValue);
-      newValue = BuiltIn.Element_className.get.call(this);
-      if (oldValue !== newValue) {
-        internals.attributeChangedCallback(this, 'class', oldValue, newValue, null);
-      }
-    },
-  });
-
-  Object.defineProperty(Element.prototype, 'slot', {
-    enumerable: BuiltIn.Element_slot.enumerable,
-    configurable: true,
-    get: BuiltIn.Element_slot.get,
-    set: function(newValue) {
-      const oldValue = BuiltIn.Element_slot.get.call(this);
-      BuiltIn.Element_slot.set.call(this, newValue);
-      newValue = BuiltIn.Element_slot.get.call(this);
-      if (oldValue !== newValue) {
-        internals.attributeChangedCallback(this, 'slot', oldValue, newValue, null);
-      }
-    },
-  });
-
   /**
    * @param {string} name
    * @param {string} newValue
@@ -127,58 +85,6 @@ export default function(internals) {
     if (oldValue !== null) {
       internals.attributeChangedCallback(this, name, oldValue, null, namespace);
     }
-  };
-
-  /**
-   * @param {!Attr} attr
-   * @return {?Attr}
-   * @suppress {duplicate}
-   */
-  Element.prototype.setAttributeNode = function(attr) {
-    const attrName = attr.name;
-    const oldValue = BuiltIn.Element_getAttribute.call(this, attrName);
-    const oldAttr = BuiltIn.Element_setAttributeNode.call(this, attr);
-    const newValue = BuiltIn.Element_getAttribute.call(this, attrName);
-    if (oldValue !== newValue) {
-      internals.attributeChangedCallback(this, attrName, oldValue, newValue, null);
-    }
-    return oldAttr;
-  };
-
-  /**
-   * @param {!Attr} attr
-   * @return {?Attr}
-   * @suppress {duplicate}
-   */
-  Element.prototype.setAttributeNodeNS = function(attr) {
-    const attrNS = attr.namespaceURI;
-    const attrName = attr.name;
-    const oldValue = BuiltIn.Element_getAttributeNS.call(this, attrNS, attrName);
-    const oldAttr = BuiltIn.Element_setAttributeNodeNS.call(this, attr);
-    const newValue = BuiltIn.Element_getAttributeNS.call(this, attrNS, attrName);
-    if (oldValue !== newValue) {
-      internals.attributeChangedCallback(this, attrName, oldValue, newValue, attrNS);
-    }
-    return oldAttr;
-  };
-
-  /**
-   * @param {!Attr} attr
-   * @return {!Attr}
-   * @suppress {duplicate}
-   */
-  Element.prototype.removeAttributeNode = function(attr) {
-    const attrNS = attr.namespaceURI;
-    const attrName = attr.name;
-    const oldValue =
-      (attrNS === null)
-      ? BuiltIn.Element_getAttribute.call(this, attrName)
-      : BuiltIn.Element_getAttributeNS.call(this, attrNS, attrName);
-    const oldAttr = BuiltIn.Element_removeAttributeNode.call(this, attr);
-    if (oldValue !== null) {
-      internals.attributeChangedCallback(this, attrName, oldValue, null, attrNS);
-    }
-    return oldAttr;
   };
 
   /**
