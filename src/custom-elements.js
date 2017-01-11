@@ -24,6 +24,14 @@ if (!window['customElements'] || window['customElements']['forcePolyfill']) {
   /** @type {!CustomElementInternals} */
   const internals = new CustomElementInternals();
 
+  PatchHTMLElement(internals);
+  PatchDocument(internals);
+  PatchNode(internals);
+  PatchElement(internals);
+  PatchDOMTokenList(internals);
+  PatchAttr(internals);
+  PatchNamedNodeMap(internals);
+
   /** @type {!CustomElementRegistry} */
   const customElements = new CustomElementRegistry(internals);
 
@@ -35,12 +43,4 @@ if (!window['customElements'] || window['customElements']['forcePolyfill']) {
 
   /** @type {!DocumentConstructionObserver} */
   const constructionObserver = new DocumentConstructionObserver(internals, document);
-
-  PatchHTMLElement(internals);
-  PatchDocument(internals);
-  PatchNode(internals);
-  PatchElement(internals);
-  PatchDOMTokenList(internals);
-  PatchAttr(internals);
-  PatchNamedNodeMap(internals);
 }
