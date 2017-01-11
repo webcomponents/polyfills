@@ -10,9 +10,7 @@ export default {
   Node_removeChild: window.Node.prototype.removeChild,
   Node_replaceChild: window.Node.prototype.replaceChild,
   Element_attachShadow: window.Element.prototype['attachShadow'],
-  Element_attributes: Object.getOwnPropertyDescriptor(window.Element.prototype, 'attributes'),
   Element_id: Object.getOwnPropertyDescriptor(window.Element.prototype, 'id'),
-  Element_classList: Object.getOwnPropertyDescriptor(window.Element.prototype, 'classList'),
   Element_className: Object.getOwnPropertyDescriptor(window.Element.prototype, 'className'),
   Element_slot: Object.getOwnPropertyDescriptor(window.Element.prototype, 'slot'),
   Element_innerHTML: Object.getOwnPropertyDescriptor(window.Element.prototype, 'innerHTML'),
@@ -33,25 +31,4 @@ export default {
   Element_replaceWith: window.Element.prototype['replaceWith'],
   Element_remove: window.Element.prototype['remove'],
   HTMLElement: window.HTMLElement,
-  DOMTokenList_add: window.DOMTokenList.prototype.add,
-  DOMTokenList_remove: window.DOMTokenList.prototype.remove,
-  DOMTokenList_toggle: window.DOMTokenList.prototype.toggle,
-  DOMTokenList_replace: window.DOMTokenList.prototype.replace,
-  DOMTokenList_value: Object.getOwnPropertyDescriptor(window.DOMTokenList.prototype, 'value'),
-  Attr_value: Object.getOwnPropertyDescriptor(window.Attr.prototype, 'value'),
-  // NOTE: Chrome doesn't match the DOM spec and adds the `nodeValue` and
-  // `textContent` setters to `Attr` in addition to `Node`. To work around this
-  // and to prevent overhead in other cases that don't affect custom elements
-  // these setters are only implemented on the prototypes for which they have
-  // observable effects.
-  Attr_nodeValue:
-    Object.getOwnPropertyDescriptor(window.Attr.prototype, 'nodeValue') ||
-    Object.getOwnPropertyDescriptor(window.Node.prototype, 'nodeValue'),
-  Attr_textContent:
-    Object.getOwnPropertyDescriptor(window.Attr.prototype, 'textContent') ||
-    Object.getOwnPropertyDescriptor(window.Node.prototype, 'textContent'),
-  NamedNodeMap_setNamedItem: window.NamedNodeMap.prototype.setNamedItem,
-  NamedNodeMap_setNamedItemNS: window.NamedNodeMap.prototype['setNamedItemNS'],
-  NamedNodeMap_removeNamedItem: window.NamedNodeMap.prototype.removeNamedItem,
-  NamedNodeMap_removeNamedItemNS: window.NamedNodeMap.prototype['removeNamedItemNS'],
 };

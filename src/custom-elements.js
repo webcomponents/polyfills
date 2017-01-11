@@ -16,9 +16,6 @@ import PatchHTMLElement from './Patch/HTMLElement';
 import PatchDocument from './Patch/Document';
 import PatchNode from './Patch/Node';
 import PatchElement from './Patch/Element';
-import PatchDOMTokenList from './Patch/DOMTokenList';
-import PatchAttr from './Patch/Attr';
-import PatchNamedNodeMap from './Patch/NamedNodeMap';
 
 if (!window['customElements'] || window['customElements']['forcePolyfill']) {
   /** @type {!CustomElementInternals} */
@@ -28,9 +25,6 @@ if (!window['customElements'] || window['customElements']['forcePolyfill']) {
   PatchDocument(internals);
   PatchNode(internals);
   PatchElement(internals);
-  PatchDOMTokenList(internals);
-  PatchAttr(internals);
-  PatchNamedNodeMap(internals);
 
   /** @type {!CustomElementRegistry} */
   const customElements = new CustomElementRegistry(internals);
