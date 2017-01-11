@@ -92,6 +92,7 @@ export default function(internals) {
      */
     function(deep) {
       const clone = Native.Node_cloneNode.call(this, deep);
+      internals.patchTree(clone);
       internals.upgradeTree(clone);
       return clone;
     });

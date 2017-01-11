@@ -20,7 +20,9 @@ export default function(internals) {
         return new (definition.constructor)();
       }
 
-      return Native.Document_createElement.call(this, localName);
+      const result = Native.Document_createElement.call(this, localName);
+      internals.patch(result);
+      return result;
     });
 
   Utilities.setPropertyUnchecked(Document.prototype, 'importNode',
@@ -32,6 +34,7 @@ export default function(internals) {
      */
     function(node, deep) {
       const clone = Native.Document_importNode.call(this, node, deep);
+      internals.patchTree(clone);
       internals.upgradeTree(clone);
       return clone;
     });
@@ -50,7 +53,9 @@ export default function(internals) {
         return this.createElement(localName);
       }
 
-      return Native.Document_createElementNS.call(this, namespace, localName);
+      const result = Native.Document_createElementNS.call(this, namespace, localName);
+      internals.patch(result);
+      return result;
     });
 
   PatchParentNode(internals, Document.prototype, {
