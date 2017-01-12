@@ -10,7 +10,6 @@
 
 import CustomElementInternals from './CustomElementInternals';
 import CustomElementRegistry from './CustomElementRegistry';
-import DocumentConstructionObserver from './DocumentConstructionObserver';
 
 import PatchHTMLElement from './Patch/HTMLElement';
 import PatchDocument from './Patch/Document';
@@ -28,13 +27,11 @@ if (!window['customElements'] || window['customElements']['forcePolyfill']) {
 
   /** @type {!CustomElementRegistry} */
   const customElements = new CustomElementRegistry(internals);
+  customElements.polyfillAddDocument(document);
 
   Object.defineProperty(window, 'customElements', {
     configurable: true,
     enumerable: true,
     value: customElements,
   });
-
-  /** @type {!DocumentConstructionObserver} */
-  const constructionObserver = new DocumentConstructionObserver(internals, document);
 }
