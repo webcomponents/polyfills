@@ -46,6 +46,27 @@ export function walkDeepDescendantElements(root, callback) {
   do {
     const element = /** @type {!Element} */ (walker.currentNode);
     callback(element);
+
+    // Ignore descendants of link elements to prevent attempting to traverse
+    // elements created by the HTML Imports polyfill. When upgrading a tree,
+    // `CustomElementInternals#upgradeTree` by walks the `import` property of
+    // import links, which will point to either the true imported document
+    // (native) or the descendant containing the elements created to emulate the
+    // imported document (polyfill).
+    if (element.localName === 'link') {
+      let context = element;
+      let next = context.nextElementSibling;
+      while (!next && context !== root) {
+        context = context.parentNode;
+        next = context.nextElementSibling;
+      }
+
+      if (!next || context === root) return;
+
+      walker.currentNode = next;
+      continue;
+    }
+
     const shadowRoot = element[CustomElementInternalSymbols.shadowRoot];
     if (shadowRoot) {
       const children = shadowRoot.children;
