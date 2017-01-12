@@ -16,11 +16,13 @@ export default class CustomElementRegistry {
     this._elementDefinitionIsRunning = false;
 
     /**
+     * @private
      * @type {!CustomElementInternals}
      */
     this._internals = internals;
 
     /**
+     * @private
      * @type {!Map<string, !Deferred<undefined>>}
      */
     this._whenDefinedDeferred = new Map();
