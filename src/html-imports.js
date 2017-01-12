@@ -661,10 +661,10 @@
       content.innerHTML = resource;
     }
 
-    // Support <base> in imported docs. Get its href and remove it from the parent.
+    // Support <base> in imported docs. Resolve url and remove it from the parent.
     const baseEl = /** @type {HTMLBaseElement} */ (content.querySelector('base'));
     if (baseEl) {
-      url = baseEl.href;
+      url = Path._resolveUrl(baseEl.getAttribute('href'), url);
       baseEl.parentNode.removeChild(baseEl);
     }
     // TODO(sorvell): this is specific to users of <dom-module> (Polymer).
