@@ -660,6 +660,13 @@
     if (resource) {
       content.innerHTML = resource;
     }
+
+    // Support <base> in imported docs. Get its href and remove it from the parent.
+    const baseEl = /** @type {HTMLBaseElement} */ (content.querySelector('base'));
+    if (baseEl) {
+      url = baseEl.href;
+      baseEl.parentNode.removeChild(baseEl);
+    }
     // TODO(sorvell): this is specific to users of <dom-module> (Polymer).
     fixDomModules(content, url);
     fixUrls(content, url);
