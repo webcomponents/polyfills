@@ -76,3 +76,16 @@ export function walkDeepDescendantElements(root, callback) {
     }
   } while (walker.nextNode());
 }
+
+/**
+ * Used to suppress Closure's "Modifying the prototype is only allowed if the
+ * constructor is in the same scope" warning without using
+ * `@suppress {newCheckTypes, duplicate}` because `newCheckTypes` is too broad.
+ *
+ * @param {!Object} destination
+ * @param {string} name
+ * @param {*} value
+ */
+export function setPropertyUnchecked(destination, name, value) {
+  destination[name] = value;
+}
