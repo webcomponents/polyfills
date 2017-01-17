@@ -10,11 +10,11 @@ import PatchChildNode from './Interface/ChildNode';
  * @param {!CustomElementInternals} internals
  */
 export default function(internals) {
-  /**
-   * @param {!{mode: string}} init
-   * @return {ShadowRoot}
-   */
   if (Native.Element_attachShadow) {
+    /**
+     * @param {!{mode: string}} init
+     * @return {ShadowRoot}
+     */
     Element.prototype['attachShadow'] = function(init) {
       const shadowRoot = Native.Element_attachShadow.call(this, init);
       this[CESymbols.shadowRoot] = shadowRoot;
