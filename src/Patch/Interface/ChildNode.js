@@ -9,12 +9,12 @@ import * as Utilities from '../../Utilities';
  *   remove: !function(),
  * }}
  */
-let ChildNodeBuiltIns;
+let ChildNodeNativeMethods;
 
 /**
  * @param {!CustomElementInternals} internals
  * @param {!Object} destination
- * @param {!ChildNodeBuiltIns} builtIn
+ * @param {!ChildNodeNativeMethods} builtIn
  */
 export default function(internals, destination, builtIn) {
   /**

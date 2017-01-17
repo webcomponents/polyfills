@@ -1,4 +1,4 @@
-import BuiltIn from './BuiltIn';
+import Native from './Native';
 import CustomElementInternals from '../CustomElementInternals';
 
 import PatchParentNode from './Interface/ParentNode';
@@ -18,7 +18,7 @@ export default function(internals) {
       return new (definition.constructor)();
     }
 
-    return BuiltIn.Document_createElement.call(this, localName);
+    return Native.Document_createElement.call(this, localName);
   };
 
   /**
@@ -28,7 +28,7 @@ export default function(internals) {
    * @suppress {duplicate}
    */
   Document.prototype.importNode = function(node, deep) {
-    const clone = BuiltIn.Document_importNode.call(this, node, deep);
+    const clone = Native.Document_importNode.call(this, node, deep);
     internals.upgradeTree(clone);
     return clone;
   };
@@ -46,11 +46,11 @@ export default function(internals) {
       return this.createElement(localName);
     }
 
-    return BuiltIn.Document_createElementNS.call(this, namespace, localName);
+    return Native.Document_createElementNS.call(this, namespace, localName);
   };
 
   PatchParentNode(internals, Document.prototype, {
-    prepend: BuiltIn.Document_prepend,
-    append: BuiltIn.Document_append,
+    prepend: Native.Document_prepend,
+    append: Native.Document_append,
   });
 };

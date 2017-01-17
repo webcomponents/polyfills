@@ -1,4 +1,4 @@
-import BuiltIn from './BuiltIn';
+import Native from './Native';
 import CustomElementInternals from '../CustomElementInternals';
 import * as CESymbols from '../CustomElementInternalSymbols';
 import CEState from '../CustomElementState';
@@ -27,7 +27,7 @@ export default function(internals) {
       const constructionStack = definition.constructionStack;
 
       if (constructionStack.length === 0) {
-        const self = BuiltIn.Document_createElement.call(document, definition.localName);
+        const self = Native.Document_createElement.call(document, definition.localName);
         Object.setPrototypeOf(self, constructor.prototype);
         self[CESymbols.state] = CEState.custom;
         self[CESymbols.definition] = definition;
@@ -46,7 +46,7 @@ export default function(internals) {
       return element;
     }
 
-    HTMLElement.prototype = BuiltIn.HTMLElement.prototype;
+    HTMLElement.prototype = Native.HTMLElement.prototype;
 
     return HTMLElement;
   })();

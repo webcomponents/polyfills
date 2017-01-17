@@ -7,12 +7,12 @@ import * as Utilities from '../../Utilities';
   *  append: !function(...(!Node|string)),
  * }}
  */
-let ParentNodeBuiltIns;
+let ParentNodeNativeMethods;
 
 /**
  * @param {!CustomElementInternals} internals
  * @param {!Object} destination
- * @param {!ParentNodeBuiltIns} builtIn
+ * @param {!ParentNodeNativeMethods} builtIn
  */
 export default function(internals, destination, builtIn) {
   /**

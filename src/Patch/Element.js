@@ -1,4 +1,4 @@
-import BuiltIn from './BuiltIn';
+import Native from './Native';
 import CustomElementInternals from '../CustomElementInternals';
 import * as CESymbols from '../CustomElementInternalSymbols';
 import * as Utilities from '../Utilities';
@@ -14,9 +14,9 @@ export default function(internals) {
    * @param {!{mode: string}} init
    * @return {ShadowRoot}
    */
-  if (BuiltIn.Element_attachShadow) {
+  if (Native.Element_attachShadow) {
     Element.prototype['attachShadow'] = function(init) {
-      const shadowRoot = BuiltIn.Element_attachShadow.call(this, init);
+      const shadowRoot = Native.Element_attachShadow.call(this, init);
       this[CESymbols.shadowRoot] = shadowRoot;
       return shadowRoot;
     };
@@ -25,13 +25,13 @@ export default function(internals) {
   }
 
   // TODO: Patch instances in browsers without an `Element#innerHTML` descriptor (Early Chrome, IE).
-  if (BuiltIn.Element_innerHTML) {
+  if (Native.Element_innerHTML) {
     Object.defineProperty(Element.prototype, 'innerHTML', {
-      enumerable: BuiltIn.Element_innerHTML.enumerable,
+      enumerable: Native.Element_innerHTML.enumerable,
       configurable: true,
-      get: BuiltIn.Element_innerHTML.get,
+      get: Native.Element_innerHTML.get,
       set: function(htmlString) {
-        BuiltIn.Element_innerHTML.set.call(this, htmlString);
+        Native.Element_innerHTML.set.call(this, htmlString);
         internals.upgradeTree(this);
         return htmlString;
       },
@@ -46,9 +46,9 @@ export default function(internals) {
    * @suppress {duplicate}
    */
   Element.prototype.setAttribute = function(name, newValue) {
-    const oldValue = BuiltIn.Element_getAttribute.call(this, name);
-    BuiltIn.Element_setAttribute.call(this, name, newValue);
-    newValue = BuiltIn.Element_getAttribute.call(this, name);
+    const oldValue = Native.Element_getAttribute.call(this, name);
+    Native.Element_setAttribute.call(this, name, newValue);
+    newValue = Native.Element_getAttribute.call(this, name);
     if (oldValue !== newValue) {
       internals.attributeChangedCallback(this, name, oldValue, newValue, null);
     }
@@ -61,9 +61,9 @@ export default function(internals) {
    * @suppress {duplicate}
    */
   Element.prototype.setAttributeNS = function(namespace, name, newValue) {
-    const oldValue = BuiltIn.Element_getAttributeNS.call(this, namespace, name);
-    BuiltIn.Element_setAttributeNS.call(this, namespace, name, newValue);
-    newValue = BuiltIn.Element_getAttributeNS.call(this, namespace, name);
+    const oldValue = Native.Element_getAttributeNS.call(this, namespace, name);
+    Native.Element_setAttributeNS.call(this, namespace, name, newValue);
+    newValue = Native.Element_getAttributeNS.call(this, namespace, name);
     if (oldValue !== newValue) {
       internals.attributeChangedCallback(this, name, oldValue, newValue, namespace);
     }
@@ -74,8 +74,8 @@ export default function(internals) {
    * @suppress {duplicate}
    */
   Element.prototype.removeAttribute = function(name) {
-    const oldValue = BuiltIn.Element_getAttribute.call(this, name);
-    BuiltIn.Element_removeAttribute.call(this, name);
+    const oldValue = Native.Element_getAttribute.call(this, name);
+    Native.Element_removeAttribute.call(this, name);
     if (oldValue !== null) {
       internals.attributeChangedCallback(this, name, oldValue, null, null);
     }
@@ -87,8 +87,8 @@ export default function(internals) {
    * @suppress {duplicate}
    */
   Element.prototype.removeAttributeNS = function(namespace, name) {
-    const oldValue = BuiltIn.Element_getAttributeNS.call(this, namespace, name);
-    BuiltIn.Element_removeAttributeNS.call(this, namespace, name);
+    const oldValue = Native.Element_getAttributeNS.call(this, namespace, name);
+    Native.Element_removeAttributeNS.call(this, namespace, name);
     if (oldValue !== null) {
       internals.attributeChangedCallback(this, name, oldValue, null, namespace);
     }
@@ -102,7 +102,7 @@ export default function(internals) {
   Element.prototype['insertAdjacentElement'] = function(where, element) {
     const wasConnected = Utilities.isConnected(element);
     const insertedElement = /** @type {!Element} */
-      (BuiltIn.Element_insertAdjacentElement.call(this, where, element));
+      (Native.Element_insertAdjacentElement.call(this, where, element));
 
     if (wasConnected) {
       internals.disconnectTree(element);
@@ -115,14 +115,14 @@ export default function(internals) {
   };
 
   PatchParentNode(internals, Element.prototype, {
-    prepend: BuiltIn.Element_prepend,
-    append: BuiltIn.Element_append,
+    prepend: Native.Element_prepend,
+    append: Native.Element_append,
   });
 
   PatchChildNode(internals, Element.prototype, {
-    before: BuiltIn.Element_before,
-    after: BuiltIn.Element_after,
-    replaceWith: BuiltIn.Element_replaceWith,
-    remove: BuiltIn.Element_remove,
+    before: Native.Element_before,
+    after: Native.Element_after,
+    replaceWith: Native.Element_replaceWith,
+    remove: Native.Element_remove,
   });
 };
