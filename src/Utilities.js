@@ -64,6 +64,7 @@ export function walkDeepDescendantElements(root, callback) {
       if (!next || context === root) return;
 
       walker.currentNode = next;
+      walker.previousNode();
       continue;
     }
 
