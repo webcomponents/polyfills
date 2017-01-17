@@ -2,9 +2,7 @@ import BuiltIn from './BuiltIn';
 import CustomElementInternals from '../CustomElementInternals';
 import * as CESymbols from '../CustomElementInternalSymbols';
 import CEState from '../CustomElementState';
-import {
-  AlreadyConstructedMarker,
-} from '../CustomElementDefinition';
+import AlreadyConstructedMarker from '../AlreadyConstructedMarker';
 
 /**
  * @param {!CustomElementInternals} internals

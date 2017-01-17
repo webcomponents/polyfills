@@ -1,7 +1,5 @@
-import {
-  AlreadyConstructedMarker,
-  CustomElementDefinition,
-} from './CustomElementDefinition';
+import AlreadyConstructedMarker from './AlreadyConstructedMarker';
+import CustomElementDefinition from './CustomElementDefinition';
 import * as Utilities from './Utilities';
 import * as CESymbols from './CustomElementInternalSymbols';
 import CEState from './CustomElementState';

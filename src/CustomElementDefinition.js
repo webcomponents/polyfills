@@ -1,5 +1,3 @@
-export const AlreadyConstructedMarker = {"AlreadyConstructedMarker": true};
-
 /**
  * @typedef {{
  *  localName: string,
