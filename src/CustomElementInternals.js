@@ -4,8 +4,7 @@ import {
 } from './CustomElementDefinition';
 import * as Utilities from './Utilities';
 import * as CustomElementInternalSymbols from './CustomElementInternalSymbols';
-/** @type {CustomElementInternalSymbols.CustomElementState} */
-const CustomElementState = CustomElementInternalSymbols.CustomElementState;
+import CustomElementState from './CustomElementState';
 
 export default class CustomElementInternals {
   constructor() {
