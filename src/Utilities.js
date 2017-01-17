@@ -1,4 +1,4 @@
-import * as CustomElementInternalSymbols from './CustomElementInternalSymbols';
+import * as CESymbols from './CustomElementInternalSymbols';
 
 const reservedTagList = new Set([
   'annotation-xml',
@@ -67,7 +67,7 @@ export function walkDeepDescendantElements(root, callback) {
       continue;
     }
 
-    const shadowRoot = element[CustomElementInternalSymbols.shadowRoot];
+    const shadowRoot = element[CESymbols.shadowRoot];
     if (shadowRoot) {
       const children = shadowRoot.children;
       for (var i = 0; i < children.length; i++) {

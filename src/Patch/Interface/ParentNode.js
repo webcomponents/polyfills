@@ -3,8 +3,8 @@ import * as Utilities from '../../Utilities';
 
 /**
  * @typedef {{
- *  prepend: !function(...(!Node|string)),
- *  append: !function(...(!Node|string)),
+ *   prepend: !function(...(!Node|string)),
+  *  append: !function(...(!Node|string)),
  * }}
  */
 let ParentNodeBuiltIns;

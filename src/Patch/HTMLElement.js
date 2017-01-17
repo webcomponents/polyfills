@@ -1,7 +1,7 @@
 import BuiltIn from './BuiltIn';
 import CustomElementInternals from '../CustomElementInternals';
-import * as CustomElementInternalSymbols from '../CustomElementInternalSymbols';
-import CustomElementState from '../CustomElementState';
+import * as CESymbols from '../CustomElementInternalSymbols';
+import CEState from '../CustomElementState';
 import {
   AlreadyConstructedMarker,
 } from '../CustomElementDefinition';
@@ -31,8 +31,8 @@ export default function(internals) {
       if (constructionStack.length === 0) {
         const self = BuiltIn.Document_createElement.call(document, definition.localName);
         Object.setPrototypeOf(self, constructor.prototype);
-        self[CustomElementInternalSymbols.state] = CustomElementState.custom;
-        self[CustomElementInternalSymbols.definition] = definition;
+        self[CESymbols.state] = CEState.custom;
+        self[CESymbols.definition] = definition;
         return self;
       }
 

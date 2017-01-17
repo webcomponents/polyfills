@@ -1,7 +1,6 @@
 import BuiltIn from './BuiltIn';
 import CustomElementInternals from '../CustomElementInternals';
-import * as CustomElementInternalSymbols from '../CustomElementInternalSymbols';
-import CustomElementState from '../CustomElementState';
+import * as CESymbols from '../CustomElementInternalSymbols';
 import * as Utilities from '../Utilities';
 
 import PatchParentNode from './Interface/ParentNode';
@@ -18,7 +17,7 @@ export default function(internals) {
   if (BuiltIn.Element_attachShadow) {
     Element.prototype['attachShadow'] = function(init) {
       const shadowRoot = BuiltIn.Element_attachShadow.call(this, init);
-      this[CustomElementInternalSymbols.shadowRoot] = shadowRoot;
+      this[CESymbols.shadowRoot] = shadowRoot;
       return shadowRoot;
     };
   } else {

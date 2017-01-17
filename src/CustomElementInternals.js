@@ -3,8 +3,8 @@ import {
   CustomElementDefinition,
 } from './CustomElementDefinition';
 import * as Utilities from './Utilities';
-import * as CustomElementInternalSymbols from './CustomElementInternalSymbols';
-import CustomElementState from './CustomElementState';
+import * as CESymbols from './CustomElementInternalSymbols';
+import CEState from './CustomElementState';
 
 export default class CustomElementInternals {
   constructor() {
@@ -50,7 +50,7 @@ export default class CustomElementInternals {
 
     for (let i = 0; i < elements.length; i++) {
       const element = elements[i];
-      if (element[CustomElementInternalSymbols.state] === CustomElementState.custom) {
+      if (element[CESymbols.state] === CEState.custom) {
         this.connectedCallback(element);
       } else {
         this.upgradeElement(element);
@@ -68,7 +68,7 @@ export default class CustomElementInternals {
 
     for (let i = 0; i < elements.length; i++) {
       const element = elements[i];
-      if (element[CustomElementInternalSymbols.state] === CustomElementState.custom) {
+      if (element[CESymbols.state] === CEState.custom) {
         this.disconnectedCallback(element);
       }
     }
@@ -158,8 +158,8 @@ export default class CustomElementInternals {
           element.addEventListener('load', () => {
             const doc = element.import;
 
-            if (doc[CustomElementInternalSymbols.documentLoadHandled]) return;
-            doc[CustomElementInternalSymbols.documentLoadHandled] = true;
+            if (doc[CESymbols.documentLoadHandled]) return;
+            doc[CESymbols.documentLoadHandled] = true;
 
             this.upgradeTree(document);
           });
@@ -181,8 +181,8 @@ export default class CustomElementInternals {
    */
   upgradeElement(element) {
     if (
-      element[CustomElementInternalSymbols.state] === CustomElementState.custom ||
-      element[CustomElementInternalSymbols.state] === CustomElementState.failed
+      element[CESymbols.state] === CEState.custom ||
+      element[CESymbols.state] === CEState.failed
     ) return;
 
     const definition = this.localNameToDefinition(element.localName);
@@ -201,12 +201,12 @@ export default class CustomElementInternals {
         definition.constructionStack.pop();
       }
     } catch (e) {
-      element[CustomElementInternalSymbols.state] = CustomElementState.failed;
+      element[CESymbols.state] = CEState.failed;
       throw e;
     }
 
-    element[CustomElementInternalSymbols.state] = CustomElementState.custom;
-    element[CustomElementInternalSymbols.definition] = definition;
+    element[CESymbols.state] = CEState.custom;
+    element[CESymbols.definition] = definition;
 
     if (definition.attributeChangedCallback) {
       const observedAttributes = definition.observedAttributes;
@@ -228,8 +228,8 @@ export default class CustomElementInternals {
    * @param {!Element} element
    */
   connectedCallback(element) {
-    if (element[CustomElementInternalSymbols.state] === CustomElementState.custom) {
-      const definition = element[CustomElementInternalSymbols.definition];
+    if (element[CESymbols.state] === CEState.custom) {
+      const definition = element[CESymbols.definition];
       if (definition && definition.connectedCallback) {
         definition.connectedCallback.call(element);
       }
@@ -240,8 +240,8 @@ export default class CustomElementInternals {
    * @param {!Element} element
    */
   disconnectedCallback(element) {
-    if (element[CustomElementInternalSymbols.state] === CustomElementState.custom) {
-      const definition = element[CustomElementInternalSymbols.definition];
+    if (element[CESymbols.state] === CEState.custom) {
+      const definition = element[CESymbols.definition];
       if (definition && definition.disconnectedCallback) {
         definition.disconnectedCallback.call(element);
       }
@@ -256,8 +256,8 @@ export default class CustomElementInternals {
    * @param {?string} namespace
    */
   attributeChangedCallback(element, name, oldValue, newValue, namespace) {
-    if (element[CustomElementInternalSymbols.state] === CustomElementState.custom) {
-      const definition = element[CustomElementInternalSymbols.definition];
+    if (element[CESymbols.state] === CEState.custom) {
+      const definition = element[CESymbols.definition];
       if (
         definition &&
         definition.attributeChangedCallback &&
