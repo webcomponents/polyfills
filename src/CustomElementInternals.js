@@ -45,24 +45,34 @@ export default class CustomElementInternals {
    * @param {!Node} root
    */
   connectTree(root) {
-    Utilities.walkDeepDescendantElements(root, element => {
+    const elements = [];
+
+    Utilities.walkDeepDescendantElements(root, element => elements.push(element));
+
+    for (let i = 0; i < elements.length; i++) {
+      const element = elements[i];
       if (element[CustomElementInternalSymbols.state] === CustomElementState.custom) {
         this.connectedCallback(element);
       } else {
         this.upgradeElement(element);
       }
-    });
+    }
   }
 
   /**
    * @param {!Node} root
    */
   disconnectTree(root) {
-    Utilities.walkDeepDescendantElements(root, element => {
+    const elements = [];
+
+    Utilities.walkDeepDescendantElements(root, element => elements.push(element));
+
+    for (let i = 0; i < elements.length; i++) {
+      const element = elements[i];
       if (element[CustomElementInternalSymbols.state] === CustomElementState.custom) {
         this.disconnectedCallback(element);
       }
-    });
+    }
   }
 
   /**
@@ -126,9 +136,45 @@ export default class CustomElementInternals {
    *     Reactions in the popped stack are invoked.)
    *
    * @param {!Node} root
+   * @param {!Set<Node>=} visitedImports
    */
-  upgradeTree(root) {
-    Utilities.walkDeepDescendantElements(root, element => this.upgradeElement(element));
+  upgradeTree(root, visitedImports) {
+    if (!visitedImports) {
+      visitedImports = new Set();
+    }
+
+    const elements = [];
+
+    const gatherElements = element => {
+      if (element.localName === 'link' && element.getAttribute('rel') === 'import') {
+        if (visitedImports.has(element)) return;
+
+        visitedImports.add(element);
+
+        // The HTML Imports polyfill sets a descendant element of the link to
+        // the `import` property, specifically this is *not* a Document.
+        if (element.import instanceof Node) {
+          Utilities.walkDeepDescendantElements(element.import, gatherElements);
+        } else {
+          element.addEventListener('load', () => {
+            const doc = element.import;
+
+            if (doc[CustomElementInternalSymbols.documentLoadHandled]) return;
+            doc[CustomElementInternalSymbols.documentLoadHandled] = true;
+
+            this.upgradeTree(document);
+          });
+        }
+      } else {
+        elements.push(element);
+      }
+    };
+
+    Utilities.walkDeepDescendantElements(root, gatherElements);
+
+    for (var i = 0; i < elements.length; i++) {
+      this.upgradeElement(elements[i]);
+    }
   }
 
   /**
