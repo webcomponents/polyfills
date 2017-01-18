@@ -414,11 +414,16 @@
       // Support <base> in imported docs. Resolve url and remove it from the parent.
       const baseEl = /** @type {HTMLBaseElement} */ (content.querySelector('base'));
       if (baseEl) {
-        url = Path._resolveUrl(baseEl.getAttribute('href'), url);
+        url = Path.replaceAttrUrl(baseEl.getAttribute('href'), url);
         baseEl.parentNode.removeChild(baseEl);
       }
-      // TODO(sorvell): this is specific to users of <dom-module> (Polymer).
-      fixDomModules(content, url);
+      // This is specific to users of <dom-module> (Polymer).
+      // TODO(valdrin) remove this when importForElement is exposed.
+      const s$ = content.querySelectorAll('dom-module');
+      for (let i = 0, s; i < s$.length && (s = s$[i]); i++) {
+        s.setAttribute('assetpath',
+          Path.replaceAttrUrl(s.getAttribute('assetpath') || '', url));
+      }
 
       const n$ = content.querySelectorAll(importsSelectors);
       for (let i = 0, l = n$.length, n; i < l && (n = n$[i]); i++) {
@@ -522,15 +527,6 @@
   /********************* vulcanize style inline processing  *********************/
 
   const scriptType = 'import-script';
-
-  function fixDomModules(element, url) {
-    const s$ = element.querySelectorAll('dom-module');
-    for (let i = 0; i < s$.length; i++) {
-      const o = s$[i];
-      const assetpath = o.getAttribute('assetpath') || '';
-      o.setAttribute('assetpath', Path.replaceAttrUrl(assetpath, url));
-    }
-  }
 
   /**
    * Replaces all the imported scripts with a clone in order to execute them.
