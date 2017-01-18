@@ -23,7 +23,7 @@
     };
   </script>
   <script src="../../web-component-tester/browser.js"></script>
-  <link rel="import" href="html/imports/base-1.html">
+  <link id="base1" rel="import" href="html/imports/base-1.html">
 </head>
 
 <body>
@@ -32,7 +32,7 @@
       assert.equal(document.querySelectorAll('base').length, 1);
 
       // First import of base-1.html, which is base-2.html
-      var link = document.querySelector('link[rel=import] link[rel=import]');
+      var link = base1.import.querySelector('link[rel=import]');
       // path to base-2.html
       var url = window.location.href.replace('base/imports-with-base.html',
         'imports/base/base-2.html');
