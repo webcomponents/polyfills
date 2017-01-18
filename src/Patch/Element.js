@@ -34,6 +34,7 @@ export default function(internals) {
       get: Native.Element_innerHTML.get,
       set: function(htmlString) {
         Native.Element_innerHTML.set.call(this, htmlString);
+        internals.patchTree(this);
         internals.upgradeTree(this);
         return htmlString;
       },

@@ -4,3 +4,4 @@ export const state = '_CE_state_' + randomString;
 export const definition = '_CE_definition_' + randomString;
 export const shadowRoot = '_CE_shadowRoot_' + randomString;
 export const documentLoadHandled = '_CE_documentLoadHandled_' + randomString;
+export const patched = '_CE_patched_' + randomString;

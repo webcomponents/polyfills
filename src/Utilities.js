@@ -79,6 +79,31 @@ export function walkDeepDescendantElements(root, callback) {
 }
 
 /**
+ * @param {!Node} root
+ * @param {!function(!Node)} callback
+ */
+export function walkDeepDescendants(root, callback) {
+  // IE throws on `walker.nextNode()` if the root given to TreeWalker is a text node.
+  if (root.nodeType === Node.TEXT_NODE) {
+    callback(root);
+    return;
+  }
+
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_ALL, null, false);
+  do {
+    const node = walker.currentNode;
+    callback(node);
+    const shadowRoot = node[CESymbols.shadowRoot];
+    if (shadowRoot) {
+      const children = shadowRoot.children;
+      for (var i = 0; i < children.length; i++) {
+        walkDeepDescendants(children[i], callback);
+      }
+    }
+  } while (walker.nextNode());
+}
+
+/**
  * Used to suppress Closure's "Modifying the prototype is only allowed if the
  * constructor is in the same scope" warning without using
  * `@suppress {newCheckTypes, duplicate}` because `newCheckTypes` is too broad.

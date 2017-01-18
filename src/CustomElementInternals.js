@@ -11,6 +11,9 @@ export default class CustomElementInternals {
 
     /** @type {!Map<!Function, !CustomElementDefinition>} */
     this._constructorToDefinition = new Map();
+
+    /** @type {!Array<!function(!Node)>} */
+    this._patches = [];
   }
 
   /**
@@ -36,6 +39,32 @@ export default class CustomElementInternals {
    */
   constructorToDefinition(constructor) {
     return this._constructorToDefinition.get(constructor);
+  }
+
+  /**
+   * @param {!function(!Node)} listener
+   */
+  addPatch(listener) {
+    this._patches.push(listener);
+  }
+
+  /**
+   * @param {!Node} node
+   */
+  patchTree(node) {
+    Utilities.walkDeepDescendants(node, node => this.patch(node));
+  }
+
+  /**
+   * @param {!Node} node
+   */
+  patch(node) {
+    if (node[CESymbols.patched]) return;
+    node[CESymbols.patched] = true;
+
+    for (let i = 0; i < this._patches.length; i++) {
+      this._patches[i](node);
+    }
   }
 
   /**

@@ -31,6 +31,7 @@ export default function(internals) {
         Object.setPrototypeOf(self, constructor.prototype);
         self[CESymbols.state] = CEState.custom;
         self[CESymbols.definition] = definition;
+        internals.patch(self);
         return self;
       }
 
@@ -42,6 +43,7 @@ export default function(internals) {
       constructionStack[lastIndex] = AlreadyConstructedMarker;
 
       Object.setPrototypeOf(element, constructor.prototype);
+      internals.patch(element);
 
       return element;
     }
