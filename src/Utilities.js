@@ -55,10 +55,10 @@ export function walkDeepDescendantElements(root, callback) {
     // imported document (polyfill).
     if (element.localName === 'link') {
       let context = element;
-      let next = context.nextElementSibling;
+      let next = context.nextSibling;
       while (!next && context !== root) {
         context = context.parentNode;
-        next = context.nextElementSibling;
+        next = context.nextSibling;
       }
 
       if (!next || context === root) return;
@@ -91,7 +91,7 @@ export function walkDeepDescendants(root, callback) {
 
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_ALL, null, false);
   do {
-    const node = walker.currentNode;
+    const node = /** @type {!Node} */ (walker.currentNode);
     callback(node);
     const shadowRoot = node[CESymbols.shadowRoot];
     if (shadowRoot) {
