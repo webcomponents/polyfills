@@ -26,6 +26,12 @@ export function isValidCustomElementName(localName) {
  * @param {!Node} node
  */
 export function isConnected(node) {
+  // Use `Node#isConnected`, if defined.
+  const nativeValue = node.isConnected;
+  if (nativeValue !== undefined) {
+    return nativeValue;
+  }
+
   while (node && !(node instanceof Document)) {
     node = node.parentNode || (node.nodeType === Node.DOCUMENT_FRAGMENT_NODE ? node.host : undefined);
   }

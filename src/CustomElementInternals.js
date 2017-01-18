@@ -206,10 +206,8 @@ export default class CustomElementInternals {
    * @param {!Element} element
    */
   upgradeElement(element) {
-    if (
-      element[CESymbols.state] === CEState.custom ||
-      element[CESymbols.state] === CEState.failed
-    ) return;
+    const currentState = element[CESymbols.state];
+    if (currentState !== undefined) return;
 
     const definition = this.localNameToDefinition(element.localName);
     if (!definition) return;
