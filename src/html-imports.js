@@ -382,17 +382,22 @@
      * @param {Array<MutationRecord>} mutations
      */
     _onMutation(mutations) {
+      const promises = [];
       for (let j = 0, m; j < mutations.length && (m = mutations[j]); j++) {
         for (let i = 0, l = m.addedNodes ? m.addedNodes.length : 0; i < l; i++) {
           const n = /** @type {Element} */ (m.addedNodes[i]);
           if (n && isImportLink(n)) {
-            if (useNative) {
-              whenElementLoaded(n);
-            } else {
+            promises.push(whenElementLoaded(n));
+            if (!useNative) {
               this._loader.addNode(n);
             }
           }
         }
+      }
+      if (promises.length) {
+        // Ensure we update isImporting.
+        isImporting = true;
+        Promise.all(promises).then(() => isImporting = false);
       }
     }
 
@@ -535,9 +540,7 @@
     const promises = [];
     for (let i = 0, l = s$.length, s; i < l && (s = s$[i]); i++) {
       // Catch failures, always return s
-      promises.push(
-        whenElementLoaded(s).catch(() => s)
-      );
+      promises.push(whenElementLoaded(s).catch(() => s));
     }
     return Promise.all(promises);
   }
@@ -687,6 +690,9 @@
 
   const isIE = /Trident/.test(navigator.userAgent);
   const isEdge = !isIE && /Edge\/\d./i.test(navigator.userAgent);
+  // Used to ensure synchronous callback execution in whenReady. Updated to true
+  // when new imports are found, and to false when all imports are done loading.
+  let isImporting = true;
 
   /**
    * Calls the callback when all HTMLImports in the document at call time
@@ -695,9 +701,15 @@
    * @return {Promise}
    */
   function whenReady(callback) {
+    // Ensure callback is executed synchronously if HTMLImports is ready.
+    if (!isImporting) {
+      callback && callback();
+      return Promise.resolve();
+    }
     // 1. ensure the document is in a ready state (has dom), then
     // 2. watch for loading of imports and call callback when done
     return whenDocumentReady(document).then(watchImportsLoad).then(() => {
+      isImporting = false;
       callback && callback();
     });
   }
