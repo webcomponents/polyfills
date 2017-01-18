@@ -10,6 +10,7 @@
 
 import CustomElementInternals from './CustomElementInternals';
 import CustomElementRegistry from './CustomElementRegistry';
+import DocumentConstructionObserver from './DocumentConstructionObserver';
 
 import PatchHTMLElement from './Patch/HTMLElement';
 import PatchDocument from './Patch/Document';
@@ -27,7 +28,19 @@ if (!window['customElements'] || window['customElements']['forcePolyfill']) {
 
   /** @type {!CustomElementRegistry} */
   const customElements = new CustomElementRegistry(internals);
-  customElements.polyfillAddDocument(document);
+
+  // If `customElements.documentReady` exists and is a Promise, prevent calls to
+  // define from causing upgrades until `documentReady` has resolved.
+  const documentReady = window['customElements']['documentReady'];
+  if (documentReady && documentReady.then instanceof Function) {
+    customElements.setUpgradeOnDefine(false);
+    documentReady.then(function() {
+      customElements.setUpgradeOnDefine(true);
+      internals.upgradeTree(document);
+    });
+  } else {
+    new DocumentConstructionObserver(internals, document);
+  }
 
   Object.defineProperty(window, 'customElements', {
     configurable: true,

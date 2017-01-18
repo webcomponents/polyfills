@@ -2,7 +2,6 @@ import CustomElementDefinition from './CustomElementDefinition';
 import CustomElementInternals from './CustomElementInternals';
 import Deferred from './Deferred';
 import * as Utilities from './Utilities';
-import DocumentConstructionObserver from './DocumentConstructionObserver';
 
 export default class CustomElementRegistry {
 
@@ -30,18 +29,9 @@ export default class CustomElementRegistry {
 
     /**
      * @private
-     * @type {!Array<!Document>}
+     * @type {boolean}
      */
-    this._documents = [];
-  }
-
-  /**
-   * @param {!Document} doc
-   */
-  polyfillAddDocument(doc) {
-    if (this._documents.indexOf(doc) !== -1) return;
-    this._documents.push(doc);
-    const constructionObserver = new DocumentConstructionObserver(this._internals, doc);
+    this._upgradeOnDefine = true;
   }
 
   /**
@@ -110,8 +100,8 @@ export default class CustomElementRegistry {
 
     this._internals.setDefinition(localName, definition);
 
-    for (let i = 0; i < this._documents.length; i++) {
-      this._internals.upgradeTree(this._documents[i]);
+    if (this._upgradeOnDefine) {
+      this._internals.upgradeTree(document);
     }
 
     const deferred = this._whenDefinedDeferred.get(localName);
@@ -157,6 +147,13 @@ export default class CustomElementRegistry {
 
     return deferred.toPromise();
   }
+
+  /**
+   * @param {boolean} upgradeOnDefine
+   */
+  setUpgradeOnDefine(upgradeOnDefine) {
+    this._upgradeOnDefine = upgradeOnDefine;
+  }
 }
 
 // Closure compiler exports.
@@ -164,4 +161,3 @@ window['CustomElementRegistry'] = CustomElementRegistry;
 CustomElementRegistry.prototype['define'] = CustomElementRegistry.prototype.define;
 CustomElementRegistry.prototype['get'] = CustomElementRegistry.prototype.get;
 CustomElementRegistry.prototype['whenDefined'] = CustomElementRegistry.prototype.whenDefined;
-CustomElementRegistry.prototype['polyfillAddDocument'] = CustomElementRegistry.prototype.polyfillAddDocument;
