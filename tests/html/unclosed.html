@@ -29,10 +29,10 @@
 
   <script>
     test('unclosed tag', function(done) {
-      HTMLImports.whenReady(function(detail) {
-        assert.equal(detail.allImports.length, 1);
-        assert.equal(detail.loadedImports.length, 1);
-        assert.equal(detail.errorImports.length, 0);
+      HTMLImports.whenReady(function() {
+        var links = document.querySelectorAll('link[rel=import]');
+        assert.equal(links.length, 1);
+        expect(links[0].import).to.be.ok;
         done();
       });
     });

@@ -691,17 +691,14 @@
   /**
    * Calls the callback when all HTMLImports in the document at call time
    * (or at least document ready) have loaded.
-   * @param {function(!HTMLImportInfo)=} callback
-   * @param {HTMLDocument=} doc
+   * @param {function()=} callback
    * @return {Promise}
    */
-  function whenReady(callback, doc) {
-    doc = doc || document;
+  function whenReady(callback) {
     // 1. ensure the document is in a ready state (has dom), then
     // 2. watch for loading of imports and call callback when done
-    return whenDocumentReady(doc).then(watchImportsLoad).then((importInfo) => {
-      callback && callback(importInfo);
-      return importInfo;
+    return whenDocumentReady(document).then(watchImportsLoad).then(() => {
+      callback && callback();
     });
   }
 
@@ -726,36 +723,23 @@
   }
 
   /**
-   * Resolved when all imports are done loading. The promise returns the import
-   * details as HTMLImportInfo object.
+   * Resolved when all imports are done loading.
    * @param {!HTMLDocument} doc
    * @returns {Promise}
    */
   function watchImportsLoad(doc) {
     let imports = doc.querySelectorAll(IMPORT_SELECTOR);
     const promises = [];
-    const importInfo = /** @type {!HTMLImportInfo} */ ({
-      allImports: [],
-      loadedImports: [],
-      errorImports: []
-    });
     for (let i = 0, l = imports.length, imp; i < l && (imp = imports[i]); i++) {
       // Skip nested imports.
       if (MATCHES.call(imp, `${IMPORT_SELECTOR} ${IMPORT_SELECTOR}`)) {
         continue;
       }
-      importInfo.allImports.push(imp);
-      promises.push(whenElementLoaded(imp).then((imp) => {
-        importInfo.loadedImports.push(imp);
-        return imp;
-      }).catch((imp) => {
-        importInfo.errorImports.push(imp);
-        // Capture failures, always return imp.
-        return imp;
-      }));
+      // Capture failures, always return imp.
+      promises.push(whenElementLoaded(imp).catch(() => imp));
     }
     // Return aggregated info.
-    return Promise.all(promises).then(() => importInfo);
+    return Promise.all(promises);
   }
 
   new Importer(document);
@@ -764,11 +748,11 @@
   // have loaded. This event is required to simulate the script blocking
   // behavior of native imports. A main document script that needs to be sure
   // imports have loaded should wait for this event.
-  whenReady((detail) =>
+  whenReady(() =>
     document.dispatchEvent(new CustomEvent('HTMLImportsLoaded', {
       cancelable: true,
       bubbles: true,
-      detail: detail
+      detail: undefined
     })));
 
   // exports
