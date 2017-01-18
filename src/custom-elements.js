@@ -17,7 +17,9 @@ import PatchDocument from './Patch/Document';
 import PatchNode from './Patch/Node';
 import PatchElement from './Patch/Element';
 
-if (!window['customElements'] || window['customElements']['forcePolyfill']) {
+const priorCustomElements = window['customElements'];
+
+if (!priorCustomElements || priorCustomElements['forcePolyfill']) {
   /** @type {!CustomElementInternals} */
   const internals = new CustomElementInternals();
 
@@ -31,13 +33,15 @@ if (!window['customElements'] || window['customElements']['forcePolyfill']) {
 
   // If `customElements.documentReady` exists and is a Promise, prevent calls to
   // define from causing upgrades until `documentReady` has resolved.
-  const documentReady = window['customElements']['documentReady'];
-  if (documentReady && documentReady.then instanceof Function) {
-    customElements.setUpgradeOnDefine(false);
-    documentReady.then(function() {
-      customElements.setUpgradeOnDefine(true);
-      internals.upgradeTree(document);
-    });
+  if (priorCustomElements) {
+    const documentReady = priorCustomElements['documentReady'];
+    if (documentReady && documentReady.then instanceof Function) {
+      customElements.setUpgradeOnDefine(false);
+      documentReady.then(function() {
+        customElements.setUpgradeOnDefine(true);
+        internals.upgradeTree(document);
+      });
+    }
   } else {
     new DocumentConstructionObserver(internals, document);
   }
