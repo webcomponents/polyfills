@@ -43,7 +43,7 @@ export default function(internals) {
       constructionStack[lastIndex] = AlreadyConstructedMarker;
 
       Object.setPrototypeOf(element, constructor.prototype);
-      internals.patch(element);
+      internals.patch(/** @type {!HTMLElement} */ (element));
 
       return element;
     }
