@@ -551,11 +551,7 @@
         currentScript = c;
         s.parentNode.replaceChild(c, s);
         // After is loaded, reset currentScript.
-        return whenLoadedPromise.then((script) => {
-          if (script === currentScript) {
-            currentScript = null;
-          }
-        });
+        return whenLoadedPromise.then(() => currentScript = null);
       });
     }
     return promise;
