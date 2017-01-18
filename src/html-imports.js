@@ -25,7 +25,8 @@
         return currentScript ||
           // NOTE: only works when called in synchronously executing code.
           // readyState should check if `loading` but IE10 is
-          // interactive when scripts run so we cheat.
+          // interactive when scripts run so we cheat. This is not needed by
+          // html-imports polyfill but helps generally polyfill `currentScript`.
           (document.readyState !== 'complete' ?
             document.scripts[document.scripts.length - 1] : null);
       },
@@ -42,6 +43,61 @@
   // path fixup: style elements in imports must be made relative to the main
   // document. We fixup url's in url() and @import.
   const Path = {
+
+    fixUrls: function(element, base) {
+      if (element.href) {
+        element.setAttribute('href',
+          Path.replaceAttrUrl(element.getAttribute('href'), base));
+      }
+      if (element.src) {
+        element.setAttribute('src',
+          Path.replaceAttrUrl(element.getAttribute('src'), base));
+      }
+      if (element.localName === 'style') {
+        Path.resolveUrlsInStyle(element, base);
+      } else if (element.localName === 'script' && element.textContent) {
+        element.textContent += `\n//# sourceURL=${base}`;
+      }
+    },
+
+    fixUrlAttributes: function(element, base) {
+      const attrs = ['action', 'src', 'href', 'url', 'style'];
+      for (let i = 0, a; i < attrs.length && (a = attrs[i]); i++) {
+        const at = element.attributes[a];
+        const v = at && at.value;
+        if (v && (v.search(/({{|\[\[)/) < 0)) {
+          at.value = (a === 'style') ?
+            Path.resolveUrlsInCssText(v, base) :
+            Path.replaceAttrUrl(v, base);
+        }
+      }
+    },
+
+    fixUrlsInTemplates: function(element, base) {
+      const t$ = element.querySelectorAll('template');
+      for (let i = 0; i < t$.length; i++) {
+        Path.fixUrlsInTemplate(t$[i], base);
+      }
+    },
+
+    fixUrlsInTemplate: function(template, base) {
+      const content = template.content;
+      if (!content) { // Template not supported.
+        return;
+      }
+      const n$ = content.querySelectorAll(
+        'style, form[action], [src], [href], [url], [style]');
+      for (let i = 0; i < n$.length; i++) {
+        const n = n$[i];
+        if (n.localName == 'style') {
+          Path.resolveUrlsInStyle(n, base);
+        } else {
+          Path.fixUrlAttributes(n, base);
+        }
+      }
+      Path.fixUrlsInTemplates(content, base);
+    },
+
     resolveUrlsInStyle: function(style, linkUrl) {
       style.textContent = Path.resolveUrlsInCssText(style.textContent, linkUrl);
     },
@@ -330,12 +386,54 @@
         this.documents[url] = null;
       } else {
         // Generate an HTMLDocument from data.
-        const doc = makeDocument(resource, redirectedUrl || url);
+        const doc = this._makeDocument(resource, redirectedUrl || url);
         // note, we cannot use MO to detect parsed nodes because
         // SD polyfill does not report these as mutations.
         this._loadSubtree(doc);
         this.documents[url] = doc;
       }
+    }
+
+    /**
+     * Creates a new document containing resource and normalizes urls accordingly.
+     * @param {string=} resource
+     * @param {string=} url
+     * @return {HTMLElement}
+     */
+    _makeDocument(resource, url) {
+      const content = /** @type {HTMLElement} */
+        (document.createElement('import-content'));
+      content.style.display = 'none';
+      if (url) {
+        content.setAttribute('import-href', url);
+      }
+      if (resource) {
+        content.innerHTML = resource;
+      }
+
+      // Support <base> in imported docs. Resolve url and remove it from the parent.
+      const baseEl = /** @type {HTMLBaseElement} */ (content.querySelector('base'));
+      if (baseEl) {
+        url = Path._resolveUrl(baseEl.getAttribute('href'), url);
+        baseEl.parentNode.removeChild(baseEl);
+      }
+      // TODO(sorvell): this is specific to users of <dom-module> (Polymer).
+      fixDomModules(content, url);
+
+      const n$ = content.querySelectorAll(importsSelectors);
+      for (let i = 0, l = n$.length, n; i < l && (n = n$[i]); i++) {
+        // Ensure we add load/error listeners before modifying urls or appending
+        // these to the main document.
+        whenElementLoaded(n);
+        Path.fixUrls(n, url);
+        if (n.localName === 'script') {
+          // NOTE: we override the type here, might need to keep track of original
+          // type and apply it to clone when running the script.
+          n.setAttribute('type', scriptType);
+        }
+      }
+      Path.fixUrlsInTemplates(content, url);
+      return content;
     }
 
     _onLoadedAll() {
@@ -422,71 +520,8 @@
   }
 
   /********************* vulcanize style inline processing  *********************/
-  const attrs = ['action', 'src', 'href', 'url', 'style'];
-
-  function fixUrlAttributes(element, base) {
-    attrs.forEach((a) => {
-      const at = element.attributes[a];
-      const v = at && at.value;
-      if (v && (v.search(/({{|\[\[)/) < 0)) {
-        at.value = (a === 'style') ?
-          Path.resolveUrlsInCssText(v, base) :
-          Path.replaceAttrUrl(v, base);
-      }
-    });
-  }
-
-  function fixUrlsInTemplate(template, base) {
-    const content = template.content;
-    if (!content) { // Template not supported.
-      return;
-    }
-    const n$ = content.querySelectorAll('style, form[action], [src], [href], [url], [style]');
-    for (let i = 0; i < n$.length; i++) {
-      const n = n$[i];
-      if (n.localName == 'style') {
-        Path.resolveUrlsInStyle(n, base);
-      } else {
-        fixUrlAttributes(n, base);
-      }
-    }
-    fixUrlsInTemplates(content, base);
-  }
-
-  function fixUrlsInTemplates(element, base) {
-    const t$ = element.querySelectorAll('template');
-    for (let i = 0; i < t$.length; i++) {
-      fixUrlsInTemplate(t$[i], base);
-    }
-  }
 
   const scriptType = 'import-script';
-
-  function fixUrls(element, base) {
-    const n$ = element.querySelectorAll(importsSelectors);
-    for (let i = 0, l = n$.length, n; i < l && (n = n$[i]); i++) {
-      // Ensure we add load/error listeners before modifying urls or appending
-      // these to the main document.
-      whenElementLoaded(n);
-      if (n.href) {
-        n.setAttribute('href', Path.replaceAttrUrl(n.getAttribute('href'), base));
-      }
-      if (n.src) {
-        n.setAttribute('src', Path.replaceAttrUrl(n.getAttribute('src'), base));
-      }
-      if (n.localName == 'style') {
-        Path.resolveUrlsInStyle(n, base);
-      } else if (n.localName === 'script') {
-        if (n.textContent) {
-          n.textContent += `\n//# sourceURL=${base}`;
-        }
-        // NOTE: we override the type here, might need to keep track of original
-        // type and apply it to clone when running the script.
-        n.setAttribute('type', scriptType);
-      }
-    }
-    fixUrlsInTemplates(element, base);
-  }
 
   function fixDomModules(element, url) {
     const s$ = element.querySelectorAll('dom-module');
@@ -553,6 +588,8 @@
   function cloneAndMoveStyles(importLink) {
     const n$ = importLink.import.querySelectorAll(stylesSelector);
     for (let i = 0, l = n$.length, n; i < l && (n = n$[i]); i++) {
+      // Cannot use `n.cloneNode(true)` as it won't work for link stylesheets
+      // with a parentNode https://gist.github.com/valdrinkoshi/4a92f97169a6fc41a1852f23211b8c4e
       const clone = document.createElement(n.localName);
       // Ensure we listen for load/error for this element.
       whenElementLoaded(clone);
@@ -645,35 +682,6 @@
       isLoaded = true;
     }
     return isLoaded;
-  }
-
-  /**
-   * Creates a new document containing resource and normalizes urls accordingly.
-   * @param {string=} resource
-   * @param {string=} url
-   * @return {HTMLElement}
-   */
-  function makeDocument(resource, url) {
-    const content = /** @type {HTMLElement} */
-      (document.createElement('import-content'));
-    content.style.display = 'none';
-    if (url) {
-      content.setAttribute('import-href', url);
-    }
-    if (resource) {
-      content.innerHTML = resource;
-    }
-
-    // Support <base> in imported docs. Resolve url and remove it from the parent.
-    const baseEl = /** @type {HTMLBaseElement} */ (content.querySelector('base'));
-    if (baseEl) {
-      url = Path._resolveUrl(baseEl.getAttribute('href'), url);
-      baseEl.parentNode.removeChild(baseEl);
-    }
-    // TODO(sorvell): this is specific to users of <dom-module> (Polymer).
-    fixDomModules(content, url);
-    fixUrls(content, url);
-    return content;
   }
 
   /**
