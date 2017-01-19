@@ -28,8 +28,8 @@ export default function(internals) {
       if (constructionStack.length === 0) {
         const self = Native.Document_createElement.call(document, definition.localName);
         Object.setPrototypeOf(self, constructor.prototype);
-        self['__CE_state'] = CEState.custom;
-        self['__CE_definition'] = definition;
+        self.__CE_state = CEState.custom;
+        self.__CE_definition = definition;
         internals.patch(self);
         return self;
       }

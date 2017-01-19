@@ -18,7 +18,7 @@ export default function(internals) {
        */
       function(init) {
         const shadowRoot = Native.Element_attachShadow.call(this, init);
-        this['__CE_shadowRoot'] = shadowRoot;
+        this.__CE_shadowRoot = shadowRoot;
         return shadowRoot;
       });
   } else {

@@ -72,7 +72,7 @@ export function walkDeepDescendantElements(root, callback) {
       continue;
     }
 
-    const shadowRoot = element['__CE_shadowRoot'];
+    const shadowRoot = element.__CE_shadowRoot;
     if (shadowRoot) {
       const children = shadowRoot.children;
       for (var i = 0; i < children.length; i++) {
@@ -97,7 +97,7 @@ export function walkDeepDescendants(root, callback) {
   do {
     const node = /** @type {!Node} */ (walker.currentNode);
     callback(node);
-    const shadowRoot = node['__CE_shadowRoot'];
+    const shadowRoot = node.__CE_shadowRoot;
     if (shadowRoot) {
       const children = shadowRoot.children;
       for (var i = 0; i < children.length; i++) {
