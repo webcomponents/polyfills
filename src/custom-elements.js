@@ -33,9 +33,9 @@ if (!priorCustomElements || priorCustomElements['forcePolyfill']) {
 
   // If `customElements.documentReady` exists and is a Promise, prevent calls to
   // define from causing upgrades until `documentReady` has resolved.
-  if (priorCustomElements) {
+  if (priorCustomElements && priorCustomElements['documentReady']) {
     const documentReady = priorCustomElements['documentReady'];
-    if (documentReady && documentReady.then instanceof Function) {
+    if (documentReady.then instanceof Function) {
       customElements.setUpgradeOnDefine(false);
       documentReady.then(function() {
         customElements.setUpgradeOnDefine(true);
