@@ -30,10 +30,10 @@ export function isConnected(node) {
     return nativeValue;
   }
 
-  while (node && !(node instanceof Document)) {
+  while (node && node !== document) {
     node = node.parentNode || (node.nodeType === Node.DOCUMENT_FRAGMENT_NODE ? node.host : undefined);
   }
-  return node instanceof Document;
+  return node === document;
 }
 
 /**
