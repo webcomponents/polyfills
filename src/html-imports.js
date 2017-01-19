@@ -443,10 +443,9 @@
 
     _onLoadedAll() {
       this._flatten(this._doc);
-      Promise.all([
-        runScripts(this._doc),
-        waitForStyles(this._doc)
-      ]).then(() => fireEvents(this._doc));
+      waitForStyles(this._doc)
+        .then(() => runScripts(this._doc))
+        .then(() => fireEvents(this._doc));
     }
 
     _flatten(element) {
@@ -540,15 +539,16 @@
     for (let i = 0, l = s$.length, s; i < l && (s = s$[i]); i++) {
       promise = promise.then(() => {
         const c = doc.createElement('script');
-        c.textContent = s.textContent;
-        if (s.src) {
-          c.setAttribute('src', s.getAttribute('src'));
-        }
         // Listen for load/error events before adding the clone to the document.
         // Catch failures, always return c.
         const whenLoadedPromise = whenElementLoaded(c).catch(() => c);
         // Update currentScript and replace original with clone script.
         currentScript = c;
+
+        c.textContent = s.textContent;
+        if (s.src) {
+          c.setAttribute('src', s.getAttribute('src'));
+        }
         s.parentNode.replaceChild(c, s);
         // After is loaded, reset currentScript.
         return whenLoadedPromise.then(() => currentScript = null);
@@ -670,8 +670,6 @@
           }
         }
       }
-    } else if (element.localName === 'script' && !element.src) {
-      isLoaded = true;
     }
     return isLoaded;
   }
