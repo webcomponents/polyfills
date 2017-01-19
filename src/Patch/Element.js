@@ -1,5 +1,6 @@
 import Native from './Native';
 import CustomElementInternals from '../CustomElementInternals';
+import CEState from '../CustomElementState';
 import * as Utilities from '../Utilities';
 
 import PatchParentNode from './Interface/ParentNode';
@@ -49,6 +50,11 @@ export default function(internals) {
      * @param {string} newValue
      */
     function(name, newValue) {
+      // Fast path for non-custom elements.
+      if (this.__CE_state !== CEState.custom) {
+        return Native.Element_setAttribute.call(this, name, newValue);
+      }
+
       const oldValue = Native.Element_getAttribute.call(this, name);
       Native.Element_setAttribute.call(this, name, newValue);
       newValue = Native.Element_getAttribute.call(this, name);
@@ -65,6 +71,11 @@ export default function(internals) {
      * @param {string} newValue
      */
     function(namespace, name, newValue) {
+      // Fast path for non-custom elements.
+      if (this.__CE_state !== CEState.custom) {
+        return Native.Element_setAttributeNS.call(this, namespace, name, newValue);
+      }
+
       const oldValue = Native.Element_getAttributeNS.call(this, namespace, name);
       Native.Element_setAttributeNS.call(this, namespace, name, newValue);
       newValue = Native.Element_getAttributeNS.call(this, namespace, name);
@@ -79,6 +90,11 @@ export default function(internals) {
      * @param {string} name
      */
     function(name) {
+      // Fast path for non-custom elements.
+      if (this.__CE_state !== CEState.custom) {
+        return Native.Element_removeAttribute.call(this, name);
+      }
+
       const oldValue = Native.Element_getAttribute.call(this, name);
       Native.Element_removeAttribute.call(this, name);
       if (oldValue !== null) {
@@ -93,6 +109,11 @@ export default function(internals) {
      * @param {string} name
      */
     function(namespace, name) {
+      // Fast path for non-custom elements.
+      if (this.__CE_state !== CEState.custom) {
+        return Native.Element_removeAttributeNS.call(this, namespace, name);
+      }
+
       const oldValue = Native.Element_getAttributeNS.call(this, namespace, name);
       Native.Element_removeAttributeNS.call(this, namespace, name);
       if (oldValue !== null) {
