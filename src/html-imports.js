@@ -374,7 +374,7 @@
         this._loader = new Loader(
           this._onLoaded.bind(this), this._onLoadedAll.bind(this)
         );
-        whenDocumentReady().then(() => this._loadSubtree(document));
+        whenDocumentReady(() => this._loadSubtree(document));
       }
     }
 
@@ -443,9 +443,9 @@
         whenElementLoaded(n);
         Path.fixUrls(n, url);
         if (n.localName === 'script') {
-          // NOTE: we override the type here, might need to keep track of original
-          // type and apply it to clone when running the script.
+          n.__originalType = n.getAttribute('type') || 'text/javascript';
           n.setAttribute('type', scriptType);
+
         }
       }
       Path.fixUrlsInTemplates(content, url);
@@ -453,8 +453,12 @@
     }
 
     _onLoadedAll() {
+      this._flatten();
+      // Scripts and styles are executed in parallel, so this doesn't guarantee
+      // styles are applied before scripts run. This is done to have a faster
+      // response; if this creates problems, consider putting in sequence
+      // waitForStyles -> runScripts -> fireEvents.
       Promise.all([
-        this._flatten(),
         this._waitForStyles(),
         this._runScripts()
       ]).then(() => this._fireEvents());
@@ -496,20 +500,26 @@
       let promise = Promise.resolve();
       for (let i = 0, l = s$.length, s; i < l && (s = s$[i]); i++) {
         promise = promise.then(() => {
-          const c = document.createElement('script');
-          // Listen for load/error events before adding the clone to the document.
-          // Catch failures, always return c.
-          const whenLoadedPromise = whenElementLoaded(c).catch(() => c);
-          // Update currentScript and replace original with clone script.
-          currentScript = c;
-
-          c.textContent = s.textContent;
-          if (s.src) {
-            c.setAttribute('src', s.getAttribute('src'));
+          const clone = document.createElement('script');
+          // Copy text and attributes.
+          clone.textContent = s.textContent;
+          for (let j = 0, ll = s.attributes.length; j < ll; j++) {
+            const attr = s.attributes[j];
+            if (attr.name === 'type') {
+              clone.setAttribute(attr.name, s.__originalType);
+            } else {
+              clone.setAttribute(attr.name, attr.value);
+            }
           }
-          s.parentNode.replaceChild(c, s);
+
+          // Update currentScript and replace original with clone script.
+          currentScript = clone;
+          // Inline scripts (w/o src) are expected to be executed synchronously
+          // (`whenElementLoaded` considers them already loaded).
+          s.parentNode.replaceChild(clone, s);
+          // Listen for load/error events before adding the clone to the document.
           // After is loaded, reset currentScript.
-          return whenLoadedPromise.then(() => currentScript = null);
+          return whenElementLoaded(clone).then(() => currentScript = null);
         });
       }
       return promise;
@@ -524,7 +534,7 @@
       const promises = [];
       for (let i = 0, l = s$.length, s; i < l && (s = s$[i]); i++) {
         // Catch failures, always return s
-        promises.push(whenElementLoaded(s).catch(() => s));
+        promises.push(whenElementLoaded(s));
       }
       return Promise.all(promises);
     }
@@ -593,22 +603,16 @@
      * @param {Array<MutationRecord>} mutations
      */
     _onMutation(mutations) {
-      const promises = [];
       for (let j = 0, m; j < mutations.length && (m = mutations[j]); j++) {
         for (let i = 0, l = m.addedNodes ? m.addedNodes.length : 0; i < l; i++) {
           const n = /** @type {Element} */ (m.addedNodes[i]);
           if (n && isImportLink(n)) {
-            promises.push(whenElementLoaded(n));
+            whenElementLoaded(n);
             if (!useNative) {
               this._loader.addNode(n);
             }
           }
         }
-      }
-      if (promises.length) {
-        // Ensure we update isImporting.
-        isImporting = true;
-        Promise.all(promises).then(() => isImporting = false);
       }
     }
 
@@ -629,16 +633,17 @@
    * @return {Promise}
    */
   function whenElementLoaded(element) {
-    if (!element.__loadPromise) {
-      element.__loadPromise = new Promise((resolve, reject) => {
-        if (isElementLoaded(element)) {
-          resolve(element);
-        } else {
-          element.addEventListener('load', () => resolve(element));
-          element.addEventListener('error', () => reject(element));
-        }
-      });
-    }
+    element.__loadPromise = element.__loadPromise || new Promise((resolve) => {
+      if (isElementLoaded(element)) {
+        resolve();
+      } else {
+        element.addEventListener('load', resolve);
+        element.addEventListener('error', resolve);
+      }
+    }).then(() => {
+      element.__loaded = true;
+      return element;
+    });
     return element.__loadPromise;
   }
 
@@ -647,6 +652,9 @@
    * @return {boolean}
    */
   function isElementLoaded(element) {
+    if (element.__loaded) {
+      return true;
+    }
     let isLoaded = false;
     if (useNative && isImportLink(element) && element.import &&
       element.import.readyState !== 'loading') {
@@ -671,10 +679,11 @@
         }
       }
     } else if (element.localName === 'script' && !element.src) {
-      // Needed by safari
-      // TODO(valdrin) add more info.
+      // Scripts w/o src won't fire load/error events, so we consider them
+      // already loaded.
       isLoaded = true;
     }
+    element.__loaded = isLoaded;
     return isLoaded;
   }
 
@@ -692,54 +701,43 @@
 
   const isIE = /Trident/.test(navigator.userAgent);
   const isEdge = !isIE && /Edge\/\d./i.test(navigator.userAgent);
-  // Used to ensure synchronous callback execution in whenReady. Updated to true
-  // when new imports are found, and to false when all imports are done loading.
-  let isImporting = true;
 
   /**
-   * Calls the callback when all HTMLImports in the document at call time
-   * (or at least document ready) have loaded.
+   * Calls the callback when all imports in the document at call time
+   * (or at least document ready) have loaded. Callback is called synchronously
+   * if imports are already done loading.
    * @param {function()=} callback
-   * @return {Promise}
    */
   function whenReady(callback) {
-    // Ensure callback is executed synchronously if HTMLImports is ready.
-    if (!isImporting) {
-      callback && callback();
-      return Promise.resolve();
-    }
     // 1. ensure the document is in a ready state (has dom), then
     // 2. watch for loading of imports and call callback when done
-    return whenDocumentReady().then(watchImportsLoad).then(() => {
-      isImporting = false;
-      callback && callback();
-    });
-  }
-
-
-  /**
-   * Resolved when document is in ready state.
-   * @returns {Promise}
-   */
-  function whenDocumentReady() {
-    return new Promise((resolve) => {
-      if (document.readyState !== 'loading') {
-        resolve();
-      } else {
-        document.addEventListener('readystatechange', () => {
-          if (document.readyState !== 'loading') {
-            resolve();
-          }
-        });
-      }
-    });
+    whenDocumentReady(() => whenImportsReady(() => callback && callback()));
   }
 
   /**
-   * Resolved when all imports are done loading.
-   * @returns {Promise}
+   * Invokes the callback when document is in ready state. Callback is called
+   *  synchronously if document is already done loading.
+   * @param {!function()} callback
    */
-  function watchImportsLoad() {
+  function whenDocumentReady(callback) {
+    if (document.readyState !== 'loading') {
+      callback();
+    } else {
+      document.addEventListener('readystatechange', function stateChanged() {
+        if (document.readyState !== 'loading') {
+          document.removeEventListener('readystatechange', stateChanged);
+          callback();
+        }
+      });
+    }
+  }
+
+  /**
+   * Invokes the callback after all imports are loaded. Callback is called
+   * synchronously if imports are already done loading.
+   * @param {!function()} callback
+   */
+  function whenImportsReady(callback) {
     let imports = document.querySelectorAll(IMPORT_SELECTOR);
     const promises = [];
     for (let i = 0, l = imports.length, imp; i < l && (imp = imports[i]); i++) {
@@ -747,11 +745,16 @@
       if (MATCHES.call(imp, `${IMPORT_SELECTOR} ${IMPORT_SELECTOR}`)) {
         continue;
       }
-      // Capture failures, always return imp.
-      promises.push(whenElementLoaded(imp).catch(() => imp));
+      if (!isElementLoaded(imp)) {
+        // Capture failures, always return imp.
+        promises.push(whenElementLoaded(imp));
+      }
     }
-    // Return aggregated info.
-    return Promise.all(promises);
+    if (promises.length) {
+      Promise.all(promises).then(() => callback());
+    } else {
+      callback();
+    }
   }
 
   new Importer();
