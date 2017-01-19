@@ -14,6 +14,7 @@ import {removeCustomPropAssignment, StyleNode} from './css-parse'
 import {nativeShadow} from './style-settings'
 import StyleTransformer from './style-transformer'
 import * as StyleUtil from './style-util'
+import * as RX from './common-regex'
 import StyleInfo from './style-info'
 
 // TODO: dedupe with shady
@@ -80,7 +81,7 @@ class StyleProperties {
         return true;
       }
     } else {
-      let m, rx = StyleUtil.rx.VAR_ASSIGN;
+      let m, rx = RX.VAR_ASSIGN;
       let cssText = rule.parsedCssText;
       let value;
       let any;
@@ -106,13 +107,13 @@ class StyleProperties {
   // NOTE: we support consumption inside mixin assignment
   // but not production, so strip out {...}
   collectConsumingCssText(cssText) {
-    return cssText.replace(StyleUtil.rx.BRACKETED, '')
-      .replace(StyleUtil.rx.VAR_ASSIGN, '');
+    return cssText.replace(RX.BRACKETED, '')
+      .replace(RX.VAR_ASSIGN, '');
   }
 
   collectPropertiesInCssText(cssText, props) {
     let m;
-    while ((m = StyleUtil.rx.VAR_CONSUMED.exec(cssText))) {
+    while ((m = RX.VAR_CONSUMED.exec(cssText))) {
       let name = m[1];
       // This regex catches all variable names, and following non-whitespace char
       // If next char is not ':', then variable is a consumer
@@ -178,8 +179,8 @@ class StyleProperties {
     let parts = property.split(';');
     for (let i=0, p, m; i<parts.length; i++) {
       if ((p = parts[i])) {
-        StyleUtil.rx.MIXIN_MATCH.lastIndex = 0;
-        m = StyleUtil.rx.MIXIN_MATCH.exec(p);
+        RX.MIXIN_MATCH.lastIndex = 0;
+        m = RX.MIXIN_MATCH.exec(p);
         if (m) {
           p = this.valueForProperty(props[m[1]], props);
         } else {
@@ -220,7 +221,7 @@ class StyleProperties {
     let output = rule.cssText;
     if (rule.hasAnimations == null) {
       // Cache whether or not the rule has any animations to begin with:
-      rule.hasAnimations = StyleUtil.rx.ANIMATION_MATCH.test(input);
+      rule.hasAnimations = RX.ANIMATION_MATCH.test(input);
     }
     // If there are no animations referenced, we can skip transforms:
     if (rule.hasAnimations) {
@@ -362,8 +363,8 @@ class StyleProperties {
     let rxHostSelector = element.extends ?
       '\\' + hostSelector.slice(0, -1) + '\\]' :
       hostSelector;
-    let hostRx = new RegExp(StyleUtil.rx.HOST_PREFIX + rxHostSelector +
-      StyleUtil.rx.HOST_SUFFIX);
+    let hostRx = new RegExp(RX.HOST_PREFIX + rxHostSelector +
+      RX.HOST_SUFFIX);
     let rules = StyleInfo.get(element).styleRules;
     let keyframeTransforms =
       this._elementKeyframeTransforms(element, rules, scopeSelector);

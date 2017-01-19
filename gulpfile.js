@@ -15,78 +15,29 @@
 
 const gulp = require('gulp');
 const sourcemaps = require('gulp-sourcemaps');
-const babel = require('gulp-babel');
 const del = require('del');
 const rename = require('gulp-rename');
 const rollup = require('rollup-stream');
 const buffer = require('vinyl-buffer');
 const source = require('vinyl-source-stream');
-
-function singleLicenseComment() {
-  let hasLicense = false;
-  return (comment) => {
-    if (hasLicense) {
-      return false;
-    }
-    return hasLicense = /@license/.test(comment);
-  }
-}
-
-const babiliConfig = {
-  presets: ['babili'],
-  shouldPrintComment: singleLicenseComment()
-};
-
-const es5Config = {
-  presets: ['es2015']
-}
-
-gulp.task('minify', () => {
-  return rollup({
-    entry: 'index.js',
-    format: 'iife',
-    moduleName: 'shadycss',
-    sourceMap: true
-  })
-  .pipe(source('index.js'))
-  .pipe(buffer())
-  .pipe(sourcemaps.init({loadMaps: true}))
-  .pipe(babel(babiliConfig))
-  .pipe(rename('shadycss.min.js'))
-  .pipe(sourcemaps.write('.'))
-  .pipe(gulp.dest('./'))
-});
+const closure = require('google-closure-compiler').gulp();
+const size = require('gulp-size');
 
 gulp.task('debug', () => {
   return rollup({
-    entry: 'index.js',
+    entry: 'src/shadycss.js',
     format: 'iife',
     moduleName: 'shadycss',
     sourceMap: true
   })
-  .pipe(source('index.js'))
+  .pipe(source('shadycss.js', 'src'))
   .pipe(buffer())
   .pipe(sourcemaps.init({loadMaps: true}))
   .pipe(rename('shadycss.min.js'))
+  .pipe(size({showFiles: true, showTotal: false, gzip: true}))
   .pipe(sourcemaps.write('.'))
   .pipe(gulp.dest('./'))
-})
-
-gulp.task('es5', () => {
-  return rollup({
-    entry: 'index.js',
-    format: 'iife',
-    moduleName: 'shadycss',
-    sourceMap: true
-  })
-  .pipe(source('index.js'))
-  .pipe(buffer())
-  .pipe(sourcemaps.init({loadMaps: true}))
-  .pipe(babel(es5Config))
-  .pipe(rename('shadycss.min.js'))
-  .pipe(sourcemaps.write('.'))
-  .pipe(gulp.dest('./'))
-})
+});
 
 const modules = [
   'apply-shim',
@@ -120,18 +71,10 @@ gulp.task('test-modules', moduleTasks);
 
 gulp.task('clean-test-modules', () => del(['tests/module/generated']));
 
-gulp.task('default', ['minify', 'test-modules']);
+gulp.task('default', ['closure', 'test-modules']);
 
 gulp.task('closure', () => {
-  const closure = require('google-closure-compiler').gulp();
-  const mergeStream = require('ordered-merge-stream');
-  const concat = require('gulp-concat');
-
-  let customStyleStream = gulp.src('src/custom-style-element.js', {base: '.'})
-  .pipe(sourcemaps.init())
-  // .pipe(babel(babiliConfig));
-
-  let closureStream = gulp.src('src/*.js')
+  return gulp.src('src/*.js')
   .pipe(sourcemaps.init())
   .pipe(closure({
     new_type_inf: true,
@@ -140,14 +83,12 @@ gulp.task('closure', () => {
     language_out: 'ES5_STRICT',
     output_wrapper: '(function(){\n%output%\n}).call(self)',
     js_output_file: 'shadycss.min.js',
-    entry_point: ['/src/ShadyCSS.js'],
+    entry_point: '/src/shadycss.js',
     dependency_mode: 'STRICT',
+    warning_level: 'VERBOSE',
     rewrite_polyfills: false,
-    formatting: 'PRETTY_PRINT'
-    }));
-
-return mergeStream([closureStream, customStyleStream])
-  .pipe(concat('shadycss.min.js', {newLine: ';'}))
+  }))
+  .pipe(size({showFiles: true, showTotal: false, gzip: true}))
   .pipe(sourcemaps.write('.'))
   .pipe(gulp.dest('.'))
-})
+});

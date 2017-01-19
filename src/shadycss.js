@@ -11,30 +11,34 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 'use strict';
 
 import {parse} from './css-parse'
-import {nativeShadow, nativeCssVariables, nativeCssApply} from './style-settings'
+import {nativeShadow, nativeCssVariables} from './style-settings'
 import StyleTransformer from './style-transformer'
 import * as StyleUtil from './style-util'
 import StyleProperties from './style-properties'
-import templateMap from './template-map'
 import placeholderMap from './style-placeholder'
 import StyleInfo from './style-info'
 import StyleCache from './style-cache'
-
-// TODO(dfreedm): consider spliting into separate global
-import ApplyShim from './apply-shim'
 import {flush as watcherFlush} from './document-watcher'
+import templateMap from './template-map';
+
+import './apply-shim';
+/** @const {ApplyShim} */
+const ApplyShim = window['ApplyShim'];
+
+ApplyShim['invalidCallback'] = StyleInfo.invalidate;
 
 /**
  * @const {StyleCache}
  */
 const styleCache = new StyleCache();
 
+/** @unrestricted */
 class ShadyCSS {
   constructor() {
     this._scopeCounter = {};
     this._documentOwner = document.documentElement;
     this._documentOwnerStyleInfo = StyleInfo.set(document.documentElement, new StyleInfo({rules: []}));
-    this._elementsHaveApplied = false;
+    this['_elementsHaveApplied'] = false;
   }
   flush() {
     watcherFlush();
@@ -95,7 +99,7 @@ class ShadyCSS {
     let hasMixins = ApplyShim.detectMixin(cssText);
     let ast = parse(cssText);
     // only run the applyshim transforms if there is a mixin involved
-    if (hasMixins && nativeCssVariables && !nativeCssApply) {
+    if (hasMixins && nativeCssVariables) {
       ApplyShim.transformRules(ast, elementName);
     }
     template._styleAst = ast;
@@ -161,7 +165,7 @@ class ShadyCSS {
     }
     // Only trip the `elementsHaveApplied` flag if a node other that the root document has `applyStyle` called
     if (!this._isRootOwner(host)) {
-      this._elementsHaveApplied = true;
+      this['_elementsHaveApplied'] = true;
     }
     if (window['CustomStyle']) {
       let CS = window['CustomStyle'];
@@ -170,12 +174,12 @@ class ShadyCSS {
         let customStyles = CS['_customStyles'];
         if (!nativeCssVariables) {
           this._updateProperties(this._documentOwner, this._documentOwnerStyleInfo);
-        } else if (!nativeCssApply) {
+        } else {
           this._revalidateCustomStyleApplyShim(customStyles);
         }
         this._applyCustomStyles(customStyles);
         // if no elements have booted yet, we can just update the document and be done
-        if (!this._elementsHaveApplied) {
+        if (!this['_elementsHaveApplied']) {
           return;
         }
         // if no native css custom properties, we must recalculate the whole tree
@@ -351,7 +355,7 @@ class ShadyCSS {
       } else {
         StyleTransformer.documentRule(rule);
       }
-      if (nativeCssVariables && !nativeCssApply) {
+      if (nativeCssVariables) {
         ApplyShim.transformRule(rule);
       }
     });
@@ -362,7 +366,7 @@ class ShadyCSS {
     }
   }
   _revalidateApplyShim(style) {
-    if (nativeCssVariables && !nativeCssApply) {
+    if (nativeCssVariables) {
       let ast = StyleUtil.rulesForStyle(style);
       ApplyShim.transformRules(ast);
       style.textContent = StyleUtil.toCssText(ast);
@@ -443,19 +447,6 @@ Object.defineProperties(ShadyCSS.prototype, {
   'nativeCss': {
     get() {
       return nativeCssVariables;
-    }
-  },
-  'nativeCssApply': {
-    get() {
-      return nativeCssApply;
-    }
-  },
-  '_elementsHaveApplied': {
-    /**
-     * @this {ShadyCSS}
-     */
-    get() {
-      return this._elementsHaveApplied;
     }
   }
 });

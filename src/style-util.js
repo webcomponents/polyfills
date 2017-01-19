@@ -12,6 +12,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 import {nativeShadow, nativeCssVariables} from './style-settings'
 import {parse, stringify, types, StyleNode} from './css-parse'
+import {MEDIA_MATCH} from './common-regex';
 
 /**
  * @param {string|StyleNode} rules
@@ -63,7 +64,7 @@ export function forEachRule(node, styleRuleCallback, keyframesRuleCallback, only
   let skipRules = false;
   if (onlyActiveRules) {
     if (node.type === types.MEDIA_RULE) {
-      let matchMedia = node.selector.match(rx.MEDIA_MATCH);
+      let matchMedia = node.selector.match(MEDIA_MATCH);
       if (matchMedia) {
         // if rule is a non matching @media rule, skip subrules
         if (!window.matchMedia(matchMedia[1]).matches) {
@@ -187,21 +188,9 @@ export function processVariableAndFallback(str, callback) {
 
 export function setElementClassRaw(element, value) {
   // use native setAttribute provided by ShadyDOM when setAttribute is patched
-  if (window.ShadyDOM) {
-    window.ShadyDOM.nativeMethods.setAttribute.call(element, 'class', value);
+  if (window['ShadyDOM']) {
+    window['ShadyDOM']['nativeMethods']['setAttribute'].call(element, 'class', value);
   } else {
     element.setAttribute('class', value);
   }
-}
-
-export let rx = {
-  VAR_ASSIGN: /(?:^|[;\s{]\s*)(--[\w-]*?)\s*:\s*(?:([^;{]*)|{([^}]*)})(?:(?=[;\s}])|$)/gi,
-  MIXIN_MATCH: /(?:^|\W+)@apply\s*\(?([^);\n]*)\)?/gi,
-  VAR_CONSUMED: /(--[\w-]+)\s*([:,;)]|$)/gi,
-  ANIMATION_MATCH: /(animation\s*:)|(animation-name\s*:)/,
-  MEDIA_MATCH: /@media[^(]*(\([^)]*\))/,
-  IS_VAR: /^--/,
-  BRACKETED: /\{[^}]*\}/g,
-  HOST_PREFIX: '(?:^|[^.#[:])',
-  HOST_SUFFIX: '($|[.:[\\s>+~])'
 }

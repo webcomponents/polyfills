@@ -16,9 +16,6 @@ export let nativeShadow = !(window['ShadyDOM'] && window['ShadyDOM']['inUse']);
 export let nativeCssVariables = (!navigator.userAgent.match('AppleWebKit/601') &&
 window.CSS && CSS.supports && CSS.supports('box-shadow', '0 0 0 var(--foo)'));
 
-// TODO(dfreedm): remove
-export let nativeCssApply = false;
-
 /**
  * @param {?Object} settings
  */
