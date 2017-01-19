@@ -32,10 +32,13 @@ export default function(internals) {
       enumerable: Native.Element_innerHTML.enumerable,
       configurable: true,
       get: Native.Element_innerHTML.get,
-      set: function(htmlString) {
+      set: /** @this {Element} */ function(htmlString) {
         Native.Element_innerHTML.set.call(this, htmlString);
         internals.patchTree(this);
-        internals.upgradeTree(this);
+        // Only create custom elements in the main document.
+        if (this.ownerDocument === document) {
+          internals.upgradeTree(this);
+        }
         return htmlString;
       },
     });

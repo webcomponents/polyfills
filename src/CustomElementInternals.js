@@ -76,7 +76,7 @@ export default class CustomElementInternals {
       const element = elements[i];
       if (element.__CE_state === CEState.custom) {
         this.connectedCallback(element);
-      } else {
+      } else if (element.ownerDocument === document) {
         this.upgradeElement(element);
       }
     }
