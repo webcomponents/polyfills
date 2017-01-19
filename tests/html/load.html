@@ -51,11 +51,11 @@
     <div id="test3" class="image"></div>
     <script>
       test('load', function() {
-        chai.assert.equal(loadEvents, 4, 'expected # of load events');
+        assert.equal(loadEvents, 4, 'expected # of load events');
         var test1 = getComputedStyle(document.querySelector('#test1')).backgroundColor;
-        chai.assert.equal(test1, 'rgb(255, 0, 0)');
+        assert.equal(test1, 'rgb(255, 0, 0)', 'test1 red background-color ok');
         var test2 = getComputedStyle(document.querySelector('#test2')).backgroundColor;
-        chai.assert.equal(test2, 'rgb(0, 0, 255)');
+        assert.equal(test2, 'rgb(0, 0, 255)', 'test2 blue background-color ok');
       });
 
       test('synchronous execution of callback', function() {

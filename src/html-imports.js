@@ -465,14 +465,11 @@
 
     _onLoadedAll() {
       this._flatten();
-      // Scripts and styles are executed in parallel, so this doesn't guarantee
-      // styles are applied before scripts run. This is done to have a faster
-      // response; if this creates problems, consider putting in sequence
-      // waitForStyles -> runScripts -> fireEvents.
-      Promise.all([
-        this._waitForStyles(),
-        this._runScripts()
-      ]).then(() => this._fireEvents());
+      // Scripts and styles are executed in sequentially so that styles are
+      // applied before scripts run.
+      this._waitForStyles()
+        .then(() => this._runScripts())
+        .then(() => this._fireEvents());
     }
 
     /**
