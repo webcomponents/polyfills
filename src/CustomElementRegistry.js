@@ -1,4 +1,3 @@
-import CustomElementDefinition from './CustomElementDefinition';
 import CustomElementInternals from './CustomElementInternals';
 import Deferred from './Deferred';
 import * as Utilities from './Utilities';

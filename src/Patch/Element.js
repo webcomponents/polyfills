@@ -1,6 +1,5 @@
 import Native from './Native';
 import CustomElementInternals from '../CustomElementInternals';
-import * as CESymbols from '../CustomElementInternalSymbols';
 import * as Utilities from '../Utilities';
 
 import PatchParentNode from './Interface/ParentNode';
@@ -19,7 +18,7 @@ export default function(internals) {
        */
       function(init) {
         const shadowRoot = Native.Element_attachShadow.call(this, init);
-        this[CESymbols.shadowRoot] = shadowRoot;
+        this.__CE_shadowRoot = shadowRoot;
         return shadowRoot;
       });
   } else {
