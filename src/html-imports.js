@@ -338,6 +338,18 @@
   ].join(',');
 
   /**
+   * @type {Function}
+   */
+  const MATCHES = Element.prototype.matches ||
+    Element.prototype.matchesSelector ||
+    Element.prototype.mozMatchesSelector ||
+    Element.prototype.msMatchesSelector ||
+    Element.prototype.oMatchesSelector ||
+    Element.prototype.webkitMatchesSelector;
+
+  const scriptType = 'import-script';
+
+  /**
    * Importer will:
    * - load any linked import documents (with deduping)
    * - whenever an import is loaded, prompt the parser to try to parse
@@ -345,20 +357,16 @@
    *   dynamic importer)
    */
   class Importer {
-    /**
-     * @param {!HTMLDocument} doc
-     */
-    constructor(doc) {
+    constructor() {
       this.documents = {};
-      this._doc = doc;
       // Make sure to catch any imports that are in the process of loading
       // when this script is run.
-      const imports = doc.querySelectorAll(IMPORT_SELECTOR);
+      const imports = document.querySelectorAll(IMPORT_SELECTOR);
       for (let i = 0, l = imports.length; i < l; i++) {
         whenElementLoaded(imports[i]);
       }
       // Observe only document head
-      new MutationObserver(this._onMutation.bind(this)).observe(doc.head, {
+      new MutationObserver(this._onMutation.bind(this)).observe(document.head, {
         childList: true
       });
 
@@ -366,12 +374,15 @@
         this._loader = new Loader(
           this._onLoaded.bind(this), this._onLoadedAll.bind(this)
         );
-        whenDocumentReady(doc).then(() => this._loadSubtree(doc));
+        whenDocumentReady().then(() => this._loadSubtree(document));
       }
     }
 
-    _loadSubtree(doc) {
-      const nodes = doc.querySelectorAll(IMPORT_SELECTOR);
+    /**
+     * @param {!(HTMLElement|Document)} node
+     */
+    _loadSubtree(node) {
+      const nodes = node.querySelectorAll(IMPORT_SELECTOR);
       // add these nodes to loader's queue
       this._loader.addNodes(nodes);
     }
@@ -385,7 +396,7 @@
       if (err) {
         this.documents[url] = null;
       } else {
-        // Generate an HTMLDocument from data.
+        // Generate a document from data.
         const doc = this._makeDocument(resource, redirectedUrl || url);
         // note, we cannot use MO to detect parsed nodes because
         // SD polyfill does not report these as mutations.
@@ -398,7 +409,7 @@
      * Creates a new document containing resource and normalizes urls accordingly.
      * @param {string=} resource
      * @param {string=} url
-     * @return {HTMLElement}
+     * @return {!HTMLElement}
      */
     _makeDocument(resource, url) {
       const content = /** @type {HTMLElement} */
@@ -442,14 +453,20 @@
     }
 
     _onLoadedAll() {
-      this._flatten(this._doc);
-      waitForStyles(this._doc)
-        .then(() => runScripts(this._doc))
-        .then(() => fireEvents(this._doc));
+      Promise.all([
+        this._flatten(),
+        this._waitForStyles(),
+        this._runScripts()
+      ]).then(() => this._fireEvents());
     }
 
+    /**
+     * @param {(HTMLElement|Document)=} element
+     */
     _flatten(element) {
-      const n$ = element.querySelectorAll(IMPORT_SELECTOR);
+      element = element || document;
+      const n$ = /** @type {!NodeList<!HTMLLinkElement>} */
+        (element.querySelectorAll(IMPORT_SELECTOR));
       for (let i = 0, l = n$.length, n; i < l && (n = n$[i]); i++) {
         n.import = this.documents[n.href];
         if (n.import && !n.import.__firstImport) {
@@ -460,11 +477,103 @@
             // In IE/Edge, when imports have link stylesheets/styles, the cascading order
             // isn't respected https://developer.microsoft.com/en-us/microsoft-edge/platform/issues/10472273/
             if (isIE || isEdge) {
-              cloneAndMoveStyles(n);
+              this._cloneAndMoveStyles(n);
             }
             this._observe(n.import);
           }
           n.appendChild(n.import);
+        }
+      }
+    }
+
+    /**
+     * Replaces all the imported scripts with a clone in order to execute them.
+     * Updates the `currentScript`.
+     * @return {Promise} Resolved when scripts are loaded.
+     */
+    _runScripts() {
+      const s$ = document.querySelectorAll(`script[type=${scriptType}]`);
+      let promise = Promise.resolve();
+      for (let i = 0, l = s$.length, s; i < l && (s = s$[i]); i++) {
+        promise = promise.then(() => {
+          const c = document.createElement('script');
+          // Listen for load/error events before adding the clone to the document.
+          // Catch failures, always return c.
+          const whenLoadedPromise = whenElementLoaded(c).catch(() => c);
+          // Update currentScript and replace original with clone script.
+          currentScript = c;
+
+          c.textContent = s.textContent;
+          if (s.src) {
+            c.setAttribute('src', s.getAttribute('src'));
+          }
+          s.parentNode.replaceChild(c, s);
+          // After is loaded, reset currentScript.
+          return whenLoadedPromise.then(() => currentScript = null);
+        });
+      }
+      return promise;
+    }
+
+    /**
+     * Waits for all the imported stylesheets/styles to be loaded.
+     * @return {Promise}
+     */
+    _waitForStyles() {
+      const s$ = document.querySelectorAll(stylesInImportsSelector);
+      const promises = [];
+      for (let i = 0, l = s$.length, s; i < l && (s = s$[i]); i++) {
+        // Catch failures, always return s
+        promises.push(whenElementLoaded(s).catch(() => s));
+      }
+      return Promise.all(promises);
+    }
+
+    /**
+     * Clones styles and stylesheets links contained in imports and moves them
+     * as siblings of the root import link.
+     * @param {!HTMLLinkElement} importLink
+     */
+    _cloneAndMoveStyles(importLink) {
+      const n$ = importLink.import.querySelectorAll(stylesSelector);
+      for (let i = 0, l = n$.length, n; i < l && (n = n$[i]); i++) {
+        // Cannot use `n.cloneNode(true)` as it won't work for link stylesheets
+        // with a parentNode https://gist.github.com/valdrinkoshi/4a92f97169a6fc41a1852f23211b8c4e
+        const clone = document.createElement(n.localName);
+        // Ensure we listen for load/error for this element.
+        whenElementLoaded(clone);
+        // Copy textContent and attributes.
+        clone.textContent = n.textContent;
+        for (let j = 0, ll = n.attributes.length; j < ll; j++) {
+          clone.setAttribute(n.attributes[j].name, n.attributes[j].value);
+        }
+
+        // Remove old, add new.
+        n.parentNode.removeChild(n);
+        importLink.parentNode.insertBefore(clone, importLink);
+      }
+    }
+
+    /**
+     * Fires load/error events for loaded imports.
+     */
+    _fireEvents() {
+      const n$ = /** @type {!NodeList<!HTMLLinkElement>} */
+        (document.querySelectorAll(IMPORT_SELECTOR));
+      // Inverse order to have events firing bottom-up.
+      for (let i = n$.length - 1, n; i >= 0 && (n = n$[i]); i--) {
+        // Don't fire twice same event.
+        if (!n.__fired) {
+          n.__fired = true;
+          const eventType = n.import ? 'load' : 'error';
+          flags.log && console.warn('fire', eventType, n.href);
+          // Ensure the load promise is setup before firing the event.
+          whenElementLoaded(n);
+          n.dispatchEvent(new CustomEvent(eventType, {
+            bubbles: false,
+            cancelable: false,
+            detail: undefined
+          }));
         }
       }
     }
@@ -506,120 +615,11 @@
   }
 
   /**
-   * @type {Function}
-   */
-  const MATCHES = Element.prototype.matches ||
-    Element.prototype.matchesSelector ||
-    Element.prototype.mozMatchesSelector ||
-    Element.prototype.msMatchesSelector ||
-    Element.prototype.oMatchesSelector ||
-    Element.prototype.webkitMatchesSelector;
-
-  /**
    * @param {!Node} node
    * @return {boolean}
    */
   function isImportLink(node) {
     return node.nodeType === Node.ELEMENT_NODE && MATCHES.call(node, IMPORT_SELECTOR);
-  }
-
-  /********************* vulcanize style inline processing  *********************/
-
-  const scriptType = 'import-script';
-
-  /**
-   * Replaces all the imported scripts with a clone in order to execute them.
-   * Updates the `currentScript`.
-   * @param {!HTMLDocument} doc
-   * @return {Promise} Resolved when scripts are loaded.
-   */
-  function runScripts(doc) {
-    const s$ = doc.querySelectorAll(`script[type=${scriptType}]`);
-    let promise = Promise.resolve();
-    for (let i = 0, l = s$.length, s; i < l && (s = s$[i]); i++) {
-      promise = promise.then(() => {
-        const c = doc.createElement('script');
-        // Listen for load/error events before adding the clone to the document.
-        // Catch failures, always return c.
-        const whenLoadedPromise = whenElementLoaded(c).catch(() => c);
-        // Update currentScript and replace original with clone script.
-        currentScript = c;
-
-        c.textContent = s.textContent;
-        if (s.src) {
-          c.setAttribute('src', s.getAttribute('src'));
-        }
-        s.parentNode.replaceChild(c, s);
-        // After is loaded, reset currentScript.
-        return whenLoadedPromise.then(() => currentScript = null);
-      });
-    }
-    return promise;
-  }
-
-  /**
-   * Waits for all the imported stylesheets/styles to be loaded.
-   * @param {!HTMLDocument} doc
-   * @return {Promise}
-   */
-  function waitForStyles(doc) {
-    const s$ = doc.querySelectorAll(stylesInImportsSelector);
-    const promises = [];
-    for (let i = 0, l = s$.length, s; i < l && (s = s$[i]); i++) {
-      // Catch failures, always return s
-      promises.push(whenElementLoaded(s).catch(() => s));
-    }
-    return Promise.all(promises);
-  }
-
-  /**
-   * Clones styles and stylesheets links contained in imports and moves them
-   * as siblings of the root import link.
-   * @param {!HTMLLinkElement} importLink
-   */
-  function cloneAndMoveStyles(importLink) {
-    const n$ = importLink.import.querySelectorAll(stylesSelector);
-    for (let i = 0, l = n$.length, n; i < l && (n = n$[i]); i++) {
-      // Cannot use `n.cloneNode(true)` as it won't work for link stylesheets
-      // with a parentNode https://gist.github.com/valdrinkoshi/4a92f97169a6fc41a1852f23211b8c4e
-      const clone = document.createElement(n.localName);
-      // Ensure we listen for load/error for this element.
-      whenElementLoaded(clone);
-      // Copy textContent and attributes.
-      clone.textContent = n.textContent;
-      for (let j = 0, ll = n.attributes.length; j < ll; j++) {
-        clone.setAttribute(n.attributes[j].name, n.attributes[j].value);
-      }
-
-      // Remove old, add new.
-      n.parentNode.removeChild(n);
-      importLink.parentNode.insertBefore(clone, importLink);
-    }
-  }
-
-  /**
-   * Fires load/error events for loaded imports.
-   * @param {!HTMLDocument} doc
-   */
-  function fireEvents(doc) {
-    const n$ = /** @type {!NodeList<!HTMLLinkElement>} */
-      (doc.querySelectorAll(IMPORT_SELECTOR));
-    // Inverse order to have events firing bottom-up.
-    for (let i = n$.length - 1, n; i >= 0 && (n = n$[i]); i--) {
-      // Don't fire twice same event.
-      if (!n.__fired) {
-        n.__fired = true;
-        const eventType = n.import ? 'load' : 'error';
-        flags.log && console.warn('fire', eventType, n.href);
-        // Ensure the load promise is setup before firing the event.
-        whenElementLoaded(n);
-        n.dispatchEvent(new CustomEvent(eventType, {
-          bubbles: false,
-          cancelable: false,
-          detail: undefined
-        }));
-      }
-    }
   }
 
   /**
@@ -670,6 +670,10 @@
           }
         }
       }
+    } else if (element.localName === 'script' && !element.src) {
+      // Needed by safari
+      // TODO(valdrin) add more info.
+      isLoaded = true;
     }
     return isLoaded;
   }
@@ -706,7 +710,7 @@
     }
     // 1. ensure the document is in a ready state (has dom), then
     // 2. watch for loading of imports and call callback when done
-    return whenDocumentReady(document).then(watchImportsLoad).then(() => {
+    return whenDocumentReady().then(watchImportsLoad).then(() => {
       isImporting = false;
       callback && callback();
     });
@@ -715,17 +719,16 @@
 
   /**
    * Resolved when document is in ready state.
-   * @param {!HTMLDocument} doc
    * @returns {Promise}
    */
-  function whenDocumentReady(doc) {
+  function whenDocumentReady() {
     return new Promise((resolve) => {
-      if (doc.readyState !== 'loading') {
-        resolve(doc);
+      if (document.readyState !== 'loading') {
+        resolve();
       } else {
-        doc.addEventListener('readystatechange', () => {
-          if (doc.readyState !== 'loading') {
-            resolve(doc);
+        document.addEventListener('readystatechange', () => {
+          if (document.readyState !== 'loading') {
+            resolve();
           }
         });
       }
@@ -734,11 +737,10 @@
 
   /**
    * Resolved when all imports are done loading.
-   * @param {!HTMLDocument} doc
    * @returns {Promise}
    */
-  function watchImportsLoad(doc) {
-    let imports = doc.querySelectorAll(IMPORT_SELECTOR);
+  function watchImportsLoad() {
+    let imports = document.querySelectorAll(IMPORT_SELECTOR);
     const promises = [];
     for (let i = 0, l = imports.length, imp; i < l && (imp = imports[i]); i++) {
       // Skip nested imports.
@@ -752,7 +754,7 @@
     return Promise.all(promises);
   }
 
-  new Importer(document);
+  new Importer();
 
   // Fire the 'HTMLImportsLoaded' event when imports in document at load time
   // have loaded. This event is required to simulate the script blocking
