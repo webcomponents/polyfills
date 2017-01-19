@@ -11,6 +11,9 @@ export default class CustomElementInternals {
 
     /** @type {!Array<!function(!Node)>} */
     this._patches = [];
+
+    /** @type {boolean} */
+    this._hasPatches = false;
   }
 
   /**
@@ -42,6 +45,7 @@ export default class CustomElementInternals {
    * @param {!function(!Node)} listener
    */
   addPatch(listener) {
+    this._hasPatches = true;
     this._patches.push(listener);
   }
 
@@ -49,6 +53,8 @@ export default class CustomElementInternals {
    * @param {!Node} node
    */
   patchTree(node) {
+    if (!this._hasPatches) return;
+
     Utilities.walkDeepDescendants(node, node => this.patch(node));
   }
 
@@ -56,6 +62,8 @@ export default class CustomElementInternals {
    * @param {!Node} node
    */
   patch(node) {
+    if (!this._hasPatches) return;
+
     if (node.__CE_patched) return;
     node.__CE_patched = true;
 
