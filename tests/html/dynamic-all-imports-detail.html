@@ -26,6 +26,7 @@
   <body>
 
     <script>
+      var loads = 0;
       document.addEventListener('DOMContentLoaded', function() {
         // some time later
         setTimeout(function() {
@@ -38,24 +39,24 @@
             document.head.appendChild(div.firstElementChild);
           }
           var ports = document.querySelectorAll('link[rel=import]');
-          var loads = 0;
           for (var i=0, l=ports.length, n; (i<l) && (n=ports[i]); i++) {
             n.addEventListener('load', function(e) {
               loads++;
-              assert.ok(e.target.import);
+              assert.isOk(e.target.import, 'import ok');
             });
           }
           ready();
         });
       });
 
-      test('HTMLImports whenready detail', function(done) {
+      test('HTMLImports whenready', function(done) {
         HTMLImports.whenReady(function() {
+          assert.equal(loads, 2, 'load events count ok');
           var links = document.querySelectorAll('link[rel=import]');
-          assert.equal(links.length, 2);
-          expect(links[0].import).to.be.ok;
-          expect(links[0].href).to.contain('imports/load-1.html');
-          expect(links[1].import).to.be.ok;
+          assert.equal(links.length, 2, 'links count ok');
+          assert.include(links[0].href, 'imports/load-1.html', '1st link href ok');
+          assert.isOk(links[0].import, '1st link import ok');
+          assert.isOk(links[1].import, '2nd link import ok');
           done();
         });
       });

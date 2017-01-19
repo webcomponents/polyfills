@@ -26,6 +26,7 @@
   <body>
 
     <script>
+      var loads = 0;
       document.addEventListener('DOMContentLoaded', function() {
         // some time later
         setTimeout(function() {
@@ -40,7 +41,8 @@
           var ports = document.querySelectorAll('link[rel=import]');
           for (var i=0, l=ports.length, n; (i<l) && (n=ports[i]); i++) {
             n.addEventListener('load', function(e) {
-              assert.ok(e.target.import);
+              loads++;
+              assert.isOk(e.target.import, 'import ok');
             });
           }
           ready();
@@ -49,12 +51,12 @@
 
       test('HTMLImports whenready errors', function(done) {
         HTMLImports.whenReady(function() {
+          assert.equal(loads, 1, 'load events count ok');
           var links = document.querySelectorAll('link[rel=import]');
-          assert.equal(links.length, 2);
-          expect(links[0].import).to.be.ok;
-          expect(links[1].import).to.not.be.ok;
-          expect(links[1].href).to.contain('imports/load-does-not-exist.html');
-
+          assert.equal(links.length, 2, 'links count ok');
+          assert.isOk(links[0].import, '1st link import ok');
+          assert.isNotOk(links[1].import, '2nd link import ok');
+          assert.include(links[1].href, 'imports/load-does-not-exist.html', '2nd link href ok');
           done();
         });
       });

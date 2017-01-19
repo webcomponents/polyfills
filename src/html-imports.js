@@ -12,10 +12,6 @@
   /********************* base setup *********************/
   const IMPORT_SELECTOR = 'link[rel=import]';
   const useNative = Boolean('import' in document.createElement('link'));
-  const flags = {
-    bust: false,
-    log: false
-  };
 
   // Polyfill `currentScript` for browsers without it.
   let currentScript = null;
@@ -168,9 +164,6 @@
      */
     load: function(url, callback) {
       const request = new XMLHttpRequest();
-      if (flags.bust) {
-        url += '?' + Math.random();
-      }
       request.open('GET', url, Xhr.async);
       request.addEventListener('readystatechange', (e) => {
         if (request.readyState === 4) {
@@ -213,18 +206,27 @@
       this.pending = {};
     }
 
+    /**
+     * @param {!NodeList<!Element>} nodes
+     */
     addNodes(nodes) {
+      // Avoid calling checkDone if no nodes are added.
+      if (!nodes.length) {
+        return;
+      }
       // number of transactions to complete
       this.inflight += nodes.length;
       // commence transactions
-      for (let i = 0, l = nodes.length, n;
-        (i < l) && (n = nodes[i]); i++) {
-        this.require(n);
+      for (let i = 0, l = nodes.length; i < l; i++) {
+        this.require(nodes[i]);
       }
       // anything to do?
       this.checkDone();
     }
 
+    /**
+     * @param {!Element} node
+     */
     addNode(node) {
       // number of transactions to complete
       this.inflight++;
@@ -234,8 +236,11 @@
       this.checkDone();
     }
 
+    /**
+     * @param {!Element} elt
+     */
     require(elt) {
-      const url = elt.src || elt.href;
+      const url = elt.href || elt.src;
       // deduplication
       if (!this.dedupe(url, elt)) {
         // fetch this resource
@@ -243,6 +248,11 @@
       }
     }
 
+    /**
+     * @param {string} url
+     * @param {!Element} elt
+     * @return {boolean}
+     */
     dedupe(url, elt) {
       if (this.pending[url]) {
         // add to list of nodes waiting for inUrl
@@ -264,8 +274,11 @@
       return false;
     }
 
+    /**
+     * @param {string} url
+     * @param {!Element} elt
+     */
     fetch(url, elt) {
-      flags.log && console.log('fetch', url, elt);
       if (!url) {
         this.receive(url, elt, true, 'error: href must be specified');
       } else if (url.match(/^data:/)) {
@@ -383,12 +396,11 @@
      */
     _loadSubtree(node) {
       const nodes = node.querySelectorAll(IMPORT_SELECTOR);
-      // add these nodes to loader's queue
+      // Add these nodes to loader's queue.
       this._loader.addNodes(nodes);
     }
 
     _onLoaded(url, elt, resource, err, redirectedUrl) {
-      flags.log && console.log('loaded', url, elt);
       // We've already seen a document at this url, return.
       if (this.documents[url] !== undefined) {
         return;
@@ -443,9 +455,8 @@
         whenElementLoaded(n);
         Path.fixUrls(n, url);
         if (n.localName === 'script') {
-          n.__originalType = n.getAttribute('type') || 'text/javascript';
+          n['__originalType'] = n.getAttribute('type');
           n.setAttribute('type', scriptType);
-
         }
       }
       Path.fixUrlsInTemplates(content, url);
@@ -473,8 +484,8 @@
         (element.querySelectorAll(IMPORT_SELECTOR));
       for (let i = 0, l = n$.length, n; i < l && (n = n$[i]); i++) {
         n.import = this.documents[n.href];
-        if (n.import && !n.import.__firstImport) {
-          n.import.__firstImport = n;
+        if (n.import && !n.import['__firstImport']) {
+          n.import['__firstImport'] = n;
           this._flatten(n.import);
           // If in the main document, observe for any imports added later.
           if (element === document) {
@@ -501,25 +512,35 @@
       for (let i = 0, l = s$.length, s; i < l && (s = s$[i]); i++) {
         promise = promise.then(() => {
           const clone = document.createElement('script');
-          // Copy text and attributes.
-          clone.textContent = s.textContent;
+
+          // Setting `src` will trigger load/error events, so listen for those
+          // before setting the attributes. For inline scripts, consider them
+          // already loaded.
+          let loadedPromise;
+          if (s.src) {
+            loadedPromise = whenElementLoaded(clone);
+          } else {
+            clone['__loaded'] = true;
+            loadedPromise = Promise.resolve(clone);
+          }
+
+          // Copy attributes and textContent.
           for (let j = 0, ll = s.attributes.length; j < ll; j++) {
             const attr = s.attributes[j];
             if (attr.name === 'type') {
-              clone.setAttribute(attr.name, s.__originalType);
+              clone.setAttribute(attr.name, s['__originalType'] || 'text/javascript');
             } else {
               clone.setAttribute(attr.name, attr.value);
             }
           }
+          clone.textContent = s.textContent;
 
           // Update currentScript and replace original with clone script.
           currentScript = clone;
-          // Inline scripts (w/o src) are expected to be executed synchronously
-          // (`whenElementLoaded` considers them already loaded).
           s.parentNode.replaceChild(clone, s);
           // Listen for load/error events before adding the clone to the document.
           // After is loaded, reset currentScript.
-          return whenElementLoaded(clone).then(() => currentScript = null);
+          return loadedPromise.then(() => currentScript = null);
         });
       }
       return promise;
@@ -533,7 +554,6 @@
       const s$ = document.querySelectorAll(stylesInImportsSelector);
       const promises = [];
       for (let i = 0, l = s$.length, s; i < l && (s = s$[i]); i++) {
-        // Catch failures, always return s
         promises.push(whenElementLoaded(s));
       }
       return Promise.all(promises);
@@ -550,13 +570,13 @@
         // Cannot use `n.cloneNode(true)` as it won't work for link stylesheets
         // with a parentNode https://gist.github.com/valdrinkoshi/4a92f97169a6fc41a1852f23211b8c4e
         const clone = document.createElement(n.localName);
-        // Ensure we listen for load/error for this element.
+        // Ensure we listen for load/error events on this element.
         whenElementLoaded(clone);
-        // Copy textContent and attributes.
-        clone.textContent = n.textContent;
+        // Copy attributes and textContent.
         for (let j = 0, ll = n.attributes.length; j < ll; j++) {
           clone.setAttribute(n.attributes[j].name, n.attributes[j].value);
         }
+        clone.textContent = n.textContent;
 
         // Remove old, add new.
         n.parentNode.removeChild(n);
@@ -573,10 +593,9 @@
       // Inverse order to have events firing bottom-up.
       for (let i = n$.length - 1, n; i >= 0 && (n = n$[i]); i--) {
         // Don't fire twice same event.
-        if (!n.__fired) {
-          n.__fired = true;
+        if (!n['__fired']) {
+          n['__fired'] = true;
           const eventType = n.import ? 'load' : 'error';
-          flags.log && console.warn('fire', eventType, n.href);
           // Ensure the load promise is setup before firing the event.
           whenElementLoaded(n);
           n.dispatchEvent(new CustomEvent(eventType, {
@@ -589,11 +608,11 @@
     }
 
     _observe(element) {
-      if (element.__importObserver) {
+      if (element['__importObserver']) {
         return;
       }
-      element.__importObserver = new MutationObserver(this._onMutation.bind(this));
-      element.__importObserver.observe(element, {
+      element['__importObserver'] = new MutationObserver(this._onMutation.bind(this));
+      element['__importObserver'].observe(element, {
         childList: true,
         subtree: true
       });
@@ -633,7 +652,7 @@
    * @return {Promise}
    */
   function whenElementLoaded(element) {
-    element.__loadPromise = element.__loadPromise || new Promise((resolve) => {
+    element['__loadPromise'] = element['__loadPromise'] || new Promise((resolve) => {
       if (isElementLoaded(element)) {
         resolve();
       } else {
@@ -641,10 +660,10 @@
         element.addEventListener('error', resolve);
       }
     }).then(() => {
-      element.__loaded = true;
+      element['__loaded'] = true;
       return element;
     });
-    return element.__loadPromise;
+    return element['__loadPromise'];
   }
 
   /**
@@ -652,7 +671,7 @@
    * @return {boolean}
    */
   function isElementLoaded(element) {
-    if (element.__loaded) {
+    if (element['__loaded']) {
       return true;
     }
     let isLoaded = false;
@@ -678,12 +697,8 @@
           }
         }
       }
-    } else if (element.localName === 'script' && !element.src) {
-      // Scripts w/o src won't fire load/error events, so we consider them
-      // already loaded.
-      isLoaded = true;
     }
-    element.__loaded = isLoaded;
+    element['__loaded'] = isLoaded;
     return isLoaded;
   }
 
@@ -746,7 +761,6 @@
         continue;
       }
       if (!isElementLoaded(imp)) {
-        // Capture failures, always return imp.
         promises.push(whenElementLoaded(imp));
       }
     }
