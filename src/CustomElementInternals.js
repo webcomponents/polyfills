@@ -1,6 +1,5 @@
 import CustomElementDefinition from './CustomElementDefinition';
 import * as Utilities from './Utilities';
-import * as CESymbols from './CustomElementInternalSymbols';
 import CEState from './CustomElementState';
 
 export default class CustomElementInternals {
@@ -58,8 +57,8 @@ export default class CustomElementInternals {
    * @param {!Node} node
    */
   patch(node) {
-    if (node[CESymbols.patched]) return;
-    node[CESymbols.patched] = true;
+    if (node['__CE_patched']) return;
+    node['__CE_patched'] = true;
 
     for (let i = 0; i < this._patches.length; i++) {
       this._patches[i](node);
@@ -76,7 +75,7 @@ export default class CustomElementInternals {
 
     for (let i = 0; i < elements.length; i++) {
       const element = elements[i];
-      if (element[CESymbols.state] === CEState.custom) {
+      if (element['__CE_state'] === CEState.custom) {
         this.connectedCallback(element);
       } else {
         this.upgradeElement(element);
@@ -94,7 +93,7 @@ export default class CustomElementInternals {
 
     for (let i = 0; i < elements.length; i++) {
       const element = elements[i];
-      if (element[CESymbols.state] === CEState.custom) {
+      if (element['__CE_state'] === CEState.custom) {
         this.disconnectedCallback(element);
       }
     }
@@ -184,8 +183,8 @@ export default class CustomElementInternals {
           element.addEventListener('load', () => {
             const doc = element.import;
 
-            if (doc[CESymbols.documentLoadHandled]) return;
-            doc[CESymbols.documentLoadHandled] = true;
+            if (doc['__CE_documentLoadHandled']) return;
+            doc['__CE_documentLoadHandled'] = true;
 
             this.upgradeTree(document);
           });
@@ -206,7 +205,7 @@ export default class CustomElementInternals {
    * @param {!Element} element
    */
   upgradeElement(element) {
-    const currentState = element[CESymbols.state];
+    const currentState = element['__CE_state'];
     if (currentState !== undefined) return;
 
     const definition = this.localNameToDefinition(element.localName);
@@ -225,12 +224,12 @@ export default class CustomElementInternals {
         definition.constructionStack.pop();
       }
     } catch (e) {
-      element[CESymbols.state] = CEState.failed;
+      element['__CE_state'] = CEState.failed;
       throw e;
     }
 
-    element[CESymbols.state] = CEState.custom;
-    element[CESymbols.definition] = definition;
+    element['__CE_state'] = CEState.custom;
+    element['__CE_definition'] = definition;
 
     if (definition.attributeChangedCallback) {
       const observedAttributes = definition.observedAttributes;
@@ -252,8 +251,8 @@ export default class CustomElementInternals {
    * @param {!Element} element
    */
   connectedCallback(element) {
-    if (element[CESymbols.state] === CEState.custom) {
-      const definition = element[CESymbols.definition];
+    if (element['__CE_state'] === CEState.custom) {
+      const definition = element['__CE_definition'];
       if (definition && definition.connectedCallback) {
         definition.connectedCallback.call(element);
       }
@@ -264,8 +263,8 @@ export default class CustomElementInternals {
    * @param {!Element} element
    */
   disconnectedCallback(element) {
-    if (element[CESymbols.state] === CEState.custom) {
-      const definition = element[CESymbols.definition];
+    if (element['__CE_state'] === CEState.custom) {
+      const definition = element['__CE_definition'];
       if (definition && definition.disconnectedCallback) {
         definition.disconnectedCallback.call(element);
       }
@@ -280,8 +279,8 @@ export default class CustomElementInternals {
    * @param {?string} namespace
    */
   attributeChangedCallback(element, name, oldValue, newValue, namespace) {
-    if (element[CESymbols.state] === CEState.custom) {
-      const definition = element[CESymbols.definition];
+    if (element['__CE_state'] === CEState.custom) {
+      const definition = element['__CE_definition'];
       if (
         definition &&
         definition.attributeChangedCallback &&
