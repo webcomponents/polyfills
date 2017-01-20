@@ -50,35 +50,29 @@
 
 
   <script>
-    test('style-links', function(done) {
+    test('style-links', function() {
+      var imp = document.head.querySelector('link[rel=import]');
+      assert.isOk(imp.import, 'import has content');
 
-      // NOTE: IE requires asynchrony here
-      setTimeout(function() {
-        var imp = document.head.querySelector('link[rel=import]');
-        chai.assert.ok(imp.import, 'import has content');
-
-        function computedStyle(selector) {
-          return getComputedStyle(document.querySelector(selector));
-        }
-        // styles in stylesheets are applied
-        chai.assert.equal(computedStyle('.red').backgroundColor, 'rgb(255, 0, 0)');
-        chai.assert.equal(computedStyle('.orange').backgroundColor, 'rgb(255, 165, 0)');
-        chai.assert.equal(computedStyle('.blue').backgroundColor, 'rgb(0, 0, 255)');
-        // styles in stylesheets are applied in the correct order and overriddable
-        chai.assert.equal(computedStyle('.overridden').backgroundColor, 'rgb(0, 0, 0)');
-        // styles in style elements are applied
-        chai.assert.equal(computedStyle('.styled').backgroundColor, 'rgb(255, 0, 0)');
-        // styles in style are applied in the correct order and overriddable
-        chai.assert.equal(computedStyle('.overridden-style').backgroundColor, 'rgb(0, 0, 0)');
-        if (!HTMLImports.useNative) {
-          // links with type attr are not imported
-          chai.assert.notEqual(computedStyle('.link-typed').backgroundColor, 'rgb(0, 0, 128)');
-        }
-        // styles with type attr are not imported
-        chai.assert.notEqual(computedStyle('.style-typed').backgroundColor, 'rgb(255, 0, 0)');
-
-        done();
-      });
+      function computedStyle(selector) {
+        return getComputedStyle(document.querySelector(selector));
+      }
+      // styles in stylesheets are applied
+      assert.equal(computedStyle('.red').backgroundColor, 'rgb(255, 0, 0)', 'red ok');
+      assert.equal(computedStyle('.orange').backgroundColor, 'rgb(255, 165, 0)', 'orange ok');
+      assert.equal(computedStyle('.blue').backgroundColor, 'rgb(0, 0, 255)', 'blue ok');
+      // styles in stylesheets are applied in the correct order and overriddable
+      assert.equal(computedStyle('.overridden').backgroundColor, 'rgb(0, 0, 0)', 'overridden ok');
+      // styles in style elements are applied
+      assert.equal(computedStyle('.styled').backgroundColor, 'rgb(255, 0, 0)', 'styled ok');
+      // styles in style are applied in the correct order and overriddable
+      assert.equal(computedStyle('.overridden-style').backgroundColor, 'rgb(0, 0, 0)', 'overridden-style ok');
+      if (!HTMLImports.useNative) {
+        // links with type attr are not imported
+        assert.notEqual(computedStyle('.link-typed').backgroundColor, 'rgb(0, 0, 128)', 'link-typed ok');
+      }
+      // styles with type attr are not imported
+      assert.notEqual(computedStyle('.style-typed').backgroundColor, 'rgb(255, 0, 0)', 'style-typed ok');
     });
   </script>
 </body>

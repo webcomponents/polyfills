@@ -207,24 +207,6 @@
     }
 
     /**
-     * @param {!NodeList<!Element>} nodes
-     */
-    addNodes(nodes) {
-      // Avoid calling checkDone if no nodes are added.
-      if (!nodes.length) {
-        return;
-      }
-      // number of transactions to complete
-      this.inflight += nodes.length;
-      // commence transactions
-      for (let i = 0, l = nodes.length; i < l; i++) {
-        this.require(nodes[i]);
-      }
-      // anything to do?
-      this.checkDone();
-    }
-
-    /**
      * @param {!Element} node
      */
     addNode(node) {
@@ -332,23 +314,24 @@
 
   /********************* importer *********************/
 
-  const stylesSelector = [
-    'style:not([type])',
-    'link[rel=stylesheet][href]:not([type])'
-  ].join(',');
+  const isIE = /Trident/.test(navigator.userAgent) ||
+    /Edge\/\d./i.test(navigator.userAgent);
 
-  const stylesInImportsSelector = [
-    `${IMPORT_SELECTOR} style:not([type])`,
-    `${IMPORT_SELECTOR} link[rel=stylesheet][href]:not([type])`
-  ].join(',');
+  const importsSelector = `
+    ${IMPORT_SELECTOR},
+    style:not([type]),
+    link[rel=stylesheet][href]:not([type]),
+    script:not([type]),
+    script[type="application/javascript"],
+    script[type="text/javascript"]`;
 
-  const importsSelectors = [
-    IMPORT_SELECTOR,
-    stylesSelector,
-    'script:not([type])',
-    'script[type="application/javascript"]',
-    'script[type="text/javascript"]'
-  ].join(',');
+  // Used to mark the scripts that need to be cloned in order to be executed.
+  const importDisableType = 'import-disable';
+
+  const scriptsToRunSel = `script[type=${importDisableType}]`;
+
+  const stylesToEnableSel = `style[type=${importDisableType}],
+    link[rel=stylesheet][type=${importDisableType}]`;
 
   /**
    * @type {Function}
@@ -359,8 +342,6 @@
     Element.prototype.msMatchesSelector ||
     Element.prototype.oMatchesSelector ||
     Element.prototype.webkitMatchesSelector;
-
-  const scriptType = 'import-script';
 
   /**
    * Importer will:
@@ -396,8 +377,16 @@
      */
     _loadSubtree(node) {
       const nodes = node.querySelectorAll(IMPORT_SELECTOR);
-      // Add these nodes to loader's queue.
-      this._loader.addNodes(nodes);
+      const count = nodes.length;
+      if (count) {
+        this._loader.inflight += count;
+        for (let i = 0; i < count; i++) {
+          // Ensure the load promise is setup.
+          whenElementLoaded(nodes[i]);
+          this._loader.require(nodes[i]);
+        }
+        this._loader.checkDone();
+      }
     }
 
     _onLoaded(url, elt, resource, err, redirectedUrl) {
@@ -426,6 +415,7 @@
     _makeDocument(resource, url) {
       const content = /** @type {HTMLElement} */
         (document.createElement('import-content'));
+
       content.style.display = 'none';
       if (url) {
         content.setAttribute('import-href', url);
@@ -435,11 +425,12 @@
       }
 
       // Support <base> in imported docs. Resolve url and remove it from the parent.
-      const baseEl = /** @type {HTMLBaseElement} */ (content.querySelector('base'));
+      const baseEl = content.querySelector('base');
       if (baseEl) {
         url = Path.replaceAttrUrl(baseEl.getAttribute('href'), url);
         baseEl.parentNode.removeChild(baseEl);
       }
+
       // This is specific to users of <dom-module> (Polymer).
       // TODO(valdrin) remove this when importForElement is exposed.
       const s$ = content.querySelectorAll('dom-module');
@@ -448,16 +439,15 @@
           Path.replaceAttrUrl(s.getAttribute('assetpath') || '', url));
       }
 
-      const n$ = content.querySelectorAll(importsSelectors);
+      const n$ = content.querySelectorAll(importsSelector);
       for (let i = 0, l = n$.length, n; i < l && (n = n$[i]); i++) {
-        // Ensure we add load/error listeners before modifying urls or appending
-        // these to the main document.
-        whenElementLoaded(n);
-        Path.fixUrls(n, url);
-        if (n.localName === 'script') {
+        n['__ownerImport'] = content;
+        // Disable loading.
+        if (!isImportLink(n)) {
           n['__originalType'] = n.getAttribute('type');
-          n.setAttribute('type', scriptType);
+          n.setAttribute('type', importDisableType);
         }
+        Path.fixUrls(n, url);
       }
       Path.fixUrlsInTemplates(content, url);
       return content;
@@ -486,11 +476,6 @@
           this._flatten(n.import);
           // If in the main document, observe for any imports added later.
           if (element === document) {
-            // In IE/Edge, when imports have link stylesheets/styles, the cascading order
-            // isn't respected https://developer.microsoft.com/en-us/microsoft-edge/platform/issues/10472273/
-            if (isIE || isEdge) {
-              this._cloneAndMoveStyles(n);
-            }
             this._observe(n.import);
           }
           n.appendChild(n.import);
@@ -504,7 +489,7 @@
      * @return {Promise} Resolved when scripts are loaded.
      */
     _runScripts() {
-      const s$ = document.querySelectorAll(`script[type=${scriptType}]`);
+      const s$ = document.querySelectorAll(scriptsToRunSel);
       let promise = Promise.resolve();
       for (let i = 0, l = s$.length, s; i < l && (s = s$[i]); i++) {
         promise = promise.then(() => {
@@ -548,37 +533,32 @@
      * @return {Promise}
      */
     _waitForStyles() {
-      const s$ = document.querySelectorAll(stylesInImportsSelector);
+      const s$ = document.querySelectorAll(stylesToEnableSel);
       const promises = [];
       for (let i = 0, l = s$.length, s; i < l && (s = s$[i]); i++) {
+        // <link rel=stylesheet> should be appended to <head>. Not doing so
+        // in IE/Edge breaks the cascading order
+        // https://developer.microsoft.com/en-us/microsoft-edge/platform/issues/10472273/
+        if (isIE) {
+          let rootImport = s['__ownerImport']['__firstImport'];
+          while (rootImport && rootImport['__ownerImport']) {
+            rootImport = rootImport['__ownerImport']['__firstImport'];
+          }
+          if (rootImport.parentNode === document.head) {
+            document.head.insertBefore(s, rootImport);
+          } else {
+            document.head.appendChild(s);
+          }
+        }
+        // Listen for load/error events.
         promises.push(whenElementLoaded(s));
+        // Enables the loading!
+        s.removeAttribute('type');
+        if (isIE && s.localName === 'style') {
+          s.textContent += '';
+        }
       }
       return Promise.all(promises);
-    }
-
-    /**
-     * Clones styles and stylesheets links contained in imports and moves them
-     * as siblings of the root import link.
-     * @param {!HTMLLinkElement} importLink
-     */
-    _cloneAndMoveStyles(importLink) {
-      const n$ = importLink.import.querySelectorAll(stylesSelector);
-      for (let i = 0, l = n$.length, n; i < l && (n = n$[i]); i++) {
-        // Cannot use `n.cloneNode(true)` as it won't work for link stylesheets
-        // with a parentNode https://gist.github.com/valdrinkoshi/4a92f97169a6fc41a1852f23211b8c4e
-        const clone = document.createElement(n.localName);
-        // Ensure we listen for load/error events on this element.
-        whenElementLoaded(clone);
-        // Copy attributes and textContent.
-        for (let j = 0, ll = n.attributes.length; j < ll; j++) {
-          clone.setAttribute(n.attributes[j].name, n.attributes[j].value);
-        }
-        clone.textContent = n.textContent;
-
-        // Remove old, add new.
-        n.parentNode.removeChild(n);
-        importLink.parentNode.insertBefore(clone, importLink);
-      }
     }
 
     /**
@@ -593,8 +573,6 @@
         if (!n['__fired']) {
           n['__fired'] = true;
           const eventType = n.import ? 'load' : 'error';
-          // Ensure the load promise is setup before firing the event.
-          whenElementLoaded(n);
           n.dispatchEvent(new CustomEvent(eventType, {
             bubbles: false,
             cancelable: false,
@@ -649,17 +627,19 @@
    * @return {Promise}
    */
   function whenElementLoaded(element) {
-    element['__loadPromise'] = element['__loadPromise'] || new Promise((resolve) => {
-      if (isElementLoaded(element)) {
-        resolve();
-      } else {
-        element.addEventListener('load', resolve);
-        element.addEventListener('error', resolve);
-      }
-    }).then(() => {
-      element['__loaded'] = true;
-      return element;
-    });
+    if (!element['__loadPromise']) {
+      element['__loadPromise'] = new Promise((resolve) => {
+        if (isElementLoaded(element)) {
+          resolve();
+        } else {
+          element.addEventListener('load', resolve);
+          element.addEventListener('error', resolve);
+        }
+      }).then(() => {
+        element['__loaded'] = true;
+        return element;
+      });
+    }
     return element['__loadPromise'];
   }
 
@@ -672,47 +652,13 @@
       return true;
     }
     let isLoaded = false;
-    if (useNative && isImportLink(element) && element.import &&
-      element.import.readyState !== 'loading') {
+    if (useNative && isImportLink(element) &&
+      element.import && element.import.readyState !== 'loading') {
       isLoaded = true;
-    } else if (isIE && element.localName === 'style') {
-      // NOTE: IE does not fire "load" event for styles that have already
-      // loaded. This is in violation of the spec, so we try our hardest to
-      // work around it.
-      // If there's not @import in the textContent, assume it has loaded
-      if (element.textContent.indexOf('@import') == -1) {
-        isLoaded = true;
-        // if we have a sheet, we have been parsed
-      } else if (element.sheet) {
-        isLoaded = true;
-        const csr = element.sheet.cssRules;
-        // search the rules for @import's
-        for (let i = 0, l = csr ? csr.length : 0; i < l && isLoaded; i++) {
-          if (csr[i].type === CSSRule.IMPORT_RULE) {
-            // if every @import has resolved, fake the load
-            isLoaded = Boolean(csr[i].styleSheet);
-          }
-        }
-      }
     }
     element['__loaded'] = isLoaded;
     return isLoaded;
   }
-
-  /**
-    Add support for the `HTMLImportsLoaded` event and the `HTMLImports.whenReady`
-    method. This api is necessary because unlike the native implementation,
-    script elements do not force imports to resolve. Instead, users should wrap
-    code in either an `HTMLImportsLoaded` handler or after load time in an
-    `HTMLImports.whenReady(callback)` call.
-
-    NOTE: This module also supports these apis under the native implementation.
-    Therefore, if this file is loaded, the same code can be used under both
-    the polyfill and native implementation.
-   */
-
-  const isIE = /Trident/.test(navigator.userAgent);
-  const isEdge = !isIE && /Edge\/\d./i.test(navigator.userAgent);
 
   /**
    * Calls the callback when all imports in the document at call time
@@ -768,18 +714,24 @@
     }
   }
 
-  new Importer();
+  /**
+    Add support for the `HTMLImportsLoaded` event and the `HTMLImports.whenReady`
+    method. This api is necessary because unlike the native implementation,
+    script elements do not force imports to resolve. Instead, users should wrap
+    code in either an `HTMLImportsLoaded` handler or after load time in an
+    `HTMLImports.whenReady(callback)` call.
 
-  // Fire the 'HTMLImportsLoaded' event when imports in document at load time
-  // have loaded. This event is required to simulate the script blocking
-  // behavior of native imports. A main document script that needs to be sure
-  // imports have loaded should wait for this event.
-  whenReady(() =>
-    document.dispatchEvent(new CustomEvent('HTMLImportsLoaded', {
-      cancelable: true,
-      bubbles: true,
-      detail: undefined
-    })));
+    NOTE: This module also supports these apis under the native implementation.
+    Therefore, if this file is loaded, the same code can be used under both
+    the polyfill and native implementation.
+   */
+  whenReady(() => document.dispatchEvent(new CustomEvent('HTMLImportsLoaded', {
+    cancelable: true,
+    bubbles: true,
+    detail: undefined
+  })));
+
+  new Importer();
 
   // exports
   scope.useNative = useNative;
