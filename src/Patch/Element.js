@@ -35,8 +35,9 @@ export default function(internals) {
       set: /** @this {Element} */ function(htmlString) {
         Native.Element_innerHTML.set.call(this, htmlString);
         internals.patchTree(this);
-        // Only create custom elements in the main document.
-        if (this.ownerDocument === document) {
+        // Only create custom elements if this element's owner document is
+        // associated with the registry.
+        if (this.ownerDocument.__CE_hasRegistry) {
           internals.upgradeTree(this);
         }
         return htmlString;

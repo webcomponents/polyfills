@@ -15,8 +15,8 @@ export default function(internals) {
      * @return {!Element}
      */
     function(localName) {
-      // Only create custom elements in the main document.
-      if (this === document) {
+      // Only create custom elements if this document is associated with the registry.
+      if (this.__CE_hasRegistry) {
         const definition = internals.localNameToDefinition(localName);
         if (definition) {
           return new (definition.constructor)();
@@ -39,8 +39,8 @@ export default function(internals) {
     function(node, deep) {
       const clone = Native.Document_importNode.call(this, node, deep);
       internals.patchTree(clone);
-      // Only create custom elements in the main document.
-      if (this === document) {
+      // Only create custom elements if this document is associated with the registry.
+      if (this.__CE_hasRegistry) {
         internals.upgradeTree(clone);
       }
       return clone;
@@ -56,8 +56,8 @@ export default function(internals) {
      * @return {!Element}
      */
     function(namespace, localName) {
-      // Only create custom elements in the main document.
-      if (this === document && (namespace === null || namespace === NS_HTML)) {
+      // Only create custom elements if this document is associated with the registry.
+      if (this.__CE_hasRegistry && (namespace === null || namespace === NS_HTML)) {
         const definition = internals.localNameToDefinition(localName);
         if (definition) {
           return new (definition.constructor)();

@@ -22,6 +22,7 @@ export function isValidCustomElementName(localName) {
 /**
  * @private
  * @param {!Node} node
+ * @return {boolean}
  */
 export function isConnected(node) {
   // Use `Node#isConnected`, if defined.
@@ -30,10 +31,10 @@ export function isConnected(node) {
     return nativeValue;
   }
 
-  while (node && node !== document) {
+  while (node && !(node.__CE_isImportDocument || node instanceof Document)) {
     node = node.parentNode || (node.nodeType === Node.DOCUMENT_FRAGMENT_NODE ? node.host : undefined);
   }
-  return node === document;
+  return !!(node && (node.__CE_isImportDocument || node instanceof Document));
 }
 
 /**
