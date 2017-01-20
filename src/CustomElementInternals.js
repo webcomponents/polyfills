@@ -278,11 +278,9 @@ export default class CustomElementInternals {
    * @param {!Element} element
    */
   connectedCallback(element) {
-    if (element.__CE_state === CEState.custom) {
-      const definition = element.__CE_definition;
-      if (definition && definition.connectedCallback) {
-        definition.connectedCallback.call(element);
-      }
+    const definition = element.__CE_definition;
+    if (definition.connectedCallback) {
+      definition.connectedCallback.call(element);
     }
   }
 
@@ -290,11 +288,9 @@ export default class CustomElementInternals {
    * @param {!Element} element
    */
   disconnectedCallback(element) {
-    if (element.__CE_state === CEState.custom) {
-      const definition = element.__CE_definition;
-      if (definition && definition.disconnectedCallback) {
-        definition.disconnectedCallback.call(element);
-      }
+    const definition = element.__CE_definition;
+    if (definition.disconnectedCallback) {
+      definition.disconnectedCallback.call(element);
     }
   }
 
@@ -306,15 +302,12 @@ export default class CustomElementInternals {
    * @param {?string} namespace
    */
   attributeChangedCallback(element, name, oldValue, newValue, namespace) {
-    if (element.__CE_state === CEState.custom) {
-      const definition = element.__CE_definition;
-      if (
-        definition &&
-        definition.attributeChangedCallback &&
-        definition.observedAttributes.indexOf(name) > -1
-      ) {
-        definition.attributeChangedCallback.call(element, name, oldValue, newValue, namespace);
-      }
+    const definition = element.__CE_definition;
+    if (
+      definition.attributeChangedCallback &&
+      definition.observedAttributes.indexOf(name) > -1
+    ) {
+      definition.attributeChangedCallback.call(element, name, oldValue, newValue, namespace);
     }
   }
 }
