@@ -26,14 +26,24 @@ export default function(internals) {
     console.warn('Custom Elements: `Element#attachShadow` was not patched.');
   }
 
+
   // TODO: Patch instances in browsers without an `Element#innerHTML` descriptor (Early Chrome, IE).
-  if (Native.Element_innerHTML) {
-    Object.defineProperty(Element.prototype, 'innerHTML', {
-      enumerable: Native.Element_innerHTML.enumerable,
+  function patch_innerHTML(destination, baseDescriptor) {
+    Object.defineProperty(destination, 'innerHTML', {
+      enumerable: baseDescriptor.enumerable,
       configurable: true,
-      get: Native.Element_innerHTML.get,
+      get: baseDescriptor.get,
       set: /** @this {Element} */ function(htmlString) {
-        Native.Element_innerHTML.set.call(this, htmlString);
+        const removedNodes = Array.prototype.slice.apply(this.childNodes);
+
+        baseDescriptor.set.call(this, htmlString);
+
+        if (Utilities.isConnected(this)) {
+          for (let i = 0; i < removedNodes.length; i++) {
+            internals.disconnectTree(removedNodes[i]);
+          }
+        }
+
         // Only create custom elements if this element's owner document is
         // associated with the registry.
         if (!this.ownerDocument.__CE_hasRegistry) {
@@ -44,9 +54,41 @@ export default function(internals) {
         return htmlString;
       },
     });
-  } else {
-    console.warn('Custom Elements: `Element#innerHTML` was not patched.');
   }
+
+  if (Native.Element_innerHTML && Native.Element_innerHTML.get) {
+    patch_innerHTML(Element.prototype, Native.Element_innerHTML);
+  } else if (Native.HTMLElement_innerHTML && Native.HTMLElement_innerHTML.get) {
+    patch_innerHTML(HTMLElement.prototype, Native.HTMLElement_innerHTML);
+  } else {
+    // Assume that `innerHTML` is implemented as a 'magic' data descriptor on
+    // all instances.
+
+    /** @type {HTMLDivElement} */
+    const rawDiv = Native.Document_createElement.call(document, 'div');
+
+    internals.addPatch(function(element) {
+      patch_innerHTML(element, {
+        enumerable: true,
+        configurable: true,
+        get: /** @this {Element} */ function() {
+          // TODO: Is this too expensive?
+          return Native.Node_cloneNode.call(this, true).innerHTML;
+        },
+        set: /** @this {Element} */ function(assignedValue) {
+          rawDiv.innerHTML = assignedValue;
+
+          while (this.childNodes.length > 0) {
+            Native.Node_removeChild.call(this, this.childNodes[0]);
+          }
+          while (rawDiv.childNodes.length > 0) {
+            Native.Node_appendChild.call(this, rawDiv.childNodes[0]);
+          }
+        },
+      });
+    });
+  }
+
 
   Utilities.setPropertyUnchecked(Element.prototype, 'setAttribute',
     /**

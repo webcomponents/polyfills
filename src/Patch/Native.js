@@ -25,4 +25,5 @@ export default {
   Element_replaceWith: window.Element.prototype['replaceWith'],
   Element_remove: window.Element.prototype['remove'],
   HTMLElement: window.HTMLElement,
+  HTMLElement_innerHTML: Object.getOwnPropertyDescriptor(window.HTMLElement.prototype, 'innerHTML'),
 };
