@@ -170,22 +170,36 @@ export default class CustomElementInternals {
 
     const gatherElements = element => {
       if (element.localName === 'link' && element.getAttribute('rel') === 'import') {
-        if (visitedImports.has(element)) return;
-
-        visitedImports.add(element);
-
         // The HTML Imports polyfill sets a descendant element of the link to
         // the `import` property, specifically this is *not* a Document.
-        if (element.import instanceof Node) {
-          Utilities.walkDeepDescendantElements(element.import, gatherElements);
+        const importNode = /** @type {?Node} */ (element.import);
+
+        if (importNode instanceof Node) {
+          if (visitedImports.has(importNode)) return;
+          visitedImports.add(importNode);
+
+          importNode.__CE_isImportDocument = true;
+
+          // Connected links are associated with the registry.
+          importNode.__CE_hasRegistry = true;
+
+          Utilities.walkDeepDescendantElements(importNode, gatherElements);
         } else {
           element.addEventListener('load', () => {
-            const doc = element.import;
+            const importNode = /** @type {!Node} */ (element.import);
 
-            if (doc.__CE_documentLoadHandled) return;
-            doc.__CE_documentLoadHandled = true;
+            if (importNode.__CE_documentLoadHandled) return;
+            importNode.__CE_documentLoadHandled = true;
 
-            this.upgradeTree(document);
+            if (visitedImports.has(importNode)) return;
+            visitedImports.add(importNode);
+
+            importNode.__CE_isImportDocument = true;
+
+            // Connected links are associated with the registry.
+            importNode.__CE_hasRegistry = true;
+
+            this.upgradeTree(importNode, visitedImports);
           });
         }
       } else {

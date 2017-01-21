@@ -28,6 +28,9 @@ if (!priorCustomElements || priorCustomElements['forcePolyfill']) {
   PatchNode(internals);
   PatchElement(internals);
 
+  // The main document is always associated with the registry.
+  document.__CE_hasRegistry = true;
+
   /** @type {!CustomElementRegistry} */
   const customElements = new CustomElementRegistry(internals);
 

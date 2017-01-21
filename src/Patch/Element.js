@@ -32,10 +32,14 @@ export default function(internals) {
       enumerable: Native.Element_innerHTML.enumerable,
       configurable: true,
       get: Native.Element_innerHTML.get,
-      set: function(htmlString) {
+      set: /** @this {Element} */ function(htmlString) {
         Native.Element_innerHTML.set.call(this, htmlString);
         internals.patchTree(this);
-        internals.upgradeTree(this);
+        // Only create custom elements if this element's owner document is
+        // associated with the registry.
+        if (this.ownerDocument.__CE_hasRegistry) {
+          internals.upgradeTree(this);
+        }
         return htmlString;
       },
     });

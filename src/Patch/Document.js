@@ -15,9 +15,12 @@ export default function(internals) {
      * @return {!Element}
      */
     function(localName) {
-      const definition = internals.localNameToDefinition(localName);
-      if (definition) {
-        return new (definition.constructor)();
+      // Only create custom elements if this document is associated with the registry.
+      if (this.__CE_hasRegistry) {
+        const definition = internals.localNameToDefinition(localName);
+        if (definition) {
+          return new (definition.constructor)();
+        }
       }
 
       const result = /** @type {!Element} */
@@ -36,7 +39,10 @@ export default function(internals) {
     function(node, deep) {
       const clone = Native.Document_importNode.call(this, node, deep);
       internals.patchTree(clone);
-      internals.upgradeTree(clone);
+      // Only create custom elements if this document is associated with the registry.
+      if (this.__CE_hasRegistry) {
+        internals.upgradeTree(clone);
+      }
       return clone;
     });
 
@@ -50,8 +56,12 @@ export default function(internals) {
      * @return {!Element}
      */
     function(namespace, localName) {
-      if (namespace === null || namespace === NS_HTML) {
-        return this.createElement(localName);
+      // Only create custom elements if this document is associated with the registry.
+      if (this.__CE_hasRegistry && (namespace === null || namespace === NS_HTML)) {
+        const definition = internals.localNameToDefinition(localName);
+        if (definition) {
+          return new (definition.constructor)();
+        }
       }
 
       const result = /** @type {!Element} */
