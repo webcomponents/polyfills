@@ -432,7 +432,7 @@
       }
 
       // This is specific to users of <dom-module> (Polymer).
-      // TODO(valdrin) remove this when importForElement is exposed.
+      // TODO(valdrin) remove this when Polymer uses importForElement.
       const s$ = content.querySelectorAll('dom-module');
       for (let i = 0, s; i < s$.length && (s = s$[i]); i++) {
         s.setAttribute('assetpath',
@@ -535,14 +535,15 @@
     _waitForStyles() {
       const s$ = document.querySelectorAll(stylesToEnableSel);
       const promises = [];
+      let waitNextRender = false;
       for (let i = 0, l = s$.length, s; i < l && (s = s$[i]); i++) {
         // <link rel=stylesheet> should be appended to <head>. Not doing so
         // in IE/Edge breaks the cascading order
         // https://developer.microsoft.com/en-us/microsoft-edge/platform/issues/10472273/
         if (isIE) {
-          let rootImport = s['__ownerImport']['__firstImport'];
-          while (rootImport && rootImport['__ownerImport']) {
-            rootImport = rootImport['__ownerImport']['__firstImport'];
+          let rootImport = importForElement(s);
+          while (rootImport && importForElement(rootImport)) {
+            rootImport = importForElement(rootImport);
           }
           if (rootImport.parentNode === document.head) {
             document.head.insertBefore(s, rootImport);
@@ -554,11 +555,17 @@
         promises.push(whenElementLoaded(s));
         // Enables the loading!
         s.removeAttribute('type');
-        if (isIE && s.localName === 'style') {
+        if (s.localName === 'style') {
           s.textContent += '';
+          waitNextRender = true;
         }
       }
-      return Promise.all(promises);
+      return Promise.all(promises).then(() => {
+        if (waitNextRender) {
+          // Next render ~= raf + timeout
+          return new Promise(resolve => requestAnimationFrame(() => setTimeout(resolve)));
+        }
+      });
     }
 
     /**
@@ -733,8 +740,28 @@
 
   new Importer();
 
+  /**
+   * Returns the link that imported the element.
+   * @param {!Element} element
+   * @return {!HTMLLinkElement|undefined}
+   */
+  function importForElement(element) {
+    let target = element;
+    while ((target = target['__ownerImport'] || target.parentNode || target.host)) {
+      // Found the deepest import.
+      if (target.localName === 'import-content') {
+        element['__ownerImport'] = target;
+        break;
+      }
+    }
+    if (target) {
+      return target['__firstImport'];
+    }
+  }
+
   // exports
   scope.useNative = useNative;
   scope.whenReady = whenReady;
+  scope.importForElement = importForElement;
 
 })(window.HTMLImports = (window.HTMLImports || {}));
