@@ -9,5 +9,6 @@
  */
 
 remoteCurrentScriptExecuted = window.remoteCurrentScriptExecuted || 0;
+console.log('remoteCurrentScriptExecuted ' + remoteCurrentScriptExecuted);
 remoteCurrentScriptExecuted++;
 chai.assert.ok(document.currentScript);
