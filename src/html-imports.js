@@ -207,6 +207,21 @@
     }
 
     /**
+     * @param {!NodeList<!Element>} nodes
+     */
+    addNodes(nodes) {
+      const count = nodes.length;
+      if (!count) {
+        return;
+      }
+      this.inflight += count;
+      for (let i = 0; i < count; i++) {
+        this.require(nodes[i]);
+      }
+      this.checkDone();
+    }
+
+    /**
      * @param {!Element} node
      */
     addNode(node) {
@@ -317,6 +332,7 @@
   const isIE = /Trident/.test(navigator.userAgent) ||
     /Edge\/\d./i.test(navigator.userAgent);
 
+
   const importsSelector = `
     ${IMPORT_SELECTOR},
     style:not([type]),
@@ -325,13 +341,17 @@
     script[type="application/javascript"],
     script[type="text/javascript"]`;
 
-  // Used to mark the scripts that need to be cloned in order to be executed.
+  const importDependencyAttr = 'import-dependency';
+
+  const rootImportsSelector = `${IMPORT_SELECTOR}:not(${importDependencyAttr})`;
+
+  const pendingScriptsSelector = `script[${importDependencyAttr}]`;
+
+  const pendingStylesSelector = `style[${importDependencyAttr}],
+    link[rel=stylesheet][${importDependencyAttr}]`;
+
+  // Used to disable loading of resources.
   const importDisableType = 'import-disable';
-
-  const scriptsToRunSel = `script[type=${importDisableType}]`;
-
-  const stylesToEnableSel = `style[type=${importDisableType}],
-    link[rel=stylesheet][type=${importDisableType}]`;
 
   /**
    * @type {Function}
@@ -353,18 +373,20 @@
   class Importer {
     constructor() {
       this.documents = {};
-      // Make sure to catch any imports that are in the process of loading
-      // when this script is run.
-      const imports = document.querySelectorAll(IMPORT_SELECTOR);
-      for (let i = 0, l = imports.length; i < l; i++) {
-        whenElementLoaded(imports[i]);
-      }
+
       // Observe only document head
       new MutationObserver(this._onMutation.bind(this)).observe(document.head, {
         childList: true
       });
 
-      if (!useNative) {
+      if (useNative) {
+        // Make sure to catch any imports that are in the process of loading
+        // when this script is run.
+        const imports = document.querySelectorAll(IMPORT_SELECTOR);
+        for (let i = 0, l = imports.length; i < l; i++) {
+          whenElementLoaded(imports[i]);
+        }
+      } else {
         this._loader = new Loader(
           this._onLoaded.bind(this), this._onLoadedAll.bind(this)
         );
@@ -377,16 +399,7 @@
      */
     _loadSubtree(node) {
       const nodes = node.querySelectorAll(IMPORT_SELECTOR);
-      const count = nodes.length;
-      if (count) {
-        this._loader.inflight += count;
-        for (let i = 0; i < count; i++) {
-          // Ensure the load promise is setup.
-          whenElementLoaded(nodes[i]);
-          this._loader.require(nodes[i]);
-        }
-        this._loader.checkDone();
-      }
+      this._loader.addNodes(nodes);
     }
 
     _onLoaded(url, elt, resource, err, redirectedUrl) {
@@ -442,11 +455,16 @@
       const n$ = content.querySelectorAll(importsSelector);
       for (let i = 0, l = n$.length, n; i < l && (n = n$[i]); i++) {
         n['__ownerImport'] = content;
+        // Mark for easier selectors.
+        n.setAttribute(importDependencyAttr, '');
         // Disable loading.
-        if (!isImportLink(n)) {
+        if (n.localName === 'script') {
           n['__originalType'] = n.getAttribute('type');
           n.setAttribute('type', importDisableType);
+        } else if (isIE && !isImportLink(n)) {
+          n.setAttribute('type', importDisableType);
         }
+
         Path.fixUrls(n, url);
       }
       Path.fixUrlsInTemplates(content, url);
@@ -489,7 +507,7 @@
      * @return {Promise} Resolved when scripts are loaded.
      */
     _runScripts() {
-      const s$ = document.querySelectorAll(scriptsToRunSel);
+      const s$ = document.querySelectorAll(pendingScriptsSelector);
       let promise = Promise.resolve();
       for (let i = 0, l = s$.length, s; i < l && (s = s$[i]); i++) {
         promise = promise.then(() => {
@@ -533,14 +551,13 @@
      * @return {Promise}
      */
     _waitForStyles() {
-      const s$ = document.querySelectorAll(stylesToEnableSel);
+      const s$ = document.querySelectorAll(pendingStylesSelector);
       const promises = [];
-      let waitNextRender = false;
       for (let i = 0, l = s$.length, s; i < l && (s = s$[i]); i++) {
         // <link rel=stylesheet> should be appended to <head>. Not doing so
         // in IE/Edge breaks the cascading order
         // https://developer.microsoft.com/en-us/microsoft-edge/platform/issues/10472273/
-        if (isIE) {
+        if (isIE && s.parentNode !== document.head) {
           let rootImport = importForElement(s);
           while (rootImport && importForElement(rootImport)) {
             rootImport = importForElement(rootImport);
@@ -551,21 +568,20 @@
             document.head.appendChild(s);
           }
         }
-        // Listen for load/error events.
-        promises.push(whenElementLoaded(s));
-        // Enables the loading!
-        s.removeAttribute('type');
-        if (s.localName === 'style') {
-          s.textContent += '';
-          waitNextRender = true;
+
+        // Listen for load/error events, remove selector once is done loading.
+        promises.push(whenElementLoaded(s)
+          .then(() => s.removeAttribute(importDependencyAttr)));
+
+        if (s.hasAttribute('type')) {
+          // Enables the loading!
+          s.removeAttribute('type');
+          if (s.localName === 'style') {
+            s.textContent += '';
+          }
         }
       }
-      return Promise.all(promises).then(() => {
-        if (waitNextRender) {
-          // Next render ~= raf + timeout
-          return new Promise(resolve => requestAnimationFrame(() => setTimeout(resolve)));
-        }
-      });
+      return Promise.all(promises);
     }
 
     /**
@@ -577,8 +593,8 @@
       // Inverse order to have events firing bottom-up.
       for (let i = n$.length - 1, n; i >= 0 && (n = n$[i]); i--) {
         // Don't fire twice same event.
-        if (!n['__fired']) {
-          n['__fired'] = true;
+        if (!n['__loaded']) {
+          n['__loaded'] = true;
           const eventType = n.import ? 'load' : 'error';
           n.dispatchEvent(new CustomEvent(eventType, {
             bubbles: false,
@@ -608,8 +624,9 @@
         for (let i = 0, l = m.addedNodes ? m.addedNodes.length : 0; i < l; i++) {
           const n = /** @type {Element} */ (m.addedNodes[i]);
           if (n && isImportLink(n)) {
-            whenElementLoaded(n);
-            if (!useNative) {
+            if (useNative) {
+              whenElementLoaded(n);
+            } else {
               this._loader.addNode(n);
             }
           }
@@ -638,6 +655,34 @@
       element['__loadPromise'] = new Promise((resolve) => {
         if (isElementLoaded(element)) {
           resolve();
+        } else if (isIE && element.localName === 'style') {
+          // NOTE: IE does not fire "load" event for styles that have already
+          // loaded. This is in violation of the spec, so we try our hardest to
+          // work around it.
+          let isLoaded = false;
+          // If there's not @import in the textContent, assume it has loaded.
+          if (element.textContent.indexOf('@import') == -1) {
+            isLoaded = true;
+            // if we have a sheet, we have been parsed
+          } else if (element.sheet && element.sheet.cssRules) {
+            isLoaded = true;
+            const csr = element.sheet.cssRules,
+              len = csr.length;
+            // search the rules for @import's
+            for (let i = 0, r; i < len && (r = csr[i]) && isLoaded; i++) {
+              if (r.type === CSSRule.IMPORT_RULE) {
+                // if every @import has resolved, fake the load
+                isLoaded = Boolean(r.styleSheet);
+              }
+            }
+          }
+          if (isLoaded) {
+            // Resolve async to allow style to apply.
+            setTimeout(resolve);
+          } else {
+            // Listen only for load as <style> will always trigger that.
+            element.addEventListener('load', resolve);
+          }
         } else {
           element.addEventListener('load', resolve);
           element.addEventListener('error', resolve);
@@ -703,13 +748,9 @@
    * @param {!function()} callback
    */
   function whenImportsReady(callback) {
-    let imports = document.querySelectorAll(IMPORT_SELECTOR);
+    let imports = document.querySelectorAll(rootImportsSelector);
     const promises = [];
     for (let i = 0, l = imports.length, imp; i < l && (imp = imports[i]); i++) {
-      // Skip nested imports.
-      if (MATCHES.call(imp, `${IMPORT_SELECTOR} ${IMPORT_SELECTOR}`)) {
-        continue;
-      }
       if (!isElementLoaded(imp)) {
         promises.push(whenElementLoaded(imp));
       }
