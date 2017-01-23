@@ -543,14 +543,17 @@
      * @return {Promise}
      */
     _waitForStyles() {
+      // <link rel=stylesheet> should be appended to <head>. Not doing so
+      // in IE/Edge breaks the cascading order
+      // https://developer.microsoft.com/en-us/microsoft-edge/platform/issues/10472273/
+      // If there is one <link rel=stylesheet> imported, we must move these to
+      // <head>.
+      const needsMove = isIE && !!document.querySelector(`link[rel=stylesheet][${importDependencyAttr}]`);
       const s$ = /** @type {!NodeList<!(HTMLLinkElement|HTMLStyleElement)>} */
         (document.querySelectorAll(pendingStylesSelector));
       const promises = [];
       for (let i = 0, l = s$.length, s; i < l && (s = s$[i]); i++) {
-        // <link rel=stylesheet> should be appended to <head>. Not doing so
-        // in IE/Edge breaks the cascading order
-        // https://developer.microsoft.com/en-us/microsoft-edge/platform/issues/10472273/
-        if (isIE && s.parentNode !== document.head) {
+        if (needsMove && s.parentNode !== document.head) {
           let rootImport = importForElement(s);
           while (rootImport && importForElement(rootImport)) {
             rootImport = importForElement(rootImport);
@@ -561,11 +564,9 @@
             document.head.appendChild(s);
           }
         }
-
         // Listen for load/error events, remove selector once is done loading.
         promises.push(whenElementLoaded(s)
           .then(() => s.removeAttribute(importDependencyAttr)));
-
         if (s.hasAttribute('type')) {
           // Enables the loading!
           s.removeAttribute('type');
