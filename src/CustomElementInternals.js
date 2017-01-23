@@ -55,7 +55,7 @@ export default class CustomElementInternals {
   patchTree(node) {
     if (!this._hasPatches) return;
 
-    Utilities.walkDeepDescendants(node, node => this.patch(node));
+    Utilities.walkDeepDescendantElements(node, element => this.patch(element));
   }
 
   /**
