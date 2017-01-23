@@ -515,13 +515,14 @@
         promise = promise.then(() => {
           const clone = /** @type {!HTMLScriptElement} */
             (document.createElement('script'));
-
           // Copy attributes and textContent.
           for (let j = 0, ll = s.attributes.length; j < ll; j++) {
             const attr = s.attributes[j];
+            // Restore original type; skip the import-dependency attribute
+            // to avoid script being cloned again.
             if (attr.name === 'type') {
               clone.setAttribute(attr.name, s['__originalType'] || 'text/javascript');
-            } else {
+            } else if (attr.name !== importDependencyAttr) {
               clone.setAttribute(attr.name, attr.value);
             }
           }
