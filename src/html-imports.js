@@ -332,7 +332,6 @@
   const isIE = /Trident/.test(navigator.userAgent) ||
     /Edge\/\d./i.test(navigator.userAgent);
 
-
   const importsSelector = `
     ${IMPORT_SELECTOR},
     style:not([type]),
@@ -459,11 +458,14 @@
         n['__ownerImport'] = importLink;
         // Mark for easier selectors.
         n.setAttribute(importDependencyAttr, '');
-        // Disable loading.
         if (n.localName === 'script') {
           n['__originalType'] = n.getAttribute('type');
           n.setAttribute('type', importDisableType);
-        } else if (isIE && !isImportLink(n)) {
+        }
+        // <link rel=stylesheet> should be appended to <head>. Not doing so
+        // in IE/Edge breaks the cascading order. We disable the loading by setting
+        // the type.
+        else if (isIE && n.localName === 'link' && n.getAttribute('rel') === 'stylesheet') {
           n.setAttribute('type', importDisableType);
         }
 
@@ -553,6 +555,10 @@
         (document.querySelectorAll(pendingStylesSelector));
       const promises = [];
       for (let i = 0, l = s$.length, s; i < l && (s = s$[i]); i++) {
+        // Listen for load/error events, remove selector once is done loading.
+        promises.push(whenElementLoaded(s)
+          .then(() => s.removeAttribute(importDependencyAttr)));
+
         if (needsMove && s.parentNode !== document.head) {
           let rootImport = importForElement(s);
           while (rootImport && importForElement(rootImport)) {
@@ -563,16 +569,8 @@
           } else {
             document.head.appendChild(s);
           }
-        }
-        // Listen for load/error events, remove selector once is done loading.
-        promises.push(whenElementLoaded(s)
-          .then(() => s.removeAttribute(importDependencyAttr)));
-        if (s.hasAttribute('type')) {
-          // Enables the loading!
+          // Enables the loading of <link rel=stylesheet>
           s.removeAttribute('type');
-          if (s.localName === 'style') {
-            s.textContent += '';
-          }
         }
       }
       return Promise.all(promises);
@@ -649,36 +647,24 @@
       element['__loadPromise'] = new Promise((resolve) => {
         if (isElementLoaded(element)) {
           resolve();
+        } else if (isIE && element.localName === 'style') {
+          // NOTE: IE does not fire "load" event for styles that have already
+          // loaded. This is in violation of the spec, so we try our hardest to
+          // work around it.
+          // If there's not @import in the textContent, assume it has loaded,
+          // else listen only for load which is fired after all @import are loaded.
+          if (element.textContent.indexOf('@import') == -1) {
+            // Give time to apply style.
+            setTimeout(resolve);
+          } else {
+            element.addEventListener('load', () => {
+              // Give time to apply style.
+              setTimeout(resolve);
+            });
+          }
         } else {
           element.addEventListener('load', resolve);
           element.addEventListener('error', resolve);
-
-          if (isIE && element.localName === 'style') {
-            // NOTE: IE does not fire "load" event for styles that have already
-            // loaded. This is in violation of the spec, so we try our hardest to
-            // work around it.
-            let isLoaded = false;
-            // If there's not @import in the textContent, assume it has loaded.
-            if (element.textContent.indexOf('@import') == -1) {
-              isLoaded = true;
-              // if we have a sheet, we have been parsed
-            } else if (element.sheet && element.sheet.cssRules) {
-              isLoaded = true;
-              const csr = element.sheet.cssRules,
-                len = csr.length;
-              // search the rules for @import's
-              for (let i = 0, r; i < len && (r = csr[i]) && isLoaded; i++) {
-                if (r.type === CSSRule.IMPORT_RULE) {
-                  // if every @import has resolved, fake the load
-                  isLoaded = Boolean(r.styleSheet);
-                }
-              }
-            }
-            if (isLoaded) {
-              // Resolve async to allow style to apply.
-              setTimeout(() => resolve());
-            }
-          }
         }
       }).then(() => {
         element['__loaded'] = true;

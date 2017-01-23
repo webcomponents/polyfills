@@ -31,8 +31,6 @@
   <script>
 
   test('style-paths', function() {
-    var i = document.querySelector('[rel=import]');
-    var doc = i.import;
 
     var red = document.querySelector('.red');
     chai.assert.equal(getComputedStyle(red).backgroundColor, 'rgb(255, 0, 0)', 'style in @import applied');
