@@ -453,7 +453,8 @@
           Path.replaceAttrUrl(s.getAttribute('assetpath') || '', url));
       }
 
-      const n$ = content.querySelectorAll(importsSelector);
+      const n$ = /** @type {!NodeList<!(HTMLLinkElement|HTMLScriptElement|HTMLStyleElement)>} */
+        (content.querySelectorAll(importsSelector));
       for (let i = 0, l = n$.length, n; i < l && (n = n$[i]); i++) {
         n['__ownerImport'] = importLink;
         // Mark for easier selectors.
@@ -467,6 +468,9 @@
         // the type.
         else if (isIE && n.localName === 'link' && n.getAttribute('rel') === 'stylesheet') {
           n.setAttribute('type', importDisableType);
+        } else {
+          // Listen for load/error events asap.
+          whenElementLoaded(n);
         }
 
         Path.fixUrls(n, url);
