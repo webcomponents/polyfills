@@ -34,6 +34,7 @@
   const ABS_URL_TEST = /(^\/)|(^#)|(^[\w-\d]*:)/;
   const CSS_URL_REGEXP = /(url\()([^)]*)(\))/g;
   const CSS_IMPORT_REGEXP = /(@import[\s]+(?!url\())([^;]*)(;)/g;
+  const STYLESHEET_REGEXP = /(<link[^>]*)(rel=['|"]?stylesheet['|"]?[^>]*>)/g;
 
 
   // path fixup: style elements in imports must be made relative to the main
@@ -332,8 +333,14 @@
   const isIE = /Trident/.test(navigator.userAgent) ||
     /Edge\/\d./i.test(navigator.userAgent);
 
+  // Used to disable loading of resources.
+  const importDisableType = 'import-disable';
+
+  const disabledLinkSelector = `link[rel=stylesheet][href][type=${importDisableType}]`;
+
   const importsSelector = `
     ${IMPORT_SELECTOR},
+    ${disabledLinkSelector},
     style:not([type]),
     link[rel=stylesheet][href]:not([type]),
     script:not([type]),
@@ -348,9 +355,6 @@
 
   const pendingStylesSelector = `style[${importDependencyAttr}],
     link[rel=stylesheet][${importDependencyAttr}]`;
-
-  // Used to disable loading of resources.
-  const importDisableType = 'import-disable';
 
   /**
    * @type {Function}
@@ -435,6 +439,18 @@
         content.setAttribute('import-href', url);
       }
       if (resource) {
+        if (isIE) {
+          // <link rel=stylesheet> should be appended to <head>. Not doing so
+          // in IE/Edge breaks the cascading order. We disable the loading by
+          // setting the type before setting innerHTML to avoid loading
+          // resources twice.
+          resource = resource.replace(STYLESHEET_REGEXP, (match, p1, p2) => {
+            if (match.indexOf('type=') === -1) {
+              return `${p1} type=${importDisableType} ${p2}`;
+            }
+            return match;
+          });
+        }
         content.innerHTML = resource;
       }
 
@@ -456,24 +472,13 @@
       const n$ = /** @type {!NodeList<!(HTMLLinkElement|HTMLScriptElement|HTMLStyleElement)>} */
         (content.querySelectorAll(importsSelector));
       for (let i = 0, l = n$.length, n; i < l && (n = n$[i]); i++) {
-        n['__ownerImport'] = importLink;
+        // Listen for load/error events, then fix urls.
+        whenElementLoaded(n);
+        Path.fixUrls(n, url);
         // Mark for easier selectors.
         n.setAttribute(importDependencyAttr, '');
-        if (n.localName === 'script') {
-          n['__originalType'] = n.getAttribute('type');
-          n.setAttribute('type', importDisableType);
-        }
-        // <link rel=stylesheet> should be appended to <head>. Not doing so
-        // in IE/Edge breaks the cascading order. We disable the loading by setting
-        // the type.
-        else if (isIE && n.localName === 'link' && n.getAttribute('rel') === 'stylesheet') {
-          n.setAttribute('type', importDisableType);
-        } else {
-          // Listen for load/error events asap.
-          whenElementLoaded(n);
-        }
-
-        Path.fixUrls(n, url);
+        // Set owner import so we save lookup when importForElement is invoked.
+        n['__ownerImport'] = importLink;
       }
       Path.fixUrlsInTemplates(content, url);
       return content;
@@ -481,10 +486,14 @@
 
     _onLoadedAll() {
       this._flatten(document);
-      // Scripts and styles are executed in sequentially so that styles are
-      // applied before scripts run.
-      this._waitForStyles()
-        .then(() => this._runScripts())
+      // We wait for styles to load, and at the same time we execute the scripts,
+      // then fire the load/error events for imports to have faster whenReady
+      // callback execution.
+      // NOTE: This is different for native behavior where scripts would be
+      // executed after the styles before them are loaded.
+      // To achieve that, we could select pending styles and scripts in the
+      // document and execute them sequentially in their dom order.
+      Promise.all([this._waitForStyles(), this._runScripts()])
         .then(() => this._fireEvents());
     }
 
@@ -521,16 +530,11 @@
         promise = promise.then(() => {
           const clone = /** @type {!HTMLScriptElement} */
             (document.createElement('script'));
+          // Remove import-dependency attribute to avoid double cloning.
+          s.removeAttribute(importDependencyAttr);
           // Copy attributes and textContent.
           for (let j = 0, ll = s.attributes.length; j < ll; j++) {
-            const attr = s.attributes[j];
-            // Restore original type; skip the import-dependency attribute
-            // to avoid script being cloned again.
-            if (attr.name === 'type') {
-              clone.setAttribute(attr.name, s['__originalType'] || 'text/javascript');
-            } else if (attr.name !== importDependencyAttr) {
-              clone.setAttribute(attr.name, attr.value);
-            }
+            clone.setAttribute(s.attributes[j].name, s.attributes[j].value);
           }
           clone.textContent = s.textContent;
 
@@ -554,7 +558,7 @@
       // https://developer.microsoft.com/en-us/microsoft-edge/platform/issues/10472273/
       // If there is one <link rel=stylesheet> imported, we must move these to
       // <head>.
-      const needsMove = isIE && !!document.querySelector(`link[rel=stylesheet][${importDependencyAttr}]`);
+      const needsMove = !!document.querySelector(disabledLinkSelector);
       const s$ = /** @type {!NodeList<!(HTMLLinkElement|HTMLStyleElement)>} */
         (document.querySelectorAll(pendingStylesSelector));
       const promises = [];
@@ -619,6 +623,8 @@
       for (let j = 0, m; j < mutations.length && (m = mutations[j]); j++) {
         for (let i = 0, l = m.addedNodes ? m.addedNodes.length : 0; i < l; i++) {
           const n = /** @type {HTMLLinkElement} */ (m.addedNodes[i]);
+          // NOTE: added scripts are not updating currentScript in IE.
+          // TODO add test w/ script & stylesheet maybe
           if (n && isImportLink(n)) {
             if (useNative) {
               whenElementLoaded(n);
@@ -651,21 +657,6 @@
       element['__loadPromise'] = new Promise((resolve) => {
         if (isElementLoaded(element)) {
           resolve();
-        } else if (isIE && element.localName === 'style') {
-          // NOTE: IE does not fire "load" event for styles that have already
-          // loaded. This is in violation of the spec, so we try our hardest to
-          // work around it.
-          // If there's not @import in the textContent, assume it has loaded,
-          // else listen only for load which is fired after all @import are loaded.
-          if (element.textContent.indexOf('@import') == -1) {
-            // Give time to apply style.
-            setTimeout(resolve);
-          } else {
-            element.addEventListener('load', () => {
-              // Give time to apply style.
-              setTimeout(resolve);
-            });
-          }
         } else {
           element.addEventListener('load', resolve);
           element.addEventListener('error', resolve);

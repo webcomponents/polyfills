@@ -9,42 +9,49 @@
     subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 -->
 <html>
-  <head>
-    <title>HTML Imports Dynamic</title>
-    <script src="../polyfills.js"></script>
-    <script src="../../html-imports.min.js"></script>
-    <script>
-      WCT = {
-        waitFor: function(callback) {
-          HTMLImports.whenReady(callback);
-        }
-      };
-    </script>
-    <script src="../../../web-component-tester/browser.js"></script>
-  </head>
-  <body>
+
+<head>
+  <title>HTML Imports Dynamic</title>
+  <script src="../polyfills.js"></script>
+  <script src="../../html-imports.min.js"></script>
+  <script>
+    WCT = {
+      waitFor: function(callback) {
+        HTMLImports.whenReady(callback);
+      }
+    };
+  </script>
+  <script src="../../../web-component-tester/browser.js"></script>
+</head>
+
+<body>
 
   <script>
     test('dynamic imports', function(done) {
-      var loads = 0;
+      var loadSpy = sinon.stub();
+      var whenReadySpy = sinon.stub();
+
       var div = document.createElement('div');
       div.innerHTML = '<link rel="import" href="imports/load-1.html">' +
         '<link rel="import" href="imports/load-2.html">';
       // In Safari putting the div in <head> will not trigger
       // MutationObservers on their subtree.
-      while (div.firstElementChild) {
-        document.head.appendChild(div.firstElementChild);
+      var imp;
+      while ((imp = div.firstElementChild)) {
+        imp.addEventListener('load', loadSpy);
+        document.head.appendChild(imp);
       }
-      var ports = document.querySelectorAll('link[rel=import]');
-      for (var i=0, l=ports.length, n; (i<l) && (n=ports[i]); i++) {
-        n.addEventListener('load', function(e) {
-          loads++;
-          if (loads == 2) {
-            done();
-          }
-        });
-      }
+
+      HTMLImports.whenReady(whenReadySpy);
+      assert.isFalse(whenReadySpy.called, 'captured elements dynamically added');
+
+      HTMLImports.whenReady(function() {
+        assert.equal(whenReadySpy.callCount, 1, 'called previous whenReady');
+        assert.equal(loadSpy.callCount, 2, 'load count ok');
+        done();
+      });
     });
   </script>
-  </body>
+</body>
+
 </html>
