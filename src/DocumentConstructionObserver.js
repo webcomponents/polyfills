@@ -20,7 +20,6 @@ export default class DocumentConstructionObserver {
 
     // Simulate tree construction for all currently accessible nodes in the
     // document.
-    this._internals.patchTree(this._document);
     this._internals.upgradeTree(this._document);
 
     if (this._document.readyState === 'loading') {
@@ -53,7 +52,6 @@ export default class DocumentConstructionObserver {
       const addedNodes = mutations[i].addedNodes;
       for (let j = 0; j < addedNodes.length; j++) {
         const node = addedNodes[j];
-        this._internals.patchTree(node);
         this._internals.upgradeTree(node);
       }
     }

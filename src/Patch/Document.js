@@ -38,9 +38,10 @@ export default function(internals) {
      */
     function(node, deep) {
       const clone = Native.Document_importNode.call(this, node, deep);
-      internals.patchTree(clone);
       // Only create custom elements if this document is associated with the registry.
-      if (this.__CE_hasRegistry) {
+      if (!this.__CE_hasRegistry) {
+        internals.patchTree(clone);
+      } else {
         internals.upgradeTree(clone);
       }
       return clone;

@@ -217,7 +217,13 @@ export default class CustomElementInternals {
 
     Utilities.walkDeepDescendantElements(root, gatherElements);
 
-    for (var i = 0; i < elements.length; i++) {
+    if (this._hasPatches) {
+      for (let i = 0; i < elements.length; i++) {
+        this.patch(elements[i]);
+      }
+    }
+
+    for (let i = 0; i < elements.length; i++) {
       this.upgradeElement(elements[i]);
     }
   }
