@@ -54,8 +54,8 @@ export function walkDeepDescendantElements(root, callback) {
 
     // Ignore descendants of link elements to prevent attempting to traverse
     // elements created by the HTML Imports polyfill. When upgrading a tree,
-    // `CustomElementInternals#upgradeTree` by walks the `import` property of
-    // import links, which will point to either the true imported document
+    // `CustomElementInternals#patchAndUpgradeTree` walks the `import` property
+    // of import links, which will point to either the true imported document
     // (native) or the descendant containing the elements created to emulate the
     // imported document (polyfill).
     if (element.localName === 'link') {

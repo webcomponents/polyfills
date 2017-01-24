@@ -100,7 +100,7 @@ export default class CustomElementRegistry {
     this._internals.setDefinition(localName, definition);
 
     if (this._upgradeOnDefine) {
-      this._internals.upgradeTree(document);
+      this._internals.patchAndUpgradeTree(document);
     }
 
     const deferred = this._whenDefinedDeferred.get(localName);

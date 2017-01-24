@@ -34,11 +34,12 @@ export default function(internals) {
       get: Native.Element_innerHTML.get,
       set: /** @this {Element} */ function(htmlString) {
         Native.Element_innerHTML.set.call(this, htmlString);
-        internals.patchTree(this);
         // Only create custom elements if this element's owner document is
         // associated with the registry.
-        if (this.ownerDocument.__CE_hasRegistry) {
-          internals.upgradeTree(this);
+        if (!this.ownerDocument.__CE_hasRegistry) {
+          internals.patchTree(this);
+        } else {
+          internals.patchAndUpgradeTree(this);
         }
         return htmlString;
       },
