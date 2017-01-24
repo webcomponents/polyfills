@@ -524,6 +524,10 @@
       let promise = Promise.resolve();
       for (let i = 0, l = s$.length, s; i < l && (s = s$[i]); i++) {
         promise = promise.then(() => {
+          // The pending scripts have been generated through innerHTML and
+          // browsers won't execute them for security reasons. We cannot use
+          // s.cloneNode(true) either, the only way to run the script is manually
+          // creating a new element and copying its attributes/textContent.
           const clone = /** @type {!HTMLScriptElement} */
             (document.createElement('script'));
           // Remove import-dependency attribute to avoid double cloning.
