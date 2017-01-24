@@ -27,7 +27,6 @@ export default function(internals) {
   }
 
 
-  // TODO: Patch instances in browsers without an `Element#innerHTML` descriptor (Early Chrome, IE).
   function patch_innerHTML(destination, baseDescriptor) {
     Object.defineProperty(destination, 'innerHTML', {
       enumerable: baseDescriptor.enumerable,
@@ -61,8 +60,6 @@ export default function(internals) {
   } else if (Native.HTMLElement_innerHTML && Native.HTMLElement_innerHTML.get) {
     patch_innerHTML(HTMLElement.prototype, Native.HTMLElement_innerHTML);
   } else {
-    // Assume that `innerHTML` is implemented as a 'magic' data descriptor on
-    // all instances.
 
     /** @type {HTMLDivElement} */
     const rawDiv = Native.Document_createElement.call(document, 'div');
@@ -71,10 +68,15 @@ export default function(internals) {
       patch_innerHTML(element, {
         enumerable: true,
         configurable: true,
+        // Implements getting `innerHTML` by performing an unpatched `cloneNode`
+        // of the element and returning the resulting element's `innerHTML`.
+        // TODO: Is this too expensive?
         get: /** @this {Element} */ function() {
-          // TODO: Is this too expensive?
           return Native.Node_cloneNode.call(this, true).innerHTML;
         },
+        // Implements setting `innerHTML` by creating an unpatched element,
+        // setting `innerHTML` of that element and replacing the target
+        // element's children with those of the unpatched element.
         set: /** @this {Element} */ function(assignedValue) {
           rawDiv.innerHTML = assignedValue;
 
