@@ -12,6 +12,7 @@
   /********************* base setup *********************/
   const IMPORT_SELECTOR = 'link[rel=import]';
   const useNative = Boolean('import' in document.createElement('link'));
+  const supportsTemplate = (typeof HTMLTemplateElement !== 'undefined');
 
   // Polyfill `currentScript` for browsers without it.
   let currentScript = null;
@@ -71,6 +72,9 @@
     },
 
     fixUrlsInTemplates: function(element, base) {
+      if (!supportsTemplate) { // Template not supported.
+        return;
+      }
       const t$ = element.querySelectorAll('template');
       for (let i = 0; i < t$.length; i++) {
         Path.fixUrlsInTemplate(t$[i], base);
@@ -79,9 +83,6 @@
 
     fixUrlsInTemplate: function(template, base) {
       const content = template.content;
-      if (!content) { // Template not supported.
-        return;
-      }
       const n$ = content.querySelectorAll(
         'style, form[action], [src], [href], [url], [style]');
       for (let i = 0; i < n$.length; i++) {
@@ -195,9 +196,6 @@
   /********************* loader *********************/
   // This loader supports a dynamic list of urls
   // and an oncomplete callback that is called when the loader is done.
-  // NOTE: The polyfill currently does *not* need this dynamism or the
-  // onComplete concept. Because of this, the loader could be simplified
-  // quite a bit.
   class Loader {
     constructor(onLoad, onComplete) {
       this.cache = {};
@@ -387,7 +385,7 @@
     }
 
     /**
-     * @param {!HTMLDocument} doc
+     * @param {!(HTMLDocument|DocumentFragment)} doc
      */
     _loadSubtree(doc) {
       const nodes = doc.querySelectorAll(IMPORT_SELECTOR);
@@ -403,12 +401,9 @@
         this.documents[url] = null;
       } else {
         // Generate a document from data.
-        const doc = /** @type {!HTMLDocument} */
-          (this._makeDocument(elt, resource, redirectedUrl || url));
-        // note, we cannot use MO to detect parsed nodes because
-        // SD polyfill does not report these as mutations.
-        this._loadSubtree(doc);
+        const doc = this._makeDocument(elt, resource, redirectedUrl || url);
         this.documents[url] = doc;
+        this._loadSubtree(doc);
       }
     }
 
@@ -417,30 +412,41 @@
      * @param {!HTMLLinkElement} importLink
      * @param {string=} resource
      * @param {string=} url
-     * @return {!Node}
+     * @return {!DocumentFragment}
      */
     _makeDocument(importLink, resource, url) {
-      const content = document.createElement('import-content');
+      if (!resource) {
+        return document.createDocumentFragment();
+      }
 
-      content.style.display = 'none';
-      if (url) {
-        content.setAttribute('import-href', url);
+      if (isIE) {
+        // <link rel=stylesheet> should be appended to <head>. Not doing so
+        // in IE/Edge breaks the cascading order. We disable the loading by
+        // setting the type before setting innerHTML to avoid loading
+        // resources twice.
+        resource = resource.replace(STYLESHEET_REGEXP, (match, p1, p2) => {
+          if (match.indexOf('type=') === -1) {
+            return `${p1} type=${importDisableType} ${p2}`;
+          }
+          return match;
+        });
       }
-      if (resource) {
-        if (isIE) {
-          // <link rel=stylesheet> should be appended to <head>. Not doing so
-          // in IE/Edge breaks the cascading order. We disable the loading by
-          // setting the type before setting innerHTML to avoid loading
-          // resources twice.
-          resource = resource.replace(STYLESHEET_REGEXP, (match, p1, p2) => {
-            if (match.indexOf('type=') === -1) {
-              return `${p1} type=${importDisableType} ${p2}`;
-            }
-            return match;
-          });
+
+      let content;
+      if (supportsTemplate) {
+        const template = /** @type {!HTMLTemplateElement} */
+          (document.createElement('template'));
+        template.innerHTML = resource;
+        content = template.content;
+      } else {
+        content = document.createDocumentFragment();
+        const div = document.createElement('div');
+        div.innerHTML = resource;
+        while (div.firstElementChild) {
+          content.appendChild(div.firstElementChild);
         }
-        content.innerHTML = resource;
       }
+
 
       // Support <base> in imported docs. Resolve url and remove it from the parent.
       const baseEl = content.querySelector('base');
@@ -491,16 +497,18 @@
     _flatten(doc) {
       const n$ = /** @type {!NodeList<!HTMLLinkElement>} */
         (doc.querySelectorAll(IMPORT_SELECTOR));
-      for (let i = 0, l = n$.length, n, imp; i < l && (n = n$[i]); i++) {
-        imp = /** @type {HTMLDocument} */ (this.documents[n.href]);
-        n.import = imp;
-        if (imp && !imp['__firstImport']) {
-          imp['__firstImport'] = n;
+      for (let i = 0, l = n$.length, n; i < l && (n = n$[i]); i++) {
+        let imp = this.documents[n.href];
+        n.import = /** @type {!Document} */ (imp);
+        if (imp && imp.nodeType === Node.DOCUMENT_FRAGMENT_NODE) {
+          this.documents[n.href] = n;
+          // TODO find how to suppress Closure warning here.
+          n.import = n;
           this._flatten(imp);
           n.appendChild(imp);
           // If in the main document, observe for any imports added later.
           if (doc === document) {
-            this._observe(imp);
+            this._observe(n);
           }
         }
       }
@@ -660,7 +668,7 @@
    */
   function isElementLoaded(el) {
     el['__loaded'] = el['__loaded'] ||
-      // For inline scripts, consider them already loaded.
+      // Inline scripts don't trigger load/error events, consider them already loaded.
       (el.localName === 'script' && !( /** @type {!HTMLScriptElement} */ (el).src));
     return el['__loaded'];
   }

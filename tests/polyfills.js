@@ -26,7 +26,3 @@ if (!document.baseURI) {
 if (typeof window.Promise !== 'function') {
   document.write('<script src="/bower_components/es6-promise/dist/es6-promise.auto.min.js"></script>');
 }
-
-if (typeof HTMLTemplateElement === 'undefined') {
-  document.write('<script src="/bower_components/template/template.js"></script>');
-}
