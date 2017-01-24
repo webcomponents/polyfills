@@ -376,26 +376,14 @@
   class Importer {
     constructor() {
       this.documents = {};
-
       // Observe only document head
       new MutationObserver(this._onMutation.bind(this)).observe(document.head, {
         childList: true
       });
-
-      if (useNative) {
-        // Make sure to catch any imports that are in the process of loading
-        // when this script is run.
-        const imports = /** @type {!NodeList<!HTMLLinkElement>} */
-          (document.querySelectorAll(IMPORT_SELECTOR));
-        for (let i = 0, l = imports.length; i < l; i++) {
-          whenElementLoaded(imports[i]);
-        }
-      } else {
-        this._loader = new Loader(
-          this._onLoaded.bind(this), this._onLoadedAll.bind(this)
-        );
-        whenDocumentReady(() => this._loadSubtree(document));
-      }
+      this._loader = new Loader(
+        this._onLoaded.bind(this), this._onLoadedAll.bind(this)
+      );
+      whenDocumentReady(() => this._loadSubtree(document));
     }
 
     /**
@@ -556,8 +544,8 @@
       // <link rel=stylesheet> should be appended to <head>. Not doing so
       // in IE/Edge breaks the cascading order
       // https://developer.microsoft.com/en-us/microsoft-edge/platform/issues/10472273/
-      // If there is one <link rel=stylesheet> imported, we must move these to
-      // <head>.
+      // If there is one <link rel=stylesheet> imported, we must move all imported
+      // links and styles to <head>.
       const needsMove = !!document.querySelector(disabledLinkSelector);
       const s$ = /** @type {!NodeList<!(HTMLLinkElement|HTMLStyleElement)>} */
         (document.querySelectorAll(pendingStylesSelector));
@@ -566,7 +554,8 @@
         // Listen for load/error events, remove selector once is done loading.
         promises.push(whenElementLoaded(s)
           .then(() => s.removeAttribute(importDependencyAttr)));
-
+        // Check if was already moved to head, to handle the case where the element
+        // has already been moved but it is still loading.
         if (needsMove && s.parentNode !== document.head) {
           let rootImport = importForElement(s);
           while (rootImport && importForElement(rootImport)) {
@@ -626,11 +615,7 @@
           // NOTE: added scripts are not updating currentScript in IE.
           // TODO add test w/ script & stylesheet maybe
           if (n && isImportLink(n)) {
-            if (useNative) {
-              whenElementLoaded(n);
-            } else {
-              this._loader.addNode(n);
-            }
+            this._loader.addNode(n);
           }
         }
       }
@@ -675,9 +660,6 @@
    */
   function isElementLoaded(el) {
     el['__loaded'] = el['__loaded'] ||
-      // Check native imports readyState.
-      (useNative && isImportLink(el) && el.import &&
-        ( /** @type {!HTMLDocument} */ (el.import)).readyState !== 'loading') ||
       // For inline scripts, consider them already loaded.
       (el.localName === 'script' && !( /** @type {!HTMLScriptElement} */ (el).src));
     return el['__loaded'];
@@ -768,7 +750,22 @@
     detail: undefined
   })));
 
-  new Importer();
+  if (useNative) {
+    // Listen for load/error events to capture dynamically added scripts.
+    /**
+     * @type {!function(!Event)}
+     */
+    const onLoadingDone = (event) => {
+      const elem = /** @type {!Element} */ (event.target);
+      if (isImportLink(elem)) {
+        elem['__loaded'] = true;
+      }
+    };
+    document.addEventListener('load', onLoadingDone, true /* useCapture */ );
+    document.addEventListener('error', onLoadingDone, true /* useCapture */ );
+  } else {
+    new Importer();
+  }
 
   // exports
   scope.useNative = useNative;
