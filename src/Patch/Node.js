@@ -97,7 +97,7 @@ export default function(internals) {
       if (!this.ownerDocument.__CE_hasRegistry) {
         internals.patchTree(clone);
       } else {
-        internals.upgradeTree(clone);
+        internals.patchAndUpgradeTree(clone);
       }
       return clone;
     });

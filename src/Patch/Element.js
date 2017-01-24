@@ -39,7 +39,7 @@ export default function(internals) {
         if (!this.ownerDocument.__CE_hasRegistry) {
           internals.patchTree(this);
         } else {
-          internals.upgradeTree(this);
+          internals.patchAndUpgradeTree(this);
         }
         return htmlString;
       },

@@ -169,7 +169,7 @@ export default class CustomElementInternals {
    * @param {!Node} root
    * @param {!Set<Node>=} visitedImports
    */
-  upgradeTree(root, visitedImports) {
+  patchAndUpgradeTree(root, visitedImports) {
     if (!visitedImports) {
       visitedImports = new Set();
     }
@@ -207,7 +207,7 @@ export default class CustomElementInternals {
             // Connected links are associated with the registry.
             importNode.__CE_hasRegistry = true;
 
-            this.upgradeTree(importNode, visitedImports);
+            this.patchAndUpgradeTree(importNode, visitedImports);
           });
         }
       } else {

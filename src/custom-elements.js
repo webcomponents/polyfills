@@ -42,7 +42,7 @@ if (!priorCustomElements || priorCustomElements['forcePolyfill']) {
       customElements.setUpgradeOnDefine(false);
       documentReady.then(function() {
         customElements.setUpgradeOnDefine(true);
-        internals.upgradeTree(document);
+        internals.patchAndUpgradeTree(document);
       });
     }
   } else {
