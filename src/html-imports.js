@@ -12,7 +12,6 @@
   /********************* base setup *********************/
   const IMPORT_SELECTOR = 'link[rel=import]';
   const useNative = Boolean('import' in document.createElement('link'));
-  const supportsTemplate = (typeof HTMLTemplateElement !== 'undefined');
 
   // Polyfill `currentScript` for browsers without it.
   let currentScript = null;
@@ -72,9 +71,6 @@
     },
 
     fixUrlsInTemplates: function(element, base) {
-      if (!supportsTemplate) { // Template not supported.
-        return;
-      }
       const t$ = element.querySelectorAll('template');
       for (let i = 0; i < t$.length; i++) {
         Path.fixUrlsInTemplate(t$[i], base);
@@ -83,6 +79,9 @@
 
     fixUrlsInTemplate: function(template, base) {
       const content = template.content;
+      if (!content) { // Template not supported.
+        return;
+      }
       const n$ = content.querySelectorAll(
         'style, form[action], [src], [href], [url], [style]');
       for (let i = 0; i < n$.length; i++) {
@@ -433,20 +432,20 @@
       }
 
       let content;
-      if (supportsTemplate) {
-        const template = /** @type {!HTMLTemplateElement} */
-          (document.createElement('template'));
-        template.innerHTML = resource;
+      const template = /** @type {!HTMLTemplateElement} */
+        (document.createElement('template'));
+      template.innerHTML = resource;
+      if (template.content) {
+        // This doesn't upgrade CustomElements on polyfilled
+        // CustomElements & native <template> (Safari10).
         content = template.content;
       } else {
+        // <template> not supported, create fragment and move children into it.
         content = document.createDocumentFragment();
-        const div = document.createElement('div');
-        div.innerHTML = resource;
-        while (div.firstElementChild) {
-          content.appendChild(div.firstElementChild);
+        while (template.firstElementChild) {
+          content.appendChild(template.firstElementChild);
         }
       }
-
 
       // Support <base> in imported docs. Resolve url and remove it from the parent.
       const baseEl = content.querySelector('base');
@@ -667,7 +666,7 @@
   }
 
   /**
-   * @param {!(HTMLLinkElement|HTMLScriptElement|HTMLStyleElement)} el
+   * @param {!HTMLElement} el
    * @return {boolean}
    */
   function isElementLoaded(el) {
