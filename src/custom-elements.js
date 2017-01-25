@@ -34,17 +34,8 @@ if (!priorCustomElements || priorCustomElements['forcePolyfill']) {
   /** @type {!CustomElementRegistry} */
   const customElements = new CustomElementRegistry(internals);
 
-  // If `customElements.documentReady` exists and is a Promise, prevent calls to
-  // define from causing upgrades until `documentReady` has resolved.
-  if (priorCustomElements && priorCustomElements['documentReady']) {
-    const documentReady = priorCustomElements['documentReady'];
-    if (documentReady.then instanceof Function) {
-      customElements.setUpgradeOnDefine(false);
-      documentReady.then(function() {
-        customElements.setUpgradeOnDefine(true);
-        internals.patchAndUpgradeTree(document);
-      });
-    }
+  if (priorCustomElements && priorCustomElements['flushCallback'] instanceof Function) {
+    customElements.polyfillSetFlushCallback(priorCustomElements['flushCallback']);
   } else {
     new DocumentConstructionObserver(internals, document);
   }

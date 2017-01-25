@@ -28,9 +28,21 @@ export default class CustomElementRegistry {
 
     /**
      * @private
+     * @type {Function|undefined}
+     */
+    this._flushCallback = undefined;
+
+    /**
+     * @private
      * @type {boolean}
      */
-    this._upgradeOnDefine = true;
+    this._flushScheduled = false;
+
+    /**
+     * @private
+     * @type {!Array<string>}
+     */
+    this._pendingDeferred = [];
   }
 
   /**
@@ -99,14 +111,50 @@ export default class CustomElementRegistry {
 
     this._internals.setDefinition(localName, definition);
 
-    if (this._upgradeOnDefine) {
+    // If no flush is scheduled and no flush gate function is defined, we can
+    // walk everything on this definition.
+    if (!this._flushScheduled && !this._flushCallback) {
       this._internals.patchAndUpgradeTree(document);
-    }
 
-    const deferred = this._whenDefinedDeferred.get(localName);
-    if (deferred) {
-      deferred.resolve(undefined);
+      const deferred = this._whenDefinedDeferred.get(localName);
+      if (deferred) {
+        deferred.resolve(undefined);
+      }
+    } else {
+      this._pendingDeferred.push(localName);
+
+      // If we've already scheduled a flush, don't schedule a new one.
+      if (!this._flushScheduled) {
+        this._flushScheduled = true;
+        this._flushCallback(() => this._doFlush());
+      }
     }
+  }
+
+  _doFlush() {
+    // If no new definitions were defined, don't attempt to flush.
+    if (this._flushScheduled === false) return;
+
+    this._flushScheduled = false;
+    this._internals.patchAndUpgradeTree(document);
+
+    while (this._pendingDeferred.length > 0) {
+      const localName = this._pendingDeferred.shift();
+      const deferred = this._whenDefinedDeferred.get(localName);
+      if (deferred) {
+        deferred.resolve(undefined);
+      }
+    }
+  }
+
+  /**
+   * @param {Function} flushCallback
+   */
+  polyfillSetFlushCallback(flushCallback) {
+    if (flushCallback === undefined) {
+      this._doFlush();
+    }
+    this._flushCallback = flushCallback;
   }
 
   /**
@@ -146,13 +194,6 @@ export default class CustomElementRegistry {
 
     return deferred.toPromise();
   }
-
-  /**
-   * @param {boolean} upgradeOnDefine
-   */
-  setUpgradeOnDefine(upgradeOnDefine) {
-    this._upgradeOnDefine = upgradeOnDefine;
-  }
 }
 
 // Closure compiler exports.
@@ -160,3 +201,4 @@ window['CustomElementRegistry'] = CustomElementRegistry;
 CustomElementRegistry.prototype['define'] = CustomElementRegistry.prototype.define;
 CustomElementRegistry.prototype['get'] = CustomElementRegistry.prototype.get;
 CustomElementRegistry.prototype['whenDefined'] = CustomElementRegistry.prototype.whenDefined;
+CustomElementRegistry.prototype['polyfillSetFlushCallback'] = CustomElementRegistry.prototype.polyfillSetFlushCallback;
