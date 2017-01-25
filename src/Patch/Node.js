@@ -170,11 +170,27 @@ export default function(internals) {
       configurable: true,
       get: baseDescriptor.get,
       set: /** @this {Node} */ function(assignedValue) {
-        const removedNodes = Array.prototype.slice.apply(this.childNodes);
+        // If this is a text node then there are no nodes to disconnect.
+        if (this.nodeType === Node.TEXT_NODE) {
+          baseDescriptor.set.call(this, assignedValue);
+          return;
+        }
+
+        let removedNodes = undefined;
+        // Using `childNodes` is faster than `children`.
+        const childNodes = this.childNodes;
+        const childNodesLength = childNodes ? childNodes.length : 0;
+        if (childNodesLength > 0 && Utilities.isConnected(this)) {
+          // Copying an array by iterating is faster than using slice.
+          removedNodes = new Array(childNodesLength);
+          for (let i = 0; i < childNodesLength; i++) {
+            removedNodes[i] = childNodes[i];
+          }
+        }
 
         baseDescriptor.set.call(this, assignedValue);
 
-        if (Utilities.isConnected(this)) {
+        if (removedNodes) {
           for (let i = 0; i < removedNodes.length; i++) {
             internals.disconnectTree(removedNodes[i]);
           }
