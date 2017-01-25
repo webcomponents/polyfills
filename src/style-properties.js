@@ -514,7 +514,7 @@ class StyleProperties {
   applyCustomStyle(style, properties) {
     let rules = StyleUtil.rulesForStyle(style);
     let self = this;
-    style.textContent = StyleUtil.toCssText(rules, function(rule) {
+    style.textContent = StyleUtil.toCssText(rules, function(/** StyleNode */rule) {
       let css = rule.cssText = rule.parsedCssText;
       if (rule.propertyInfo && rule.propertyInfo.cssText) {
         // remove property assignments
@@ -525,7 +525,7 @@ class StyleProperties {
         // (3) custom property usage: border: var(--foo); @apply(--foo);
         // In elements, 1 and 3 are separated for efficiency; here they
         // are not and this makes this case unique.
-        css = removeCustomPropAssignment(css);
+        css = removeCustomPropAssignment(/** @type {string} */(css));
         // replace with reified properties, scenario is same as mixin
         rule.cssText = self.valueForProperties(css, properties);
       }

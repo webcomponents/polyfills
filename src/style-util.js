@@ -16,7 +16,7 @@ import {MEDIA_MATCH} from './common-regex';
 
 /**
  * @param {string|StyleNode} rules
- * @param {function(!Array<Object>)=} callback
+ * @param {function(StyleNode)=} callback
  */
 export function toCssText (rules, callback) {
   if (typeof rules === 'string') {

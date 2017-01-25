@@ -10,6 +10,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 'use strict';
 
+import {StyleNode} from './css-parse'
 import * as StyleUtil from './style-util'
 import {nativeShadow} from './style-settings'
 
@@ -115,7 +116,7 @@ class StyleTransformer {
     let hostScope = this._calcHostScope(scope, ext);
     scope = this._calcElementScope(scope);
     let self = this;
-    return StyleUtil.toCssText(rules, function(rule) {
+    return StyleUtil.toCssText(rules, function(/** StyleNode */rule) {
       if (!rule.isScoped) {
         self.rule(rule, scope, hostScope);
         rule.isScoped = true;

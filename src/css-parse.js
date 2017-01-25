@@ -137,8 +137,12 @@ function parseCss(node, text) {
   return node;
 }
 
-// conversion of sort unicode escapes with spaces like `\33 ` (and longer) into
-// expanded form that doesn't require trailing space `\000033`
+/**
+ * conversion of sort unicode escapes with spaces like `\33 ` (and longer) into
+ * expanded form that doesn't require trailing space `\000033`
+ * @param {string} s
+ * @return {string}
+ */
 function _expandUnicodeEscapes(s) {
   return s.replace(/\\([0-9a-f]{1,6})\s/gi, function() {
     let code = arguments[1],
@@ -170,7 +174,7 @@ export function stringify(node, preserveProperties, text) {
       }
     } else {
       cssText = preserveProperties ? node.cssText :
-        removeCustomProps(node.cssText);
+        removeCustomProps(/** @type {string} */(node.cssText));
       cssText = cssText.trim();
       if (cssText) {
         cssText = '  ' + cssText + '\n';
@@ -199,35 +203,48 @@ function _hasMixinRules(rules) {
   return Boolean(r) && Boolean(r.selector) && r.selector.indexOf(VAR_START) === 0;
 }
 
+/**
+ * @param {string} cssText
+ * @return {string}
+ */
 function removeCustomProps(cssText) {
   cssText = removeCustomPropAssignment(cssText);
   return removeCustomPropApply(cssText);
 }
 
+/**
+ * @param {string} cssText
+ * @return {string}
+ */
 export function removeCustomPropAssignment(cssText) {
   return cssText
     .replace(RX.customProp, '')
     .replace(RX.mixinProp, '');
 }
 
+/**
+ * @param {string} cssText
+ * @return {string}
+ */
 function removeCustomPropApply(cssText) {
   return cssText
     .replace(RX.mixinApply, '')
     .replace(RX.varApply, '');
 }
 
-export let types = {
+/** @enum {number} */
+export const types = {
   STYLE_RULE: 1,
   KEYFRAMES_RULE: 7,
   MEDIA_RULE: 4,
   MIXIN_RULE: 1000
 }
 
-let OPEN_BRACE = '{';
-let CLOSE_BRACE = '}';
+const OPEN_BRACE = '{';
+const CLOSE_BRACE = '}';
 
 // helper regexp's
-let RX = {
+const RX = {
   comments: /\/\*[^*]*\*+([^/*][^*]*\*+)*\//gim,
   port: /@import[^;]*;/gim,
   customProp: /(?:^[^;\-\s}]+)?--[^;{}]*?:[^{};]*?(?:[;\n]|$)/gim,
@@ -238,6 +255,6 @@ let RX = {
   multipleSpaces: /\s+/g
 }
 
-let VAR_START = '--';
-let MEDIA_START = '@media';
-let AT_START = '@';
+const VAR_START = '--';
+const MEDIA_START = '@media';
+const AT_START = '@';

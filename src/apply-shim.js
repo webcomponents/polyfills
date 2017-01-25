@@ -71,7 +71,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 'use strict';
 
-import {forEachRule, processVariableAndFallback, rulesForStyle} from './style-util'
+import {forEachRule, processVariableAndFallback, rulesForStyle, toCssText} from './style-util'
 import {MIXIN_MATCH, VAR_ASSIGN} from './common-regex'
 import {StyleNode} from './css-parse'
 
@@ -147,12 +147,11 @@ class ApplyShim {
   /**
    * @param {!HTMLStyleElement} style
    * @param {string} elementName
-   * @return {StyleNode}
    */
   transformStyle(style, elementName) {
     let ast = rulesForStyle(style);
     this.transformRules(ast, elementName);
-    return ast;
+    style.textContent = toCssText(ast);
   }
   /**
    * @param {StyleNode} rules
@@ -408,7 +407,6 @@ ApplyShim.prototype['detectMixin'] = ApplyShim.prototype.detectMixin;
 ApplyShim.prototype['transformStyle'] = ApplyShim.prototype.transformStyle;
 ApplyShim.prototype['transformRules'] = ApplyShim.prototype.transformRules;
 ApplyShim.prototype['transformRule'] = ApplyShim.prototype.transformRule;
-ApplyShim.prototype['transformCssText'] = ApplyShim.prototype.transformCssText;
 ApplyShim.prototype['_separator'] = MIXIN_VAR_SEP;
 Object.defineProperty(ApplyShim.prototype, 'invalidCallback', {
   /** @return {?function(string)} */
