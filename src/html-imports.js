@@ -498,7 +498,8 @@
         if (imp && imp.nodeType === Node.DOCUMENT_FRAGMENT_NODE) {
           this.documents[n.href] = n;
           // Suppress Closure warning about incompatible subtype assignment.
-          /** @type {!HTMLElement} */(n).import = n;
+          /** @type {!HTMLElement} */
+          (n).import = n;
           this._flatten(imp);
           n.appendChild(imp);
           // If in the main document, observe for any imports added later.
@@ -568,6 +569,11 @@
           while (rootImport && importForElement(rootImport)) {
             rootImport = importForElement(rootImport);
           }
+          // Replace the element we're about to move with a placeholder
+          // containing a reference to the moved element.
+          const placeholder = document.createElement(s.localName);
+          placeholder['__appliedElement'] = s;
+          s.parentNode.replaceChild(placeholder, s);
           if (rootImport.parentNode === document.head) {
             document.head.insertBefore(s, rootImport);
           } else {
