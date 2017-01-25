@@ -162,4 +162,53 @@ export default function(internals) {
 
       return nativeResult;
     });
+
+
+  function patch_textContent(destination, baseDescriptor) {
+    Object.defineProperty(destination, 'textContent', {
+      enumerable: baseDescriptor.enumerable,
+      configurable: true,
+      get: baseDescriptor.get,
+      set: /** @this {Node} */ function(assignedValue) {
+        const removedNodes = Array.prototype.slice.apply(this.childNodes);
+
+        baseDescriptor.set.call(this, assignedValue);
+
+        if (Utilities.isConnected(this)) {
+          for (let i = 0; i < removedNodes.length; i++) {
+            internals.disconnectTree(removedNodes[i]);
+          }
+        }
+      },
+    });
+  }
+
+  if (Native.Node_textContent && Native.Node_textContent.get) {
+    patch_textContent(Node.prototype, Native.Node_textContent);
+  } else {
+    internals.addPatch(function(element) {
+      patch_textContent(element, {
+        enumerable: true,
+        configurable: true,
+        // NOTE: This implementation of the `textContent` getter assumes that
+        // text nodes' `textContent` getter will not be patched.
+        get: /** @this {Node} */ function() {
+          /** @type {!Array<string>} */
+          const parts = [];
+
+          for (let i = 0; i < this.childNodes.length; i++) {
+            parts.push(this.childNodes[i].textContent);
+          }
+
+          return parts.join('');
+        },
+        set: /** @this {Node} */ function(assignedValue) {
+          while (this.firstChild) {
+            Native.Node_removeChild.call(this, this.firstChild);
+          }
+          Native.Node_appendChild.call(this, document.createTextNode(assignedValue));
+        },
+      });
+    });
+  }
 };
