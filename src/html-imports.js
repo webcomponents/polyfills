@@ -400,7 +400,7 @@
         this.documents[url] = null;
       } else {
         // Generate a document from data.
-        const doc = this._makeDocument(elt, resource, redirectedUrl || url);
+        const doc = this._makeDocument(resource, redirectedUrl || url);
         this.documents[url] = doc;
         this._loadSubtree(doc);
       }
@@ -408,12 +408,11 @@
 
     /**
      * Creates a new document containing resource and normalizes urls accordingly.
-     * @param {!HTMLLinkElement} importLink
      * @param {string=} resource
      * @param {string=} url
      * @return {!DocumentFragment}
      */
-    _makeDocument(importLink, resource, url) {
+    _makeDocument(resource, url) {
       if (!resource) {
         return document.createDocumentFragment();
       }
@@ -436,8 +435,7 @@
         (document.createElement('template'));
       template.innerHTML = resource;
       if (template.content) {
-        // This doesn't upgrade CustomElements on polyfilled
-        // CustomElements & native <template> (Safari10).
+        // This creates issues in Safari10 when used with shadydom (see #12).
         content = template.content;
       } else {
         // <template> not supported, create fragment and move children into it.
@@ -470,8 +468,6 @@
         Path.fixUrls(n, url);
         // Mark for easier selectors.
         n.setAttribute(importDependencyAttr, '');
-        // Set owner import so we save lookup when importForElement is invoked.
-        n['__ownerImport'] = importLink;
       }
       Path.fixUrlsInTemplates(content, url);
       return content;
@@ -501,8 +497,8 @@
         n.import = /** @type {!Document} */ (imp);
         if (imp && imp.nodeType === Node.DOCUMENT_FRAGMENT_NODE) {
           this.documents[n.href] = n;
-          // TODO find how to suppress Closure warning here.
-          n.import = n;
+          // Suppress Closure warning about incompatible subtype assignment.
+          /** @type {!HTMLElement} */(n).import = n;
           this._flatten(imp);
           n.appendChild(imp);
           // If in the main document, observe for any imports added later.
