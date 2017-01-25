@@ -148,6 +148,54 @@ export default class CustomElementRegistry {
   }
 
   /**
+   * Calling `polyfillSetFlushCallback` with a function will set that function
+   * as the registry's 'flush callback'.
+   *
+   * If the flush callback is `undefined` (the default), calls to `define` cause
+   * synchronous full-document walks to find and upgrade elements and resolve
+   * any associated `whenDefined` promises immediately after the walk.
+   *
+   * If the flush callback is defined and the registry receives a call to
+   * `define`, the flush callback is called with a function that must be called
+   * to initiate the next flush. Particularly, no calls to `define` will trigger
+   * document walks to check for upgrades and no promises returned by
+   * `whenDefined` will be resolved until the next time the function given to
+   * the flush callback is called (or the flush callback is set back to
+   * `undefined`).
+   *
+   * ```javascript
+   * let doFlush = undefined;
+   * customElements.polyfillSetFlushCallback(function flushCallback(fn) {
+   *   doFlush = fn;
+   * });
+   *
+   * let promiseB = customElements.whenDefined('element-a');
+   * let promiseA = customElements.whenDefined('element-b');
+   *
+   * // These calls will not cause any 'element-a' or 'element-b' elements
+   * // already in the document to be upgraded and will not cause `promiseA` or
+   * // `promiseB` to be resolved. However, `flushCallback` was called and
+   * // `doFlush` is now a function.
+   * customElements.define('element-a', class extends HTMLElement {});
+   * customElements.define('element-b', class extends HTMLElement {});
+   *
+   * // This call will cause the document to be walked and any 'element-a' or
+   * // 'element-b' elements found (which are now defined) will be upgraded.
+   * // Also, `promiseA` and `promiseB` will be resolved.
+   * doFlush();
+   *
+   * let promiseC = customElements.whenDefined('element-c');
+   *
+   * // Once again 'element-c' elements in the document are not upgraded and
+   * // `promiseC` is not resolved.
+   * customElements.define('element-c', class extends HTMLElement {});
+   *
+   * // Setting the flush callback to `undefined` walks the document for
+   * // upgrades and resolves any pending `whenDefined` promises, if any calls
+   * // to `define` were made since the last flush.
+   * customElements.polyfillSetFlushCallback(undefined);
+   * ```
+   *
    * @param {Function} flushCallback
    */
   polyfillSetFlushCallback(flushCallback) {
