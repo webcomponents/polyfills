@@ -52,9 +52,12 @@
       }
       if (element.localName === 'style') {
         Path.resolveUrlsInStyle(element, base);
-      } else if (element.localName === 'script' && element.textContent) {
-        element.textContent += `\n//# sourceURL=${base}`;
       }
+      // TODO(valdrin) append sourceURL and test the "debuggability" of scripts
+      // loaded via imports on the various browsers.
+      // else if (element.localName === 'script' && element.textContent) {
+      //   element.textContent += `\n//# sourceURL=${base}`;
+      // }
     },
 
     fixUrlAttributes: function(element, base) {
@@ -62,6 +65,8 @@
       for (let i = 0, a; i < attrs.length && (a = attrs[i]); i++) {
         const at = element.attributes[a];
         const v = at && at.value;
+        // Skip bound attribute values (assume binding is done via {} and []).
+        // TODO(valdrin) consider exposing a library-implementable hook.
         if (v && (v.search(/({{|\[\[)/) < 0)) {
           at.value = (a === 'style') ?
             Path.resolveUrlsInCssText(v, base) :
@@ -578,6 +583,8 @@
             placeholder = document.createElement(s.localName);
           // Add reference of the moved element.
           placeholder['__appliedElement'] = s;
+          // Disable this from appearing in document.styleSheets.
+          placeholder.setAttribute('type', 'import-placeholder');
           // First, re-parent the element...
           if (rootImport.parentNode === document.head) {
             document.head.insertBefore(s, rootImport);
@@ -748,15 +755,14 @@
    * @return {!HTMLLinkElement|undefined}
    */
   function importForElement(element) {
-    let target = element;
-    while ((target = target['__ownerImport'] || target.parentNode || target.host)) {
-      // Found the deepest import.
-      if (isImportLink(target)) {
-        element['__ownerImport'] = /** @type {!HTMLLinkElement} */ (target);
-        break;
-      }
+    let owner = element['__ownerImport'];
+    if (!owner) {
+      owner = element;
+      // Walk up the parent tree until we find an import.
+      while ((owner = owner.parentNode || owner.host) && !isImportLink(owner)) {}
+      element['__ownerImport'] = owner;
     }
-    return element['__ownerImport'];
+    return owner;
   }
 
   /**
