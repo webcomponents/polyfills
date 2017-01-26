@@ -10,7 +10,6 @@
 (function(scope) {
 
   /********************* base setup *********************/
-  const IMPORT_SELECTOR = 'link[rel=import]';
   const useNative = Boolean('import' in document.createElement('link'));
 
   // Polyfill `currentScript` for browsers without it.
@@ -165,193 +164,83 @@
 
     /**
      * @param {!string} url
-     * @param {!function(boolean, ?, string=)} callback
-     * @return {XMLHttpRequest}
+     * @return {!Promise}
      */
-    load: function(url, callback) {
-      const request = new XMLHttpRequest();
-      request.open('GET', url, Xhr.async);
-      request.addEventListener('readystatechange', (e) => {
-        if (request.readyState === 4) {
-          // Servers redirecting an import can add a Location header to help us
-          // polyfill correctly.
-          let redirectedUrl = undefined;
-          try {
-            const locationHeader = request.getResponseHeader('Location');
-            if (locationHeader) {
-              // Relative or full path.
-              redirectedUrl = (locationHeader.substr(0, 1) === '/') ?
-                location.origin + locationHeader : locationHeader;
-            }
-          } catch (e) {
-            console.error(e.message);
+    load: function(url) {
+      return new Promise((resolve, reject) => {
+        if (!url) {
+          reject({
+            resource: 'error: href must be specified'
+          });
+        } else if (url.match(/^data:/)) {
+          // Handle Data URI Scheme
+          const pieces = url.split(',');
+          const header = pieces[0];
+          let resource = pieces[1];
+          if (header.indexOf(';base64') > -1) {
+            resource = atob(resource);
+          } else {
+            resource = decodeURIComponent(resource);
           }
-          const isOk = ((request.status >= 200 && request.status < 300) ||
-            request.status === 304 || request.status === 0);
-          const resource = (request.response || request.responseText);
-          callback(!isOk, resource, redirectedUrl);
+          resolve({
+            resource: resource
+          });
+        } else {
+          const request = new XMLHttpRequest();
+          request.open('GET', url, Xhr.async);
+          request.addEventListener('readystatechange', (e) => {
+            if (request.readyState === 4) {
+              // Servers redirecting an import can add a Location header to help us
+              // polyfill correctly.
+              let redirectedUrl = undefined;
+              try {
+                const locationHeader = request.getResponseHeader('Location');
+                if (locationHeader) {
+                  // Relative or full path.
+                  redirectedUrl = (locationHeader.substr(0, 1) === '/') ?
+                    location.origin + locationHeader : locationHeader;
+                }
+              } catch (e) {
+                console.error(e.message);
+              }
+              const resp = {
+                resource: (request.response || request.responseText),
+                redirectedUrl: redirectedUrl
+              };
+              if ((request.status >= 200 && request.status < 300) ||
+                request.status === 304 || request.status === 0) {
+                resolve(resp);
+              } else {
+                reject(resp);
+              }
+            }
+          });
+          request.send();
         }
       });
-      request.send();
-      return request;
     }
   };
-
-  /********************* loader *********************/
-  // This loader supports a dynamic list of urls
-  // and an oncomplete callback that is called when the loader is done.
-  class Loader {
-    constructor(onLoad, onComplete) {
-      this.cache = {};
-      this.onload = onLoad;
-      this.oncomplete = onComplete;
-      this.inflight = 0;
-      this.pending = {};
-    }
-
-    /**
-     * @param {!NodeList<!Element>} nodes
-     */
-    addNodes(nodes) {
-      const count = nodes.length;
-      if (!count) {
-        return;
-      }
-      this.inflight += count;
-      for (let i = 0; i < count; i++) {
-        this.require(nodes[i]);
-      }
-      this.checkDone();
-    }
-
-    /**
-     * @param {!Element} node
-     */
-    addNode(node) {
-      // number of transactions to complete
-      this.inflight++;
-      // commence transactions
-      this.require(node);
-      // anything to do?
-      this.checkDone();
-    }
-
-    /**
-     * @param {!Element} elt
-     */
-    require(elt) {
-      const url = elt.href || elt.src;
-      // deduplication
-      if (!this.dedupe(url, elt)) {
-        // fetch this resource
-        this.fetch(url, elt);
-      }
-    }
-
-    /**
-     * @param {string} url
-     * @param {!Element} elt
-     * @return {boolean}
-     */
-    dedupe(url, elt) {
-      if (this.pending[url]) {
-        // add to list of nodes waiting for inUrl
-        this.pending[url].push(elt);
-        // don't need fetch
-        return true;
-      }
-      let resource;
-      if (this.cache[url]) {
-        this.onload(url, elt, this.cache[url]);
-        // finished this transaction
-        this.tail();
-        // don't need fetch
-        return true;
-      }
-      // first node waiting for inUrl
-      this.pending[url] = [elt];
-      // need fetch (not a dupe)
-      return false;
-    }
-
-    /**
-     * @param {string} url
-     * @param {!Element} elt
-     */
-    fetch(url, elt) {
-      if (!url) {
-        this.receive(url, elt, true, 'error: href must be specified');
-      } else if (url.match(/^data:/)) {
-        // Handle Data URI Scheme
-        const pieces = url.split(',');
-        const header = pieces[0];
-        let body = pieces[1];
-        if (header.indexOf(';base64') > -1) {
-          body = atob(body);
-        } else {
-          body = decodeURIComponent(body);
-        }
-        this.receive(url, elt, false, body);
-      } else {
-        Xhr.load(url, (error, resource, redirectedUrl) =>
-          this.receive(url, elt, error, resource, redirectedUrl));
-      }
-    }
-
-    /**
-     * @param {!string} url
-     * @param {!Element} elt
-     * @param {boolean} err
-     * @param {string=} resource
-     * @param {string=} redirectedUrl
-     */
-    receive(url, elt, err, resource, redirectedUrl) {
-      this.cache[url] = resource;
-      const $p = this.pending[url];
-      for (let i = 0, l = $p.length, p;
-        (i < l) && (p = $p[i]); i++) {
-        // If url was redirected, use the redirected location so paths are
-        // calculated relative to that.
-        this.onload(url, p, resource, err, redirectedUrl);
-        this.tail();
-      }
-      this.pending[url] = null;
-    }
-
-    tail() {
-      --this.inflight;
-      this.checkDone();
-    }
-
-    checkDone() {
-      if (!this.inflight) {
-        this.oncomplete();
-      }
-    }
-  }
 
   /********************* importer *********************/
 
   const isIE = /Trident/.test(navigator.userAgent) ||
     /Edge\/\d./i.test(navigator.userAgent);
 
+  const importSelector = 'link[rel=import]';
+
   // Used to disable loading of resources.
   const importDisableType = 'import-disable';
 
   const disabledLinkSelector = `link[rel=stylesheet][href][type=${importDisableType}]`;
 
-  const importsSelector = `
-    ${IMPORT_SELECTOR},
-    ${disabledLinkSelector},
-    style:not([type]),
-    link[rel=stylesheet][href]:not([type]),
-    script:not([type]),
-    script[type="application/javascript"],
+  const importDependenciesSelector = `${importSelector}, ${disabledLinkSelector},
+    style:not([type]), link[rel=stylesheet][href]:not([type]),
+    script:not([type]), script[type="application/javascript"],
     script[type="text/javascript"]`;
 
   const importDependencyAttr = 'import-dependency';
 
-  const rootImportsSelector = `${IMPORT_SELECTOR}:not(${importDependencyAttr})`;
+  const rootImportSelector = `${importSelector}:not(${importDependencyAttr})`;
 
   const pendingScriptsSelector = `script[${importDependencyAttr}]`;
 
@@ -378,37 +267,75 @@
   class Importer {
     constructor() {
       this.documents = {};
-      // Observe only document head
-      new MutationObserver(this._onMutation.bind(this)).observe(document.head, {
-        childList: true
+      // Used to keep track of pending loads, so that flattening and firing of
+      // events can be done when all resources are ready.
+      this.inflight = 0;
+      whenDocumentReady(() => {
+        // Observe only document head
+        new MutationObserver(this._onMutation.bind(this)).observe(document.head, {
+          childList: true
+        });
+        this._load();
       });
-      this._loader = new Loader(
-        this._onLoaded.bind(this), this._onLoadedAll.bind(this)
-      );
-      whenDocumentReady(() => this._loadSubtree(document));
+    }
+
+    /**
+     * Loads the resources needed by the import link and fires the load/error
+     * event on the node once finished. If link is not defined or null, loads
+     * all imports in the main document.
+     * @param {HTMLLinkElement=} link
+     */
+    _load(link) {
+      const whenLoadedPromise = link ? this._whenImportLoaded(link) : this._whenImportsLoaded(document);
+      if (whenLoadedPromise) {
+        this.inflight++;
+        whenLoadedPromise.then(() => {
+          // Wait until all resources are ready.
+          if (--this.inflight === 0) {
+            this._onLoadedAll();
+          }
+        });
+      }
     }
 
     /**
      * @param {!(HTMLDocument|DocumentFragment)} doc
+     * @return {Promise|null}
      */
-    _loadSubtree(doc) {
-      const nodes = doc.querySelectorAll(IMPORT_SELECTOR);
-      this._loader.addNodes(nodes);
+    _whenImportsLoaded(doc) {
+      const links = /** @type {!NodeList<!HTMLLinkElement>} */
+        (doc.querySelectorAll(importSelector));
+      const promises = [];
+      for (let i = 0, l = links.length; i < l; i++) {
+        const promise = this._whenImportLoaded(links[i]);
+        if (promise) {
+          promises.push(promise);
+        }
+      }
+      return promises.length ? Promise.all(promises).then(() => doc) : null;
     }
 
-    _onLoaded(url, elt, resource, err, redirectedUrl) {
-      // We've already seen a document at this url, return.
+    /**
+     * @param {!HTMLLinkElement} link
+     * @return {Promise|null}
+     */
+    _whenImportLoaded(link) {
+      const url = link.href;
+      // This resource is already being handled by another import.
       if (this.documents[url] !== undefined) {
-        return;
+        return null;
       }
-      if (err) {
-        this.documents[url] = null;
-      } else {
-        // Generate a document from data.
-        const doc = this._makeDocument(resource, redirectedUrl || url);
-        this.documents[url] = doc;
-        this._loadSubtree(doc);
-      }
+      // Mark it as pending to notify others this url is being loaded.
+      this.documents[url] = 'pending';
+      return Xhr.load(url)
+        .then((resp) => {
+          const doc = this._makeDocument(resp.resource, resp.redirectedUrl || url);
+          this.documents[url] = doc;
+          // Load subtree.
+          return this._whenImportsLoaded(doc);
+        })
+        .catch(() => this.documents[url] = null)
+        .then(() => link);
     }
 
     /**
@@ -466,7 +393,7 @@
       }
 
       const n$ = /** @type {!NodeList<!(HTMLLinkElement|HTMLScriptElement|HTMLStyleElement)>} */
-        (content.querySelectorAll(importsSelector));
+        (content.querySelectorAll(importDependenciesSelector));
       for (let i = 0, l = n$.length, n; i < l && (n = n$[i]); i++) {
         // Listen for load/error events, then fix urls.
         whenElementLoaded(n);
@@ -496,15 +423,14 @@
      */
     _flatten(doc) {
       const n$ = /** @type {!NodeList<!HTMLLinkElement>} */
-        (doc.querySelectorAll(IMPORT_SELECTOR));
+        (doc.querySelectorAll(importSelector));
       for (let i = 0, l = n$.length, n; i < l && (n = n$[i]); i++) {
-        let imp = this.documents[n.href];
+        const imp = this.documents[n.href];
         n.import = /** @type {!Document} */ (imp);
         if (imp && imp.nodeType === Node.DOCUMENT_FRAGMENT_NODE) {
           this.documents[n.href] = n;
           // Suppress Closure warning about incompatible subtype assignment.
-          /** @type {!HTMLElement} */
-          (n).import = n;
+          ( /** @type {!HTMLElement} */ (n).import = n);
           this._flatten(imp);
           n.appendChild(imp);
           // If in the main document, observe for any imports added later.
@@ -601,23 +527,31 @@
     }
 
     /**
-     * Fires load/error events for loaded imports.
+     * Fires load/error events for imports in the right order .
      */
     _fireEvents() {
       const n$ = /** @type {!NodeList<!HTMLLinkElement>} */
-        (document.querySelectorAll(IMPORT_SELECTOR));
+        (document.querySelectorAll(importSelector));
       // Inverse order to have events firing bottom-up.
       for (let i = n$.length - 1, n; i >= 0 && (n = n$[i]); i--) {
-        // Don't fire twice same event.
-        if (!n['__loaded']) {
-          n['__loaded'] = true;
-          const eventType = n.import ? 'load' : 'error';
-          n.dispatchEvent(new CustomEvent(eventType, {
-            bubbles: false,
-            cancelable: false,
-            detail: undefined
-          }));
-        }
+        this._fireEventIfNeeded(n);
+      }
+    }
+
+    /**
+     * Fires load/error event for the import if this wasn't done already.
+     * @param {!HTMLLinkElement} link
+     */
+    _fireEventIfNeeded(link) {
+      // Don't fire twice same event.
+      if (!link['__loaded']) {
+        link['__loaded'] = true;
+        const eventType = link.import ? 'load' : 'error';
+        link.dispatchEvent(new CustomEvent(eventType, {
+          bubbles: false,
+          cancelable: false,
+          detail: undefined
+        }));
       }
     }
 
@@ -642,12 +576,21 @@
           // NOTE: added scripts are not updating currentScript in IE.
           // TODO add test w/ script & stylesheet maybe
           if (n && isImportLink(n)) {
-            this._loader.addNode(n);
+            const imp = this.documents[n.href];
+            // First time we see this import, load.
+            if (imp === undefined) {
+              this._load(n);
+            }
+            // If nothing else is loading, we can safely associate the import
+            // and fire the load/error event.
+            else if (!this.inflight) {
+              n.import = imp;
+              this._fireEventIfNeeded(n);
+            }
           }
         }
       }
     }
-
   }
 
   /**
@@ -655,7 +598,7 @@
    * @return {boolean}
    */
   function isImportLink(node) {
-    return node.nodeType === Node.ELEMENT_NODE && MATCHES.call(node, IMPORT_SELECTOR);
+    return node.nodeType === Node.ELEMENT_NODE && MATCHES.call(node, importSelector);
   }
 
   /**
@@ -735,7 +678,7 @@
    */
   function whenImportsReady(callback) {
     let imports = /** @type {!NodeList<!HTMLLinkElement>} */
-      (document.querySelectorAll(rootImportsSelector));
+      (document.querySelectorAll(rootImportSelector));
     const promises = [];
     for (let i = 0, l = imports.length, imp; i < l && (imp = imports[i]); i++) {
       if (!isElementLoaded(imp)) {
@@ -743,7 +686,7 @@
       }
     }
     if (promises.length) {
-      Promise.all(promises).then(() => callback());
+      Promise.all(promises).then(callback);
     } else {
       callback();
     }
