@@ -54,8 +54,8 @@ This is how the resolved import will look like:
   <link rel="stylesheet" href="my-linked-style.css">
   <style> .blue { color: blue }; </style>
   <link rel="import" href="my-element.html">
-    <link>
-    <style></style>
+    <link type="import-placeholder">
+    <style type="import-placeholder"></style>
   </link>
 </head>
 ```
