@@ -9,6 +9,7 @@ export default {
   Node_insertBefore: window.Node.prototype.insertBefore,
   Node_removeChild: window.Node.prototype.removeChild,
   Node_replaceChild: window.Node.prototype.replaceChild,
+  Node_textContent: Object.getOwnPropertyDescriptor(window.Node.prototype, 'textContent'),
   Element_attachShadow: window.Element.prototype['attachShadow'],
   Element_innerHTML: Object.getOwnPropertyDescriptor(window.Element.prototype, 'innerHTML'),
   Element_getAttribute: window.Element.prototype.getAttribute,
