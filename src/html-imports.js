@@ -569,17 +569,24 @@
           while (rootImport && importForElement(rootImport)) {
             rootImport = importForElement(rootImport);
           }
-          // Replace the element we're about to move with a placeholder
-          // containing a reference to the moved element.
-          const placeholder = document.createElement(s.localName);
+          // Replace the element we're about to move with a placeholder.
+          // NOTE: we first have to append the element to the new parent, then
+          // we can put the placeholder at its place, otherwise load/error events
+          // seem to be fired too early.
+          const parent = s.parentNode,
+            next = s.nextSibling,
+            placeholder = document.createElement(s.localName);
+          // Add reference of the moved element.
           placeholder['__appliedElement'] = s;
-          s.parentNode.replaceChild(placeholder, s);
+          // First, re-parent the element...
           if (rootImport.parentNode === document.head) {
             document.head.insertBefore(s, rootImport);
           } else {
             document.head.appendChild(s);
           }
-          // Enables the loading of <link rel=stylesheet>
+          // ...and then, insert the placeholder at the right place.
+          parent.insertBefore(placeholder, next);
+          // Enable the loading of <link rel=stylesheet>.
           s.removeAttribute('type');
         }
       }
