@@ -662,6 +662,12 @@
       element['__loadPromise'] = new Promise((resolve) => {
         if (isElementLoaded(element)) {
           resolve();
+        } else if (isIE && element.localName === 'style') {
+          // NOTE: We listen only for load events in IE/Edge, because in IE/Edge
+          // <style> with @import will fire error events for each failing @import,
+          // and finally will trigger the load event when all @import are
+          // finished (even if all fail).
+          element.addEventListener('load', resolve);
         } else {
           element.addEventListener('load', resolve);
           element.addEventListener('error', resolve);
