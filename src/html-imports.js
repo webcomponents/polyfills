@@ -35,7 +35,6 @@
   const CSS_IMPORT_REGEXP = /(@import[\s]+(?!url\())([^;]*)(;)/g;
   const STYLESHEET_REGEXP = /(<link[^>]*)(rel=['|"]?stylesheet['|"]?[^>]*>)/g;
 
-
   // path fixup: style elements in imports must be made relative to the main
   // document. We fixup url's in url() and @import.
   const Path = {
@@ -108,7 +107,7 @@
       return text.replace(regexp, (m, pre, url, post) => {
         let urlPath = url.replace(/["']/g, '');
         if (linkUrl) {
-          urlPath = Path._resolveUrl(urlPath, linkUrl);
+          urlPath = Path.resolveUrl(urlPath, linkUrl);
         }
         return pre + '\'' + urlPath + '\'' + post;
       });
@@ -118,11 +117,11 @@
       if (text && ABS_URL_TEST.test(text)) {
         return text;
       } else {
-        return Path._resolveUrl(text, linkUrl);
+        return Path.resolveUrl(text, linkUrl);
       }
     },
 
-    _resolveUrl(url, base) {
+    resolveUrl(url, base) {
       // Lazy feature detection.
       if (Path.__workingURL === undefined) {
         Path.__workingURL = false;
@@ -266,14 +265,14 @@
       // events can be done when all resources are ready.
       this.inflight = 0;
       // Observe only document head
-      new MutationObserver(this._onMutation.bind(this)).observe(document.head, {
+      new MutationObserver(m => this.handleMutations(m)).observe(document.head, {
         childList: true
       });
       // 1. Load imports contents
       // 2. Assign them to first import links on the document
       // 3. Wait for import styles & scripts to be done loading/running
       // 4. Fire load/error events
-      whenDocumentReady(() => this._load());
+      whenDocumentReady(() => this.load());
     }
 
     /**
@@ -282,14 +281,14 @@
      * all imports in the main document.
      * @param {HTMLLinkElement=} link
      */
-    _load(link) {
-      const whenLoadedPromise = link ? this._whenImportLoaded(link) : this._whenImportsLoaded(document);
+    load(link) {
+      const whenLoadedPromise = link ? this.whenImportLoaded(link) : this.whenImportsLoaded(document);
       if (whenLoadedPromise) {
         this.inflight++;
         whenLoadedPromise.then(() => {
           // Wait until all resources are ready.
           if (--this.inflight === 0) {
-            this._onLoadedAll();
+            this.onLoadedAll();
           }
         });
       }
@@ -299,12 +298,12 @@
      * @param {!(HTMLDocument|DocumentFragment)} doc
      * @return {Promise|null}
      */
-    _whenImportsLoaded(doc) {
+    whenImportsLoaded(doc) {
       const links = /** @type {!NodeList<!HTMLLinkElement>} */
         (doc.querySelectorAll(importSelector));
       const promises = [];
       for (let i = 0, l = links.length; i < l; i++) {
-        const promise = this._whenImportLoaded(links[i]);
+        const promise = this.whenImportLoaded(links[i]);
         if (promise) {
           promises.push(promise);
         }
@@ -316,7 +315,7 @@
      * @param {!HTMLLinkElement} link
      * @return {Promise|null}
      */
-    _whenImportLoaded(link) {
+    whenImportLoaded(link) {
       const url = link.href;
       // This resource is already being handled by another import.
       if (this.documents[url] !== undefined) {
@@ -326,10 +325,10 @@
       this.documents[url] = 'pending';
       return Xhr.load(url)
         .then((resp) => {
-          const doc = this._makeDocument(resp.resource, resp.redirectedUrl || url);
+          const doc = this.makeDocument(resp.resource, resp.redirectedUrl || url);
           this.documents[url] = doc;
           // Load subtree.
-          return this._whenImportsLoaded(doc);
+          return this.whenImportsLoaded(doc);
         })
         .catch(() => this.documents[url] = null)
         .then(() => link);
@@ -341,7 +340,7 @@
      * @param {string=} url
      * @return {!DocumentFragment}
      */
-    _makeDocument(resource, url) {
+    makeDocument(resource, url) {
       if (!resource) {
         return document.createDocumentFragment();
       }
@@ -410,8 +409,8 @@
       return content;
     }
 
-    _onLoadedAll() {
-      this._flatten(document);
+    onLoadedAll() {
+      this.flatten(document);
       // We wait for styles to load, and at the same time we execute the scripts,
       // then fire the load/error events for imports to have faster whenReady
       // callback execution.
@@ -419,14 +418,14 @@
       // executed after the styles before them are loaded.
       // To achieve that, we could select pending styles and scripts in the
       // document and execute them sequentially in their dom order.
-      Promise.all([this._waitForStyles(), this._runScripts()])
-        .then(() => this._fireEvents());
+      Promise.all([this.waitForStyles(), this.runScripts()])
+        .then(() => this.fireEvents());
     }
 
     /**
      * @param {!HTMLDocument} doc
      */
-    _flatten(doc) {
+    flatten(doc) {
       const n$ = /** @type {!NodeList<!HTMLLinkElement>} */
         (doc.querySelectorAll(importSelector));
       for (let i = 0, l = n$.length, n; i < l && (n = n$[i]); i++) {
@@ -439,11 +438,14 @@
           n.readyState = 'loading';
           // Suppress Closure warning about incompatible subtype assignment.
           ( /** @type {!HTMLElement} */ (n).import = n);
-          this._flatten(imp);
+          this.flatten(imp);
           n.appendChild(imp);
           // If in the main document, observe for any imports added later.
           if (doc === document) {
-            this._observe(n);
+            new MutationObserver(m => this.handleMutations(m)).observe(n, {
+              childList: true,
+              subtree: true
+            });
           }
         }
       }
@@ -454,7 +456,7 @@
      * Updates the `currentScript`.
      * @return {Promise} Resolved when scripts are loaded.
      */
-    _runScripts() {
+    runScripts() {
       const s$ = document.querySelectorAll(pendingScriptsSelector);
       let promise = Promise.resolve();
       for (let i = 0, l = s$.length, s; i < l && (s = s$[i]); i++) {
@@ -487,7 +489,7 @@
      * Waits for all the imported stylesheets/styles to be loaded.
      * @return {Promise}
      */
-    _waitForStyles() {
+    waitForStyles() {
       // <link rel=stylesheet> should be appended to <head>. Not doing so
       // in IE/Edge breaks the cascading order
       // https://developer.microsoft.com/en-us/microsoft-edge/platform/issues/10472273/
@@ -537,12 +539,12 @@
     /**
      * Fires load/error events for imports in the right order .
      */
-    _fireEvents() {
+    fireEvents() {
       const n$ = /** @type {!NodeList<!HTMLLinkElement>} */
         (document.querySelectorAll(importSelector));
       // Inverse order to have events firing bottom-up.
       for (let i = n$.length - 1, n; i >= 0 && (n = n$[i]); i--) {
-        this._fireEventIfNeeded(n);
+        this.fireEventIfNeeded(n);
       }
     }
 
@@ -550,13 +552,13 @@
      * Fires load/error event for the import if this wasn't done already.
      * @param {!HTMLLinkElement} link
      */
-    _fireEventIfNeeded(link) {
+    fireEventIfNeeded(link) {
       // Don't fire twice same event.
       if (!link['__loaded']) {
         link['__loaded'] = true;
-        const eventType = link.import ? 'load' : 'error';
         // Update link's import readyState.
         link.import && (link.import.readyState = 'complete');
+        const eventType = link.import ? 'load' : 'error';
         link.dispatchEvent(new CustomEvent(eventType, {
           bubbles: false,
           cancelable: false,
@@ -565,21 +567,10 @@
       }
     }
 
-    _observe(element) {
-      if (element['__importObserver']) {
-        return;
-      }
-      element['__importObserver'] = new MutationObserver(this._onMutation.bind(this));
-      element['__importObserver'].observe(element, {
-        childList: true,
-        subtree: true
-      });
-    }
-
     /**
      * @param {Array<MutationRecord>} mutations
      */
-    _onMutation(mutations) {
+    handleMutations(mutations) {
       for (let j = 0, m; j < mutations.length && (m = mutations[j]); j++) {
         for (let i = 0, l = m.addedNodes ? m.addedNodes.length : 0; i < l; i++) {
           const n = /** @type {HTMLLinkElement} */ (m.addedNodes[i]);
@@ -589,13 +580,13 @@
             const imp = this.documents[n.href];
             // First time we see this import, load.
             if (imp === undefined) {
-              this._load(n);
+              this.load(n);
             }
             // If nothing else is loading, we can safely associate the import
             // and fire the load/error event.
             else if (!this.inflight) {
               n.import = imp;
-              this._fireEventIfNeeded(n);
+              this.fireEventIfNeeded(n);
             }
           }
         }
