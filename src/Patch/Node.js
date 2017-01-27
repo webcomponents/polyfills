@@ -177,14 +177,19 @@ export default function(internals) {
         }
 
         let removedNodes = undefined;
-        // Using `childNodes` is faster than `children`.
-        const childNodes = this.childNodes;
-        const childNodesLength = childNodes ? childNodes.length : 0;
-        if (childNodesLength > 0 && Utilities.isConnected(this)) {
-          // Copying an array by iterating is faster than using slice.
-          removedNodes = new Array(childNodesLength);
-          for (let i = 0; i < childNodesLength; i++) {
-            removedNodes[i] = childNodes[i];
+        // Checking for `firstChild` is faster than reading `childNodes.length`
+        // to compare with 0.
+        if (this.firstChild) {
+          // Using `childNodes` is faster than `children`, even though we only
+          // care about elements.
+          const childNodes = this.childNodes;
+          const childNodesLength = childNodes.length;
+          if (childNodesLength > 0 && Utilities.isConnected(this)) {
+            // Copying an array by iterating is faster than using slice.
+            removedNodes = new Array(childNodesLength);
+            for (let i = 0; i < childNodesLength; i++) {
+              removedNodes[i] = childNodes[i];
+            }
           }
         }
 
