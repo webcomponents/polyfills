@@ -702,10 +702,13 @@
 
   /**
    * Returns the link that imported the element.
-   * @param {!Element} element
-   * @return {!HTMLLinkElement|undefined}
+   * @param {!Node} element
+   * @return {HTMLLinkElement|Document|undefined}
    */
   const importForElement = (element) => {
+    if (useNative) {
+      return element.ownerDocument;
+    }
     let owner = element['__ownerImport'];
     if (!owner) {
       owner = element;

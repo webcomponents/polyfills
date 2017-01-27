@@ -21,9 +21,9 @@
 
     window.checkReadyState = function() {
       var link = document.querySelector('link[rel=import]');
-      assert.equal(window.readyStateAtExecTime, 'loading',
+      chai.assert.equal(window.readyStateAtExecTime, 'loading',
         'readyState ok at script exec time');
-      assert.equal(link.import.readyState, 'complete',
+      chai.assert.equal(link.import.readyState, 'complete',
         'readyState ok at load time');
     };
   </script>
