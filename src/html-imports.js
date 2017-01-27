@@ -52,11 +52,6 @@
       if (element.localName === 'style') {
         Path.resolveUrlsInStyle(element, base);
       }
-      // TODO(valdrin) append sourceURL and test the "debuggability" of scripts
-      // loaded via imports on the various browsers.
-      // else if (element.localName === 'script' && element.textContent) {
-      //   element.textContent += `\n//# sourceURL=${base}`;
-      // }
     },
 
     fixUrlAttributes(element, base) {
@@ -396,12 +391,20 @@
 
       const n$ = /** @type {!NodeList<!(HTMLLinkElement|HTMLScriptElement|HTMLStyleElement)>} */
         (content.querySelectorAll(importDependenciesSelector));
+      // For source map hints.
+      let inlineScriptIndex = 0;
       for (let i = 0, l = n$.length, n; i < l && (n = n$[i]); i++) {
         // Listen for load/error events, then fix urls.
         whenElementLoaded(n);
         Path.fixUrls(n, url);
         // Mark for easier selectors.
         n.setAttribute(importDependencyAttr, '');
+        // Generate source map hints for inline scripts.
+        if (n.localName === 'script' && n.textContent) {
+          const num = inlineScriptIndex ? `-${inlineScriptIndex}` : '';
+          n.textContent += `\n//# sourceURL=${url}${num}.js\n`;
+          inlineScriptIndex++;
+        }
       }
       Path.fixUrlsInTemplates(content, url);
       return content;
