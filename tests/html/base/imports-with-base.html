@@ -29,8 +29,6 @@
 <body>
   <script>
     test('imports with base tag', function() {
-      assert.equal(document.querySelectorAll('base').length, 1);
-
       // First import of base-1.html, which is base-2.html
       var link = base1.import.querySelector('link[rel=import]');
       // path to base-2.html

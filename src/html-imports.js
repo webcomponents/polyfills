@@ -7,7 +7,7 @@
  * Code distributed by Google as part of the polymer project is also
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
-(function(scope) {
+((scope) => {
 
   /********************* base setup *********************/
   const useNative = Boolean('import' in document.createElement('link'));
@@ -16,7 +16,7 @@
   let currentScript = null;
   if ('currentScript' in document === false) {
     Object.defineProperty(document, 'currentScript', {
-      get: function() {
+      get() {
         return currentScript ||
           // NOTE: only works when called in synchronously executing code.
           // readyState should check if `loading` but IE10 is
@@ -40,7 +40,7 @@
   // document. We fixup url's in url() and @import.
   const Path = {
 
-    fixUrls: function(element, base) {
+    fixUrls(element, base) {
       if (element.href) {
         element.setAttribute('href',
           Path.replaceAttrUrl(element.getAttribute('href'), base));
@@ -59,7 +59,7 @@
       // }
     },
 
-    fixUrlAttributes: function(element, base) {
+    fixUrlAttributes(element, base) {
       const attrs = ['action', 'src', 'href', 'url', 'style'];
       for (let i = 0, a; i < attrs.length && (a = attrs[i]); i++) {
         const at = element.attributes[a];
@@ -74,14 +74,14 @@
       }
     },
 
-    fixUrlsInTemplates: function(element, base) {
+    fixUrlsInTemplates(element, base) {
       const t$ = element.querySelectorAll('template');
       for (let i = 0; i < t$.length; i++) {
         Path.fixUrlsInTemplate(t$[i], base);
       }
     },
 
-    fixUrlsInTemplate: function(template, base) {
+    fixUrlsInTemplate(template, base) {
       const content = template.content;
       if (!content) { // Template not supported.
         return;
@@ -99,18 +99,18 @@
       Path.fixUrlsInTemplates(content, base);
     },
 
-    resolveUrlsInStyle: function(style, linkUrl) {
+    resolveUrlsInStyle(style, linkUrl) {
       style.textContent = Path.resolveUrlsInCssText(style.textContent, linkUrl);
     },
 
-    resolveUrlsInCssText: function(cssText, linkUrl) {
+    resolveUrlsInCssText(cssText, linkUrl) {
       let r = Path.replaceUrls(cssText, linkUrl, CSS_URL_REGEXP);
       r = Path.replaceUrls(r, linkUrl, CSS_IMPORT_REGEXP);
       return r;
     },
 
-    replaceUrls: function(text, linkUrl, regexp) {
-      return text.replace(regexp, function(m, pre, url, post) {
+    replaceUrls(text, linkUrl, regexp) {
+      return text.replace(regexp, (m, pre, url, post) => {
         let urlPath = url.replace(/["']/g, '');
         if (linkUrl) {
           urlPath = Path._resolveUrl(urlPath, linkUrl);
@@ -119,7 +119,7 @@
       });
     },
 
-    replaceAttrUrl: function(text, linkUrl) {
+    replaceAttrUrl(text, linkUrl) {
       if (text && ABS_URL_TEST.test(text)) {
         return text;
       } else {
@@ -127,7 +127,7 @@
       }
     },
 
-    _resolveUrl: function(url, base) {
+    _resolveUrl(url, base) {
       // Lazy feature detection.
       if (Path.__workingURL === undefined) {
         Path.__workingURL = false;
@@ -166,7 +166,7 @@
      * @param {!string} url
      * @return {!Promise}
      */
-    load: function(url) {
+    load(url) {
       return new Promise((resolve, reject) => {
         if (!url) {
           reject({
@@ -270,13 +270,15 @@
       // Used to keep track of pending loads, so that flattening and firing of
       // events can be done when all resources are ready.
       this.inflight = 0;
-      whenDocumentReady(() => {
-        // Observe only document head
-        new MutationObserver(this._onMutation.bind(this)).observe(document.head, {
-          childList: true
-        });
-        this._load();
+      // Observe only document head
+      new MutationObserver(this._onMutation.bind(this)).observe(document.head, {
+        childList: true
       });
+      // 1. Load imports contents
+      // 2. Assign them to first import links on the document
+      // 3. Wait for import styles & scripts to be done loading/running
+      // 4. Fire load/error events
+      whenDocumentReady(() => this._load());
     }
 
     /**
@@ -377,11 +379,11 @@
         }
       }
 
-      // Support <base> in imported docs. Resolve url and remove it from the parent.
+      // Support <base> in imported docs. Resolve url and remove its href.
       const baseEl = content.querySelector('base');
       if (baseEl) {
         url = Path.replaceAttrUrl(baseEl.getAttribute('href'), url);
-        baseEl.parentNode.removeChild(baseEl);
+        baseEl.removeAttribute('href');
       }
 
       // This is specific to users of <dom-module> (Polymer).
@@ -428,7 +430,10 @@
         const imp = this.documents[n.href];
         n.import = /** @type {!Document} */ (imp);
         if (imp && imp.nodeType === Node.DOCUMENT_FRAGMENT_NODE) {
+          // We set the .import to be the link itself, and update its readyState.
+          // Other links with the same href will point to this link.
           this.documents[n.href] = n;
+          n.readyState = 'loading';
           // Suppress Closure warning about incompatible subtype assignment.
           ( /** @type {!HTMLElement} */ (n).import = n);
           this._flatten(imp);
@@ -547,6 +552,8 @@
       if (!link['__loaded']) {
         link['__loaded'] = true;
         const eventType = link.import ? 'load' : 'error';
+        // Update link's import readyState.
+        link.import && (link.import.readyState = 'complete');
         link.dispatchEvent(new CustomEvent(eventType, {
           bubbles: false,
           cancelable: false,
@@ -597,9 +604,9 @@
    * @param {!Node} node
    * @return {boolean}
    */
-  function isImportLink(node) {
+  const isImportLink = (node) => {
     return node.nodeType === Node.ELEMENT_NODE && MATCHES.call(node, importSelector);
-  }
+  };
 
   /**
    * Waits for an element to finish loading. If already done loading, it will
@@ -607,7 +614,7 @@
    * @param {!(HTMLLinkElement|HTMLScriptElement|HTMLStyleElement)} element
    * @return {Promise}
    */
-  function whenElementLoaded(element) {
+  const whenElementLoaded = (element) => {
     if (!element['__loadPromise']) {
       element['__loadPromise'] = new Promise((resolve) => {
         if (isElementLoaded(element)) {
@@ -634,7 +641,7 @@
    * @param {!HTMLElement} el
    * @return {boolean}
    */
-  function isElementLoaded(el) {
+  const isElementLoaded = (el) => {
     el['__loaded'] = el['__loaded'] ||
       // Inline scripts don't trigger load/error events, consider them already loaded.
       (el.localName === 'script' && !( /** @type {!HTMLScriptElement} */ (el).src));
@@ -647,7 +654,7 @@
    * if imports are already done loading.
    * @param {function()=} callback
    */
-  function whenReady(callback) {
+  const whenReady = (callback) => {
     // 1. ensure the document is in a ready state (has dom), then
     // 2. watch for loading of imports and call callback when done
     whenDocumentReady(() => whenImportsReady(() => callback && callback()));
@@ -658,16 +665,17 @@
    *  synchronously if document is already done loading.
    * @param {!function()} callback
    */
-  function whenDocumentReady(callback) {
+  const whenDocumentReady = (callback) => {
     if (document.readyState !== 'loading') {
       callback();
     } else {
-      document.addEventListener('readystatechange', function stateChanged() {
+      const stateChanged = () => {
         if (document.readyState !== 'loading') {
           document.removeEventListener('readystatechange', stateChanged);
           callback();
         }
-      });
+      }
+      document.addEventListener('readystatechange', stateChanged);
     }
   }
 
@@ -676,7 +684,7 @@
    * synchronously if imports are already done loading.
    * @param {!function()} callback
    */
-  function whenImportsReady(callback) {
+  const whenImportsReady = (callback) => {
     let imports = /** @type {!NodeList<!HTMLLinkElement>} */
       (document.querySelectorAll(rootImportSelector));
     const promises = [];
@@ -697,7 +705,7 @@
    * @param {!Element} element
    * @return {!HTMLLinkElement|undefined}
    */
-  function importForElement(element) {
+  const importForElement = (element) => {
     let owner = element['__ownerImport'];
     if (!owner) {
       owner = element;
