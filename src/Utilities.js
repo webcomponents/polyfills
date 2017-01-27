@@ -59,7 +59,11 @@ export function walkDeepDescendantElements(root, callback) {
     // (native) or the descendant containing the elements created to emulate the
     // imported document (polyfill).
     if (element.localName === 'link') {
-      walker.currentNode = element.lastChild || element;
+      let lastDescendant = element;
+      while (lastDescendant.lastChild) {
+        lastDescendant = lastDescendant.lastChild;
+      }
+      walker.currentNode = lastDescendant;
       continue;
     }
 
