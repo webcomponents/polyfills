@@ -69,9 +69,8 @@ export function walkDeepDescendantElements(root, callback) {
 
     const shadowRoot = element.__CE_shadowRoot;
     if (shadowRoot) {
-      const children = shadowRoot.children;
-      for (var i = 0; i < children.length; i++) {
-        walkDeepDescendantElements(children[i], callback);
+      for (let child = shadowRoot.firstChild; child; child = child.nextSibling) {
+        walkDeepDescendantElements(child, callback);
       }
     }
   } while (walker.nextNode());
