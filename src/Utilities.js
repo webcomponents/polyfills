@@ -39,41 +39,59 @@ export function isConnected(node) {
 
 /**
  * @param {!Node} root
+ * @param {!Node} start
+ * @return {?Node}
+ */
+function nextSiblingOrAncestorSibling(root, start) {
+  let node = start;
+  while (node && node !== root && !node.nextSibling) {
+    node = node.parentNode;
+  }
+  return (!node || node === root) ? null : node.nextSibling;
+}
+
+/**
+ * @param {!Node} root
+ * @param {!Node} start
+ * @return {?Node}
+ */
+function nextNode(root, start) {
+  return start.firstChild ? start.firstChild : nextSiblingOrAncestorSibling(root, start);
+}
+
+/**
+ * @param {!Node} root
  * @param {!function(!Element)} callback
  */
 export function walkDeepDescendantElements(root, callback) {
-  // IE throws on `walker.nextNode()` if the root given to TreeWalker is a text node.
-  if (root.nodeType === Node.TEXT_NODE) {
-    return;
+  let node = root;
+
+  while (node) {
+    if (node.nodeType === Node.ELEMENT_NODE) {
+      callback(node);
+
+      // Ignore descendants of link elements to prevent attempting to traverse
+      // elements created by the HTML Imports polyfill. When upgrading a tree,
+      // `CustomElementInternals#patchAndUpgradeTree` walks the `import` property
+      // of import links, which will point to either the true imported document
+      // (native) or the descendant containing the elements created to emulate the
+      // imported document (polyfill).
+      if (node.localName === 'link') {
+        node = nextSiblingOrAncestorSibling(root, node);
+        continue;
+      }
+
+      // Walk shadow roots.
+      const shadowRoot = node.__CE_shadowRoot;
+      if (shadowRoot) {
+        for (let child = shadowRoot.firstChild; child; child = child.nextSibling) {
+          walkDeepDescendantElements(child, callback);
+        }
+      }
+    }
+
+    node = nextNode(root, node);
   }
-
-  const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT, null, false);
-  do {
-    const element = /** @type {!Element} */ (walker.currentNode);
-    callback(element);
-
-    // Ignore descendants of link elements to prevent attempting to traverse
-    // elements created by the HTML Imports polyfill. When upgrading a tree,
-    // `CustomElementInternals#patchAndUpgradeTree` walks the `import` property
-    // of import links, which will point to either the true imported document
-    // (native) or the descendant containing the elements created to emulate the
-    // imported document (polyfill).
-    if (element.localName === 'link') {
-      let lastDescendant = element;
-      while (lastDescendant.lastChild) {
-        lastDescendant = lastDescendant.lastChild;
-      }
-      walker.currentNode = lastDescendant;
-      continue;
-    }
-
-    const shadowRoot = element.__CE_shadowRoot;
-    if (shadowRoot) {
-      for (let child = shadowRoot.firstChild; child; child = child.nextSibling) {
-        walkDeepDescendantElements(child, callback);
-      }
-    }
-  } while (walker.nextNode());
 }
 
 /**
