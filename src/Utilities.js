@@ -26,12 +26,17 @@ export function isValidCustomElementName(localName) {
  */
 export function isConnected(node) {
   // Use `Node#isConnected`, if defined.
+  /* TODO: Enable when shadydom's implementation of `isConnected` is fixed.
   const nativeValue = node.isConnected;
   if (nativeValue !== undefined) {
     return nativeValue;
   }
+  */
 
   while (node && !(node.__CE_isImportDocument || node instanceof Document)) {
+    // TODO: Change this check from testing if the node is a DocumentFragment to
+    // testing `instanceof ShadowRoot` when shadydom exposes its implementation
+    // of ShadowRoot.
     node = node.parentNode || (node.nodeType === Node.DOCUMENT_FRAGMENT_NODE ? node.host : undefined);
   }
   return !!(node && (node.__CE_isImportDocument || node instanceof Document));
