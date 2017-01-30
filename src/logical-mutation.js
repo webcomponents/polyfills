@@ -417,18 +417,15 @@ export function cloneNode(node, deep) {
 // This allows, for example, elements that cannot
 // contain custom elements and are therefore not likely to contain shadowRoots
 // to cloned natively. This is a fairly significant performance win.
-export function importNode(node, deep, nativeImportNode) {
-  if (!nativeImportNode) {
-    nativeImportNode = nativeMethods.importNode;
-  }
+export function importNode(node, deep) {
   if (node.ownerDocument !== document) {
-    return nativeImportNode.call(document, node, deep);
+    return nativeMethods.importNode.call(document, node, deep);
   }
-  let n = nativeImportNode.call(document, node, false);
+  let n = nativeMethods.importNode.call(document, node, false);
   if (deep) {
     let c$ = node.childNodes;
     for (let i=0, nc; i < c$.length; i++) {
-      nc = importNode(c$[i], true, nativeImportNode);
+      nc = importNode(c$[i], true);
       n.appendChild(nc);
     }
   }
