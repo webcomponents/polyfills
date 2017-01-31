@@ -34,19 +34,18 @@
       var div = document.createElement('div');
       div.innerHTML = '<link rel="import" href="imports/load-1.html">' +
         '<link rel="import" href="imports/load-2.html">';
-      // In Safari putting the div in <head> will not trigger
-      // MutationObservers on their subtree.
-      var imp;
-      while ((imp = div.firstElementChild)) {
-        imp.addEventListener('load', loadSpy);
-        document.head.appendChild(imp);
+      for (var i = 0, l = div.children.length; i < l; i++) {
+        div.children[i].addEventListener('load', loadSpy);
       }
+      document.head.appendChild(div);
 
       HTMLImports.whenReady(whenReadySpy);
-      assert.isFalse(whenReadySpy.called, 'captured elements dynamically added');
+      assert.isFalse(whenReadySpy.called,
+        'captured elements dynamically added');
 
       HTMLImports.whenReady(function() {
-        assert.equal(whenReadySpy.callCount, 1, 'called previous whenReady');
+        assert.equal(whenReadySpy.callCount, 1,
+          'called previous whenReady');
         assert.equal(loadSpy.callCount, 2, 'load count ok');
         done();
       });

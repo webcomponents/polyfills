@@ -264,15 +264,18 @@
       // Used to keep track of pending loads, so that flattening and firing of
       // events can be done when all resources are ready.
       this.inflight = 0;
-      // Observe only document head
-      new MutationObserver(m => this.handleMutations(m)).observe(document.head, {
-        childList: true
-      });
       // 1. Load imports contents
       // 2. Assign them to first import links on the document
       // 3. Wait for import styles & scripts to be done loading/running
       // 4. Fire load/error events
-      whenDocumentReady(() => this.load());
+      whenDocumentReady(() => {
+        // Observe changes on <head>.
+        new MutationObserver(m => this.handleMutations(m)).observe(document.head, {
+          childList: true,
+          subtree: true
+        });
+        this.load();
+      });
     }
 
     /**
@@ -282,7 +285,8 @@
      * @param {HTMLLinkElement=} link
      */
     load(link) {
-      const whenLoadedPromise = link ? this.whenImportLoaded(link) : this.whenImportsLoaded(document);
+      const whenLoadedPromise = link ? this.whenImportLoaded(link) :
+        this.whenImportsLoaded(document);
       if (whenLoadedPromise) {
         this.inflight++;
         whenLoadedPromise.then(() => {
@@ -440,13 +444,6 @@
           ( /** @type {!HTMLElement} */ (n).import = n);
           this.flatten(imp);
           n.appendChild(imp);
-          // If in the main document, observe for any imports added later.
-          if (doc === document) {
-            new MutationObserver(m => this.handleMutations(m)).observe(n, {
-              childList: true,
-              subtree: true
-            });
-          }
         }
       }
     }
@@ -571,12 +568,22 @@
      * @param {Array<MutationRecord>} mutations
      */
     handleMutations(mutations) {
-      for (let j = 0, m; j < mutations.length && (m = mutations[j]); j++) {
-        for (let i = 0, l = m.addedNodes ? m.addedNodes.length : 0; i < l; i++) {
-          const n = /** @type {HTMLLinkElement} */ (m.addedNodes[i]);
+      for (let i = 0; i < mutations.length; i++) {
+        const m = mutations[i];
+        if (!m.addedNodes) {
+          continue;
+        }
+        for (let ii = 0; ii < m.addedNodes.length; ii++) {
+          const link = m.addedNodes[ii];
+          if (!link || link.nodeType !== Node.ELEMENT_NODE) {
+            continue;
+          }
           // NOTE: added scripts are not updating currentScript in IE.
           // TODO add test w/ script & stylesheet maybe
-          if (n && isImportLink(n)) {
+          const imports = /** @type {!NodeList<!HTMLLinkElement>} */
+            (isImportLink(link) ? [link] : link.querySelectorAll(importSelector));
+          for (let iii = 0; iii < imports.length; iii++) {
+            const n = imports[iii];
             const imp = this.documents[n.href];
             // First time we see this import, load.
             if (imp === undefined) {

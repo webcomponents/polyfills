@@ -33,11 +33,7 @@
           var div = document.createElement('div');
           div.innerHTML = '<link rel="import" href="imports/load-1.html">' +
               '<link rel="import" href="imports/load-2.html">';
-          // In Safari putting the div in <head> will not trigger
-          // MutationObservers on their subtree.
-          while (div.firstElementChild) {
-            document.head.appendChild(div.firstElementChild);
-          }
+          document.head.appendChild(div);
           var ports = document.querySelectorAll('link[rel=import]');
           for (var i=0, l=ports.length, n; (i<l) && (n=ports[i]); i++) {
             n.addEventListener('load', function(e) {
