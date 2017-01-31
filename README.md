@@ -78,7 +78,7 @@ This is how the resolved import will look like:
 The placeholders contain a reference to the applied element:
 
 ```javascript
-var myImport = document.head.querySelector('link[rel=import]');
+var myImport = document.head.querySelector('link[rel=import]').import;
 var link = myImport.querySelector('link');
 console.log(link.__appliedElement || link);
 var style = myImport.querySelector('style');
