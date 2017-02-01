@@ -252,9 +252,8 @@ let InsideAccessors = {
       } else {
         htmlContainer.innerHTML = text;
       }
-      let c$ = Array.from(htmlContainer.childNodes);
-      for (let i=0; i < c$.length; i++) {
-        content.appendChild(c$[i]);
+      while (htmlContainer.firstChild) {
+        content.appendChild(htmlContainer.firstChild);
       }
     },
     configurable: true
