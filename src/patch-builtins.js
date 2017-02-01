@@ -55,6 +55,9 @@ let nodeMixin = {
   },
 
   get isConnected() {
+    // Fast path for distributed nodes.
+    if (this.ownerDocument.documentElement.contains(this)) return true;
+
     let node = this;
     while (node && !(node instanceof Document)) {
       node = node.parentNode || (node instanceof ShadyRoot ? node.host : undefined);
