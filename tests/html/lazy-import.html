@@ -1,7 +1,7 @@
 <!doctype html>
 <!--
     @license
-    Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+    Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
     This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
     The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
     The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
@@ -9,28 +9,43 @@
     subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 -->
 <html>
+
 <head>
-  <title>HTML Imports Dynamic Elements</title>
+  <title>HTML Lazy Imports</title>
   <script src="../polyfills.js"></script>
   <script src="../../html-imports.min.js"></script>
-  <script>WCT = {waitFor: function(cb){cb()}};</script>
+  <script>
+    var ready;
+    WCT = {
+      waitFor: function(cb) {
+        HTMLImports.whenReady(cb);
+      }
+    };
+  </script>
   <script src="../../../web-component-tester/browser.js"></script>
-  <link rel="import" href="imports/dynamic-elements-import.html">
+  <link rel="import" href="imports/load-1.html" id="load1Link">
 </head>
+
 <body>
-  <div id="asyncStyled">red?</div>
 
   <script>
-    test('async elements added', function(done) {
-      document.addEventListener('asyncElementsAdded', function() {
-        requestAnimationFrame(function() {
-          chai.assert.isTrue(window.asyncScript, 'async added script ran');
-          var computed = getComputedStyle(document.querySelector('#asyncStyled'));
-          chai.assert.equal(computed.backgroundColor, 'rgb(255, 0, 0)', 'async added style applied');
+    test('Import lazy-loading another import', function(done) {
+      if (HTMLImports.useNative) {
+        done();
+        return;
+      }
+      // Some time later..
+      setTimeout(function() {
+        var link = document.createElement('link');
+        link.setAttribute('rel', 'import');
+        link.setAttribute('href', 'imports/load-2.html');
+        link.addEventListener('load', function() {
           done();
         });
+        load1Link.import.appendChild(link);
       });
     });
   </script>
 </body>
+
 </html>

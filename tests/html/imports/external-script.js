@@ -9,3 +9,4 @@
  */
 
 window.externalScriptParsed = new Date().getTime();
+console.log('externalScriptParsed', window.externalScriptParsed);

@@ -11,6 +11,8 @@
 <html>
   <head>
     <title>HTML Imports Dynamic</title>
+    <script src="../polyfills.js"></script>
+    <script src="../../html-imports.min.js"></script>
     <script>
       var ready;
       WCT = {
@@ -19,40 +21,39 @@
         }
       };
     </script>
-    <script src="../../src/html-imports.js"></script>
     <script src="../../../web-component-tester/browser.js"></script>
   </head>
   <body>
 
     <script>
+      var loads = 0;
       document.addEventListener('DOMContentLoaded', function() {
         // some time later
         setTimeout(function() {
           var div = document.createElement('div');
           div.innerHTML = '<link rel="import" href="imports/load-1.html">' +
               '<link rel="import" href="imports/load-2.html">';
-          document.body.appendChild(div);
+          document.head.appendChild(div);
           var ports = document.querySelectorAll('link[rel=import]');
-          var loads = 0;
           for (var i=0, l=ports.length, n; (i<l) && (n=ports[i]); i++) {
             n.addEventListener('load', function(e) {
               loads++;
-              chai.assert.ok(e.target.import);
+              assert.isOk(e.target.import, 'import ok');
             });
           }
           ready();
         });
       });
 
-      test('HTMLImports whenready detail', function(done) {
-        HTMLImports.whenReady(function(detail) {
-          chai.assert.equal(detail.allImports.length, 2);
-          chai.assert.equal(detail.loadedImports.length, 2);
-
-          chai.expect(detail.allImports[0].href).to.contain('imports/load-1.html');
-          chai.expect(detail.allImports[1].href).to.contain('imports/load-2.html');
-
-          done()
+      test('HTMLImports whenready', function(done) {
+        HTMLImports.whenReady(function() {
+          assert.equal(loads, 2, 'load events count ok');
+          var links = document.querySelectorAll('link[rel=import]');
+          assert.equal(links.length, 2, 'links count ok');
+          assert.include(links[0].href, 'imports/load-1.html', '1st link href ok');
+          assert.isOk(links[0].import, '1st link import ok');
+          assert.isOk(links[1].import, '2nd link import ok');
+          done();
         });
       });
     </script>

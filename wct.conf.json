@@ -1,0 +1,4 @@
+{
+  "suites": ["tests/index.html"],
+  "environmentImports": []
+}

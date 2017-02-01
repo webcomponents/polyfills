@@ -9,7 +9,7 @@
 -->
 <script>
 (function() {
-  var doc = document._currentScript.ownerDocument;
+  var doc = document.currentScript.ownerDocument;
   setTimeout(function() {
     var script = doc.createElement('script');
     script.textContent = 'window.asyncScript = true;';

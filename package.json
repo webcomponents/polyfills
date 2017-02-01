@@ -24,6 +24,6 @@
     "google-closure-compiler": "^20160822.1.0",
     "gulp": "^3.8.8",
     "gulp-sourcemaps": "^1.6.0",
-    "web-component-tester": "^4.0.1"
+    "web-component-tester": "^6.0.0-prerelease.4"
   }
 }

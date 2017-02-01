@@ -8,6 +8,7 @@
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
+chai.assert.ok(document.currentScript);
 remoteCurrentScriptExecuted = window.remoteCurrentScriptExecuted || 0;
 remoteCurrentScriptExecuted++;
-chai.assert.ok(document._currentScript);
+console.log('remoteCurrentScriptExecuted ' + remoteCurrentScriptExecuted);
