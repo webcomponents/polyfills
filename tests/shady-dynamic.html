@@ -978,6 +978,21 @@ suite('non-distributed elements', function() {
     assert.equal(test.getRootNode(), c1, 'getOwnerRoot incorrect for child moved from a root to no root');
   });
 
+  test('getRootNode into/out of shadowRoot', function() {
+    var test = document.createElement('div');
+    var c1 = createEnabledElement('x-compose');
+    c1.shadowRoot.querySelector('#project').appendChild(test);
+    ShadyDOM.flush();
+    assert.equal(test.getRootNode(), c1.shadowRoot, 'getOwnerRoot incorrect for child added to element in root');
+    document.body.appendChild(test);
+    ShadyDOM.flush();
+    assert.equal(test.getRootNode(), document, 'getOwnerRoot not correctly reset when element moved to different root');
+    c1.appendChild(test);
+    ShadyDOM.flush();
+    assert.equal(test.getRootNode(), c1, 'getOwnerRoot incorrect for child moved from a root to no root');
+  });
+
+
   test('getRootNode when out of tree', function() {
     var test = document.createElement('div');
     assert.equal(test.getRootNode(), test, 'getOwnerRoot incorrect when not in root');
