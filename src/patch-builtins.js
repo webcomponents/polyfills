@@ -56,7 +56,10 @@ let nodeMixin = {
 
   get isConnected() {
     // Fast path for distributed nodes.
-    if (this.ownerDocument.documentElement.contains(this)) return true;
+    const ownerDocument = this.ownerDocument;
+    if (ownerDocument && ownerDocument.contains && ownerDocument.contains(this)) return true;
+    const ownerDocumentElement = ownerDocument.documentElement;
+    if (ownerDocumentElement && ownerDocumentElement.contains && ownerDocumentElement.contains(this)) return true;
 
     let node = this;
     while (node && !(node instanceof Document)) {
