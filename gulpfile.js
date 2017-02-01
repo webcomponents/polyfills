@@ -38,12 +38,11 @@ let es5Config = {
   shouldPrintComment
 }
 
-gulp.task('closure', function() {
+gulp.task('default', function() {
   return gulp.src(['./src/*.js'], {base: './'})
     .pipe(sourcemaps.init())
     .pipe(closureCompiler({
       new_type_inf: true,
-      debug: true,
       compilation_level: 'SIMPLE',
       language_in: 'ES6_STRICT',
       language_out: 'ES5_STRICT',
@@ -55,7 +54,7 @@ gulp.task('closure', function() {
     .pipe(gulp.dest('./'))
 });
 
-gulp.task('default', () => {
+gulp.task('babili', () => {
   return gulp.src('src/*.js')
   .pipe(sourcemaps.init())
   .pipe(rollup({
