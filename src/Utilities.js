@@ -65,21 +65,31 @@ function nextNode(root, start) {
 /**
  * @param {!Node} root
  * @param {!function(!Element)} callback
+ * @param {!Set<Node>=} visitedImports
  */
-export function walkDeepDescendantElements(root, callback) {
+export function walkDeepDescendantElements(root, callback, visitedImports = new Set()) {
   let node = root;
-
   while (node) {
     if (node.nodeType === Node.ELEMENT_NODE) {
       callback(node);
 
-      // Ignore descendants of link elements to prevent attempting to traverse
-      // elements created by the HTML Imports polyfill. When upgrading a tree,
-      // `CustomElementInternals#patchAndUpgradeTree` walks the `import` property
-      // of import links, which will point to either the true imported document
-      // (native) or the descendant containing the elements created to emulate the
-      // imported document (polyfill).
-      if (node.localName === 'link') {
+      if (node.localName === 'link' && node.getAttribute('rel') === 'import') {
+        // If this import (polyfilled or not) has it's root node available,
+        // walk it.
+        const importNode = /** @type {!Node} */ (node.import);
+        if (importNode instanceof Node) {
+          // Prevent multiple walks of the same import root.
+          if (visitedImports.has(importNode)) return;
+          visitedImports.add(importNode);
+
+          for (let child = importNode.firstChild; child; child = child.nextSibling) {
+            walkDeepDescendantElements(child, callback, visitedImports);
+          }
+        }
+
+        // Ignore descendants of import links to prevent attempting to walk the
+        // elements created by the HTML Imports polyfill that we just walked
+        // above.
         node = nextSiblingOrAncestorSibling(root, node);
         continue;
       }
@@ -88,7 +98,7 @@ export function walkDeepDescendantElements(root, callback) {
       const shadowRoot = node.__CE_shadowRoot;
       if (shadowRoot) {
         for (let child = shadowRoot.firstChild; child; child = child.nextSibling) {
-          walkDeepDescendantElements(child, callback);
+          walkDeepDescendantElements(child, callback, visitedImports);
         }
       }
     }

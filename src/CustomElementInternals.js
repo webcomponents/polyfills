@@ -169,11 +169,7 @@ export default class CustomElementInternals {
    * @param {!Node} root
    * @param {!Set<Node>=} visitedImports
    */
-  patchAndUpgradeTree(root, visitedImports) {
-    if (!visitedImports) {
-      visitedImports = new Set();
-    }
-
+  patchAndUpgradeTree(root, visitedImports = new Set()) {
     const elements = [];
 
     const gatherElements = element => {
@@ -183,29 +179,31 @@ export default class CustomElementInternals {
         const importNode = /** @type {?Node} */ (element.import);
 
         if (importNode instanceof Node) {
-          if (visitedImports.has(importNode)) return;
-          visitedImports.add(importNode);
-
           importNode.__CE_isImportDocument = true;
 
           // Connected links are associated with the registry.
           importNode.__CE_hasRegistry = true;
-
-          Utilities.walkDeepDescendantElements(importNode, gatherElements);
         } else {
+          // If this link's import root is not available, its contents can't be
+          // walked. Wait for 'load' and walk it when it's ready.
           element.addEventListener('load', () => {
             const importNode = /** @type {!Node} */ (element.import);
 
             if (importNode.__CE_documentLoadHandled) return;
             importNode.__CE_documentLoadHandled = true;
 
-            if (visitedImports.has(importNode)) return;
-            visitedImports.add(importNode);
-
             importNode.__CE_isImportDocument = true;
 
             // Connected links are associated with the registry.
             importNode.__CE_hasRegistry = true;
+
+            // Clone the `visitedImports` set that was populated sync during
+            // the `patchAndUpgradeTree` call that caused this 'load' handler to
+            // be added. Then, remove *this* link's import node so that we can
+            // walk that import again, even if it was partially walked later
+            // during the same `patchAndUpgradeTree` call.
+            const clonedVisitedImports = new Set(visitedImports);
+            visitedImports.delete(importNode);
 
             this.patchAndUpgradeTree(importNode, visitedImports);
           });
@@ -215,7 +213,9 @@ export default class CustomElementInternals {
       }
     };
 
-    Utilities.walkDeepDescendantElements(root, gatherElements);
+    // `walkDeepDescendantElements` populates (and internally checks against)
+    // `visitedImports` when traversing a loaded import.
+    Utilities.walkDeepDescendantElements(root, gatherElements, visitedImports);
 
     if (this._hasPatches) {
       for (let i = 0; i < elements.length; i++) {
