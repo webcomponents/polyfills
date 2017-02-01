@@ -31,7 +31,7 @@ export default class CustomElementRegistry {
 
     /**
      * @private
-     * @type {Function|undefined}
+     * @type {!Function|undefined}
      */
     this._flushCallback = undefined;
 
@@ -252,5 +252,13 @@ Object.defineProperty(CustomElementRegistry.prototype, 'polyfillFlushCallback', 
       this._doFlush();
     }
     this._flushCallback = flushCallback;
-  }
+  },
+
+  /**
+   * @this {CustomElementRegistry}
+   * @return {!Function|undefined}
+   */
+  get: function() {
+    return this._flushCallback;
+  },
 });
