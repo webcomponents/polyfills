@@ -30,7 +30,7 @@ gulp.task('default', () => {
       dependency_mode: 'STRICT',
       entry_point: ['/src/custom-elements'],
       js_output_file: 'custom-elements.min.js',
-      output_wrapper: '(function(){\n%output%\n}).call(this);',
+      output_wrapper: '(function(){\n%output%\n}).call(self);',
       new_type_inf: true,
       rewrite_polyfills: false,
     }))
