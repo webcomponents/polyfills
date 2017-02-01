@@ -77,9 +77,8 @@ export function walkDeepDescendantElements(root, callback, visitedImports = new 
         // If this import (polyfilled or not) has it's root node available,
         // walk it.
         const importNode = /** @type {!Node} */ (node.import);
-        if (importNode instanceof Node) {
+        if (importNode instanceof Node && !visitedImports.has(importNode)) {
           // Prevent multiple walks of the same import root.
-          if (visitedImports.has(importNode)) return;
           visitedImports.add(importNode);
 
           for (let child = importNode.firstChild; child; child = child.nextSibling) {

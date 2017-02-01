@@ -178,7 +178,7 @@ export default class CustomElementInternals {
         // the `import` property, specifically this is *not* a Document.
         const importNode = /** @type {?Node} */ (element.import);
 
-        if (importNode instanceof Node) {
+        if (importNode instanceof Node && importNode.readyState === 'complete') {
           importNode.__CE_isImportDocument = true;
 
           // Connected links are associated with the registry.
