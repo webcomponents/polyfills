@@ -34,7 +34,9 @@ function clearNode(node) {
 const nativeInnerHTMLDesc =
   Object.getOwnPropertyDescriptor(Element.prototype, 'innerHTML') ||
   Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'innerHTML');
-const htmlContainer = document.createElement('template');
+
+const inertDoc = document.implementation.createHTMLDocument('inert');
+const htmlContainer = inertDoc.createElement('div');
 
 const nativeActiveElementDescriptor = Object.getOwnPropertyDescriptor(
   Document.prototype, 'activeElement');
@@ -250,7 +252,10 @@ let InsideAccessors = {
       } else {
         htmlContainer.innerHTML = text;
       }
-      content.appendChild(htmlContainer.content);
+      let c$ = Array.from(htmlContainer.childNodes);
+      for (let i=0; i < c$.length; i++) {
+        content.appendChild(c$[i]);
+      }
     },
     configurable: true
   }
