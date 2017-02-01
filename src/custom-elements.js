@@ -35,7 +35,7 @@ if (!priorCustomElements || priorCustomElements['forcePolyfill']) {
   const customElements = new CustomElementRegistry(internals);
 
   if (priorCustomElements && priorCustomElements['polyfillFlushCallback'] instanceof Function) {
-    customElements.polyfillFlushCallback = priorCustomElements['polyfillFlushCallback'];
+    customElements['polyfillFlushCallback'] = priorCustomElements['polyfillFlushCallback'];
   } else {
     new DocumentConstructionObserver(internals, document);
   }

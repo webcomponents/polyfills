@@ -2,6 +2,9 @@ import CustomElementInternals from './CustomElementInternals';
 import Deferred from './Deferred';
 import * as Utilities from './Utilities';
 
+/**
+ * @unrestricted
+ */
 export default class CustomElementRegistry {
 
   /**
@@ -111,8 +114,8 @@ export default class CustomElementRegistry {
 
     this._internals.setDefinition(localName, definition);
 
-    // If no flush is scheduled and no flush gate function is defined, we can
-    // walk everything on this definition.
+    // If no flush is scheduled and no flush callback is defined, we can walk
+    // everything on this definition.
     if (!this._flushScheduled && !this._flushCallback) {
       this._internals.patchAndUpgradeTree(document);
 
@@ -147,6 +150,51 @@ export default class CustomElementRegistry {
     }
   }
 
+  /**
+   * @param {string} localName
+   * @return {Function|undefined}
+   */
+  get(localName) {
+    const definition = this._internals.localNameToDefinition(localName);
+    if (definition) {
+      return definition.constructor;
+    }
+
+    return undefined;
+  }
+
+  /**
+   * @param {string} localName
+   * @return {!Promise<undefined>}
+   */
+  whenDefined(localName) {
+    if (!Utilities.isValidCustomElementName(localName)) {
+      return Promise.reject(new SyntaxError(`'${localName}' is not a valid custom element name.`));
+    }
+
+    const prior = this._whenDefinedDeferred.get(localName);
+    if (prior) {
+      return prior.toPromise();
+    }
+
+    const deferred = new Deferred();
+    this._whenDefinedDeferred.set(localName, deferred);
+
+    const definition = this._internals.localNameToDefinition(localName);
+    if (definition) {
+      deferred.resolve(undefined);
+    }
+
+    return deferred.toPromise();
+  }
+}
+
+// Closure compiler exports.
+window['CustomElementRegistry'] = CustomElementRegistry;
+CustomElementRegistry.prototype['define'] = CustomElementRegistry.prototype.define;
+CustomElementRegistry.prototype['get'] = CustomElementRegistry.prototype.get;
+CustomElementRegistry.prototype['whenDefined'] = CustomElementRegistry.prototype.whenDefined;
+Object.defineProperty(CustomElementRegistry.prototype, 'polyfillFlushCallback', {
   /**
    * Setting `polyfillFlushCallback` to a function will set that function as the
    * registry's 'flush callback'.
@@ -196,57 +244,13 @@ export default class CustomElementRegistry {
    * customElements.polyfillFlushCallback = undefined;
    * ```
    *
+   * @this {CustomElementRegistry}
    * @param {!Function|undefined} flushCallback
    */
-  set polyfillFlushCallback(flushCallback) {
+  set: function(flushCallback) {
     if (flushCallback === undefined) {
       this._doFlush();
     }
     this._flushCallback = flushCallback;
   }
-
-  /**
-   * @param {string} localName
-   * @return {Function|undefined}
-   */
-  get(localName) {
-    const definition = this._internals.localNameToDefinition(localName);
-    if (definition) {
-      return definition.constructor;
-    }
-
-    return undefined;
-  }
-
-  /**
-   * @param {string} localName
-   * @return {!Promise<undefined>}
-   */
-  whenDefined(localName) {
-    if (!Utilities.isValidCustomElementName(localName)) {
-      return Promise.reject(new SyntaxError(`'${localName}' is not a valid custom element name.`));
-    }
-
-    const prior = this._whenDefinedDeferred.get(localName);
-    if (prior) {
-      return prior.toPromise();
-    }
-
-    const deferred = new Deferred();
-    this._whenDefinedDeferred.set(localName, deferred);
-
-    const definition = this._internals.localNameToDefinition(localName);
-    if (definition) {
-      deferred.resolve(undefined);
-    }
-
-    return deferred.toPromise();
-  }
-}
-
-// Closure compiler exports.
-window['CustomElementRegistry'] = CustomElementRegistry;
-CustomElementRegistry.prototype['define'] = CustomElementRegistry.prototype.define;
-CustomElementRegistry.prototype['get'] = CustomElementRegistry.prototype.get;
-CustomElementRegistry.prototype['whenDefined'] = CustomElementRegistry.prototype.whenDefined;
-CustomElementRegistry.prototype['polyfillFlushCallback'] = CustomElementRegistry.prototype.polyfillFlushCallback;
+});
