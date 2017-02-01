@@ -15,7 +15,7 @@ import * as mutation from './logical-mutation'
 import {ActiveElementAccessor, ShadowRootAccessor, patchAccessors} from './patch-accessors'
 import {getProperty} from './logical-properties'
 import {addEventListener, removeEventListener} from './patch-events'
-import {attachShadow} from './attach-shadow'
+import {attachShadow, ShadyRoot} from './attach-shadow'
 
 function getAssignedSlot(node) {
   mutation.renderRootNode(node);
@@ -55,7 +55,14 @@ let nodeMixin = {
   },
 
   get isConnected() {
-    return document.documentElement.contains(this)
+    // Fast path for distributed nodes.
+    if (this.ownerDocument.documentElement.contains(this)) return true;
+
+    let node = this;
+    while (node && !(node instanceof Document)) {
+      node = node.parentNode || (node instanceof ShadyRoot ? node.host : undefined);
+    }
+    return !!(node && node instanceof Document);
   }
 
 };
