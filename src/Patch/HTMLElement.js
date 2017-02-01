@@ -26,12 +26,12 @@ export default function(internals) {
       const constructionStack = definition.constructionStack;
 
       if (constructionStack.length === 0) {
-        const self = Native.Document_createElement.call(document, definition.localName);
-        Object.setPrototypeOf(self, constructor.prototype);
-        self.__CE_state = CEState.custom;
-        self.__CE_definition = definition;
-        internals.patch(self);
-        return self;
+        const element = Native.Document_createElement.call(document, definition.localName);
+        Object.setPrototypeOf(element, constructor.prototype);
+        element.__CE_state = CEState.custom;
+        element.__CE_definition = definition;
+        internals.patch(element);
+        return element;
       }
 
       const lastIndex = constructionStack.length - 1;
