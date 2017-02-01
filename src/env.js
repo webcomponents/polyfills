@@ -26,6 +26,7 @@ import * as nativeMethods from './native-methods'
 import * as nativeTree from './native-tree'
 import {patchBuiltins} from './patch-builtins'
 import {patchEvents} from './patch-events'
+import {ShadyRoot} from './attach-shadow'
 
 if (utils.settings.inUse) {
 
@@ -50,4 +51,5 @@ if (utils.settings.inUse) {
   // Apply patches to builtins (e.g. Element.prototype) where applicable.
   patchBuiltins();
 
+  window.ShadowRoot = ShadyRoot;
 }

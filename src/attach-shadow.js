@@ -19,27 +19,26 @@ import {parentNode, childNodes} from './native-tree'
 import {patchShadowRootAccessors} from './patch-accessors'
 import Distributor from './distributor'
 
-/**
-  Implements a pared down version of ShadowDOM's scoping, which is easy to
-  polyfill across browsers.
-*/
-export function attachShadow(host, options) {
-  if (!host) {
-    throw 'Must provide a host.';
-  }
-  if (!options) {
-    throw 'Not enough arguments.'
+// Do not export this object. It must be passed as the first argument to the
+// ShadyRoot constructor in `attachShadow` to prevent the constructor from
+// throwing. This prevents the user from being able to manually construct a
+// ShadyRoot (i.e. `new ShadowRoot()`).
+const ShadyRootConstructionToken = {};
+
+export let ShadyRoot = function(token, host) {
+  if (token !== ShadyRootConstructionToken) {
+    throw new TypeError('Illegal constructor');
   }
   // NOTE: this strange construction is necessary because
   // DocumentFragment cannot be subclassed on older browsers.
   let shadowRoot = document.createDocumentFragment();
-  shadowRoot.__proto__ = ShadyRootPrototype;
+  shadowRoot.__proto__ = ShadyRoot.prototype;
   shadowRoot._init(host);
   return shadowRoot;
-}
+};
 
-let ShadyRootPrototype = Object.create(DocumentFragment.prototype);
-utils.extendAll(ShadyRootPrototype, {
+ShadyRoot.prototype = Object.create(DocumentFragment.prototype);
+utils.extendAll(ShadyRoot.prototype, {
 
   _init(host) {
     // NOTE: set a fake local name so this element can be
@@ -262,4 +261,18 @@ utils.extendAll(ShadyRootPrototype, {
 
 });
 
-patchShadowRootAccessors(ShadyRootPrototype);
+/**
+  Implements a pared down version of ShadowDOM's scoping, which is easy to
+  polyfill across browsers.
+*/
+export function attachShadow(host, options) {
+  if (!host) {
+    throw 'Must provide a host.';
+  }
+  if (!options) {
+    throw 'Not enough arguments.'
+  }
+  return new ShadyRoot(ShadyRootConstructionToken, host);
+}
+
+patchShadowRootAccessors(ShadyRoot.prototype);

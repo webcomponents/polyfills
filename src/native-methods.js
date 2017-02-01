@@ -10,29 +10,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 'use strict';
 
-let nativeAppendChild = Element.prototype.appendChild;
-export let appendChild = nativeAppendChild;
-
-let nativeInsertBefore = Element.prototype.insertBefore;
-export let insertBefore = nativeInsertBefore;
-
-let nativeRemoveChild = Element.prototype.removeChild;
-export let removeChild = nativeRemoveChild;
-
-let nativeSetAttribute = Element.prototype.setAttribute;
-export let setAttribute = nativeSetAttribute;
-
-let nativeRemoveAttribute = Element.prototype.removeAttribute;
-export let removeAttribute = nativeRemoveAttribute;
-
-let nativeCloneNode = Element.prototype.cloneNode;
-export let cloneNode = nativeCloneNode;
-
-let nativeImportNode = Document.prototype.importNode;
-export let importNode = nativeImportNode;
-
-let nativeAddEventListener = Element.prototype.addEventListener;
-export let addEventListener = nativeAddEventListener;
-
-let nativeRemoveEventListener = Element.prototype.removeEventListener;
-export let removeEventListener = nativeRemoveEventListener;
+export let appendChild = Element.prototype.appendChild;
+export let insertBefore = Element.prototype.insertBefore;
+export let removeChild = Element.prototype.removeChild;
+export let setAttribute = Element.prototype.setAttribute;
+export let removeAttribute = Element.prototype.removeAttribute;
+export let cloneNode = Element.prototype.cloneNode;
+export let importNode = Document.prototype.importNode;
+export let addEventListener = Element.prototype.addEventListener;
+export let removeEventListener = Element.prototype.removeEventListener;

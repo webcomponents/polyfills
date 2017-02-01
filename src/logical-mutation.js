@@ -347,7 +347,11 @@ export function insertBefore(parent, node, ref_node) {
   // remove node from its current position iff it's in a tree.
   if (node.nodeType !== Node.DOCUMENT_FRAGMENT_NODE) {
     let parent = getProperty(node, 'parentNode');
-    removeNodeFromParent(node, parent);
+    if (parent) {
+      removeNodeFromParent(node, parent);
+    } else if (node.parentNode) {
+      nativeMethods.removeChild.call(node.parentNode, node);
+    }
   }
   if (!addNode(parent, node, ref_node)) {
     if (ref_node) {
