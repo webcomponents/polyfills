@@ -7,7 +7,7 @@
  * Code distributed by Google as part of the polymer project is also
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
-((scope) => {
+(scope => {
 
   /********************* base setup *********************/
   const useNative = Boolean('import' in document.createElement('link'));
@@ -182,7 +182,7 @@
         } else {
           const request = new XMLHttpRequest();
           request.open('GET', url, Xhr.async);
-          request.addEventListener('readystatechange', (e) => {
+          request.addEventListener('readystatechange', () => {
             if (request.readyState === 4) {
               // Servers redirecting an import can add a Location header to help us
               // polyfill correctly.
@@ -201,8 +201,8 @@
                 resource: (request.response || request.responseText),
                 redirectedUrl: redirectedUrl
               };
-              if ((request.status >= 200 && request.status < 300) ||
-                request.status === 304 || request.status === 0) {
+              if (request.status === 304 || request.status === 0 ||
+                request.status >= 200 && request.status < 300) {
                 resolve(resp);
               } else {
                 reject(resp);
@@ -328,7 +328,7 @@
       // Mark it as pending to notify others this url is being loaded.
       this.documents[url] = 'pending';
       return Xhr.load(url)
-        .then((resp) => {
+        .then(resp => {
           const doc = this.makeDocument(resp.resource, resp.redirectedUrl || url);
           this.documents[url] = doc;
           // Load subtree.
@@ -403,9 +403,13 @@
         // Mark for easier selectors.
         n.setAttribute(importDependencyAttr, '');
         // Generate source map hints for inline scripts.
-        if (n.localName === 'script' && n.textContent) {
+        if (n.localName === 'script' && !n.src && n.textContent) {
           const num = inlineScriptIndex ? `-${inlineScriptIndex}` : '';
-          n.textContent += `\n//# sourceURL=${url}${num}.js\n`;
+          const content = n.textContent + `\n//# sourceURL=${url}${num}.js\n`;
+          // We use the src attribute so it triggers load/error events, and it's
+          // easier to capture errors (e.g. parsing) like this.
+          n.setAttribute('src', 'data:text/javascript;charset=utf-8,' + encodeURIComponent(content));
+          n.textContent = '';
           inlineScriptIndex++;
         }
       }
@@ -461,16 +465,14 @@
           // The pending scripts have been generated through innerHTML and
           // browsers won't execute them for security reasons. We cannot use
           // s.cloneNode(true) either, the only way to run the script is manually
-          // creating a new element and copying its attributes/textContent.
+          // creating a new element and copying its attributes.
           const clone = /** @type {!HTMLScriptElement} */
             (document.createElement('script'));
           // Remove import-dependency attribute to avoid double cloning.
           s.removeAttribute(importDependencyAttr);
-          // Copy attributes and textContent.
           for (let j = 0, ll = s.attributes.length; j < ll; j++) {
             clone.setAttribute(s.attributes[j].name, s.attributes[j].value);
           }
-          clone.textContent = s.textContent;
 
           // Update currentScript and replace original with clone script.
           currentScript = clone;
@@ -605,7 +607,7 @@
    * @param {!Node} node
    * @return {boolean}
    */
-  const isImportLink = (node) => {
+  const isImportLink = node => {
     return node.nodeType === Node.ELEMENT_NODE && MATCHES.call(node, importSelector);
   };
 
@@ -615,10 +617,11 @@
    * @param {!(HTMLLinkElement|HTMLScriptElement|HTMLStyleElement)} element
    * @return {Promise}
    */
-  const whenElementLoaded = (element) => {
+  const whenElementLoaded = element => {
     if (!element['__loadPromise']) {
-      element['__loadPromise'] = new Promise((resolve) => {
-        if (isElementLoaded(element)) {
+      element['__loadPromise'] = new Promise(resolve => {
+        // Inline scripts don't trigger load/error events, consider them already loaded.
+        if (element.localName === 'script' && !element.src) {
           resolve();
         } else if (isIE && element.localName === 'style') {
           // NOTE: We listen only for load events in IE/Edge, because in IE/Edge
@@ -639,23 +642,12 @@
   }
 
   /**
-   * @param {!HTMLElement} el
-   * @return {boolean}
-   */
-  const isElementLoaded = (el) => {
-    el['__loaded'] = el['__loaded'] ||
-      // Inline scripts don't trigger load/error events, consider them already loaded.
-      (el.localName === 'script' && !( /** @type {!HTMLScriptElement} */ (el).src));
-    return el['__loaded'];
-  }
-
-  /**
    * Calls the callback when all imports in the document at call time
    * (or at least document ready) have loaded. Callback is called synchronously
    * if imports are already done loading.
    * @param {function()=} callback
    */
-  const whenReady = (callback) => {
+  const whenReady = callback => {
     // 1. ensure the document is in a ready state (has dom), then
     // 2. watch for loading of imports and call callback when done
     whenDocumentReady(() => whenImportsReady(() => callback && callback()));
@@ -666,7 +658,7 @@
    *  synchronously if document is already done loading.
    * @param {!function()} callback
    */
-  const whenDocumentReady = (callback) => {
+  const whenDocumentReady = callback => {
     if (document.readyState !== 'loading') {
       callback();
     } else {
@@ -685,12 +677,12 @@
    * synchronously if imports are already done loading.
    * @param {!function()} callback
    */
-  const whenImportsReady = (callback) => {
+  const whenImportsReady = callback => {
     let imports = /** @type {!NodeList<!HTMLLinkElement>} */
       (document.querySelectorAll(rootImportSelector));
     const promises = [];
     for (let i = 0, l = imports.length, imp; i < l && (imp = imports[i]); i++) {
-      if (!isElementLoaded(imp)) {
+      if (!imp['__loaded']) {
         promises.push(whenElementLoaded(imp));
       }
     }
@@ -706,7 +698,7 @@
    * @param {!Node} element
    * @return {HTMLLinkElement|Document|undefined}
    */
-  const importForElement = (element) => {
+  const importForElement = element => {
     if (useNative) {
       return element.ownerDocument;
     }
@@ -742,7 +734,7 @@
     /**
      * @type {!function(!Event)}
      */
-    const onLoadingDone = (event) => {
+    const onLoadingDone = event => {
       const elem = /** @type {!Element} */ (event.target);
       if (isImportLink(elem)) {
         elem['__loaded'] = true;

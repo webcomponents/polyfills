@@ -8,8 +8,9 @@
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
+var rootPath = window.location.href.replace(/\/(\w|-)+\/tests\/.*/g, '');
 // Includes CustomEvent polyfill.
-document.write('<script src="/bower_components/webcomponents-platform/webcomponents-platform.js"></script>');
+document.write('<script src="' + rootPath + '/webcomponents-platform/webcomponents-platform.js"></script>');
 
 // document.baseURI polyfill.
 // TODO(valdrin) move it to a separate polyfill.
@@ -24,5 +25,5 @@ if (!document.baseURI) {
 }
 
 if (typeof window.Promise !== 'function') {
-  document.write('<script src="/bower_components/es6-promise/dist/es6-promise.auto.min.js"></script>');
+  document.write('<script src="' + rootPath + '/es6-promise/dist/es6-promise.auto.min.js"></script>');
 }
