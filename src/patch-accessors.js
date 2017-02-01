@@ -25,13 +25,6 @@ function generateSimpleDescriptor(prop) {
   }
 }
 
-function insertDOMFrom(target, from) {
-  let c$ = Array.from(from.childNodes);
-  for (let i=0; i < c$.length; i++) {
-    target.appendChild(c$[i]);
-  }
-}
-
 function clearNode(node) {
   while (node.firstChild) {
     node.removeChild(node.firstChild);
@@ -41,7 +34,7 @@ function clearNode(node) {
 const nativeInnerHTMLDesc =
   Object.getOwnPropertyDescriptor(Element.prototype, 'innerHTML') ||
   Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'innerHTML');
-const htmlContainer = document.createElement('div');
+const htmlContainer = document.createElement('template');
 
 const nativeActiveElementDescriptor = Object.getOwnPropertyDescriptor(
   Document.prototype, 'activeElement');
@@ -251,13 +244,13 @@ let InsideAccessors = {
     },
     set(text) {
       let content = this.localName === 'template' ? this.content : this;
-      clearNode(this);
+      clearNode(content);
       if (nativeInnerHTMLDesc && nativeInnerHTMLDesc.set) {
         nativeInnerHTMLDesc.set.call(htmlContainer, text);
       } else {
         htmlContainer.innerHTML = text;
       }
-      insertDOMFrom(content, htmlContainer);
+      content.appendChild(htmlContainer.content);
     },
     configurable: true
   }
