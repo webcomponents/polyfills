@@ -344,14 +344,6 @@
         baseEl.removeAttribute('href');
       }
 
-      // This is specific to users of <dom-module> (Polymer).
-      // TODO(valdrin) remove this when Polymer uses importForElement.
-      const s$ = content.querySelectorAll('dom-module');
-      for (let i = 0, s; i < s$.length && (s = s$[i]); i++) {
-        s.setAttribute('assetpath',
-          Path.replaceAttrUrl(s.getAttribute('assetpath') || '', url));
-      }
-
       const n$ = /** @type {!NodeList<!(HTMLLinkElement|HTMLScriptElement|HTMLStyleElement)>} */
         (content.querySelectorAll(importDependenciesSelector));
       // For source map hints.
