@@ -148,8 +148,8 @@ export default class CustomElementRegistry {
   }
 
   /**
-   * Calling `polyfillSetFlushCallback` with a function will set that function
-   * as the registry's 'flush callback'.
+   * Setting `polyfillFlushCallback` to a function will set that function as the
+   * registry's 'flush callback'.
    *
    * If the flush callback is `undefined` (the default), calls to `define` cause
    * synchronous full-document walks to find and upgrade elements and resolve
@@ -165,9 +165,9 @@ export default class CustomElementRegistry {
    *
    * ```javascript
    * let doFlush = undefined;
-   * customElements.polyfillSetFlushCallback(function flushCallback(fn) {
+   * customElements.polyfillFlushCallback = function flushCallback(fn) {
    *   doFlush = fn;
-   * });
+   * };
    *
    * let promiseB = customElements.whenDefined('element-a');
    * let promiseA = customElements.whenDefined('element-b');
@@ -193,12 +193,12 @@ export default class CustomElementRegistry {
    * // Setting the flush callback to `undefined` walks the document for
    * // upgrades and resolves any pending `whenDefined` promises, if any calls
    * // to `define` were made since the last flush.
-   * customElements.polyfillSetFlushCallback(undefined);
+   * customElements.polyfillFlushCallback = undefined;
    * ```
    *
-   * @param {Function} flushCallback
+   * @param {!Function|undefined} flushCallback
    */
-  polyfillSetFlushCallback(flushCallback) {
+  set polyfillFlushCallback(flushCallback) {
     if (flushCallback === undefined) {
       this._doFlush();
     }
@@ -249,4 +249,4 @@ window['CustomElementRegistry'] = CustomElementRegistry;
 CustomElementRegistry.prototype['define'] = CustomElementRegistry.prototype.define;
 CustomElementRegistry.prototype['get'] = CustomElementRegistry.prototype.get;
 CustomElementRegistry.prototype['whenDefined'] = CustomElementRegistry.prototype.whenDefined;
-CustomElementRegistry.prototype['polyfillSetFlushCallback'] = CustomElementRegistry.prototype.polyfillSetFlushCallback;
+CustomElementRegistry.prototype['polyfillFlushCallback'] = CustomElementRegistry.prototype.polyfillFlushCallback;
