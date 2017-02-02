@@ -76,10 +76,8 @@
     },
 
     fixUrlsInTemplate(template, base) {
-      const content = template.content;
-      if (!content) { // Template not supported.
-        return;
-      }
+      // If template is not supported, still resolve urls within it.
+      const content = template.content || template;
       const n$ = content.querySelectorAll(
         'style, form[action], [src], [href], [url], [style]');
       for (let i = 0; i < n$.length; i++) {
@@ -369,10 +367,10 @@
         // This creates issues in Safari10 when used with shadydom (see #12).
         content = template.content;
       } else {
-        // <template> not supported, create fragment and move children into it.
+        // <template> not supported, create fragment and move content into it.
         content = document.createDocumentFragment();
-        while (template.firstElementChild) {
-          content.appendChild(template.firstElementChild);
+        while (template.firstChild) {
+          content.appendChild(template.firstChild);
         }
       }
 
@@ -709,22 +707,6 @@
       element['__ownerImport'] = owner;
     }
     return owner;
-  }
-
-  // In case customElements polyfill is in use, install whenReady as the
-  // flush callback, so that custom element upgrades are deferred; this composes
-  // with any previous polyfillFlushCallback that the user may have installed
-  let prevWhenReady;
-  if (window.customElements) {
-    prevWhenReady = window.customElements['polyfillFlushCallback'];
-  } else {
-    window.customElements = {};
-  }
-  if (prevWhenReady) {
-    window.customElements['polyfillFlushCallback'] = cb => 
-      whenReady(() => prevWhenReady(cb));
-  } else {
-    window.customElements['polyfillFlushCallback'] = whenReady;
   }
 
   if (useNative) {
