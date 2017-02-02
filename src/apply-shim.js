@@ -163,9 +163,24 @@ class ApplyShim {
    * @param {string} elementName
    * @return {StyleNode}
    */
-  transformStyle(style, elementName) {
+  transformStyle(style, elementName = '') {
     let ast = rulesForStyle(style);
     this.transformRules(ast, elementName);
+    style.textContent = toCssText(ast);
+    return ast;
+  }
+  /**
+   * @param {!HTMLStyleElement} style
+   * @return {StyleNode}
+   */
+  transformCustomStyle(style) {
+    let ast = rulesForStyle(style);
+    forEachRule(ast, (rule) => {
+      if (rule['selector'] === ':root') {
+        rule['selector'] = 'html';
+      }
+      this.transformRule(rule);
+    })
     style.textContent = toCssText(ast);
     return ast;
   }
@@ -421,6 +436,7 @@ class ApplyShim {
 /* exports */
 ApplyShim.prototype['detectMixin'] = ApplyShim.prototype.detectMixin;
 ApplyShim.prototype['transformStyle'] = ApplyShim.prototype.transformStyle;
+ApplyShim.prototype['transformCustomStyle'] = ApplyShim.prototype.transformCustomStyle;
 ApplyShim.prototype['transformRules'] = ApplyShim.prototype.transformRules;
 ApplyShim.prototype['transformRule'] = ApplyShim.prototype.transformRule;
 ApplyShim.prototype['transformTemplate'] = ApplyShim.prototype.transformTemplate;
