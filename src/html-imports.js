@@ -681,9 +681,7 @@
       (document.querySelectorAll(rootImportSelector));
     const promises = [];
     for (let i = 0, l = imports.length, imp; i < l && (imp = imports[i]); i++) {
-      // note: check `.import` to consider a native import loaded
-      // prior to this polyfill actually loaded.
-      if (!imp['__loaded'] && !imp.import) {
+      if (!imp['__loaded']) {
         promises.push(whenElementLoaded(imp));
       }
     }
@@ -729,6 +727,34 @@
     window.customElements['polyfillFlushCallback'] = whenReady;
   }
 
+  if (useNative) {
+    // Check for imports that might already be done loading by the time this
+    // script is actually executed. Native imports are blocking, so the ones
+    // available in the document by this time should already have failed
+    // or have .import defined.
+    const imps = /** @type {!NodeList<!HTMLLinkElement>} */
+      (document.querySelectorAll(importSelector));
+    for (let i = 0, l = imps.length, imp; i < l && (imp = imps[i]); i++) {
+      if (!imp.import || imp.import.readyState !== 'loading') {
+        imp['__loaded'] = true;
+      }
+    }
+    // Listen for load/error events to capture dynamically added scripts.
+    /**
+     * @type {!function(!Event)}
+     */
+    const onLoadingDone = event => {
+      const elem = /** @type {!Element} */ (event.target);
+      if (isImportLink(elem)) {
+        elem['__loaded'] = true;
+      }
+    };
+    document.addEventListener('load', onLoadingDone, true /* useCapture */ );
+    document.addEventListener('error', onLoadingDone, true /* useCapture */ );
+  } else {
+    new Importer();
+  }
+
   /**
     Add support for the `HTMLImportsLoaded` event and the `HTMLImports.whenReady`
     method. This api is necessary because unlike the native implementation,
@@ -745,23 +771,6 @@
     bubbles: true,
     detail: undefined
   })));
-
-  if (useNative) {
-    // Listen for load/error events to capture dynamically added scripts.
-    /**
-     * @type {!function(!Event)}
-     */
-    const onLoadingDone = event => {
-      const elem = /** @type {!Element} */ (event.target);
-      if (isImportLink(elem)) {
-        elem['__loaded'] = true;
-      }
-    };
-    document.addEventListener('load', onLoadingDone, true /* useCapture */ );
-    document.addEventListener('error', onLoadingDone, true /* useCapture */ );
-  } else {
-    new Importer();
-  }
 
   // exports
   scope.useNative = useNative;
