@@ -78,13 +78,17 @@ export default function(internals) {
         // setting `innerHTML` of that element and replacing the target
         // element's children with those of the unpatched element.
         set: /** @this {Element} */ function(assignedValue) {
+          // NOTE: re-route to `content` for `template` elements.
+          // We need to do this because `template.appendChild` does not
+          // route into `template.content`.
+          let content = this.localName === 'template' ? this.content : this;
           rawDiv.innerHTML = assignedValue;
 
-          while (this.childNodes.length > 0) {
-            Native.Node_removeChild.call(this, this.childNodes[0]);
+          while (content.childNodes.length > 0) {
+            Native.Node_removeChild.call(content, content.childNodes[0]);
           }
           while (rawDiv.childNodes.length > 0) {
-            Native.Node_appendChild.call(this, rawDiv.childNodes[0]);
+            Native.Node_appendChild.call(content, rawDiv.childNodes[0]);
           }
         },
       });
