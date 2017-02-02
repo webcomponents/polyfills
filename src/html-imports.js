@@ -717,7 +717,7 @@
   // with any previous polyfillFlushCallback that the user may have installed
   let prevWhenReady;
   if (window.customElements) {
-    prevWhenReady = customElements['polyfillFlushCallback'];
+    prevWhenReady = window.customElements['polyfillFlushCallback'];
   } else {
     window.customElements = {};
   }
