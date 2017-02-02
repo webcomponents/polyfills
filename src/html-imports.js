@@ -712,6 +712,22 @@
     return owner;
   }
 
+  // In case customElements polyfill is in use, install whenReady as the
+  // flush callback, so that custom element upgrades are deferred; this composes
+  // with any previous polyfillFlushCallback that the user may have installed
+  let prevWhenReady;
+  if (window.customElements) {
+    prevWhenReady = customElements['polyfillFlushCallback'];
+  } else {
+    window.customElements = {};
+  }
+  if (prevWhenReady) {
+    window.customElements['polyfillFlushCallback'] = cb => 
+      whenReady(() => prevWhenReady(cb));
+  } else {
+    window.customElements['polyfillFlushCallback'] = whenReady;
+  }
+
   /**
     Add support for the `HTMLImportsLoaded` event and the `HTMLImports.whenReady`
     method. This api is necessary because unlike the native implementation,
