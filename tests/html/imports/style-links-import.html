@@ -11,4 +11,6 @@
 <link rel="stylesheet" href="sheet1.css">
 <link rel="stylesheet" href="sheet2.css">
 
-<link rel="stylesheet" type="foo" href="sheet4.css">
+<!-- in Safari a stylesheet with type is loaded anyways. We set the deprecated
+ 'disabled' attribute to avoid flakiness in the tests -->
+<link rel="stylesheet" type="foo" disabled href="sheet4.css">
