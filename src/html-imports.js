@@ -681,7 +681,9 @@
       (document.querySelectorAll(rootImportSelector));
     const promises = [];
     for (let i = 0, l = imports.length, imp; i < l && (imp = imports[i]); i++) {
-      if (!imp['__loaded']) {
+      // note: check `.import` to consider a native import loaded
+      // prior to this polyfill actually loaded.
+      if (!imp['__loaded'] && !imp.import) {
         promises.push(whenElementLoaded(imp));
       }
     }
