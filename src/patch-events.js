@@ -263,9 +263,7 @@ export function addEventListener(type, fn, optionsOrCapture) {
       this.removeEventListener(type, fn, optionsOrCapture);
     }
     if (!e.__target) {
-      e.__target = e.target;
-      e.__relatedTarget = e.relatedTarget;
-      utils.patchPrototype(e, eventMixin);
+      patchEvent(e);
     }
     // There are two critera that should stop events from firing on this node
     // 1. the event is not composed and the current node is not in the same root as the target
@@ -349,13 +347,23 @@ function activateFocusEventOverrides() {
   for (let ev in nonBubblingEventsToRetarget) {
     window.addEventListener(ev, function(e) {
       if (!e.__target) {
-        e.__target = e.target;
-        e.__relatedTarget = e.relatedTarget;
-        utils.patchPrototype(e, eventMixin);
+        patchEvent(e);
         retargetNonBubblingEvent(e);
         e.stopImmediatePropagation();
       }
     }, true);
+  }
+}
+
+function patchEvent(event) {
+  event.__target = event.target;
+  event.__relatedTarget = event.relatedTarget;
+  // patch event prototype if we can
+  if (utils.settings.hasDescriptors) {
+    utils.patchPrototype(event, eventMixin);
+  // and fallback to patching instance
+  } else {
+    utils.extend(event, eventMixin);
   }
 }
 
