@@ -31,6 +31,7 @@
     "gulp-size": "^2.1.0",
     "gulp-sourcemaps": "^2.4.0",
     "rollup-stream": "^1.14.0",
+    "run-sequence": "^1.2.2",
     "vinyl-buffer": "^1.0.0",
     "vinyl-source-stream": "^1.1.0",
     "web-component-tester": "^6.0.0-prerelease.4"

@@ -33,8 +33,12 @@ class StyleProperties {
   get XSCOPE_NAME() {
     return XSCOPE_NAME;
   }
-  // decorates styles with rule info and returns an array of used style
-  // property names
+/**
+ * decorates styles with rule info and returns an array of used style property names
+ *
+ * @param {StyleNode} rules
+ * @return {Array<string>}
+ */
   decorateStyles(rules) {
     let self = this, props = {}, keyframes = [], ruleIndex = 0;
     StyleUtil.forEachRule(rules, function(rule) {
@@ -65,7 +69,7 @@ class StyleProperties {
     if (hasProperties) {
       info.properties = properties;
       // TODO(sorvell): workaround parser seeing mixins as additional rules
-      rule.rules = null;
+      rule['rules'] = null;
     }
     info.cssText = this.collectCssText(rule);
     rule.propertyInfo = info;
@@ -82,7 +86,7 @@ class StyleProperties {
       }
     } else {
       let m, rx = RX.VAR_ASSIGN;
-      let cssText = rule.parsedCssText;
+      let cssText = rule['parsedCssText'];
       let value;
       let any;
       while ((m = rx.exec(cssText))) {
@@ -101,7 +105,7 @@ class StyleProperties {
 
   // returns cssText of properties that consume variables/mixins
   collectCssText(rule) {
-    return this.collectConsumingCssText(rule.parsedCssText);
+    return this.collectConsumingCssText(rule['parsedCssText']);
   }
 
   // NOTE: we support consumption inside mixin assignment
@@ -210,15 +214,15 @@ class StyleProperties {
     if (rule.propertyInfo.cssText) {
       output = this.valueForProperties(rule.propertyInfo.cssText, props);
     }
-    rule.cssText = output;
+    rule['cssText'] = output;
   }
 
   // Apply keyframe transformations to the cssText of a given rule. The
   // keyframeTransforms object is a map of keyframe names to transformer
   // functions which take in cssText and spit out transformed cssText.
   applyKeyframeTransforms(rule, keyframeTransforms) {
-    let input = rule.cssText;
-    let output = rule.cssText;
+    let input = rule['cssText'];
+    let output = rule['cssText'];
     if (rule.hasAnimations == null) {
       // Cache whether or not the rule has any animations to begin with:
       rule.hasAnimations = RX.ANIMATION_MATCH.test(input);
@@ -250,11 +254,15 @@ class StyleProperties {
         output = input;
       }
     }
-    rule.cssText = output;
+    rule['cssText'] = output;
   }
 
   // Test if the rules in these styles matches the given `element` and if so,
   // collect any custom properties into `props`.
+  /**
+   * @param {StyleNode} rules
+   * @param {Element} element
+   */
   propertyDataFromStyles(rules, element) {
     let props = {}, self = this;
     // generates a unique key for these matches
@@ -269,7 +277,7 @@ class StyleProperties {
       // match element against transformedSelector: selector may contain
       // unwanted uniquification and parsedSelector does not directly match
       // for :host selectors.
-      let selectorToMatch = rule.transformedSelector || rule.parsedSelector;
+      let selectorToMatch = rule.transformedSelector || rule['parsedSelector'];
       if (element && rule.propertyInfo.properties && selectorToMatch) {
         if (matchesSelector.call(element, selectorToMatch)) {
           self.collectProperties(rule, props);
@@ -281,6 +289,12 @@ class StyleProperties {
     return {properties: props, key: o};
   }
 
+  /**
+   * @param {Element} scope
+   * @param {StyleNode} rule
+   * @param {string|undefined} cssBuild
+   * @param {function(Object)} callback
+   */
   whenHostOrRootRule(scope, rule, cssBuild, callback) {
     if (!rule.propertyInfo) {
       this.decorateRule(rule);
@@ -288,10 +302,11 @@ class StyleProperties {
     if (!rule.propertyInfo.properties) {
       return;
     }
+    let isExtends = StyleUtil.getIsExtends(scope);
     let hostScope = scope.is ?
-    StyleTransformer._calcHostScope(scope.is, scope.extends) :
-    'html';
-    let parsedSelector = rule.parsedSelector;
+      StyleTransformer._calcHostScope(isExtends.is, isExtends.extends) :
+      'html';
+    let parsedSelector = rule['parsedSelector'];
     let isRoot = (parsedSelector === ':host > *' || parsedSelector === 'html');
     let isHost = parsedSelector.indexOf(':host') === 0 && !isRoot;
     // build info is either in scope (when scope is an element) or in the style
@@ -319,7 +334,7 @@ class StyleProperties {
         StyleTransformer._transformRuleCss(
           rule,
           StyleTransformer._transformComplexSelector,
-          StyleTransformer._calcElementScope(scope.is),
+          StyleTransformer._calcElementScope(isExtends.is),
           hostScope
         );
       }
@@ -332,14 +347,14 @@ class StyleProperties {
     });
   }
 /**
- * @param {string} scope
+ * @param {Element} scope
  * @param {StyleNode} rules
  * @return {Object}
  */
   hostAndRootPropertiesForScope(scope, rules) {
     let hostProps = {}, rootProps = {}, self = this;
     // note: active rules excludes non-matching @media rules
-    let cssBuild = rules && rules.__cssBuild;
+    let cssBuild = rules && rules['__cssBuild'];
     StyleUtil.forEachRule(rules, function(rule) {
       // if scope is StyleDefaults, use _element for matchesSelector
       self.whenHostOrRootRule(scope, rule, cssBuild, function(info) {
@@ -356,10 +371,16 @@ class StyleProperties {
     return {rootProps: rootProps, hostProps: hostProps};
   }
 
+  /**
+   * @param {Element} element
+   * @param {Object} properties
+   * @param {string} scopeSelector
+   */
   transformStyles(element, properties, scopeSelector) {
     let self = this;
+    let isExtends = StyleUtil.getIsExtends(element);
     let hostSelector = StyleTransformer
-      ._calcHostScope(element.is, element.extends);
+      ._calcHostScope(isExtends.is, isExtends.extends);
     let rxHostSelector = element.extends ?
       '\\' + hostSelector.slice(0, -1) + '\\]' :
       hostSelector;
@@ -372,7 +393,7 @@ class StyleProperties {
       self.applyProperties(rule, properties);
       if (!nativeShadow &&
           !StyleUtil.isKeyframesSelector(rule) &&
-          rule.cssText) {
+          rule['cssText']) {
         // NOTE: keyframe transforms only scope munge animation names, so it
         // is not necessary to apply them in ShadowDOM.
         self.applyKeyframeTransforms(rule, keyframeTransforms);
@@ -381,6 +402,12 @@ class StyleProperties {
     });
   }
 
+  /**
+   * @param {Element} element
+   * @param {StyleNode} rules
+   * @param {string} scopeSelector
+   * @return {Object}
+   */
   _elementKeyframeTransforms(element, rules, scopeSelector) {
     let keyframesRules = rules._keyframes;
     let keyframeTransforms = {};
@@ -392,7 +419,7 @@ class StyleProperties {
            i < keyframesRules.length;
            keyframesRule = keyframesRules[++i]) {
         this._scopeKeyframes(keyframesRule, scopeSelector);
-        keyframeTransforms[keyframesRule.keyframesName] =
+        keyframeTransforms[keyframesRule['keyframesName']] =
             this._keyframesRuleTransformer(keyframesRule);
       }
     }
@@ -401,6 +428,10 @@ class StyleProperties {
 
   // Generate a factory for transforming a chunk of CSS text to handle a
   // particular scoped keyframes rule.
+  /**
+   * @param {StyleNode} keyframesRule
+   * @return {function(string):string}
+   */
   _keyframesRuleTransformer(keyframesRule) {
     return function(cssText) {
       return cssText.replace(
@@ -409,14 +440,19 @@ class StyleProperties {
     };
   }
 
-  // Transforms `@keyframes` names to be unique for the current host.
-  // Example: @keyframes foo-anim -> @keyframes foo-anim-x-foo-0
+/**
+ * Transforms `@keyframes` names to be unique for the current host.
+ * Example: @keyframes foo-anim -> @keyframes foo-anim-x-foo-0
+ *
+ * @param {StyleNode} rule
+ * @param {string} scopeId
+ */
   _scopeKeyframes(rule, scopeId) {
-    rule.keyframesNameRx = new RegExp(rule.keyframesName, 'g');
-    rule.transformedKeyframesName = rule.keyframesName + '-' + scopeId;
-    rule.transformedSelector = rule.transformedSelector || rule.selector;
-    rule.selector = rule.transformedSelector.replace(
-        rule.keyframesName, rule.transformedKeyframesName);
+    rule.keyframesNameRx = new RegExp(rule['keyframesName'], 'g');
+    rule.transformedKeyframesName = rule['keyframesName'] + '-' + scopeId;
+    rule.transformedSelector = rule.transformedSelector || rule['selector'];
+    rule['selector'] = rule.transformedSelector.replace(
+        rule['keyframesName'], rule.transformedKeyframesName);
   }
 
   // Strategy: x scope shim a selector e.g. to scope `.x-foo-42` (via classes):
@@ -427,8 +463,14 @@ class StyleProperties {
   // have low specificity. They are overrideable by class selectors but,
   // unfortunately, not by type selectors (e.g. overriding via
   // `.special` is ok, but not by `x-foo`).
+  /**
+   * @param {StyleNode} rule
+   * @param {RegExp} hostRx
+   * @param {string} hostSelector
+   * @param {string} scopeId
+   */
   _scopeSelector(rule, hostRx, hostSelector, scopeId) {
-    rule.transformedSelector = rule.transformedSelector || rule.selector;
+    rule.transformedSelector = rule.transformedSelector || rule['selector'];
     let selector = rule.transformedSelector;
     let scope = '.' + scopeId;
     let parts = selector.split(',');
@@ -437,9 +479,14 @@ class StyleProperties {
         p.replace(hostSelector, scope) :
         scope + ' ' + p;
     }
-    rule.selector = parts.join(',');
+    rule['selector'] = parts.join(',');
   }
 
+  /**
+   * @param {Element} element
+   * @param {string} selector
+   * @param {string} old
+   */
   applyElementScopeSelector(element, selector, old) {
     let c = element.getAttribute('class') || '';
     let v = c;
@@ -453,6 +500,13 @@ class StyleProperties {
     }
   }
 
+  /**
+   * @param {Element} element
+   * @param {Object} properties
+   * @param {string} selector
+   * @param {Element} style
+   * @return {Element}
+   */
   applyElementStyle(element, properties, selector, style) {
     // calculate cssText to apply
     let cssText = style ? style.textContent || '' :
@@ -477,7 +531,7 @@ class StyleProperties {
       } else if (cssText) {
         // apply css after the scope style of the element to help with
         // style precedence rules.
-        style = StyleUtil.applyCss(cssText, selector, element['shadowRoot'],
+        style = StyleUtil.applyCss(cssText, selector, element.shadowRoot,
           styleInfo.placeholder);
       }
     } else {
@@ -511,11 +565,15 @@ class StyleProperties {
     return style;
   }
 
+  /**
+   * @param {Element} style
+   * @param {Object} properties
+   */
   applyCustomStyle(style, properties) {
-    let rules = StyleUtil.rulesForStyle(style);
+    let rules = StyleUtil.rulesForStyle(/** @type {HTMLStyleElement} */(style));
     let self = this;
     style.textContent = StyleUtil.toCssText(rules, function(/** StyleNode */rule) {
-      let css = rule.cssText = rule.parsedCssText;
+      let css = rule['cssText'] = rule['parsedCssText'];
       if (rule.propertyInfo && rule.propertyInfo.cssText) {
         // remove property assignments
         // so next function isn't confused
@@ -527,12 +585,16 @@ class StyleProperties {
         // are not and this makes this case unique.
         css = removeCustomPropAssignment(/** @type {string} */(css));
         // replace with reified properties, scenario is same as mixin
-        rule.cssText = self.valueForProperties(css, properties);
+        rule['cssText'] = self.valueForProperties(css, properties);
       }
     });
   }
 }
 
+/**
+ * @param {number} n
+ * @param {Array<number>} bits
+ */
 function addToBitMask(n, bits) {
   let o = parseInt(n / 32, 10);
   let v = 1 << (n % 32);

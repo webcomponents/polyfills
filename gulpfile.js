@@ -22,15 +22,16 @@ const buffer = require('vinyl-buffer');
 const source = require('vinyl-source-stream');
 const closure = require('google-closure-compiler').gulp();
 const size = require('gulp-size');
+const runseq = require('run-sequence');
 
-gulp.task('debug', () => {
+gulp.task('debug-shady-css', () => {
   return rollup({
-    entry: 'src/shadycss.js',
+    entry: 'src/shady-css.js',
     format: 'iife',
     moduleName: 'shadycss',
     sourceMap: true
   })
-  .pipe(source('shadycss.js', 'src'))
+  .pipe(source('shady-css.js', 'src'))
   .pipe(buffer())
   .pipe(sourcemaps.init({loadMaps: true}))
   .pipe(rename('shadycss.min.js'))
@@ -40,17 +41,9 @@ gulp.task('debug', () => {
 });
 
 const modules = [
-  'apply-shim',
   'css-parse',
   'custom-style-element',
   'make-element',
-  'style-cache',
-  'style-info',
-  'style-placeholder',
-  'style-properties',
-  'style-settings',
-  'style-transformer',
-  'style-util',
   'svg-in-shadow'
 ];
 
@@ -67,13 +60,19 @@ const moduleTasks = modules.map((m) => {
   return `test-module-${m}`;
 });
 
-gulp.task('test-modules', moduleTasks);
-
 gulp.task('clean-test-modules', () => del(['tests/module/generated']));
+
+gulp.task('test-modules', (cb) => {
+  runseq('clean-test-modules', moduleTasks, cb);
+});
 
 gulp.task('default', ['closure', 'test-modules']);
 
-gulp.task('closure', () => {
+gulp.task('closure', ['closure-shady-css', 'closure-apply-shim']);
+
+gulp.task('debug', ['debug-shady-css', 'debug-apply-shim']);
+
+gulp.task('closure-shady-css', () => {
   return gulp.src('src/*.js')
   .pipe(sourcemaps.init())
   .pipe(closure({
@@ -83,12 +82,52 @@ gulp.task('closure', () => {
     language_out: 'ES5_STRICT',
     output_wrapper: '(function(){\n%output%\n}).call(self)',
     js_output_file: 'shadycss.min.js',
-    entry_point: '/src/shadycss.js',
+    entry_point: '/src/shady-css.js',
     dependency_mode: 'STRICT',
     warning_level: 'VERBOSE',
     rewrite_polyfills: false,
+    // externs: ['externs/shadycss-externs.js']
+    // formatting: 'PRETTY_PRINT'
   }))
   .pipe(size({showFiles: true, showTotal: false, gzip: true}))
   .pipe(sourcemaps.write('.'))
   .pipe(gulp.dest('.'))
+});
+
+gulp.task('closure-apply-shim', () => {
+  return gulp.src('src/*.js')
+  .pipe(sourcemaps.init())
+  .pipe(closure({
+    new_type_inf: true,
+    compilation_level: 'ADVANCED',
+    language_in: 'ES6_STRICT',
+    language_out: 'ES5_STRICT',
+    output_wrapper: '(function(){\n%output%\n}).call(self)',
+    js_output_file: 'apply-shim.min.js',
+    entry_point: '/src/apply-shim.js',
+    dependency_mode: 'STRICT',
+    warning_level: 'VERBOSE',
+    rewrite_polyfills: false,
+    // externs: ['externs/shadycss-externs.js']
+    // formatting: 'PRETTY_PRINT'
+  }))
+  .pipe(size({showFiles: true, showTotal: false, gzip: true}))
+  .pipe(sourcemaps.write('.'))
+  .pipe(gulp.dest('.'))
+});
+
+gulp.task('debug-apply-shim', () => {
+  return rollup({
+    entry: 'src/apply-shim.js',
+    format: 'iife',
+    moduleName: 'applyshim',
+    sourceMap: true
+  })
+  .pipe(source('apply-shim.js', 'src'))
+  .pipe(buffer())
+  .pipe(sourcemaps.init({loadMaps: true}))
+  .pipe(rename('apply-shim.min.js'))
+  .pipe(size({showFiles: true, showTotal: false, gzip: true}))
+  .pipe(sourcemaps.write('.'))
+  .pipe(gulp.dest('./'))
 });

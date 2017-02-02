@@ -1,12 +1,9 @@
 # ShadyCSS
 
-ShadyCSS provides a shim for, CSS Custom Properties, CSS Mixins with `@apply` support,
-and ShadowDOM V1 style encapsulation with the ShadyDOM library.
+ShadyCSS provides a shim for CSS Custom Properties and ShadowDOM V1 style encapsulation with the ShadyDOM library.
 
 ## Requirements
-ShadyCSS requires support for CustomElements, ShadowDOM, MutationObserver, Promise, Object.assign
-
-This library is distributed as ES2016 only, due to the included `<custom-style>` element definition.
+ShadyCSS requires support for the `<template>` element, CustomElements, ShadowDOM, MutationObserver, Promise, Object.assign
 
 ## Usage
 
@@ -15,8 +12,6 @@ The shim will transparently no-op if some or all native support is available.
 If native ShadowDOM is not available, stylesheet selectors will be modified to simulate scoping.
 
 if CSS Custom Properties are not available, stylesheets will be generated with realized values for custom properties.
-
-`@apply` is not native in any browser, so they will be shimmed with CSS Custom Properties in browsers that support them, or via generated stylesheets with the CSS Custom Properties shim.
 
 To use ShadyCSS:
 
@@ -121,12 +116,33 @@ element name to `prepareTemplate` as a third argument.
 </script>
 ```
 
-## `<custom-style>`
+## Document level styles
 
-The `<custom-style>` element allows `<style>` elements that are not inside of
-Custom Elements to be processed by the ShadyCSS library.
+ShadyCSS provides API to process `<style>` elements that are not inside of
+Custom Elements, and simulate upper-boundary style scoping for ShadyDOM.
+
+To add document-level styles to ShadyCSS, one can call `ShadyCSS.addDocumentStyle(styleElement)` or `ShadyCSS.addDocumentStyle({getStyle: () => styleElement})`
+
+In addition, if the process used to discover document-level styles can be synchronously flushed, one should set `ShadyCSS.documentStyleFlush`.
+This function will be called when calculating styles.
+
+An example usage of the document-level styling api can be found in `examples/document-style-lib.js`
 
 ### Example
+
+```html
+<style class="document-style">
+html {
+  --content-color: brown;
+}
+</style>
+<my-element>This text will be brown!</my-element>
+<script>
+ShadyCSS.addDocumentStyle(document.querySelector('style.document-style'));
+</script>
+```
+
+Another example with a wrapper `<custom-style>` element
 
 ```html
 <custom-style>
@@ -136,7 +152,25 @@ Custom Elements to be processed by the ShadyCSS library.
   }
   </style>
 </custom-style>
-<my-element>This text will be brown!</my-element>
+<my-element>This this text will be brown!</my-element>
+<script>
+ShadyCSS.addDocumentStyle(document.querySelectorAll('custom-style > style'));
+</script>
+```
+
+Another example with a function that produces style elements
+
+```html
+<my-element>This this text will be brown!</my-element>
+<script>
+ShadyCSS.addDocumentStyle({
+  getStyle() {
+    const s = document.createElement('style');
+    s.textContent = 'html{ --content-color: brown }';
+    return s;
+  }
+});
+</script>
 ```
 
 ## Imperative values for Custom properties
@@ -165,8 +199,8 @@ ShadyCSS.applyStyle(el, {'--content-color', 'red'});
 
 ### Selector scoping
 
- You must have a selector to the left of the `::slotted`
- pseudo-element.
+You must have a selector to the left of the `::slotted`
+pseudo-element.
 
 ### Custom properties and `@apply`
 
@@ -178,7 +212,7 @@ For a given element's shadowRoot, only 1 value is allowed per custom properties.
 Properties cannot change from parent to child as they can under native custom
 properties; they can only change when a shadowRoot boundary is crossed.
 
-To receive a custom property, an element must directly matcha selector that
+To receive a custom property, an element must directly match a selector that
 defines the property in its host's stylesheet.
 
 ### `<custom-style>` Flash of unstyled content
@@ -186,9 +220,6 @@ defines the property in its host's stylesheet.
 If `ShadyCss.applyStyle` is never called, `<custom-style>` elements will process
 after HTML Imports have loaded, after the document loads, or after the next paint.
 This means that there may be a flash of unstyled content on the first load.
-
-If there are only `<custom-style>` elements in the page, you may call
-`ShadyCSS.updateStyles()` to remove the flash of unstyled content.
 
 ### Mixins do not cascade throught `<slot>`
 

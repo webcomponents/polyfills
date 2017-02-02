@@ -50,5 +50,5 @@ Caveat: ShadyCSS will add a `scope` attribute to styles it controls, so do not a
     observer.observe(document, {childList: true, subtree: true});
   });
 
-  ShadyCSS.documentStyleFlush = () => {handler(observer.takeRecords())};
+  window.documentStyleFlush = () => {handler(observer.takeRecords())};
 })();

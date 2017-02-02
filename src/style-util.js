@@ -47,8 +47,8 @@ export function rulesForStyle(style) {
  * @return {boolean}
  */
 export function isKeyframesSelector(rule) {
-  return rule.parent &&
-  rule.parent.type === types.KEYFRAMES_RULE;
+  return Boolean(rule['parent']) &&
+  rule['parent']['type'] === types.KEYFRAMES_RULE;
 }
 
 /**
@@ -62,9 +62,10 @@ export function forEachRule(node, styleRuleCallback, keyframesRuleCallback, only
     return;
   }
   let skipRules = false;
+  let type = node['type'];
   if (onlyActiveRules) {
-    if (node.type === types.MEDIA_RULE) {
-      let matchMedia = node.selector.match(MEDIA_MATCH);
+    if (type === types.MEDIA_RULE) {
+      let matchMedia = node['selector'].match(MEDIA_MATCH);
       if (matchMedia) {
         // if rule is a non matching @media rule, skip subrules
         if (!window.matchMedia(matchMedia[1]).matches) {
@@ -73,15 +74,15 @@ export function forEachRule(node, styleRuleCallback, keyframesRuleCallback, only
       }
     }
   }
-  if (node.type === types.STYLE_RULE) {
+  if (type === types.STYLE_RULE) {
     styleRuleCallback(node);
   } else if (keyframesRuleCallback &&
-    node.type === types.KEYFRAMES_RULE) {
+    type === types.KEYFRAMES_RULE) {
     keyframesRuleCallback(node);
-  } else if (node.type === types.MIXIN_RULE) {
+  } else if (type === types.MIXIN_RULE) {
     skipRules = true;
   }
-  let r$ = node.rules;
+  let r$ = node['rules'];
   if (r$ && !skipRules) {
     for (let i=0, l=r$.length, r; (i<l) && (r=r$[i]); i++) {
       forEachRule(r, styleRuleCallback, keyframesRuleCallback, onlyActiveRules);
@@ -90,6 +91,13 @@ export function forEachRule(node, styleRuleCallback, keyframesRuleCallback, only
 }
 
 // add a string of cssText to the document.
+/**
+ * @param {string} cssText
+ * @param {string} moniker
+ * @param {Node} target
+ * @param {Node} contextNode
+ * @return {HTMLStyleElement}
+ */
 export function applyCss(cssText, moniker, target, contextNode) {
   let style = createScopeStyle(cssText, moniker);
   return applyStyle(style, target, contextNode);
@@ -99,16 +107,21 @@ export function applyCss(cssText, moniker, target, contextNode) {
  * @param {Node} style
  * @param {?Node} target
  * @param {?Node} contextNode
- * @return {Node}
+ * @return {HTMLStyleElement}
  */
 export function applyStyle(style, target, contextNode) {
   target = target || document.head;
   let after = (contextNode && contextNode.nextSibling) ||
   target.firstChild;
   lastHeadApplyNode = style;
-  return target.insertBefore(style, after);
+  return /** @type {HTMLStyleElement} */(target.insertBefore(style, after));
 }
 
+/**
+ * @param {string} cssText
+ * @param {string} moniker
+ * @return {Element}
+ */
 export function createScopeStyle(cssText, moniker) {
   let style = document.createElement('style');
   if (moniker) {
@@ -118,9 +131,14 @@ export function createScopeStyle(cssText, moniker) {
   return style;
 }
 
+/** @type {Node} */
 let lastHeadApplyNode = null;
 
 // insert a comment node as a styling position placeholder.
+/**
+ * @param {string} moniker
+ * @return {Node}
+ */
 export function applyStylePlaceHolder(moniker) {
   let placeHolder = document.createComment(' Shady DOM styles for ' +
     moniker + ' ');
@@ -132,10 +150,18 @@ export function applyStylePlaceHolder(moniker) {
   return placeHolder;
 }
 
+/**
+ * @param {string} buildType
+ * @return {boolean}
+ */
 export function isTargetedBuild(buildType) {
   return nativeShadow ? buildType === 'shadow' : buildType === 'shady';
 }
 
+/**
+ * @param {Element} element
+ * @return {?string}
+ */
 export function getCssBuildType(element) {
   return element.getAttribute('css-build');
 }
@@ -161,6 +187,10 @@ function findMatchingParen(text, start) {
   return -1;
 }
 
+/**
+ * @param {string} str
+ * @param {function(string, string, string, string)} callback
+ */
 export function processVariableAndFallback(str, callback) {
   // find 'var('
   let start = str.indexOf('var(');
@@ -186,6 +216,10 @@ export function processVariableAndFallback(str, callback) {
   return callback(prefix, value, fallback, suffix);
 }
 
+/**
+ * @param {Element} element
+ * @param {string} value
+ */
 export function setElementClassRaw(element, value) {
   // use native setAttribute provided by ShadyDOM when setAttribute is patched
   if (window['ShadyDOM']) {
@@ -193,4 +227,14 @@ export function setElementClassRaw(element, value) {
   } else {
     element.setAttribute('class', value);
   }
+}
+
+/**
+ * @param {Element|Object} element
+ * @return {{is: string, extends: string}}
+ */
+export function getIsExtends(element) {
+  let is = element.is || (element.getAttribute && element.getAttribute('is')) || element.localName;
+  let extendz = element.extends || element.localName !== is ? element.localName : '';
+  return {is, extends: extendz};
 }

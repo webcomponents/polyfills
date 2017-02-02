@@ -49,6 +49,9 @@ export default class CustomStyleInterface {
     if (window['HTMLImports']) {
       window['HTMLImports']['whenReady'](this.validateFn);
     } else if (document.readyState === 'complete') {
+      /*
+      TODO(dfreedm): Must implement a batching procedure when native HTML Imports are used to facilitate batching due to O(n^2) processing
+      */
       this.validateFn();
     } else {
       document.addEventListener('readystatechange', () => {
@@ -74,15 +77,13 @@ export default class CustomStyleInterface {
    */
   getStyleForCustomStyle(customStyle) {
     let style;
-    if (customStyle.getStyle) {
-      style = customStyle.getStyle();
+    if (customStyle['getStyle']) {
+      style = customStyle['getStyle']();
     } else {
       style = customStyle;
     }
     return style;
   }
-  /* this function left intentionally blank */
-  flush() {}
   findStyles() {
     for (let i = 0; i < this.customStyles.length; i++) {
       let customStyle = this.customStyles[i];

@@ -12,4 +12,4 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 A simple shim to generate a testable module
 */
 
-import '../../src/custom-style-element'
+import '../../examples/custom-style-element'

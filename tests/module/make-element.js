@@ -20,7 +20,8 @@ window.makeElement = (name, connectedCallback) => {
   }
   window.customElements.define(name, class extends window.HTMLElement {
     connectedCallback() {
-      window.ShadyCSS.applyStyle(this);
+      window.ShadyCSS.flushCustomStyles();
+      window.ShadyCSS.applyElementStyle(this);
       if (template && !this.shadowRoot) {
         this.attachShadow({mode: 'open'});
         this.shadowRoot.appendChild(document.importNode(template.content, true));

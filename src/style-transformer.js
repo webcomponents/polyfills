@@ -147,7 +147,7 @@ class StyleTransformer {
   /**
    * transforms a css rule to a scoped rule.
    *
-   * @param {Object} rule
+   * @param {StyleNode} rule
    * @param {Function} transformer
    * @param {string=} scope
    * @param {string=} hostScope
@@ -155,12 +155,18 @@ class StyleTransformer {
   _transformRule(rule, transformer, scope, hostScope) {
     // NOTE: save transformedSelector for subsequent matching of elements
     // against selectors (e.g. when calculating style properties)
-    rule.selector = rule.transformedSelector =
+    rule['selector'] = rule.transformedSelector =
       this._transformRuleCss(rule, transformer, scope, hostScope);
   }
 
+  /**
+   * @param {StyleNode} rule
+   * @param {Function} transformer
+   * @param {string=} scope
+   * @param {string=} hostScope
+   */
   _transformRuleCss(rule, transformer, scope, hostScope) {
-    let p$ = rule.selector.split(COMPLEX_SELECTOR_SEP);
+    let p$ = rule['selector'].split(COMPLEX_SELECTOR_SEP);
     // we want to skip transformation of rules that appear in keyframes,
     // because they are keyframe selectors, not element selectors.
     if (!StyleUtil.isKeyframesSelector(rule)) {
@@ -264,16 +270,22 @@ class StyleTransformer {
     }
   }
 
+  /**
+   * @param {StyleNode} rule
+   */
   documentRule(rule) {
     // reset selector in case this is redone.
-    rule.selector = rule.parsedSelector;
+    rule['selector'] = rule['parsedSelector'];
     this.normalizeRootSelector(rule);
     this._transformRule(rule, this._transformDocumentSelector);
   }
 
+  /**
+   * @param {StyleNode} rule
+   */
   normalizeRootSelector(rule) {
-    if (rule.selector === ROOT) {
-      rule.selector = 'html';
+    if (rule['selector'] === ROOT) {
+      rule['selector'] = 'html';
     }
   }
 

@@ -145,13 +145,29 @@ class ApplyShim {
     return has;
   }
   /**
+   * @param {!HTMLTemplateElement} template
+   * @param {string} elementName
+   * @return {StyleNode}
+   */
+  transformTemplate(template, elementName) {
+    const style = /** @type {HTMLStyleElement} */(template.content.querySelector('style'));
+    /** @type {StyleNode} */
+    let ast = null;
+    if (style) {
+      ast = this.transformStyle(style, elementName);
+    }
+    return ast;
+  }
+  /**
    * @param {!HTMLStyleElement} style
    * @param {string} elementName
+   * @return {StyleNode}
    */
   transformStyle(style, elementName) {
     let ast = rulesForStyle(style);
     this.transformRules(ast, elementName);
     style.textContent = toCssText(ast);
+    return ast;
   }
   /**
    * @param {StyleNode} rules
@@ -168,12 +184,12 @@ class ApplyShim {
    * @param {!StyleNode} rule
    */
   transformRule(rule) {
-    rule.cssText = this.transformCssText(/** @type {string} */(rule.parsedCssText));
+    rule['cssText'] = this.transformCssText(rule['parsedCssText']);
     // :root was only used for variable assignment in property shim,
     // but generates invalid selectors with real properties.
     // replace with `:host > *`, which serves the same effect
-    if (rule.selector === ':root') {
-      rule.selector = ':host > *';
+    if (rule['selector'] === ':root') {
+      rule['selector'] = ':host > *';
     }
   }
   /**
@@ -407,6 +423,7 @@ ApplyShim.prototype['detectMixin'] = ApplyShim.prototype.detectMixin;
 ApplyShim.prototype['transformStyle'] = ApplyShim.prototype.transformStyle;
 ApplyShim.prototype['transformRules'] = ApplyShim.prototype.transformRules;
 ApplyShim.prototype['transformRule'] = ApplyShim.prototype.transformRule;
+ApplyShim.prototype['transformTemplate'] = ApplyShim.prototype.transformTemplate;
 ApplyShim.prototype['_separator'] = MIXIN_VAR_SEP;
 Object.defineProperty(ApplyShim.prototype, 'invalidCallback', {
   /** @return {?function(string)} */
@@ -419,4 +436,6 @@ Object.defineProperty(ApplyShim.prototype, 'invalidCallback', {
   }
 });
 
-window['ApplyShim'] = new ApplyShim();
+if (!window['ApplyShim']) {
+  window['ApplyShim'] = new ApplyShim();
+}

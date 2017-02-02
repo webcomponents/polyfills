@@ -17,7 +17,7 @@ window.addEventListener('WebComponentsReady', () => {
 
   class SVGInShadow extends window.HTMLElement {
     connectedCallback() {
-      window.ShadyCSS.applyStyle(this);
+      window.ShadyCSS.applyElementStyle(this);
       this.attachShadow({mode: 'open'});
       this.shadowRoot.appendChild(document.importNode(TEMPLATE.content, true));
     }

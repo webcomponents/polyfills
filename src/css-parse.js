@@ -15,30 +15,37 @@ and definitely not necessarily correct =).
 
 'use strict';
 
-/** @record */
-export let StyleNode = function(){};
-/** @type {number} */
-StyleNode.prototype.start;
-/** @type {number} */
-StyleNode.prototype.end;
-/** @type {StyleNode|undefined} */
-StyleNode.prototype.previous
-/** @type {Array<StyleNode>|undefined} */
-StyleNode.prototype.rules;
-/** @type {string|undefined} */
-StyleNode.prototype.parsedCssText;
-/** @type {string|undefined} */
-StyleNode.prototype.cssText;
-/** @type {boolean|undefined} */
-StyleNode.prototype.atRule;
-/** @type {number|undefined} */
-StyleNode.prototype.type;
-/** @type {string|undefined} */
-StyleNode.prototype.keyframesName;
-/** @type {string|undefined} */
-StyleNode.prototype.selector;
-/** @type {string|undefined} */
-StyleNode.prototype.parsedSelector;
+/** @unrestricted */
+class StyleNode {
+  constructor() {
+    /** @type {number} */
+    this['start'] = 0;
+    /** @type {number} */
+    this['end'] = 0;
+    /** @type {StyleNode} */
+    this['previous'] = null;
+    /** @type {StyleNode} */
+    this['parent'] = null;
+    /** @type {Array<StyleNode>} */
+    this['rules'] = null;
+    /** @type {string} */
+    this['parsedCssText'] = '';
+    /** @type {string} */
+    this['cssText'] = '';
+    /** @type {boolean} */
+    this['atRule'] = false;
+    /** @type {number} */
+    this['type'] = 0;
+    /** @type {string} */
+    this['keyframesName'] = '';
+    /** @type {string} */
+    this['selector'] = '';
+    /** @type {string} */
+    this['parsedSelector'] = '';
+  }
+}
+
+export {StyleNode}
 
 // given a string of css, return a simple rule tree
 /**
@@ -65,27 +72,25 @@ function clean(cssText) {
  * @return {StyleNode}
  */
 function lex(text) {
-  let root = {
-    start: 0,
-    end: text.length
-  };
+  let root = new StyleNode();
+  root['start'] = 0;
+  root['end'] = text.length
   let n = root;
   for (let i = 0, l = text.length; i < l; i++) {
     if (text[i] === OPEN_BRACE) {
-      if (!n.rules) {
-        n.rules = [];
+      if (!n['rules']) {
+        n['rules'] = [];
       }
       let p = n;
-      let previous = p.rules[p.rules.length - 1];
-      n = {
-        start: i + 1,
-        parent: p,
-        previous: previous
-      };
-      p.rules.push(n);
+      let previous = p['rules'][p['rules'].length - 1] || null;
+      n = new StyleNode();
+      n['start'] = i + 1;
+      n['parent'] = p;
+      n['previous'] = previous;
+      p['rules'].push(n);
     } else if (text[i] === CLOSE_BRACE) {
-      n.end = i + 1;
-      n = n.parent || root;
+      n['end'] = i + 1;
+      n = n['parent'] || root;
     }
   }
   return root;
@@ -98,36 +103,36 @@ function lex(text) {
  * @return {StyleNode}
  */
 function parseCss(node, text) {
-  let t = text.substring(node.start, node.end - 1);
-  node.parsedCssText = node.cssText = t.trim();
-  if (node.parent) {
-    let ss = node.previous ? node.previous.end : node.parent.start;
-    t = text.substring(ss, node.start - 1);
+  let t = text.substring(node['start'], node['end'] - 1);
+  node['parsedCssText'] = node['cssText'] = t.trim();
+  if (node['parent']) {
+    let ss = node['previous'] ? node['previous']['end'] : node['parent']['start'];
+    t = text.substring(ss, node['start'] - 1);
     t = _expandUnicodeEscapes(t);
     t = t.replace(RX.multipleSpaces, ' ');
     // TODO(sorvell): ad hoc; make selector include only after last ;
     // helps with mixin syntax
     t = t.substring(t.lastIndexOf(';') + 1);
-    let s = node.parsedSelector = node.selector = t.trim();
-    node.atRule = (s.indexOf(AT_START) === 0);
+    let s = node['parsedSelector'] = node['selector'] = t.trim();
+    node['atRule'] = (s.indexOf(AT_START) === 0);
     // note, support a subset of rule types...
-    if (node.atRule) {
+    if (node['atRule']) {
       if (s.indexOf(MEDIA_START) === 0) {
-        node.type = types.MEDIA_RULE;
+        node['type'] = types.MEDIA_RULE;
       } else if (s.match(RX.keyframesRule)) {
-        node.type = types.KEYFRAMES_RULE;
-        node.keyframesName =
-          node.selector.split(RX.multipleSpaces).pop();
+        node['type'] = types.KEYFRAMES_RULE;
+        node['keyframesName'] =
+          node['selector'].split(RX.multipleSpaces).pop();
       }
     } else {
       if (s.indexOf(VAR_START) === 0) {
-        node.type = types.MIXIN_RULE;
+        node['type'] = types.MIXIN_RULE;
       } else {
-        node.type = types.STYLE_RULE;
+        node['type'] = types.STYLE_RULE;
       }
     }
   }
-  let r$ = node.rules;
+  let r$ = node['rules'];
   if (r$) {
     for (let i = 0, l = r$.length, r;
       (i < l) && (r = r$[i]); i++) {
@@ -161,20 +166,19 @@ function _expandUnicodeEscapes(s) {
  * @param {string=} text
  * @return {string}
  */
-export function stringify(node, preserveProperties, text) {
-  text = text || '';
+export function stringify(node, preserveProperties, text = '') {
   // calc rule cssText
   let cssText = '';
-  if (node.cssText || node.rules) {
-    let r$ = node.rules;
+  if (node['cssText'] || node['rules']) {
+    let r$ = node['rules'];
     if (r$ && !_hasMixinRules(r$)) {
       for (let i = 0, l = r$.length, r;
         (i < l) && (r = r$[i]); i++) {
         cssText = stringify(r, preserveProperties, cssText);
       }
     } else {
-      cssText = preserveProperties ? node.cssText :
-        removeCustomProps(/** @type {string} */(node.cssText));
+      cssText = preserveProperties ? node['cssText'] :
+        removeCustomProps(node['cssText']);
       cssText = cssText.trim();
       if (cssText) {
         cssText = '  ' + cssText + '\n';
@@ -183,11 +187,11 @@ export function stringify(node, preserveProperties, text) {
   }
   // emit rule if there is cssText
   if (cssText) {
-    if (node.selector) {
-      text += node.selector + ' ' + OPEN_BRACE + '\n';
+    if (node['selector']) {
+      text += node['selector'] + ' ' + OPEN_BRACE + '\n';
     }
     text += cssText;
-    if (node.selector) {
+    if (node['selector']) {
       text += CLOSE_BRACE + '\n\n';
     }
   }
@@ -200,7 +204,7 @@ export function stringify(node, preserveProperties, text) {
  */
 function _hasMixinRules(rules) {
   let r = rules[0];
-  return Boolean(r) && Boolean(r.selector) && r.selector.indexOf(VAR_START) === 0;
+  return Boolean(r) && Boolean(r['selector']) && r['selector'].indexOf(VAR_START) === 0;
 }
 
 /**
