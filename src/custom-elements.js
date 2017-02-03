@@ -17,7 +17,6 @@ import PatchNode from './Patch/Node';
 import PatchElement from './Patch/Element';
 
 const priorCustomElements = window['customElements'];
-const HTMLImports = window['HTMLImports'];
 
 if (!priorCustomElements ||
      priorCustomElements['forcePolyfill'] ||
@@ -36,13 +35,6 @@ if (!priorCustomElements ||
 
   /** @type {!CustomElementRegistry} */
   const customElements = new CustomElementRegistry(internals);
-
-
-  // If the HTML Imports polyfill is in use, delay flushes until it is ready.
-  if (HTMLImports && HTMLImports['whenReady'] instanceof Function) {
-    customElements.polyfillWrapFlushCallback(flush => HTMLImports['whenReady'](() => flush()));
-  }
-
 
   Object.defineProperty(window, 'customElements', {
     configurable: true,
