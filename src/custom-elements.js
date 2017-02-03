@@ -18,6 +18,7 @@ import PatchNode from './Patch/Node';
 import PatchElement from './Patch/Element';
 
 const priorCustomElements = window['customElements'];
+const HTMLImports = window['HTMLImports'];
 
 if (!priorCustomElements ||
      priorCustomElements['forcePolyfill'] ||
@@ -37,11 +38,40 @@ if (!priorCustomElements ||
   /** @type {!CustomElementRegistry} */
   const customElements = new CustomElementRegistry(internals);
 
+
+  // If `polyfillFlushCallback` existed on the config object, use it.
   if (priorCustomElements && priorCustomElements['polyfillFlushCallback'] instanceof Function) {
     customElements['polyfillFlushCallback'] = priorCustomElements['polyfillFlushCallback'];
-  } else {
+  }
+
+  // If the HTML Imports polyfill is in use, delay flushes until it is ready.
+  if (HTMLImports && HTMLImports['whenReady'] instanceof Function) {
+    /** @type {!Function|undefined} */
+    const wrappedCallback = customElements['polyfillFlushCallback'];
+
+    /** @type {!Function|undefined} */
+    let doFlush = undefined;
+    customElements['polyfillFlushCallback'] = f => doFlush = f;
+
+    HTMLImports['whenReady'](function() {
+      // Do we have a pending flush that should be triggered?
+      if (doFlush) {
+        if (wrappedCallback) {
+          wrappedCallback(doFlush);
+        } else {
+          doFlush();
+        }
+      }
+      // Unwrap the previous callback, if any.
+      customElements['polyfillFlushCallback'] = wrappedCallback;
+    });
+  }
+
+  // If no flush callback was installed, create the document construction observer.
+  if (customElements['polyfillFlushCallback'] === undefined) {
     new DocumentConstructionObserver(internals, document);
   }
+
 
   Object.defineProperty(window, 'customElements', {
     configurable: true,
