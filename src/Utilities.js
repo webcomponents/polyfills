@@ -31,13 +31,12 @@ export function isConnected(node) {
     return nativeValue;
   }
 
-  while (node && !(node.__CE_isImportDocument || node instanceof Document)) {
-    // TODO: Change this check from testing if the node is a DocumentFragment to
-    // testing `instanceof ShadowRoot` when shadydom exposes its implementation
-    // of ShadowRoot.
-    node = node.parentNode || (node.nodeType === Node.DOCUMENT_FRAGMENT_NODE ? node.host : undefined);
+  /** @type {?Node|undefined} */
+  let current = node;
+  while (current && !(current.__CE_isImportDocument || current instanceof Document)) {
+    current = current.parentNode || (current instanceof ShadowRoot ? current.host : undefined);
   }
-  return !!(node && (node.__CE_isImportDocument || node instanceof Document));
+  return !!(current && (current.__CE_isImportDocument || current instanceof Document));
 }
 
 /**
