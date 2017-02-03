@@ -333,8 +333,7 @@
           this.documents[url] = doc;
           // Load subtree.
           return this.whenImportsLoaded(doc);
-        })
-        .catch(() => this.documents[url] = null)
+        }, () => this.documents[url] = null) // If load fails, handle error.
         .then(() => link);
     }
 
