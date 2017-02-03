@@ -36,6 +36,10 @@ export default class DocumentConstructionObserver {
     }
   }
 
+  disconnect() {
+    this._observer.disconnect();
+  }
+
   /**
    * @param {!Array<!MutationRecord>} mutations
    */
@@ -45,7 +49,7 @@ export default class DocumentConstructionObserver {
     // should be handled by patching.
     const readyState = this._document.readyState;
     if (readyState === 'interactive' || readyState === 'complete') {
-      this._observer.disconnect();
+      this.disconnect();
     }
 
     for (let i = 0; i < mutations.length; i++) {

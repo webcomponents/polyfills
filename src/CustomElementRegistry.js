@@ -1,4 +1,5 @@
 import CustomElementInternals from './CustomElementInternals';
+import DocumentConstructionObserver from './DocumentConstructionObserver';
 import Deferred from './Deferred';
 import * as Utilities from './Utilities';
 
@@ -30,22 +31,29 @@ export default class CustomElementRegistry {
     this._whenDefinedDeferred = new Map();
 
     /**
+     * The default flush callback triggers the document walk synchronously.
      * @private
-     * @type {!Function|undefined}
+     * @type {!Function}
      */
-    this._flushCallback = undefined;
+    this._flushCallback = fn => fn();
 
     /**
      * @private
      * @type {boolean}
      */
-    this._flushScheduled = false;
+    this._flushPending = false;
 
     /**
      * @private
      * @type {!Array<string>}
      */
     this._pendingDeferred = [];
+
+    /**
+     * @private
+     * @type {!DocumentConstructionObserver}
+     */
+    this._documentConstructionObserver = new DocumentConstructionObserver(internals, document);
   }
 
   /**
@@ -114,31 +122,23 @@ export default class CustomElementRegistry {
 
     this._internals.setDefinition(localName, definition);
 
-    // If no flush is scheduled and no flush callback is defined, we can walk
-    // everything on this definition.
-    if (!this._flushScheduled && !this._flushCallback) {
-      this._internals.patchAndUpgradeTree(document);
+    this._pendingDeferred.push(localName);
 
-      const deferred = this._whenDefinedDeferred.get(localName);
-      if (deferred) {
-        deferred.resolve(undefined);
-      }
-    } else {
-      this._pendingDeferred.push(localName);
-
-      // If we've already scheduled a flush, don't schedule a new one.
-      if (!this._flushScheduled) {
-        this._flushScheduled = true;
-        this._flushCallback(() => this._doFlush());
-      }
+    // If we've already called the flush callback and it hasn't called back yet,
+    // don't call it again.
+    if (!this._flushPending) {
+      this._flushPending = true;
+      this._flushCallback(() => this._flush());
     }
   }
 
-  _doFlush() {
-    // If no new definitions were defined, don't attempt to flush.
-    if (this._flushScheduled === false) return;
+  _flush() {
+    // If no new definitions were defined, don't attempt to flush. This could
+    // happen if a flush callback keeps the function it is given and calls it
+    // multiple times.
+    if (this._flushPending === false) return;
 
-    this._flushScheduled = false;
+    this._flushPending = false;
     this._internals.patchAndUpgradeTree(document);
 
     while (this._pendingDeferred.length > 0) {
@@ -199,17 +199,16 @@ Object.defineProperty(CustomElementRegistry.prototype, 'polyfillFlushCallback', 
    * Setting `polyfillFlushCallback` to a function will set that function as the
    * registry's 'flush callback'.
    *
-   * If the flush callback is `undefined` (the default), calls to `define` cause
+   * If the default flush callback not wrapped, calls to `define` cause
    * synchronous full-document walks to find and upgrade elements and resolve
    * any associated `whenDefined` promises immediately after the walk.
    *
-   * If the flush callback is defined and the registry receives a call to
+   * If the flush callback is wrapped and the registry receives a call to
    * `define`, the flush callback is called with a function that must be called
    * to initiate the next flush. Particularly, no calls to `define` will trigger
    * document walks to check for upgrades and no promises returned by
    * `whenDefined` will be resolved until the next time the function given to
-   * the flush callback is called (or the flush callback is set back to
-   * `undefined`).
+   * the flush callback is called.
    *
    * ```javascript
    * let doFlush = undefined;
@@ -231,32 +230,19 @@ Object.defineProperty(CustomElementRegistry.prototype, 'polyfillFlushCallback', 
    * // 'element-b' elements found (which are now defined) will be upgraded.
    * // Also, `promiseA` and `promiseB` will be resolved.
    * doFlush();
-   *
-   * let promiseC = customElements.whenDefined('element-c');
-   *
-   * // Once again 'element-c' elements in the document are not upgraded and
-   * // `promiseC` is not resolved.
-   * customElements.define('element-c', class extends HTMLElement {});
-   *
-   * // Setting the flush callback to `undefined` walks the document for
-   * // upgrades and resolves any pending `whenDefined` promises, if any calls
-   * // to `define` were made since the last flush.
-   * customElements.polyfillFlushCallback = undefined;
    * ```
    *
    * @this {CustomElementRegistry}
-   * @param {!Function|undefined} flushCallback
+   * @param {!Function} flushCallback
    */
   set: function(flushCallback) {
-    if (flushCallback === undefined) {
-      this._doFlush();
-    }
+    this._documentConstructionObserver.disconnect();
     this._flushCallback = flushCallback;
   },
 
   /**
    * @this {CustomElementRegistry}
-   * @return {!Function|undefined}
+   * @return {!Function}
    */
   get: function() {
     return this._flushCallback;
