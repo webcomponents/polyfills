@@ -81,7 +81,8 @@ export default function(internals) {
           // NOTE: re-route to `content` for `template` elements.
           // We need to do this because `template.appendChild` does not
           // route into `template.content`.
-          let content = this.localName === 'template' ? this.content : this;
+          /** @type {!Node} */
+          const content = this.localName === 'template' ? (/** @type {!HTMLTemplateElement} */ (this)).content : this;
           rawDiv.innerHTML = assignedValue;
 
           while (content.childNodes.length > 0) {

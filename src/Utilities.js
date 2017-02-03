@@ -71,12 +71,14 @@ export function walkDeepDescendantElements(root, callback, visitedImports = new 
   let node = root;
   while (node) {
     if (node.nodeType === Node.ELEMENT_NODE) {
-      callback(node);
+      const element = /** @type {!Element} */(node);
 
-      if (node.localName === 'link' && node.getAttribute('rel') === 'import') {
+      callback(element);
+
+      if (element.localName === 'link' && element.getAttribute('rel') === 'import') {
         // If this import (polyfilled or not) has it's root node available,
         // walk it.
-        const importNode = /** @type {!Node} */ (node.import);
+        const importNode = /** @type {!Node} */ (element.import);
         if (importNode instanceof Node && !visitedImports.has(importNode)) {
           // Prevent multiple walks of the same import root.
           visitedImports.add(importNode);
@@ -89,12 +91,12 @@ export function walkDeepDescendantElements(root, callback, visitedImports = new 
         // Ignore descendants of import links to prevent attempting to walk the
         // elements created by the HTML Imports polyfill that we just walked
         // above.
-        node = nextSiblingOrAncestorSibling(root, node);
+        node = nextSiblingOrAncestorSibling(root, element);
         continue;
       }
 
       // Walk shadow roots.
-      const shadowRoot = node.__CE_shadowRoot;
+      const shadowRoot = element.__CE_shadowRoot;
       if (shadowRoot) {
         for (let child = shadowRoot.firstChild; child; child = child.nextSibling) {
           walkDeepDescendantElements(child, callback, visitedImports);
