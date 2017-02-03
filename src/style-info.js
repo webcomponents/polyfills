@@ -17,11 +17,15 @@ const infoKey = '__styleInfo';
 
 export default class StyleInfo {
   /**
-   * @param {!Element} node
+   * @param {Element} node
    * @return {StyleInfo}
    */
   static get(node) {
-    return node[infoKey];
+    if (node) {
+      return node[infoKey];
+    } else {
+      return null;
+    }
   }
   /**
    * @param {!Element} node
@@ -32,6 +36,14 @@ export default class StyleInfo {
     node[infoKey] = styleInfo;
     return styleInfo;
   }
+  /**
+   * @param {StyleNode} ast
+   * @param {Node=} placeholder
+   * @param {Array<string>=} ownStylePropertyNames
+   * @param {string=} elementName
+   * @param {string=} typeExtension
+   * @param {string=} cssBuild
+   */
   constructor(ast, placeholder, ownStylePropertyNames, elementName, typeExtension, cssBuild) {
     /** @type {StyleNode} */
     this.styleRules = ast || null;
@@ -47,7 +59,7 @@ export default class StyleInfo {
     this.cssBuild = cssBuild || '';
     /** @type {string} */
     this.typeExtension = typeExtension || '';
-    /** @type {Array<Object>} */
+    /** @type {Object<string, string>} */
     this.styleProperties = null;
     /** @type {?string} */
     this.scopeSelector = null;

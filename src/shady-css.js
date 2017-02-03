@@ -37,7 +37,9 @@ class ShadyCSS {
   constructor() {
     this._scopeCounter = {};
     this._documentOwner = document.documentElement;
-    this._documentOwnerStyleInfo = StyleInfo.set(document.documentElement, new StyleInfo({rules: []}));
+    let ast = new StyleNode();
+    ast['rules'] = [];
+    this._documentOwnerStyleInfo = StyleInfo.set(document.documentElement, new StyleInfo(ast));
     this._elementsHaveApplied = false;
     /** @type {function(!HTMLStyleElement)} */
     const transformFn = (style) => {this.transformCustomStyleForDocument(style)};

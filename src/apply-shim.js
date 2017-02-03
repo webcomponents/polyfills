@@ -82,9 +82,19 @@ const INITIAL_INHERIT = /^\s*(initial)|(inherit)\s*$/;
 // NOTE: plain '-' may cause collisions in user styles
 const MIXIN_VAR_SEP = '_-_';
 
+/**
+ * @typedef {!Object<string, string>}
+ */
+let PropertyEntry;
+
+/**
+ * @typedef {!Object<string, boolean>}
+ */
+let DependantsEntry;
+
 /** @typedef {{
- *    properties: !Object<string, string>,
- *    dependants: !Object<string, boolean>
+ *    properties: PropertyEntry,
+ *    dependants: DependantsEntry
  * }}
  */
 let MixinMapEntry;
@@ -98,7 +108,7 @@ class MixinMap {
   }
   /**
    * @param {string} name
-   * @param {!MixinMapEntry} props
+   * @param {!PropertyEntry} props
    */
   set(name, props) {
     name = name.trim();
