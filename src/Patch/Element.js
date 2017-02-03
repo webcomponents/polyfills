@@ -12,16 +12,17 @@ import PatchChildNode from './Interface/ChildNode';
 export default function(internals) {
   if (Native.Element_attachShadow) {
     Utilities.setPropertyUnchecked(Element.prototype, 'attachShadow',
-      /**
-       * @this {Element}
-       * @param {!{mode: string}} init
-       * @return {ShadowRoot}
-       */
-      function(init) {
-        const shadowRoot = Native.Element_attachShadow.call(this, init);
-        this.__CE_shadowRoot = shadowRoot;
-        return shadowRoot;
-      });
+      internals.CEReactions(
+        /**
+         * @this {Element}
+         * @param {!{mode: string}} init
+         * @return {ShadowRoot}
+         */
+        function(init) {
+          const shadowRoot = Native.Element_attachShadow.call(this, init);
+          this.__CE_shadowRoot = shadowRoot;
+          return shadowRoot;
+        }));
   } else {
     console.warn('Custom Elements: `Element#attachShadow` was not patched.');
   }
@@ -32,7 +33,7 @@ export default function(internals) {
       enumerable: baseDescriptor.enumerable,
       configurable: true,
       get: baseDescriptor.get,
-      set: /** @this {Element} */ function(htmlString) {
+      set: internals.CEReactions(/** @this {Element} */ function(htmlString) {
         const isConnected = Utilities.isConnected(this);
 
         // NOTE: In IE11, when using the native `innerHTML` setter, all nodes
@@ -70,7 +71,7 @@ export default function(internals) {
           internals.patchAndUpgradeTree(this);
         }
         return htmlString;
-      },
+      }),
     });
   }
 
@@ -117,110 +118,115 @@ export default function(internals) {
 
 
   Utilities.setPropertyUnchecked(Element.prototype, 'setAttribute',
-    /**
-     * @this {Element}
-     * @param {string} name
-     * @param {string} newValue
-     */
-    function(name, newValue) {
-      // Fast path for non-custom elements.
-      if (this.__CE_state !== CEState.custom) {
-        return Native.Element_setAttribute.call(this, name, newValue);
-      }
+    internals.CEReactions(
+      /**
+       * @this {Element}
+       * @param {string} name
+       * @param {string} newValue
+       */
+      function(name, newValue) {
+        // Fast path for non-custom elements.
+        if (this.__CE_state !== CEState.custom) {
+          return Native.Element_setAttribute.call(this, name, newValue);
+        }
 
-      const oldValue = Native.Element_getAttribute.call(this, name);
-      Native.Element_setAttribute.call(this, name, newValue);
-      newValue = Native.Element_getAttribute.call(this, name);
-      if (oldValue !== newValue) {
-        internals.attributeChangedCallback(this, name, oldValue, newValue, null);
-      }
-    });
+        const oldValue = Native.Element_getAttribute.call(this, name);
+        Native.Element_setAttribute.call(this, name, newValue);
+        newValue = Native.Element_getAttribute.call(this, name);
+        if (oldValue !== newValue) {
+          internals.attributeChangedCallback(this, name, oldValue, newValue, null);
+        }
+      }));
 
   Utilities.setPropertyUnchecked(Element.prototype, 'setAttributeNS',
-    /**
-     * @this {Element}
-     * @param {?string} namespace
-     * @param {string} name
-     * @param {string} newValue
-     */
-    function(namespace, name, newValue) {
-      // Fast path for non-custom elements.
-      if (this.__CE_state !== CEState.custom) {
-        return Native.Element_setAttributeNS.call(this, namespace, name, newValue);
-      }
+    internals.CEReactions(
+      /**
+       * @this {Element}
+       * @param {?string} namespace
+       * @param {string} name
+       * @param {string} newValue
+       */
+      function(namespace, name, newValue) {
+        // Fast path for non-custom elements.
+        if (this.__CE_state !== CEState.custom) {
+          return Native.Element_setAttributeNS.call(this, namespace, name, newValue);
+        }
 
-      const oldValue = Native.Element_getAttributeNS.call(this, namespace, name);
-      Native.Element_setAttributeNS.call(this, namespace, name, newValue);
-      newValue = Native.Element_getAttributeNS.call(this, namespace, name);
-      if (oldValue !== newValue) {
-        internals.attributeChangedCallback(this, name, oldValue, newValue, namespace);
-      }
-    });
+        const oldValue = Native.Element_getAttributeNS.call(this, namespace, name);
+        Native.Element_setAttributeNS.call(this, namespace, name, newValue);
+        newValue = Native.Element_getAttributeNS.call(this, namespace, name);
+        if (oldValue !== newValue) {
+          internals.attributeChangedCallback(this, name, oldValue, newValue, namespace);
+        }
+      }));
 
   Utilities.setPropertyUnchecked(Element.prototype, 'removeAttribute',
-    /**
-     * @this {Element}
-     * @param {string} name
-     */
-    function(name) {
-      // Fast path for non-custom elements.
-      if (this.__CE_state !== CEState.custom) {
-        return Native.Element_removeAttribute.call(this, name);
-      }
+    internals.CEReactions(
+      /**
+       * @this {Element}
+       * @param {string} name
+       */
+      function(name) {
+        // Fast path for non-custom elements.
+        if (this.__CE_state !== CEState.custom) {
+          return Native.Element_removeAttribute.call(this, name);
+        }
 
-      const oldValue = Native.Element_getAttribute.call(this, name);
-      Native.Element_removeAttribute.call(this, name);
-      if (oldValue !== null) {
-        internals.attributeChangedCallback(this, name, oldValue, null, null);
-      }
-    });
+        const oldValue = Native.Element_getAttribute.call(this, name);
+        Native.Element_removeAttribute.call(this, name);
+        if (oldValue !== null) {
+          internals.attributeChangedCallback(this, name, oldValue, null, null);
+        }
+      }));
 
   Utilities.setPropertyUnchecked(Element.prototype, 'removeAttributeNS',
-    /**
-     * @this {Element}
-     * @param {?string} namespace
-     * @param {string} name
-     */
-    function(namespace, name) {
-      // Fast path for non-custom elements.
-      if (this.__CE_state !== CEState.custom) {
-        return Native.Element_removeAttributeNS.call(this, namespace, name);
-      }
+    internals.CEReactions(
+      /**
+       * @this {Element}
+       * @param {?string} namespace
+       * @param {string} name
+       */
+      function(namespace, name) {
+        // Fast path for non-custom elements.
+        if (this.__CE_state !== CEState.custom) {
+          return Native.Element_removeAttributeNS.call(this, namespace, name);
+        }
 
-      const oldValue = Native.Element_getAttributeNS.call(this, namespace, name);
-      Native.Element_removeAttributeNS.call(this, namespace, name);
-      // In older browsers, `Element#getAttributeNS` may return the empty string
-      // instead of null if the attribute does not exist. For details, see;
-      // https://developer.mozilla.org/en-US/docs/Web/API/Element/getAttributeNS#Notes
-      const newValue = Native.Element_getAttributeNS.call(this, namespace, name);
-      if (oldValue !== newValue) {
-        internals.attributeChangedCallback(this, name, oldValue, newValue, namespace);
-      }
-    });
+        const oldValue = Native.Element_getAttributeNS.call(this, namespace, name);
+        Native.Element_removeAttributeNS.call(this, namespace, name);
+        // In older browsers, `Element#getAttributeNS` may return the empty string
+        // instead of null if the attribute does not exist. For details, see;
+        // https://developer.mozilla.org/en-US/docs/Web/API/Element/getAttributeNS#Notes
+        const newValue = Native.Element_getAttributeNS.call(this, namespace, name);
+        if (oldValue !== newValue) {
+          internals.attributeChangedCallback(this, name, oldValue, newValue, namespace);
+        }
+      }));
 
 
   function patch_insertAdjacentElement(destination, baseMethod) {
     Utilities.setPropertyUnchecked(destination, 'insertAdjacentElement',
-      /**
-       * @this {Element}
-       * @param {string} where
-       * @param {!Element} element
-       * @return {?Element}
-       */
-      function(where, element) {
-        const wasConnected = Utilities.isConnected(element);
-        const insertedElement = /** @type {!Element} */
-          (baseMethod.call(this, where, element));
+      internals.CEReactions(
+        /**
+         * @this {Element}
+         * @param {string} where
+         * @param {!Element} element
+         * @return {?Element}
+         */
+        function(where, element) {
+          const wasConnected = Utilities.isConnected(element);
+          const insertedElement = /** @type {!Element} */
+            (baseMethod.call(this, where, element));
 
-        if (wasConnected) {
-          internals.disconnectTree(element);
-        }
+          if (wasConnected) {
+            internals.disconnectTree(element);
+          }
 
-        if (Utilities.isConnected(insertedElement)) {
-          internals.connectTree(element);
-        }
-        return insertedElement;
-      });
+          if (Utilities.isConnected(insertedElement)) {
+            internals.connectTree(element);
+          }
+          return insertedElement;
+        }));
   }
 
   if (Native.HTMLElement_insertAdjacentElement) {

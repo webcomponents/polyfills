@@ -30,22 +30,23 @@ export default function(internals) {
     });
 
   Utilities.setPropertyUnchecked(Document.prototype, 'importNode',
-    /**
-     * @this {Document}
-     * @param {!Node} node
-     * @param {boolean=} deep
-     * @return {!Node}
-     */
-    function(node, deep) {
-      const clone = Native.Document_importNode.call(this, node, deep);
-      // Only create custom elements if this document is associated with the registry.
-      if (!this.__CE_hasRegistry) {
-        internals.patchTree(clone);
-      } else {
-        internals.patchAndUpgradeTree(clone);
-      }
-      return clone;
-    });
+    internals.CEReactions(
+      /**
+       * @this {Document}
+       * @param {!Node} node
+       * @param {boolean=} deep
+       * @return {!Node}
+       */
+      function(node, deep) {
+        const clone = Native.Document_importNode.call(this, node, deep);
+        // Only create custom elements if this document is associated with the registry.
+        if (!this.__CE_hasRegistry) {
+          internals.patchTree(clone);
+        } else {
+          internals.patchAndUpgradeTree(clone);
+        }
+        return clone;
+      }));
 
   const NS_HTML = "http://www.w3.org/1999/xhtml";
 

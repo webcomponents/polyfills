@@ -1,19 +1,61 @@
 import * as Utilities from './Utilities';
 import CEState from './CustomElementState';
+import CustomElementReactionsStack from './CustomElementReactionsStack';
 
 export default class CustomElementInternals {
   constructor() {
-    /** @type {!Map<string, !CustomElementDefinition>} */
+    /**
+     * @private
+     * @type {!Map<string, !CustomElementDefinition>}
+     */
     this._localNameToDefinition = new Map();
 
-    /** @type {!Map<!Function, !CustomElementDefinition>} */
+    /**
+     * @private
+     * @type {!Map<!Function, !CustomElementDefinition>}
+     */
     this._constructorToDefinition = new Map();
 
-    /** @type {!Array<!function(!Node)>} */
+    /**
+     * @private
+     * @type {!Array<!function(!Node)>}
+     */
     this._patches = [];
 
-    /** @type {boolean} */
+    /**
+     * @private
+     * @type {boolean}
+     */
     this._hasPatches = false;
+
+    /**
+     * @private
+     * @type {CustomElementReactionsStack}
+     */
+    this._reactionsStack = new CustomElementReactionsStack();
+  }
+
+  /**
+   * @template T, R
+   * @param {!function(this: T, ...?): R} fn
+   * @return {!function(this: T, ...?): R}
+   */
+  CEReactions(fn) {
+    const self = /** @type {CustomElementInternals} */ (this);
+    /** @type {!function(this: T, ...?): R} */
+    const wrappedFn = function() {
+      return self._reactionsStack.runInFrame(() => fn.apply(this, arguments));
+    };
+    return wrappedFn;
+  }
+
+  /**
+   * @template T
+   * @param {!function(): T} fn
+   * @return {T}
+   */
+  runInCEReactionsFrame(fn) {
+    return this._reactionsStack.runInFrame(fn);
   }
 
   /**
@@ -280,7 +322,9 @@ export default class CustomElementInternals {
   connectedCallback(element) {
     const definition = element.__CE_definition;
     if (definition.connectedCallback) {
-      definition.connectedCallback.call(element);
+      this._reactionsStack.enqueueReaction(element, () => {
+        definition.connectedCallback.call(element);
+      });
     }
   }
 
@@ -290,7 +334,9 @@ export default class CustomElementInternals {
   disconnectedCallback(element) {
     const definition = element.__CE_definition;
     if (definition.disconnectedCallback) {
-      definition.disconnectedCallback.call(element);
+      this._reactionsStack.enqueueReaction(element, () => {
+        definition.disconnectedCallback.call(element);
+      });
     }
   }
 
@@ -307,7 +353,9 @@ export default class CustomElementInternals {
       definition.attributeChangedCallback &&
       definition.observedAttributes.indexOf(name) > -1
     ) {
-      definition.attributeChangedCallback.call(element, name, oldValue, newValue, namespace);
+      this._reactionsStack.enqueueReaction(element, () => {
+        definition.attributeChangedCallback.call(element, name, oldValue, newValue, namespace);
+      });
     }
   }
 }

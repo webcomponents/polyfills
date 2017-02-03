@@ -61,75 +61,77 @@ export default class CustomElementRegistry {
    * @param {!Function} constructor
    */
   define(localName, constructor) {
-    if (!(constructor instanceof Function)) {
-      throw new TypeError('Custom element constructors must be functions.');
-    }
-
-    if (!Utilities.isValidCustomElementName(localName)) {
-      throw new SyntaxError(`The element name '${localName}' is not valid.`);
-    }
-
-    if (this._internals.localNameToDefinition(localName)) {
-      throw new Error(`A custom element with name '${localName}' has already been defined.`);
-    }
-
-    if (this._elementDefinitionIsRunning) {
-      throw new Error('A custom element is already being defined.');
-    }
-    this._elementDefinitionIsRunning = true;
-
-    let connectedCallback;
-    let disconnectedCallback;
-    let adoptedCallback;
-    let attributeChangedCallback;
-    let observedAttributes;
-    try {
-      /** @type {!Object} */
-      const prototype = constructor.prototype;
-      if (!(prototype instanceof Object)) {
-        throw new TypeError('The custom element constructor\'s prototype is not an object.');
+    return this._internals.runInCEReactionsFrame(() => {
+      if (!(constructor instanceof Function)) {
+        throw new TypeError('Custom element constructors must be functions.');
       }
 
-      function getCallback(name) {
-        const callbackValue = prototype[name];
-        if (callbackValue !== undefined && !(callbackValue instanceof Function)) {
-          throw new Error(`The '${name}' callback must be a function.`);
+      if (!Utilities.isValidCustomElementName(localName)) {
+        throw new SyntaxError(`The element name '${localName}' is not valid.`);
+      }
+
+      if (this._internals.localNameToDefinition(localName)) {
+        throw new Error(`A custom element with name '${localName}' has already been defined.`);
+      }
+
+      if (this._elementDefinitionIsRunning) {
+        throw new Error('A custom element is already being defined.');
+      }
+      this._elementDefinitionIsRunning = true;
+
+      let connectedCallback;
+      let disconnectedCallback;
+      let adoptedCallback;
+      let attributeChangedCallback;
+      let observedAttributes;
+      try {
+        /** @type {!Object} */
+        const prototype = constructor.prototype;
+        if (!(prototype instanceof Object)) {
+          throw new TypeError('The custom element constructor\'s prototype is not an object.');
         }
-        return callbackValue;
+
+        function getCallback(name) {
+          const callbackValue = prototype[name];
+          if (callbackValue !== undefined && !(callbackValue instanceof Function)) {
+            throw new Error(`The '${name}' callback must be a function.`);
+          }
+          return callbackValue;
+        }
+
+        connectedCallback = getCallback('connectedCallback');
+        disconnectedCallback = getCallback('disconnectedCallback');
+        adoptedCallback = getCallback('adoptedCallback');
+        attributeChangedCallback = getCallback('attributeChangedCallback');
+        observedAttributes = constructor['observedAttributes'] || [];
+      } catch (e) {
+        return;
+      } finally {
+        this._elementDefinitionIsRunning = false;
       }
 
-      connectedCallback = getCallback('connectedCallback');
-      disconnectedCallback = getCallback('disconnectedCallback');
-      adoptedCallback = getCallback('adoptedCallback');
-      attributeChangedCallback = getCallback('attributeChangedCallback');
-      observedAttributes = constructor['observedAttributes'] || [];
-    } catch (e) {
-      return;
-    } finally {
-      this._elementDefinitionIsRunning = false;
-    }
+      const definition = {
+        localName,
+        constructor,
+        connectedCallback,
+        disconnectedCallback,
+        adoptedCallback,
+        attributeChangedCallback,
+        observedAttributes,
+        constructionStack: [],
+      };
 
-    const definition = {
-      localName,
-      constructor,
-      connectedCallback,
-      disconnectedCallback,
-      adoptedCallback,
-      attributeChangedCallback,
-      observedAttributes,
-      constructionStack: [],
-    };
+      this._internals.setDefinition(localName, definition);
 
-    this._internals.setDefinition(localName, definition);
+      this._unflushedLocalNames.push(localName);
 
-    this._unflushedLocalNames.push(localName);
-
-    // If we've already called the flush callback and it hasn't called back yet,
-    // don't call it again.
-    if (!this._flushPending) {
-      this._flushPending = true;
-      this._flushCallback(() => this._flush());
-    }
+      // If we've already called the flush callback and it hasn't called back yet,
+      // don't call it again.
+      if (!this._flushPending) {
+        this._flushPending = true;
+        this._flushCallback(() => this._flush());
+      }
+    });
   }
 
   _flush() {

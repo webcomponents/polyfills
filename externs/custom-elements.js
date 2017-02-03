@@ -59,3 +59,14 @@ Element.prototype.__CE_definition;
 
 /** @type {!DocumentFragment|undefined} */
 Element.prototype.__CE_shadowRoot;
+
+// CustomElementReactionsStack
+
+/** @type {!Function|undefined} */
+Element.prototype.__CE_nextReaction;
+
+/** @type {!Function|undefined} */
+Element.prototype.__CE_lastReaction;
+
+/** @type {!Function|undefined} */
+Function.prototype.__CE_next
