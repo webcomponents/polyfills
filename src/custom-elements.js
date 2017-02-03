@@ -40,11 +40,7 @@ if (!priorCustomElements ||
 
   // If the HTML Imports polyfill is in use, delay flushes until it is ready.
   if (HTMLImports && HTMLImports['whenReady'] instanceof Function) {
-    /** @type {!Function|undefined} */
-    const wrappedCallback = customElements['polyfillFlushCallback'];
-    customElements['polyfillFlushCallback'] = function(flush) {
-      HTMLImports['whenReady'](() => wrappedCallback(flush));
-    };
+    customElements.polyfillWrapFlushCallback(flush => HTMLImports['whenReady'](() => flush()));
   }
 
 

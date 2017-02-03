@@ -187,6 +187,12 @@ export default class CustomElementRegistry {
 
     return deferred.toPromise();
   }
+
+  polyfillWrapFlushCallback(outer) {
+    this._documentConstructionObserver.disconnect();
+    const inner = this._flushCallback;
+    this._flushCallback = flush => outer(() => inner(flush));
+  }
 }
 
 // Closure compiler exports.
@@ -194,57 +200,4 @@ window['CustomElementRegistry'] = CustomElementRegistry;
 CustomElementRegistry.prototype['define'] = CustomElementRegistry.prototype.define;
 CustomElementRegistry.prototype['get'] = CustomElementRegistry.prototype.get;
 CustomElementRegistry.prototype['whenDefined'] = CustomElementRegistry.prototype.whenDefined;
-Object.defineProperty(CustomElementRegistry.prototype, 'polyfillFlushCallback', {
-  /**
-   * Setting `polyfillFlushCallback` to a function will set that function as the
-   * registry's 'flush callback'.
-   *
-   * If the default flush callback not wrapped, calls to `define` cause
-   * synchronous full-document walks to find and upgrade elements and resolve
-   * any associated `whenDefined` promises immediately after the walk.
-   *
-   * If the flush callback is wrapped and the registry receives a call to
-   * `define`, the flush callback is called with a function that must be called
-   * to initiate the next flush. Particularly, no calls to `define` will trigger
-   * document walks to check for upgrades and no promises returned by
-   * `whenDefined` will be resolved until the next time the function given to
-   * the flush callback is called.
-   *
-   * ```javascript
-   * let doFlush = undefined;
-   * customElements.polyfillFlushCallback = function flushCallback(fn) {
-   *   doFlush = fn;
-   * };
-   *
-   * let promiseB = customElements.whenDefined('element-a');
-   * let promiseA = customElements.whenDefined('element-b');
-   *
-   * // These calls will not cause any 'element-a' or 'element-b' elements
-   * // already in the document to be upgraded and will not cause `promiseA` or
-   * // `promiseB` to be resolved. However, `flushCallback` was called and
-   * // `doFlush` is now a function.
-   * customElements.define('element-a', class extends HTMLElement {});
-   * customElements.define('element-b', class extends HTMLElement {});
-   *
-   * // This call will cause the document to be walked and any 'element-a' or
-   * // 'element-b' elements found (which are now defined) will be upgraded.
-   * // Also, `promiseA` and `promiseB` will be resolved.
-   * doFlush();
-   * ```
-   *
-   * @this {CustomElementRegistry}
-   * @param {!Function} flushCallback
-   */
-  set: function(flushCallback) {
-    this._documentConstructionObserver.disconnect();
-    this._flushCallback = flushCallback;
-  },
-
-  /**
-   * @this {CustomElementRegistry}
-   * @return {!Function}
-   */
-  get: function() {
-    return this._flushCallback;
-  },
-});
+CustomElementRegistry.prototype['polyfillWrapFlushCallback'] = CustomElementRegistry.prototype.polyfillWrapFlushCallback;
