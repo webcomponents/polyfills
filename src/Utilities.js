@@ -74,7 +74,8 @@ export function walkDeepDescendantElements(root, callback, visitedImports = new 
 
       callback(element);
 
-      if (element.localName === 'link' && element.getAttribute('rel') === 'import') {
+      const localName = element.localName;
+      if (localName === 'link' && element.getAttribute('rel') === 'import') {
         // If this import (polyfilled or not) has it's root node available,
         // walk it.
         const importNode = /** @type {!Node} */ (element.import);
@@ -90,6 +91,13 @@ export function walkDeepDescendantElements(root, callback, visitedImports = new 
         // Ignore descendants of import links to prevent attempting to walk the
         // elements created by the HTML Imports polyfill that we just walked
         // above.
+        node = nextSiblingOrAncestorSibling(root, element);
+        continue;
+      } else if (localName === 'template') {
+        // Ignore descendants of templates. There shouldn't be any descendants
+        // because they will be moved into `.content` during construction in
+        // browsers that support template but, in case they exist and are still
+        // waiting to be moved by a polyfill, they will be ignored.
         node = nextSiblingOrAncestorSibling(root, element);
         continue;
       }
