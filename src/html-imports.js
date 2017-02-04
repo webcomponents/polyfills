@@ -335,9 +335,13 @@
         }, () => this.documents[url] = null) // If load fails, handle error.
         .catch(err => {
           // If browser doesn't support the unhandled rejection event,
-          // log the error stack.
+          // log the error stack and fire the error outside the promise so it's
+          // visibles to listeners of window.onerror
           if (!supportsUnhandledrejection) {
             console.error(err.stack);
+            requestAnimationFrame(() => {
+              throw err;
+            });
           }
           throw err;
         })
@@ -693,7 +697,16 @@
       }
     }
     if (promises.length) {
-      Promise.all(promises).then(callback);
+      Promise.all(promises).then(() => {
+        // If browser doesn't support the unhandled rejection event,
+        // make sure errors are not swallowed by the promise by invoking the
+        // callback outside the promise scope.
+        if (!supportsUnhandledrejection) {
+          requestAnimationFrame(callback);
+        } else {
+          callback();
+        }
+      });
     } else {
       callback();
     }
