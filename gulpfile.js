@@ -47,7 +47,8 @@ gulp.task('default', function() {
       language_in: 'ES6_STRICT',
       language_out: 'ES5_STRICT',
       output_wrapper: '(function(){\n%output%\n}).call(this)',
-      js_output_file: 'shadydom.min.js'
+      js_output_file: 'shadydom.min.js',
+      rewrite_polyfills: false
     }))
     .on('error', (e) => console.error(e))
     .pipe(sourcemaps.write('/'))
