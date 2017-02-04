@@ -241,16 +241,6 @@
     link[rel=stylesheet][${importDependencyAttr}]`;
 
   /**
-   * @type {Function}
-   */
-  const MATCHES = Element.prototype.matches ||
-    Element.prototype.matchesSelector ||
-    Element.prototype.mozMatchesSelector ||
-    Element.prototype.msMatchesSelector ||
-    Element.prototype.oMatchesSelector ||
-    Element.prototype.webkitMatchesSelector;
-
-  /**
    * Importer will:
    * - load any linked import documents (with deduping)
    * - whenever an import is loaded, prompt the parser to try to parse
@@ -336,7 +326,7 @@
         .catch(err => {
           // If browser doesn't support the unhandled rejection event,
           // log the error stack and fire the error outside the promise so it's
-          // visibles to listeners of window.onerror
+          // visible to listeners of window.onerror
           if (!supportsUnhandledrejection) {
             console.error(err.stack);
             requestAnimationFrame(() => {
@@ -618,7 +608,8 @@
    * @return {boolean}
    */
   const isImportLink = node => {
-    return node.nodeType === Node.ELEMENT_NODE && MATCHES.call(node, importSelector);
+    return node.nodeType === Node.ELEMENT_NODE && node.localName === 'link' &&
+      ( /** @type {!HTMLLinkElement} */ (node).rel === 'import');
   };
 
   /**
