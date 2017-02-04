@@ -19,6 +19,6 @@
   ],
   "devDependencies": {
     "web-component-tester": "^4.3.5",
-    "webcomponentsjs": "webcomponents/webcomponentsjs#integration"
+    "webcomponentsjs": "webcomponents/webcomponentsjs#gulp-all-the-things"
   }
 }
