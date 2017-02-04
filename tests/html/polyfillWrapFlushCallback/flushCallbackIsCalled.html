@@ -19,16 +19,15 @@
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
-suite('customElements.polyfillWrapFlushCallback', function() {
-  test('The given function is called when `#define` is called.', function() {
-    let callbackWasCalled = false;
-    customElements.polyfillWrapFlushCallback(f => {
-      callbackWasCalled = true;
-      f();
-    });
-    customElements.define('x-test', class extends HTMLElement {});
-    assert(callbackWasCalled);
+test('Installed flush callbacks are called with a function when `#define` is called.', function() {
+  let callbackWasCalled = false;
+  customElements.polyfillWrapFlushCallback(f => {
+    callbackWasCalled = true;
+    assert(f instanceof Function);
+    f();
   });
+  customElements.define('x-test', class extends HTMLElement {});
+  assert(callbackWasCalled);
 });
 </script>
 </head>
