@@ -217,6 +217,7 @@
 
   const isIE = /Trident/.test(navigator.userAgent) ||
     /Edge\/\d./i.test(navigator.userAgent);
+  const supportsUnhandledrejection = ('onunhandledrejection' in window);
 
   const importSelector = 'link[rel=import]';
 
@@ -332,6 +333,14 @@
           // Load subtree.
           return this.whenImportsLoaded(doc);
         }, () => this.documents[url] = null) // If load fails, handle error.
+        .catch(err => {
+          // If browser doesn't support the unhandled rejection event,
+          // log the error stack.
+          if (!supportsUnhandledrejection) {
+            console.error(err.stack);
+          }
+          throw err;
+        })
         .then(() => link);
     }
 
