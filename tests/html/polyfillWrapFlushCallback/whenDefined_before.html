@@ -1,0 +1,62 @@
+<!doctype html>
+<html>
+<head>
+<title>customElements#whenDefined</title>
+<script>
+  (window.customElements = window.customElements || {}).forcePolyfill = true;
+</script>
+<script src="../../../../es6-promise/dist/es6-promise.auto.min.js"></script>
+<script src="../../../../web-component-tester/browser.js"></script>
+<script src="../../../custom-elements.min.js"></script>
+</head>
+<body>
+  <custom-element></custom-element>
+<script>
+/**
+ * @license
+ * Copyright (c) 2017 The Polymer Project Authors. All rights reserved.
+ * This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+ * The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+ * The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+ * Code distributed by Google as part of the polymer project is also
+ * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+ */
+
+test('`whenDefined` called before `define` does not resolve until its local name has flushed.', function(done) {
+  const element = document.querySelector('custom-element');
+
+  let flushFn = undefined;
+  let resolved = false;
+
+  customElements.polyfillWrapFlushCallback(flush => flushFn = flush);
+
+  const promise = customElements.whenDefined('custom-element');
+  promise.then(function() {
+    resolved = true;
+    assert(element.upgraded);
+    done();
+  }).catch(function(err) {
+    done(err);
+  });
+
+  assert(!element.upgraded);
+
+  customElements.define('custom-element', class extends HTMLElement {
+    constructor() {
+      super();
+      this.upgraded = true;
+      if (resolved) {
+        done(new Error("`whenDefined` promise was resolved before upgrade!"));
+      }
+    }
+  });
+
+  assert(!element.upgraded);
+
+  flushFn();
+
+  assert(element.upgraded);
+});
+</script>
+</body>
+</html>
