@@ -1,0 +1,115 @@
+<!doctype html>
+<html>
+<head>
+<title>Element#insertAdjacentElement</title>
+<script>
+  (window.customElements = window.customElements || {}).forcePolyfill = true;
+</script>
+<script src="../../../../es6-promise/dist/es6-promise.auto.min.js"></script>
+<script src="../../../../web-component-tester/browser.js"></script>
+<script src="../../../custom-elements.min.js"></script>
+</head>
+<body>
+<script>
+function generateLocalName() {
+  return 'test-element-' + Math.random().toString(32).substring(2);
+}
+
+function defineWithLocalName(localName, observedAttributes) {
+  customElements.define(localName, class extends HTMLElement {
+    constructor() {
+      super();
+      this.constructed = true;
+      this.connectedCallbackCount = 0;
+      this.disconnectedCallbackCount = 0;
+    }
+
+    connectedCallback() {
+      this.connectedCallbackCount++;
+    }
+
+    disconnectedCallback() {
+      this.disconnectedCallbackCount++;
+    }
+  });
+}
+
+suite('Inserting a custom element into a disconnected context element.', function() {
+  let disconnectedElement;
+  let localName;
+  let customElement;
+
+  setup(function() {
+    disconnectedElement = document.createElement('div');
+    localName = generateLocalName();
+    defineWithLocalName(localName);
+    customElement = document.createElement(localName);
+  });
+
+  test('Inserting a disconnected custom element.', function() {
+    assert.equal(customElement.connectedCallbackCount, 0);
+    assert.equal(customElement.disconnectedCallbackCount, 0);
+
+    disconnectedElement.insertAdjacentElement('afterbegin', customElement);
+
+    assert.equal(customElement.connectedCallbackCount, 0);
+    assert.equal(customElement.disconnectedCallbackCount, 0);
+  });
+
+  test('Inserting a connected custom element.', function() {
+    document.body.appendChild(customElement);
+
+    assert.equal(customElement.connectedCallbackCount, 1);
+    assert.equal(customElement.disconnectedCallbackCount, 0);
+
+    disconnectedElement.insertAdjacentElement('afterbegin', customElement);
+
+    assert.equal(customElement.connectedCallbackCount, 1);
+    assert.equal(customElement.disconnectedCallbackCount, 1);
+  });
+});
+
+suite('Inserting a custom element into a connected context element.', function() {
+  let connectedElement;
+  let localName;
+  let customElement;
+
+  setup(function() {
+    connectedElement = document.createElement('div');
+    document.body.appendChild(connectedElement);
+    localName = generateLocalName();
+    defineWithLocalName(localName);
+    customElement = document.createElement(localName);
+  });
+
+  teardown(function() {
+    if (connectedElement.parentNode) {
+      connectedElement.parentNode.removeChild(connectedElement);
+    }
+  });
+
+  test('Inserting a disconnected custom element.', function() {
+    assert.equal(customElement.connectedCallbackCount, 0);
+    assert.equal(customElement.disconnectedCallbackCount, 0);
+
+    connectedElement.insertAdjacentElement('afterbegin', customElement);
+
+    assert.equal(customElement.connectedCallbackCount, 1);
+    assert.equal(customElement.disconnectedCallbackCount, 0);
+  });
+
+  test('Inserting a connected custom element.', function() {
+    document.body.appendChild(customElement);
+
+    assert.equal(customElement.connectedCallbackCount, 1);
+    assert.equal(customElement.disconnectedCallbackCount, 0);
+
+    connectedElement.insertAdjacentElement('afterbegin', customElement);
+
+    assert.equal(customElement.connectedCallbackCount, 2);
+    assert.equal(customElement.disconnectedCallbackCount, 1);
+  });
+});
+</script>
+</body>
+</html>
