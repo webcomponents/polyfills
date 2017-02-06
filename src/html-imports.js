@@ -317,23 +317,26 @@
       // Mark it as pending to notify others this url is being loaded.
       this.documents[url] = 'pending';
       return Xhr.load(url)
-        .then(resp => {
-          const doc = this.makeDocument(resp.resource, resp.redirectedUrl || url);
-          this.documents[url] = doc;
-          // Load subtree.
-          return this.whenImportsLoaded(doc);
-        }, () => this.documents[url] = null) // If load fails, handle error.
+        .then(resp => this.makeDocument(resp.resource, resp.redirectedUrl || url),
+          () => null) // If load fails, handle error.
         .catch(err => {
           // If browser doesn't support the unhandled rejection event,
           // log the error stack and fire the error outside the promise so it's
           // visible to listeners of window.onerror
           if (!supportsUnhandledrejection) {
             console.error(err.stack);
-            requestAnimationFrame(() => {
+            setTimeout(() => {
               throw err;
             });
           }
           throw err;
+        })
+        .then(doc => {
+          this.documents[url] = doc;
+          if (doc) {
+            // Load subtree.
+            return this.whenImportsLoaded(doc);
+          }
         })
         .then(() => link);
     }
@@ -688,16 +691,9 @@
       }
     }
     if (promises.length) {
-      Promise.all(promises).then(() => {
-        // If browser doesn't support the unhandled rejection event,
-        // make sure errors are not swallowed by the promise by invoking the
-        // callback outside the promise scope.
-        if (!supportsUnhandledrejection) {
-          requestAnimationFrame(callback);
-        } else {
-          callback();
-        }
-      });
+      // Execute callback outside the promise scope to avoid unhandled promise
+      // exceptions that don't depend on whenImportsReady.
+      Promise.all(promises).then(() => setTimeout(callback));
     } else {
       callback();
     }
