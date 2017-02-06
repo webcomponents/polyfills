@@ -181,7 +181,10 @@ export default class CustomElementRegistry {
     this._whenDefinedDeferred.set(localName, deferred);
 
     const definition = this._internals.localNameToDefinition(localName);
-    if (definition) {
+    // Resolve immediately only if the given local name has a definition *and*
+    // the full document walk to upgrade elements with that local name has
+    // already happened (i.e. it isn't pending).
+    if (definition && this._pendingDeferred.indexOf(localName) === -1) {
       deferred.resolve(undefined);
     }
 
