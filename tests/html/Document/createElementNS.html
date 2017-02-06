@@ -1,0 +1,74 @@
+<!doctype html>
+<html>
+<head>
+<title>Document#createElement</title>
+<script>
+  (window.customElements = window.customElements || {}).forcePolyfill = true;
+</script>
+<script src="../../../../es6-promise/dist/es6-promise.auto.min.js"></script>
+<script src="../../../../web-component-tester/browser.js"></script>
+<script src="../../../custom-elements.min.js"></script>
+</head>
+<body>
+<script>
+function generateLocalName() {
+  return 'test-element-' + Math.random().toString(32).substring(2);
+}
+
+function defineWithLocalName(localName, observedAttributes) {
+  const constructor = class extends HTMLElement {
+    constructor() {
+      super();
+      this.constructed = true;
+      this.connectedCallbackCount = 0;
+      this.disconnectedCallbackCount = 0;
+    }
+
+    connectedCallback() {
+      this.connectedCallbackCount++;
+    }
+
+    disconnectedCallback() {
+      this.disconnectedCallbackCount++;
+    }
+  }
+  
+  customElements.define(localName, constructor);
+
+  return constructor;
+}
+
+suite('Creating a custom element.', function() {
+  let localName;
+  let constructor;
+
+  setup(function() {
+    localName = generateLocalName();
+    constructor = defineWithLocalName(localName);
+  });
+
+  test('Creating a defined custom element with the null namespace creates an ' +
+    'instance of that custom element.', function() {
+      const element = document.createElementNS(null, localName);
+
+      assert(element instanceof constructor);
+    });
+
+  test('Creating a defined custom element with the explicit HTML namespace ' +
+    'creates an instance of that custom element.', function() {
+      const element = document.createElementNS('http://www.w3.org/1999/xhtml', localName);
+
+      assert(element instanceof constructor);
+    });
+
+  test('Creating an element with the same local name as a defined custom element ' +
+    'but with a non-null or HTML namespace does not create an instance of that ' +
+    'custom element.', function() {
+      const element = document.createElementNS('UNKNOWN_NS', localName);
+
+      assert(!(element instanceof constructor));
+    });
+});
+</script>
+</body>
+</html>
