@@ -47,7 +47,7 @@ export default class CustomElementRegistry {
      * @private
      * @type {!Array<string>}
      */
-    this._pendingDeferred = [];
+    this._unflushedLocalNames = [];
 
     /**
      * @private
@@ -122,7 +122,7 @@ export default class CustomElementRegistry {
 
     this._internals.setDefinition(localName, definition);
 
-    this._pendingDeferred.push(localName);
+    this._unflushedLocalNames.push(localName);
 
     // If we've already called the flush callback and it hasn't called back yet,
     // don't call it again.
@@ -141,8 +141,8 @@ export default class CustomElementRegistry {
     this._flushPending = false;
     this._internals.patchAndUpgradeTree(document);
 
-    while (this._pendingDeferred.length > 0) {
-      const localName = this._pendingDeferred.shift();
+    while (this._unflushedLocalNames.length > 0) {
+      const localName = this._unflushedLocalNames.shift();
       const deferred = this._whenDefinedDeferred.get(localName);
       if (deferred) {
         deferred.resolve(undefined);
@@ -183,8 +183,8 @@ export default class CustomElementRegistry {
     const definition = this._internals.localNameToDefinition(localName);
     // Resolve immediately only if the given local name has a definition *and*
     // the full document walk to upgrade elements with that local name has
-    // already happened (i.e. it isn't pending).
-    if (definition && this._pendingDeferred.indexOf(localName) === -1) {
+    // already happened.
+    if (definition && this._unflushedLocalNames.indexOf(localName) === -1) {
       deferred.resolve(undefined);
     }
 
