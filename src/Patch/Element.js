@@ -156,7 +156,7 @@ export default function(internals) {
       }
     });
 
-  Utilities.setPropertyUnchecked(Element.prototype, 'remoteAttributeNS',
+  Utilities.setPropertyUnchecked(Element.prototype, 'removeAttributeNS',
     /**
      * @this {Element}
      * @param {?string} namespace
