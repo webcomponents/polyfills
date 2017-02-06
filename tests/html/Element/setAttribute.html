@@ -1,0 +1,118 @@
+<!doctype html>
+<html>
+<head>
+<title>Element#setAttribute</title>
+<script>
+  (window.customElements = window.customElements || {}).forcePolyfill = true;
+</script>
+<script src="../../../../es6-promise/dist/es6-promise.auto.min.js"></script>
+<script src="../../../../web-component-tester/browser.js"></script>
+<script src="../../../custom-elements.min.js"></script>
+</head>
+<body>
+<script>
+function generateLocalName() {
+  return 'test-element-' + Math.random().toString(32).substring(2);
+}
+
+function defineWithLocalName(localName, observedAttributes) {
+  customElements.define(localName, class extends HTMLElement {
+    static get observedAttributes() { return observedAttributes; }
+
+    constructor() {
+      super();
+      this.constructed = true;
+      this.connectedCallbackCount = 0;
+      this.disconnectedCallbackCount = 0;
+      this.attrCallbackArgs = [];
+    }
+
+    connectedCallback() {
+      this.connectedCallbackCount++;
+    }
+
+    disconnectedCallback() {
+      this.disconnectedCallbackCount++;
+    }
+
+    attributeChangedCallback(name, oldValue, newValue, namespace) {
+      this.attrCallbackArgs.push(Array.prototype.slice.apply(arguments));
+    }
+  });
+}
+
+suite('Setting new values.', function() {
+  let localName1;
+
+  setup(function() {
+    localName1 = generateLocalName();
+    defineWithLocalName(localName1, []);
+    localName2 = generateLocalName();
+    defineWithLocalName(localName2, ['attr']);
+  });
+
+  test('Changes to unobserved attributes do not trigger callbacks.', function() {
+    const element = document.createElement(localName1);
+
+    assert.equal(element.attrCallbackArgs.length, 0);
+
+    element.setAttribute('attr', 'abc');
+
+    assert.equal(element.attrCallbackArgs.length, 0);
+  });
+
+  test('Changes to observed attributes trigger callbacks.', function() {
+    const element = document.createElement(localName2);
+
+    assert.equal(element.attrCallbackArgs.length, 0);
+
+    element.setAttribute('attr', 'abc');
+
+    assert.equal(element.attrCallbackArgs.length, 1);
+    assert.deepEqual(element.attrCallbackArgs[0], ['attr', null, 'abc', null]);
+  });
+});
+
+suite('Changing previously set values.', function() {
+  let localName;
+
+  setup(function() {
+    localName = generateLocalName();
+    defineWithLocalName(localName, ['attr']);
+  });
+
+  test('Setting an observed attribute to its current value does not trigger a callback.', function() {
+    const element = document.createElement(localName);
+
+    assert.equal(element.attrCallbackArgs.length, 0);
+
+    element.setAttribute('attr', 'abc');
+
+    assert.equal(element.attrCallbackArgs.length, 1);
+    assert.deepEqual(element.attrCallbackArgs[0], ['attr', null, 'abc', null]);
+
+    element.setAttribute('attr', 'abc');
+
+    assert.equal(element.attrCallbackArgs.length, 1);
+  });
+
+  test('Setting an observed attribute to a different value triggers a callback.', function() {
+    const element = document.createElement(localName);
+
+    assert.equal(element.attrCallbackArgs.length, 0);
+
+    element.setAttribute('attr', 'abc');
+
+    assert.equal(element.attrCallbackArgs.length, 1);
+    assert.deepEqual(element.attrCallbackArgs[0], ['attr', null, 'abc', null]);
+
+    element.setAttribute('attr', 'def');
+
+    assert.equal(element.attrCallbackArgs.length, 2);
+    assert.deepEqual(element.attrCallbackArgs[1], ['attr', 'abc', 'def', null]);
+  });
+});
+</script>
+</body>
+</html>
+
