@@ -34,7 +34,7 @@ export function isConnected(node) {
   /** @type {?Node|undefined} */
   let current = node;
   while (current && !(current.__CE_isImportDocument || current instanceof Document)) {
-    current = current.parentNode || (ShadowRoot && current instanceof ShadowRoot ? current.host : undefined);
+    current = current.parentNode || (window.ShadowRoot && current instanceof ShadowRoot ? current.host : undefined);
   }
   return !!(current && (current.__CE_isImportDocument || current instanceof Document));
 }
