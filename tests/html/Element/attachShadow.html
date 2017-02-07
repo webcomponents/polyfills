@@ -43,7 +43,10 @@ suite('Elements inside ShadowRoots have their callbacks called.', function() {
     element = document.createElement(localName);
   });
 
-  test('Open ShadowRoots', function() {
+  const hasAttachShadow = document.createElement('div').attachShadow instanceof Function;
+  const testFn = hasAttachShadow ? test : test.skip;
+
+  testFn('Open ShadowRoots', function() {
     const div = document.createElement('div');
     div.attachShadow({mode: 'open'});
 
@@ -63,7 +66,7 @@ suite('Elements inside ShadowRoots have their callbacks called.', function() {
     assert.equal(element.disconnectedCallbackCount, 1);
   });
 
-  test('Closed ShadowRoots', function() {
+  testFn('Closed ShadowRoots', function() {
     const div = document.createElement('div');
     const shadowRoot = div.attachShadow({mode: 'closed'});
 
