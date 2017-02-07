@@ -203,7 +203,6 @@
 
   const isIE = /Trident/.test(navigator.userAgent) ||
     /Edge\/\d./i.test(navigator.userAgent);
-  const supportsUnhandledrejection = ('onunhandledrejection' in window);
 
   const importSelector = 'link[rel=import]';
 
@@ -542,7 +541,7 @@
         // Update link's import readyState.
         link.import && (link.import.readyState = 'complete');
         const eventType = link.import ? 'load' : 'error';
-        link.dispatchEvent(new CustomEvent(eventType, {
+        link.dispatchEvent(newCustomEvent(eventType, {
           bubbles: false,
           cancelable: false,
           detail: undefined
@@ -698,6 +697,15 @@
     return owner;
   }
 
+  const newCustomEvent = (type, params) => {
+    if (typeof window.CustomEvent === 'function') {
+      return new CustomEvent(type, params);
+    }
+    const event = /** @type {!CustomEvent} */ (document.createEvent('CustomEvent'));
+    event.initCustomEvent(type, Boolean(params.bubbles), Boolean(params.cancelable), params.detail);
+    return event;
+  };
+
   if (useNative) {
     // Check for imports that might already be done loading by the time this
     // script is actually executed. Native imports are blocking, so the ones
@@ -737,7 +745,7 @@
     Therefore, if this file is loaded, the same code can be used under both
     the polyfill and native implementation.
    */
-  whenReady(() => document.dispatchEvent(new CustomEvent('HTMLImportsLoaded', {
+  whenReady(() => document.dispatchEvent(newCustomEvent('HTMLImportsLoaded', {
     cancelable: true,
     bubbles: true,
     detail: undefined
