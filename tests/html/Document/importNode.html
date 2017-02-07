@@ -75,7 +75,7 @@ suite('Importing foreign nodes with a custom element.', function() {
   test('Importing foreign nodes with defined custom elements into a document ' +
     'that is not associated with the registry does not create those elements.',
     function() {
-      const doc = document.implementation.createHTMLDocument();
+      const doc = document.implementation.createHTMLDocument("title");
       const importedNode = doc.importNode(foreignNode, true);
 
       assert(!(importedNode instanceof constructor1));
