@@ -175,27 +175,39 @@ export default function(internals) {
       }
     });
 
-  Utilities.setPropertyUnchecked(Element.prototype, 'insertAdjacentElement',
-    /**
-     * @this {Element}
-     * @param {string} where
-     * @param {!Element} element
-     * @return {?Element}
-     */
-    function(where, element) {
-      const wasConnected = Utilities.isConnected(element);
-      const insertedElement = /** @type {!Element} */
-        (Native.Element_insertAdjacentElement.call(this, where, element));
 
-      if (wasConnected) {
-        internals.disconnectTree(element);
-      }
+  function patch_insertAdjacentElement(destination, baseMethod) {
+    Utilities.setPropertyUnchecked(destination, 'insertAdjacentElement',
+      /**
+       * @this {Element}
+       * @param {string} where
+       * @param {!Element} element
+       * @return {?Element}
+       */
+      function(where, element) {
+        const wasConnected = Utilities.isConnected(element);
+        const insertedElement = /** @type {!Element} */
+          (baseMethod.call(this, where, element));
 
-      if (Utilities.isConnected(insertedElement)) {
-        internals.connectTree(element);
-      }
-      return insertedElement;
-    });
+        if (wasConnected) {
+          internals.disconnectTree(element);
+        }
+
+        if (Utilities.isConnected(insertedElement)) {
+          internals.connectTree(element);
+        }
+        return insertedElement;
+      });
+  }
+
+  if (Native.HTMLElement_insertAdjacentElement) {
+    patch_insertAdjacentElement(HTMLElement.prototype, Native.HTMLElement_insertAdjacentElement);
+  } else if (Native.Element_insertAdjacentElement) {
+    patch_insertAdjacentElement(Element.prototype, Native.Element_insertAdjacentElement);
+  } else {
+    console.warn('Custom Elements: `Element#insertAdjacentElement` was not patched.');
+  }
+
 
   PatchParentNode(internals, Element.prototype, {
     prepend: Native.Element_prepend,

@@ -27,4 +27,5 @@ export default {
   Element_remove: window.Element.prototype['remove'],
   HTMLElement: window.HTMLElement,
   HTMLElement_innerHTML: Object.getOwnPropertyDescriptor(window.HTMLElement.prototype, 'innerHTML'),
+  HTMLElement_insertAdjacentElement: window.HTMLElement.prototype['insertAdjacentElement'],
 };
