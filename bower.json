@@ -17,7 +17,8 @@
   "ignore": [],
   "devDependencies": {
     "web-component-tester": "6.0.0-prerelease.3",
-    "webcomponentsjs": "webcomponents/webcomponentsjs#v1",
-    "es6-promise": "stefanpenner/es6-promise#^4.0.0"
+    "webcomponentsjs": "webcomponents/webcomponentsjs#gulp-all-the-things",
+    "es6-promise": "stefanpenner/es6-promise#^4.0.0",
+    "html-imports": "webcomponents/html-imports#master"
   }
 }
