@@ -228,7 +228,9 @@ class ShadyCSS {
     }
   }
   _applyToDescendants(root) {
-    let c$ = root.children;
+    // note: fallback to childNodes to support recursing into SVG which
+    // does not support children in some browsers (Edge/IE)
+    let c$ = root.children || root.childNodes;
     for (let i = 0, c; i < c$.length; i++) {
       c = c$[i];
       if (c.shadowRoot) {
