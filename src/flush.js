@@ -21,7 +21,7 @@ let flushMax = 100;
 export function enqueue(callback) {
   if (!scheduled) {
     scheduled = true;
-    utils.promish.then(flush);
+    utils.microtask(flush);
   }
   flushList.push(callback);
 }
