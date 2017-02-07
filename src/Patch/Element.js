@@ -170,8 +170,12 @@ export default function(internals) {
 
       const oldValue = Native.Element_getAttributeNS.call(this, namespace, name);
       Native.Element_removeAttributeNS.call(this, namespace, name);
-      if (oldValue !== null) {
-        internals.attributeChangedCallback(this, name, oldValue, null, namespace);
+      // In older browsers, `Element#getAttributeNS` may return the empty string
+      // instead of null if the attribute does not exist. For details, see;
+      // https://developer.mozilla.org/en-US/docs/Web/API/Element/getAttributeNS#Notes
+      const newValue = Native.Element_getAttributeNS.call(this, namespace, name);
+      if (oldValue !== newValue) {
+        internals.attributeChangedCallback(this, name, oldValue, newValue, namespace);
       }
     });
 
