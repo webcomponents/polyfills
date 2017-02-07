@@ -84,9 +84,11 @@ export function patchPrototype(obj, mixin) {
 
 // TODO(sorvell): actually rely on a real Promise polyfill...
 export let promish;
-if (window.Promise) {
-  promish = Promise.resolve();
-} else {
+// TODO(sorvell): needs testing, avoid use of Promise possibly because of
+// https://bugs.webkit.org/show_bug.cgi?id=161291
+// if (window.Promise) {
+//   promish = Promise.resolve();
+// } else {
   let twiddle = document.createTextNode('');
   let content = 0;
   promish = {
@@ -101,4 +103,4 @@ if (window.Promise) {
       twiddle.textContent = content++;
     }
   }
-}
+// }
