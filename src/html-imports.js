@@ -176,30 +176,24 @@
       } else {
         const request = new XMLHttpRequest();
         request.open('GET', url, Xhr.async);
-        request.addEventListener('readystatechange', () => {
-          if (request.readyState === 4) {
-            // Servers redirecting an import can add a Location header to help us
-            // polyfill correctly.
-            let redirectedUrl = undefined;
-            try {
-              const locationHeader = request.getResponseHeader('Location');
-              if (locationHeader) {
-                // Relative or full path.
-                redirectedUrl = (locationHeader.substr(0, 1) === '/') ?
-                  location.origin + locationHeader : locationHeader;
-              }
-            } catch (e) {
-              console.error(e.message);
-            }
-            const resource = /** @type {string} */ (request.response || request.responseText);
-            if (request.status === 304 || request.status === 0 ||
-              request.status >= 200 && request.status < 300) {
-              success(resource, redirectedUrl);
-            } else {
-              fail(resource);
-            }
+        request.onload = () => {
+          // Servers redirecting an import can add a Location header to help us
+          // polyfill correctly. Handle relative path.
+          let redirectedUrl = request.getResponseHeader('Location');
+          if (redirectedUrl && redirectedUrl.indexOf('/') === 0) {
+            // In IE location.origin might not work
+            // https://connect.microsoft.com/IE/feedback/details/1763802/location-origin-is-undefined-in-ie-11-on-windows-10-but-works-on-windows-7
+            const origin = (location.origin || location.protocol + '//' + location.host);
+            redirectedUrl = origin + redirectedUrl;
           }
-        });
+          const resource = /** @type {string} */ (request.response || request.responseText);
+          if (request.status === 304 || request.status === 0 ||
+            request.status >= 200 && request.status < 300) {
+            success(resource, redirectedUrl);
+          } else {
+            fail(resource);
+          }
+        };
         request.send();
       }
     }
@@ -255,22 +249,8 @@
           childList: true,
           subtree: true
         });
-        this.load();
-      });
-    }
-
-    /**
-     * Loads the resources needed by the import link and fires the load/error
-     * event on the node once finished. If link is not defined or null, loads
-     * all imports in the main document.
-     * @param {HTMLLinkElement=} link
-     */
-    load(link) {
-      if (link) {
-        this.loadImport(link)
-      } else {
         this.loadImports(document);
-      }
+      });
     }
 
     /**
@@ -282,7 +262,7 @@
       for (let i = 0, l = links.length; i < l; i++) {
         this.loadImport(links[i]);
       }
-      this.onLoadedAll();
+      this.processImportsIfLoadingDone();
     }
 
     /**
@@ -307,7 +287,7 @@
         // If load fails, handle error.
         this.documents[url] = null;
         this.inflight--;
-        this.onLoadedAll();
+        this.processImportsIfLoadingDone();
       });
     }
 
@@ -394,7 +374,7 @@
      * Waits for loaded imports to finish loading scripts and styles, then fires
      * the load/error events.
      */
-    onLoadedAll() {
+    processImportsIfLoadingDone() {
       // Wait until all resources are ready, then load import resources.
       if (this.inflight) {
         return;
@@ -593,7 +573,7 @@
             const imp = this.documents[n.href];
             // First time we see this import, load.
             if (imp === undefined) {
-              this.load(n);
+              this.loadImport(n);
             }
             // If nothing else is loading, we can safely associate the import
             // and fire the load/error event.
