@@ -43,10 +43,12 @@ suite('Importing foreign nodes with a custom element.', function() {
   let constructor2;
   let foreignNode;
 
-  setup(function() {
+  suiteSetup(function() {
     constructor1 = defineWithLocalName('custom-element-1');
     constructor2 = defineWithLocalName('custom-element-2');
+  })
 
+  setup(function() {
     const parser = new DOMParser();
     const htmlSource = `
       <html>
@@ -69,6 +71,16 @@ suite('Importing foreign nodes with a custom element.', function() {
     assert(importedNode instanceof constructor1);
     assert(importedNode.children[0] instanceof constructor2);
   });
+
+  test('Importing foreign nodes with defined custom elements into a document ' +
+    'that is not associated with the registry does not create those elements.',
+    function() {
+      const doc = document.implementation.createHTMLDocument();
+      const importedNode = doc.importNode(foreignNode, true);
+
+      assert(!(importedNode instanceof constructor1));
+      assert(!(importedNode.children[0] instanceof constructor2));
+    });
 });
 </script>
 </body>
