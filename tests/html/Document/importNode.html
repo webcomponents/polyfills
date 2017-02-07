@@ -1,0 +1,64 @@
+<!doctype html>
+<html>
+<head>
+<title>Document#importNode</title>
+<script>
+  (window.customElements = window.customElements || {}).forcePolyfill = true;
+</script>
+<script src="../../../../es6-promise/dist/es6-promise.auto.min.js"></script>
+<script src="../../../../web-component-tester/browser.js"></script>
+<script src="../../../custom-elements.min.js"></script>
+</head>
+<body>
+<template id="template1">
+  <custom-element-1>
+    <custom-element-2><custom-element-2>
+  </custom-element-1>
+</template>
+<script>
+function generateLocalName() {
+  return 'test-element-' + Math.random().toString(32).substring(2);
+}
+
+function defineWithLocalName(localName) {
+  const constructor = class extends HTMLElement {
+    constructor() {
+      super();
+      this.constructed = true;
+      this.connectedCallbackCount = 0;
+      this.disconnectedCallbackCount = 0;
+    }
+
+    connectedCallback() {
+      this.connectedCallbackCount++;
+    }
+
+    disconnectedCallback() {
+      this.disconnectedCallbackCount++;
+    }
+  }
+
+  customElements.define(localName, constructor);
+
+  return constructor;
+}
+
+suite('Importing templates with a custom element.', function() {
+  let constructor1;
+  let constructor2;
+
+  setup(function() {
+    constructor1 = defineWithLocalName('custom-element-1');
+    constructor2 = defineWithLocalName('custom-element-2');
+  });
+
+  test('Importing templates with defined custom elements creates those elements.', function() {
+    const fragment = document.importNode(document.querySelector('#template1').content, true);
+
+    assert(fragment.children[0] instanceof constructor1);
+    assert(fragment.children[0].children[0] instanceof constructor2);
+  });
+});
+</script>
+</body>
+</html>

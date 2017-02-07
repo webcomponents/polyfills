@@ -1,0 +1,281 @@
+<!doctype html>
+<html>
+<head>
+<title>Node#insertBefore</title>
+<script>
+  (window.customElements = window.customElements || {}).forcePolyfill = true;
+</script>
+<script src="../../../../es6-promise/dist/es6-promise.auto.min.js"></script>
+<script src="../../../../web-component-tester/browser.js"></script>
+<script src="../../../custom-elements.min.js"></script>
+<script>
+  function generateLocalName() {
+    return 'test-element-' + Math.random().toString(32).substring(2);
+  }
+
+  function defineWithLocalName(localName) {
+    customElements.define(localName, class extends HTMLElement {
+      constructor() {
+        super();
+        this.constructed = true;
+        this.connectedCallbackCount = 0;
+        this.disconnectedCallbackCount = 0;
+      }
+
+      connectedCallback() {
+        this.connectedCallbackCount++;
+      }
+
+      disconnectedCallback() {
+        this.disconnectedCallbackCount++;
+      }
+    });
+  }
+
+  suite('Inserting into a connected Node.', function() {
+    let connectedNode;
+
+    setup(function() {
+      connectedNode = document.createElement('div');
+      document.body.appendChild(connectedNode);
+    });
+
+    teardown(function() {
+      document.body.removeChild(connectedNode);
+    });
+
+    test('Inserting an uncustomized element with a definition upgrades the ' +
+      'element and calls `connectedCallback`.', function() {
+        const localName = generateLocalName();
+        const element = document.createElement(localName);
+        // Define after creating to prevent upgrade.
+        defineWithLocalName(localName);
+
+        assert(!element.constructed);
+
+        connectedNode.insertBefore(element, null);
+
+        assert(element.constructed);
+        assert.equal(element.connectedCallbackCount, 1);
+        assert.equal(element.disconnectedCallbackCount, 0);
+      });
+
+    test('Inserting a disconnected customized element calls `connectedCallback`.',
+      function() {
+        const localName = generateLocalName();
+        // Define before creating to cause the element to be constructed.
+        defineWithLocalName(localName);
+        const element = document.createElement(localName);
+
+        assert(element.constructed);
+        assert.equal(element.connectedCallbackCount, 0);
+        assert.equal(element.disconnectedCallbackCount, 0);
+
+        connectedNode.insertBefore(element, null);
+
+        assert.equal(element.connectedCallbackCount, 1);
+        assert.equal(element.disconnectedCallbackCount, 0);
+      });
+
+    test('Inserting a connected customized element calls `disconnectedCallback` ' +
+      'and `connectedCallback`.', function() {
+        const localName = generateLocalName();
+        // Define before creating to cause the element to be constructed.
+        defineWithLocalName(localName);
+        const element = document.createElement(localName);
+
+        assert(element.constructed);
+        assert.equal(element.connectedCallbackCount, 0);
+        assert.equal(element.disconnectedCallbackCount, 0);
+
+        connectedNode.insertBefore(element, null);
+
+        assert.equal(element.connectedCallbackCount, 1);
+        assert.equal(element.disconnectedCallbackCount, 0);
+
+        connectedNode.appendChild(document.createElement('hr'));
+
+        connectedNode.insertBefore(element, null);
+
+        assert.equal(element.connectedCallbackCount, 2);
+        assert.equal(element.disconnectedCallbackCount, 1);
+      });
+
+    test('Inserting a DocumentFragment containing uncustomized custom elements ' +
+      'with definitions upgrades the elements and calls `connectedCallback`.',
+      function() {
+        const localName = generateLocalName();
+
+        const fragment = document.createDocumentFragment();
+        const element1 = document.createElement(localName);
+        fragment.appendChild(element1);
+        fragment.appendChild(document.createTextNode('text'));
+        const element2 = document.createElement(localName);
+        fragment.appendChild(element2);
+
+        // Define after creating to prevent upgrade.
+        defineWithLocalName(localName);
+
+        assert(!element1.constructed);
+        assert(!element2.constructed);
+
+        connectedNode.insertBefore(fragment, null);
+
+        assert(element1.constructed);
+        assert.equal(element1.connectedCallbackCount, 1);
+        assert.equal(element1.disconnectedCallbackCount, 0);
+        assert(element2.constructed);
+        assert.equal(element2.connectedCallbackCount, 1);
+        assert.equal(element2.disconnectedCallbackCount, 0);
+      });
+
+    test('Inserting a DocumentFragment containing customized elements calls ' +
+      '`connectedCallback`.', function() {
+        const localName = generateLocalName();
+        // Define before creating to cause the element to be constructed.
+        defineWithLocalName(localName);
+
+        const fragment = document.createDocumentFragment();
+        const element1 = document.createElement(localName);
+        fragment.appendChild(element1);
+        fragment.appendChild(document.createTextNode('text'));
+        const element2 = document.createElement(localName);
+        fragment.appendChild(element2);
+
+        assert(element1.constructed);
+        assert.equal(element1.connectedCallbackCount, 0);
+        assert.equal(element1.disconnectedCallbackCount, 0);
+        assert(element2.constructed);
+        assert.equal(element2.connectedCallbackCount, 0);
+        assert.equal(element2.disconnectedCallbackCount, 0);
+
+        connectedNode.insertBefore(fragment, null);
+
+        assert.equal(element1.connectedCallbackCount, 1);
+        assert.equal(element1.disconnectedCallbackCount, 0);
+        assert.equal(element2.connectedCallbackCount, 1);
+        assert.equal(element2.disconnectedCallbackCount, 0);
+      });
+  });
+
+  suite('Inserting into a disconnected Node.', function() {
+    let connectedNode;
+    let disconnectedNode;
+
+    setup(function() {
+      connectedNode = document.createElement('div');
+      document.body.appendChild(connectedNode);
+      disconnectedNode = document.createElement('div');
+    });
+
+    teardown(function() {
+      document.body.removeChild(connectedNode);
+    });
+
+    test('Inserting an uncustomized element with a definition does nothing.',
+      function() {
+        const localName = generateLocalName();
+        const element = document.createElement(localName);
+        // Define after creating to prevent upgrade.
+        defineWithLocalName(localName);
+
+        assert(!element.constructed);
+
+        disconnectedNode.insertBefore(element, null);
+
+        assert(!element.constructed);
+      });
+
+    test('Inserting a disconnected customized element does nothing.', function() {
+      const localName = generateLocalName();
+      // Define before creating to cause the element to be constructed.
+      defineWithLocalName(localName);
+      const element = document.createElement(localName);
+
+      assert(element.constructed);
+      assert.equal(element.connectedCallbackCount, 0);
+      assert.equal(element.disconnectedCallbackCount, 0);
+
+      disconnectedNode.insertBefore(element, null);
+
+      assert.equal(element.connectedCallbackCount, 0);
+      assert.equal(element.disconnectedCallbackCount, 0);
+    });
+
+    test('Inserting a connected customized element calls `disconnectedCallback`.',
+      function() {
+        const localName = generateLocalName();
+        // Define before creating to cause the element to be constructed.
+        defineWithLocalName(localName);
+        const element = document.createElement(localName);
+
+        assert(element.constructed);
+        assert.equal(element.connectedCallbackCount, 0);
+        assert.equal(element.disconnectedCallbackCount, 0);
+
+        connectedNode.insertBefore(element, null);
+
+        assert.equal(element.connectedCallbackCount, 1);
+        assert.equal(element.disconnectedCallbackCount, 0);
+
+        disconnectedNode.insertBefore(element, null);
+
+        assert.equal(element.connectedCallbackCount, 1);
+        assert.equal(element.disconnectedCallbackCount, 1);
+      });
+
+    test('Inserting a DocumentFragment containing uncustomized custom elements' +
+      'with definitions does nothing.', function() {
+        const localName = generateLocalName();
+
+        const fragment = document.createDocumentFragment();
+        const element1 = document.createElement(localName);
+        fragment.appendChild(element1);
+        fragment.appendChild(document.createTextNode('text'));
+        const element2 = document.createElement(localName);
+        fragment.appendChild(element2);
+
+        // Define after creating to prevent upgrade.
+        defineWithLocalName(localName);
+
+        assert(!element1.constructed);
+        assert(!element2.constructed);
+
+        disconnectedNode.insertBefore(fragment, null);
+
+        assert(!element1.constructed);
+        assert(!element2.constructed);
+      });
+
+    test('Inserting a DocumentFragment containing customized elements does ' +
+      'nothing.', function() {
+        const localName = generateLocalName();
+        // Define before creating to cause the element to be constructed.
+        defineWithLocalName(localName);
+
+        const fragment = document.createDocumentFragment();
+        const element1 = document.createElement(localName);
+        fragment.appendChild(element1);
+        fragment.appendChild(document.createTextNode('text'));
+        const element2 = document.createElement(localName);
+        fragment.appendChild(element2);
+
+        assert(element1.constructed);
+        assert.equal(element1.connectedCallbackCount, 0);
+        assert.equal(element1.disconnectedCallbackCount, 0);
+        assert(element2.constructed);
+        assert.equal(element2.connectedCallbackCount, 0);
+        assert.equal(element2.disconnectedCallbackCount, 0);
+
+        disconnectedNode.insertBefore(fragment, null);
+
+        assert.equal(element1.connectedCallbackCount, 0);
+        assert.equal(element1.disconnectedCallbackCount, 0);
+        assert.equal(element2.connectedCallbackCount, 0);
+        assert.equal(element2.disconnectedCallbackCount, 0);
+      });
+  });
+</script>
+</head>
+<body></body>
+</html>

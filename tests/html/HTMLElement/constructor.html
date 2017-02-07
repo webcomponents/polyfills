@@ -1,0 +1,97 @@
+<!doctype html>
+<html>
+<head>
+<title>HTMLElement</title>
+<script>
+  (window.customElements = window.customElements || {}).forcePolyfill = true;
+</script>
+<script src="../../../../es6-promise/dist/es6-promise.auto.min.js"></script>
+<script src="../../../../web-component-tester/browser.js"></script>
+<script src="../../../custom-elements.min.js"></script>
+</head>
+<body>
+
+<template id="bad-custom-element-1">
+  <bad-custom-element-1></bad-custom-element-1>
+</template>
+
+<script>
+function generateLocalName() {
+  return 'test-element-' + Math.random().toString(32).substring(2);
+}
+
+function defineWithLocalName(localName) {
+  const constructor = class extends HTMLElement {
+    constructor() {
+      super();
+      this.constructed = true;
+      this.connectedCallbackCount = 0;
+      this.disconnectedCallbackCount = 0;
+    }
+
+    connectedCallback() {
+      this.connectedCallbackCount++;
+    }
+
+    disconnectedCallback() {
+      this.disconnectedCallbackCount++;
+    }
+  }
+  
+  customElements.define(localName, constructor);
+
+  return constructor;
+}
+
+suite('Constructing elements', function() {
+  let localName;
+  let constructor;
+
+  setup(function() {
+    localName = generateLocalName();
+    constructor = defineWithLocalName(localName);
+  });
+
+  test('Custom elements can be constructed from their constructor.', function() {
+    const element = new constructor();
+
+    assert(element instanceof constructor);
+    assert(element instanceof HTMLElement);
+    // The native `Element` function is not replaced, only patched; check that the
+    // prototype chain is correctly connected.
+    assert(element instanceof Element);
+    assert.equal(element.localName, localName);
+  });
+
+  test('Custom element constructors must be given to `customElements.define` ' +
+    'to be constructed.', function() {
+      class CustomElement extends HTMLElement {}
+
+      assert.throws(function() {
+        new CustomElement();
+      });
+    });
+
+  test('Custom element constructors may not cause more instances of the same ' +
+    'custom element to be created before calling into `HTMLElement` (e.g. via ' +
+    '`super()`).', function() {
+      let createSelf = true;
+      customElements.define('bad-custom-element-1', class extends HTMLElement {
+        constructor() {
+          if (createSelf) {
+            createSelf = false;
+            document.createElement('bad-custom-element-1');
+          }
+
+          super();
+        }
+      });
+
+      assert.throws(function() {
+        document.importNode(document.querySelector('#bad-custom-element-1').content, true);
+      });
+    });
+});
+</script>
+</body>
+</html>
