@@ -23,7 +23,3 @@ if (!document.baseURI) {
     configurable: true
   });
 }
-
-if (typeof window.Promise !== 'function') {
-  document.write('<script src="' + rootPath + '/es6-promise/dist/es6-promise.auto.min.js"></script>');
-}
