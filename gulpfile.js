@@ -26,7 +26,7 @@ gulp.task('default', () => {
       warning_level: 'VERBOSE',
       language_in: 'ECMASCRIPT6_STRICT',
       language_out: 'ECMASCRIPT5_STRICT',
-      externs: ['externs/html5.js', 'externs/custom-elements.js'],
+      externs: ['externs/custom-elements.js'],
       dependency_mode: 'STRICT',
       entry_point: ['/src/custom-elements'],
       js_output_file: 'custom-elements.min.js',
