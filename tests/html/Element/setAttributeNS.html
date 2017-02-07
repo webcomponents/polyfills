@@ -11,6 +11,11 @@
 </head>
 <body>
 <script>
+// In older browsers, `Element#getAttributeNS` may return the empty string
+// instead of null if the attribute does not exist. For details, see;
+// https://developer.mozilla.org/en-US/docs/Web/API/Element/getAttributeNS#Notes
+const NON_EXISTANT_VALUE = document.body.getAttributeNS('NO_SUCH_NS', 'attr');
+
 function generateLocalName() {
   return 'test-element-' + Math.random().toString(32).substring(2);
 }
@@ -69,7 +74,7 @@ suite('Setting new values.', function() {
     element.setAttributeNS('ns', 'attr', 'abc');
 
     assert.equal(element.attrCallbackArgs.length, 1);
-    assert.deepEqual(element.attrCallbackArgs[0], ['attr', null, 'abc', 'ns']);
+    assert.deepEqual(element.attrCallbackArgs[0], ['attr', NON_EXISTANT_VALUE, 'abc', 'ns']);
   });
 });
 
@@ -89,7 +94,7 @@ suite('Changing previously set values.', function() {
     element.setAttributeNS('ns', 'attr', 'abc');
 
     assert.equal(element.attrCallbackArgs.length, 1);
-    assert.deepEqual(element.attrCallbackArgs[0], ['attr', null, 'abc', 'ns']);
+    assert.deepEqual(element.attrCallbackArgs[0], ['attr', NON_EXISTANT_VALUE, 'abc', 'ns']);
 
     element.setAttributeNS('ns', 'attr', 'abc');
 
@@ -104,7 +109,7 @@ suite('Changing previously set values.', function() {
     element.setAttributeNS('ns', 'attr', 'abc');
 
     assert.equal(element.attrCallbackArgs.length, 1);
-    assert.deepEqual(element.attrCallbackArgs[0], ['attr', null, 'abc', 'ns']);
+    assert.deepEqual(element.attrCallbackArgs[0], ['attr', NON_EXISTANT_VALUE, 'abc', 'ns']);
 
     element.setAttributeNS('ns', 'attr', 'def');
 
