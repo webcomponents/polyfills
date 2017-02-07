@@ -81,6 +81,7 @@ gulp.task('closure-shady-css', () => {
     language_in: 'ES6_STRICT',
     language_out: 'ES5_STRICT',
     output_wrapper: '(function(){\n%output%\n}).call(self)',
+    assume_function_wrapper: true,
     js_output_file: 'shadycss.min.js',
     entry_point: '/src/shady-css.js',
     dependency_mode: 'STRICT',
