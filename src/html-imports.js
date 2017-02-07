@@ -156,60 +156,52 @@
 
     /**
      * @param {!string} url
-     * @return {!Promise}
+     * @param {!function(!string, string=)} success
+     * @param {!function(!string)} fail
      */
-    load(url) {
-      return new Promise((resolve, reject) => {
-        if (!url) {
-          reject({
-            resource: 'error: href must be specified'
-          });
-        } else if (url.match(/^data:/)) {
-          // Handle Data URI Scheme
-          const pieces = url.split(',');
-          const header = pieces[0];
-          let resource = pieces[1];
-          if (header.indexOf(';base64') > -1) {
-            resource = atob(resource);
-          } else {
-            resource = decodeURIComponent(resource);
-          }
-          resolve({
-            resource: resource
-          });
+    load(url, success, fail) {
+      if (!url) {
+        fail('error: href must be specified');
+      } else if (url.match(/^data:/)) {
+        // Handle Data URI Scheme
+        const pieces = url.split(',');
+        const header = pieces[0];
+        let resource = pieces[1];
+        if (header.indexOf(';base64') > -1) {
+          resource = atob(resource);
         } else {
-          const request = new XMLHttpRequest();
-          request.open('GET', url, Xhr.async);
-          request.addEventListener('readystatechange', () => {
-            if (request.readyState === 4) {
-              // Servers redirecting an import can add a Location header to help us
-              // polyfill correctly.
-              let redirectedUrl = undefined;
-              try {
-                const locationHeader = request.getResponseHeader('Location');
-                if (locationHeader) {
-                  // Relative or full path.
-                  redirectedUrl = (locationHeader.substr(0, 1) === '/') ?
-                    location.origin + locationHeader : locationHeader;
-                }
-              } catch (e) {
-                console.error(e.message);
-              }
-              const resp = {
-                resource: (request.response || request.responseText),
-                redirectedUrl: redirectedUrl
-              };
-              if (request.status === 304 || request.status === 0 ||
-                request.status >= 200 && request.status < 300) {
-                resolve(resp);
-              } else {
-                reject(resp);
-              }
-            }
-          });
-          request.send();
+          resource = decodeURIComponent(resource);
         }
-      });
+        success(resource);
+      } else {
+        const request = new XMLHttpRequest();
+        request.open('GET', url, Xhr.async);
+        request.addEventListener('readystatechange', () => {
+          if (request.readyState === 4) {
+            // Servers redirecting an import can add a Location header to help us
+            // polyfill correctly.
+            let redirectedUrl = undefined;
+            try {
+              const locationHeader = request.getResponseHeader('Location');
+              if (locationHeader) {
+                // Relative or full path.
+                redirectedUrl = (locationHeader.substr(0, 1) === '/') ?
+                  location.origin + locationHeader : locationHeader;
+              }
+            } catch (e) {
+              console.error(e.message);
+            }
+            const resource = /** @type {string} */ (request.response || request.responseText);
+            if (request.status === 304 || request.status === 0 ||
+              request.status >= 200 && request.status < 300) {
+              success(resource, redirectedUrl);
+            } else {
+              fail(resource);
+            }
+          }
+        });
+        request.send();
+      }
     }
   };
 
@@ -272,72 +264,51 @@
      * event on the node once finished. If link is not defined or null, loads
      * all imports in the main document.
      * @param {HTMLLinkElement=} link
-     * @return {Promise|undefined}
      */
     load(link) {
-      let whenLoadedPromise = link ? this.whenImportLoaded(link) :
-        this.whenImportsLoaded(document);
-      if (whenLoadedPromise) {
-        this.inflight++;
-        whenLoadedPromise = whenLoadedPromise.then(() => {
-          // Wait until all resources are ready, then load import resources.
-          if (--this.inflight === 0) {
-            return this.onLoadedAll();
-          }
-        });
-        // If browser doesn't support the unhandled rejection event,
-        // log the error stack and fire the error outside the promise so it's
-        // visible to listeners of window.onerror
-        if (!supportsUnhandledrejection) {
-          whenLoadedPromise = whenLoadedPromise.catch(err => {
-            console.error(err.stack);
-            setTimeout(() => {
-              throw err;
-            });
-            throw 'unhandledrejection';
-          });
-        }
+      if (link) {
+        this.loadImport(link)
+      } else {
+        this.loadImports(document);
       }
-      return whenLoadedPromise;
     }
 
     /**
      * @param {!(HTMLDocument|DocumentFragment)} doc
-     * @return {Promise|null}
      */
-    whenImportsLoaded(doc) {
+    loadImports(doc) {
       const links = /** @type {!NodeList<!HTMLLinkElement>} */
         (doc.querySelectorAll(importSelector));
-      const promises = [];
       for (let i = 0, l = links.length; i < l; i++) {
-        const promise = this.whenImportLoaded(links[i]);
-        if (promise) {
-          promises.push(promise);
-        }
+        this.loadImport(links[i]);
       }
-      return promises.length ? Promise.all(promises).then(() => doc) : null;
+      this.onLoadedAll();
     }
 
     /**
      * @param {!HTMLLinkElement} link
-     * @return {Promise|null}
      */
-    whenImportLoaded(link) {
+    loadImport(link) {
       const url = link.href;
       // This resource is already being handled by another import.
       if (this.documents[url] !== undefined) {
-        return null;
+        return;
       }
+      this.inflight++;
       // Mark it as pending to notify others this url is being loaded.
       this.documents[url] = 'pending';
-      return Xhr.load(url)
-        .then(resp => {
-          const doc = this.makeDocument(resp.resource, resp.redirectedUrl || url);
-          this.documents[url] = doc;
-          // Load subtree.
-          return this.whenImportsLoaded(doc);
-        }, () => this.documents[url] = null) // If load fails, handle error.
-        .then(() => link);
+      Xhr.load(url, (resource, redirectedUrl) => {
+        const doc = this.makeDocument(resource, redirectedUrl || url);
+        this.documents[url] = doc;
+        this.inflight--;
+        // Load subtree.
+        this.loadImports(doc);
+      }, () => {
+        // If load fails, handle error.
+        this.documents[url] = null;
+        this.inflight--;
+        this.onLoadedAll();
+      });
     }
 
     /**
@@ -420,11 +391,14 @@
     }
 
     /**
-     * Returns a promise resolved after the loaded imports finish loading scripts
-     * and styles, and fire the load/error events.
-     * @return {!Promise}
+     * Waits for loaded imports to finish loading scripts and styles, then fires
+     * the load/error events.
      */
     onLoadedAll() {
+      // Wait until all resources are ready, then load import resources.
+      if (this.inflight) {
+        return;
+      }
       this.flatten(document);
       // We wait for styles to load, and at the same time we execute the scripts,
       // then fire the load/error events for imports to have faster whenReady
@@ -433,8 +407,20 @@
       // executed after the styles before them are loaded.
       // To achieve that, we could select pending styles and scripts in the
       // document and execute them sequentially in their dom order.
-      return Promise.all([this.waitForStyles(), this.runScripts()])
-        .then(() => this.fireEvents());
+      let scriptsOk = false,
+        stylesOk = false;
+      this.waitForStyles(() => {
+        stylesOk = true;
+        if (scriptsOk) {
+          this.fireEvents();
+        }
+      });
+      this.runScripts(() => {
+        scriptsOk = true;
+        if (stylesOk) {
+          this.fireEvents();
+        }
+      });
     }
 
     /**
@@ -462,17 +448,18 @@
     /**
      * Replaces all the imported scripts with a clone in order to execute them.
      * Updates the `currentScript`.
-     * @return {Promise} Resolved when scripts are loaded.
+     * @param {!function()} callback
      */
-    runScripts() {
+    runScripts(callback) {
       const s$ = document.querySelectorAll(pendingScriptsSelector);
-      let promise = Promise.resolve();
-      for (let i = 0, l = s$.length, s; i < l && (s = s$[i]); i++) {
-        promise = promise.then(() => {
+      const l = s$.length;
+      const cloneScript = i => {
+        if (i < l) {
           // The pending scripts have been generated through innerHTML and
           // browsers won't execute them for security reasons. We cannot use
           // s.cloneNode(true) either, the only way to run the script is manually
           // creating a new element and copying its attributes.
+          const s = s$[i];
           const clone = /** @type {!HTMLScriptElement} */
             (document.createElement('script'));
           // Remove import-dependency attribute to avoid double cloning.
@@ -480,35 +467,46 @@
           for (let j = 0, ll = s.attributes.length; j < ll; j++) {
             clone.setAttribute(s.attributes[j].name, s.attributes[j].value);
           }
-
           // Update currentScript and replace original with clone script.
           currentScript = clone;
           s.parentNode.replaceChild(clone, s);
-          // Wait for load/error events; after is loaded, reset currentScript.
-          return whenElementLoaded(clone).then(() => currentScript = null);
-        });
-      }
-      return promise;
+          whenElementLoaded(clone, () => {
+            currentScript = null;
+            cloneScript(i + 1);
+          });
+        } else {
+          callback();
+        }
+      };
+      cloneScript(0);
     }
 
     /**
      * Waits for all the imported stylesheets/styles to be loaded.
-     * @return {Promise}
+     * @param {!function()} callback
      */
-    waitForStyles() {
+    waitForStyles(callback) {
+      const s$ = /** @type {!NodeList<!(HTMLLinkElement|HTMLStyleElement)>} */
+        (document.querySelectorAll(pendingStylesSelector));
+      let pending = s$.length;
+      if (!pending) {
+        callback();
+        return;
+      }
       // <link rel=stylesheet> should be appended to <head>. Not doing so
       // in IE/Edge breaks the cascading order
       // https://developer.microsoft.com/en-us/microsoft-edge/platform/issues/10472273/
       // If there is one <link rel=stylesheet> imported, we must move all imported
       // links and styles to <head>.
       const needsMove = !!document.querySelector(disabledLinkSelector);
-      const s$ = /** @type {!NodeList<!(HTMLLinkElement|HTMLStyleElement)>} */
-        (document.querySelectorAll(pendingStylesSelector));
-      const promises = [];
       for (let i = 0, l = s$.length, s; i < l && (s = s$[i]); i++) {
         // Listen for load/error events, remove selector once is done loading.
-        promises.push(whenElementLoaded(s)
-          .then(() => s.removeAttribute(importDependencyAttr)));
+        whenElementLoaded(s, () => {
+          s.removeAttribute(importDependencyAttr);
+          if (--pending === 0) {
+            callback();
+          }
+        });
         // Check if was already moved to head, to handle the case where the element
         // has already been moved but it is still loading.
         if (needsMove && s.parentNode !== document.head) {
@@ -539,7 +537,6 @@
           s.removeAttribute('type');
         }
       }
-      return Promise.all(promises);
     }
 
     /**
@@ -623,30 +620,30 @@
    * Waits for an element to finish loading. If already done loading, it will
    * mark the element accordingly.
    * @param {!(HTMLLinkElement|HTMLScriptElement|HTMLStyleElement)} element
-   * @return {Promise}
+   * @param {function()=} callback
    */
-  const whenElementLoaded = element => {
-    if (!element['__loadPromise']) {
-      element['__loadPromise'] = new Promise(resolve => {
-        // Inline scripts don't trigger load/error events, consider them already loaded.
-        if (element.localName === 'script' && !element.src) {
-          resolve();
-        } else if (isIE && element.localName === 'style') {
-          // NOTE: We listen only for load events in IE/Edge, because in IE/Edge
-          // <style> with @import will fire error events for each failing @import,
-          // and finally will trigger the load event when all @import are
-          // finished (even if all fail).
-          element.addEventListener('load', resolve);
-        } else {
-          element.addEventListener('load', resolve);
-          element.addEventListener('error', resolve);
-        }
-      }).then(() => {
+  const whenElementLoaded = (element, callback) => {
+    if (element['__loaded']) {
+      callback && callback();
+    } else if (element.localName === 'script' && !element.src) {
+      // Inline scripts don't trigger load/error events, consider them already loaded.
+      element['__loaded'] = true;
+      callback && callback();
+    } else {
+      const onLoadingDone = event => {
+        element.removeEventListener(event.type, onLoadingDone);
         element['__loaded'] = true;
-        return element;
-      });
+        callback && callback();
+      };
+      element.addEventListener('load', onLoadingDone);
+      // NOTE: We listen only for load events in IE/Edge, because in IE/Edge
+      // <style> with @import will fire error events for each failing @import,
+      // and finally will trigger the load event when all @import are
+      // finished (even if all fail).
+      if (!isIE || element.localName !== 'style') {
+        element.addEventListener('error', onLoadingDone);
+      }
     }
-    return element['__loadPromise'];
   }
 
   /**
@@ -688,18 +685,17 @@
   const whenImportsReady = callback => {
     let imports = /** @type {!NodeList<!HTMLLinkElement>} */
       (document.querySelectorAll(rootImportSelector));
-    const promises = [];
-    for (let i = 0, l = imports.length, imp; i < l && (imp = imports[i]); i++) {
-      if (!imp['__loaded']) {
-        promises.push(whenElementLoaded(imp));
-      }
-    }
-    if (promises.length) {
-      // Execute callback outside the promise scope to avoid unhandled promise
-      // exceptions that don't depend on whenImportsReady.
-      Promise.all(promises).then(() => setTimeout(callback));
-    } else {
+    let pending = imports.length;
+    if (!pending) {
       callback();
+      return;
+    }
+    for (let i = 0, l = imports.length, imp; i < l && (imp = imports[i]); i++) {
+      whenElementLoaded(imp, () => {
+        if (--pending === 0) {
+          callback();
+        }
+      });
     }
   }
 
