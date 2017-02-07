@@ -37,7 +37,9 @@ export default class DocumentConstructionObserver {
   }
 
   disconnect() {
-    this._observer.disconnect();
+    if (this._observer) {
+      this._observer.disconnect();
+    }
   }
 
   /**
