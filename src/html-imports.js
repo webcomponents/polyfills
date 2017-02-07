@@ -178,7 +178,7 @@
         request.open('GET', url, Xhr.async);
         request.onload = () => {
           // Servers redirecting an import can add a Location header to help us
-          // polyfill correctly. Handle relative path.
+          // polyfill correctly. Handle relative and full paths.
           let redirectedUrl = request.getResponseHeader('Location');
           if (redirectedUrl && redirectedUrl.indexOf('/') === 0) {
             // In IE location.origin might not work
