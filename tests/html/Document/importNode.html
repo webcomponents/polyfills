@@ -10,11 +10,6 @@
 <script src="../../../custom-elements.min.js"></script>
 </head>
 <body>
-<template id="template1">
-  <custom-element-1>
-    <custom-element-2><custom-element-2>
-  </custom-element-1>
-</template>
 <script>
 function generateLocalName() {
   return 'test-element-' + Math.random().toString(32).substring(2);
@@ -43,20 +38,36 @@ function defineWithLocalName(localName) {
   return constructor;
 }
 
-suite('Importing templates with a custom element.', function() {
+suite('Importing foreign nodes with a custom element.', function() {
   let constructor1;
   let constructor2;
+  let foreignNode;
 
   setup(function() {
     constructor1 = defineWithLocalName('custom-element-1');
     constructor2 = defineWithLocalName('custom-element-2');
+
+    const parser = new DOMParser();
+    const htmlSource = `
+      <html>
+        <head></head>
+        <body>
+          <custom-element-1>
+            <custom-element-2></custom-element-2>
+          </custom-element-1>
+        </body>
+      </html>
+    `;
+    const doc = parser.parseFromString(htmlSource, 'text/html');
+    foreignNode = doc.querySelector('custom-element-1');
+    assert(!(foreignNode instanceof constructor1));
   });
 
-  test('Importing templates with defined custom elements creates those elements.', function() {
-    const fragment = document.importNode(document.querySelector('#template1').content, true);
+  test('Importing foreign nodes with defined custom elements creates those elements.', function() {
+    const importedNode = document.importNode(foreignNode, true);
 
-    assert(fragment.children[0] instanceof constructor1);
-    assert(fragment.children[0].children[0] instanceof constructor2);
+    assert(importedNode instanceof constructor1);
+    assert(importedNode.children[0] instanceof constructor2);
   });
 });
 </script>
