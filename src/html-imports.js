@@ -76,10 +76,8 @@
     },
 
     fixUrlsInTemplate(template, base) {
-      const content = template.content;
-      if (!content) { // Template not supported.
-        return;
-      }
+      // If template is not supported, still resolve urls within it.
+      const content = template.content || template;
       const n$ = content.querySelectorAll(
         'style, form[action], [src], [href], [url], [style]');
       for (let i = 0; i < n$.length; i++) {
@@ -219,6 +217,7 @@
 
   const isIE = /Trident/.test(navigator.userAgent) ||
     /Edge\/\d./i.test(navigator.userAgent);
+  const supportsUnhandledrejection = ('onunhandledrejection' in window);
 
   const importSelector = 'link[rel=import]';
 
@@ -240,16 +239,6 @@
 
   const pendingStylesSelector = `style[${importDependencyAttr}],
     link[rel=stylesheet][${importDependencyAttr}]`;
-
-  /**
-   * @type {Function}
-   */
-  const MATCHES = Element.prototype.matches ||
-    Element.prototype.matchesSelector ||
-    Element.prototype.mozMatchesSelector ||
-    Element.prototype.msMatchesSelector ||
-    Element.prototype.oMatchesSelector ||
-    Element.prototype.webkitMatchesSelector;
 
   /**
    * Importer will:
@@ -283,19 +272,33 @@
      * event on the node once finished. If link is not defined or null, loads
      * all imports in the main document.
      * @param {HTMLLinkElement=} link
+     * @return {Promise|undefined}
      */
     load(link) {
-      const whenLoadedPromise = link ? this.whenImportLoaded(link) :
+      let whenLoadedPromise = link ? this.whenImportLoaded(link) :
         this.whenImportsLoaded(document);
       if (whenLoadedPromise) {
         this.inflight++;
-        whenLoadedPromise.then(() => {
-          // Wait until all resources are ready.
+        whenLoadedPromise = whenLoadedPromise.then(() => {
+          // Wait until all resources are ready, then load import resources.
           if (--this.inflight === 0) {
-            this.onLoadedAll();
+            return this.onLoadedAll();
           }
         });
+        // If browser doesn't support the unhandled rejection event,
+        // log the error stack and fire the error outside the promise so it's
+        // visible to listeners of window.onerror
+        if (!supportsUnhandledrejection) {
+          whenLoadedPromise = whenLoadedPromise.catch(err => {
+            console.error(err.stack);
+            setTimeout(() => {
+              throw err;
+            });
+            throw 'unhandledrejection';
+          });
+        }
       }
+      return whenLoadedPromise;
     }
 
     /**
@@ -369,10 +372,10 @@
         // This creates issues in Safari10 when used with shadydom (see #12).
         content = template.content;
       } else {
-        // <template> not supported, create fragment and move children into it.
+        // <template> not supported, create fragment and move content into it.
         content = document.createDocumentFragment();
-        while (template.firstElementChild) {
-          content.appendChild(template.firstElementChild);
+        while (template.firstChild) {
+          content.appendChild(template.firstChild);
         }
       }
 
@@ -416,6 +419,11 @@
       return content;
     }
 
+    /**
+     * Returns a promise resolved after the loaded imports finish loading scripts
+     * and styles, and fire the load/error events.
+     * @return {!Promise}
+     */
     onLoadedAll() {
       this.flatten(document);
       // We wait for styles to load, and at the same time we execute the scripts,
@@ -425,7 +433,7 @@
       // executed after the styles before them are loaded.
       // To achieve that, we could select pending styles and scripts in the
       // document and execute them sequentially in their dom order.
-      Promise.all([this.waitForStyles(), this.runScripts()])
+      return Promise.all([this.waitForStyles(), this.runScripts()])
         .then(() => this.fireEvents());
     }
 
@@ -607,7 +615,8 @@
    * @return {boolean}
    */
   const isImportLink = node => {
-    return node.nodeType === Node.ELEMENT_NODE && MATCHES.call(node, importSelector);
+    return node.nodeType === Node.ELEMENT_NODE && node.localName === 'link' &&
+      ( /** @type {!HTMLLinkElement} */ (node).rel === 'import');
   };
 
   /**
@@ -686,7 +695,9 @@
       }
     }
     if (promises.length) {
-      Promise.all(promises).then(callback);
+      // Execute callback outside the promise scope to avoid unhandled promise
+      // exceptions that don't depend on whenImportsReady.
+      Promise.all(promises).then(() => setTimeout(callback));
     } else {
       callback();
     }
@@ -709,22 +720,6 @@
       element['__ownerImport'] = owner;
     }
     return owner;
-  }
-
-  // In case customElements polyfill is in use, install whenReady as the
-  // flush callback, so that custom element upgrades are deferred; this composes
-  // with any previous polyfillFlushCallback that the user may have installed
-  let prevWhenReady;
-  if (window.customElements) {
-    prevWhenReady = window.customElements['polyfillFlushCallback'];
-  } else {
-    window.customElements = {};
-  }
-  if (prevWhenReady) {
-    window.customElements['polyfillFlushCallback'] = cb => 
-      whenReady(() => prevWhenReady(cb));
-  } else {
-    window.customElements['polyfillFlushCallback'] = whenReady;
   }
 
   if (useNative) {
