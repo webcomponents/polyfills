@@ -100,11 +100,11 @@ suite('Custom element descendants of the context element are disconnected when s
     element1.appendChild(element2);
 
     assert.equal(div.childNodes.length, 1);
-    assert.equal(element1.localName, localName1);
+
     assert.equal(element1.connectedCallbackCount, 0);
     assert.equal(element1.disconnectedCallbackCount, 0);
     assert.equal(element1.childNodes.length, 1);
-    assert.equal(element2.localName, localName2);
+
     assert.equal(element2.connectedCallbackCount, 0);
     assert.equal(element2.disconnectedCallbackCount, 0);
     assert.equal(element2.childNodes.length, 0);
@@ -115,46 +115,38 @@ suite('Custom element descendants of the context element are disconnected when s
 
     // `div` no longer has children.
     assert.equal(div.childNodes.length, 0);
+
     // `div` was disconnected, no callbacks were called.
     assert.equal(element1.localName, localName1);
     assert.equal(element1.connectedCallbackCount, 0);
     assert.equal(element1.disconnectedCallbackCount, 0);
-    assert.equal(element1.childNodes.length, 1);
+
     assert.equal(element2.localName, localName2);
     assert.equal(element2.connectedCallbackCount, 0);
     assert.equal(element2.disconnectedCallbackCount, 0);
-    assert.equal(element2.childNodes.length, 0);
   });
 
   test('Connected context element', function() {
     document.body.appendChild(div);
 
     assert.equal(div.childNodes.length, 1);
-    assert.equal(element1.localName, localName1);
     // `element1` was connected.
     assert.equal(element1.connectedCallbackCount, 1);
     assert.equal(element1.disconnectedCallbackCount, 0);
-    assert.equal(element1.childNodes.length, 1);
-    assert.equal(element2.localName, localName2);
     // `element2` was connected.
     assert.equal(element2.connectedCallbackCount, 1);
     assert.equal(element2.disconnectedCallbackCount, 0);
-    assert.equal(element2.childNodes.length, 0);
 
     div.innerHTML = "";
 
     // `div` no longer has children.
     assert.equal(div.childNodes.length, 0);
-    assert.equal(element1.localName, localName1);
-    assert.equal(element1.connectedCallbackCount, 1);
     // `element1` was disconnected.
+    assert.equal(element1.connectedCallbackCount, 1);
     assert.equal(element1.disconnectedCallbackCount, 1);
-    assert.equal(element1.childNodes.length, 1);
-    assert.equal(element2.localName, localName2);
-    assert.equal(element2.connectedCallbackCount, 1);
     // `element2` was disconnected.
+    assert.equal(element2.connectedCallbackCount, 1);
     assert.equal(element2.disconnectedCallbackCount, 1);
-    assert.equal(element2.childNodes.length, 0);
 
     document.body.removeChild(div);
   });
