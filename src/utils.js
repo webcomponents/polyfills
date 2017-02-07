@@ -88,7 +88,14 @@ let content = 0;
 let queue = [];
 new MutationObserver(() => {
   while (queue.length) {
-    queue.shift()();
+    // catch errors in user code...
+    try {
+      queue.shift()();
+    } catch(e) {
+      // enqueue another record and throw
+      twiddle.textContent = content++;
+      throw(e);
+    }
   }
 }).observe(twiddle, {characterData: true});
 
