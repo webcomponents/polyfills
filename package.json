@@ -23,11 +23,11 @@
   "homepage": "http://webcomponents.org",
   "devDependencies": {
     "bower": "^1.8.0",
-    "google-closure-compiler": "^20160822.1.0",
+    "google-closure-compiler": "^20170124.0.0",
     "gulp": "^3.8.8",
     "gulp-sourcemaps": "^1.6.0",
-    "web-component-tester": "6.0.0-prerelease.3",
     "rollup-stream": "^1.14.0",
-    "vinyl-source-stream": "^1.1.0"
+    "vinyl-source-stream": "^1.1.0",
+    "web-component-tester": "6.0.0-prerelease.3"
   }
 }
