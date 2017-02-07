@@ -18,6 +18,7 @@
   "devDependencies": {
     "web-component-tester": "6.0.0-prerelease.3",
     "webcomponentsjs": "webcomponents/webcomponentsjs#gulp-all-the-things",
+    "webcomponents-platform": "webcomponents/platform#master",
     "es6-promise": "stefanpenner/es6-promise#^4.0.0",
     "html-imports": "webcomponents/html-imports#remove-timeout"
   }
