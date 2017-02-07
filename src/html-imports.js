@@ -272,19 +272,33 @@
      * event on the node once finished. If link is not defined or null, loads
      * all imports in the main document.
      * @param {HTMLLinkElement=} link
+     * @return {Promise|undefined}
      */
     load(link) {
-      const whenLoadedPromise = link ? this.whenImportLoaded(link) :
+      let whenLoadedPromise = link ? this.whenImportLoaded(link) :
         this.whenImportsLoaded(document);
       if (whenLoadedPromise) {
         this.inflight++;
-        whenLoadedPromise.then(() => {
-          // Wait until all resources are ready.
+        whenLoadedPromise = whenLoadedPromise.then(() => {
+          // Wait until all resources are ready, then load import resources.
           if (--this.inflight === 0) {
-            this.onLoadedAll();
+            return this.onLoadedAll();
           }
         });
+        // If browser doesn't support the unhandled rejection event,
+        // log the error stack and fire the error outside the promise so it's
+        // visible to listeners of window.onerror
+        if (!supportsUnhandledrejection) {
+          whenLoadedPromise = whenLoadedPromise.catch(err => {
+            console.error(err.stack);
+            setTimeout(() => {
+              throw err;
+            });
+            throw 'unhandledrejection';
+          });
+        }
       }
+      return whenLoadedPromise;
     }
 
     /**
@@ -317,27 +331,12 @@
       // Mark it as pending to notify others this url is being loaded.
       this.documents[url] = 'pending';
       return Xhr.load(url)
-        .then(resp => this.makeDocument(resp.resource, resp.redirectedUrl || url),
-          () => null) // If load fails, handle error.
-        .catch(err => {
-          // If browser doesn't support the unhandled rejection event,
-          // log the error stack and fire the error outside the promise so it's
-          // visible to listeners of window.onerror
-          if (!supportsUnhandledrejection) {
-            console.error(err.stack);
-            setTimeout(() => {
-              throw err;
-            });
-          }
-          throw err;
-        })
-        .then(doc => {
+        .then(resp => {
+          const doc = this.makeDocument(resp.resource, resp.redirectedUrl || url);
           this.documents[url] = doc;
-          if (doc) {
-            // Load subtree.
-            return this.whenImportsLoaded(doc);
-          }
-        })
+          // Load subtree.
+          return this.whenImportsLoaded(doc);
+        }, () => this.documents[url] = null) // If load fails, handle error.
         .then(() => link);
     }
 
@@ -420,6 +419,11 @@
       return content;
     }
 
+    /**
+     * Returns a promise resolved after the loaded imports finish loading scripts
+     * and styles, and fire the load/error events.
+     * @return {!Promise}
+     */
     onLoadedAll() {
       this.flatten(document);
       // We wait for styles to load, and at the same time we execute the scripts,
@@ -429,7 +433,7 @@
       // executed after the styles before them are loaded.
       // To achieve that, we could select pending styles and scripts in the
       // document and execute them sequentially in their dom order.
-      Promise.all([this.waitForStyles(), this.runScripts()])
+      return Promise.all([this.waitForStyles(), this.runScripts()])
         .then(() => this.fireEvents());
     }
 
