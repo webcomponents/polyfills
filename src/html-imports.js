@@ -203,7 +203,6 @@
 
   const isIE = /Trident/.test(navigator.userAgent) ||
     /Edge\/\d./i.test(navigator.userAgent);
-  const supportsUnhandledrejection = ('onunhandledrejection' in window);
 
   const importSelector = 'link[rel=import]';
 
@@ -239,13 +238,14 @@
       // Used to keep track of pending loads, so that flattening and firing of
       // events can be done when all resources are ready.
       this.inflight = 0;
+      this.dynamicImportsMO = new MutationObserver(m => this.handleMutations(m));
       // 1. Load imports contents
       // 2. Assign them to first import links on the document
       // 3. Wait for import styles & scripts to be done loading/running
       // 4. Fire load/error events
       whenDocumentReady(() => {
         // Observe changes on <head>.
-        new MutationObserver(m => this.handleMutations(m)).observe(document.head, {
+        this.dynamicImportsMO.observe(document.head, {
           childList: true,
           subtree: true
         });
@@ -254,7 +254,7 @@
     }
 
     /**
-     * @param {!(HTMLDocument|DocumentFragment)} doc
+     * @param {!(HTMLDocument|DocumentFragment|Element)} doc
      */
     loadImports(doc) {
       const links = /** @type {!NodeList<!HTMLLinkElement>} */
@@ -272,6 +272,13 @@
       const url = link.href;
       // This resource is already being handled by another import.
       if (this.documents[url] !== undefined) {
+        // If import is already loaded, we can safely associate it to the link
+        // and fire the load/error event.
+        const imp = this.documents[url];
+        if (imp && imp['__loaded']) {
+          link.import = imp;
+          this.fireEventIfNeeded(link);
+        }
         return;
       }
       this.inflight++;
@@ -379,6 +386,9 @@
       if (this.inflight) {
         return;
       }
+
+      // Stop observing, flatten & load resource, then restart observing <head>.
+      this.dynamicImportsMO.disconnect();
       this.flatten(document);
       // We wait for styles to load, and at the same time we execute the scripts,
       // then fire the load/error events for imports to have faster whenReady
@@ -389,17 +399,23 @@
       // document and execute them sequentially in their dom order.
       let scriptsOk = false,
         stylesOk = false;
-      this.waitForStyles(() => {
-        stylesOk = true;
-        if (scriptsOk) {
+      const onLoadingDone = () => {
+        if (stylesOk && scriptsOk) {
+          // Restart observing.
+          this.dynamicImportsMO.observe(document.head, {
+            childList: true,
+            subtree: true
+          });
           this.fireEvents();
         }
+      }
+      this.waitForStyles(() => {
+        stylesOk = true;
+        onLoadingDone();
       });
       this.runScripts(() => {
         scriptsOk = true;
-        if (stylesOk) {
-          this.fireEvents();
-        }
+        onLoadingDone();
       });
     }
 
@@ -478,7 +494,7 @@
       // https://developer.microsoft.com/en-us/microsoft-edge/platform/issues/10472273/
       // If there is one <link rel=stylesheet> imported, we must move all imported
       // links and styles to <head>.
-      const needsMove = !!document.querySelector(disabledLinkSelector);
+      const needsMove = isIE && !!document.querySelector(disabledLinkSelector);
       for (let i = 0, l = s$.length, s; i < l && (s = s$[i]); i++) {
         // Listen for load/error events, remove selector once is done loading.
         whenElementLoaded(s, () => {
@@ -542,7 +558,7 @@
         // Update link's import readyState.
         link.import && (link.import.readyState = 'complete');
         const eventType = link.import ? 'load' : 'error';
-        link.dispatchEvent(new CustomEvent(eventType, {
+        link.dispatchEvent(newCustomEvent(eventType, {
           bubbles: false,
           cancelable: false,
           detail: undefined
@@ -566,21 +582,10 @@
           }
           // NOTE: added scripts are not updating currentScript in IE.
           // TODO add test w/ script & stylesheet maybe
-          const imports = /** @type {!NodeList<!HTMLLinkElement>} */
-            (isImportLink(link) ? [link] : link.querySelectorAll(importSelector));
-          for (let iii = 0; iii < imports.length; iii++) {
-            const n = imports[iii];
-            const imp = this.documents[n.href];
-            // First time we see this import, load.
-            if (imp === undefined) {
-              this.loadImport(n);
-            }
-            // If nothing else is loading, we can safely associate the import
-            // and fire the load/error event.
-            else if (!this.inflight) {
-              n.import = imp;
-              this.fireEventIfNeeded(n);
-            }
+          if (isImportLink(link)) {
+            this.loadImport( /** @type {!HTMLLinkElement} */ (link));
+          } else {
+            this.loadImports( /** @type {!Element} */ (link));
           }
         }
       }
@@ -698,6 +703,15 @@
     return owner;
   }
 
+  const newCustomEvent = (type, params) => {
+    if (typeof window.CustomEvent === 'function') {
+      return new CustomEvent(type, params);
+    }
+    const event = /** @type {!CustomEvent} */ (document.createEvent('CustomEvent'));
+    event.initCustomEvent(type, Boolean(params.bubbles), Boolean(params.cancelable), params.detail);
+    return event;
+  };
+
   if (useNative) {
     // Check for imports that might already be done loading by the time this
     // script is actually executed. Native imports are blocking, so the ones
@@ -737,7 +751,7 @@
     Therefore, if this file is loaded, the same code can be used under both
     the polyfill and native implementation.
    */
-  whenReady(() => document.dispatchEvent(new CustomEvent('HTMLImportsLoaded', {
+  whenReady(() => document.dispatchEvent(newCustomEvent('HTMLImportsLoaded', {
     cancelable: true,
     bubbles: true,
     detail: undefined

@@ -9,8 +9,6 @@
  */
 
 var rootPath = window.location.href.replace(/\/(\w|-)+\/tests\/.*/g, '');
-// Includes CustomEvent polyfill.
-document.write('<script src="' + rootPath + '/webcomponents-platform/webcomponents-platform.js"></script>');
 
 // document.baseURI polyfill.
 // TODO(valdrin) move it to a separate polyfill.

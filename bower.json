@@ -15,9 +15,6 @@
   ],
   "license": "BSD",
   "ignore": [],
-  "dependencies": {
-    "webcomponents-platform": "webcomponents/webcomponents-platform#master"
-  },
   "devDependencies": {
     "web-component-tester": "6.0.0-prerelease.3"
   }

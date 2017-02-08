@@ -21,7 +21,14 @@
 
     // async for MO.
     setTimeout(function() {
-      document.dispatchEvent(new CustomEvent('asyncElementsAdded', {bubbles: true}));
+      var event;
+      if (window.CustomEvent === 'function') {
+        event = new CustomEvent('asyncElementsAdded', {bubbles: true});
+      } else {
+        event = document.createEvent('CustomEvent');
+        event.initCustomEvent('asyncElementsAdded', true, false, undefined);
+      }
+      document.dispatchEvent(event);
     }, 1);
   }, 100);
 })();
