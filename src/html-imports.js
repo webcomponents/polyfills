@@ -238,13 +238,14 @@
       // Used to keep track of pending loads, so that flattening and firing of
       // events can be done when all resources are ready.
       this.inflight = 0;
+      this.dynamicImportsMO = new MutationObserver(m => this.handleMutations(m));
       // 1. Load imports contents
       // 2. Assign them to first import links on the document
       // 3. Wait for import styles & scripts to be done loading/running
       // 4. Fire load/error events
       whenDocumentReady(() => {
         // Observe changes on <head>.
-        new MutationObserver(m => this.handleMutations(m)).observe(document.head, {
+        this.dynamicImportsMO.observe(document.head, {
           childList: true,
           subtree: true
         });
@@ -253,7 +254,7 @@
     }
 
     /**
-     * @param {!(HTMLDocument|DocumentFragment)} doc
+     * @param {!(HTMLDocument|DocumentFragment|Element)} doc
      */
     loadImports(doc) {
       const links = /** @type {!NodeList<!HTMLLinkElement>} */
@@ -271,6 +272,13 @@
       const url = link.href;
       // This resource is already being handled by another import.
       if (this.documents[url] !== undefined) {
+        // If import is already loaded, we can safely associate it to the link
+        // and fire the load/error event.
+        const imp = this.documents[url];
+        if (imp && imp['__loaded']) {
+          link.import = imp;
+          this.fireEventIfNeeded(link);
+        }
         return;
       }
       this.inflight++;
@@ -378,6 +386,9 @@
       if (this.inflight) {
         return;
       }
+
+      // Stop observing, flatten & load resource, then restart observing <head>.
+      this.dynamicImportsMO.disconnect();
       this.flatten(document);
       // We wait for styles to load, and at the same time we execute the scripts,
       // then fire the load/error events for imports to have faster whenReady
@@ -388,17 +399,23 @@
       // document and execute them sequentially in their dom order.
       let scriptsOk = false,
         stylesOk = false;
-      this.waitForStyles(() => {
-        stylesOk = true;
-        if (scriptsOk) {
+      const onLoadingDone = () => {
+        if (stylesOk && scriptsOk) {
+          // Restart observing.
+          this.dynamicImportsMO.observe(document.head, {
+            childList: true,
+            subtree: true
+          });
           this.fireEvents();
         }
+      }
+      this.waitForStyles(() => {
+        stylesOk = true;
+        onLoadingDone();
       });
       this.runScripts(() => {
         scriptsOk = true;
-        if (stylesOk) {
-          this.fireEvents();
-        }
+        onLoadingDone();
       });
     }
 
@@ -565,21 +582,10 @@
           }
           // NOTE: added scripts are not updating currentScript in IE.
           // TODO add test w/ script & stylesheet maybe
-          const imports = /** @type {!NodeList<!HTMLLinkElement>} */
-            (isImportLink(link) ? [link] : link.querySelectorAll(importSelector));
-          for (let iii = 0; iii < imports.length; iii++) {
-            const n = imports[iii];
-            const imp = this.documents[n.href];
-            // First time we see this import, load.
-            if (imp === undefined) {
-              this.loadImport(n);
-            }
-            // If nothing else is loading, we can safely associate the import
-            // and fire the load/error event.
-            else if (!this.inflight) {
-              n.import = imp;
-              this.fireEventIfNeeded(n);
-            }
+          if (isImportLink(link)) {
+            this.loadImport( /** @type {!HTMLLinkElement} */ (link));
+          } else {
+            this.loadImports( /** @type {!Element} */ (link));
           }
         }
       }
