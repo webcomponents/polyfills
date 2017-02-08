@@ -477,7 +477,7 @@
       // https://developer.microsoft.com/en-us/microsoft-edge/platform/issues/10472273/
       // If there is one <link rel=stylesheet> imported, we must move all imported
       // links and styles to <head>.
-      const needsMove = !!document.querySelector(disabledLinkSelector);
+      const needsMove = isIE && !!document.querySelector(disabledLinkSelector);
       for (let i = 0, l = s$.length, s; i < l && (s = s$[i]); i++) {
         // Listen for load/error events, remove selector once is done loading.
         whenElementLoaded(s, () => {
