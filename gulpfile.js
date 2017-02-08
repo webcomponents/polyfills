@@ -26,6 +26,7 @@ gulp.task('default', () => {
           language_out: 'ECMASCRIPT5_STRICT',
           externs: ['externs/html-imports.js'],
           js_output_file: 'html-imports.min.js',
+          assume_function_wrapper: true,
           new_type_inf: true,
           rewrite_polyfills: false,
         }))
