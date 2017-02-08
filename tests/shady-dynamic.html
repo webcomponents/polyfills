@@ -261,7 +261,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   function createEnabledElement(tag) {
     var e = document.createElement(tag);
     document.body.appendChild(e);
-    customElements.flush();
     document.body.removeChild(e);
     return e;
   }
@@ -395,16 +394,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     var e = document.querySelector('x-select-attr');
     var ip$ = e.shadowRoot.querySelectorAll('slot');
     var c = e.firstElementChild;
-    customElements.flush();
     ShadyDOM.flush();
     assert.equal(allInsertionPoints(c)[0], ip$[1], 'child not distributed based on host attribute');
     c.slot = 'foo';
-    customElements.flush();
     ShadyDOM.flush();
     assert.equal(allInsertionPoints(c)[0], ip$[0], 'child not distributed based on reflecting attribute');
     c.slot = '';
     ShadyDOM.flush();
-    customElements.flush();
     assert.equal(allInsertionPoints(c).length, 0, 'child not distributed based on reflecting attribute');
   });
 
@@ -626,15 +622,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     var a = document.createElement('div');
     a.innerHTML = '<x-clonate><span>1</span><span>2</span></x-clonate>';
     document.body.appendChild(a);
-    if (customElements.flush) {
-      customElements.flush();
-    }
     ShadyDOM.flush();
     var b = a.firstElementChild.cloneNode();
     document.body.appendChild(b);
-    if (customElements.flush) {
-      customElements.flush();
-    }
     ShadyDOM.flush();
     assert.equal(b.childNodes.length, 0, 'shallow copy has incorrect children');
     assert.equal(ShadyDOM.nativeTree.children(b).length, 2, 'shallow copy has incorrect composed children');
@@ -644,15 +634,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     var a = document.createElement('div');
     a.innerHTML = '<x-clonate><span>1</span><span>2</span></x-clonate>';
     document.body.appendChild(a);
-    if (customElements.flush) {
-      customElements.flush();
-    }
     ShadyDOM.flush();
     var b = a.cloneNode(true);
     document.body.appendChild(b);
-    if (customElements.flush) {
-      customElements.flush();
-    }
     ShadyDOM.flush();
     assert.equal(b.firstElementChild.childNodes.length, 2, 'deep copy has incorrect children');
     assert.equal(ShadyDOM.nativeTree.children(b.firstElementChild).length, 4, 'deep copy has incorrect composed children');
@@ -662,16 +646,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     var a = document.createElement('div');
     a.innerHTML = '<x-clonate><span>1</span><span>2</span></x-clonate>';
     document.body.appendChild(a);
-    if (customElements.flush) {
-      customElements.flush();
-    }
     ShadyDOM.flush();
     // NOTE: Safari defaults do `deep` true for importNode so be explicit here.
     var b = document.importNode(a.firstElementChild, false);
     document.body.appendChild(b);
-    if (customElements.flush) {
-      customElements.flush();
-    }
     ShadyDOM.flush();
     assert.equal(b.childNodes.length, 0, 'shallow import has incorrect children');
     assert.equal(ShadyDOM.nativeTree.children(b).length, 2, 'shallow import has incorrect composed children');
@@ -681,15 +659,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     var a = document.createElement('div');
     a.innerHTML = '<x-clonate><span>1</span><span>2</span></x-clonate>';
     document.body.appendChild(a);
-    if (customElements.flush) {
-      customElements.flush();
-    }
     ShadyDOM.flush();
     var b = document.importNode(a, true);
     document.body.appendChild(b);
-    if (customElements.flush) {
-      customElements.flush();
-    }
     ShadyDOM.flush();
     assert.equal(b.firstElementChild.childNodes.length, 2, 'deep copy has incorrect children');
     assert.equal(ShadyDOM.nativeTree.children(b.firstElementChild).length, 4, 'deep copy has incorrect composed children');
@@ -747,7 +719,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   test('synchronous append during distribution', function() {
     var echo = document.createElement('x-echo');
     document.body.appendChild(echo);
-    customElements.flush();
     // When connected will cause span#peer to be added after it,
     // which should also be distributed
     echo.appendChild(document.createElement('x-stamps-peer'));
@@ -876,9 +847,6 @@ suite('Accessors', function() {
     testElement.textContent = 'Hello World';
     assert.equal(testElement.textContent, 'Hello World', 'textContent getter incorrect');
     document.body.appendChild(testElement);
-    if (customElements.flush) {
-      customElements.flush();
-    }
     ShadyDOM.flush();
     assert.equal(ShadyDOM.nativeTree.childNodes(testElement)[1].textContent, 'Hello World', 'text content setter incorrect');
     testElement = createEnabledElement('x-commented');
@@ -902,9 +870,6 @@ suite('Accessors', function() {
     assert.equal(added.textContent , 'Hello World', 'innerHTML setter incorrect');
     assert.equal(testElement.innerHTML , '<div>Hello World</div><div>2</div><div>3</div>', 'innerHTML getter incorrect');
     document.body.appendChild(testElement);
-    if (customElements.flush) {
-      customElements.flush();
-    }
     ShadyDOM.flush();
     var children = ShadyDOM.nativeTree.childNodes(testElement);
     assert.equal(children[1], added, 'innerHTML setter composed incorrectly');
@@ -978,7 +943,6 @@ suite('non-distributed elements', function() {
     // test with x-distribute
     var d = document.createElement('x-distribute');
     document.body.appendChild(d);
-    customElements.flush();
     var child = document.createElement('div');
     child.classList.add('child');
     child.textContent = 'Child';
@@ -1013,6 +977,21 @@ suite('non-distributed elements', function() {
     c1.appendChild(test);
     assert.equal(test.getRootNode(), c1, 'getOwnerRoot incorrect for child moved from a root to no root');
   });
+
+  test('getRootNode into/out of shadowRoot', function() {
+    var test = document.createElement('div');
+    var c1 = createEnabledElement('x-compose');
+    c1.shadowRoot.querySelector('#project').appendChild(test);
+    ShadyDOM.flush();
+    assert.equal(test.getRootNode(), c1.shadowRoot, 'getOwnerRoot incorrect for child added to element in root');
+    document.body.appendChild(test);
+    ShadyDOM.flush();
+    assert.equal(test.getRootNode(), document, 'getOwnerRoot not correctly reset when element moved to different root');
+    c1.appendChild(test);
+    ShadyDOM.flush();
+    assert.equal(test.getRootNode(), c1, 'getOwnerRoot incorrect for child moved from a root to no root');
+  });
+
 
   test('getRootNode when out of tree', function() {
     var test = document.createElement('div');
@@ -1108,7 +1087,6 @@ suite('renders roots', function() {
   setup(function() {
     el = document.createElement('x-rereproject');
     document.body.appendChild(el);
-    customElements.flush();
     ShadyDOM.flush();
     sinon.spy(el.shadowRoot, '_render');
     p = el.shadowRoot.querySelector('x-reproject');

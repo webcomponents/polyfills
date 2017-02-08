@@ -91,11 +91,15 @@ function _scheduleObserver(node, addedNode, removedNode) {
   }
 }
 
-function removeNodeFromParent(node, parent) {
-  if (parent) {
-    _scheduleObserver(parent, null, node);
+function removeNodeFromParent(node, logicalParent) {
+  if (logicalParent) {
+    _scheduleObserver(logicalParent, null, node);
     return removeNode(node);
   } else {
+    // composed but not logical parent
+    if (node.parentNode) {
+      nativeMethods.removeChild.call(node.parentNode, node);
+    }
     _removeOwnerShadyRoot(node);
   }
 }
@@ -347,11 +351,7 @@ export function insertBefore(parent, node, ref_node) {
   // remove node from its current position iff it's in a tree.
   if (node.nodeType !== Node.DOCUMENT_FRAGMENT_NODE) {
     let parent = getProperty(node, 'parentNode');
-    if (parent) {
-      removeNodeFromParent(node, parent);
-    } else if (node.parentNode) {
-      nativeMethods.removeChild.call(node.parentNode, node);
-    }
+    removeNodeFromParent(node, parent);
   }
   if (!addNode(parent, node, ref_node)) {
     if (ref_node) {
@@ -421,18 +421,15 @@ export function cloneNode(node, deep) {
 // This allows, for example, elements that cannot
 // contain custom elements and are therefore not likely to contain shadowRoots
 // to cloned natively. This is a fairly significant performance win.
-export function importNode(node, deep, nativeImportNode) {
-  if (!nativeImportNode) {
-    nativeImportNode = nativeMethods.importNode;
-  }
+export function importNode(node, deep) {
   if (node.ownerDocument !== document) {
-    return nativeImportNode.call(document, node, deep);
+    return nativeMethods.importNode.call(document, node, deep);
   }
-  let n = nativeImportNode.call(document, node, false);
+  let n = nativeMethods.importNode.call(document, node, false);
   if (deep) {
     let c$ = node.childNodes;
     for (let i=0, nc; i < c$.length; i++) {
-      nc = importNode(c$[i], true, nativeImportNode);
+      nc = importNode(c$[i], true);
       n.appendChild(nc);
     }
   }

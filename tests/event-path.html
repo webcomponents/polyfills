@@ -20,7 +20,159 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <body>
 
   <script>
+    window.defineTestElement = function(name, connected, mixin) {
+      var template = document.querySelector('#' + name);
+      // es5 compat class
+      function Klass() {
+        const self = (window.Reflect && Reflect.construct)
+          ? Reflect.construct(HTMLElement, [], this.constructor || Klass)
+          : HTMLElement.call(this);
+        return self;
+      }
+
+      Klass.prototype = Object.create(HTMLElement.prototype, {
+        'constructor': {
+          value: Klass,
+          configurable: true,
+          writable: true
+        }
+      });
+
+      Klass.prototype.connectedCallback = function() {
+        if (!this._initialized) {
+          this._initialized = true;
+          if (template) {
+            this.attachShadow({mode: 'open'});
+            this.shadowRoot.appendChild(document.importNode(template.content, true));
+          }
+          if (connected) {
+            connected.call(this);
+          }
+        }
+      }
+
+      if (mixin) {
+        for (var p in mixin) {
+          Klass.prototype[p] = mixin[p];
+        }
+      }
+
+      customElements.define(name, Klass);
+    }
+
+  </script>
+
+  <template id="x-event-scoped">
+    <div id="scoped"></div>
+  </template>
+    <script>
+    defineTestElement('x-event-scoped', function() {
+      this.scoped = this.shadowRoot.querySelector('#scoped');
+      this.hostEvents = [];
+      this.childEvents = [];
+      this.addEventListener('composed', this.hostHandler.bind(this));
+      this.addEventListener('scoped', this.hostHandler.bind(this));
+      this.scoped.addEventListener('composed', this.childHandler.bind(this));
+      this.scoped.addEventListener('scoped', this.childHandler.bind(this));
+    }, {
+      hostHandler: function(e) {
+        this.hostEvents.push({
+          target: e.target,
+          type: e.type,
+          path: e.composedPath()
+        });
+      },
+      childHandler: function(e) {
+        this.childEvents.push({
+          target: e.target,
+          type: e.type,
+          path: e.composedPath()
+        });
+      },
+      fireComposed: function() {
+        return this.scoped.dispatchEvent(
+          new Event('composed', {composed: true, bubbles: true}));
+      },
+      fireScoped: function(){
+        return this.scoped.dispatchEvent(
+          new Event('scoped', {bubbles: true}));
+      }
+    });
+  </script>
+
+  <template id="x-focus">
+    <style>
+      :host {
+        display: block;
+      }
+    </style>
+    <div id="child" on-focus="focusHandler"></div>
+  </template>
+  <script>
+  defineTestElement('x-focus', function() {
+    this.events = [];
+    this.child = this.shadowRoot.querySelector('#child');
+    this.addEventListener('focus', this.focusHandler.bind(this));
+    this.child.addEventListener('focus', this.focusHandler.bind(this));
+  }, {
+    focusHandler: function(e) {
+      this.events.push(e.target);
+    },
+    fireComposed: function() {
+      var ev = new Event('focus', {composed: true});
+      this.child.dispatchEvent(ev);
+    },
+    fireScoped: function() {
+      var ev = new Event('focus');
+      this.child.dispatchEvent(ev);
+    }
+  });
+  </script>
+
+  <template id="x-a">
+    <div id="child" on-foo="childFooHandler"></div>
+    <div id="child2"></div>
+  </template>
+  <script>
+  defineTestElement('x-a', function() {
+    this.child = this.shadowRoot.querySelector('#child');
+    this.child2 = this.shadowRoot.querySelector('#child2');
+    this.addEventListener('foo', this.fooHandler.bind(this));
+    this.child.addEventListener('foo', this.childFooHandler.bind(this));
+  }, {
+    fooHandler: function(e) {
+      this.event = {target: e.target, relatedTarget: e.relatedTarget};
+    },
+    childFooHandler: function(e) {
+      this.childEvent = {target: e.target, relatedTarget: e.relatedTarget};
+    }
+  });
+  </script>
+
+  <div id="globalpatch"></div>
+
+  <template id="relatedtarget">
+    <x-a id="one"></x-a>
+    <x-a id="two"></x-a>
+  </template>
+
+  <script>
   'use strict';
+
+  function createEnabledElement(tag) {
+    var e = document.createElement(tag);
+    document.body.appendChild(e);
+    return e;
+  }
+
+  function stampNodes(selector) {
+    var t = document.querySelector(selector);
+    var dom = document.importNode(t.content, true);
+    var c = document.createElement('div');
+    c.appendChild(dom);
+    document.body.appendChild(c);
+    return c;
+  }
 
   function pathCompare(expectedPath, givenPath) {
     for (var i = 0; i < expectedPath.length; i++) {
@@ -29,62 +181,158 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     assert.equal(expectedPath.length, givenPath.length, 'paths should be equal');
   }
 
-  suite('composedPath', function() {
-    test('does not confuse anchor with shadowroot', function() {
-      var el = document.createElement('div');
-      var root = el.attachShadow({mode: 'open'});
-      var a = document.createElement('a');
-      a.href = 'http://localhost/foo.html';
-      a.textContent = 'link!';
-      root.appendChild(a)
-      el.addEventListener('foo', function(event) {
-        var path = event.composedPath();
-        pathCompare([a, root, el, document.body, document.documentElement, document, window], path);
+  suite('events', function() {
+
+    test('events retarget', function() {
+      var el = createEnabledElement('x-event-scoped');
+      el.fireComposed();
+      assert.equal(el.hostEvents[0].target, el);
+      assert.equal(el.childEvents[0].target, el.scoped);
+      el.parentNode.removeChild(el);
+    });
+
+    test('event.composedPath is consistent', function() {
+      var el = createEnabledElement('x-event-scoped');
+      el.fireComposed();
+      assert.equal(el.hostEvents.length, el.childEvents.length);
+      el.parentNode.removeChild(el);
+    });
+
+    test('`composed` flag controls event propagation through roots', function() {
+      var el = createEnabledElement('x-event-scoped');
+      el.fireScoped();
+      el.fireComposed();
+      assert.equal(el.hostEvents.length, 1);
+      assert.equal(el.hostEvents[0].type, 'composed');
+      assert.equal(el.childEvents.length, 2);
+      assert.equal(el.childEvents[0].type, 'scoped');
+      assert.equal(el.childEvents[1].type, 'composed');
+      el.parentNode.removeChild(el);
+    });
+
+    test('event patching works on any elements', function() {
+      var el = document.querySelector('#globalpatch');
+      var path;
+      el.addEventListener('foo', function(e) {
+        path = e.composedPath();
       });
-      document.body.appendChild(el);
-      ShadyDOM.flush();
-      var ev = new Event('foo', {bubbles: true, composed: true});
-      a.dispatchEvent(ev);
+      var e = new Event('foo', {composed: true});
+      el.dispatchEvent(e);
+      assert.deepEqual([el, document.body, document.documentElement, document, window], path);
     });
 
-    test('focus events retarget', function() {
-      var recv = [];
-      function track(el) {
-        el.addEventListener('focus', function() {
-          recv.push(el);
-        })
-      }
-      var top = document.createElement('div');
-      top.id = 'top';
-      top.attachShadow({mode: 'open'});
-      track(top);
-      track(top.shadowRoot);
+    test('composed focus and blur events retarget up tree', function() {
+    var el = createEnabledElement('x-focus');
+    el.fireComposed();
+    assert.equal(el.events.length, 2);
+    assert.equal(el.events[0], el.child);
+    assert.equal(el.events[1], el);
+    el.parentNode.removeChild(el);
+  });
 
-      var mid = document.createElement('div');
-      mid.attachShadow({mode: 'open'});
-      mid.id = 'mid';
-      track(mid);
-      track(mid.shadowRoot);
-      var slot = document.createElement('slot');
-      track(slot);
-      mid.shadowRoot.appendChild(slot);
-      top.shadowRoot.appendChild(mid);
+  test('scoped focus and blur events do not retarget', function() {
+    var el = createEnabledElement('x-focus');
+    el.fireScoped();
+    assert.equal(el.events.length, 1);
+    assert.equal(el.events[0], el.child);
+    el.parentNode.removeChild(el);
+  });
 
-      var bot = document.createElement('div');
-      bot.id = 'bot';
-      track(bot);
-      mid.appendChild(bot);
+  test('composed relatedTarget retargets', function() {
+    var container = stampNodes('#relatedtarget');
+    var a = container.children[0];
+    var b = container.children[1];
+    var ev = new MouseEvent('foo', {bubbles: true, composed: true, relatedTarget: b.child});
+    a.child.dispatchEvent(ev);
+    assert.property(a, 'childEvent');
+    assert.deepEqual(a.childEvent, {target: a.child, relatedTarget: b});
+    assert.property(a, 'event');
+    assert.deepEqual(a.event, {target: a, relatedTarget: b});
+    container.parentNode.removeChild(container);
+  });
 
-      document.body.appendChild(top);
+  test('events do not fire if relatedtarget and target are the same node after retargeting', function() {
+    var container = stampNodes('#relatedtarget');
+    var a = container.children[0];
+    var ev = new MouseEvent('foo', {bubbles: true, composed: true, relatedTarget: a.child2});
+    a.child.dispatchEvent(ev);
+    assert.property(a, 'childEvent');
+    assert.deepEqual(a.childEvent, {target: a.child, relatedTarget: a.child2});
+    assert.notProperty(a, 'event');
+    container.parentNode.removeChild(container);
+  });
 
-      ShadyDOM.flush();
+  test('capturing event listeners fire correctly for focus and blur', function() {
+    var el = createEnabledElement('x-focus');
+    var timeStamp;
+    el.addEventListener('focus', function(e) {
+      timeStamp = e.timeStamp;
+    }, true);
+    el.fireComposed();
+    assert.ok(timeStamp);
+    assert.equal(el.events.length, 2);
+    assert.equal(el.events[0], el.child);
+    assert.equal(el.events[1], el);
+  });
 
-      var ev = new Event('focus', {composed: true});
-      bot.dispatchEvent(ev);
+    suite('composedPath', function() {
+      test('does not confuse anchor with shadowroot', function() {
+        var el = document.createElement('div');
+        var root = el.attachShadow({mode: 'open'});
+        var a = document.createElement('a');
+        a.href = 'http://localhost/foo.html';
+        a.textContent = 'link!';
+        root.appendChild(a)
+        el.addEventListener('foo', function(event) {
+          var path = event.composedPath();
+          pathCompare([a, root, el, document.body, document.documentElement, document, window], path);
+        });
+        document.body.appendChild(el);
+        ShadyDOM.flush();
+        var ev = new Event('foo', {bubbles: true, composed: true});
+        a.dispatchEvent(ev);
+      });
 
-      assert.isAbove(recv.length, 0);
-      pathCompare([bot, top], recv);
+      test('focus events retarget', function() {
+        var recv = [];
+        function track(el) {
+          el.addEventListener('focus', function() {
+            recv.push(el);
+          })
+        }
+        var top = document.createElement('div');
+        top.id = 'top';
+        top.attachShadow({mode: 'open'});
+        track(top);
+        track(top.shadowRoot);
+
+        var mid = document.createElement('div');
+        mid.attachShadow({mode: 'open'});
+        mid.id = 'mid';
+        track(mid);
+        track(mid.shadowRoot);
+        var slot = document.createElement('slot');
+        track(slot);
+        mid.shadowRoot.appendChild(slot);
+        top.shadowRoot.appendChild(mid);
+
+        var bot = document.createElement('div');
+        bot.id = 'bot';
+        track(bot);
+        mid.appendChild(bot);
+
+        document.body.appendChild(top);
+
+        ShadyDOM.flush();
+
+        var ev = new Event('focus', {composed: true});
+        bot.dispatchEvent(ev);
+
+        assert.isAbove(recv.length, 0);
+        pathCompare([bot, top], recv);
+      });
     });
+
   });
   </script>
 </body>

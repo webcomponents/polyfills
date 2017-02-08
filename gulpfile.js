@@ -38,24 +38,24 @@ let es5Config = {
   shouldPrintComment
 }
 
-gulp.task('closure', function() {
+gulp.task('default', function() {
   return gulp.src(['./src/*.js'], {base: './'})
     .pipe(sourcemaps.init())
     .pipe(closureCompiler({
       new_type_inf: true,
-      debug: true,
       compilation_level: 'SIMPLE',
       language_in: 'ES6_STRICT',
       language_out: 'ES5_STRICT',
       output_wrapper: '(function(){\n%output%\n}).call(this)',
-      js_output_file: 'shadydom.min.js'
+      js_output_file: 'shadydom.min.js',
+      rewrite_polyfills: false
     }))
     .on('error', (e) => console.error(e))
     .pipe(sourcemaps.write('/'))
     .pipe(gulp.dest('./'))
 });
 
-gulp.task('default', () => {
+gulp.task('babili', () => {
   return gulp.src('src/*.js')
   .pipe(sourcemaps.init())
   .pipe(rollup({

@@ -24,7 +24,7 @@ class AsyncObserver {
   schedule() {
     if (!this._scheduled) {
       this._scheduled = true;
-      utils.promish.then(() => {
+      utils.microtask(() => {
         this.flush();
       });
     }

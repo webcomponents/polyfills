@@ -82,23 +82,25 @@ export function patchPrototype(obj, mixin) {
   obj.__proto__ = proto.__patchProto;
 }
 
-// TODO(sorvell): actually rely on a real Promise polyfill...
-export let promish;
-if (window.Promise) {
-  promish = Promise.resolve();
-} else {
-  let twiddle = document.createTextNode('');
-  let content = 0;
-  promish = {
-    then(cb) {
-      // To preserve timing with Promise microtasks
-      // we create a new observer for every callback.
-      let observer = new MutationObserver(function() {
-        observer.disconnect();
-        cb();
-      });
-      observer.observe(twiddle, {characterData: true});
+
+let twiddle = document.createTextNode('');
+let content = 0;
+let queue = [];
+new MutationObserver(() => {
+  while (queue.length) {
+    // catch errors in user code...
+    try {
+      queue.shift()();
+    } catch(e) {
+      // enqueue another record and throw
       twiddle.textContent = content++;
+      throw(e);
     }
   }
+}).observe(twiddle, {characterData: true});
+
+// use MutationObserver to get microtask async timing.
+export function microtask(callback) {
+  queue.push(callback);
+  twiddle.textContent = content++;
 }
