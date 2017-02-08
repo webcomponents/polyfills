@@ -11,8 +11,9 @@
 <title>Custom Elements Tests</title>
 <meta charset="utf-8">
 <script>
-  window.customElements.forcePolyfill = true;
+  (window.customElements = window.customElements || {}).forcePolyfill = true;
 </script>
+<script src="../../es6-promise/dist/es6-promise.auto.min.js"></script>
 <script src="../custom-elements.min.js"></script>
 <script src="../../web-component-tester/browser.js"></script>
 
@@ -26,9 +27,14 @@
     'js/closure.js',
     'js/upgrade.js',
     'js/shadow-dom.js',
-    'js/patching.js',
+    'html/polyfillWrapFlushCallback/index.html',
     'html/imports.html',
     'html/shim.html',
     // 'chromium/custom-elements/spec/callback.html',
+    'html/Node/index.html',
+    'html/Element/index.html',
+    'html/Document/index.html',
+    'html/HTMLElement/index.html',
+    'html/Interface/index.html',
   ]);
 </script>

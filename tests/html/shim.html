@@ -10,12 +10,19 @@
 -->
 <title>Custom Elements Tests</title>
 <meta charset="utf-8">
+<script src="../../../es6-promise/dist/es6-promise.auto.min.js"></script>
 <script src="../../src/native-shim.js"></script>
 <script src="../../../web-component-tester/browser.js"></script>
 
 <script>
 
   suite('Native Shim', () => {
+
+    // Do nothing if the browser does not natively support custom elements.
+    if (!window.customElements) {
+      test.skip('The native shim does not apply to this browser.', () => {});
+      return;
+    }
 
     test('works with createElement()', () => {
       function ES5Element1() {

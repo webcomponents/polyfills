@@ -1,0 +1,77 @@
+<!doctype html>
+<html>
+<head>
+<title>Node#cloneNode</title>
+<script>
+  (window.customElements = window.customElements || {}).forcePolyfill = true;
+</script>
+<script src="../../../../es6-promise/dist/es6-promise.auto.min.js"></script>
+<script src="../../../../web-component-tester/browser.js"></script>
+<script src="../../../custom-elements.min.js"></script>
+<script>
+  function generateLocalName() {
+    return 'test-element-' + Math.random().toString(32).substring(2);
+  }
+
+  function defineWithLocalName(localName) {
+    customElements.define(localName, class extends HTMLElement {
+      constructor() {
+        super();
+        this.constructed = true;
+        this.connectedCallbackCount = 0;
+        this.disconnectedCallbackCount = 0;
+      }
+
+      connectedCallback() {
+        this.connectedCallbackCount++;
+      }
+
+      disconnectedCallback() {
+        this.disconnectedCallbackCount++;
+      }
+    });
+  }
+
+  test('Cloning a customized element upgrades the cloned tree. (shallow)',
+    function() {
+      const localName = generateLocalName();
+      defineWithLocalName(localName);
+
+      const element = document.createElement(localName);
+      document.body.appendChild(element);
+
+      const clone = element.cloneNode();
+
+      assert(clone.constructed);
+      assert.equal(clone.connectedCallbackCount, 0);
+      assert.equal(clone.disconnectedCallbackCount, 0);
+
+      assert.equal(clone.childNodes.length, 0);
+    });
+
+  test('Cloning a customized element upgrades the cloned tree. (deep)',
+    function() {
+      const localName = generateLocalName();
+      defineWithLocalName(localName);
+
+      const element = document.createElement(localName);
+      element.appendChild(document.createElement(localName));
+      document.body.appendChild(element);
+
+      const clone = element.cloneNode(true);
+
+      assert(clone.constructed);
+      assert.equal(clone.connectedCallbackCount, 0);
+      assert.equal(clone.disconnectedCallbackCount, 0);
+
+      assert.equal(clone.childNodes.length, 1);
+
+      const cloneChild = clone.childNodes[0];
+      assert(cloneChild.constructed);
+      assert.equal(cloneChild.connectedCallbackCount, 0);
+      assert.equal(cloneChild.disconnectedCallbackCount, 0);
+    });
+</script>
+</head>
+<body></body>
+</html>

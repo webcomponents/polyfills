@@ -1,0 +1,91 @@
+<!doctype html>
+<html>
+<head>
+<title>Element#attachShadow</title>
+<script>
+  (window.customElements = window.customElements || {}).forcePolyfill = true;
+</script>
+<script src="../../../../es6-promise/dist/es6-promise.auto.min.js"></script>
+<script src="../../../../web-component-tester/browser.js"></script>
+<script src="../../../custom-elements.min.js"></script>
+</head>
+<body>
+<script>
+function generateLocalName() {
+  return 'test-element-' + Math.random().toString(32).substring(2);
+}
+
+function defineWithLocalName(localName) {
+  customElements.define(localName, class extends HTMLElement {
+    constructor() {
+      super();
+      this.constructed = true;
+      this.connectedCallbackCount = 0;
+      this.disconnectedCallbackCount = 0;
+    }
+
+    connectedCallback() {
+      this.connectedCallbackCount++;
+    }
+
+    disconnectedCallback() {
+      this.disconnectedCallbackCount++;
+    }
+  });
+}
+
+suite('Elements inside ShadowRoots have their callbacks called.', function() {
+  let element;
+
+  setup(function() {
+    let localName = generateLocalName();
+    defineWithLocalName(localName);
+    element = document.createElement(localName);
+  });
+
+  const hasAttachShadow = document.createElement('div').attachShadow instanceof Function;
+  const testFn = hasAttachShadow ? test : test.skip;
+
+  testFn('Open ShadowRoots', function() {
+    const div = document.createElement('div');
+    div.attachShadow({mode: 'open'});
+
+    div.shadowRoot.appendChild(element);
+
+    assert.equal(element.connectedCallbackCount, 0);
+    assert.equal(element.disconnectedCallbackCount, 0);
+
+    document.body.appendChild(div);
+
+    assert.equal(element.connectedCallbackCount, 1);
+    assert.equal(element.disconnectedCallbackCount, 0);
+
+    document.body.removeChild(div);
+
+    assert.equal(element.connectedCallbackCount, 1);
+    assert.equal(element.disconnectedCallbackCount, 1);
+  });
+
+  testFn('Closed ShadowRoots', function() {
+    const div = document.createElement('div');
+    const shadowRoot = div.attachShadow({mode: 'closed'});
+
+    shadowRoot.appendChild(element);
+
+    assert.equal(element.connectedCallbackCount, 0);
+    assert.equal(element.disconnectedCallbackCount, 0);
+
+    document.body.appendChild(div);
+
+    assert.equal(element.connectedCallbackCount, 1);
+    assert.equal(element.disconnectedCallbackCount, 0);
+
+    document.body.removeChild(div);
+
+    assert.equal(element.connectedCallbackCount, 1);
+    assert.equal(element.disconnectedCallbackCount, 1);
+  });
+});
+</script>
+</body>
+</html>

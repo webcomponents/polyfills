@@ -1,0 +1,333 @@
+<!doctype html>
+<html>
+<head>
+<title>Node#appendChild</title>
+<script>
+  (window.customElements = window.customElements || {}).forcePolyfill = true;
+</script>
+<script src="../../../../es6-promise/dist/es6-promise.auto.min.js"></script>
+<script src="../../../../web-component-tester/browser.js"></script>
+<script src="../../../custom-elements.min.js"></script>
+<script>
+  function generateLocalName() {
+    return 'test-element-' + Math.random().toString(32).substring(2);
+  }
+
+  function defineWithLocalName(localName) {
+    customElements.define(localName, class extends HTMLElement {
+      constructor() {
+        super();
+        this.constructed = true;
+        this.connectedCallbackCount = 0;
+        this.disconnectedCallbackCount = 0;
+      }
+
+      connectedCallback() {
+        this.connectedCallbackCount++;
+      }
+
+      disconnectedCallback() {
+        this.disconnectedCallbackCount++;
+      }
+    });
+  }
+
+  suite('Replacing connected Nodes', function() {
+    let connectedNode;
+
+    setup(function() {
+      connectedNode = document.createElement('div');
+      document.body.appendChild(connectedNode);
+    });
+
+    teardown(function() {
+      document.body.removeChild(connectedNode);
+    });
+
+    test('Replacing with a connected customized element.', function() {
+      const localName = generateLocalName();
+      defineWithLocalName(localName);
+
+      const element1 = document.createElement(localName);
+      // Connect the element to be replaced.
+      connectedNode.appendChild(element1);
+
+      assert.equal(element1.connectedCallbackCount, 1);
+      assert.equal(element1.disconnectedCallbackCount, 0);
+
+      connectedNode.appendChild(document.createElement('hr'));
+
+      const element2 = document.createElement(localName);
+      // Connect the element that will replace the original element.
+      connectedNode.appendChild(element2);
+
+      assert.equal(element2.connectedCallbackCount, 1);
+      assert.equal(element2.disconnectedCallbackCount, 0);
+
+      connectedNode.replaceChild(element2, element1);
+
+      // `disconnectedCallback` is called on the replaced element.
+      assert.equal(element1.connectedCallbackCount, 1);
+      assert.equal(element1.disconnectedCallbackCount, 1);
+      // `disconnectedCallback` and `connectedCallback` are called on the inserted element.
+      assert.equal(element2.connectedCallbackCount, 2);
+      assert.equal(element2.disconnectedCallbackCount, 1);
+    });
+
+    test('Replacing with a disconnected customized element.', function() {
+      const localName = generateLocalName();
+      defineWithLocalName(localName);
+
+      const element1 = document.createElement(localName);
+      // Connect the element to be replaced.
+      connectedNode.appendChild(element1);
+
+      assert.equal(element1.connectedCallbackCount, 1);
+      assert.equal(element1.disconnectedCallbackCount, 0);
+
+      connectedNode.appendChild(document.createElement('hr'));
+
+      // The element that will replace the original is not connected.
+      const element2 = document.createElement(localName);
+
+      assert.equal(element2.connectedCallbackCount, 0);
+      assert.equal(element2.disconnectedCallbackCount, 0);
+
+      connectedNode.replaceChild(element2, element1);
+
+      // `disconnectedCallback` is called on the replaced element.
+      assert.equal(element1.connectedCallbackCount, 1);
+      assert.equal(element1.disconnectedCallbackCount, 1);
+      // `connectedCallback` is called on the inserted element.
+      assert.equal(element2.connectedCallbackCount, 1);
+      assert.equal(element2.disconnectedCallbackCount, 0);
+    });
+
+    test('Replacing with a disconnected uncustomized element with a definition.',
+      function() {
+        const localName1 = generateLocalName();
+        defineWithLocalName(localName1);
+
+        const element1 = document.createElement(localName1);
+        // Connect the element to be replaced.
+        connectedNode.appendChild(element1);
+
+        assert.equal(element1.connectedCallbackCount, 1);
+        assert.equal(element1.disconnectedCallbackCount, 0);
+
+        connectedNode.appendChild(document.createElement('hr'));
+
+        // The element that will replace the original is not connected.
+        const localName2 = generateLocalName();
+        const element2 = document.createElement(localName2);
+        // Define after creating to prevent upgrade.
+        defineWithLocalName(localName2);
+
+        assert(!element2.constructed);
+
+        connectedNode.replaceChild(element2, element1);
+
+        // `disconnectedCallback` is called on the replaced element.
+        assert.equal(element1.connectedCallbackCount, 1);
+        assert.equal(element1.disconnectedCallbackCount, 1);
+
+        // The inserted element is constructed and `connectedCallback` is called.
+        assert(element2.constructed);
+        assert.equal(element2.connectedCallbackCount, 1);
+        assert.equal(element2.disconnectedCallbackCount, 0);
+      });
+
+    test('Replacing with a DocumentFragment.', function() {
+      const localName1 = generateLocalName();
+      defineWithLocalName(localName1);
+
+      const element1 = document.createElement(localName1);
+      // Connect the element to be replaced.
+      connectedNode.appendChild(element1);
+
+      assert.equal(element1.connectedCallbackCount, 1);
+      assert.equal(element1.disconnectedCallbackCount, 0);
+
+      const fragment = document.createDocumentFragment();
+
+      // Add a customized custom element to the fragment.
+      const localName2 = generateLocalName();
+      defineWithLocalName(localName2);
+      const element2 = document.createElement(localName2);
+      fragment.appendChild(element2);
+      assert(element2.constructed);
+
+      // Add an uncustomized custom element to the fragment and define it after.
+      const localName3 = generateLocalName();
+      const element3 = document.createElement(localName3);
+      defineWithLocalName(localName3);
+      fragment.appendChild(element3);
+      assert(!element3.constructed);
+
+      connectedNode.replaceChild(fragment, element1);
+
+      // `disconnectedCallback` is called on the replaced element.
+      assert.equal(element1.connectedCallbackCount, 1);
+      assert.equal(element1.disconnectedCallbackCount, 1);
+
+      // `connectedCallback` is called on the customized element.
+      assert(element2.constructed);
+      assert.equal(element2.connectedCallbackCount, 1);
+      assert.equal(element2.disconnectedCallbackCount, 0);
+
+      // The uncustomized element is customized and has `connectedCallback` called.
+      assert(element3.constructed);
+      assert.equal(element3.connectedCallbackCount, 1);
+      assert.equal(element3.disconnectedCallbackCount, 0);
+    });
+  });
+
+  suite('Replacing disconnected Nodes', function() {
+    let connectedNode;
+    let disconnectedNode;
+
+    setup(function() {
+      connectedNode = document.createElement('div');
+      document.body.appendChild(connectedNode);
+      disconnectedNode = document.createElement('div');
+    });
+
+    teardown(function() {
+      document.body.removeChild(connectedNode);
+    });
+
+    test('Replacing with a connected customized element does nothing.', function() {
+      const localName = generateLocalName();
+      defineWithLocalName(localName);
+
+      const element1 = document.createElement(localName);
+      // Append the element to be replaced to a disconnected node.
+      disconnectedNode.appendChild(element1);
+
+      assert.equal(element1.connectedCallbackCount, 0);
+      assert.equal(element1.disconnectedCallbackCount, 0);
+
+      disconnectedNode.appendChild(document.createElement('hr'));
+
+      const element2 = document.createElement(localName);
+      // Append the element that will replace the original element to the disconnected node.
+      disconnectedNode.appendChild(element2);
+
+      assert.equal(element2.connectedCallbackCount, 0);
+      assert.equal(element2.disconnectedCallbackCount, 0);
+
+      disconnectedNode.replaceChild(element2, element1);
+
+      // No callbacks are called.
+      assert.equal(element1.connectedCallbackCount, 0);
+      assert.equal(element1.disconnectedCallbackCount, 0);
+      assert.equal(element2.connectedCallbackCount, 0);
+      assert.equal(element2.disconnectedCallbackCount, 0);
+    });
+
+    test('Replacing with a disconnected customized element.', function() {
+      const localName = generateLocalName();
+      defineWithLocalName(localName);
+
+      const element1 = document.createElement(localName);
+      // Append the element to be replaced to a disconnected node.
+      disconnectedNode.appendChild(element1);
+
+      assert.equal(element1.connectedCallbackCount, 0);
+      assert.equal(element1.disconnectedCallbackCount, 0);
+
+      disconnectedNode.appendChild(document.createElement('hr'));
+
+      // The element that will replace the original is not connected.
+      const element2 = document.createElement(localName);
+
+      assert.equal(element2.connectedCallbackCount, 0);
+      assert.equal(element2.disconnectedCallbackCount, 0);
+
+      disconnectedNode.replaceChild(element2, element1);
+
+      // No callbacks are called.
+      assert.equal(element1.connectedCallbackCount, 0);
+      assert.equal(element1.disconnectedCallbackCount, 0);
+      assert.equal(element2.connectedCallbackCount, 0);
+      assert.equal(element2.disconnectedCallbackCount, 0);
+    });
+
+    test('Replacing with a disconnected uncustomized element with a definition ' +
+      'does nothing.', function() {
+        const localName1 = generateLocalName();
+        defineWithLocalName(localName1);
+
+        const element1 = document.createElement(localName1);
+        // Append the element to be replaced to a disconnected node.
+        disconnectedNode.appendChild(element1);
+
+        assert.equal(element1.connectedCallbackCount, 0);
+        assert.equal(element1.disconnectedCallbackCount, 0);
+
+        disconnectedNode.appendChild(document.createElement('hr'));
+
+        // The element that will replace the original is not connected.
+        const localName2 = generateLocalName();
+        const element2 = document.createElement(localName2);
+        // Define after creating to prevent upgrade.
+        defineWithLocalName(localName2);
+
+        assert(!element2.constructed);
+
+        disconnectedNode.replaceChild(element2, element1);
+
+        // No callbacks are called on the customized element.
+        assert.equal(element1.connectedCallbackCount, 0);
+        assert.equal(element1.disconnectedCallbackCount, 0);
+
+        // The disconnected uncustomized element remains uncustomized.
+        assert(!element2.constructed);
+      });
+
+    test('Replacing with a DocumentFragment.', function() {
+      const localName1 = generateLocalName();
+      defineWithLocalName(localName1);
+
+      const element1 = document.createElement(localName1);
+      // Append the element to be replaced to a disconnected node.
+      disconnectedNode.appendChild(element1);
+
+      assert.equal(element1.connectedCallbackCount, 0);
+      assert.equal(element1.disconnectedCallbackCount, 0);
+
+      const fragment = document.createDocumentFragment();
+
+      // Add a customized custom element to the fragment.
+      const localName2 = generateLocalName();
+      defineWithLocalName(localName2);
+      const element2 = document.createElement(localName2);
+      fragment.appendChild(element2);
+      assert(element2.constructed);
+
+      // Add an uncustomized custom element to the fragment and define it after.
+      const localName3 = generateLocalName();
+      const element3 = document.createElement(localName3);
+      defineWithLocalName(localName3);
+      fragment.appendChild(element3);
+      assert(!element3.constructed);
+
+      disconnectedNode.replaceChild(fragment, element1);
+
+      // No callbacks are called on the replaced customized element.
+      assert.equal(element1.connectedCallbackCount, 0);
+      assert.equal(element1.disconnectedCallbackCount, 0);
+
+      // No callbacks are called on the inserted customized element.
+      assert(element2.constructed);
+      assert.equal(element2.connectedCallbackCount, 0);
+      assert.equal(element2.disconnectedCallbackCount, 0);
+
+      // The inserted uncustomized element remains uncustomized.
+      assert(!element3.constructed);
+    });
+  });
+</script>
+</head>
+<body></body>
+</html>

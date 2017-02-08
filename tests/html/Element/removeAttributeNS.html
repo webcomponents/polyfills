@@ -1,0 +1,108 @@
+<!doctype html>
+<html>
+<head>
+<title>Element#removeAttributeNS</title>
+<script>
+  (window.customElements = window.customElements || {}).forcePolyfill = true;
+</script>
+<script src="../../../../es6-promise/dist/es6-promise.auto.min.js"></script>
+<script src="../../../../web-component-tester/browser.js"></script>
+<script src="../../../custom-elements.min.js"></script>
+</head>
+<body>
+<script>
+// In older browsers, `Element#getAttributeNS` may return the empty string
+// instead of null if the attribute does not exist. For details, see;
+// https://developer.mozilla.org/en-US/docs/Web/API/Element/getAttributeNS#Notes
+const NON_EXISTANT_VALUE = document.body.getAttributeNS('NO_SUCH_NS', 'attr');
+
+function generateLocalName() {
+  return 'test-element-' + Math.random().toString(32).substring(2);
+}
+
+function defineWithLocalName(localName, observedAttributes) {
+  customElements.define(localName, class extends HTMLElement {
+    static get observedAttributes() { return observedAttributes; }
+
+    constructor() {
+      super();
+      this.constructed = true;
+      this.connectedCallbackCount = 0;
+      this.disconnectedCallbackCount = 0;
+      this.attrCallbackArgs = [];
+    }
+
+    connectedCallback() {
+      this.connectedCallbackCount++;
+    }
+
+    disconnectedCallback() {
+      this.disconnectedCallbackCount++;
+    }
+
+    attributeChangedCallback(name, oldValue, newValue, namespace) {
+      this.attrCallbackArgs.push(Array.prototype.slice.apply(arguments));
+    }
+  });
+}
+
+suite('Removing an unset attribute.', function() {
+  let localName;
+
+  setup(function() {
+    localName = generateLocalName();
+    defineWithLocalName(localName, ['attr']);
+  });
+
+  test('Removing an attribute with no value (null) does not trigger a callback.', function() {
+    const element = document.createElement(localName);
+
+    element.removeAttributeNS('ns', 'attr');
+
+    assert.equal(element.attrCallbackArgs.length, 0);
+  });
+});
+
+suite('Removing a set attribute.', function() {
+  let localName1;
+  let localName2;
+
+  setup(function() {
+    localName1 = generateLocalName();
+    defineWithLocalName(localName1, []);
+    localName2 = generateLocalName();
+    defineWithLocalName(localName2, ['attr']);
+  });
+
+  test('Removing an unobserved value does not trigger a callback.', function() {
+    const element = document.createElement(localName1);
+
+    assert.equal(element.attrCallbackArgs.length, 0);
+
+    element.setAttributeNS('ns', 'attr', 'abc');
+
+    assert.equal(element.attrCallbackArgs.length, 0);
+
+    element.removeAttributeNS('ns', 'attr');
+
+    assert.equal(element.attrCallbackArgs.length, 0);
+  });
+
+  test('Removing an observed attribute triggers a callback.', function() {
+    const element = document.createElement(localName2);
+
+    assert.equal(element.attrCallbackArgs.length, 0);
+
+    element.setAttributeNS('ns', 'attr', 'abc');
+
+    assert.equal(element.attrCallbackArgs.length, 1);
+
+    element.removeAttributeNS('ns', 'attr');
+
+    assert.equal(element.attrCallbackArgs.length, 2);
+    assert.deepEqual(element.attrCallbackArgs[1], ['attr', 'abc', NON_EXISTANT_VALUE, 'ns']);
+  });
+});
+</script>
+</body>
+</html>

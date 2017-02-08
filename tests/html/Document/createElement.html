@@ -1,0 +1,58 @@
+<!doctype html>
+<html>
+<head>
+<title>Document#createElement</title>
+<script>
+  (window.customElements = window.customElements || {}).forcePolyfill = true;
+</script>
+<script src="../../../../es6-promise/dist/es6-promise.auto.min.js"></script>
+<script src="../../../../web-component-tester/browser.js"></script>
+<script src="../../../custom-elements.min.js"></script>
+</head>
+<body>
+<script>
+function generateLocalName() {
+  return 'test-element-' + Math.random().toString(32).substring(2);
+}
+
+function defineWithLocalName(localName, observedAttributes) {
+  const constructor = class extends HTMLElement {
+    constructor() {
+      super();
+      this.constructed = true;
+      this.connectedCallbackCount = 0;
+      this.disconnectedCallbackCount = 0;
+    }
+
+    connectedCallback() {
+      this.connectedCallbackCount++;
+    }
+
+    disconnectedCallback() {
+      this.disconnectedCallbackCount++;
+    }
+  }
+  
+  customElements.define(localName, constructor);
+
+  return constructor;
+}
+
+suite('Creating a custom element.', function() {
+  let localName;
+  let constructor;
+
+  setup(function() {
+    localName = generateLocalName();
+    constructor = defineWithLocalName(localName);
+  });
+
+  test('Creating a defined custom element creates an instance of that custom element.', function() {
+    const element = document.createElement(localName);
+
+    assert(element instanceof constructor);
+  });
+});
+</script>
+</body>
+</html>

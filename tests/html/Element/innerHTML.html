@@ -1,0 +1,156 @@
+<!doctype html>
+<html>
+<head>
+<title>Element#innerHTML</title>
+<script>
+  (window.customElements = window.customElements || {}).forcePolyfill = true;
+</script>
+<script src="../../../../es6-promise/dist/es6-promise.auto.min.js"></script>
+<script src="../../../../web-component-tester/browser.js"></script>
+<script src="../../../custom-elements.min.js"></script>
+</head>
+<body>
+<script>
+function generateLocalName() {
+  return 'test-element-' + Math.random().toString(32).substring(2);
+}
+
+function defineWithLocalName(localName) {
+  customElements.define(localName, class extends HTMLElement {
+    constructor() {
+      super();
+      this.constructed = true;
+      this.connectedCallbackCount = 0;
+      this.disconnectedCallbackCount = 0;
+    }
+
+    connectedCallback() {
+      this.connectedCallbackCount++;
+    }
+
+    disconnectedCallback() {
+      this.disconnectedCallbackCount++;
+    }
+  });
+}
+
+suite('Custom elements in the assigned string are created when setting `innerHTML`.', function() {
+  let localName1;
+  let localName2;
+
+  setup(function() {
+    localName1 = generateLocalName();
+    defineWithLocalName(localName1);
+    localName2 = generateLocalName();
+    defineWithLocalName(localName2);
+  });
+
+  test('Disconnected context element', function() {
+    const div = document.createElement('div');
+    div.innerHTML = `<${localName1}><${localName2}></${localName2}></${localName1}>`;
+
+    assert.equal(div.childNodes.length, 1);
+    assert.equal(div.childNodes[0].localName, localName1);
+    assert.equal(div.childNodes[0].connectedCallbackCount, 0);
+    assert.equal(div.childNodes[0].disconnectedCallbackCount, 0);
+    assert.equal(div.childNodes[0].childNodes.length, 1);
+    assert.equal(div.childNodes[0].childNodes[0].localName, localName2);
+    assert.equal(div.childNodes[0].childNodes[0].connectedCallbackCount, 0);
+    assert.equal(div.childNodes[0].childNodes[0].disconnectedCallbackCount, 0);
+    assert.equal(div.childNodes[0].childNodes[0].childNodes.length, 0);
+  });
+
+  test('Connected context element', function() {
+    const div = document.createElement('div');
+    document.body.appendChild(div);
+
+    div.innerHTML = `<${localName1}><${localName2}></${localName2}></${localName1}>`;
+
+    assert.equal(div.childNodes.length, 1);
+    assert.equal(div.childNodes[0].localName, localName1);
+    assert.equal(div.childNodes[0].connectedCallbackCount, 1);
+    assert.equal(div.childNodes[0].disconnectedCallbackCount, 0);
+    assert.equal(div.childNodes[0].childNodes.length, 1);
+    assert.equal(div.childNodes[0].childNodes[0].localName, localName2);
+    assert.equal(div.childNodes[0].childNodes[0].connectedCallbackCount, 1);
+    assert.equal(div.childNodes[0].childNodes[0].disconnectedCallbackCount, 0);
+    assert.equal(div.childNodes[0].childNodes[0].childNodes.length, 0);
+
+    document.body.removeChild(div);
+  });
+});
+
+suite('Custom element descendants of the context element are disconnected when setting `innerHTML`.', function() {
+  let localName1;
+  let localName2;
+  let div;
+  let element1;
+  let element2;
+
+  setup(function() {
+    localName1 = generateLocalName();
+    localName2 = generateLocalName();
+    defineWithLocalName(localName1);
+    defineWithLocalName(localName2);
+
+    div = document.createElement('div');
+    element1 = document.createElement(localName1);
+    element2 = document.createElement(localName2);
+    div.appendChild(element1);
+    element1.appendChild(element2);
+
+    assert.equal(div.childNodes.length, 1);
+
+    assert.equal(element1.connectedCallbackCount, 0);
+    assert.equal(element1.disconnectedCallbackCount, 0);
+    assert.equal(element1.childNodes.length, 1);
+
+    assert.equal(element2.connectedCallbackCount, 0);
+    assert.equal(element2.disconnectedCallbackCount, 0);
+    assert.equal(element2.childNodes.length, 0);
+  });
+
+  test('Disconnected context element', function() {
+    div.innerHTML = "";
+
+    // `div` no longer has children.
+    assert.equal(div.childNodes.length, 0);
+
+    // `div` was disconnected, no callbacks were called.
+    assert.equal(element1.localName, localName1);
+    assert.equal(element1.connectedCallbackCount, 0);
+    assert.equal(element1.disconnectedCallbackCount, 0);
+
+    assert.equal(element2.localName, localName2);
+    assert.equal(element2.connectedCallbackCount, 0);
+    assert.equal(element2.disconnectedCallbackCount, 0);
+  });
+
+  test('Connected context element', function() {
+    document.body.appendChild(div);
+
+    assert.equal(div.childNodes.length, 1);
+    // `element1` was connected.
+    assert.equal(element1.connectedCallbackCount, 1);
+    assert.equal(element1.disconnectedCallbackCount, 0);
+    // `element2` was connected.
+    assert.equal(element2.connectedCallbackCount, 1);
+    assert.equal(element2.disconnectedCallbackCount, 0);
+
+    div.innerHTML = "";
+
+    // `div` no longer has children.
+    assert.equal(div.childNodes.length, 0);
+    // `element1` was disconnected.
+    assert.equal(element1.connectedCallbackCount, 1);
+    assert.equal(element1.disconnectedCallbackCount, 1);
+    // `element2` was disconnected.
+    assert.equal(element2.connectedCallbackCount, 1);
+    assert.equal(element2.disconnectedCallbackCount, 1);
+
+    document.body.removeChild(div);
+  });
+});
+</script>
+</body>
+</html>

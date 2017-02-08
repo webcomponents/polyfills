@@ -1,10 +1,8 @@
 language: node_js
-sudo: required
+node_js: 6
 dist: trusty
-node_js: stable
 addons:
-  sauce_connect: true
-  firefox: 48.0
+  firefox: latest
   apt:
     sources:
     - google-chrome
@@ -15,7 +13,9 @@ before_script:
 script:
 - npm run build
 - xvfb-run wct
-- if [ "${TRAVIS_PULL_REQUEST}" = "false" ]; then wct -s 'default'; fi
+- if [ "${TRAVIS_PULL_REQUEST}" = "false" ]; then wct -s 'windows 10/microsoftedge@14'
+  -s 'windows 8.1/internet explorer@11' -s 'os x 10.11/safari@10' -s 'os x 10.11/safari@9';
+  fi
 env:
   global:
   - secure: NDKE0TviiIuKwDJd+eOmd+T42K2en8HbuBvLpfMQb+7564dqRgy+a539IhY9z0CTdMZ7Z0cGcSVwXCQz4SmtA36ARNy4EWlldNSMYU8dYbNyAK0JF4KH6kTrzljB4SPIxb5psN8QY/mD4MjN3LhwzWVF7giumeAUnPkuv+lGHOVVZ+budPIEDemQXc22IZUCYbzzaBpFLf/vdkeyA3ieLcyMnCGbP29zgB1swa1vniTqdcgzuNWwZ46lW5ZQEMj4NPHYUXjiq9rUa/zcaAQoC75YNSVqAxduXLfKvuqZTEWO1mosOV2xpWLBvT981i+UP0t2dAIX2dFgLKKUzlcOwq2Yi5SXcrG+5TJFvuF/+uhfg5Sdu9uBjeql0Vx0NlCydeNBYltRKAWDDj2ePzs2/69Ori54QXQLu3fcC2RBe6te6QMVg91F4PiZJPhkHzw5qgAa4k5X8kpC4JzT6aigPyUUkBd3oYe8TnAsjfp6Z/GbSfJI7fdgqtDnO8lLvE4aF9f6l1rDGsyWL0lwEbAZvWdzqY/Bzhq46BcjrEBSZCh98up15+d6w6IuFgFqPPwXRloOQUiW8IokCExgv3RDilP0CxPWZdf4yHc2nTn7HhvVrzI54UG7eVkh7wywseRFVmIL/Cr5kciWjc200zKwDT2kTZ6EuRMAnTXYbbDZQOU=

@@ -1,0 +1,87 @@
+<!doctype html>
+<html>
+<head>
+<title>Document#importNode</title>
+<script>
+  (window.customElements = window.customElements || {}).forcePolyfill = true;
+</script>
+<script src="../../../../es6-promise/dist/es6-promise.auto.min.js"></script>
+<script src="../../../../web-component-tester/browser.js"></script>
+<script src="../../../custom-elements.min.js"></script>
+</head>
+<body>
+<script>
+function generateLocalName() {
+  return 'test-element-' + Math.random().toString(32).substring(2);
+}
+
+function defineWithLocalName(localName) {
+  const constructor = class extends HTMLElement {
+    constructor() {
+      super();
+      this.constructed = true;
+      this.connectedCallbackCount = 0;
+      this.disconnectedCallbackCount = 0;
+    }
+
+    connectedCallback() {
+      this.connectedCallbackCount++;
+    }
+
+    disconnectedCallback() {
+      this.disconnectedCallbackCount++;
+    }
+  }
+
+  customElements.define(localName, constructor);
+
+  return constructor;
+}
+
+suite('Importing foreign nodes with a custom element.', function() {
+  let constructor1;
+  let constructor2;
+  let foreignNode;
+
+  suiteSetup(function() {
+    constructor1 = defineWithLocalName('custom-element-1');
+    constructor2 = defineWithLocalName('custom-element-2');
+  })
+
+  setup(function() {
+    const parser = new DOMParser();
+    const htmlSource = `
+      <html>
+        <head></head>
+        <body>
+          <custom-element-1>
+            <custom-element-2></custom-element-2>
+          </custom-element-1>
+        </body>
+      </html>
+    `;
+    const doc = parser.parseFromString(htmlSource, 'text/html');
+    foreignNode = doc.querySelector('custom-element-1');
+    assert(!(foreignNode instanceof constructor1));
+  });
+
+  test('Importing foreign nodes with defined custom elements creates those elements.', function() {
+    const importedNode = document.importNode(foreignNode, true);
+
+    assert(importedNode instanceof constructor1);
+    assert(importedNode.children[0] instanceof constructor2);
+  });
+
+  test('Importing foreign nodes with defined custom elements into a document ' +
+    'that is not associated with the registry does not create those elements.',
+    function() {
+      const doc = document.implementation.createHTMLDocument("title");
+      const importedNode = doc.importNode(foreignNode, true);
+
+      assert(!(importedNode instanceof constructor1));
+      assert(!(importedNode.children[0] instanceof constructor2));
+    });
+});
+</script>
+</body>
+</html>

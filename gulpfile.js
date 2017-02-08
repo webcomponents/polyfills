@@ -13,22 +13,39 @@
 const compilerPackage = require('google-closure-compiler');
 const gulp = require('gulp');
 const sourcemaps = require('gulp-sourcemaps');
+const rollup = require('rollup-stream');
+const source = require('vinyl-source-stream');
 
 const closureCompiler = compilerPackage.gulp();
 
 gulp.task('default', () => {
-  return gulp.src('./src/custom-elements.js', {base: './'})
-      .pipe(sourcemaps.init())
-      .pipe(closureCompiler({
-          compilation_level: 'ADVANCED',
-          warning_level: 'VERBOSE',
-          language_in: 'ECMASCRIPT6_STRICT',
-          language_out: 'ECMASCRIPT5_STRICT',
-          externs: ['externs/html5.js', 'externs/custom-elements.js'],
-          js_output_file: 'custom-elements.min.js',
-          new_type_inf: true,
-          rewrite_polyfills: false,
-        }))
-      .pipe(sourcemaps.write('/'))
-      .pipe(gulp.dest('./'));
+  return gulp.src('./src/**/*.js', {base: './'})
+    .pipe(sourcemaps.init())
+    .pipe(closureCompiler({
+      compilation_level: 'ADVANCED',
+      warning_level: 'VERBOSE',
+      language_in: 'ECMASCRIPT6_STRICT',
+      language_out: 'ECMASCRIPT5_STRICT',
+      externs: ['externs/custom-elements.js'],
+      dependency_mode: 'STRICT',
+      entry_point: ['/src/custom-elements'],
+      js_output_file: 'custom-elements.min.js',
+      output_wrapper: '(function(){\n%output%\n}).call(self);',
+      assume_function_wrapper: true,
+      new_type_inf: true,
+      rewrite_polyfills: false,
+    }))
+    .pipe(sourcemaps.write('/'))
+    .pipe(gulp.dest('./'));
+});
+
+gulp.task('debug', () => {
+  return rollup({
+      entry: './src/custom-elements.js',
+      format: 'iife',
+      sourceMap: false,
+      indent: true,
+    })
+    .pipe(source('custom-elements.min.js'))
+    .pipe(gulp.dest('./'));
 });

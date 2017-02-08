@@ -16,14 +16,18 @@
     "url": "https://github.com/webcomponents/custom-elements/issues"
   },
   "scripts": {
-    "build": "gulp",
-    "test": "wct"
+    "install": "$(npm bin)/bower install",
+    "build": "$(npm bin)/gulp",
+    "test": "$(npm bin)/wct"
   },
   "homepage": "http://webcomponents.org",
   "devDependencies": {
-    "google-closure-compiler": "^20160822.1.0",
+    "bower": "^1.8.0",
+    "google-closure-compiler": "^20170124.0.0",
     "gulp": "^3.8.8",
     "gulp-sourcemaps": "^1.6.0",
-    "web-component-tester": "^4.0.1"
+    "rollup-stream": "^1.14.0",
+    "vinyl-source-stream": "^1.1.0",
+    "web-component-tester": "6.0.0-prerelease.3"
   }
 }

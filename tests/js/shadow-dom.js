@@ -13,8 +13,6 @@ suite('Shadow DOM Support', function() {
   var work;
   var assert = chai.assert;
 
-  customElements.enableFlush = true;
-
   setup(function() {
     work = document.createElement('div');
     document.body.appendChild(work);
@@ -36,7 +34,6 @@ suite('Shadow DOM Support', function() {
     shadowRoot.appendChild(container);
     container.innerHTML = '<x-shadow></x-shadow>';
 
-    customElements.flush();
     var el = container.querySelector('x-shadow');
     assert.instanceOf(el, XShadow);
   });
@@ -50,7 +47,6 @@ suite('Shadow DOM Support', function() {
     shadowRoot.appendChild(container);
     container.innerHTML = '<x-shadow2></x-shadow2>';
     var el = container.querySelector('x-shadow2');
-    customElements.flush();
 
     // undefined elements are not upgraded
     assert.notInstanceOf(el, XShadow2);
