@@ -324,7 +324,8 @@ class ShadyCSS {
       this.applyElementStyle(host, properties);
     }
     // process the shadowdom children of `root`
-    let shadowChildren = host.shadowRoot && host.shadowRoot.children;
+    let root = host.shadowRoot;
+    let shadowChildren = root && (root.children || root.childNodes);
     if (shadowChildren) {
       for (let i = 0; i < shadowChildren.length; i++) {
         let c = /** @type {!HTMLElement} */(shadowChildren[i]);
@@ -332,7 +333,7 @@ class ShadyCSS {
       }
     }
     // process the lightdom children of `root`
-    let children = host.children;
+    let children = host.children || host.childNodes;
     if (children) {
       for (let i = 0; i < children.length; i++) {
         let c = /** @type {!HTMLElement} */(children[i]);

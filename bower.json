@@ -17,10 +17,10 @@
     "tests"
   ],
   "dependencies": {
-    "custom-elements": "webcomponents/custom-elements#master"
+    "custom-elements": "webcomponents/custom-elements#remove-mo"
   },
   "devDependencies": {
     "web-component-tester": "^4.3.5",
-    "webcomponentsjs": "webcomponents/webcomponentsjs#v1"
+    "webcomponentsjs": "webcomponents/webcomponentsjs#gulp-all-the-things"
   }
 }

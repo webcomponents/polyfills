@@ -457,19 +457,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       d1.textContent = 'complex-child';
       document.body.appendChild(x);
       x.appendChild(d1);
-      flush()
-      assertComputed(d1, '6px');
-      document.body.removeChild(x);
-    });
-
-
-    test('::slotted + child in complex selector', function() {
-      var x = document.createElement('x-slotted');
-      var d1 = document.createElement('div');
-      d1.classList.add('complex-child');
-      d1.textContent = 'complex-child';
-      document.body.appendChild(x);
-      x.appendChild(d1);
       flush();
       assertComputed(d1, '6px');
       document.body.removeChild(x);
