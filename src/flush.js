@@ -13,11 +13,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 import * as utils from './utils'
 
 // render enqueuer/flusher
-let customElements = window.customElements;
 let flushList = [];
 let scheduled;
-let flushCount = 0;
-let flushMax = 100;
 export function enqueue(callback) {
   if (!scheduled) {
     scheduled = true;
@@ -28,22 +25,11 @@ export function enqueue(callback) {
 
 export function flush() {
   scheduled = false;
-  flushCount++;
+  let didFlush = Boolean(flushList.length);
   while (flushList.length) {
     flushList.shift()();
   }
-  if (customElements && customElements.flush) {
-    customElements.flush();
-  }
-  // continue flushing after elements are upgraded...
-  const isFlushedMaxed = (flushCount > flushMax);
-  if (flushList.length && !isFlushedMaxed) {
-      flush();
-  }
-  flushCount = 0;
-  if (isFlushedMaxed) {
-    throw new Error('Loop detected in ShadyDOM distribution, aborting.')
-  }
+  return didFlush;
 }
 
 flush.list = flushList;
