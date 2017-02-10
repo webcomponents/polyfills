@@ -297,13 +297,22 @@ export default class CustomElementInternals {
         const name = observedAttributes[i];
         const value = element.getAttribute(name);
         if (value !== null) {
-          this.attributeChangedCallback(element, name, null, value, null);
+          // This IIFE exists to prevent Closure from implementing the `for`
+          // scope around the two `const` variables as a new object for each
+          // iteration.
+          ((element, name, value) => {
+            this._reactionsStack.enqueueReaction(element, () => {
+              definition.attributeChangedCallback.call(element, name, null, value, null);
+            });
+          })(element, name, value);
         }
       }
     }
 
-    if (Utilities.isConnected(element)) {
-      this.connectedCallback(element);
+    if (definition.connectedCallback && Utilities.isConnected(element)) {
+      this._reactionsStack.enqueueReaction(element, () => {
+        definition.connectedCallback.call(element);
+      });
     }
   }
 
