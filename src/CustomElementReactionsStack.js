@@ -1,6 +1,6 @@
 export default class CustomElementReactionsStack {
   constructor() {
-    this._stack = new Array(16);
+    this._stack = [];
     this._length = 0;
     this._frames = 0;
     this._backupElementQueue = [];
@@ -34,12 +34,9 @@ export default class CustomElementReactionsStack {
    * @param {!Element} element
    */
   _drainReactionQueue(element) {
-    while (element.__CE_nextReaction) {
-      const reaction = element.__CE_nextReaction;
-      element.__CE_nextReaction = reaction.__CE_next;
-      if (element.__CE_lastReaction === reaction) {
-        element.__CE_lastReaction = undefined;
-      }
+    while (element.__CE_queueFront) {
+      const reaction = element.__CE_queueFront;
+      element.__CE_queueFront = reaction.__CE_next;
       reaction();
     }
   }
@@ -49,15 +46,14 @@ export default class CustomElementReactionsStack {
    * @param {!Function} reaction
    */
   enqueueReaction(element, reaction) {
-    // If there are any pending reactions, insert this one at the end.
-    if (element.__CE_lastReaction) {
-      element.__CE_lastReaction.__CE_next = reaction;
-    }
-    element.__CE_lastReaction = reaction;
-
-    // If there are no pending reactions, this reaction is next.
-    if (!element.__CE_nextReaction) {
-      element.__CE_nextReaction = reaction;
+    if (element.__CE_queueFront) {
+      let last = element.__CE_queueFront;
+      while (last.__CE_next) {
+        last = last.__CE_next;
+      }
+      last.__CE_next = reaction;
+    } else {
+      element.__CE_queueFront = reaction;
     }
 
     if (this._frames === 0) {

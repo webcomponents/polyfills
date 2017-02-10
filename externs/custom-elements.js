@@ -63,10 +63,7 @@ Element.prototype.__CE_shadowRoot;
 // CustomElementReactionsStack
 
 /** @type {!Function|undefined} */
-Element.prototype.__CE_nextReaction;
-
-/** @type {!Function|undefined} */
-Element.prototype.__CE_lastReaction;
+Element.prototype.__CE_queueFront;
 
 /** @type {!Function|undefined} */
 Function.prototype.__CE_next
