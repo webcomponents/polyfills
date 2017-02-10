@@ -433,6 +433,11 @@
           n.readyState = 'loading';
           // Suppress Closure warning about incompatible subtype assignment.
           ( /** @type {!HTMLElement} */ (n).import = n);
+          // Override baseURI so that link.import.baseURI can be used seemlessly
+          // on native or polyfilled html-imports.
+          Object.defineProperty(n, 'baseURI', {
+            get: () => n.href
+          });
           this.flatten(imp);
           n.appendChild(imp);
         }

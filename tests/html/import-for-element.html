@@ -26,11 +26,24 @@
 
 <body>
   <script>
+
+    test('baseURI updated', function() {
+      var rootLink = document.head.querySelector('link[rel=import]');
+      assert.equal(rootLink.href, rootLink.import.baseURI, 'baseURI ok');
+
+      var linkInA = rootLink.import.querySelector('link[rel=import]');
+      assert.equal(linkInA.href, linkInA.import.baseURI, 'baseURI ok');
+
+      var linkInB = linkInA.import.querySelector('link[rel=import]');
+      assert.equal(linkInB.href, linkInB.import.baseURI, 'baseURI ok');
+    });
+
     test('returns the correct import document', function() {
       var rootLink = document.head.querySelector('link[rel=import]');
 
       var scriptInA = rootLink.import.querySelector('script');
       assert.equal(HTMLImports.importForElement(scriptInA), rootLink.import, 'script in load-a ok');
+
       var linkInA = rootLink.import.querySelector('link[rel=import]');
       assert.equal(HTMLImports.importForElement(linkInA), rootLink.import, 'link in load-a ok');
 
