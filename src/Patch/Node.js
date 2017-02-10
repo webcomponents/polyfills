@@ -19,29 +19,24 @@ export default function(internals) {
        */
       function(node, refNode) {
         if (node instanceof DocumentFragment) {
-          const insertedNodes = Array.prototype.slice.apply(node.childNodes);
-          const nativeResult = Native.Node_insertBefore.call(this, node, refNode);
-
           // DocumentFragments can't be connected, so `disconnectTree` will never
           // need to be called on a DocumentFragment's children after inserting it.
 
           if (Utilities.isConnected(this)) {
-            for (let i = 0; i < insertedNodes.length; i++) {
-              internals.connectTree(insertedNodes[i]);
-            }
+            internals.connectTree(node);
           }
 
-          return nativeResult;
+          return Native.Node_insertBefore.call(this, node, refNode);
         }
 
-        const nodeWasConnected = Utilities.isConnected(node);
-        const nativeResult = Native.Node_insertBefore.call(this, node, refNode);
 
-        if (nodeWasConnected) {
+        if (Utilities.isConnected(node)) {
           internals.disconnectTree(node);
         }
 
-        if (Utilities.isConnected(this)) {
+        const nativeResult = Native.Node_insertBefore.call(this, node, refNode);
+
+        if (Utilities.isConnected(node)) {
           internals.connectTree(node);
         }
 
@@ -57,29 +52,24 @@ export default function(internals) {
        */
       function(node) {
         if (node instanceof DocumentFragment) {
-          const insertedNodes = Array.prototype.slice.apply(node.childNodes);
-          const nativeResult = Native.Node_appendChild.call(this, node);
-
           // DocumentFragments can't be connected, so `disconnectTree` will never
           // need to be called on a DocumentFragment's children after inserting it.
 
           if (Utilities.isConnected(this)) {
-            for (let i = 0; i < insertedNodes.length; i++) {
-              internals.connectTree(insertedNodes[i]);
-            }
+            internals.connectTree(node);
           }
 
-          return nativeResult;
+          return Native.Node_appendChild.call(this, node);
         }
 
-        const nodeWasConnected = Utilities.isConnected(node);
-        const nativeResult = Native.Node_appendChild.call(this, node);
 
-        if (nodeWasConnected) {
+        if (Utilities.isConnected(node)) {
           internals.disconnectTree(node);
         }
 
-        if (Utilities.isConnected(this)) {
+        const nativeResult = Native.Node_appendChild.call(this, node);
+
+        if (Utilities.isConnected(node)) {
           internals.connectTree(node);
         }
 
@@ -113,14 +103,10 @@ export default function(internals) {
        * @return {!Node}
        */
       function(node) {
-        const nodeWasConnected = Utilities.isConnected(node);
-        const nativeResult = Native.Node_removeChild.call(this, node);
-
-        if (nodeWasConnected) {
+        if (Utilities.isConnected(node)) {
           internals.disconnectTree(node);
         }
-
-        return nativeResult;
+        return Native.Node_removeChild.call(this, node);
       }));
 
   Utilities.setPropertyUnchecked(Node.prototype, 'replaceChild',
@@ -132,32 +118,28 @@ export default function(internals) {
        * @return {!Node}
        */
       function(nodeToInsert, nodeToRemove) {
+        const thisIsConnected = Utilities.isConnected(this);
+
         if (nodeToInsert instanceof DocumentFragment) {
-          const insertedNodes = Array.prototype.slice.apply(nodeToInsert.childNodes);
-          const nativeResult = Native.Node_replaceChild.call(this, nodeToInsert, nodeToRemove);
-
-          // DocumentFragments can't be connected, so `disconnectTree` will never
-          // need to be called on a DocumentFragment's children after inserting it.
-
-          if (Utilities.isConnected(this)) {
+          if (thisIsConnected) {
             internals.disconnectTree(nodeToRemove);
-            for (let i = 0; i < insertedNodes.length; i++) {
-              internals.connectTree(insertedNodes[i]);
-            }
+
+            // DocumentFragments can't be connected, so `disconnectTree` will
+            // never need to be called on a DocumentFragment's children after
+            // inserting it.
+
+            internals.connectTree(nodeToInsert);
           }
 
-          return nativeResult;
+          return Native.Node_replaceChild.call(this, nodeToInsert, nodeToRemove);
         }
 
-        const nodeToInsertWasConnected = Utilities.isConnected(nodeToInsert);
-        const nativeResult = Native.Node_replaceChild.call(this, nodeToInsert, nodeToRemove);
-        const thisIsConnected = Utilities.isConnected(this);
 
         if (thisIsConnected) {
           internals.disconnectTree(nodeToRemove);
         }
 
-        if (nodeToInsertWasConnected) {
+        if (Utilities.isConnected(nodeToInsert)) {
           internals.disconnectTree(nodeToInsert);
         }
 
@@ -165,7 +147,7 @@ export default function(internals) {
           internals.connectTree(nodeToInsert);
         }
 
-        return nativeResult;
+        return Native.Node_replaceChild.call(this, nodeToInsert, nodeToRemove);
       }));
 
 
@@ -181,30 +163,11 @@ export default function(internals) {
           return;
         }
 
-        let removedNodes = undefined;
-        // Checking for `firstChild` is faster than reading `childNodes.length`
-        // to compare with 0.
-        if (this.firstChild) {
-          // Using `childNodes` is faster than `children`, even though we only
-          // care about elements.
-          const childNodes = this.childNodes;
-          const childNodesLength = childNodes.length;
-          if (childNodesLength > 0 && Utilities.isConnected(this)) {
-            // Copying an array by iterating is faster than using slice.
-            removedNodes = new Array(childNodesLength);
-            for (let i = 0; i < childNodesLength; i++) {
-              removedNodes[i] = childNodes[i];
-            }
-          }
+        for (let child = this.firstChild; child; child = child.nextSibling) {
+          internals.disconnectTree(child);
         }
 
         baseDescriptor.set.call(this, assignedValue);
-
-        if (removedNodes) {
-          for (let i = 0; i < removedNodes.length; i++) {
-            internals.disconnectTree(removedNodes[i]);
-          }
-        }
       }),
     });
   }

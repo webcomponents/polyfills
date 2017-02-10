@@ -34,34 +34,20 @@ export default function(internals) {
       configurable: true,
       get: baseDescriptor.get,
       set: internals.CEReactions(/** @this {Element} */ function(htmlString) {
-        const isConnected = Utilities.isConnected(this);
-
         // NOTE: In IE11, when using the native `innerHTML` setter, all nodes
         // that were previously descendants of the context element have all of
         // their children removed as part of the set - the entire subtree is
         // 'disassembled'. This work around walks the subtree *before* using the
         // native setter.
-        /** @type {!Array<!Element>|undefined} */
-        let removedElements = undefined;
-        if (isConnected) {
-          removedElements = [];
+        if (Utilities.isConnected(this)) {
           Utilities.walkDeepDescendantElements(this, element => {
-            if (element !== this) {
-              removedElements.push(element);
+            if (element !== this && element.__CE_state === CEState.custom) {
+              internals.disconnectedCallback(element);
             }
           });
         }
 
         baseDescriptor.set.call(this, htmlString);
-
-        if (removedElements) {
-          for (let i = 0; i < removedElements.length; i++) {
-            const element = removedElements[i];
-            if (element.__CE_state === CEState.custom) {
-              internals.disconnectedCallback(element);
-            }
-          }
-        }
 
         // Only create custom elements if this element's owner document is
         // associated with the registry.
