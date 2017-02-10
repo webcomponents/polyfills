@@ -3,6 +3,8 @@ export default class CustomElementReactionsStack {
     this._stack = new Array(16);
     this._length = 0;
     this._frames = 0;
+    this._backupElementQueue = [];
+    this._processingTheBackupElementQueue = false;
   }
 
   /**
@@ -20,20 +22,26 @@ export default class CustomElementReactionsStack {
     for (let i = frameStart; i < frameEnd; i++) {
       const element = this._stack[i];
       this._stack[i] = undefined;
-
-      while (element.__CE_nextReaction) {
-        const reaction = element.__CE_nextReaction;
-        element.__CE_nextReaction = reaction.__CE_next;
-        if (element.__CE_lastReaction === reaction) {
-          element.__CE_lastReaction = undefined;
-        }
-        reaction();
-      }
+      this._drainReactionQueue(element);
     }
 
     this._length = frameStart;
 
     return result;
+  }
+
+  /**
+   * @param {!Element} element
+   */
+  _drainReactionQueue(element) {
+    while (element.__CE_nextReaction) {
+      const reaction = element.__CE_nextReaction;
+      element.__CE_nextReaction = reaction.__CE_next;
+      if (element.__CE_lastReaction === reaction) {
+        element.__CE_lastReaction = undefined;
+      }
+      reaction();
+    }
   }
 
   /**
@@ -44,18 +52,27 @@ export default class CustomElementReactionsStack {
     // If there are any pending reactions, insert this one at the end.
     if (element.__CE_lastReaction) {
       element.__CE_lastReaction.__CE_next = reaction;
-      element.__CE_lastReaction = reaction;
     }
+    element.__CE_lastReaction = reaction;
 
     // If there are no pending reactions, this reaction is next.
     if (!element.__CE_nextReaction) {
       element.__CE_nextReaction = reaction;
     }
 
-    element.__CE_lastReaction = reaction;
-
     if (this._frames === 0) {
-      throw new Error('Backup queue unimplemented.');
+      this._backupElementQueue.push(element);
+
+      if (this._processingTheBackupElementQueue) return;
+      this._processingTheBackupElementQueue = true;
+
+      Promise.resolve().then(() => {
+        while (this._backupElementQueue.length) {
+          const element = this._backupElementQueue.shift();
+          this._drainReactionQueue(element);
+        }
+        this._processingTheBackupElementQueue = false;
+      });
     } else {
       this._stack[this._length++] = element;
     }

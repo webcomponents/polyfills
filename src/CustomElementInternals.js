@@ -274,6 +274,15 @@ export default class CustomElementInternals {
    * @param {!Element} element
    */
   upgradeElement(element) {
+    this._reactionsStack.enqueueReaction(element, () => {
+      this._upgradeElement(element);
+    });
+  }
+
+  /**
+   * @param {!Element} element
+   */
+  _upgradeElement(element) {
     const currentState = element.__CE_state;
     if (currentState !== undefined) return;
 

@@ -139,17 +139,19 @@ export default class CustomElementRegistry {
     // happen if a flush callback keeps the function it is given and calls it
     // multiple times.
     if (this._flushPending === false) return;
-
     this._flushPending = false;
-    this._internals.patchAndUpgradeTree(document);
 
-    while (this._unflushedLocalNames.length > 0) {
-      const localName = this._unflushedLocalNames.shift();
-      const deferred = this._whenDefinedDeferred.get(localName);
-      if (deferred) {
-        deferred.resolve(undefined);
+    this._internals.runInCEReactionsFrame(() => {
+      this._internals.patchAndUpgradeTree(document);
+
+      while (this._unflushedLocalNames.length > 0) {
+        const localName = this._unflushedLocalNames.shift();
+        const deferred = this._whenDefinedDeferred.get(localName);
+        if (deferred) {
+          deferred.resolve(undefined);
+        }
       }
-    }
+    });
   }
 
   /**
