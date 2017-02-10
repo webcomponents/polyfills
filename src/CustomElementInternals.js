@@ -118,34 +118,24 @@ export default class CustomElementInternals {
    * @param {!Node} root
    */
   connectTree(root) {
-    const elements = [];
-
-    Utilities.walkDeepDescendantElements(root, element => elements.push(element));
-
-    for (let i = 0; i < elements.length; i++) {
-      const element = elements[i];
+    Utilities.walkDeepDescendantElements(root, element => {
       if (element.__CE_state === CEState.custom) {
         this.connectedCallback(element);
       } else {
         this.upgradeElement(element);
       }
-    }
+    });
   }
 
   /**
    * @param {!Node} root
    */
   disconnectTree(root) {
-    const elements = [];
-
-    Utilities.walkDeepDescendantElements(root, element => elements.push(element));
-
-    for (let i = 0; i < elements.length; i++) {
-      const element = elements[i];
+    Utilities.walkDeepDescendantElements(root, element => {
       if (element.__CE_state === CEState.custom) {
         this.disconnectedCallback(element);
       }
-    }
+    });
   }
 
   /**
@@ -212,8 +202,6 @@ export default class CustomElementInternals {
    * @param {!Set<Node>=} visitedImports
    */
   patchAndUpgradeTree(root, visitedImports = new Set()) {
-    const elements = [];
-
     const gatherElements = element => {
       if (element.localName === 'link' && element.getAttribute('rel') === 'import') {
         // The HTML Imports polyfill sets a descendant element of the link to
@@ -228,7 +216,7 @@ export default class CustomElementInternals {
         } else {
           // If this link's import root is not available, its contents can't be
           // walked. Wait for 'load' and walk it when it's ready.
-          element.addEventListener('load', () => {
+          element.addEventListener('load', this.CEReactions(() => {
             const importNode = /** @type {!Node} */ (element.import);
 
             if (importNode.__CE_documentLoadHandled) return;
@@ -248,32 +236,26 @@ export default class CustomElementInternals {
             visitedImports.delete(importNode);
 
             this.patchAndUpgradeTree(importNode, visitedImports);
-          });
+          }));
         }
       } else {
-        elements.push(element);
+        if (this._hasPatches) {
+          this.patch(element);
+        }
+        this.upgradeElement(element);
       }
     };
 
     // `walkDeepDescendantElements` populates (and internally checks against)
     // `visitedImports` when traversing a loaded import.
     Utilities.walkDeepDescendantElements(root, gatherElements, visitedImports);
-
-    if (this._hasPatches) {
-      for (let i = 0; i < elements.length; i++) {
-        this.patch(elements[i]);
-      }
-    }
-
-    for (let i = 0; i < elements.length; i++) {
-      this.upgradeElement(elements[i]);
-    }
   }
 
   /**
    * @param {!Element} element
    */
   upgradeElement(element) {
+    if (element.__CE_state !== undefined) return;
     this._reactionsStack.enqueueReaction(element, () => {
       this._upgradeElement(element);
     });
