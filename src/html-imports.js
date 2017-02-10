@@ -682,8 +682,8 @@
    */
   const importForElement = element => {
     if (useNative) {
-      let doc = element.ownerDocument;
-      return doc !== document ? doc : null;
+      // Return only if not in the main doc!
+      return element.ownerDocument !== document ? element.ownerDocument : null;
     }
     let doc = element[importDoc];
     if (!doc && element.parentNode) {

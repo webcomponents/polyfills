@@ -19,7 +19,6 @@
       }
     };
   </script>
-  <script src="../polyfills.js"></script>
   <script src="../../html-imports.min.js"></script>
   <script src="../../../web-component-tester/browser.js"></script>
   <link rel="import" href="imports/load-a.html">
@@ -42,8 +41,10 @@
     });
 
     test('handles not imported elements', function() {
-      assert.isNotOk(HTMLImports.importForElement(document.body), 'connected element ok');
-      assert.isNotOk(HTMLImports.importForElement(document.createElement('div')), 'not connected element ok');
+      var rootLink = document.head.querySelector('link[rel=import]');
+      assert.isNotOk(HTMLImports.importForElement(rootLink), 'rootLink has no import');
+      assert.isNotOk(HTMLImports.importForElement(document.body), '<body> has no import');
+      assert.isNotOk(HTMLImports.importForElement(document.createElement('div')), 'disconnected element has no import');
     });
   </script>
 </body>
