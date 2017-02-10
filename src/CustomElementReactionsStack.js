@@ -22,23 +22,18 @@ export default class CustomElementReactionsStack {
     for (let i = frameStart; i < frameEnd; i++) {
       const element = this._stack[i];
       this._stack[i] = undefined;
-      this._drainReactionQueue(element);
+
+      // Drain the element's reaction queue.
+      while (element.__CE_queueFront) {
+        const reaction = element.__CE_queueFront;
+        element.__CE_queueFront = reaction.__CE_next;
+        reaction();
+      }
     }
 
     this._length = frameStart;
 
     return result;
-  }
-
-  /**
-   * @param {!Element} element
-   */
-  _drainReactionQueue(element) {
-    while (element.__CE_queueFront) {
-      const reaction = element.__CE_queueFront;
-      element.__CE_queueFront = reaction.__CE_next;
-      reaction();
-    }
   }
 
   /**
@@ -65,7 +60,13 @@ export default class CustomElementReactionsStack {
       Promise.resolve().then(() => {
         while (this._backupElementQueue.length) {
           const element = this._backupElementQueue.shift();
-          this._drainReactionQueue(element);
+
+          // Drain the element's reaction queue.
+          while (element.__CE_queueFront) {
+            const reaction = element.__CE_queueFront;
+            element.__CE_queueFront = reaction.__CE_next;
+            reaction();
+          }
         }
         this._processingTheBackupElementQueue = false;
       });
