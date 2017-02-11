@@ -42,12 +42,13 @@ export default class CustomElementReactionsStack {
   }
 
   popFrame() {
+    const stack = this._stack;
     const frameStart = this._frameStart[--this._frames];
     const frameEnd = this._length;
 
     for (let i = frameStart; i < frameEnd; i++) {
-      const element = this._stack[i];
-      this._stack[i] = undefined;
+      const element = stack[i];
+      stack[i] = undefined;
 
       // Drain the element's reaction queue.
       while (element.__CE_queueFront) {
