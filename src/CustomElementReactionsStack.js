@@ -2,21 +2,18 @@ export default class CustomElementReactionsStack {
   constructor() {
     this._stack = [];
     this._length = 0;
+    this._frameStart = [];
     this._frames = 0;
     this._backupElementQueue = [];
     this._processingTheBackupElementQueue = false;
   }
 
-  /**
-   * @template T
-   * @param {!function():T} fn
-   * @return {T}
-   */
-  runInFrame(fn) {
-    const frameStart = this._length;
-    this._frames++;
-    const result = fn();
-    this._frames--;
+  pushFrame() {
+    this._frameStart[this._frames++] = this._length;
+  }
+
+  popFrame() {
+    const frameStart = this._frameStart[--this._frames];
     const frameEnd = this._length;
 
     for (let i = frameStart; i < frameEnd; i++) {
@@ -32,8 +29,6 @@ export default class CustomElementReactionsStack {
     }
 
     this._length = frameStart;
-
-    return result;
   }
 
   /**

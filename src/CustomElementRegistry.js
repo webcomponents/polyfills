@@ -61,77 +61,79 @@ export default class CustomElementRegistry {
    * @param {!Function} constructor
    */
   define(localName, constructor) {
-    return this._internals.runInCEReactionsFrame(() => {
-      if (!(constructor instanceof Function)) {
-        throw new TypeError('Custom element constructors must be functions.');
+    this._internals.pushCEReactionsFrame();
+    if (!(constructor instanceof Function)) {
+      throw new TypeError('Custom element constructors must be functions.');
+    }
+
+    if (!Utilities.isValidCustomElementName(localName)) {
+      throw new SyntaxError(`The element name '${localName}' is not valid.`);
+    }
+
+    if (this._internals.localNameToDefinition(localName)) {
+      throw new Error(`A custom element with name '${localName}' has already been defined.`);
+    }
+
+    if (this._elementDefinitionIsRunning) {
+      throw new Error('A custom element is already being defined.');
+    }
+    this._elementDefinitionIsRunning = true;
+
+    let connectedCallback;
+    let disconnectedCallback;
+    let adoptedCallback;
+    let attributeChangedCallback;
+    let observedAttributes;
+    try {
+      /** @type {!Object} */
+      const prototype = constructor.prototype;
+      if (!(prototype instanceof Object)) {
+        throw new TypeError('The custom element constructor\'s prototype is not an object.');
       }
 
-      if (!Utilities.isValidCustomElementName(localName)) {
-        throw new SyntaxError(`The element name '${localName}' is not valid.`);
-      }
-
-      if (this._internals.localNameToDefinition(localName)) {
-        throw new Error(`A custom element with name '${localName}' has already been defined.`);
-      }
-
-      if (this._elementDefinitionIsRunning) {
-        throw new Error('A custom element is already being defined.');
-      }
-      this._elementDefinitionIsRunning = true;
-
-      let connectedCallback;
-      let disconnectedCallback;
-      let adoptedCallback;
-      let attributeChangedCallback;
-      let observedAttributes;
-      try {
-        /** @type {!Object} */
-        const prototype = constructor.prototype;
-        if (!(prototype instanceof Object)) {
-          throw new TypeError('The custom element constructor\'s prototype is not an object.');
+      function getCallback(name) {
+        const callbackValue = prototype[name];
+        if (callbackValue !== undefined && !(callbackValue instanceof Function)) {
+          throw new Error(`The '${name}' callback must be a function.`);
         }
-
-        function getCallback(name) {
-          const callbackValue = prototype[name];
-          if (callbackValue !== undefined && !(callbackValue instanceof Function)) {
-            throw new Error(`The '${name}' callback must be a function.`);
-          }
-          return callbackValue;
-        }
-
-        connectedCallback = getCallback('connectedCallback');
-        disconnectedCallback = getCallback('disconnectedCallback');
-        adoptedCallback = getCallback('adoptedCallback');
-        attributeChangedCallback = getCallback('attributeChangedCallback');
-        observedAttributes = constructor['observedAttributes'] || [];
-      } catch (e) {
-        return;
-      } finally {
-        this._elementDefinitionIsRunning = false;
+        return callbackValue;
       }
 
-      const definition = {
-        localName,
-        constructor,
-        connectedCallback,
-        disconnectedCallback,
-        adoptedCallback,
-        attributeChangedCallback,
-        observedAttributes,
-        constructionStack: [],
-      };
+      connectedCallback = getCallback('connectedCallback');
+      disconnectedCallback = getCallback('disconnectedCallback');
+      adoptedCallback = getCallback('adoptedCallback');
+      attributeChangedCallback = getCallback('attributeChangedCallback');
+      observedAttributes = constructor['observedAttributes'] || [];
+    } catch (e) {
+      this._internals.popCEReactionsFrame();
+      return;
+    } finally {
+      this._elementDefinitionIsRunning = false;
+    }
 
-      this._internals.setDefinition(localName, definition);
+    const definition = {
+      localName,
+      constructor,
+      connectedCallback,
+      disconnectedCallback,
+      adoptedCallback,
+      attributeChangedCallback,
+      observedAttributes,
+      constructionStack: [],
+    };
 
-      this._unflushedLocalNames.push(localName);
+    this._internals.setDefinition(localName, definition);
 
-      // If we've already called the flush callback and it hasn't called back yet,
-      // don't call it again.
-      if (!this._flushPending) {
-        this._flushPending = true;
-        this._flushCallback(() => this._flush());
-      }
-    });
+    this._unflushedLocalNames.push(localName);
+
+    // If we've already called the flush callback and it hasn't called back yet,
+    // don't call it again.
+    if (!this._flushPending) {
+      this._flushPending = true;
+      this._flushCallback(() => this._flush());
+    }
+
+    this._internals.popCEReactionsFrame();
   }
 
   _flush() {
@@ -141,17 +143,17 @@ export default class CustomElementRegistry {
     if (this._flushPending === false) return;
     this._flushPending = false;
 
-    this._internals.runInCEReactionsFrame(() => {
-      this._internals.patchAndUpgradeTree(document);
+    this._internals.pushCEReactionsFrame();
+    this._internals.patchAndUpgradeTree(document);
 
-      while (this._unflushedLocalNames.length > 0) {
-        const localName = this._unflushedLocalNames.shift();
-        const deferred = this._whenDefinedDeferred.get(localName);
-        if (deferred) {
-          deferred.resolve(undefined);
-        }
+    while (this._unflushedLocalNames.length > 0) {
+      const localName = this._unflushedLocalNames.shift();
+      const deferred = this._whenDefinedDeferred.get(localName);
+      if (deferred) {
+        deferred.resolve(undefined);
       }
-    });
+    }
+    this._internals.popCEReactionsFrame();
   }
 
   /**

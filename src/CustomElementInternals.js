@@ -35,27 +35,12 @@ export default class CustomElementInternals {
     this._reactionsStack = new CustomElementReactionsStack();
   }
 
-  /**
-   * @template T, R
-   * @param {!function(this: T, ...?): R} fn
-   * @return {!function(this: T, ...?): R}
-   */
-  CEReactions(fn) {
-    const self = /** @type {CustomElementInternals} */ (this);
-    /** @type {!function(this: T, ...?): R} */
-    const wrappedFn = function(a0, a1, a2, a3, a4, a5, a6, a7) {
-      return self._reactionsStack.runInFrame(() => fn.call(this, a0, a1, a2, a3, a4, a5, a6, a7));
-    };
-    return wrappedFn;
+  pushCEReactionsFrame() {
+    return this._reactionsStack.pushFrame();
   }
 
-  /**
-   * @template T
-   * @param {!function(): T} fn
-   * @return {T}
-   */
-  runInCEReactionsFrame(fn) {
-    return this._reactionsStack.runInFrame(fn);
+  popCEReactionsFrame() {
+    return this._reactionsStack.popFrame();
   }
 
   /**
@@ -216,7 +201,7 @@ export default class CustomElementInternals {
         } else {
           // If this link's import root is not available, its contents can't be
           // walked. Wait for 'load' and walk it when it's ready.
-          element.addEventListener('load', this.CEReactions(() => {
+          element.addEventListener('load', () => {
             const importNode = /** @type {!Node} */ (element.import);
 
             if (importNode.__CE_documentLoadHandled) return;
@@ -235,8 +220,10 @@ export default class CustomElementInternals {
             const clonedVisitedImports = new Set(visitedImports);
             visitedImports.delete(importNode);
 
+            this.pushCEReactionsFrame();
             this.patchAndUpgradeTree(importNode, visitedImports);
-          }));
+            this.popCEReactionsFrame();
+          });
         }
       } else {
         if (this._hasPatches) {
