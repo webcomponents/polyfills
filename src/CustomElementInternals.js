@@ -43,8 +43,8 @@ export default class CustomElementInternals {
   CEReactions(fn) {
     const self = /** @type {CustomElementInternals} */ (this);
     /** @type {!function(this: T, ...?): R} */
-    const wrappedFn = function() {
-      return self._reactionsStack.runInFrame(() => fn.apply(this, arguments));
+    const wrappedFn = function(a0, a1, a2, a3, a4, a5, a6, a7) {
+      return self._reactionsStack.runInFrame(() => fn.call(this, a0, a1, a2, a3, a4, a5, a6, a7));
     };
     return wrappedFn;
   }
