@@ -1,10 +1,39 @@
 export default class CustomElementReactionsStack {
   constructor() {
+    /**
+     * @private
+     * @type {!Array<!Element|undefined>}
+     */
     this._stack = [];
+
+    /**
+     * @private
+     * @type {number}
+     */
     this._length = 0;
+
+    /**
+     * @private
+     * @type {!Array<number>}
+     */
     this._frameStart = [];
+
+    /**
+     * @private
+     * @type {number}
+     */
     this._frames = 0;
+
+    /**
+     * @private
+     * @type {!Array<!Element>}
+     */
     this._backupElementQueue = [];
+
+    /**
+     * @private
+     * @type {boolean}
+     */
     this._processingTheBackupElementQueue = false;
   }
 
