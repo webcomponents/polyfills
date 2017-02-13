@@ -20,7 +20,6 @@ import StyleInfo from './style-info'
 import StyleCache from './style-cache'
 import {flush as watcherFlush} from './document-watcher'
 import templateMap from './template-map'
-import CustomStyleInterface from './custom-style-interface'
 import * as ApplyShimUtils from './apply-shim-utils'
 
 /**
@@ -33,7 +32,7 @@ const ApplyShim = new ApplyShimUtils.ApplyShimShim();
  */
 const styleCache = new StyleCache();
 
-class ShadyCSS {
+export default class ScopingShim {
   constructor() {
     this._scopeCounter = {};
     this._documentOwner = document.documentElement;
@@ -41,16 +40,6 @@ class ShadyCSS {
     ast['rules'] = [];
     this._documentOwnerStyleInfo = StyleInfo.set(document.documentElement, new StyleInfo(ast));
     this._elementsHaveApplied = false;
-    /** @type {function(!HTMLStyleElement)} */
-    const transformFn = (style) => {this.transformCustomStyleForDocument(style)};
-    const validateFn = () => {
-      requestAnimationFrame(() => {
-        if (this._customStyleInterface.enqueued || this._elementsHaveApplied) {
-          this.flushCustomStyles();
-        }
-      })
-    };
-    this._customStyleInterface = new CustomStyleInterface(transformFn, validateFn);
   }
   flush() {
     watcherFlush();
@@ -158,23 +147,46 @@ class ShadyCSS {
       )
     );
   }
+  _ensureCustomStyleInterface() {
+    if (this._customStyleInterface) {
+      return;
+    } else if (window['CustomStyleInterface']) {
+      this._customStyleInterface = window['CustomStyleInterface'];
+      /** @type {function(!HTMLStyleElement)} */
+      this._customStyleInterface['transformCallback'] = (style) => {this.transformCustomStyleForDocument(style)};
+      this._customStyleInterface['validateCallback'] = () => {
+        requestAnimationFrame(() => {
+          if (this._customStyleInterface['enqueued'] || this._elementsHaveApplied) {
+            this.flushCustomStyles();
+          }
+        })
+      };
+    } else {
+      this._customStyleInterface = {
+        ['findStyles']() {},
+        ['enqueued']: false,
+        ['getStyleForCustomStyle'](s) { return null }
+      }
+    }
+  }
   /**
    * Flush and apply custom styles to document
    */
   flushCustomStyles() {
-    this._customStyleInterface.findStyles();
+    this._ensureCustomStyleInterface();
+    this._customStyleInterface['findStyles']();
     // early return if custom-styles don't need validation
-    if (!this._customStyleInterface.enqueued) {
+    if (!this._customStyleInterface['enqueued']) {
       return;
     }
-    let customStyles = this._customStyleInterface.customStyles;
+    let customStyles = this._customStyleInterface['customStyles'];
     if (!nativeCssVariables) {
       this._updateProperties(this._documentOwner, this._documentOwnerStyleInfo);
       this._applyCustomStyles(customStyles);
     } else {
       this._revalidateCustomStyleApplyShim(customStyles);
     }
-    this._customStyleInterface.enqueued = false;
+    this._customStyleInterface['enqueued'] = false;
     // if custom elements have upgraded and there are no native custom properties, we must recalculate the whole tree
     if (this._elementsHaveApplied && !nativeCssVariables) {
       this.updateStyles();
@@ -345,7 +357,7 @@ class ShadyCSS {
   _revalidateCustomStyleApplyShim(customStyles) {
     for (let i = 0; i < customStyles.length; i++) {
       let c = customStyles[i];
-      let s = this._customStyleInterface.getStyleForCustomStyle(c);
+      let s = this._customStyleInterface['getStyleForCustomStyle'](c);
       if (s) {
         this._revalidateApplyShim(s);
       }
@@ -354,7 +366,7 @@ class ShadyCSS {
   _applyCustomStyles(customStyles) {
     for (let i = 0; i < customStyles.length; i++) {
       let c = customStyles[i];
-      let s = this._customStyleInterface.getStyleForCustomStyle(c);
+      let s = this._customStyleInterface['getStyleForCustomStyle'](c);
       if (s) {
         StyleProperties.applyCustomStyle(s, this._documentOwnerStyleInfo.styleProperties);
       }
@@ -377,9 +389,6 @@ class ShadyCSS {
     } else {
       this._documentOwnerStyleInfo.styleRules.rules.push(ast);
     }
-  }
-  addDocumentStyle(style) {
-    this._customStyleInterface.addCustomStyle(style);
   }
   _revalidateApplyShim(style) {
     if (nativeCssVariables) {
@@ -440,20 +449,19 @@ class ShadyCSS {
 }
 
 /* exports */
-ShadyCSS.prototype['flush'] = ShadyCSS.prototype.flush;
-ShadyCSS.prototype['prepareTemplate'] = ShadyCSS.prototype.prepareTemplate;
-ShadyCSS.prototype['applyElementStyle'] = ShadyCSS.prototype.applyElementStyle;
-ShadyCSS.prototype['updateStyles'] = ShadyCSS.prototype.updateStyles;
-ShadyCSS.prototype['applySubtreeStyle'] = ShadyCSS.prototype.applySubtreeStyle;
-ShadyCSS.prototype['getComputedStyleValue'] = ShadyCSS.prototype.getComputedStyleValue;
-ShadyCSS.prototype['setElementClass'] = ShadyCSS.prototype.setElementClass;
-ShadyCSS.prototype['_styleInfoForNode'] = ShadyCSS.prototype._styleInfoForNode;
-ShadyCSS.prototype['transformCustomStyleForDocument'] = ShadyCSS.prototype.transformCustomStyleForDocument;
-ShadyCSS.prototype['getStyleAst'] = ShadyCSS.prototype.getStyleAst;
-ShadyCSS.prototype['styleAstToString'] = ShadyCSS.prototype.styleAstToString;
-ShadyCSS.prototype['addDocumentStyle'] = ShadyCSS.prototype.addDocumentStyle;
-ShadyCSS.prototype['flushCustomStyles'] = ShadyCSS.prototype.flushCustomStyles;
-Object.defineProperties(ShadyCSS.prototype, {
+ScopingShim.prototype['flush'] = ScopingShim.prototype.flush;
+ScopingShim.prototype['prepareTemplate'] = ScopingShim.prototype.prepareTemplate;
+ScopingShim.prototype['applyElementStyle'] = ScopingShim.prototype.applyElementStyle;
+ScopingShim.prototype['updateStyles'] = ScopingShim.prototype.updateStyles;
+ScopingShim.prototype['applySubtreeStyle'] = ScopingShim.prototype.applySubtreeStyle;
+ScopingShim.prototype['getComputedStyleValue'] = ScopingShim.prototype.getComputedStyleValue;
+ScopingShim.prototype['setElementClass'] = ScopingShim.prototype.setElementClass;
+ScopingShim.prototype['_styleInfoForNode'] = ScopingShim.prototype._styleInfoForNode;
+ScopingShim.prototype['transformCustomStyleForDocument'] = ScopingShim.prototype.transformCustomStyleForDocument;
+ScopingShim.prototype['getStyleAst'] = ScopingShim.prototype.getStyleAst;
+ScopingShim.prototype['styleAstToString'] = ScopingShim.prototype.styleAstToString;
+ScopingShim.prototype['flushCustomStyles'] = ScopingShim.prototype.flushCustomStyles;
+Object.defineProperties(ScopingShim.prototype, {
   'nativeShadow': {
     get() {
       return nativeShadow;
@@ -465,5 +473,3 @@ Object.defineProperties(ShadyCSS.prototype, {
     }
   }
 });
-
-window['ShadyCSS'] = new ShadyCSS();

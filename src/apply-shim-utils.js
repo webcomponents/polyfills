@@ -10,7 +10,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 'use strict';
 import templateMap from './template-map'
-import {StyleNode} from './css-parse'
+import {StyleNode} from './css-parse' // eslint-disable-line no-unused-vars
 
 /**
  * @const {Promise}
@@ -82,7 +82,10 @@ export class ApplyShimShim {
       this.impl = window['ApplyShim'] || {
         ['detectMixin'](){return false},
         ['transformRule'](){},
-        ['transformRules'](){}
+        ['transformRules'](){},
+        ['transformTemplate'](){},
+        ['transformCustomStyle'](){},
+        ['transformStyle'](){}
       };
       this.impl['invalidCallback'] = invalidate;
     }
@@ -109,5 +112,28 @@ export class ApplyShimShim {
   transformRule(ast) {
     this.ensure();
     this.impl['transformRule'](ast);
+  }
+  /**
+   * @param {!HTMLStyleElement} style
+   * @param {string=} elementName
+   */
+  transformStyle(style, elementName = '') {
+    this.ensure();
+    this.impl['transformStyle'](style, elementName);
+  }
+  /**
+   * @param {!HTMLStyleElement} style
+   */
+  transformCustomStyle(style) {
+    this.ensure();
+    this.impl['transformCustomStyle'](style);
+  }
+  /**
+   * @param {!HTMLTemplateElement} template
+   * @param {string} elementName
+   */
+  transformTemplate(template, elementName) {
+    this.ensure();
+    this.impl['transformTemplate'](template, elementName);
   }
 }

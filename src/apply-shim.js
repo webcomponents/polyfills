@@ -73,7 +73,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 import {forEachRule, processVariableAndFallback, rulesForStyle, toCssText} from './style-util'
 import {MIXIN_MATCH, VAR_ASSIGN} from './common-regex'
-import {StyleNode} from './css-parse'
+import {StyleNode} from './css-parse' // eslint-disable-line no-unused-vars
 
 const APPLY_NAME_CLEAN = /;\s*/m;
 const INITIAL_INHERIT = /^\s*(initial)|(inherit)\s*$/;
@@ -85,19 +85,19 @@ const MIXIN_VAR_SEP = '_-_';
 /**
  * @typedef {!Object<string, string>}
  */
-let PropertyEntry;
+let PropertyEntry; // eslint-disable-line no-unused-vars
 
 /**
  * @typedef {!Object<string, boolean>}
  */
-let DependantsEntry;
+let DependantsEntry; // eslint-disable-line no-unused-vars
 
 /** @typedef {{
  *    properties: PropertyEntry,
  *    dependants: DependantsEntry
  * }}
  */
-let MixinMapEntry;
+let MixinMapEntry; // eslint-disable-line no-unused-vars
 
 // map of mixin to property names
 // --foo: {border: 2px} -> {properties: {(--foo, ['border'])}, dependants: {'element-name': proto}}
@@ -462,6 +462,4 @@ Object.defineProperty(ApplyShim.prototype, 'invalidCallback', {
   }
 });
 
-if (!window['ApplyShim']) {
-  window['ApplyShim'] = new ApplyShim();
-}
+export default ApplyShim;

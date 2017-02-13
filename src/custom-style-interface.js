@@ -13,12 +13,24 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 /**
  * @typedef {HTMLStyleElement | ({getStyle: (function():HTMLStyleElement)})}
  */
-let CustomStyleProvider;
+let CustomStyleProvider; // eslint-disable-line no-unused-vars
 
 const PROCESSED_MARKER = '__processedByShadyCSS';
 const SEEN_MARKER = '__seenByShadyCSS';
 
-/*
+/** @type {Promise<void>} */
+let readyPromise = null;
+
+/** @type {?function(function())} */
+let whenReady = window['HTMLImports'] && window['HTMLImports']['whenReady'] || null;
+
+/** @type {?function(!HTMLStyleElement)} */
+let transformFn = null;
+
+/** @type {?function()} */
+let validateFn = null;
+
+/**
 This interface is provided to add document-level <style> elements to ShadyCSS for processing.
 These styles must be processed by ShadyCSS to simulate ShadowRoot upper-bound encapsulation from outside styles
 In addition, these styles may also need to be processed for @apply rules and CSS Custom Properties
@@ -29,36 +41,41 @@ In addition, if the process used to discover document-level styles can be synchr
 This function will be called when calculating styles.
 
 An example usage of the document-level styling api can be found in `examples/document-style-lib.js`
+
+@unrestricted
 */
 export default class CustomStyleInterface {
-  constructor(transformerFn, validateFn) {
-    this.transformerFn = transformerFn;
-    this.validateFn = validateFn;
+  constructor() {
     /** @type {!Array<!CustomStyleProvider>} */
-    this.customStyles = [];
-    this.enqueued = false;
+    this['customStyles'] = [];
+    this['enqueued'] = false;
   }
   /**
    * Queue a validation for new custom styles to batch style recalculations
    */
   enqueueDocumentValidation() {
-    if (this.enqueued) {
+    if (this['enqueued'] || !validateFn) {
       return;
     }
-    this.enqueued = true;
-    if (window['HTMLImports']) {
-      window['HTMLImports']['whenReady'](this.validateFn);
-    } else if (document.readyState === 'complete') {
-      /*
-      TODO(dfreedm): Must implement a batching procedure when native HTML Imports are used to facilitate batching due to O(n^2) processing
-      */
-      this.validateFn();
+    this['enqueued'] = true;
+    if (whenReady) {
+      whenReady(validateFn);
     } else {
-      document.addEventListener('readystatechange', () => {
+      if (!readyPromise) {
+        /** @type {!function()} */
+        let resolveFn = function(){};
+        readyPromise = new Promise((resolve) => {resolveFn = resolve});
         if (document.readyState === 'complete') {
-          this.validateFn();
+          resolveFn();
+        } else {
+          document.addEventListener('readystatechange', () => {
+            if (document.readyState === 'complete') {
+              resolveFn();
+            }
+          });
         }
-      });
+      }
+      readyPromise.then(validateFn);
     }
   }
   /**
@@ -67,7 +84,7 @@ export default class CustomStyleInterface {
   addCustomStyle(style) {
     if (!style[SEEN_MARKER]) {
       style[SEEN_MARKER] = true;
-      this.customStyles.push(style);
+      this['customStyles'].push(style);
       this.enqueueDocumentValidation();
     }
   }
@@ -85,8 +102,9 @@ export default class CustomStyleInterface {
     return style;
   }
   findStyles() {
-    for (let i = 0; i < this.customStyles.length; i++) {
-      let customStyle = this.customStyles[i];
+    let cs = this['customStyles'];
+    for (let i = 0; i < cs.length; i++) {
+      let customStyle = cs[i];
       if (customStyle[PROCESSED_MARKER]) {
         continue;
       }
@@ -103,8 +121,37 @@ export default class CustomStyleInterface {
             appliedStyle.setAttribute(attr.name, attr.value);
           }
         }
-        this.transformerFn(appliedStyle || style);
+        if (transformFn) {
+          transformFn(appliedStyle || style);
+        }
       }
     }
   }
 }
+
+CustomStyleInterface.prototype['addCustomStyle'] = CustomStyleInterface.prototype.addCustomStyle;
+CustomStyleInterface.prototype['getStyleForCustomStyle'] = CustomStyleInterface.prototype.getStyleForCustomStyle;
+CustomStyleInterface.prototype['findStyles'] = CustomStyleInterface.prototype.findStyles;
+
+Object.defineProperties(CustomStyleInterface.prototype, {
+  'transformCallback': {
+    /** @return {?function(!HTMLStyleElement)} */
+    get() {
+      return transformFn;
+    },
+    /** @param {?function(!HTMLStyleElement)} fn */
+    set(fn) {
+      transformFn = fn;
+    }
+  },
+  'validateCallback': {
+    /** @return {?function()} */
+    get() {
+      return validateFn;
+    },
+    /** @param {?function()} fn */
+    set(fn) {
+      validateFn = fn;
+    },
+  }
+})

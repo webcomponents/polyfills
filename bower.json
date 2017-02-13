@@ -17,7 +17,7 @@
     "tests"
   ],
   "dependencies": {
-    "custom-elements": "webcomponents/custom-elements#remove-mo"
+    "custom-elements": "webcomponents/custom-elements#master"
   },
   "devDependencies": {
     "web-component-tester": "^4.3.5",
