@@ -16,9 +16,6 @@
     "test",
     "tests"
   ],
-  "dependencies": {
-    "custom-elements": "webcomponents/custom-elements#master"
-  },
   "devDependencies": {
     "web-component-tester": "^4.3.5",
     "webcomponentsjs": "webcomponents/webcomponentsjs#gulp-all-the-things"
