@@ -11,10 +11,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 import templateMap from './template-map'
 import {getIsExtends} from './style-util'
 import * as ApplyShimUtils from './apply-shim-utils'
+import documentWait from './document-wait'
 
-const ScopingShim = window['ScopingShim'];
-const ApplyShim = window['ApplyShim'];
-const CustomStyleInterface = window['CustomStyleInterface'];
+let ScopingShim;
+let ApplyShim;
+let CustomStyleInterface;
 
 /**
  * @param {Element} element
@@ -60,40 +61,53 @@ class ShadyInterface {
   styleDocument(properties) {
     ScopingShim['updateStyles'](properties);
   }
+  ensure() {}
 }
 
 /** @implements {StylingInterface} */
 class ApplyInterface {
   constructor() {
     this.applyShim = new ApplyShimUtils.ApplyShimShim();
-    if (CustomStyleInterface) {
-      CustomStyleInterface['transformCallback'] = (style) => {
+    this.customStyleInterface = null;
+    this.booted = false;
+  }
+  ensure() {
+    if (this.booted) {
+      return;
+    }
+    this.customStyleInterface = window['CustomStyleInterface'];
+    if (this.customStyleInterface) {
+      this.customStyleInterface['transformCallback'] = (style) => {
         this.applyShim.transformCustomStyle(style);
       };
-      CustomStyleInterface['validateCallback'] = () => {
+      this.customStyleInterface['validateCallback'] = () => {
         this.flushCustomStyles();
       }
     }
+    this.booted = true;
   }
   prepareTemplate(template, elementName) {
+    this.ensure();
     templateMap[elementName] = template;
     this.applyShim.transformTemplate(template, elementName);
   }
   flushCustomStyles() {
-    if (CustomStyleInterface) {
-      CustomStyleInterface['findStyles']();
-      let styles = CustomStyleInterface['customStyles'];
+    this.ensure();
+    if (this.customStyleInterface) {
+      this.customStyleInterface['findStyles']();
+      let styles = this.customStyleInterface['customStyles'];
       for (let i = 0; i < styles.length; i++ ) {
         let cs = styles[i];
-        let style = CustomStyleInterface['getStyleForCustomStyle'](cs);
+        let style = this.customStyleInterface['getStyleForCustomStyle'](cs);
         if (style) {
           this.applyShim.transformCustomStyle(style);
         }
       }
-      CustomStyleInterface['enqueued'] = false;
+      this.customStyleInterface['enqueued'] = false;
     }
   }
   styleSubtree(element, properties) {
+    this.ensure();
     if (properties) {
       updateNativeProperties(element, properties);
     }
@@ -110,6 +124,7 @@ class ApplyInterface {
     }
   }
   styleElement(element) {
+    this.ensure();
     let {is} = getIsExtends(element);
     let template = templateMap[is];
     if (template && !ApplyShimUtils.templateIsValid(template)) {
@@ -129,6 +144,7 @@ class ApplyInterface {
     }
   }
   styleDocument(properties) {
+    this.ensure();
     this.styleSubtree(document.documentElement, properties);
   }
 }
@@ -152,25 +168,37 @@ class CustomOnlyInterface {
   }
 }
 
-/** @type {StylingInterface} */
-let styleInterface;
-
-if (ScopingShim) {
-  styleInterface = new ShadyInterface();
-} else if (ApplyShim) {
-  styleInterface = new ApplyInterface();
-} else {
-  styleInterface = new CustomOnlyInterface();
-}
-
 export default class ElementStyleInterface {
+  constructor() {
+    /** @type {StylingInterface} */
+    this.styleInterface = null;
+    documentWait(() => {this.ensure()});
+  }
+  ensure() {
+    if (this.styleInterface) {
+      return;
+    }
+    ScopingShim = window['ScopingShim'];
+    ApplyShim = window['ApplyShim'];
+    CustomStyleInterface = window['CustomStyleInterface'];
+    if (ScopingShim) {
+      this.styleInterface = new ShadyInterface();
+    } else if (ApplyShim) {
+      this.styleInterface = new ApplyInterface();
+    } else if (CustomStyleInterface) {
+      this.styleInterface = new CustomOnlyInterface();
+    }
+  }
   /**
    * @param {HTMLTemplateElement} template
    * @param {string} elementName
    * @param {string=} elementExtends
    */
   prepareTemplate(template, elementName, elementExtends) {
-    styleInterface.prepareTemplate(template, elementName, elementExtends)
+    this.ensure();
+    if (this.styleInterface) {
+      this.styleInterface.prepareTemplate(template, elementName, elementExtends)
+    }
   }
 
   /**
@@ -178,24 +206,33 @@ export default class ElementStyleInterface {
    * @param {Object=} properties
    */
   styleSubtree(element, properties) {
-    styleInterface.flushCustomStyles();
-    styleInterface.styleSubtree(element, properties);
+    this.ensure();
+    if (this.styleInterface) {
+      this.styleInterface.flushCustomStyles();
+      this.styleInterface.styleSubtree(element, properties);
+    }
   }
 
   /**
    * @param {Element} element
    */
   styleElement(element) {
-    styleInterface.flushCustomStyles();
-    styleInterface.styleElement(element);
+    this.ensure();
+    if (this.styleInterface) {
+      this.styleInterface.flushCustomStyles();
+      this.styleInterface.styleElement(element);
+    }
   }
 
   /**
    * @param {Object=} properties
    */
   styleDocument(properties) {
-    styleInterface.flushCustomStyles();
-    styleInterface.styleDocument(properties);
+    this.ensure();
+    if (this.styleInterface) {
+      this.styleInterface.flushCustomStyles();
+      this.styleInterface.styleDocument(properties);
+    }
   }
 
   /**

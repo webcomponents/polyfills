@@ -8,6 +8,8 @@ Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 */
 
+import documentWait from './document-wait'
+
 'use strict';
 
 /**
@@ -17,12 +19,6 @@ let CustomStyleProvider; // eslint-disable-line no-unused-vars
 
 const PROCESSED_MARKER = '__processedByShadyCSS';
 const SEEN_MARKER = '__seenByShadyCSS';
-
-/** @type {Promise<void>} */
-let readyPromise = null;
-
-/** @type {?function(function())} */
-let whenReady = window['HTMLImports'] && window['HTMLImports']['whenReady'] || null;
 
 /** @type {?function(!HTMLStyleElement)} */
 let transformFn = null;
@@ -54,29 +50,13 @@ export default class CustomStyleInterface {
    * Queue a validation for new custom styles to batch style recalculations
    */
   enqueueDocumentValidation() {
-    if (this['enqueued'] || !validateFn) {
+    if (this['enqueued']) {
       return;
     }
     this['enqueued'] = true;
-    if (whenReady) {
-      whenReady(validateFn);
-    } else {
-      if (!readyPromise) {
-        /** @type {!function()} */
-        let resolveFn = function(){};
-        readyPromise = new Promise((resolve) => {resolveFn = resolve});
-        if (document.readyState === 'complete') {
-          resolveFn();
-        } else {
-          document.addEventListener('readystatechange', () => {
-            if (document.readyState === 'complete') {
-              resolveFn();
-            }
-          });
-        }
-      }
-      readyPromise.then(validateFn);
-    }
+    documentWait(() => {
+      validateFn();
+    });
   }
   /**
    * @param {!HTMLStyleElement} style

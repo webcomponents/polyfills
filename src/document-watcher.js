@@ -12,6 +12,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 import {nativeShadow} from './style-settings'
 import StyleTransformer from './style-transformer'
+import {getIsExtends} from './style-util'
 
 export let flush = function() {};
 
@@ -42,7 +43,7 @@ if (!nativeShadow) {
             // may no longer be in a shadowroot
             let host = /** @type {ShadowRoot} */(root).host;
             if (host) {
-              let scope = host.is || host.localName;
+              let {is: scope} = getIsExtends(host);
               StyleTransformer.dom(n, scope);
             }
           }

@@ -21,6 +21,7 @@ import StyleCache from './style-cache'
 import {flush as watcherFlush} from './document-watcher'
 import templateMap from './template-map'
 import * as ApplyShimUtils from './apply-shim-utils'
+import documentWait from './document-wait'
 
 /**
  * @const {ApplyShimUtils.ApplyShimShim}
@@ -40,6 +41,7 @@ export default class ScopingShim {
     ast['rules'] = [];
     this._documentOwnerStyleInfo = StyleInfo.set(document.documentElement, new StyleInfo(ast));
     this._elementsHaveApplied = false;
+    documentWait(() => {this._ensureCustomStyleInterface()});
   }
   flush() {
     watcherFlush();
@@ -165,7 +167,7 @@ export default class ScopingShim {
       this._customStyleInterface = {
         ['findStyles']() {},
         ['enqueued']: false,
-        ['getStyleForCustomStyle'](s) { return null }
+        ['getStyleForCustomStyle'](s) { return null } // eslint-disable-line no-unused-vars
       }
     }
   }
@@ -199,7 +201,7 @@ export default class ScopingShim {
    * @param {Object=} overrideProps
    */
   applyElementStyle(host, overrideProps) {
-    let is = host.getAttribute('is') || host.localName;
+    let {is} = StyleUtil.getIsExtends(host);
     let styleInfo = StyleInfo.get(host);
     if (!styleInfo) {
       styleInfo = this._prepareHost(host);
