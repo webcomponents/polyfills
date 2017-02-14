@@ -260,7 +260,7 @@
     }
 
     /**
-     * @param {!(HTMLDocument|DocumentFragment|Element)} doc
+     * @param {!(HTMLDocument|DocumentFragment)} doc
      */
     loadImports(doc) {
       const links = /** @type {!NodeList<!HTMLLinkElement>} */
@@ -579,11 +579,10 @@
             continue;
           }
           // NOTE: added scripts are not updating currentScript in IE.
-          // TODO add test w/ script & stylesheet maybe
-          if (isImportLink(link)) {
-            this.loadImport( /** @type {!HTMLLinkElement} */ (link));
-          } else {
-            this.loadImports( /** @type {!Element} */ (link));
+          const links = /** @type {!NodeList<!HTMLLinkElement>} */
+            (isImportLink(link) ? [link] : link.querySelectorAll(importSelector));
+          for (let iii = 0; iii < links.length; iii++) {
+            this.loadImport(links[iii]);
           }
         }
       }
