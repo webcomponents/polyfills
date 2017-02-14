@@ -19,27 +19,10 @@ let sourcemaps = require('gulp-sourcemaps');
 let rename = require('gulp-rename');
 let closureCompiler = compilerPackage.gulp();
 let rollup = require('gulp-rollup');
-let babel = require('gulp-babel');
+const size = require('gulp-size');
 
-let hasLicense = false;
-let shouldPrintComment = (c) => {
-    if (!hasLicense) {
-      return hasLicense = /@license/.test(c);
-    }
-    return false;
-  }
-let babiliConfig = {
-  presets: ['babili'],
-  shouldPrintComment
-}
-
-let es5Config = {
-  presets: ['babili', 'es2015'],
-  shouldPrintComment
-}
-
-gulp.task('default', function() {
-  return gulp.src(['./src/*.js'], {base: './'})
+gulp.task('default', () => {
+  return gulp.src('./src/*.js')
     .pipe(sourcemaps.init())
     .pipe(closureCompiler({
       new_type_inf: true,
@@ -48,50 +31,22 @@ gulp.task('default', function() {
       language_out: 'ES5_STRICT',
       output_wrapper: '(function(){\n%output%\n}).call(this)',
       js_output_file: 'shadydom.min.js',
-      rewrite_polyfills: false
+      rewrite_polyfills: false,
+      assume_function_wrapper: true
     }))
-    .on('error', (e) => console.error(e))
-    .pipe(sourcemaps.write('/'))
+    .pipe(size({showFiles: true, showTotal: false, gzip: true}))
+    .pipe(sourcemaps.write('.'))
     .pipe(gulp.dest('./'))
 });
-
-gulp.task('babili', () => {
-  return gulp.src('src/*.js')
-  .pipe(sourcemaps.init())
-  .pipe(rollup({
-    entry: 'src/env.js',
-    format: 'iife',
-    moduleName: 'shadydom',
-    sourceMap: true
-  }))
-  .pipe(babel(babiliConfig))
-  .pipe(rename('shadydom.min.js'))
-  .pipe(sourcemaps.write('.'))
-  .pipe(gulp.dest('./'))
-})
 
 gulp.task('debug', () => {
   return gulp.src('src/*.js')
   .pipe(rollup({
-    entry: 'src/env.js',
+    entry: 'src/shadydom.js',
     format: 'iife',
     moduleName: 'shadydom'
   }))
   .pipe(rename('shadydom.min.js'))
-  .pipe(gulp.dest('./'))
-})
-
-gulp.task('es5', () => {
-  return gulp.src('src/*.js')
-  .pipe(sourcemaps.init())
-  .pipe(rollup({
-    entry: 'src/env.js',
-    format: 'iife',
-    moduleName: 'shadydom',
-    sourceMap: true
-  }))
-  .pipe(babel(es5Config))
-  .pipe(rename('shadydom.min.js'))
-  .pipe(sourcemaps.write('.'))
+  .pipe(size({showFiles: true, showTotal: false, gzip: true}))
   .pipe(gulp.dest('./'))
 })
