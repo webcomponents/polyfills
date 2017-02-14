@@ -10,7 +10,7 @@ addons:
     packages:
     - google-chrome-stable
 before_script:
-- npm lint
+- npm run lint
 - npm install -g bower
 - bower install
 - gulp test-modules
