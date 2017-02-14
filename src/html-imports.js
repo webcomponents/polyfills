@@ -225,6 +225,12 @@
   const pendingStylesSelector = `style[${importDependencyAttr}],
     link[rel=stylesheet][${importDependencyAttr}]`;
 
+  /** @type {!Symbol} */
+  const loaded = Symbol('loaded');
+
+  /** @type {!Symbol} */
+  const importDoc = Symbol('importDoc');
+
   /**
    * Importer will:
    * - load any linked import documents (with deduping)
@@ -275,7 +281,7 @@
         // If import is already loaded, we can safely associate it to the link
         // and fire the load/error event.
         const imp = this.documents[url];
-        if (imp && imp['__loaded']) {
+        if (imp && imp[loaded]) {
           link.import = imp;
           this.fireEventIfNeeded(link);
         }
@@ -427,6 +433,13 @@
           n.readyState = 'loading';
           // Suppress Closure warning about incompatible subtype assignment.
           ( /** @type {!HTMLElement} */ (n).import = n);
+          // Override baseURI so that link.import.baseURI can be used seemlessly
+          // on native or polyfilled html-imports.
+          Object.defineProperty(n, 'baseURI', {
+            get: () => n.href,
+            configurable: true,
+            enumerable: true
+          });
           this.flatten(imp);
           n.appendChild(imp);
         }
@@ -498,29 +511,22 @@
         // Check if was already moved to head, to handle the case where the element
         // has already been moved but it is still loading.
         if (needsMove && s.parentNode !== document.head) {
-          let rootImport = importForElement(s);
-          while (rootImport && importForElement(rootImport)) {
-            rootImport = importForElement(rootImport);
-          }
           // Replace the element we're about to move with a placeholder.
-          // NOTE: we first have to append the element to the new parent, then
-          // we can put the placeholder at its place, otherwise load/error events
-          // seem to be fired too early.
-          const parent = s.parentNode,
-            next = s.nextSibling,
-            placeholder = document.createElement(s.localName);
+          const placeholder = document.createElement(s.localName);
           // Add reference of the moved element.
           placeholder['__appliedElement'] = s;
           // Disable this from appearing in document.styleSheets.
           placeholder.setAttribute('type', 'import-placeholder');
-          // First, re-parent the element...
-          if (rootImport.parentNode === document.head) {
-            document.head.insertBefore(s, rootImport);
-          } else {
-            document.head.appendChild(s);
+          // Append placeholder next to the sibling, and move original to <head>.
+          s.parentNode.insertBefore(placeholder, s.nextSibling);
+          let newSibling = importForElement(s);
+          while (newSibling && importForElement(newSibling)) {
+            newSibling = importForElement(newSibling);
           }
-          // ...and then, insert the placeholder at the right place.
-          parent.insertBefore(placeholder, next);
+          if (newSibling.parentNode !== document.head) {
+            newSibling = null;
+          }
+          document.head.insertBefore(s, newSibling);
           // Enable the loading of <link rel=stylesheet>.
           s.removeAttribute('type');
         }
@@ -545,8 +551,8 @@
      */
     fireEventIfNeeded(link) {
       // Don't fire twice same event.
-      if (!link['__loaded']) {
-        link['__loaded'] = true;
+      if (!link[loaded]) {
+        link[loaded] = true;
         // Update link's import readyState.
         link.import && (link.import.readyState = 'complete');
         const eventType = link.import ? 'load' : 'error';
@@ -600,16 +606,16 @@
    * @param {function()=} callback
    */
   const whenElementLoaded = (element, callback) => {
-    if (element['__loaded']) {
+    if (element[loaded]) {
       callback && callback();
     } else if (element.localName === 'script' && !element.src) {
       // Inline scripts don't trigger load/error events, consider them already loaded.
-      element['__loaded'] = true;
+      element[loaded] = true;
       callback && callback();
     } else {
       const onLoadingDone = event => {
         element.removeEventListener(event.type, onLoadingDone);
-        element['__loaded'] = true;
+        element[loaded] = true;
         callback && callback();
       };
       element.addEventListener('load', onLoadingDone);
@@ -677,22 +683,29 @@
   }
 
   /**
-   * Returns the link that imported the element.
+   * Returns the import document containing the element.
    * @param {!Node} element
    * @return {HTMLLinkElement|Document|undefined}
    */
   const importForElement = element => {
     if (useNative) {
-      return element.ownerDocument;
+      // Return only if not in the main doc!
+      return element.ownerDocument !== document ? element.ownerDocument : null;
     }
-    let owner = element['__ownerImport'];
-    if (!owner) {
-      owner = element;
-      // Walk up the parent tree until we find an import.
-      while ((owner = owner.parentNode || owner.host) && !isImportLink(owner)) {}
-      element['__ownerImport'] = owner;
+    let doc = element[importDoc];
+    if (!doc && element.parentNode) {
+      doc = /** @type {!Element} */ (element.parentNode);
+      if (typeof doc.closest === 'function') {
+        // Element.closest returns the element itself if it matches the selector,
+        // so we search the closest import starting from the parent.
+        doc = doc.closest(importSelector);
+      } else {
+        // Walk up the parent tree until we find an import.
+        while (!isImportLink(doc) && (doc = doc.parentNode)) {}
+      }
+      element[importDoc] = doc;
     }
-    return owner;
+    return doc;
   }
 
   const newCustomEvent = (type, params) => {
@@ -713,7 +726,7 @@
       (document.querySelectorAll(importSelector));
     for (let i = 0, l = imps.length, imp; i < l && (imp = imps[i]); i++) {
       if (!imp.import || imp.import.readyState !== 'loading') {
-        imp['__loaded'] = true;
+        imp[loaded] = true;
       }
     }
     // Listen for load/error events to capture dynamically added scripts.
@@ -723,7 +736,7 @@
     const onLoadingDone = event => {
       const elem = /** @type {!Element} */ (event.target);
       if (isImportLink(elem)) {
-        elem['__loaded'] = true;
+        elem[loaded] = true;
       }
     };
     document.addEventListener('load', onLoadingDone, true /* useCapture */ );
