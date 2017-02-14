@@ -8,7 +8,7 @@
     Code distributed by Google as part of the polymer project is also
     subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 -->
-<title>ShadyCSS Tests</title>
+<title>ScopingShim Tests</title>
 <meta charset="utf-8">
 
 <script src="../../web-component-tester/browser.js"></script>
@@ -53,7 +53,7 @@
       webcomponents = 'wc-register=true';
     }
     // if native is available, make sure to test polyfill
-    if (Element.prototype.attachShadow) {
+    if (Element.prototype.attachShadow && document.documentElement.getRootNode) {
       webcomponents = addUrlOption(webcomponents, 'wc-shadydom=true');
     }
     // ce + sd becomes a single test iteration.

@@ -12,9 +12,16 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <head>
 
   <meta charset="utf-8">
-
+  <script>
+  WCT = {waitFor: (cb) => {HTMLImports.whenReady(cb)}}
+  </script>
   <script src="../../web-component-tester/browser.js"></script>
-  <script src="../../webcomponentsjs/webcomponents-lite.js"></script>
+  <script src="../../template/template.js"></script>
+  <script src="../../html-imports/html-imports.min.js"></script>
+  <script src="../../custom-elements/custom-elements.min.js"></script>
+  <script src="../../shadydom/shadydom.min.js"></script>
+  <script src="../scoping-shim.min.js"></script>
+  <script src="../apply-shim.min.js"></script>
   <title>Apply Shim</title>
 
 </head>
@@ -132,7 +139,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         var info = prep('basic');
         style = info.style;
         ast = info.ast;
-        style.textContent = window.ShadyCSS.styleAstToString(ast);
+        style.textContent = window.ScopingShim.styleAstToString(ast);
       });
 
       test('style is transformed', function() {
@@ -226,7 +233,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       var style, ast, template;
       suiteSetup(function() {
         template = document.querySelector('template#element').cloneNode(true);
-        window.ShadyCSS.prepareTemplate(template, 'x-element');
+        window.ScopingShim.prepareTemplate(template, 'x-element');
         var info = prep('element', 'x-element');
         style = info.style;
         ast = info.ast;
@@ -238,7 +245,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
       test('Defining the mixin invalidates the element', function() {
         var template2 = document.querySelector('template#element2').cloneNode(true);
-        window.ShadyCSS.prepareTemplate(template2, 'x-element-2');
+        window.ScopingShim.prepareTemplate(template2, 'x-element-2');
         prep('element2', 'x-element-2');
         assert.equal(template._applyShimInvalid, true);
       });

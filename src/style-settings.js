@@ -26,8 +26,8 @@ function parseSettings(settings) {
   }
 }
 
-if (window.ShadyCSS) {
-  parseSettings(window['ShadyCSS']);
-} else if (window.WebComponents) {
+if (window['ScopingShim']) {
+  parseSettings(window['ScopingShim']);
+} else if (window['WebComponents']) {
   parseSettings(window['WebComponents']['flags']);
 }

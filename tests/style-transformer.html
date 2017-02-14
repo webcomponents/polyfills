@@ -8,11 +8,18 @@ The complete set of contributors may be found at http://polymer.github.io/CONTRI
 Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 -->
+<script>
+WCT = {waitFor: (cb) => {HTMLImports.whenReady(cb)}}
+</script>
 <script src="../../web-component-tester/browser.js"></script>
 <script>
-window.ShadyCSS = {shimshadow: true};
+window.ScopingShim = {shimshadow: true};
 </script>
-<script src="../../webcomponentsjs/webcomponents-lite.js"></script>
+<script src="../../template/template.js"></script>
+<script src="../../html-imports/html-imports.min.js"></script>
+<script src="../../custom-elements/custom-elements.min.js"></script>
+<script src="../../shadydom/shadydom.min.js"></script>
+<script src="../scoping-shim.min.js"></script>
 <script src="module/generated/style-transformer.js"></script>
 <title>Style Transformer</title>
 
@@ -66,7 +73,7 @@ window.ShadyCSS = {shimshadow: true};
 <script>
 function processTemplate(templateName, elementName) {
   var template = document.querySelector('template#' + templateName);
-  window.ShadyCSS.prepareTemplate(template, elementName);
+  window.ScopingShim.prepareTemplate(template, elementName);
   return template._styleAst;
 }
 suite('Style Transformer', function() {
@@ -129,7 +136,7 @@ suite('Style Transformer', function() {
     setup(function() {
       var template = document.querySelector('template#custom-style');
       var style = template.content.querySelector('style').cloneNode(true);
-      var ast = window.ShadyCSS.getStyleAst(style);
+      var ast = window.ScopingShim.getStyleAst(style);
       rule = ast.rules[0];
     });
 

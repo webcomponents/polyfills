@@ -8,8 +8,18 @@ The complete set of contributors may be found at http://polymer.github.io/CONTRI
 Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 -->
+<script>
+WCT = {waitFor: (cb) => {HTMLImports.whenReady(cb)}}
+</script>
 <script src="../../web-component-tester/browser.js"></script>
-<script src="../../webcomponentsjs/webcomponents-lite.js"></script>
+<script src="../../template/template.js"></script>
+<script src="../../html-imports/html-imports.min.js"></script>
+<script src="../../custom-elements/custom-elements.min.js"></script>
+<script src="../../shadydom/shadydom.min.js"></script>
+<script src="../scoping-shim.min.js"></script>
+<script src="../apply-shim.min.js"></script>
+<script src="../custom-style-interface.min.js"></script>
+<script src="../element-style-interface.min.js"></script>
 <script src="module/generated/make-element.js"></script>
 <script src="module/generated/custom-style-element.js"></script>
 
