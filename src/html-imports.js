@@ -436,7 +436,9 @@
           // Override baseURI so that link.import.baseURI can be used seemlessly
           // on native or polyfilled html-imports.
           Object.defineProperty(n, 'baseURI', {
-            get: () => n.href
+            get: () => n.href,
+            configurable: true,
+            enumerable: true
           });
           this.flatten(imp);
           n.appendChild(imp);
