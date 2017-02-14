@@ -49,56 +49,10 @@
           Path.replaceAttrUrl(element.getAttribute('src'), base));
       }
       if (element.localName === 'style') {
-        Path.resolveUrlsInStyle(element, base);
+        let r = Path.replaceUrls(element.textContent, base, CSS_URL_REGEXP);
+        r = Path.replaceUrls(r, base, CSS_IMPORT_REGEXP);
+        element.textContent = r;
       }
-    },
-
-    fixUrlAttributes(element, base) {
-      const attrs = ['action', 'src', 'href', 'url', 'style'];
-      for (let i = 0, a; i < attrs.length && (a = attrs[i]); i++) {
-        const at = element.attributes[a];
-        const v = at && at.value;
-        // Skip bound attribute values (assume binding is done via {} and []).
-        // TODO(valdrin) consider exposing a library-implementable hook.
-        if (v && (v.search(/({{|\[\[)/) < 0)) {
-          at.value = (a === 'style') ?
-            Path.resolveUrlsInCssText(v, base) :
-            Path.replaceAttrUrl(v, base);
-        }
-      }
-    },
-
-    fixUrlsInTemplates(element, base) {
-      const t$ = element.querySelectorAll('template');
-      for (let i = 0; i < t$.length; i++) {
-        Path.fixUrlsInTemplate(t$[i], base);
-      }
-    },
-
-    fixUrlsInTemplate(template, base) {
-      // If template is not supported, still resolve urls within it.
-      const content = template.content || template;
-      const n$ = content.querySelectorAll(
-        'style, form[action], [src], [href], [url], [style]');
-      for (let i = 0; i < n$.length; i++) {
-        const n = n$[i];
-        if (n.localName == 'style') {
-          Path.resolveUrlsInStyle(n, base);
-        } else {
-          Path.fixUrlAttributes(n, base);
-        }
-      }
-      Path.fixUrlsInTemplates(content, base);
-    },
-
-    resolveUrlsInStyle(style, linkUrl) {
-      style.textContent = Path.resolveUrlsInCssText(style.textContent, linkUrl);
-    },
-
-    resolveUrlsInCssText(cssText, linkUrl) {
-      let r = Path.replaceUrls(cssText, linkUrl, CSS_URL_REGEXP);
-      r = Path.replaceUrls(r, linkUrl, CSS_IMPORT_REGEXP);
-      return r;
     },
 
     replaceUrls(text, linkUrl, regexp) {
@@ -371,7 +325,6 @@
           inlineScriptIndex++;
         }
       }
-      Path.fixUrlsInTemplates(content, url);
       return content;
     }
 
