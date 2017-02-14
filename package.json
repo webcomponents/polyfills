@@ -16,7 +16,7 @@
     "url": "https://github.com/webcomponents/custom-elements/issues"
   },
   "scripts": {
-    "install": "$(npm bin)/bower install",
+    "bower-install": "$(npm bin)/bower install",
     "build": "$(npm bin)/gulp",
     "test": "$(npm bin)/wct"
   },

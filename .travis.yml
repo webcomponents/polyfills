@@ -10,6 +10,7 @@ addons:
     - google-chrome-stable
 before_script:
 - export PATH=$PWD/node_modules/.bin:$PATH
+- npm run bower-install
 script:
 - npm run build
 - xvfb-run wct
