@@ -49,6 +49,29 @@
         done();
       });
     });
+
+    test('concurrent loads', function(done) {
+      var loadSpy = sinon.stub();
+      var errorSpy = sinon.stub();
+      
+      var link = document.createElement('link');
+      link.setAttribute('rel', 'import');
+      link.setAttribute('href', 'imports/load-a.html');
+      link.addEventListener('load', loadSpy);
+      link.addEventListener('error', errorSpy);
+
+      // Add also a <style> to have multiple mutations.
+      // HTMLImports should wait for link to load.
+      document.head.appendChild(document.createElement('style'));
+      document.head.appendChild(link);
+
+      HTMLImports.whenReady(function() {
+        assert.equal(errorSpy.callCount, 0, 'error not called');
+        assert.equal(loadSpy.callCount, 1, 'load ok');
+        assert.isOk(link.import, 'import ok');
+        done();
+      });
+    });
   </script>
 </body>
 

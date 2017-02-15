@@ -49,56 +49,10 @@
           Path.replaceAttrUrl(element.getAttribute('src'), base));
       }
       if (element.localName === 'style') {
-        Path.resolveUrlsInStyle(element, base);
+        let r = Path.replaceUrls(element.textContent, base, CSS_URL_REGEXP);
+        r = Path.replaceUrls(r, base, CSS_IMPORT_REGEXP);
+        element.textContent = r;
       }
-    },
-
-    fixUrlAttributes(element, base) {
-      const attrs = ['action', 'src', 'href', 'url', 'style'];
-      for (let i = 0, a; i < attrs.length && (a = attrs[i]); i++) {
-        const at = element.attributes[a];
-        const v = at && at.value;
-        // Skip bound attribute values (assume binding is done via {} and []).
-        // TODO(valdrin) consider exposing a library-implementable hook.
-        if (v && (v.search(/({{|\[\[)/) < 0)) {
-          at.value = (a === 'style') ?
-            Path.resolveUrlsInCssText(v, base) :
-            Path.replaceAttrUrl(v, base);
-        }
-      }
-    },
-
-    fixUrlsInTemplates(element, base) {
-      const t$ = element.querySelectorAll('template');
-      for (let i = 0; i < t$.length; i++) {
-        Path.fixUrlsInTemplate(t$[i], base);
-      }
-    },
-
-    fixUrlsInTemplate(template, base) {
-      // If template is not supported, still resolve urls within it.
-      const content = template.content || template;
-      const n$ = content.querySelectorAll(
-        'style, form[action], [src], [href], [url], [style]');
-      for (let i = 0; i < n$.length; i++) {
-        const n = n$[i];
-        if (n.localName == 'style') {
-          Path.resolveUrlsInStyle(n, base);
-        } else {
-          Path.fixUrlAttributes(n, base);
-        }
-      }
-      Path.fixUrlsInTemplates(content, base);
-    },
-
-    resolveUrlsInStyle(style, linkUrl) {
-      style.textContent = Path.resolveUrlsInCssText(style.textContent, linkUrl);
-    },
-
-    resolveUrlsInCssText(cssText, linkUrl) {
-      let r = Path.replaceUrls(cssText, linkUrl, CSS_URL_REGEXP);
-      r = Path.replaceUrls(r, linkUrl, CSS_IMPORT_REGEXP);
-      return r;
     },
 
     replaceUrls(text, linkUrl, regexp) {
@@ -225,12 +179,6 @@
   const pendingStylesSelector = `style[${importDependencyAttr}],
     link[rel=stylesheet][${importDependencyAttr}]`;
 
-  /** @type {!Symbol} */
-  const loaded = Symbol('loaded');
-
-  /** @type {!Symbol} */
-  const importDoc = Symbol('importDoc');
-
   /**
    * Importer will:
    * - load any linked import documents (with deduping)
@@ -268,7 +216,6 @@
       for (let i = 0, l = links.length; i < l; i++) {
         this.loadImport(links[i]);
       }
-      this.processImportsIfLoadingDone();
     }
 
     /**
@@ -281,7 +228,7 @@
         // If import is already loaded, we can safely associate it to the link
         // and fire the load/error event.
         const imp = this.documents[url];
-        if (imp && imp[loaded]) {
+        if (imp && imp['__loaded']) {
           link.import = imp;
           this.fireEventIfNeeded(link);
         }
@@ -296,6 +243,7 @@
         this.inflight--;
         // Load subtree.
         this.loadImports(doc);
+        this.processImportsIfLoadingDone();
       }, () => {
         // If load fails, handle error.
         this.documents[url] = null;
@@ -371,7 +319,6 @@
           inlineScriptIndex++;
         }
       }
-      Path.fixUrlsInTemplates(content, url);
       return content;
     }
 
@@ -551,8 +498,8 @@
      */
     fireEventIfNeeded(link) {
       // Don't fire twice same event.
-      if (!link[loaded]) {
-        link[loaded] = true;
+      if (!link['__loaded']) {
+        link['__loaded'] = true;
         // Update link's import readyState.
         link.import && (link.import.readyState = 'complete');
         const eventType = link.import ? 'load' : 'error';
@@ -574,16 +521,15 @@
           continue;
         }
         for (let ii = 0; ii < m.addedNodes.length; ii++) {
-          const link = m.addedNodes[ii];
-          if (!link || link.nodeType !== Node.ELEMENT_NODE) {
+          const elem = m.addedNodes[ii];
+          if (!elem || elem.nodeType !== Node.ELEMENT_NODE) {
             continue;
           }
           // NOTE: added scripts are not updating currentScript in IE.
-          // TODO add test w/ script & stylesheet maybe
-          if (isImportLink(link)) {
-            this.loadImport( /** @type {!HTMLLinkElement} */ (link));
+          if (isImportLink(elem)) {
+            this.loadImport( /** @type {!HTMLLinkElement} */ (elem));
           } else {
-            this.loadImports( /** @type {!Element} */ (link));
+            this.loadImports( /** @type {!Element} */ (elem));
           }
         }
       }
@@ -606,16 +552,16 @@
    * @param {function()=} callback
    */
   const whenElementLoaded = (element, callback) => {
-    if (element[loaded]) {
+    if (element['__loaded']) {
       callback && callback();
     } else if (element.localName === 'script' && !element.src) {
       // Inline scripts don't trigger load/error events, consider them already loaded.
-      element[loaded] = true;
+      element['__loaded'] = true;
       callback && callback();
     } else {
       const onLoadingDone = event => {
         element.removeEventListener(event.type, onLoadingDone);
-        element[loaded] = true;
+        element['__loaded'] = true;
         callback && callback();
       };
       element.addEventListener('load', onLoadingDone);
@@ -692,7 +638,7 @@
       // Return only if not in the main doc!
       return element.ownerDocument !== document ? element.ownerDocument : null;
     }
-    let doc = element[importDoc];
+    let doc = element['__importDoc'];
     if (!doc && element.parentNode) {
       doc = /** @type {!Element} */ (element.parentNode);
       if (typeof doc.closest === 'function') {
@@ -703,7 +649,7 @@
         // Walk up the parent tree until we find an import.
         while (!isImportLink(doc) && (doc = doc.parentNode)) {}
       }
-      element[importDoc] = doc;
+      element['__importDoc'] = doc;
     }
     return doc;
   }
@@ -726,7 +672,7 @@
       (document.querySelectorAll(importSelector));
     for (let i = 0, l = imps.length, imp; i < l && (imp = imps[i]); i++) {
       if (!imp.import || imp.import.readyState !== 'loading') {
-        imp[loaded] = true;
+        imp['__loaded'] = true;
       }
     }
     // Listen for load/error events to capture dynamically added scripts.
@@ -736,7 +682,7 @@
     const onLoadingDone = event => {
       const elem = /** @type {!Element} */ (event.target);
       if (isImportLink(elem)) {
-        elem[loaded] = true;
+        elem['__loaded'] = true;
       }
     };
     document.addEventListener('load', onLoadingDone, true /* useCapture */ );
