@@ -23,6 +23,7 @@ import templateMap from './template-map'
 import * as ApplyShimUtils from './apply-shim-utils'
 import documentWait from './document-wait'
 import {updateNativeProperties} from './common-utils'
+import {CustomStyleInterfaceInterface} from './custom-style-interface' //eslint-disable-line no-unused-vars
 
 /**
  * @const {StyleCache}
@@ -38,6 +39,9 @@ export default class ScopingShim {
     this._documentOwnerStyleInfo = StyleInfo.set(document.documentElement, new StyleInfo(ast));
     this._elementsHaveApplied = false;
     documentWait(() => {this._ensureCustomStyleInterface()});
+    this._applyShim = null;
+    /** @type {?CustomStyleInterfaceInterface} */
+    this._customStyleInterface = null;
   }
   flush() {
     watcherFlush();
@@ -165,8 +169,8 @@ export default class ScopingShim {
   _ensureCustomStyleInterface() {
     if (this._customStyleInterface) {
       return;
-    } else if (window['ShadyCSS']['CustomStyleInterface']) {
-      this._customStyleInterface = window['ShadyCSS']['CustomStyleInterface'];
+    } else if (window.ShadyCSS.CustomStyleInterface) {
+      this._customStyleInterface = /** @type {!CustomStyleInterfaceInterface} */(window.ShadyCSS.CustomStyleInterface);
       /** @type {function(!HTMLStyleElement)} */
       this._customStyleInterface['transformCallback'] = (style) => {this.transformCustomStyleForDocument(style)};
       this._customStyleInterface['validateCallback'] = () => {
@@ -181,11 +185,11 @@ export default class ScopingShim {
         })
       };
     } else {
-      this._customStyleInterface = {
+      this._customStyleInterface = /** @type {!CustomStyleInterfaceInterface} */({
         ['findStyles']() {},
         ['enqueued']: false,
         ['getStyleForCustomStyle'](s) { return null } // eslint-disable-line no-unused-vars
-      }
+      })
     }
   }
   /**

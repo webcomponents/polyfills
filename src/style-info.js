@@ -63,7 +63,7 @@ export default class StyleInfo {
     this.styleProperties = null;
     /** @type {?string} */
     this.scopeSelector = null;
-    /** @type {Node} */
+    /** @type {HTMLStyleElement} */
     this.customStyle = null;
   }
   _getStyleRules() {

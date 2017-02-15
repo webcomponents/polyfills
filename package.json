@@ -17,7 +17,7 @@
   },
   "scripts": {
     "build": "gulp",
-    "lint": "eslint src test",
+    "lint": "eslint src test entrypoints",
     "test": "npm run lint && gulp test-modules && wct"
   },
   "homepage": "http://webcomponents.org",

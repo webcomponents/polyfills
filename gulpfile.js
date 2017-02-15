@@ -65,7 +65,8 @@ function closurify(entry) {
       entry_point: `/entrypoints/${entry}.js`,
       dependency_mode: 'STRICT',
       warning_level: 'VERBOSE',
-      rewrite_polyfills: false
+      rewrite_polyfills: false,
+      externs: 'externs/shadycss-externs.js'
     }))
     .pipe(size({showFiles: true, showTotal: false, gzip: true}))
     .pipe(sourcemaps.write('.'))

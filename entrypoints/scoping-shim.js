@@ -11,6 +11,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 'use strict';
 
 import ScopingShim from '../src/scoping-shim'
+import {nativeCssVariables, nativeShadow} from '../src/style-settings'
 
 /** @const {ScopingShim} */
 const scopingShim = new ScopingShim();
@@ -22,31 +23,31 @@ if (window['ShadyCSS']) {
   CustomStyleInterface = window['ShadyCSS']['CustomStyleInterface'];
 }
 
-window['ShadyCSS'] = {
-  ['ScopingShim']: scopingShim,
+window.ShadyCSS = {
+  ScopingShim: scopingShim,
   /**
-   * @param {HTMLTemplateElement} template
+   * @param {!HTMLTemplateElement} template
    * @param {string} elementName
    * @param {string=} elementExtends
    */
-  ['prepareTemplate'](template, elementName, elementExtends) {
+  prepareTemplate(template, elementName, elementExtends) {
     scopingShim.flushCustomStyles();
     scopingShim.prepareTemplate(template, elementName, elementExtends)
   },
 
   /**
-   * @param {Element} element
+   * @param {!HTMLElement} element
    * @param {Object=} properties
    */
-  ['styleSubtree'](element, properties) {
+  styleSubtree(element, properties) {
     scopingShim.flushCustomStyles();
     scopingShim.styleSubtree(element, properties);
   },
 
   /**
-   * @param {Element} element
+   * @param {!HTMLElement} element
    */
-  ['styleElement'](element) {
+  styleElement(element) {
     scopingShim.flushCustomStyles();
     scopingShim.styleElement(element);
   },
@@ -54,7 +55,7 @@ window['ShadyCSS'] = {
   /**
    * @param {Object=} properties
    */
-  ['styleDocument'](properties) {
+  styleDocument(properties) {
     scopingShim.flushCustomStyles();
     scopingShim.styleDocument(properties);
   },
@@ -64,18 +65,19 @@ window['ShadyCSS'] = {
    * @param {string} property
    * @return {string}
    */
-  ['getComputedStyleValue'](element, property) {
+  getComputedStyleValue(element, property) {
     return scopingShim.getComputedStyleValue(element, property);
   },
 
-  ['nativeCss']: scopingShim['nativeCss'],
-  ['nativeShadow']: scopingShim['nativeShadow']
+  nativeCss: nativeCssVariables,
+
+  nativeShadow: nativeShadow
 };
 
 if (ApplyShim) {
-  window['ShadyCSS']['ApplyShim'] = ApplyShim;
+  window.ShadyCSS.ApplyShim = ApplyShim;
 }
 
 if (CustomStyleInterface) {
-  window['ShadyCSS']['CustomStyleInterface'] = CustomStyleInterface;
+  window.ShadyCSS.CustomStyleInterface = CustomStyleInterface;
 }

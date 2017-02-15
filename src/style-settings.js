@@ -17,7 +17,7 @@ export let nativeCssVariables = (!navigator.userAgent.match('AppleWebKit/601') &
 window.CSS && CSS.supports && CSS.supports('box-shadow', '0 0 0 var(--foo)'));
 
 /**
- * @param {?Object} settings
+ * @param {ShadyCSSOptions | ShadyCSSInterface | undefined} settings
  */
 function parseSettings(settings) {
   if (settings) {
@@ -26,8 +26,8 @@ function parseSettings(settings) {
   }
 }
 
-if (window['ShadyCSS']) {
-  parseSettings(window['ShadyCSS']);
+if (window.ShadyCSS) {
+  parseSettings(window.ShadyCSS);
 } else if (window['WebComponents']) {
   parseSettings(window['WebComponents']['flags']);
 }

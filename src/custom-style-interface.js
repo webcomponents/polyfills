@@ -15,7 +15,7 @@ import documentWait from './document-wait'
 /**
  * @typedef {HTMLStyleElement | ({getStyle: (function():HTMLStyleElement)})}
  */
-let CustomStyleProvider; // eslint-disable-line no-unused-vars
+export let CustomStyleProvider;
 
 const PROCESSED_MARKER = '__processedByShadyCSS';
 const SEEN_MARKER = '__seenByShadyCSS';
@@ -135,3 +135,14 @@ Object.defineProperties(CustomStyleInterface.prototype, {
     },
   }
 })
+
+/** @typedef {{
+ * customStyles: !Array<!CustomStyleProvider>,
+ * addCustomStyle: function(!CustomStyleProvider),
+ * getStyleForCustomStyle: function(!CustomStyleProvider): HTMLStyleElement,
+ * findStyles: function(),
+ * transformCallback: ?function(!HTMLStyleElement),
+ * validateCallback: ?function()
+ * }}
+ */
+export let CustomStyleInterfaceInterface;

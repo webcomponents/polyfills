@@ -15,12 +15,14 @@ import templateMap from '../src/template-map'
 import {getIsExtends} from '../src/style-util'
 import * as ApplyShimUtils from '../src/apply-shim-utils'
 import {getComputedStyleValue, updateNativeProperties} from '../src/common-utils'
+import {CustomStyleInterfaceInterface} from '../src/custom-style-interface' // eslint-disable-line no-unused-vars
 
 /** @const {ApplyShim} */
 const applyShim = new ApplyShim();
 
 class ApplyShimInterface {
   constructor() {
+    /** @type {?CustomStyleInterfaceInterface} */
     this.customStyleInterface = null;
     this.booted = false;
   }
@@ -28,7 +30,7 @@ class ApplyShimInterface {
     if (this.booted) {
       return;
     }
-    this.customStyleInterface = window['ShadyCSS']['CustomStyleInterface'];
+    this.customStyleInterface = window.ShadyCSS.CustomStyleInterface;
     if (this.customStyleInterface) {
       this.customStyleInterface['transformCallback'] = (style) => {
         applyShim.transformCustomStyle(style);
@@ -67,7 +69,7 @@ class ApplyShimInterface {
     }
   }
   /**
-   * @param {Element} element
+   * @param {HTMLElement} element
    * @param {Object=} properties
    */
   styleSubtree(element, properties) {
@@ -79,16 +81,16 @@ class ApplyShimInterface {
       this.styleElement(element);
       let shadowChildren = element.shadowRoot.children || element.shadowRoot.childNodes;
       for (let i = 0; i < shadowChildren.length; i++) {
-        this.styleSubtree(shadowChildren[i]);
+        this.styleSubtree(/** @type {HTMLElement} */(shadowChildren[i]));
       }
     }
     let children = element.children || element.childNodes;
     for (let i = 0; i < children.length; i++) {
-      this.styleSubtree(children[i]);
+      this.styleSubtree(/** @type {HTMLElement} */(children[i]));
     }
   }
   /**
-   * @param {Element} element
+   * @param {HTMLElement} element
    */
   styleElement(element) {
     this.ensure();
@@ -115,39 +117,39 @@ class ApplyShimInterface {
    */
   styleDocument(properties) {
     this.ensure();
-    this.styleSubtree(document.documentElement, properties);
+    this.styleSubtree(/** @type {HTMLElement} */(document.documentElement), properties);
   }
 }
 
 const applyShimInterface = new ApplyShimInterface();
 
-if (!window['ShadyCSS'] || !window['ShadyCSS']['ScopingShim']) {
-  let CustomStyleInterface = window['ShadyCSS'] && window['ShadyCSS']['CustomStyleInterface'];
+if (!window.ShadyCSS || !window.ShadyCSS.ScopingShim) {
+  let CustomStyleInterface = window.ShadyCSS && window.ShadyCSS.CustomStyleInterface;
 
-  window['ShadyCSS'] = {
+  window.ShadyCSS = {
     /**
-     * @param {HTMLTemplateElement} template
+     * @param {!HTMLTemplateElement} template
      * @param {string} elementName
      * @param {string=} elementExtends
      */
-    ['prepareTemplate'](template, elementName, elementExtends) { // eslint-disable-line no-unused-vars
+    prepareTemplate(template, elementName, elementExtends) { // eslint-disable-line no-unused-vars
       applyShimInterface.flushCustomStyles();
       applyShimInterface.prepareTemplate(template, elementName)
     },
 
     /**
-     * @param {Element} element
+     * @param {!HTMLElement} element
      * @param {Object=} properties
      */
-    ['styleSubtree'](element, properties) {
+    styleSubtree(element, properties) {
       applyShimInterface.flushCustomStyles();
       applyShimInterface.styleSubtree(element, properties);
     },
 
     /**
-     * @param {Element} element
+     * @param {!HTMLElement} element
      */
-    ['styleElement'](element) {
+    styleElement(element) {
       applyShimInterface.flushCustomStyles();
       applyShimInterface.styleElement(element);
     },
@@ -155,7 +157,7 @@ if (!window['ShadyCSS'] || !window['ShadyCSS']['ScopingShim']) {
     /**
      * @param {Object=} properties
      */
-    ['styleDocument'](properties) {
+    styleDocument(properties) {
       applyShimInterface.flushCustomStyles();
       applyShimInterface.styleDocument(properties);
     },
@@ -165,16 +167,16 @@ if (!window['ShadyCSS'] || !window['ShadyCSS']['ScopingShim']) {
      * @param {string} property
      * @return {string}
      */
-    ['getComputedStyleValue'](element, property) {
+    getComputedStyleValue(element, property) {
       return getComputedStyleValue(element, property);
     },
-    ['nativeCss']: true,
-    ['nativeShadow']: true
+    nativeCss: true,
+    nativeShadow: true
   };
 
   if (CustomStyleInterface) {
-    window['ShadyCSS']['CustomStyleInterface'] = CustomStyleInterface;
+    window.ShadyCSS.CustomStyleInterface = CustomStyleInterface;
   }
 }
 
-window['ShadyCSS']['ApplyShim'] = applyShim;
+window.ShadyCSS.ApplyShim = applyShim;

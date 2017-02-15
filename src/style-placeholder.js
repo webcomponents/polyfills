@@ -16,17 +16,17 @@ import {nativeShadow} from './style-settings'
 let placeholderMap = {};
 
 /**
- * @const {Object|undefined}
+ * @const {CustomElementRegistry}
  */
 const ce = window['customElements'];
 if (ce && !nativeShadow) {
   /**
-   * @const {function(string,Function,Object=)}
+   * @const {function(this:CustomElementRegistry, string,function(new:HTMLElement),{extends: string}=)}
    */
   const origDefine = ce['define'];
   ce['define'] = function(name, clazz, options) {
     placeholderMap[name] = applyStylePlaceHolder(name);
-    return origDefine.call(ce, name, clazz, options);
+    return origDefine.call(/** @type {!CustomElementRegistry} */(ce), name, clazz, options);
   };
 }
 

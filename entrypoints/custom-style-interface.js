@@ -15,20 +15,20 @@ import {getComputedStyleValue, updateNativeProperties} from '../src/common-utils
 
 const customStyleInterface = new CustomStyleInterface();
 
-if (!window['ShadyCSS']) {
-  window['ShadyCSS'] = {
+if (!window.ShadyCSS) {
+  window.ShadyCSS = {
     /**
      * @param {HTMLTemplateElement} template
      * @param {string} elementName
      * @param {string=} elementExtends
      */
-    ['prepareTemplate'](template, elementName, elementExtends) {}, // eslint-disable-line no-unused-vars
+    prepareTemplate(template, elementName, elementExtends) {}, // eslint-disable-line no-unused-vars
 
     /**
      * @param {Element} element
      * @param {Object=} properties
      */
-    ['styleSubtree'](element, properties) {
+    styleSubtree(element, properties) {
       customStyleInterface.findStyles();
       updateNativeProperties(element, properties);
     },
@@ -36,14 +36,14 @@ if (!window['ShadyCSS']) {
     /**
      * @param {Element} element
      */
-    ['styleElement'](element) { // eslint-disable-line no-unused-vars
+    styleElement(element) { // eslint-disable-line no-unused-vars
       customStyleInterface.findStyles();
     },
 
     /**
      * @param {Object=} properties
      */
-    ['styleDocument'](properties) {
+    styleDocument(properties) {
       customStyleInterface.findStyles();
       updateNativeProperties(document.documentElement, properties);
     },
@@ -53,12 +53,12 @@ if (!window['ShadyCSS']) {
      * @param {string} property
      * @return {string}
      */
-    ['getComputedStyleValue'](element, property) {
+    getComputedStyleValue(element, property) {
       return getComputedStyleValue(element, property);
     },
-    ['nativeCss']: true,
-    ['nativeShadow']: true
+    nativeCss: true,
+    nativeShadow: true
   }
 }
 
-window['ShadyCSS']['CustomStyleInterface'] = customStyleInterface;
+window.ShadyCSS.CustomStyleInterface = customStyleInterface;

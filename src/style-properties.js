@@ -501,11 +501,11 @@ class StyleProperties {
   }
 
   /**
-   * @param {Element} element
+   * @param {HTMLElement} element
    * @param {Object} properties
    * @param {string} selector
-   * @param {Element} style
-   * @return {Element}
+   * @param {HTMLStyleElement} style
+   * @return {HTMLStyleElement}
    */
   applyElementStyle(element, properties, selector, style) {
     // calculate cssText to apply
