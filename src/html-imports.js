@@ -208,7 +208,7 @@
     }
 
     /**
-     * @param {!(HTMLDocument|DocumentFragment)} doc
+     * @param {!(HTMLDocument|DocumentFragment|Element)} doc
      */
     loadImports(doc) {
       const links = /** @type {!NodeList<!HTMLLinkElement>} */
@@ -216,7 +216,6 @@
       for (let i = 0, l = links.length; i < l; i++) {
         this.loadImport(links[i]);
       }
-      this.processImportsIfLoadingDone();
     }
 
     /**
@@ -244,6 +243,7 @@
         this.inflight--;
         // Load subtree.
         this.loadImports(doc);
+        this.processImportsIfLoadingDone();
       }, () => {
         // If load fails, handle error.
         this.documents[url] = null;
@@ -521,15 +521,15 @@
           continue;
         }
         for (let ii = 0; ii < m.addedNodes.length; ii++) {
-          const link = m.addedNodes[ii];
-          if (!link || link.nodeType !== Node.ELEMENT_NODE) {
+          const elem = m.addedNodes[ii];
+          if (!elem || elem.nodeType !== Node.ELEMENT_NODE) {
             continue;
           }
           // NOTE: added scripts are not updating currentScript in IE.
-          const links = /** @type {!NodeList<!HTMLLinkElement>} */
-            (isImportLink(link) ? [link] : link.querySelectorAll(importSelector));
-          for (let iii = 0; iii < links.length; iii++) {
-            this.loadImport(links[iii]);
+          if (isImportLink(elem)) {
+            this.loadImport( /** @type {!HTMLLinkElement} */ (elem));
+          } else {
+            this.loadImports( /** @type {!Element} */ (elem));
           }
         }
       }
