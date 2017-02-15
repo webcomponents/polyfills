@@ -179,12 +179,6 @@
   const pendingStylesSelector = `style[${importDependencyAttr}],
     link[rel=stylesheet][${importDependencyAttr}]`;
 
-  /** @type {!Symbol} */
-  const loaded = Symbol('loaded');
-
-  /** @type {!Symbol} */
-  const importDoc = Symbol('importDoc');
-
   /**
    * Importer will:
    * - load any linked import documents (with deduping)
@@ -235,7 +229,7 @@
         // If import is already loaded, we can safely associate it to the link
         // and fire the load/error event.
         const imp = this.documents[url];
-        if (imp && imp[loaded]) {
+        if (imp && imp['__loaded']) {
           link.import = imp;
           this.fireEventIfNeeded(link);
         }
@@ -504,8 +498,8 @@
      */
     fireEventIfNeeded(link) {
       // Don't fire twice same event.
-      if (!link[loaded]) {
-        link[loaded] = true;
+      if (!link['__loaded']) {
+        link['__loaded'] = true;
         // Update link's import readyState.
         link.import && (link.import.readyState = 'complete');
         const eventType = link.import ? 'load' : 'error';
@@ -558,16 +552,16 @@
    * @param {function()=} callback
    */
   const whenElementLoaded = (element, callback) => {
-    if (element[loaded]) {
+    if (element['__loaded']) {
       callback && callback();
     } else if (element.localName === 'script' && !element.src) {
       // Inline scripts don't trigger load/error events, consider them already loaded.
-      element[loaded] = true;
+      element['__loaded'] = true;
       callback && callback();
     } else {
       const onLoadingDone = event => {
         element.removeEventListener(event.type, onLoadingDone);
-        element[loaded] = true;
+        element['__loaded'] = true;
         callback && callback();
       };
       element.addEventListener('load', onLoadingDone);
@@ -644,7 +638,7 @@
       // Return only if not in the main doc!
       return element.ownerDocument !== document ? element.ownerDocument : null;
     }
-    let doc = element[importDoc];
+    let doc = element['__importDoc'];
     if (!doc && element.parentNode) {
       doc = /** @type {!Element} */ (element.parentNode);
       if (typeof doc.closest === 'function') {
@@ -655,7 +649,7 @@
         // Walk up the parent tree until we find an import.
         while (!isImportLink(doc) && (doc = doc.parentNode)) {}
       }
-      element[importDoc] = doc;
+      element['__importDoc'] = doc;
     }
     return doc;
   }
@@ -678,7 +672,7 @@
       (document.querySelectorAll(importSelector));
     for (let i = 0, l = imps.length, imp; i < l && (imp = imps[i]); i++) {
       if (!imp.import || imp.import.readyState !== 'loading') {
-        imp[loaded] = true;
+        imp['__loaded'] = true;
       }
     }
     // Listen for load/error events to capture dynamically added scripts.
@@ -688,7 +682,7 @@
     const onLoadingDone = event => {
       const elem = /** @type {!Element} */ (event.target);
       if (isImportLink(elem)) {
-        elem[loaded] = true;
+        elem['__loaded'] = true;
       }
     };
     document.addEventListener('load', onLoadingDone, true /* useCapture */ );
