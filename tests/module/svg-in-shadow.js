@@ -10,16 +10,16 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 'use strict';
 
-const ESI = window.ElementStyleInterface;
+const ShadyCSS = window.ShadyCSS;
 
 window.registerSVGElement = () => {
   const LOCAL_NAME = 'svg-in-shadow';
   const TEMPLATE = document.querySelector(`template#${LOCAL_NAME}`);
-  ESI.prepareTemplate(TEMPLATE, LOCAL_NAME);
+  ShadyCSS.prepareTemplate(TEMPLATE, LOCAL_NAME);
 
   class SVGInShadow extends window.HTMLElement {
     connectedCallback() {
-      ESI.styleElement(this);
+      ShadyCSS.styleElement(this);
       this.attachShadow({mode: 'open'});
       this.shadowRoot.appendChild(document.importNode(TEMPLATE.content, true));
     }

@@ -19,7 +19,7 @@ Caveat: ShadyCSS will add a `scope` attribute to styles it controls, so do not a
 (function() {
   'use strict';
 
-  const ShadyCSS = window.ShadyCSS;
+  const CustomStyleInterface = window.ShadyCSS.CustomStyleInterface;
 
   function shouldAddDocumentStyle(n) {
     return n.nodeType === Node.ELEMENT_NODE && n.localName === 'style' && !n.hasAttribute('scope');
@@ -31,7 +31,7 @@ Caveat: ShadyCSS will add a `scope` attribute to styles it controls, so do not a
       for (let j = 0; j < mxn.addedNodes.length; j++) {
         let n = mxn.addedNodes[j];
         if (shouldAddDocumentStyle(n)) {
-          ShadyCSS.addDocumentStyle(n);
+          CustomStyleInterface.addCustomStyle(n);
         }
       }
     }
@@ -44,7 +44,7 @@ Caveat: ShadyCSS will add a `scope` attribute to styles it controls, so do not a
     for (let i = 0; i < candidates.length; i++) {
       const candidate = candidates[i];
       if (shouldAddDocumentStyle(candidate)) {
-        ShadyCSS.addDocumentStyle(candidate);
+        CustomStyleInterface.addCustomStyle(candidate);
       }
     }
     observer.observe(document, {childList: true, subtree: true});

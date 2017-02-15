@@ -8,6 +8,57 @@ Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 */
 
-import CustomStyleInterface from '../src/custom-style-interface'
+'use strict';
 
-window['CustomStyleInterface'] = new CustomStyleInterface();
+import CustomStyleInterface from '../src/custom-style-interface'
+import {getComputedStyleValue, updateNativeProperties} from '../src/common-utils'
+
+const customStyleInterface = new CustomStyleInterface();
+
+if (!window['ShadyCSS']) {
+  window['ShadyCSS'] = {
+    /**
+     * @param {HTMLTemplateElement} template
+     * @param {string} elementName
+     * @param {string=} elementExtends
+     */
+    ['prepareTemplate'](template, elementName, elementExtends) {}, // eslint-disable-line no-unused-vars
+
+    /**
+     * @param {Element} element
+     * @param {Object=} properties
+     */
+    ['styleSubtree'](element, properties) {
+      customStyleInterface.findStyles();
+      updateNativeProperties(element, properties);
+    },
+
+    /**
+     * @param {Element} element
+     */
+    ['styleElement'](element) { // eslint-disable-line no-unused-vars
+      customStyleInterface.findStyles();
+    },
+
+    /**
+     * @param {Object=} properties
+     */
+    ['styleDocument'](properties) {
+      customStyleInterface.findStyles();
+      updateNativeProperties(document.documentElement, properties);
+    },
+
+    /**
+     * @param {Element} element
+     * @param {string} property
+     * @return {string}
+     */
+    ['getComputedStyleValue'](element, property) {
+      return getComputedStyleValue(element, property);
+    },
+    ['nativeCss']: true,
+    ['nativeShadow']: true
+  }
+}
+
+window['ShadyCSS']['CustomStyleInterface'] = customStyleInterface;

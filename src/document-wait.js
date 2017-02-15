@@ -16,6 +16,9 @@ let readyPromise = null;
 /** @type {?function(function())} */
 let whenReady = window['HTMLImports'] && window['HTMLImports']['whenReady'] || null;
 
+/** @type {function()} */
+let resolveFn;
+
 /**
  * @param {function()} callback
  */
@@ -24,8 +27,6 @@ export default function documentWait(callback) {
     whenReady(callback)
   } else {
     if (!readyPromise) {
-      /** @type {function()} */
-      let resolveFn;
       readyPromise = new Promise((resolve) => {resolveFn = resolve});
       if (document.readyState === 'complete') {
         resolveFn();

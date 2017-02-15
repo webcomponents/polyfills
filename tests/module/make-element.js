@@ -13,16 +13,16 @@ A simple webcomponents helper
 */
 'use strict';
 
-const ESI = window.ElementStyleInterface;
+const ShadyCSS = window.ShadyCSS;
 
 window.makeElement = (name, connectedCallback) => {
   let template = document.querySelector(`template#${name}`);
   if (template) {
-    ESI.prepareTemplate(template, name);
+    ShadyCSS.prepareTemplate(template, name);
   }
   window.customElements.define(name, class extends window.HTMLElement {
     connectedCallback() {
-      ESI.styleElement(this);
+      ShadyCSS.styleElement(this);
       if (template && !this.shadowRoot) {
         this.attachShadow({mode: 'open'});
         this.shadowRoot.appendChild(document.importNode(template.content, true));

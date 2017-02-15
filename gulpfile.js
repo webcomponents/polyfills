@@ -55,15 +55,13 @@ gulp.task('default', ['closure', 'test-modules']);
 gulp.task('closure', [
   'closure-scoping-shim',
   'closure-apply-shim',
-  'closure-custom-style-interface',
-  'closure-element-style-interface'
+  'closure-custom-style-interface'
 ]);
 
 gulp.task('debug', [
   'debug-scoping-shim',
   'debug-apply-shim',
-  'debug-custom-style-interface',
-  'debug-element-style-interface'
+  'debug-custom-style-interface'
 ]);
 
 gulp.task('closure-scoping-shim', () => {
@@ -173,43 +171,6 @@ gulp.task('debug-custom-style-interface', () => {
   .pipe(buffer())
   .pipe(sourcemaps.init({loadMaps: true}))
   .pipe(rename('custom-style-interface.min.js'))
-  .pipe(size({showFiles: true, showTotal: false, gzip: true}))
-  .pipe(sourcemaps.write('.'))
-  .pipe(gulp.dest('./'))
-});
-
-gulp.task('closure-element-style-interface', () => {
-  return gulp.src(['src/*.js', 'entrypoints/*.js'])
-  .pipe(sourcemaps.init())
-  .pipe(closure({
-    new_type_inf: true,
-    compilation_level: 'ADVANCED',
-    language_in: 'ES6_STRICT',
-    language_out: 'ES5_STRICT',
-    output_wrapper: '(function(){\n%output%\n}).call(self)',
-    js_output_file: 'element-style-interface.min.js',
-    entry_point: '/entrypoints/element-style-interface.js',
-    dependency_mode: 'STRICT',
-    warning_level: 'VERBOSE',
-    rewrite_polyfills: false,
-    // formatting: 'PRETTY_PRINT'
-  }))
-  .pipe(size({showFiles: true, showTotal: false, gzip: true}))
-  .pipe(sourcemaps.write('.'))
-  .pipe(gulp.dest('.'))
-});
-
-gulp.task('debug-element-style-interface', () => {
-  return rollup({
-    entry: 'entrypoints/element-style-interface.js',
-    format: 'iife',
-    moduleName: 'elementstyleinterface',
-    sourceMap: true
-  })
-  .pipe(source('element-style-interface.js', 'entrypoints'))
-  .pipe(buffer())
-  .pipe(sourcemaps.init({loadMaps: true}))
-  .pipe(rename('element-style-interface.min.js'))
   .pipe(size({showFiles: true, showTotal: false, gzip: true}))
   .pipe(sourcemaps.write('.'))
   .pipe(gulp.dest('./'))

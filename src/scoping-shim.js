@@ -22,11 +22,7 @@ import {flush as watcherFlush} from './document-watcher'
 import templateMap from './template-map'
 import * as ApplyShimUtils from './apply-shim-utils'
 import documentWait from './document-wait'
-
-/**
- * @const {ApplyShimUtils.ApplyShimShim}
- */
-const ApplyShim = new ApplyShimUtils.ApplyShimShim();
+import {updateNativeProperties} from './common-utils'
 
 /**
  * @const {StyleCache}
@@ -99,11 +95,12 @@ export default class ScopingShim {
       StyleTransformer.dom(template.content, elementName);
     }
     // check if the styling has mixin definitions or uses
-    let hasMixins = ApplyShim.detectMixin(cssText);
+    this._ensureApplyShimInterface();
+    let hasMixins = this._applyShim.detectMixin(cssText);
     let ast = parse(cssText);
     // only run the applyshim transforms if there is a mixin involved
     if (hasMixins && nativeCssVariables) {
-      ApplyShim.transformRules(ast, elementName);
+      this._applyShim.transformRules(ast, elementName);
     }
     template._styleAst = ast;
     template._cssBuild = cssBuild;
@@ -149,17 +146,37 @@ export default class ScopingShim {
       )
     );
   }
+  _ensureApplyShimInterface() {
+    if (this._applyShim) {
+      return;
+    } else if (window['ShadyCSS']['ApplyShim']) {
+      this._applyShim = window['ShadyCSS']['ApplyShim'];
+      this._applyShim['invalidCallback'] = ApplyShimUtils.invalidate;
+    } else {
+      this._applyShim = {
+        /* eslint-disable no-unused-vars */
+        ['detectMixin'](str){return false},
+        ['transformRule'](ast){},
+        ['transformRules'](ast, name){},
+        /* eslint-enable no-unused-vars */
+      }
+    }
+  }
   _ensureCustomStyleInterface() {
     if (this._customStyleInterface) {
       return;
-    } else if (window['CustomStyleInterface']) {
-      this._customStyleInterface = window['CustomStyleInterface'];
+    } else if (window['ShadyCSS']['CustomStyleInterface']) {
+      this._customStyleInterface = window['ShadyCSS']['CustomStyleInterface'];
       /** @type {function(!HTMLStyleElement)} */
       this._customStyleInterface['transformCallback'] = (style) => {this.transformCustomStyleForDocument(style)};
       this._customStyleInterface['validateCallback'] = () => {
         requestAnimationFrame(() => {
           if (this._customStyleInterface['enqueued'] || this._elementsHaveApplied) {
             this.flushCustomStyles();
+            // if custom elements have upgraded and an element is invalid, we must recalculate the whole tree
+            if (this._elementsHaveApplied && nativeCssVariables && ApplyShimUtils.elementsAreInvalid()) {
+              this.styleDocument();
+            }
           }
         })
       };
@@ -189,9 +206,9 @@ export default class ScopingShim {
       this._revalidateCustomStyleApplyShim(customStyles);
     }
     this._customStyleInterface['enqueued'] = false;
-    // if custom elements have upgraded and there are no native custom properties, we must recalculate the whole tree
+    // if custom elements have upgraded and there are no native css variables, we must recalculate the whole tree
     if (this._elementsHaveApplied && !nativeCssVariables) {
-      this.updateStyles();
+      this.styleDocument();
     }
   }
   /**
@@ -200,7 +217,7 @@ export default class ScopingShim {
    * @param {!HTMLElement} host
    * @param {Object=} overrideProps
    */
-  applyElementStyle(host, overrideProps) {
+  styleElement(host, overrideProps) {
     let {is} = StyleUtil.getIsExtends(host);
     let styleInfo = StyleInfo.get(host);
     if (!styleInfo) {
@@ -222,7 +239,7 @@ export default class ScopingShim {
       }
     } else {
       if (styleInfo.overrideStyleProperties) {
-        this._updateNativeProperties(host, styleInfo.overrideStyleProperties);
+        updateNativeProperties(host, styleInfo.overrideStyleProperties);
       }
       let template = templateMap[is];
       // bail early if there is no shadowroot for this element
@@ -232,7 +249,8 @@ export default class ScopingShim {
       if (template && template._style && !ApplyShimUtils.templateIsValid(template)) {
         // update template
         if (!ApplyShimUtils.templateIsValidating(template)) {
-          ApplyShim.transformRules(template._styleAst, is);
+          this._ensureApplyShimInterface();
+          this._applyShim.transformRules(template._styleAst, is);
           template._style.textContent = StyleTransformer.elementStyles(host, styleInfo.styleRules);
           ApplyShimUtils.startValidatingTemplate(template);
         }
@@ -308,24 +326,13 @@ export default class ScopingShim {
       }
     }
   }
-  _updateNativeProperties(element, properties) {
-    // remove previous properties
-    for (let p in properties) {
-      // NOTE: for bc with shim, don't apply null values.
-      if (p === null) {
-        element.style.removeProperty(p);
-      } else {
-        element.style.setProperty(p, properties[p]);
-      }
-    }
-  }
   /**
    * Update styles of the whole document
    *
    * @param {Object=} properties
    */
-  updateStyles(properties) {
-    this.applySubtreeStyle(this._documentOwner, properties);
+  styleDocument(properties) {
+    this.styleSubtree(this._documentOwner, properties);
   }
   /**
    * Update styles of a subtree
@@ -333,9 +340,9 @@ export default class ScopingShim {
    * @param {!HTMLElement} host
    * @param {Object=} properties
    */
-  applySubtreeStyle(host, properties) {
+  styleSubtree(host, properties) {
     if (host.shadowRoot || this._isRootOwner(host)) {
-      this.applyElementStyle(host, properties);
+      this.styleElement(host, properties);
     }
     // process the shadowdom children of `root`
     let root = host.shadowRoot;
@@ -343,7 +350,7 @@ export default class ScopingShim {
     if (shadowChildren) {
       for (let i = 0; i < shadowChildren.length; i++) {
         let c = /** @type {!HTMLElement} */(shadowChildren[i]);
-        this.applySubtreeStyle(c);
+        this.styleSubtree(c);
       }
     }
     // process the lightdom children of `root`
@@ -351,7 +358,7 @@ export default class ScopingShim {
     if (children) {
       for (let i = 0; i < children.length; i++) {
         let c = /** @type {!HTMLElement} */(children[i]);
-        this.applySubtreeStyle(c);
+        this.styleSubtree(c);
       }
     }
   }
@@ -383,7 +390,8 @@ export default class ScopingShim {
         StyleTransformer.documentRule(rule);
       }
       if (nativeCssVariables) {
-        ApplyShim.transformRule(rule);
+        this._ensureApplyShimInterface();
+        this._applyShim.transformRule(rule);
       }
     });
     if (nativeCssVariables) {
@@ -395,7 +403,8 @@ export default class ScopingShim {
   _revalidateApplyShim(style) {
     if (nativeCssVariables) {
       let ast = StyleUtil.rulesForStyle(style);
-      ApplyShim.transformRules(ast);
+      this._ensureApplyShimInterface();
+      this._applyShim.transformRules(ast);
       style.textContent = StyleUtil.toCssText(ast);
     }
   }
@@ -453,9 +462,9 @@ export default class ScopingShim {
 /* exports */
 ScopingShim.prototype['flush'] = ScopingShim.prototype.flush;
 ScopingShim.prototype['prepareTemplate'] = ScopingShim.prototype.prepareTemplate;
-ScopingShim.prototype['applyElementStyle'] = ScopingShim.prototype.applyElementStyle;
-ScopingShim.prototype['updateStyles'] = ScopingShim.prototype.updateStyles;
-ScopingShim.prototype['applySubtreeStyle'] = ScopingShim.prototype.applySubtreeStyle;
+ScopingShim.prototype['styleElement'] = ScopingShim.prototype.styleElement;
+ScopingShim.prototype['styleDocument'] = ScopingShim.prototype.styleDocument;
+ScopingShim.prototype['styleSubtree'] = ScopingShim.prototype.styleSubtree;
 ScopingShim.prototype['getComputedStyleValue'] = ScopingShim.prototype.getComputedStyleValue;
 ScopingShim.prototype['setElementClass'] = ScopingShim.prototype.setElementClass;
 ScopingShim.prototype['_styleInfoForNode'] = ScopingShim.prototype._styleInfoForNode;

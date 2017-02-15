@@ -13,12 +13,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <meta charset="utf-8">
   <script>
     window.ShadyDOM = {force: true};
-    window.ScopingShim = {shimshadow: true};
+    window.ShadyCSS = {shimshadow: true};
   </script>
   <script>
-  WCT = {waitFor: (cb) => {HTMLImports.whenReady(cb)}}
+  WCT = {waitFor: function (cb) {HTMLImports.whenReady(cb)}}
   </script>
   <script src="../../web-component-tester/browser.js"></script>
+  <script src="../../webcomponents-platform/webcomponents-platform.js"></script>
+  <script src="../../es6-promise/dist/es6-promise.auto.min.js"></script>
   <script src="../../template/template.js"></script>
   <script src="../../html-imports/html-imports.min.js"></script>
   <script src="../../shadydom/shadydom.min.js"></script>
@@ -335,7 +337,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       window.customElements.flush();
     }
     window.ShadyDOM.flush();
-    window.ScopingShim.flush();
+    window.ShadyCSS.ScopingShim.flush();
   }
 
   suite('scoped-styling', function() {
@@ -607,7 +609,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
         xKeyframes.classList.add('special');
         xKeyframes.setAttribute('animated', '');
-        window.ScopingShim.applyElementStyle(xKeyframes);
+        window.ShadyCSS.ScopingShim.styleElement(xKeyframes);
       };
       xKeyframes.addEventListener('animationend', onAnimationEnd);
       xKeyframes.addEventListener('webkitAnimationEnd', onAnimationEnd);

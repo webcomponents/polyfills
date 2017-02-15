@@ -13,15 +13,18 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
   <meta charset="utf-8">
   <script>
-  WCT = {waitFor: (cb) => {HTMLImports.whenReady(cb)}}
+  WCT = {waitFor: function (cb) {HTMLImports.whenReady(cb)}}
   </script>
   <script src="../../web-component-tester/browser.js"></script>
+  <script src="../../webcomponents-platform/webcomponents-platform.js"></script>
+  <script src="../../es6-promise/dist/es6-promise.auto.min.js"></script>
   <script src="../../template/template.js"></script>
   <script src="../../html-imports/html-imports.min.js"></script>
-  <script src="../../custom-elements/custom-elements.min.js"></script>
   <script src="../../shadydom/shadydom.min.js"></script>
+  <script src="../../custom-elements/custom-elements.min.js"></script>
   <script src="../scoping-shim.min.js"></script>
   <script src="../apply-shim.min.js"></script>
+  <script src="module/generated/make-element.js"></script>
   <title>Apply Shim</title>
 
 </head>
@@ -105,7 +108,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     </style>
   </template>
 
-  <template id="element">
+  <template id="x-element">
     <style>
     :host {
       @apply --my-mixin;
@@ -113,7 +116,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     </style>
   </template>
 
-  <template id="element2">
+  <template id="x-element2">
     <style>
     :root {
       --my-mixin: {
@@ -128,18 +131,20 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       var template = document.querySelector('template#' + name);
       return template.content.cloneNode(true);
     }
+
     function prep(templateName, elementName) {
       var style = copy(templateName).querySelector('style');
-      var ast = window.ApplyShim.transformStyle(style, elementName);
+      var ast = window.ShadyCSS.ApplyShim.transformStyle(style, elementName);
       return {style: style, ast: ast};
     }
+
     suite('Basic', function() {
       var style, ast;
       suiteSetup(function() {
         var info = prep('basic');
         style = info.style;
         ast = info.ast;
-        style.textContent = window.ScopingShim.styleAstToString(ast);
+        style.textContent = window.ShadyCSS.ScopingShim.styleAstToString(ast);
       });
 
       test('style is transformed', function() {
@@ -230,28 +235,27 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     });
 
     suite('invalidation on new definitions', function() {
-      var style, ast, template;
+      var style, ast, element;
       suiteSetup(function() {
-        template = document.querySelector('template#element').cloneNode(true);
-        window.ScopingShim.prepareTemplate(template, 'x-element');
-        var info = prep('element', 'x-element');
-        style = info.style;
-        ast = info.ast;
+        makeElement('x-element');
+        element = document.createElement('x-element');
+        document.body.appendChild(element);
+        style = element.shadowRoot ? element.shadowRoot.querySelector('style') : document.head.querySelector('style[scope=x-element]');
       });
 
       test('element initially has no definition', function() {
+        var ast = window.ShadyCSS.ScopingShim._styleInfoForNode(element).styleRules;
         assert.equal(ast.rules[0].cssText, ';');
       });
 
       test('Defining the mixin invalidates the element', function() {
-        var template2 = document.querySelector('template#element2').cloneNode(true);
-        window.ScopingShim.prepareTemplate(template2, 'x-element-2');
-        prep('element2', 'x-element-2');
-        assert.equal(template._applyShimInvalid, true);
+        makeElement('x-element2');
+        document.body.appendChild(document.createElement('x-element2'));
       });
 
       test('Revalidating Apply Shim on element template fills in properties', function() {
-        ast = window.ApplyShim.transformStyle(style, 'x-element');
+        window.ShadyCSS.styleDocument();
+        var ast = window.ShadyCSS.ScopingShim._styleInfoForNode(element).styleRules;
         assert.match(ast.rules[0].cssText, /border:\s*var\(--my-mixin_-_border\)/);
       });
     });

@@ -13,7 +13,7 @@ import templateMap from './template-map'
 import {StyleNode} from './css-parse' // eslint-disable-line no-unused-vars
 
 /**
- * @const {Promise}
+ * @const {Promise<void>}
  */
 const promise = Promise.resolve();
 
@@ -25,7 +25,7 @@ export function invalidate(elementName){
 }
 
 export function invalidateTemplate(template) {
-  template._applyShimInvalid = true;
+  template['_applyShimInvalid'] = true;
 }
 
 export function isValid(elementName) {
@@ -37,7 +37,7 @@ export function isValid(elementName) {
 }
 
 export function templateIsValid(template) {
-  return !template._applyShimInvalid;
+  return !template['_applyShimInvalid'];
 }
 
 export function isValidating(elementName) {
@@ -66,74 +66,18 @@ export function startValidatingTemplate(template) {
   if (!template._validating) {
     template._validating = true;
     promise.then(function() {
-      template._applyShimInvalid = false;
+      template['_applyShimInvalid'] = false;
       template._validating = false;
     });
   }
 }
 
-export class ApplyShimShim {
-  constructor() {
-    /** @type {Object} */
-    this.impl;
-  }
-  ensure() {
-    if (!this.impl) {
-      this.impl = window['ApplyShim'] || {
-        ['detectMixin'](){return false},
-        ['transformRule'](){},
-        ['transformRules'](){},
-        ['transformTemplate'](){},
-        ['transformCustomStyle'](){},
-        ['transformStyle'](){}
-      };
-      this.impl['invalidCallback'] = invalidate;
+export function elementsAreInvalid() {
+  for (let elementName in templateMap) {
+    let template = templateMap[elementName];
+    if (!templateIsValid(template)) {
+      return true;
     }
   }
-  /**
-   * @param {string} text
-   * @return {boolean}
-   */
-  detectMixin(text) {
-    this.ensure();
-    return this.impl['detectMixin'](text);
-  }
-  /**
-   * @param {StyleNode} ast
-   * @param {string=} elementName
-   */
-  transformRules(ast, elementName) {
-    this.ensure();
-    return this.impl['transformRules'](ast, elementName);
-  }
-  /**
-   * @param {StyleNode} ast
-   */
-  transformRule(ast) {
-    this.ensure();
-    this.impl['transformRule'](ast);
-  }
-  /**
-   * @param {!HTMLStyleElement} style
-   * @param {string=} elementName
-   */
-  transformStyle(style, elementName = '') {
-    this.ensure();
-    this.impl['transformStyle'](style, elementName);
-  }
-  /**
-   * @param {!HTMLStyleElement} style
-   */
-  transformCustomStyle(style) {
-    this.ensure();
-    this.impl['transformCustomStyle'](style);
-  }
-  /**
-   * @param {!HTMLTemplateElement} template
-   * @param {string} elementName
-   */
-  transformTemplate(template, elementName) {
-    this.ensure();
-    this.impl['transformTemplate'](template, elementName);
-  }
+  return false;
 }

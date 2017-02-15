@@ -5,12 +5,14 @@
   <title>SVG</title>
   <script>
     window.ShadyDOM = {force: true};
-    window.ScopingShim = {shimshadow: true};
+    window.ShadyCSS = {shimshadow: true};
   </script>
   <script>
-  WCT = {waitFor: (cb) => {HTMLImports.whenReady(cb)}}
+  WCT = {waitFor: function (cb) {HTMLImports.whenReady(cb)}}
   </script>
   <script src="../../web-component-tester/browser.js"></script>
+  <script src="../../webcomponents-platform/webcomponents-platform.js"></script>
+  <script src="../../es6-promise/dist/es6-promise.auto.min.js"></script>
   <script src="../../template/template.js"></script>
   <script src="../../html-imports/html-imports.min.js"></script>
   <script src="../../shadydom/shadydom.min.js"></script>
@@ -57,13 +59,13 @@
         // Force upgrade.
         document.body.appendChild(elementWithSVG);
         window.ShadyDOM.flush();
-        window.ScopingShim.flush();
+        window.ShadyCSS.ScopingShim.flush();
         var svg = elementWithSVG.svg;
         // The svg element should have a style scope.
         assert(svg.getAttribute('class').indexOf(STYLE_SCOPE_CLASS) > -1);
         var circle = elementWithSVG.addCircle();
         window.ShadyDOM.flush();
-        window.ScopingShim.flush();
+        window.ShadyCSS.ScopingShim.flush();
         // The circle should also have a style scope.
         assert(circle.getAttribute('class').indexOf(STYLE_SCOPE_CLASS) > -1);
         // Clean up.
@@ -75,17 +77,17 @@
         // Force upgrade.
         document.body.appendChild(elementWithSVG);
         window.ShadyDOM.flush();
-        window.ScopingShim.flush();
+        window.ShadyCSS.ScopingShim.flush();
         // Get references to test elements.
         var svg = elementWithSVG.svg;
         var circle = elementWithSVG.addCircle();
         window.ShadyDOM.flush();
-        window.ScopingShim.flush();
+        window.ShadyCSS.ScopingShim.flush();
         // Move the SVG element out of the shadow root.
         svg.parentNode.removeChild(svg);
         document.body.appendChild(svg);
         window.ShadyDOM.flush();
-        window.ScopingShim.flush();
+        window.ShadyCSS.ScopingShim.flush();
         // The svg element should keep the class that was not involved in style scoping.
         assert.equal(svg.getAttribute('class').trim(), 'test-class');
         // The svg element and circle should not have style scope classes.

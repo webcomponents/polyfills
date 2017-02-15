@@ -18,9 +18,11 @@
   ],
   "devDependencies": {
     "web-component-tester": "^5",
+    "es6-promise": "stefanpenner/es6-promise#^4.0.0",
     "template": "webcomponents/template#master",
     "html-imports": "webcomponents/html-imports#master",
     "custom-elements": "webcomponents/custom-elements#master",
-    "shadydom": "webcomponents/shadydom#rename-shadycss"
+    "shadydom": "webcomponents/shadydom#rename-shadycss",
+    "webcomponents-platform": "webcomponents/webcomponents-platform#master"
   }
 }

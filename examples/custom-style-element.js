@@ -21,7 +21,7 @@ Example:
 (function() {
   'use strict';
 
-  const CustomStyleInterface = window.CustomStyleInterface;
+  const CustomStyleInterface = window.ShadyCSS.CustomStyleInterface;
 
   class CustomStyle extends HTMLElement {
     constructor() {
