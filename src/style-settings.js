@@ -28,7 +28,6 @@ function parseSettings(settings) {
 
 if (window['ShadyCSS']) {
   parseSettings(window['ShadyCSS']);
-  window['ShadyCSS'] = null;
 } else if (window['WebComponents']) {
   parseSettings(window['WebComponents']['flags']);
 }
