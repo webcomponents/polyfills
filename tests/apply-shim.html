@@ -244,7 +244,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       });
 
       test('element initially has no definition', function() {
-        var ast = window.ShadyCSS.ScopingShim._styleInfoForNode(element).styleRules;
+        var ast = window.ShadyCSS.ScopingShim._styleInfoForNode(element)._getStyleRules();
         assert.equal(ast.rules[0].cssText, ';');
       });
 
@@ -255,7 +255,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
       test('Revalidating Apply Shim on element template fills in properties', function() {
         window.ShadyCSS.styleDocument();
-        var ast = window.ShadyCSS.ScopingShim._styleInfoForNode(element).styleRules;
+        var ast = window.ShadyCSS.ScopingShim._styleInfoForNode(element)._getStyleRules();
         assert.match(ast.rules[0].cssText, /border:\s*var\(--my-mixin_-_border\)/);
       });
     });

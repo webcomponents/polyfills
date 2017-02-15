@@ -1,6 +1,6 @@
 /**
 @license
-Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
+Copyright (c) 2017 The Polymer Project Authors. All rights reserved.
 This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
 The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
 The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
@@ -41,7 +41,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
  * Consider this setup at the point where the `@apply` is used:
  *
  *    background: orange;
- *    @apply --foo;
+ *    `@apply` --foo;
  *
  * In this case the background will be unset (initial) rather than the desired
  * `orange`. We address this by altering the property set to use a fallback
@@ -272,7 +272,7 @@ class ApplyShim {
   }
   /**
    * produce variable consumption at the site of mixin consumption
-   * @apply --foo; -> for all props (${propname}: var(--foo_-_${propname}, ${fallback[propname]}}))
+   * `@apply` --foo; -> for all props (${propname}: var(--foo_-_${propname}, ${fallback[propname]}}))
    * Example:
    *  border: var(--foo_-_border); padding: var(--foo_-_padding, 2px)
    *

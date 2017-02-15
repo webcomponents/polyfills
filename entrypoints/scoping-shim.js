@@ -15,6 +15,13 @@ import ScopingShim from '../src/scoping-shim'
 /** @const {ScopingShim} */
 const scopingShim = new ScopingShim();
 
+let ApplyShim, CustomStyleInterface;
+
+if (window['ShadyCSS']) {
+  ApplyShim = window['ShadyCSS']['ApplyShim'];
+  CustomStyleInterface = window['ShadyCSS']['CustomStyleInterface'];
+}
+
 window['ShadyCSS'] = {
   ['ScopingShim']: scopingShim,
   /**
@@ -57,6 +64,14 @@ window['ShadyCSS'] = {
     return scopingShim.getComputedStyleValue(element, property);
   },
 
-  ['nativeCss']: scopingShim.nativeCss,
-  ['nativeShadow']: scopingShim.nativeShadow
+  ['nativeCss']: scopingShim['nativeCss'],
+  ['nativeShadow']: scopingShim['nativeShadow']
 };
+
+if (ApplyShim) {
+  window['ShadyCSS']['ApplyShim'] = ApplyShim;
+}
+
+if (CustomStyleInterface) {
+  window['ShadyCSS']['CustomStyleInterface'] = CustomStyleInterface;
+}

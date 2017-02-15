@@ -50,128 +50,60 @@ gulp.task('test-modules', (cb) => {
   runseq('clean-test-modules', moduleTasks, cb);
 });
 
+function closurify(entry) {
+  gulp.task(`closure-${entry}`, () => {
+    return gulp.src(['src/*.js', 'entrypoints/*.js'])
+    .pipe(sourcemaps.init())
+    .pipe(closure({
+      new_type_inf: true,
+      compilation_level: 'ADVANCED',
+      language_in: 'ES6_STRICT',
+      language_out: 'ES5_STRICT',
+      output_wrapper: '(function(){\n%output%\n}).call(self)',
+      assume_function_wrapper: true,
+      js_output_file: `${entry}.min.js`,
+      entry_point: `/entrypoints/${entry}.js`,
+      dependency_mode: 'STRICT',
+      warning_level: 'VERBOSE',
+      rewrite_polyfills: false
+    }))
+    .pipe(size({showFiles: true, showTotal: false, gzip: true}))
+    .pipe(sourcemaps.write('.'))
+    .pipe(gulp.dest('.'))
+  });
+  return `closure-${entry}`;
+}
+
+function debugify(entry) {
+  gulp.task(`debug-${entry}`, () => {
+    return rollup({
+      entry: `entrypoints/${entry}.js`,
+      format: 'iife',
+      moduleName: '${entry}',
+      sourceMap: true
+    })
+    .pipe(source(`${entry}.js`, 'entrypoints'))
+    .pipe(buffer())
+    .pipe(sourcemaps.init({loadMaps: true}))
+    .pipe(rename(`${entry}.min.js`))
+    .pipe(size({showFiles: true, showTotal: false, gzip: true}))
+    .pipe(sourcemaps.write('.'))
+    .pipe(gulp.dest('./'))
+  });
+  return `debug-${entry}`;
+}
+
+const entrypoints = [
+  'scoping-shim',
+  'apply-shim',
+  'custom-style-interface'
+]
+
+let closureTasks = entrypoints.map((e) => closurify(e));
+let debugTasks = entrypoints.map((e) => debugify(e));
+
 gulp.task('default', ['closure', 'test-modules']);
 
-gulp.task('closure', [
-  'closure-scoping-shim',
-  'closure-apply-shim',
-  'closure-custom-style-interface'
-]);
+gulp.task('closure', closureTasks);
 
-gulp.task('debug', [
-  'debug-scoping-shim',
-  'debug-apply-shim',
-  'debug-custom-style-interface'
-]);
-
-gulp.task('closure-scoping-shim', () => {
-  return gulp.src(['src/*.js', 'entrypoints/*.js'])
-  .pipe(sourcemaps.init())
-  .pipe(closure({
-    new_type_inf: true,
-    compilation_level: 'ADVANCED',
-    language_in: 'ES6_STRICT',
-    language_out: 'ES5_STRICT',
-    output_wrapper: '(function(){\n%output%\n}).call(self)',
-    assume_function_wrapper: true,
-    js_output_file: 'scoping-shim.min.js',
-    entry_point: '/entrypoints/scoping-shim.js',
-    dependency_mode: 'STRICT',
-    warning_level: 'VERBOSE',
-    rewrite_polyfills: false,
-    // formatting: 'PRETTY_PRINT'
-  }))
-  .pipe(size({showFiles: true, showTotal: false, gzip: true}))
-  .pipe(sourcemaps.write('.'))
-  .pipe(gulp.dest('.'))
-});
-
-gulp.task('debug-scoping-shim', () => {
-  return rollup({
-    entry: 'entrypoints/scoping-shim.js',
-    format: 'iife',
-    moduleName: 'scopingshim',
-    sourceMap: true
-  })
-  .pipe(source('scoping-shim.js', 'entrypoints'))
-  .pipe(buffer())
-  .pipe(sourcemaps.init({loadMaps: true}))
-  .pipe(rename('scoping-shim.min.js'))
-  .pipe(size({showFiles: true, showTotal: false, gzip: true}))
-  .pipe(sourcemaps.write('.'))
-  .pipe(gulp.dest('./'))
-});
-
-gulp.task('closure-apply-shim', () => {
-  return gulp.src(['src/*.js', 'entrypoints/*.js'])
-  .pipe(sourcemaps.init())
-  .pipe(closure({
-    new_type_inf: true,
-    compilation_level: 'ADVANCED',
-    language_in: 'ES6_STRICT',
-    language_out: 'ES5_STRICT',
-    output_wrapper: '(function(){\n%output%\n}).call(self)',
-    js_output_file: 'apply-shim.min.js',
-    entry_point: '/entrypoints/apply-shim.js',
-    dependency_mode: 'STRICT',
-    warning_level: 'VERBOSE',
-    rewrite_polyfills: false,
-    // formatting: 'PRETTY_PRINT'
-  }))
-  .pipe(size({showFiles: true, showTotal: false, gzip: true}))
-  .pipe(sourcemaps.write('.'))
-  .pipe(gulp.dest('.'))
-});
-
-gulp.task('debug-apply-shim', () => {
-  return rollup({
-    entry: 'entrypoints/apply-shim.js',
-    format: 'iife',
-    moduleName: 'applyshim',
-    sourceMap: true
-  })
-  .pipe(source('apply-shim.js', 'entrypoints'))
-  .pipe(buffer())
-  .pipe(sourcemaps.init({loadMaps: true}))
-  .pipe(rename('apply-shim.min.js'))
-  .pipe(size({showFiles: true, showTotal: false, gzip: true}))
-  .pipe(sourcemaps.write('.'))
-  .pipe(gulp.dest('./'))
-});
-
-gulp.task('closure-custom-style-interface', () => {
-  return gulp.src(['src/*.js', 'entrypoints/*.js'])
-  .pipe(sourcemaps.init())
-  .pipe(closure({
-    new_type_inf: true,
-    compilation_level: 'ADVANCED',
-    language_in: 'ES6_STRICT',
-    language_out: 'ES5_STRICT',
-    output_wrapper: '(function(){\n%output%\n}).call(self)',
-    js_output_file: 'custom-style-interface.min.js',
-    entry_point: '/entrypoints/custom-style-interface.js',
-    dependency_mode: 'STRICT',
-    warning_level: 'VERBOSE',
-    rewrite_polyfills: false,
-    // formatting: 'PRETTY_PRINT'
-  }))
-  .pipe(size({showFiles: true, showTotal: false, gzip: true}))
-  .pipe(sourcemaps.write('.'))
-  .pipe(gulp.dest('.'))
-});
-
-gulp.task('debug-custom-style-interface', () => {
-  return rollup({
-    entry: 'entrypoints/custom-style-interface.js',
-    format: 'iife',
-    moduleName: 'customstyleinterface',
-    sourceMap: true
-  })
-  .pipe(source('custom-style-interface.js', 'entrypoints'))
-  .pipe(buffer())
-  .pipe(sourcemaps.init({loadMaps: true}))
-  .pipe(rename('custom-style-interface.min.js'))
-  .pipe(size({showFiles: true, showTotal: false, gzip: true}))
-  .pipe(sourcemaps.write('.'))
-  .pipe(gulp.dest('./'))
-});
+gulp.task('debug', debugTasks);

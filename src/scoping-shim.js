@@ -1,6 +1,6 @@
 /**
 @license
-Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
+Copyright (c) 2017 The Polymer Project Authors. All rights reserved.
 This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
 The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
 The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
@@ -96,11 +96,11 @@ export default class ScopingShim {
     }
     // check if the styling has mixin definitions or uses
     this._ensureApplyShimInterface();
-    let hasMixins = this._applyShim.detectMixin(cssText);
+    let hasMixins = this._applyShim['detectMixin'](cssText);
     let ast = parse(cssText);
     // only run the applyshim transforms if there is a mixin involved
     if (hasMixins && nativeCssVariables) {
-      this._applyShim.transformRules(ast, elementName);
+      this._applyShim['transformRules'](ast, elementName);
     }
     template._styleAst = ast;
     template._cssBuild = cssBuild;
@@ -250,7 +250,7 @@ export default class ScopingShim {
         // update template
         if (!ApplyShimUtils.templateIsValidating(template)) {
           this._ensureApplyShimInterface();
-          this._applyShim.transformRules(template._styleAst, is);
+          this._applyShim['transformRules'](template._styleAst, is);
           template._style.textContent = StyleTransformer.elementStyles(host, styleInfo.styleRules);
           ApplyShimUtils.startValidatingTemplate(template);
         }
@@ -391,7 +391,7 @@ export default class ScopingShim {
       }
       if (nativeCssVariables) {
         this._ensureApplyShimInterface();
-        this._applyShim.transformRule(rule);
+        this._applyShim['transformRule'](rule);
       }
     });
     if (nativeCssVariables) {
@@ -404,7 +404,7 @@ export default class ScopingShim {
     if (nativeCssVariables) {
       let ast = StyleUtil.rulesForStyle(style);
       this._ensureApplyShimInterface();
-      this._applyShim.transformRules(ast);
+      this._applyShim['transformRules'](ast);
       style.textContent = StyleUtil.toCssText(ast);
     }
   }

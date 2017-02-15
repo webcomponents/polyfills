@@ -17,6 +17,9 @@ import {StyleNode} from './css-parse' // eslint-disable-line no-unused-vars
  */
 const promise = Promise.resolve();
 
+/**
+ * @param {string} elementName
+ */
 export function invalidate(elementName){
   let template = templateMap[elementName];
   if (template) {
@@ -24,10 +27,17 @@ export function invalidate(elementName){
   }
 }
 
+/**
+ * @param {HTMLTemplateElement} template
+ */
 export function invalidateTemplate(template) {
   template['_applyShimInvalid'] = true;
 }
 
+/**
+ * @param {string} elementName
+ * @return {boolean}
+ */
 export function isValid(elementName) {
   let template = templateMap[elementName];
   if (template) {
@@ -36,10 +46,18 @@ export function isValid(elementName) {
   return true;
 }
 
+/**
+ * @param {HTMLTemplateElement} template
+ * @return {boolean}
+ */
 export function templateIsValid(template) {
   return !template['_applyShimInvalid'];
 }
 
+/**
+ * @param {string} elementName
+ * @return {boolean}
+ */
 export function isValidating(elementName) {
   let template = templateMap[elementName];
   if (template) {
@@ -48,20 +66,28 @@ export function isValidating(elementName) {
   return false;
 }
 
+/**
+ * @param {HTMLTemplateElement} template
+ * @return {boolean}
+ */
 export function templateIsValidating(template) {
   return template._validating;
 }
 
-/*
-the template is marked as `validating` for one microtask so that all instances
-found in the tree crawl of `applyStyle` will update themselves,
-but the template will only be updated once.
+/**
+ * the template is marked as `validating` for one microtask so that all instances
+ * found in the tree crawl of `applyStyle` will update themselves,
+ * but the template will only be updated once.
+ * @param {string} elementName
 */
 export function startValidating(elementName) {
   let template = templateMap[elementName];
   startValidatingTemplate(template);
 }
 
+/**
+ * @param {HTMLTemplateElement} template
+ */
 export function startValidatingTemplate(template) {
   if (!template._validating) {
     template._validating = true;
@@ -72,6 +98,9 @@ export function startValidatingTemplate(template) {
   }
 }
 
+/**
+ * @return {boolean}
+ */
 export function elementsAreInvalid() {
   for (let elementName in templateMap) {
     let template = templateMap[elementName];

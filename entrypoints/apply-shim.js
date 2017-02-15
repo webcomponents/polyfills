@@ -121,7 +121,9 @@ class ApplyShimInterface {
 
 const applyShimInterface = new ApplyShimInterface();
 
-if (!window['ShadyCSS']) {
+if (!window['ShadyCSS'] || !window['ShadyCSS']['ScopingShim']) {
+  let CustomStyleInterface = window['ShadyCSS'] && window['ShadyCSS']['CustomStyleInterface'];
+
   window['ShadyCSS'] = {
     /**
      * @param {HTMLTemplateElement} template
@@ -165,6 +167,10 @@ if (!window['ShadyCSS']) {
     ['nativeCss']: true,
     ['nativeShadow']: true
   };
+
+  if (CustomStyleInterface) {
+    window['ShadyCSS']['CustomStyleInterface'] = CustomStyleInterface;
+  }
 }
 
 window['ShadyCSS']['ApplyShim'] = applyShim;
