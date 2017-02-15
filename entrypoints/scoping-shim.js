@@ -30,6 +30,7 @@ window['ShadyCSS'] = {
    * @param {string=} elementExtends
    */
   ['prepareTemplate'](template, elementName, elementExtends) {
+    scopingShim.flushCustomStyles();
     scopingShim.prepareTemplate(template, elementName, elementExtends)
   },
 
@@ -38,6 +39,7 @@ window['ShadyCSS'] = {
    * @param {Object=} properties
    */
   ['styleSubtree'](element, properties) {
+    scopingShim.flushCustomStyles();
     scopingShim.styleSubtree(element, properties);
   },
 
@@ -45,6 +47,7 @@ window['ShadyCSS'] = {
    * @param {Element} element
    */
   ['styleElement'](element) {
+    scopingShim.flushCustomStyles();
     scopingShim.styleElement(element);
   },
 
@@ -52,6 +55,7 @@ window['ShadyCSS'] = {
    * @param {Object=} properties
    */
   ['styleDocument'](properties) {
+    scopingShim.flushCustomStyles();
     scopingShim.styleDocument(properties);
   },
 

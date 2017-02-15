@@ -131,6 +131,7 @@ if (!window['ShadyCSS'] || !window['ShadyCSS']['ScopingShim']) {
      * @param {string=} elementExtends
      */
     ['prepareTemplate'](template, elementName, elementExtends) { // eslint-disable-line no-unused-vars
+      applyShimInterface.flushCustomStyles();
       applyShimInterface.prepareTemplate(template, elementName)
     },
 
@@ -139,6 +140,7 @@ if (!window['ShadyCSS'] || !window['ShadyCSS']['ScopingShim']) {
      * @param {Object=} properties
      */
     ['styleSubtree'](element, properties) {
+      applyShimInterface.flushCustomStyles();
       applyShimInterface.styleSubtree(element, properties);
     },
 
@@ -146,6 +148,7 @@ if (!window['ShadyCSS'] || !window['ShadyCSS']['ScopingShim']) {
      * @param {Element} element
      */
     ['styleElement'](element) {
+      applyShimInterface.flushCustomStyles();
       applyShimInterface.styleElement(element);
     },
 
@@ -153,6 +156,7 @@ if (!window['ShadyCSS'] || !window['ShadyCSS']['ScopingShim']) {
      * @param {Object=} properties
      */
     ['styleDocument'](properties) {
+      applyShimInterface.flushCustomStyles();
       applyShimInterface.styleDocument(properties);
     },
 
