@@ -29,7 +29,7 @@ gulp.task('default', () => {
       compilation_level: 'SIMPLE',
       language_in: 'ES6_STRICT',
       language_out: 'ES5_STRICT',
-      output_wrapper: '(function(){\n%output%\n}).call(this)',
+      output_wrapper: '(function(){\n%output%\n}).call(this);',
       js_output_file: 'shadydom.min.js',
       rewrite_polyfills: false,
       assume_function_wrapper: true
