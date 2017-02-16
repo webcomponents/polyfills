@@ -17,6 +17,11 @@ export default class DocumentConstructionObserver {
      */
     this._observer = undefined;
 
+    /**
+     * @type {!Array<!Element|undefined>}
+     */
+    this._parserQueue = [];
+
 
     // Simulate tree construction for all currently accessible nodes in the
     // document.
@@ -54,12 +59,29 @@ export default class DocumentConstructionObserver {
       this.disconnect();
     }
 
-    for (let i = 0; i < mutations.length; i++) {
+    const internals = this._internals;
+
+    const parserQueue = this._parserQueue;
+    let addedElementsCount = 0;
+
+    for (let i = 0, mutationsLength = mutations.length; i < mutationsLength; i++) {
       const addedNodes = mutations[i].addedNodes;
-      for (let j = 0; j < addedNodes.length; j++) {
+      for (let j = 0, addedNodesLength = addedNodes.length; j < addedNodesLength; j++) {
         const node = addedNodes[j];
-        this._internals.patchAndUpgradeTree(node);
+        if (node instanceof Element) {
+          internals.patch(node);
+          parserQueue[addedElementsCount++] = node;
+        }
       }
+    }
+
+    for (let i = 0; i < addedElementsCount; i++) {
+      const element = /** @type {!Element} */ (parserQueue[i]);
+      parserQueue[i] = undefined;
+
+      internals.pushCEReactionsQueue();
+      internals.upgradeElement(element);
+      internals.popCEReactionsQueue();
     }
   }
 }
