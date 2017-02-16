@@ -42,6 +42,8 @@ export default class DocumentConstructionObserver {
   }
 
   disconnect() {
+    // Release references to any elements in the queue.
+    this._parserQueue.length = 0;
     if (this._observer) {
       this._observer.disconnect();
     }
@@ -77,7 +79,6 @@ export default class DocumentConstructionObserver {
 
     for (let i = 0; i < addedElementsCount; i++) {
       const element = /** @type {!Element} */ (parserQueue[i]);
-      parserQueue[i] = undefined;
 
       internals.pushCEReactionsQueue();
       internals.upgradeElement(element);
