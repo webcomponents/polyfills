@@ -50,13 +50,11 @@ export default class CustomStyleInterface {
    * Queue a validation for new custom styles to batch style recalculations
    */
   enqueueDocumentValidation() {
-    if (this['enqueued']) {
+    if (this['enqueued'] || !validateFn) {
       return;
     }
     this['enqueued'] = true;
-    documentWait(() => {
-      validateFn();
-    });
+    documentWait(validateFn);
   }
   /**
    * @param {!HTMLStyleElement} style
@@ -129,9 +127,19 @@ Object.defineProperties(CustomStyleInterface.prototype, {
     get() {
       return validateFn;
     },
-    /** @param {?function()} fn */
+    /**
+     * @param {?function()} fn
+     * @this {CustomStyleInterface}
+     */
     set(fn) {
+      let needsEnqueue = false;
+      if (!validateFn) {
+        needsEnqueue = true;
+      }
       validateFn = fn;
+      if (needsEnqueue) {
+        this.enqueueDocumentValidation();
+      }
     },
   }
 })

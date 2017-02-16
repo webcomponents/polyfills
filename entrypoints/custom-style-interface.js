@@ -12,6 +12,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 import CustomStyleInterface from '../src/custom-style-interface'
 import {getComputedStyleValue, updateNativeProperties} from '../src/common-utils'
+import {nativeCssVariables, nativeShadow} from '../src/style-settings'
 
 const customStyleInterface = new CustomStyleInterface();
 
@@ -56,8 +57,8 @@ if (!window.ShadyCSS) {
     getComputedStyleValue(element, property) {
       return getComputedStyleValue(element, property);
     },
-    nativeCss: true,
-    nativeShadow: true
+    nativeCss: nativeCssVariables,
+    nativeShadow: nativeShadow
   }
 }
 

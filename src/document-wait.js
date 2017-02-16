@@ -13,14 +13,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 /** @type {Promise<void>} */
 let readyPromise = null;
 
-/** @type {?function(function())} */
+/** @type {?function(?function())} */
 let whenReady = window['HTMLImports'] && window['HTMLImports']['whenReady'] || null;
 
 /** @type {function()} */
 let resolveFn;
 
 /**
- * @param {function()} callback
+ * @param {?function()} callback
  */
 export default function documentWait(callback) {
   if (whenReady) {
@@ -38,6 +38,6 @@ export default function documentWait(callback) {
         });
       }
     }
-    readyPromise.then(callback);
+    readyPromise.then(function(){ callback && callback(); });
   }
 }

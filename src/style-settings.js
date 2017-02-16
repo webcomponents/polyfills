@@ -21,8 +21,8 @@ window.CSS && CSS.supports && CSS.supports('box-shadow', '0 0 0 var(--foo)'));
  */
 function parseSettings(settings) {
   if (settings) {
-    nativeCssVariables = nativeCssVariables && !settings['shimcssproperties'];
-    nativeShadow = nativeShadow && !settings['shimshadow'];
+    nativeCssVariables = nativeCssVariables && !settings['nativeCss'] && !settings['shimcssproperties'];
+  nativeShadow = nativeShadow && !settings['nativeShadow'] && !settings['shimshadow'];
   }
 }
 

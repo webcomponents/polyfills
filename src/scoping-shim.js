@@ -38,10 +38,12 @@ export default class ScopingShim {
     ast['rules'] = [];
     this._documentOwnerStyleInfo = StyleInfo.set(document.documentElement, new StyleInfo(ast));
     this._elementsHaveApplied = false;
-    documentWait(() => {this._ensureCustomStyleInterface()});
     this._applyShim = null;
     /** @type {?CustomStyleInterfaceInterface} */
     this._customStyleInterface = null;
+    documentWait(() => {
+      this._ensure();
+    });
   }
   flush() {
     watcherFlush();
@@ -99,7 +101,7 @@ export default class ScopingShim {
       StyleTransformer.dom(template.content, elementName);
     }
     // check if the styling has mixin definitions or uses
-    this._ensureApplyShimInterface();
+    this._ensure();
     let hasMixins = this._applyShim['detectMixin'](cssText);
     let ast = parse(cssText);
     // only run the applyshim transforms if there is a mixin involved
@@ -150,11 +152,11 @@ export default class ScopingShim {
       )
     );
   }
-  _ensureApplyShimInterface() {
+  _ensureApplyShim() {
     if (this._applyShim) {
       return;
-    } else if (window['ShadyCSS']['ApplyShim']) {
-      this._applyShim = window['ShadyCSS']['ApplyShim'];
+    } else if (window.ShadyCSS.ApplyShim) {
+      this._applyShim = window.ShadyCSS.ApplyShim;
       this._applyShim['invalidCallback'] = ApplyShimUtils.invalidate;
     } else {
       this._applyShim = {
@@ -177,10 +179,6 @@ export default class ScopingShim {
         requestAnimationFrame(() => {
           if (this._customStyleInterface['enqueued'] || this._elementsHaveApplied) {
             this.flushCustomStyles();
-            // if custom elements have upgraded and an element is invalid, we must recalculate the whole tree
-            if (this._elementsHaveApplied && nativeCssVariables && ApplyShimUtils.elementsAreInvalid()) {
-              this.styleDocument();
-            }
           }
         })
       };
@@ -192,11 +190,15 @@ export default class ScopingShim {
       })
     }
   }
+  _ensure() {
+    this._ensureApplyShim();
+    this._ensureCustomStyleInterface();
+  }
   /**
    * Flush and apply custom styles to document
    */
   flushCustomStyles() {
-    this._ensureCustomStyleInterface();
+    this._ensure();
     this._customStyleInterface['findStyles']();
     // early return if custom-styles don't need validation
     if (!this._customStyleInterface['enqueued']) {
@@ -253,7 +255,7 @@ export default class ScopingShim {
       if (template && template._style && !ApplyShimUtils.templateIsValid(template)) {
         // update template
         if (!ApplyShimUtils.templateIsValidating(template)) {
-          this._ensureApplyShimInterface();
+          this._ensure();
           this._applyShim['transformRules'](template._styleAst, is);
           template._style.textContent = StyleTransformer.elementStyles(host, styleInfo.styleRules);
           ApplyShimUtils.startValidatingTemplate(template);
@@ -394,7 +396,7 @@ export default class ScopingShim {
         StyleTransformer.documentRule(rule);
       }
       if (nativeCssVariables) {
-        this._ensureApplyShimInterface();
+        this._ensure();
         this._applyShim['transformRule'](rule);
       }
     });
@@ -407,7 +409,7 @@ export default class ScopingShim {
   _revalidateApplyShim(style) {
     if (nativeCssVariables) {
       let ast = StyleUtil.rulesForStyle(style);
-      this._ensureApplyShimInterface();
+      this._ensure();
       this._applyShim['transformRules'](ast);
       style.textContent = StyleUtil.toCssText(ast);
     }

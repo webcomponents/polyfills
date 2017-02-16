@@ -12,10 +12,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 import ApplyShim from '../src/apply-shim'
 import templateMap from '../src/template-map'
-import {getIsExtends} from '../src/style-util'
+import {getIsExtends, toCssText} from '../src/style-util'
 import * as ApplyShimUtils from '../src/apply-shim-utils'
+import documentWait from '../src/document-wait'
 import {getComputedStyleValue, updateNativeProperties} from '../src/common-utils'
 import {CustomStyleInterfaceInterface} from '../src/custom-style-interface' // eslint-disable-line no-unused-vars
+import {nativeCssVariables, nativeShadow} from '../src/style-settings'
 
 /** @const {ApplyShim} */
 const applyShim = new ApplyShim();
@@ -25,6 +27,10 @@ class ApplyShimInterface {
     /** @type {?CustomStyleInterfaceInterface} */
     this.customStyleInterface = null;
     this.booted = false;
+    documentWait(() => {
+      this.ensure();
+    });
+    applyShim['invalidCallback'] = ApplyShimUtils.invalidate;
   }
   ensure() {
     if (this.booted) {
@@ -36,10 +42,11 @@ class ApplyShimInterface {
         applyShim.transformCustomStyle(style);
       };
       this.customStyleInterface['validateCallback'] = () => {
-        this.flushCustomStyles();
-        if (ApplyShimUtils.elementsAreInvalid()) {
-          this.styleDocument();
-        }
+        requestAnimationFrame(() => {
+          if (this.customStyleInterface['enqueued']) {
+            this.flushCustomStyles();
+          }
+        });
       }
     }
     this.booted = true;
@@ -51,7 +58,9 @@ class ApplyShimInterface {
   prepareTemplate(template, elementName) {
     this.ensure();
     templateMap[elementName] = template;
-    applyShim.transformTemplate(template, elementName);
+    let ast = applyShim.transformTemplate(template, elementName);
+    // save original style ast to use for revalidating instances
+    template._styleAst = ast;
   }
   flushCustomStyles() {
     this.ensure();
@@ -107,7 +116,9 @@ class ApplyShimInterface {
       if (root) {
         let style = /** @type {HTMLStyleElement} */(root.querySelector('style'));
         if (style) {
-          applyShim.transformStyle(style, is);
+          // reuse the template's style ast, it has all the original css text
+          style['__cssRules'] = template._styleAst;
+          style.textContent = toCssText(template._styleAst)
         }
       }
     }
@@ -121,9 +132,8 @@ class ApplyShimInterface {
   }
 }
 
-const applyShimInterface = new ApplyShimInterface();
-
 if (!window.ShadyCSS || !window.ShadyCSS.ScopingShim) {
+  const applyShimInterface = new ApplyShimInterface();
   let CustomStyleInterface = window.ShadyCSS && window.ShadyCSS.CustomStyleInterface;
 
   window.ShadyCSS = {
@@ -170,8 +180,8 @@ if (!window.ShadyCSS || !window.ShadyCSS.ScopingShim) {
     getComputedStyleValue(element, property) {
       return getComputedStyleValue(element, property);
     },
-    nativeCss: true,
-    nativeShadow: true
+    nativeCss: nativeCssVariables,
+    nativeShadow: nativeShadow
   };
 
   if (CustomStyleInterface) {

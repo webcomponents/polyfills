@@ -15,18 +15,18 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <script>
   WCT = {waitFor: function (cb) {HTMLImports.whenReady(cb)}}
   </script>
-  <script src="../../web-component-tester/browser.js"></script>
-  <script src="../../webcomponents-platform/webcomponents-platform.js"></script>
-  <script src="../../es6-promise/dist/es6-promise.auto.min.js"></script>
-  <script src="../../template/template.js"></script>
-  <script src="../../html-imports/html-imports.min.js"></script>
-  <script src="../../shadydom/shadydom.min.js"></script>
-  <script src="../../custom-elements/custom-elements.min.js"></script>
-  <script src="../scoping-shim.min.js"></script>
-  <script src="../apply-shim.min.js"></script>
-  <script src="../custom-style-interface.min.js"></script>
-  <script src="module/generated/custom-style-element.js"></script>
-  <script src="module/generated/make-element.js"></script>
+  <script src="../../../web-component-tester/browser.js"></script>
+  <script src="../../../webcomponents-platform/webcomponents-platform.js"></script>
+  <script src="../../../es6-promise/dist/es6-promise.auto.min.js"></script>
+  <script src="../../../template/template.js"></script>
+  <script src="../../../html-imports/html-imports.min.js"></script>
+  <script src="../../../shadydom/shadydom.min.js"></script>
+  <script src="../../../custom-elements/custom-elements.min.js"></script>
+  <script src="../../apply-shim.min.js"></script>
+  <script src="../../custom-style-interface.min.js"></script>
+  <script src="../module/generated/make-element.js"></script>
+  <script src="../module/generated/custom-style-element.js"></script>
+  <script src="../module/generated/style-util.js"></script>
   <title>Apply Shim</title>
 
 </head>
@@ -148,7 +148,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         var info = prep('basic');
         style = info.style;
         ast = info.ast;
-        style.textContent = window.ShadyCSS.ScopingShim.styleAstToString(ast);
+        style.textContent = window.StyleUtil.toCssText(ast);
       });
 
       test('style is transformed', function() {
@@ -248,7 +248,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       });
 
       test('element initially has no definition', function() {
-        var ast = window.ShadyCSS.ScopingShim._styleInfoForNode(element)._getStyleRules();
+        var ast = window.StyleUtil.rulesForStyle(style);
         assert.equal(ast.rules[0].cssText, ';');
       });
 
@@ -256,7 +256,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         var nodes = copy('x-element2');
         document.body.appendChild(nodes);
         window.ShadyCSS.styleDocument();
-        var ast = window.ShadyCSS.ScopingShim._styleInfoForNode(element)._getStyleRules();
+        var ast = window.StyleUtil.rulesForStyle(style);
         assert.match(ast.rules[0].cssText, /border:\s*var\(--my-mixin_-_border\)/);
       });
     });

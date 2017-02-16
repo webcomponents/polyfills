@@ -28,7 +28,8 @@ const modules = [
   'css-parse',
   'custom-style-element',
   'make-element',
-  'svg-in-shadow'
+  'svg-in-shadow',
+  'style-util'
 ];
 
 const moduleTasks = modules.map((m) => {
