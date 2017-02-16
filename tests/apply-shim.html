@@ -126,6 +126,17 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     </style>
   </template>
 
+  <template id="x-element2">
+    <custom-style>
+    <style>
+    html {
+      --my-mixin: {
+        border: 2px solid black;
+      };
+    }
+    </style>
+    </custom-style>
+  </template>
   <script>
   suite('Apply Shim', function() {
     function copy(name) {
@@ -250,11 +261,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       });
 
       test('Revalidating Apply Shim on element template fills in properties', function() {
-        var style = document.createElement('style');
-        style.textContent = 'html{--my-mixin:{border: 2px solid black;}}';
-        var customStyle = document.createElement('custom-style');
-        customStyle.appendChild(style);
-        document.body.appendChild(customStyle);
+        var nodes = copy('x-element2');
+        document.body.appendChild(nodes);
         window.ShadyCSS.styleDocument();
         var ast = window.ShadyCSS.ScopingShim._styleInfoForNode(element)._getStyleRules();
         if (window.ShadyCSS.nativeCss) {

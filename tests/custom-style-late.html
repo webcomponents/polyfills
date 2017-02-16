@@ -19,6 +19,14 @@ WCT = {waitFor: function (cb) {HTMLImports.whenReady(cb)}}
 <script src="../../custom-elements/custom-elements.min.js"></script>
 <script src="../scoping-shim.min.js"></script>
 <script src="../apply-shim.min.js"></script>
+  <script>
+  if (customElements.polyfillWrapFlushCallback) {
+    // delay definition of custom-style until after template polyfill loads
+    customElements.polyfillWrapFlushCallback(function(cb) {
+      HTMLImports.whenReady(cb);
+    });
+  }
+  </script>
 <script src="../custom-style-interface.min.js"></script>
 <script src="module/generated/make-element.js"></script>
 <script src="module/generated/custom-style-element.js"></script>
