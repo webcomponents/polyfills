@@ -24,6 +24,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <script src="../../custom-elements/custom-elements.min.js"></script>
   <script src="../scoping-shim.min.js"></script>
   <script src="../apply-shim.min.js"></script>
+  <script>
+  if (customElements.polyfillWrapFlushCallback) {
+    // delay definition of custom-style until after template polyfill loads
+    customElements.polyfillWrapFlushCallback(function(cb) {
+      HTMLImports.whenReady(cb);
+    });
+  }
+  </script>
   <script src="../custom-style-interface.min.js"></script>
   <script src="module/generated/custom-style-element.js"></script>
   <script src="module/generated/make-element.js"></script>
@@ -257,7 +265,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         document.body.appendChild(nodes);
         window.ShadyCSS.styleDocument();
         var ast = window.ShadyCSS.ScopingShim._styleInfoForNode(element)._getStyleRules();
-        assert.match(ast.rules[0].cssText, /border:\s*var\(--my-mixin_-_border\)/);
+        if (window.ShadyCSS.nativeCss) {
+          assert.match(ast.rules[0].cssText, /border:\s*var\(--my-mixin_-_border\)/);
+        } else {
+          assert.match(ast.rules[0].cssText, /border:\s*2px solid black/);
+        }
       });
     });
   });
