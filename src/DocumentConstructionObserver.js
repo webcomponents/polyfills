@@ -81,7 +81,7 @@ export default class DocumentConstructionObserver {
       const element = /** @type {!Element} */ (parserQueue[i]);
 
       internals.pushCEReactionsQueue();
-      internals.upgradeElement(element);
+      internals.upgradeElementSync(element);
       internals.popCEReactionsQueue();
     }
   }

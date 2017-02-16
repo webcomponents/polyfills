@@ -244,14 +244,14 @@ export default class CustomElementInternals {
   upgradeElement(element) {
     if (element.__CE_state !== undefined) return;
     this._reactionsStack.enqueueReaction(element, () => {
-      this._upgradeElement(element);
+      this.upgradeElementSync(element);
     });
   }
 
   /**
    * @param {!Element} element
    */
-  _upgradeElement(element) {
+  upgradeElementSync(element) {
     const currentState = element.__CE_state;
     if (currentState !== undefined) return;
 
