@@ -16,13 +16,13 @@ export default class CustomElementReactionsStack {
      * @private
      * @type {!Array<number>}
      */
-    this._frameStart = [];
+    this._queueStart = [];
 
     /**
      * @private
      * @type {number}
      */
-    this._frames = 0;
+    this._queueCount = 0;
 
     /**
      * @private
@@ -32,15 +32,15 @@ export default class CustomElementReactionsStack {
   }
 
   pushFrame() {
-    this._frameStart[this._frames++] = this._length;
+    this._queueStart[this._queueCount++] = this._length;
   }
 
   popFrame() {
     const stack = this._stack;
-    const frameStart = this._frameStart[--this._frames];
-    const frameEnd = this._length;
+    const queueStart = this._queueStart[--this._queueCount];
+    const queueEnd = this._length;
 
-    for (let i = frameStart; i < frameEnd; i++) {
+    for (let i = queueStart; i < queueEnd; i++) {
       const element = stack[i];
       stack[i] = undefined;
 
@@ -52,7 +52,7 @@ export default class CustomElementReactionsStack {
       }
     }
 
-    this._length = frameStart;
+    this._length = queueStart;
   }
 
   /**
@@ -70,7 +70,7 @@ export default class CustomElementReactionsStack {
       element.__CE_queueFront = reaction;
     }
 
-    if (this._frames === 0) {
+    if (this._queueCount === 0) {
       this.pushFrame();
       this._stack[this._length++] = element;
 
