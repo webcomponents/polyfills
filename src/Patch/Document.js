@@ -37,7 +37,7 @@ export default function(internals) {
      * @return {!Node}
      */
     function(node, deep) {
-      internals.pushCEReactionsFrame();
+      internals.pushCEReactionsQueue();
 
       const clone = Native.Document_importNode.call(this, node, deep);
       // Only create custom elements if this document is associated with the registry.
@@ -47,7 +47,7 @@ export default function(internals) {
         internals.patchAndUpgradeTree(clone);
       }
 
-      internals.popCEReactionsFrame();
+      internals.popCEReactionsQueue();
       return clone;
     });
 

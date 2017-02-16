@@ -17,7 +17,7 @@ export default function(internals) {
      * @return {!Node}
      */
     function(node, refNode) {
-      internals.pushCEReactionsFrame();
+      internals.pushCEReactionsQueue();
 
       if (node instanceof DocumentFragment) {
         // DocumentFragments can't be connected, so `disconnectTree` will never
@@ -29,7 +29,7 @@ export default function(internals) {
 
         const result = Native.Node_insertBefore.call(this, node, refNode);
 
-        internals.popCEReactionsFrame();
+        internals.popCEReactionsQueue();
         return result;
       }
 
@@ -44,7 +44,7 @@ export default function(internals) {
         internals.connectTree(node);
       }
 
-      internals.popCEReactionsFrame();
+      internals.popCEReactionsQueue();
       return nativeResult;
     });
 
@@ -55,7 +55,7 @@ export default function(internals) {
      * @return {!Node}
      */
     function(node) {
-      internals.pushCEReactionsFrame();
+      internals.pushCEReactionsQueue();
 
       if (node instanceof DocumentFragment) {
         // DocumentFragments can't be connected, so `disconnectTree` will never
@@ -67,7 +67,7 @@ export default function(internals) {
 
         const result = Native.Node_appendChild.call(this, node);
 
-        internals.popCEReactionsFrame();
+        internals.popCEReactionsQueue();
         return result;
       }
 
@@ -82,7 +82,7 @@ export default function(internals) {
         internals.connectTree(node);
       }
 
-      internals.popCEReactionsFrame();
+      internals.popCEReactionsQueue();
       return nativeResult;
     });
 
@@ -93,7 +93,7 @@ export default function(internals) {
      * @return {!Node}
      */
     function(deep) {
-      internals.pushCEReactionsFrame();
+      internals.pushCEReactionsQueue();
 
       const clone = Native.Node_cloneNode.call(this, deep);
       // Only create custom elements if this element's owner document is
@@ -104,7 +104,7 @@ export default function(internals) {
         internals.patchAndUpgradeTree(clone);
       }
 
-      internals.popCEReactionsFrame();
+      internals.popCEReactionsQueue();
       return clone;
     });
 
@@ -115,14 +115,14 @@ export default function(internals) {
      * @return {!Node}
      */
     function(node) {
-      internals.pushCEReactionsFrame();
+      internals.pushCEReactionsQueue();
 
       if (Utilities.isConnected(node)) {
         internals.disconnectTree(node);
       }
       const result = Native.Node_removeChild.call(this, node);
 
-      internals.popCEReactionsFrame();
+      internals.popCEReactionsQueue();
       return result;
     });
 
@@ -134,7 +134,7 @@ export default function(internals) {
      * @return {!Node}
      */
     function(nodeToInsert, nodeToRemove) {
-      internals.pushCEReactionsFrame();
+      internals.pushCEReactionsQueue();
 
       const thisIsConnected = Utilities.isConnected(this);
 
@@ -151,7 +151,7 @@ export default function(internals) {
 
         const result = Native.Node_replaceChild.call(this, nodeToInsert, nodeToRemove);
 
-        internals.popCEReactionsFrame();
+        internals.popCEReactionsQueue();
         return result;
       }
 
@@ -170,7 +170,7 @@ export default function(internals) {
 
       const result = Native.Node_replaceChild.call(this, nodeToInsert, nodeToRemove);
 
-      internals.popCEReactionsFrame();
+      internals.popCEReactionsQueue();
       return result;
     });
 
@@ -181,12 +181,12 @@ export default function(internals) {
       configurable: true,
       get: baseDescriptor.get,
       set: /** @this {Node} */ function(assignedValue) {
-        internals.pushCEReactionsFrame();
+        internals.pushCEReactionsQueue();
 
         // If this is a text node then there are no nodes to disconnect.
         if (this.nodeType === Node.TEXT_NODE) {
           baseDescriptor.set.call(this, assignedValue);
-          internals.popCEReactionsFrame();
+          internals.popCEReactionsQueue();
           return;
         }
 
@@ -196,7 +196,7 @@ export default function(internals) {
 
         baseDescriptor.set.call(this, assignedValue);
 
-        internals.popCEReactionsFrame();
+        internals.popCEReactionsQueue();
       },
     });
   }

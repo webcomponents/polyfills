@@ -33,7 +33,7 @@ export default function(internals) {
       configurable: true,
       get: baseDescriptor.get,
       set: /** @this {Element} */ function(htmlString) {
-        internals.pushCEReactionsFrame();
+        internals.pushCEReactionsQueue();
 
         // NOTE: In IE11, when using the native `innerHTML` setter, all nodes
         // that were previously descendants of the context element have all of
@@ -58,7 +58,7 @@ export default function(internals) {
           internals.patchAndUpgradeTree(this);
         }
 
-        internals.popCEReactionsFrame();
+        internals.popCEReactionsQueue();
         return htmlString;
       },
     });
@@ -118,7 +118,7 @@ export default function(internals) {
           return Native.Element_setAttribute.call(this, name, newValue);
         }
 
-        internals.pushCEReactionsFrame();
+        internals.pushCEReactionsQueue();
 
         const oldValue = Native.Element_getAttribute.call(this, name);
         Native.Element_setAttribute.call(this, name, newValue);
@@ -127,7 +127,7 @@ export default function(internals) {
           internals.attributeChangedCallback(this, name, oldValue, newValue, null);
         }
 
-        internals.popCEReactionsFrame();
+        internals.popCEReactionsQueue();
       });
 
   Utilities.setPropertyUnchecked(Element.prototype, 'setAttributeNS',
@@ -143,7 +143,7 @@ export default function(internals) {
         return Native.Element_setAttributeNS.call(this, namespace, name, newValue);
       }
 
-      internals.pushCEReactionsFrame();
+      internals.pushCEReactionsQueue();
 
       const oldValue = Native.Element_getAttributeNS.call(this, namespace, name);
       Native.Element_setAttributeNS.call(this, namespace, name, newValue);
@@ -152,7 +152,7 @@ export default function(internals) {
         internals.attributeChangedCallback(this, name, oldValue, newValue, namespace);
       }
 
-      internals.popCEReactionsFrame();
+      internals.popCEReactionsQueue();
     });
 
   Utilities.setPropertyUnchecked(Element.prototype, 'removeAttribute',
@@ -166,7 +166,7 @@ export default function(internals) {
         return Native.Element_removeAttribute.call(this, name);
       }
 
-      internals.pushCEReactionsFrame();
+      internals.pushCEReactionsQueue();
 
       const oldValue = Native.Element_getAttribute.call(this, name);
       Native.Element_removeAttribute.call(this, name);
@@ -174,7 +174,7 @@ export default function(internals) {
         internals.attributeChangedCallback(this, name, oldValue, null, null);
       }
 
-      internals.popCEReactionsFrame();
+      internals.popCEReactionsQueue();
     });
 
   Utilities.setPropertyUnchecked(Element.prototype, 'removeAttributeNS',
@@ -189,7 +189,7 @@ export default function(internals) {
         return Native.Element_removeAttributeNS.call(this, namespace, name);
       }
 
-      internals.pushCEReactionsFrame();
+      internals.pushCEReactionsQueue();
 
       const oldValue = Native.Element_getAttributeNS.call(this, namespace, name);
       Native.Element_removeAttributeNS.call(this, namespace, name);
@@ -201,7 +201,7 @@ export default function(internals) {
         internals.attributeChangedCallback(this, name, oldValue, newValue, namespace);
       }
 
-      internals.popCEReactionsFrame();
+      internals.popCEReactionsQueue();
     });
 
 
@@ -214,7 +214,7 @@ export default function(internals) {
        * @return {?Element}
        */
       function(where, element) {
-        internals.pushCEReactionsFrame();
+        internals.pushCEReactionsQueue();
 
         const wasConnected = Utilities.isConnected(element);
         const insertedElement = /** @type {!Element} */
@@ -228,7 +228,7 @@ export default function(internals) {
           internals.connectTree(element);
         }
 
-        internals.popCEReactionsFrame();
+        internals.popCEReactionsQueue();
         return insertedElement;
       });
   }

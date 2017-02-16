@@ -35,12 +35,12 @@ export default class CustomElementInternals {
     this._reactionsStack = new CustomElementReactionsStack();
   }
 
-  pushCEReactionsFrame() {
-    return this._reactionsStack.pushFrame();
+  pushCEReactionsQueue() {
+    return this._reactionsStack.pushQueue();
   }
 
-  popCEReactionsFrame() {
-    return this._reactionsStack.popFrame();
+  popCEReactionsQueue() {
+    return this._reactionsStack.popQueue();
   }
 
   /**
@@ -220,9 +220,9 @@ export default class CustomElementInternals {
             const clonedVisitedImports = new Set(visitedImports);
             visitedImports.delete(importNode);
 
-            this.pushCEReactionsFrame();
+            this.pushCEReactionsQueue();
             this.patchAndUpgradeTree(importNode, visitedImports);
-            this.popCEReactionsFrame();
+            this.popCEReactionsQueue();
           });
         }
       } else {

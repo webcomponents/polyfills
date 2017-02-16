@@ -31,11 +31,11 @@ export default class CustomElementReactionsStack {
     this._processingTheBackupElementQueue = false;
   }
 
-  pushFrame() {
+  pushQueue() {
     this._queueStart[this._queueCount++] = this._length;
   }
 
-  popFrame() {
+  popQueue() {
     const stack = this._stack;
     const queueStart = this._queueStart[--this._queueCount];
     const queueEnd = this._length;
@@ -71,14 +71,14 @@ export default class CustomElementReactionsStack {
     }
 
     if (this._queueCount === 0) {
-      this.pushFrame();
+      this.pushQueue();
       this._stack[this._length++] = element;
 
       if (this._processingTheBackupElementQueue) return;
       this._processingTheBackupElementQueue = true;
 
       Promise.resolve().then(() => {
-        this.popFrame();
+        this.popQueue();
         this._processingTheBackupElementQueue = false;
       });
     } else {

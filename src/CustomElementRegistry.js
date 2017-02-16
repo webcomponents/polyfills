@@ -61,7 +61,8 @@ export default class CustomElementRegistry {
    * @param {!Function} constructor
    */
   define(localName, constructor) {
-    this._internals.pushCEReactionsFrame();
+    this._internals.pushCEReactionsQueue();
+
     if (!(constructor instanceof Function)) {
       throw new TypeError('Custom element constructors must be functions.');
     }
@@ -105,7 +106,7 @@ export default class CustomElementRegistry {
       attributeChangedCallback = getCallback('attributeChangedCallback');
       observedAttributes = constructor['observedAttributes'] || [];
     } catch (e) {
-      this._internals.popCEReactionsFrame();
+      this._internals.popCEReactionsQueue();
       return;
     } finally {
       this._elementDefinitionIsRunning = false;
@@ -133,7 +134,7 @@ export default class CustomElementRegistry {
       this._flushCallback(() => this._flush());
     }
 
-    this._internals.popCEReactionsFrame();
+    this._internals.popCEReactionsQueue();
   }
 
   _flush() {
@@ -143,7 +144,7 @@ export default class CustomElementRegistry {
     if (this._flushPending === false) return;
     this._flushPending = false;
 
-    this._internals.pushCEReactionsFrame();
+    this._internals.pushCEReactionsQueue();
     this._internals.patchAndUpgradeTree(document);
 
     while (this._unflushedLocalNames.length > 0) {
@@ -153,7 +154,8 @@ export default class CustomElementRegistry {
         deferred.resolve(undefined);
       }
     }
-    this._internals.popCEReactionsFrame();
+
+    this._internals.popCEReactionsQueue();
   }
 
   /**
