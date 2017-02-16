@@ -155,9 +155,9 @@ supported.
 <script>
 let el = document.querySelector('my-element#a');
 // Set the color of all my-element instances to 'green'
-ShadyCSS.updateStyles({'--content-color', 'green'});
+ShadyCSS.updateStyles({'--content-color' : 'green'});
 // Set the color my-element#a's text to 'red'
-ShadyCSS.applyStyle(el, {'--content-color', 'red'});
+ShadyCSS.applyStyle(el, {'--content-color' : 'red'});
 </script>
 ```
 
