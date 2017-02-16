@@ -319,10 +319,15 @@ export function renderRootNode(element) {
   }
 }
 
+let scopingShim = null;
+
 export function setAttribute(node, attr, value) {
+  if (!scopingShim) {
+    scopingShim = window.ShadyCSS && window.ShadyCSS.ScopingShim;
+  }
   // avoid scoping elements in non-main document to avoid template documents
-  if (window.ShadyCSS && attr === 'class' && node.ownerDocument === document) {
-    window.ShadyCSS.setElementClass(node, value);
+  if (scopingShim && attr === 'class' && node.ownerDocument === document) {
+    scopingShim.setElementClass(node, value);
   } else {
     nativeMethods.setAttribute.call(node, attr, value);
     distributeAttributeChange(node, attr);
