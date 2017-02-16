@@ -3,21 +3,25 @@ import CustomElementInternals from './CustomElementInternals';
 export default class DocumentConstructionObserver {
   constructor(internals, doc) {
     /**
+     * @private
      * @type {!CustomElementInternals}
      */
     this._internals = internals;
 
     /**
+     * @private
      * @type {!Document}
      */
     this._document = doc;
 
     /**
+     * @private
      * @type {MutationObserver|undefined}
      */
     this._observer = undefined;
 
     /**
+     * @private
      * @type {!Array<!Element|undefined>}
      */
     this._parserQueue = [];
@@ -50,6 +54,7 @@ export default class DocumentConstructionObserver {
   }
 
   /**
+   * @private
    * @param {!Array<!MutationRecord>} mutations
    */
   _handleMutations(mutations) {
@@ -62,8 +67,8 @@ export default class DocumentConstructionObserver {
     }
 
     const internals = this._internals;
-
     const parserQueue = this._parserQueue;
+
     let addedElementsCount = 0;
 
     for (let i = 0, mutationsLength = mutations.length; i < mutationsLength; i++) {
