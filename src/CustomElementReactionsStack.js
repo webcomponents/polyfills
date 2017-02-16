@@ -26,12 +26,6 @@ export default class CustomElementReactionsStack {
 
     /**
      * @private
-     * @type {!Array<!Element>}
-     */
-    this._backupElementQueue = [];
-
-    /**
-     * @private
      * @type {boolean}
      */
     this._processingTheBackupElementQueue = false;
@@ -77,22 +71,14 @@ export default class CustomElementReactionsStack {
     }
 
     if (this._frames === 0) {
-      this._backupElementQueue.push(element);
+      this.pushFrame();
+      this._stack[this._length++] = element;
 
       if (this._processingTheBackupElementQueue) return;
       this._processingTheBackupElementQueue = true;
 
       Promise.resolve().then(() => {
-        while (this._backupElementQueue.length) {
-          const element = this._backupElementQueue.shift();
-
-          // Drain the element's reaction queue.
-          while (element.__CE_queueFront) {
-            const reaction = element.__CE_queueFront;
-            element.__CE_queueFront = reaction.__CE_next;
-            reaction();
-          }
-        }
+        this.popFrame();
         this._processingTheBackupElementQueue = false;
       });
     } else {
