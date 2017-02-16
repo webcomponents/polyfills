@@ -1,0 +1,63 @@
+<!doctype html>
+<html>
+<head>
+<title>CustomElementReactionsStack callback ordering for main document elements</title>
+<script>
+  (window.customElements = window.customElements || {}).forcePolyfill = true;
+</script>
+<script src="../../../../es6-promise/dist/es6-promise.auto.min.js"></script>
+<script src="../../../../web-component-tester/browser.js"></script>
+<script src="../../../custom-elements.min.js"></script>
+<script>
+  window.LOG = [];
+
+  customElements.define('custom-element', class extends HTMLElement {
+    constructor() {
+      super();
+      this.constructor.instanceCount = (this.constructor.instanceCount || 0) + 1;
+      window.LOG.push(`custom-element constructor ${this.constructor.instanceCount}`);
+    }
+
+    connectedCallback() {
+      window.LOG.push(`#${this.id} connected`);
+    }
+
+    disconnectedCallback() {
+      window.LOG.push(`#${this.id} disconnected`);
+    }
+
+    static get observedAttributes() { return ['attr']; }
+    attributeChangedCallback(name, oldValue, newValue, namespace) {
+      window.LOG.push(`#${this.id} attributeChangedCallback ${name}`);
+    }
+  });
+</script>
+</head>
+<body>
+
+<custom-element id="root" attr="a">
+  <custom-element id="next-0" attr="a">
+    <custom-element id="next-1" attr="a"></custom-element>
+  </custom-element>
+</custom-element>
+
+<script>
+suite('Callback ordering for main document elements.', function() {
+  test('Element reactions are queued and flushed in the correct order.', function() {
+    assert.deepEqual(window.LOG, [
+      'custom-element constructor 1',
+      '#root attributeChangedCallback attr',
+      '#root connected',
+      'custom-element constructor 2',
+      '#next-0 attributeChangedCallback attr',
+      '#next-0 connected',
+      'custom-element constructor 3',
+      '#next-1 attributeChangedCallback attr',
+      '#next-1 connected',
+    ]);
+  });
+});
+
+</script>
+</body>
+</html>

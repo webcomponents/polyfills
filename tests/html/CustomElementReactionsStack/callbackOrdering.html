@@ -1,0 +1,123 @@
+<!doctype html>
+<html>
+<head>
+<title>CustomElementReactionsStack callback ordering</title>
+<script>
+  (window.customElements = window.customElements || {}).forcePolyfill = true;
+</script>
+<script src="../../../../es6-promise/dist/es6-promise.auto.min.js"></script>
+<script src="../../../../web-component-tester/browser.js"></script>
+<script src="../../../custom-elements.min.js"></script>
+</head>
+<body>
+<script>
+function generateLocalName() {
+  return 'test-element-' + Math.random().toString(32).substring(2);
+}
+
+suite('Callback ordering', function() {
+  let container;
+  let log;
+  let localName1;
+
+  setup(function() {
+    container = document.createElement('div');
+    document.body.appendChild(container);
+
+    log = [];
+
+    localName1 = generateLocalName();
+    customElements.define(localName1, class extends HTMLElement {
+      connectedCallback() {
+        log.push(`ENTER #${this.id} connected`);
+
+        // When connected, this element removes all of its children and inserts
+        // them as siblings following itself.
+        const sibling = this.nextSibling;
+        while (this.firstChild) {
+          this.parentNode.insertBefore(this.firstChild, sibling);
+        }
+        log.push(`EXIT #${this.id} connected`);
+      }
+
+      disconnectedCallback() {
+        log.push(`#${this.id} disconnected`);
+      }
+    });
+  });
+
+  teardown(function() {
+    document.body.removeChild(container);
+  });
+
+  test('Element reactions are queued and flushed in the correct order when ' +
+    'nested reactions are triggered.', function() {
+      /*
+        <localName1 id="root">
+          <localName1 id="next-0">
+            <localName1 id="next-1"></localName1>
+          </localName1>
+        </localName1>
+      */
+      const root = document.createElement(localName1);
+      root.id = 'root';
+      let current = root;
+      for (var i = 0; i < 2; i++) {
+        const next = document.createElement(localName1);
+        next.id = `next-${i}`;
+        current.appendChild(next);
+        current = next;
+      }
+
+      container.appendChild(root);
+
+      /*
+        <localName1 id="root">
+          <localName1 id="next-0">
+            <localName1 id="next-1"></localName1>
+          </localName1>
+        </localName1>
+
+      After #root.connectedCallback:
+
+        <localName1 id="root"></localName1>
+        <localName1 id="next-0">
+          <localName1 id="next-1"></localName1>
+        </localName1>
+
+      After #next-0.connectedCallback:
+
+        <localName1 id="root"></localName1>
+        <localName1 id="next-0"></localName1>
+        <localName1 id="next-1"></localName1>
+      */
+
+      assert.deepEqual(log, [
+        // Enqueued and triggered by the initial appendChild.
+        'ENTER #root connected',
+          // Enqueued by the initial appendChild.
+          'ENTER #next-0 connected',
+            // Enqueued by the initial appendChild.
+            'ENTER #next-1 connected',
+            'EXIT #next-1 connected',
+            // Enqueued by #root.connectedCallback.
+            '#next-1 disconnected',
+            'ENTER #next-1 connected',
+            'EXIT #next-1 connected',
+            // Enqueued by #next-0.connectedCallback.
+            '#next-1 disconnected',
+            'ENTER #next-1 connected',
+            'EXIT #next-1 connected',
+          'EXIT #next-0 connected',
+          // Enqueued by #root.connectedCallback.
+          '#next-0 disconnected',
+          'ENTER #next-0 connected',
+          'EXIT #next-0 connected',
+        'EXIT #root connected',
+      ]);
+    });
+});
+
+</script>
+</body>
+</html>
