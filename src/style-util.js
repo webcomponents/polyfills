@@ -100,30 +100,17 @@ export function forEachRule(node, styleRuleCallback, keyframesRuleCallback, only
  */
 export function applyCss(cssText, moniker, target, contextNode) {
   let style = createScopeStyle(cssText, moniker);
-  return applyStyle(style, target, contextNode);
-}
-
-/**
- * @param {Node} style
- * @param {?Node} target
- * @param {?Node} contextNode
- * @return {HTMLStyleElement}
- */
-export function applyStyle(style, target, contextNode) {
-  target = target || document.head;
-  let after = (contextNode && contextNode.nextSibling) ||
-  target.firstChild;
-  lastHeadApplyNode = style;
-  return /** @type {HTMLStyleElement} */(target.insertBefore(style, after));
+  applyStyle(style, target, contextNode);
+  return style;
 }
 
 /**
  * @param {string} cssText
  * @param {string} moniker
- * @return {Element}
+ * @return {HTMLStyleElement}
  */
 export function createScopeStyle(cssText, moniker) {
-  let style = document.createElement('style');
+  let style = /** @type {HTMLStyleElement} */(document.createElement('style'));
   if (moniker) {
     style.setAttribute('scope', moniker);
   }
@@ -131,13 +118,16 @@ export function createScopeStyle(cssText, moniker) {
   return style;
 }
 
-/** @type {Node} */
+/**
+ * Track the position of the last added style for placing placeholders
+ * @type {Node}
+ */
 let lastHeadApplyNode = null;
 
 // insert a comment node as a styling position placeholder.
 /**
  * @param {string} moniker
- * @return {!Node}
+ * @return {!Comment}
  */
 export function applyStylePlaceHolder(moniker) {
   let placeHolder = document.createComment(' Shady DOM styles for ' +
@@ -148,6 +138,27 @@ export function applyStylePlaceHolder(moniker) {
   scope.insertBefore(placeHolder, after || scope.firstChild);
   lastHeadApplyNode = placeHolder;
   return placeHolder;
+}
+
+/**
+ * @param {HTMLStyleElement} style
+ * @param {?Node} target
+ * @param {?Node} contextNode
+ */
+export function applyStyle(style, target, contextNode) {
+  target = target || document.head;
+  let after = (contextNode && contextNode.nextSibling) ||
+    target.firstChild;
+  target.insertBefore(style, after);
+  if (!lastHeadApplyNode) {
+    lastHeadApplyNode = style;
+  } else {
+    // only update lastHeadApplyNode if the new style is inserted after the old lastHeadApplyNode
+    let position = style.compareDocumentPosition(lastHeadApplyNode);
+    if (position === Node.DOCUMENT_POSITION_PRECEDING) {
+      lastHeadApplyNode = style;
+    }
+  }
 }
 
 /**

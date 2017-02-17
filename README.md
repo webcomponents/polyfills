@@ -3,7 +3,7 @@
 ShadyCSS provides a library to simulate ShadowDOM style encapsulation (ScopingShim), a shim for the proposed CSS mixin `@apply` styntax (ApplyShim), and a library to integrate document-level stylesheets with both of the former libraries (CustomStyleInterface).
 
 ## Requirements
-ShadyCSS requires support for the `<template>` element, CustomElements, ShadowDOM, MutationObserver, Promise, and Object.assign
+ShadyCSS requires support for the `<template>` element, ShadowDOM, MutationObserver, Promise, and Object.assign
 
 ## Loading
 
@@ -128,7 +128,7 @@ my-element {
 ## About CustomStyleInterface
 
 CustomStyleInterface provides API to process `<style>` elements that are not inside of
-Custom Elements, and simulate upper-boundary style scoping for ShadyDOM.
+ShadowRoots, and simulate upper-boundary style scoping for ShadyDOM.
 
 To add document-level styles to ShadyCSS, one can call `CustomStyleInterface.addCustomStyle(styleElement)` or `CustomStyleInterface.addCustomStyle({getStyle: () => styleElement})`
 

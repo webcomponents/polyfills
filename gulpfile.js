@@ -83,14 +83,12 @@ function debugify(entry) {
       entry: `entrypoints/${entry}.js`,
       format: 'iife',
       moduleName: '${entry}',
-      sourceMap: true
     })
     .pipe(source(`${entry}.js`, 'entrypoints'))
     .pipe(buffer())
     .pipe(sourcemaps.init({loadMaps: true}))
     .pipe(rename(`${entry}.min.js`))
     .pipe(size({showFiles: true, showTotal: false, gzip: true}))
-    .pipe(sourcemaps.write('.'))
     .pipe(gulp.dest('./'))
   });
   return `debug-${entry}`;
