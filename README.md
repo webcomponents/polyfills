@@ -305,9 +305,9 @@ supported.
 <script>
 let el = document.querySelector('my-element#a');
 // Set the color of all my-element instances to 'green'
-ShadyCSS.styleDocument({'--content-color', 'green'});
+ShadyCSS.styleDocument({'--content-color' : 'green'});
 // Set the color my-element#a's text to 'red'
-ShadyCSS.styleSubtree(el, {'--content-color', 'red'});
+ShadyCSS.styleSubtree(el, {'--content-color' : 'red'});
 </script>
 ```
 
