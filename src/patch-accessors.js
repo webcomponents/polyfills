@@ -50,7 +50,10 @@ function getDocumentActiveElement() {
 
 function activeElementForNode(node) {
   let active = getDocumentActiveElement();
-  if (!active) {
+  // In IE11, activeElement might be an empty object if the document is
+  // contained in an iframe.
+  // https://developer.microsoft.com/en-us/microsoft-edge/platform/issues/10998788/
+  if (!active || !active.nodeType) {
     return null;
   }
   let isShadyRoot = !!(utils.isShadyRoot(node));
