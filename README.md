@@ -47,18 +47,6 @@ and [HTML](https://html.spec.whatwg.org/) specifications are marked with the
     - `DOMTokenList` (`element.classList`)
     - `NamedNodeMap` (`element.attributes`)
     - `Attr` (`element.attributes.getNamedItem('attr-name')`)
-- The [custom element reactions stack](https://html.spec.whatwg.org/multipage/scripting.html#custom-element-reactions-stack)
-  is not implemented.
-  - Typically, DOM operations patched in this polyfill gather the list of
-    elements to which a given callback would apply and then iterate that list,
-    calling the callback on each element. This mechanism breaks down if an
-    element's callback performs another DOM operation that manipulates an area
-    of the tree that was captured in the outer operation's list of elements.
-    When this happens, the callbacks from the inner DOM operation will be called
-    *before* those of the outer DOM operation (typically, depending on the patch
-    implementation), as opposed to a spec-compliant implementation where the
-    callbacks are always run in the order they were inserted into each
-    particular element's reaction queue.
 - Custom elements created by the UA's parser are customized as if they were
   upgraded, rather than constructed.
   - These elements are only learned about *after* they have been constructed,
