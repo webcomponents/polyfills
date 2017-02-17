@@ -230,11 +230,11 @@ export function setElementClassRaw(element, value) {
 }
 
 /**
- * @param {HTMLElement | {is: string, extends: string, localName: undefined}} element
+ * @param {Element | {is: string, extends: string}} element
  * @return {{is: string, typeExtension: string}}
  */
 export function getIsExtends(element) {
-  let localName = element.localName;
+  let localName = element['localName'];
   let is = '', typeExtension = '';
   /*
   NOTE: technically, this can be wrong for certain svg elements

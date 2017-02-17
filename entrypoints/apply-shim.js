@@ -60,7 +60,7 @@ class ApplyShimInterface {
     templateMap[elementName] = template;
     let ast = applyShim.transformTemplate(template, elementName);
     // save original style ast to use for revalidating instances
-    template._styleAst = ast;
+    template['_styleAst'] = ast;
   }
   flushCustomStyles() {
     this.ensure();
@@ -117,8 +117,8 @@ class ApplyShimInterface {
         let style = /** @type {HTMLStyleElement} */(root.querySelector('style'));
         if (style) {
           // reuse the template's style ast, it has all the original css text
-          style['__cssRules'] = template._styleAst;
-          style.textContent = toCssText(template._styleAst)
+          style['__cssRules'] = template['_styleAst'];
+          style.textContent = toCssText(template['_styleAst'])
         }
       }
     }

@@ -108,17 +108,17 @@ export default class ScopingShim {
     if (hasMixins && nativeCssVariables) {
       this._applyShim['transformRules'](ast, elementName);
     }
-    template._styleAst = ast;
+    template['_styleAst'] = ast;
     template._cssBuild = cssBuild;
 
     let ownPropertyNames = [];
     if (!nativeCssVariables) {
-      ownPropertyNames = StyleProperties.decorateStyles(template._styleAst, info);
+      ownPropertyNames = StyleProperties.decorateStyles(template['_styleAst'], info);
     }
     if (!ownPropertyNames.length || nativeCssVariables) {
       let root = nativeShadow ? template.content : null;
       let placeholder = placeholderMap[elementName];
-      let style = this._generateStaticStyle(info, template._styleAst, root, placeholder);
+      let style = this._generateStaticStyle(info, template['_styleAst'], root, placeholder);
       template._style = style;
     }
     template._ownPropertyNames = ownPropertyNames;
@@ -137,7 +137,7 @@ export default class ScopingShim {
     let ownStylePropertyNames;
     let cssBuild;
     if (template) {
-      ast = template._styleAst;
+      ast = template['_styleAst'];
       ownStylePropertyNames = template._ownPropertyNames;
       cssBuild = template._cssBuild;
     }
@@ -255,7 +255,7 @@ export default class ScopingShim {
         // update template
         if (!ApplyShimUtils.templateIsValidating(template)) {
           this._ensure();
-          this._applyShim['transformRules'](template._styleAst, is);
+          this._applyShim['transformRules'](template['_styleAst'], is);
           template._style.textContent = StyleTransformer.elementStyles(host, styleInfo.styleRules);
           ApplyShimUtils.startValidatingTemplate(template);
         }
@@ -267,7 +267,7 @@ export default class ScopingShim {
             style.textContent = StyleTransformer.elementStyles(host, styleInfo.styleRules);
           }
         }
-        styleInfo.styleRules = template._styleAst;
+        styleInfo.styleRules = template['_styleAst'];
       }
     }
   }
