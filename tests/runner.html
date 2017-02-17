@@ -21,6 +21,7 @@
     'scoping.html',
     'mixin-ordering.html',
     'svg.html',
+    'style-transformer.html',
     'custom-style.html',
     'custom-style-late.html'
   ];
@@ -70,7 +71,6 @@
   suites = combinations(suites, [matrix]);
 
   if (matrix.length > 2) {
-    console.log(matrix);
     suites = suites.concat([
       'no-scopingshim/apply-shim.html',
       'no-scopingshim/mixin-ordering.html',

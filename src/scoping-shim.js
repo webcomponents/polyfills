@@ -36,7 +36,7 @@ export default class ScopingShim {
     this._documentOwner = document.documentElement;
     let ast = new StyleNode();
     ast['rules'] = [];
-    this._documentOwnerStyleInfo = StyleInfo.set(document.documentElement, new StyleInfo(ast));
+    this._documentOwnerStyleInfo = StyleInfo.set(this._documentOwner, new StyleInfo(ast));
     this._elementsHaveApplied = false;
     this._applyShim = null;
     /** @type {?CustomStyleInterfaceInterface} */
@@ -130,7 +130,7 @@ export default class ScopingShim {
     }
   }
   _prepareHost(host) {
-    let {is, extends: typeExtension} = StyleUtil.getIsExtends(host);
+    let {is, typeExtension} = StyleUtil.getIsExtends(host);
     let placeholder = placeholderMap[is];
     let template = templateMap[is];
     let ast;
@@ -184,7 +184,7 @@ export default class ScopingShim {
       };
     } else {
       this._customStyleInterface = /** @type {!CustomStyleInterfaceInterface} */({
-        ['findStyles']() {},
+        ['processStyles']() {},
         ['enqueued']: false,
         ['getStyleForCustomStyle'](s) { return null } // eslint-disable-line no-unused-vars
       })
@@ -199,12 +199,11 @@ export default class ScopingShim {
    */
   flushCustomStyles() {
     this._ensure();
-    this._customStyleInterface['findStyles']();
+    let customStyles = this._customStyleInterface['processStyles']();
     // early return if custom-styles don't need validation
     if (!this._customStyleInterface['enqueued']) {
       return;
     }
-    let customStyles = this._customStyleInterface['customStyles'];
     if (!nativeCssVariables) {
       this._updateProperties(this._documentOwner, this._documentOwnerStyleInfo);
       this._applyCustomStyles(customStyles);
@@ -347,24 +346,25 @@ export default class ScopingShim {
    * @param {Object=} properties
    */
   styleSubtree(host, properties) {
-    if (host.shadowRoot || this._isRootOwner(host)) {
+    let root = host.shadowRoot;
+    if (root || this._isRootOwner(host)) {
       this.styleElement(host, properties);
     }
-    // process the shadowdom children of `root`
-    let root = host.shadowRoot;
+    // process the shadowdom children of `host`
     let shadowChildren = root && (root.children || root.childNodes);
     if (shadowChildren) {
       for (let i = 0; i < shadowChildren.length; i++) {
         let c = /** @type {!HTMLElement} */(shadowChildren[i]);
         this.styleSubtree(c);
       }
-    }
-    // process the lightdom children of `root`
-    let children = host.children || host.childNodes;
-    if (children) {
-      for (let i = 0; i < children.length; i++) {
-        let c = /** @type {!HTMLElement} */(children[i]);
-        this.styleSubtree(c);
+    } else {
+      // process the lightdom children of `host`
+      let children = host.children || host.childNodes;
+      if (children) {
+        for (let i = 0; i < children.length; i++) {
+          let c = /** @type {!HTMLElement} */(children[i]);
+          this.styleSubtree(c);
+        }
       }
     }
   }

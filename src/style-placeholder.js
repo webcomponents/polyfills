@@ -13,6 +13,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 import {applyStylePlaceHolder} from './style-util'
 import {nativeShadow} from './style-settings'
 
+/** @type {Object<string, !Node>} */
 let placeholderMap = {};
 
 /**
@@ -24,10 +25,17 @@ if (ce && !nativeShadow) {
    * @const {function(this:CustomElementRegistry, string,function(new:HTMLElement),{extends: string}=)}
    */
   const origDefine = ce['define'];
-  ce['define'] = function(name, clazz, options) {
+  /**
+   * @param {string} name
+   * @param {function(new:HTMLElement)} clazz
+   * @param {{extends: string}=} options
+   * @return {function(new:HTMLElement)}
+   */
+  const wrappedDefine = (name, clazz, options) => {
     placeholderMap[name] = applyStylePlaceHolder(name);
     return origDefine.call(/** @type {!CustomElementRegistry} */(ce), name, clazz, options);
-  };
+  }
+  ce['define'] = wrappedDefine;
 }
 
 export default placeholderMap;

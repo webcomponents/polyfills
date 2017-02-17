@@ -30,7 +30,7 @@ if (!window.ShadyCSS) {
      * @param {Object=} properties
      */
     styleSubtree(element, properties) {
-      customStyleInterface.findStyles();
+      customStyleInterface.processStyles();
       updateNativeProperties(element, properties);
     },
 
@@ -38,15 +38,15 @@ if (!window.ShadyCSS) {
      * @param {Element} element
      */
     styleElement(element) { // eslint-disable-line no-unused-vars
-      customStyleInterface.findStyles();
+      customStyleInterface.processStyles();
     },
 
     /**
      * @param {Object=} properties
      */
     styleDocument(properties) {
-      customStyleInterface.findStyles();
-      updateNativeProperties(document.documentElement, properties);
+      customStyleInterface.processStyles();
+      updateNativeProperties(document.body, properties);
     },
 
     /**

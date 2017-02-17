@@ -65,8 +65,7 @@ class ApplyShimInterface {
   flushCustomStyles() {
     this.ensure();
     if (this.customStyleInterface) {
-      this.customStyleInterface['findStyles']();
-      let styles = this.customStyleInterface['customStyles'];
+      let styles = this.customStyleInterface['processStyles']();
       for (let i = 0; i < styles.length; i++ ) {
         let cs = styles[i];
         let style = this.customStyleInterface['getStyleForCustomStyle'](cs);
@@ -92,10 +91,11 @@ class ApplyShimInterface {
       for (let i = 0; i < shadowChildren.length; i++) {
         this.styleSubtree(/** @type {HTMLElement} */(shadowChildren[i]));
       }
-    }
-    let children = element.children || element.childNodes;
-    for (let i = 0; i < children.length; i++) {
-      this.styleSubtree(/** @type {HTMLElement} */(children[i]));
+    } else {
+      let children = element.children || element.childNodes;
+      for (let i = 0; i < children.length; i++) {
+        this.styleSubtree(/** @type {HTMLElement} */(children[i]));
+      }
     }
   }
   /**
@@ -111,7 +111,7 @@ class ApplyShimInterface {
         this.prepareTemplate(template, is);
         ApplyShimUtils.startValidatingTemplate(template);
       }
-      // update all instances
+      // update this element instance
       let root = element.shadowRoot;
       if (root) {
         let style = /** @type {HTMLStyleElement} */(root.querySelector('style'));
@@ -128,7 +128,7 @@ class ApplyShimInterface {
    */
   styleDocument(properties) {
     this.ensure();
-    this.styleSubtree(/** @type {HTMLElement} */(document.documentElement), properties);
+    this.styleSubtree(document.body, properties);
   }
 }
 

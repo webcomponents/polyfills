@@ -302,9 +302,9 @@ class StyleProperties {
     if (!rule.propertyInfo.properties) {
       return;
     }
-    let isExtends = StyleUtil.getIsExtends(scope);
+    let {is, typeExtension} = StyleUtil.getIsExtends(scope);
     let hostScope = scope.is ?
-      StyleTransformer._calcHostScope(isExtends.is, isExtends.extends) :
+      StyleTransformer._calcHostScope(is, typeExtension) :
       'html';
     let parsedSelector = rule['parsedSelector'];
     let isRoot = (parsedSelector === ':host > *' || parsedSelector === 'html');
@@ -334,7 +334,7 @@ class StyleProperties {
         StyleTransformer._transformRuleCss(
           rule,
           StyleTransformer._transformComplexSelector,
-          StyleTransformer._calcElementScope(isExtends.is),
+          StyleTransformer._calcElementScope(is),
           hostScope
         );
       }
@@ -378,9 +378,9 @@ class StyleProperties {
    */
   transformStyles(element, properties, scopeSelector) {
     let self = this;
-    let isExtends = StyleUtil.getIsExtends(element);
+    let {is, typeExtension} = StyleUtil.getIsExtends(element);
     let hostSelector = StyleTransformer
-      ._calcHostScope(isExtends.is, isExtends.extends);
+      ._calcHostScope(is, typeExtension);
     let rxHostSelector = element.extends ?
       '\\' + hostSelector.slice(0, -1) + '\\]' :
       hostSelector;

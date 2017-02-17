@@ -137,7 +137,7 @@ let lastHeadApplyNode = null;
 // insert a comment node as a styling position placeholder.
 /**
  * @param {string} moniker
- * @return {Node}
+ * @return {!Node}
  */
 export function applyStylePlaceHolder(moniker) {
   let placeHolder = document.createComment(' Shady DOM styles for ' +
@@ -222,19 +222,34 @@ export function processVariableAndFallback(str, callback) {
  */
 export function setElementClassRaw(element, value) {
   // use native setAttribute provided by ShadyDOM when setAttribute is patched
-  if (window['ShadyDOM']) {
-    window['ShadyDOM']['nativeMethods']['setAttribute'].call(element, 'class', value);
-  } else {
+  if (nativeShadow) {
     element.setAttribute('class', value);
+  } else {
+    window['ShadyDOM']['nativeMethods']['setAttribute'].call(element, 'class', value);
   }
 }
 
 /**
- * @param {Element|Object} element
- * @return {{is: string, extends: string}}
+ * @param {HTMLElement | {is: string, extends: string, localName: undefined}} element
+ * @return {{is: string, typeExtension: string}}
  */
 export function getIsExtends(element) {
-  let is = element.is || (element.getAttribute && element.getAttribute('is')) || element.localName;
-  let extendz = element.extends || element.localName !== is ? element.localName : '';
-  return {is, extends: extendz};
+  let localName = element.localName;
+  let is = '', typeExtension = '';
+  /*
+  NOTE: technically, this can be wrong for certain svg elements
+  with `-` in the name like `<font-face>`
+  */
+  if (localName) {
+    if (localName.indexOf('-') > -1) {
+      is = localName;
+    } else {
+      typeExtension = localName;
+      is = (element.getAttribute && element.getAttribute('is')) || '';
+    }
+  } else {
+    is = /** @type {?} */(element).is;
+    typeExtension = /** @type {?} */(element).extends;
+  }
+  return {is, typeExtension};
 }

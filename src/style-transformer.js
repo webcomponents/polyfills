@@ -106,8 +106,8 @@ class StyleTransformer {
     if (nativeShadow || cssBuildType === 'shady') {
       cssText = StyleUtil.toCssText(styleRules, callback);
     } else {
-      let {is, extends: ex} = StyleUtil.getIsExtends(element);
-      cssText = this.css(styleRules, is, ex, callback) + '\n\n';
+      let {is, typeExtension} = StyleUtil.getIsExtends(element);
+      cssText = this.css(styleRules, is, typeExtension, callback) + '\n\n';
     }
     return cssText.trim();
   }

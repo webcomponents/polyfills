@@ -13,7 +13,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 import documentWait from './document-wait'
 
 /**
- * @typedef {HTMLStyleElement | ({getStyle: (function():HTMLStyleElement)})}
+ * @typedef {HTMLStyleElement | {getStyle: function():HTMLStyleElement}}
  */
 export let CustomStyleProvider;
 
@@ -79,7 +79,10 @@ export default class CustomStyleInterface {
     }
     return style;
   }
-  findStyles() {
+  /**
+   * @return {!Array<!CustomStyleProvider>}
+   */
+  processStyles() {
     let cs = this['customStyles'];
     for (let i = 0; i < cs.length; i++) {
       let customStyle = cs[i];
@@ -104,12 +107,13 @@ export default class CustomStyleInterface {
         }
       }
     }
+    return cs;
   }
 }
 
 CustomStyleInterface.prototype['addCustomStyle'] = CustomStyleInterface.prototype.addCustomStyle;
 CustomStyleInterface.prototype['getStyleForCustomStyle'] = CustomStyleInterface.prototype.getStyleForCustomStyle;
-CustomStyleInterface.prototype['findStyles'] = CustomStyleInterface.prototype.findStyles;
+CustomStyleInterface.prototype['processStyles'] = CustomStyleInterface.prototype.processStyles;
 
 Object.defineProperties(CustomStyleInterface.prototype, {
   'transformCallback': {
