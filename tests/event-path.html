@@ -22,7 +22,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     // Ensure customElements are updated when document is ready.
     if (customElements.polyfillWrapFlushCallback) {
       customElements.polyfillWrapFlushCallback(function(cb) {
-        document.addEventListener('DOMContentLoaded', cb);
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', cb);
+        } else {
+          cb();
+        }
       });
     }
   </script>
