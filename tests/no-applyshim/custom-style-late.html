@@ -61,7 +61,6 @@ suite('Async custom-style', function() {
   });
   test('late custom-style updates elements', function(done) {
     var lateTemplate = document.querySelector('template#late');
-    console.log(lateTemplate.innerHTML);
     var host = document.querySelector('x-host');
     var inner = host.shadowRoot.querySelector('x-late');
     requestAnimationFrame(function() {

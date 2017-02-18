@@ -15,6 +15,7 @@ import {nativeShadow, nativeCssVariables} from './style-settings'
 import StyleTransformer from './style-transformer'
 import * as StyleUtil from './style-util'
 import StyleProperties from './style-properties'
+import placeholderMap from './style-placeholder'
 import StyleInfo from './style-info'
 import StyleCache from './style-cache'
 import {flush as watcherFlush} from './document-watcher'
@@ -28,11 +29,6 @@ import {CustomStyleInterfaceInterface} from './custom-style-interface' //eslint-
  * @const {StyleCache}
  */
 const styleCache = new StyleCache();
-
-/**
- * @const {Object<string, !Comment>}
- */
-const placeholderMap = {};
 
 export default class ScopingShim {
   constructor() {
@@ -102,7 +98,6 @@ export default class ScopingShim {
       __cssBuild: cssBuild,
     };
     if (!nativeShadow) {
-      placeholderMap[info.is] = StyleUtil.applyStylePlaceHolder(info.is);
       StyleTransformer.dom(template.content, elementName);
     }
     // check if the styling has mixin definitions or uses
