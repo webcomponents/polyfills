@@ -11,26 +11,21 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <script>
 WCT = {waitFor: function (cb) {HTMLImports.whenReady(cb)}}
 </script>
-<script src="../../web-component-tester/browser.js"></script>
-<script src="../../webcomponents-platform/webcomponents-platform.js"></script>
-<script src="../../es6-promise/dist/es6-promise.auto.min.js"></script>
-<script src="../../template/template.js"></script>
-<script src="../../html-imports/html-imports.min.js"></script>
-<script src="../../shadydom/shadydom.min.js"></script>
-<script src="../../custom-elements/custom-elements.min.js"></script>
-<script src="../scoping-shim.min.js"></script>
-<script src="../apply-shim.min.js"></script>
-<script src="../custom-style-interface.min.js"></script>
-<script src="module/generated/make-element.js"></script>
-<script src="module/generated/custom-style-element.js"></script>
+<script src="../../../web-component-tester/browser.js"></script>
+<script src="../../../webcomponents-platform/webcomponents-platform.js"></script>
+<script src="../../../es6-promise/dist/es6-promise.auto.min.js"></script>
+<script src="../../../template/template.js"></script>
+<script src="../../../html-imports/html-imports.min.js"></script>
+<script src="../../../shadydom/shadydom.min.js"></script>
+<script src="../../../custom-elements/custom-elements.min.js"></script>
+<script src="../../custom-style-interface.min.js"></script>
+<script src="../module/generated/make-element.js"></script>
+<script src="../module/generated/custom-style-element.js"></script>
 
 <custom-style>
   <style>
   html {
     --foo: rgb(123, 123, 123);
-    --bar: {
-      border: 2px solid red;
-    }
   }
   </style>
 </custom-style>
@@ -43,7 +38,6 @@ WCT = {waitFor: function (cb) {HTMLImports.whenReady(cb)}}
       width: 100px;
       border: 4px solid blue;
       background-color: var(--foo);
-      @apply --bar;
     }
   </style>
 </template>
@@ -52,7 +46,6 @@ WCT = {waitFor: function (cb) {HTMLImports.whenReady(cb)}}
   <style>
   :host {
     display: block;
-    @apply --bar;
   }
   </style>
   <x-inner></x-inner>
@@ -70,12 +63,6 @@ WCT = {waitFor: function (cb) {HTMLImports.whenReady(cb)}}
       var target = document.querySelector('#target');
       var inner = target.shadowRoot.querySelector('x-inner');
       assert.equal(getComputedStyle(inner).backgroundColor, 'rgb(123, 123, 123)');
-    });
-    test('custom-style applied mixins update', function() {
-      var target = document.querySelector('#target');
-      var inner = target.shadowRoot.querySelector('x-inner');
-      assert.equal(getComputedStyle(target).borderTopWidth.trim(), '2px');
-      assert.equal(getComputedStyle(inner).borderTopWidth.trim(), '2px');
     });
   });
 </script>

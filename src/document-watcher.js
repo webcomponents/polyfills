@@ -1,6 +1,6 @@
 /**
 @license
-Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
+Copyright (c) 2017 The Polymer Project Authors. All rights reserved.
 This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
 The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
 The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
@@ -12,6 +12,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 import {nativeShadow} from './style-settings'
 import StyleTransformer from './style-transformer'
+import {getIsExtends} from './style-util'
 
 export let flush = function() {};
 
@@ -20,10 +21,13 @@ if (!nativeShadow) {
     return (element.classList &&
       !element.classList.contains(StyleTransformer.SCOPE_NAME) ||
       // note: necessary for IE11
-      (element instanceof SVGElement && (!element.hasAttribute('class') ||
+      (element instanceof window['SVGElement'] && (!element.hasAttribute('class') ||
       element.getAttribute('class').indexOf(StyleTransformer.SCOPE_NAME) < 0)));
   }
 
+/**
+ * @param {Array<MutationRecord|null>|null} mxns
+ */
   let handler = (mxns) => {
     for (let x=0; x < mxns.length; x++) {
       let mxn = mxns[x];
@@ -37,16 +41,16 @@ if (!nativeShadow) {
           let root = n.getRootNode();
           if (root.nodeType === Node.DOCUMENT_FRAGMENT_NODE) {
             // may no longer be in a shadowroot
-            let host = root.host;
+            let host = /** @type {ShadowRoot} */(root).host;
             if (host) {
-              let scope = host.is || host.localName;
+              let {is: scope} = getIsExtends(host);
               StyleTransformer.dom(n, scope);
             }
           }
         }
       }
       for (let i=0; i < mxn.removedNodes.length; i++) {
-        let n = mxn.removedNodes[i];
+        let n = /** @type {HTMLElement} */(mxn.removedNodes[i]);
         if (n.nodeType === Node.ELEMENT_NODE) {
           let classes = undefined;
           if (n.classList) {
@@ -75,7 +79,7 @@ if (!nativeShadow) {
     observer.observe(node, {childList: true, subtree: true});
   }
   let nativeCustomElements = (window.customElements &&
-    !window.customElements.flush);
+    !window['customElements']['flush']);
   // need to start immediately with native custom elements
   // TODO(dfreedm): with polyfilled HTMLImports and native custom elements
   // excessive mutations may be observed; this can be optimized via cooperation
@@ -87,8 +91,8 @@ if (!nativeShadow) {
       start(document.body);
     }
     // use polyfill timing if it's available
-    if (window.HTMLImports) {
-      window.HTMLImports.whenReady(delayedStart);
+    if (window['HTMLImports']) {
+      window['HTMLImports']['whenReady'](delayedStart);
     // otherwise push beyond native imports being ready
     // which requires RAF + readystate interactive.
     } else {

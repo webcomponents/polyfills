@@ -1,6 +1,6 @@
 /**
 @license
-Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
+Copyright (c) 2017 The Polymer Project Authors. All rights reserved.
 This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
 The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
 The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
@@ -11,8 +11,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 'use strict';
 
 import {nativeShadow, nativeCssVariables} from './style-settings'
-import {parse, stringify, types} from './css-parse'
+import {parse, stringify, types, StyleNode} from './css-parse' // eslint-disable-line no-unused-vars
+import {MEDIA_MATCH} from './common-regex';
 
+/**
+ * @param {string|StyleNode} rules
+ * @param {function(StyleNode)=} callback
+ */
 export function toCssText (rules, callback) {
   if (typeof rules === 'string') {
     rules = parse(rules);
@@ -23,29 +28,44 @@ export function toCssText (rules, callback) {
   return stringify(rules, nativeCssVariables);
 }
 
+/**
+ * @param {HTMLStyleElement} style
+ * @return {StyleNode}
+ */
 export function rulesForStyle(style) {
-  if (!style.__cssRules && style.textContent) {
-    style.__cssRules = parse(style.textContent);
+  if (!style['__cssRules'] && style.textContent) {
+    style['__cssRules'] = parse(style.textContent);
   }
-  return style.__cssRules;
+  return style['__cssRules'];
 }
 
 // Tests if a rule is a keyframes selector, which looks almost exactly
 // like a normal selector but is not (it has nothing to do with scoping
 // for example).
+/**
+ * @param {StyleNode} rule
+ * @return {boolean}
+ */
 export function isKeyframesSelector(rule) {
-  return rule.parent &&
-  rule.parent.type === types.KEYFRAMES_RULE;
+  return Boolean(rule['parent']) &&
+  rule['parent']['type'] === types.KEYFRAMES_RULE;
 }
 
+/**
+ * @param {StyleNode} node
+ * @param {Function=} styleRuleCallback
+ * @param {Function=} keyframesRuleCallback
+ * @param {boolean=} onlyActiveRules
+ */
 export function forEachRule(node, styleRuleCallback, keyframesRuleCallback, onlyActiveRules) {
   if (!node) {
     return;
   }
   let skipRules = false;
+  let type = node['type'];
   if (onlyActiveRules) {
-    if (node.type === types.MEDIA_RULE) {
-      let matchMedia = node.selector.match(rx.MEDIA_MATCH);
+    if (type === types.MEDIA_RULE) {
+      let matchMedia = node['selector'].match(MEDIA_MATCH);
       if (matchMedia) {
         // if rule is a non matching @media rule, skip subrules
         if (!window.matchMedia(matchMedia[1]).matches) {
@@ -54,15 +74,15 @@ export function forEachRule(node, styleRuleCallback, keyframesRuleCallback, only
       }
     }
   }
-  if (node.type === types.STYLE_RULE) {
+  if (type === types.STYLE_RULE) {
     styleRuleCallback(node);
   } else if (keyframesRuleCallback &&
-    node.type === types.KEYFRAMES_RULE) {
+    type === types.KEYFRAMES_RULE) {
     keyframesRuleCallback(node);
-  } else if (node.type === types.MIXIN_RULE) {
+  } else if (type === types.MIXIN_RULE) {
     skipRules = true;
   }
-  let r$ = node.rules;
+  let r$ = node['rules'];
   if (r$ && !skipRules) {
     for (let i=0, l=r$.length, r; (i<l) && (r=r$[i]); i++) {
       forEachRule(r, styleRuleCallback, keyframesRuleCallback, onlyActiveRules);
@@ -71,21 +91,26 @@ export function forEachRule(node, styleRuleCallback, keyframesRuleCallback, only
 }
 
 // add a string of cssText to the document.
+/**
+ * @param {string} cssText
+ * @param {string} moniker
+ * @param {Node} target
+ * @param {Node} contextNode
+ * @return {HTMLStyleElement}
+ */
 export function applyCss(cssText, moniker, target, contextNode) {
   let style = createScopeStyle(cssText, moniker);
-  return applyStyle(style, target, contextNode);
+  applyStyle(style, target, contextNode);
+  return style;
 }
 
-export function applyStyle(style, target, contextNode) {
-  target = target || document.head;
-  let after = (contextNode && contextNode.nextSibling) ||
-  target.firstChild;
-  lastHeadApplyNode = style;
-  return target.insertBefore(style, after);
-}
-
+/**
+ * @param {string} cssText
+ * @param {string} moniker
+ * @return {HTMLStyleElement}
+ */
 export function createScopeStyle(cssText, moniker) {
-  let style = document.createElement('style');
+  let style = /** @type {HTMLStyleElement} */(document.createElement('style'));
   if (moniker) {
     style.setAttribute('scope', moniker);
   }
@@ -93,37 +118,72 @@ export function createScopeStyle(cssText, moniker) {
   return style;
 }
 
+/**
+ * Track the position of the last added style for placing placeholders
+ * @type {Node}
+ */
 let lastHeadApplyNode = null;
 
 // insert a comment node as a styling position placeholder.
+/**
+ * @param {string} moniker
+ * @return {!Comment}
+ */
 export function applyStylePlaceHolder(moniker) {
   let placeHolder = document.createComment(' Shady DOM styles for ' +
     moniker + ' ');
   let after = lastHeadApplyNode ?
-    lastHeadApplyNode.nextSibling : null;
+    lastHeadApplyNode['nextSibling'] : null;
   let scope = document.head;
   scope.insertBefore(placeHolder, after || scope.firstChild);
   lastHeadApplyNode = placeHolder;
   return placeHolder;
 }
 
+/**
+ * @param {HTMLStyleElement} style
+ * @param {?Node} target
+ * @param {?Node} contextNode
+ */
+export function applyStyle(style, target, contextNode) {
+  target = target || document.head;
+  let after = (contextNode && contextNode.nextSibling) ||
+    target.firstChild;
+  target.insertBefore(style, after);
+  if (!lastHeadApplyNode) {
+    lastHeadApplyNode = style;
+  } else {
+    // only update lastHeadApplyNode if the new style is inserted after the old lastHeadApplyNode
+    let position = style.compareDocumentPosition(lastHeadApplyNode);
+    if (position === Node.DOCUMENT_POSITION_PRECEDING) {
+      lastHeadApplyNode = style;
+    }
+  }
+}
+
+/**
+ * @param {string} buildType
+ * @return {boolean}
+ */
 export function isTargetedBuild(buildType) {
   return nativeShadow ? buildType === 'shadow' : buildType === 'shady';
 }
 
-// cssBuildTypeForModule: function (module) {
-//   let dm = Polymer.DomModule.import(module);
-//   if (dm) {
-//     return getCssBuildType(dm);
-//   }
-// },
-//
+/**
+ * @param {Element} element
+ * @return {?string}
+ */
 export function getCssBuildType(element) {
   return element.getAttribute('css-build');
 }
 
-// Walk from text[start] matching parens
-// returns position of the outer end paren
+/**
+ * Walk from text[start] matching parens and
+ * returns position of the outer end paren
+ * @param {string} text
+ * @param {number} start
+ * @return {number}
+ */
 function findMatchingParen(text, start) {
   let level = 0;
   for (let i=start, l=text.length; i < l; i++) {
@@ -138,6 +198,10 @@ function findMatchingParen(text, start) {
   return -1;
 }
 
+/**
+ * @param {string} str
+ * @param {function(string, string, string, string)} callback
+ */
 export function processVariableAndFallback(str, callback) {
   // find 'var('
   let start = str.indexOf('var(');
@@ -163,23 +227,40 @@ export function processVariableAndFallback(str, callback) {
   return callback(prefix, value, fallback, suffix);
 }
 
+/**
+ * @param {Element} element
+ * @param {string} value
+ */
 export function setElementClassRaw(element, value) {
   // use native setAttribute provided by ShadyDOM when setAttribute is patched
-  if (window.ShadyDOM) {
-    window.ShadyDOM.nativeMethods.setAttribute.call(element, 'class', value);
-  } else {
+  if (nativeShadow) {
     element.setAttribute('class', value);
+  } else {
+    window['ShadyDOM']['nativeMethods']['setAttribute'].call(element, 'class', value);
   }
 }
 
-export let rx = {
-  VAR_ASSIGN: /(?:^|[;\s{]\s*)(--[\w-]*?)\s*:\s*(?:([^;{]*)|{([^}]*)})(?:(?=[;\s}])|$)/gi,
-  MIXIN_MATCH: /(?:^|\W+)@apply\s*\(?([^);\n]*)\)?/gi,
-  VAR_CONSUMED: /(--[\w-]+)\s*([:,;)]|$)/gi,
-  ANIMATION_MATCH: /(animation\s*:)|(animation-name\s*:)/,
-  MEDIA_MATCH: /@media[^(]*(\([^)]*\))/,
-  IS_VAR: /^--/,
-  BRACKETED: /\{[^}]*\}/g,
-  HOST_PREFIX: '(?:^|[^.#[:])',
-  HOST_SUFFIX: '($|[.:[\\s>+~])'
+/**
+ * @param {Element | {is: string, extends: string}} element
+ * @return {{is: string, typeExtension: string}}
+ */
+export function getIsExtends(element) {
+  let localName = element['localName'];
+  let is = '', typeExtension = '';
+  /*
+  NOTE: technically, this can be wrong for certain svg elements
+  with `-` in the name like `<font-face>`
+  */
+  if (localName) {
+    if (localName.indexOf('-') > -1) {
+      is = localName;
+    } else {
+      typeExtension = localName;
+      is = (element.getAttribute && element.getAttribute('is')) || '';
+    }
+  } else {
+    is = /** @type {?} */(element).is;
+    typeExtension = /** @type {?} */(element).extends;
+  }
+  return {is, typeExtension};
 }

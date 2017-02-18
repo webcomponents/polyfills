@@ -1,6 +1,6 @@
 /**
 @license
-Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
+Copyright (c) 2017 The Polymer Project Authors. All rights reserved.
 This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
 The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
 The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
@@ -10,37 +10,40 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 'use strict';
 
-import {parse} from './css-parse'
-import {nativeShadow, nativeCssVariables, nativeCssApply} from './style-settings'
+import {parse, StyleNode} from './css-parse'
+import {nativeShadow, nativeCssVariables} from './style-settings'
 import StyleTransformer from './style-transformer'
 import * as StyleUtil from './style-util'
 import StyleProperties from './style-properties'
-import templateMap from './template-map'
 import placeholderMap from './style-placeholder'
 import StyleInfo from './style-info'
 import StyleCache from './style-cache'
-
-// TODO(dfreedm): consider spliting into separate global
-import ApplyShim from './apply-shim'
 import {flush as watcherFlush} from './document-watcher'
+import templateMap from './template-map'
+import * as ApplyShimUtils from './apply-shim-utils'
+import documentWait from './document-wait'
+import {updateNativeProperties} from './common-utils'
+import {CustomStyleInterfaceInterface} from './custom-style-interface' //eslint-disable-line no-unused-vars
 
-let styleCache = new StyleCache();
+/**
+ * @const {StyleCache}
+ */
+const styleCache = new StyleCache();
 
-class ShadyCSS {
+export default class ScopingShim {
   constructor() {
     this._scopeCounter = {};
     this._documentOwner = document.documentElement;
-    this._documentOwnerStyleInfo = StyleInfo.set(document.documentElement, new StyleInfo({rules: []}));
+    let ast = new StyleNode();
+    ast['rules'] = [];
+    this._documentOwnerStyleInfo = StyleInfo.set(this._documentOwner, new StyleInfo(ast));
     this._elementsHaveApplied = false;
-  }
-  get nativeShadow() {
-    return nativeShadow;
-  }
-  get nativeCss() {
-    return nativeCssVariables;
-  }
-  get nativeCssApply() {
-    return nativeCssApply;
+    this._applyShim = null;
+    /** @type {?CustomStyleInterfaceInterface} */
+    this._customStyleInterface = null;
+    documentWait(() => {
+      this._ensure();
+    });
   }
   flush() {
     watcherFlush();
@@ -72,6 +75,13 @@ class ShadyCSS {
     }
     return style.getAttribute('css-build') || '';
   }
+  /**
+   * Prepare the styling and template for the given element type
+   *
+   * @param {HTMLTemplateElement} template
+   * @param {string} elementName
+   * @param {string=} typeExtension
+   */
   prepareTemplate(template, elementName, typeExtension) {
     if (template._prepared) {
       return;
@@ -87,26 +97,28 @@ class ShadyCSS {
       extends: typeExtension,
       __cssBuild: cssBuild,
     };
-    if (!this.nativeShadow) {
+    if (!nativeShadow) {
       StyleTransformer.dom(template.content, elementName);
     }
     // check if the styling has mixin definitions or uses
-    let hasMixins = ApplyShim.detectMixin(cssText);
+    this._ensure();
+    let hasMixins = this._applyShim['detectMixin'](cssText);
     let ast = parse(cssText);
     // only run the applyshim transforms if there is a mixin involved
-    if (hasMixins && this.nativeCss && !this.nativeCssApply) {
-      ApplyShim.transformRules(ast, elementName);
+    if (hasMixins && nativeCssVariables) {
+      this._applyShim['transformRules'](ast, elementName);
     }
-    template._styleAst = ast;
+    template['_styleAst'] = ast;
+    template._cssBuild = cssBuild;
 
     let ownPropertyNames = [];
-    if (!this.nativeCss) {
-      ownPropertyNames = StyleProperties.decorateStyles(template._styleAst, info);
+    if (!nativeCssVariables) {
+      ownPropertyNames = StyleProperties.decorateStyles(template['_styleAst'], info);
     }
-    if (!ownPropertyNames.length || this.nativeCss) {
-      let root = this.nativeShadow ? template.content : null;
+    if (!ownPropertyNames.length || nativeCssVariables) {
+      let root = nativeShadow ? template.content : null;
       let placeholder = placeholderMap[elementName];
-      let style = this._generateStaticStyle(info, template._styleAst, root, placeholder);
+      let style = this._generateStaticStyle(info, template['_styleAst'], root, placeholder);
       template._style = style;
     }
     template._ownPropertyNames = ownPropertyNames;
@@ -118,18 +130,14 @@ class ShadyCSS {
     }
   }
   _prepareHost(host) {
-    let is = host.getAttribute('is') || host.localName;
-    let typeExtension;
-    if (is !== host.localName) {
-      typeExtension = host.localName;
-    }
+    let {is, typeExtension} = StyleUtil.getIsExtends(host);
     let placeholder = placeholderMap[is];
     let template = templateMap[is];
     let ast;
     let ownStylePropertyNames;
     let cssBuild;
     if (template) {
-      ast = template._styleAst;
+      ast = template['_styleAst'];
       ownStylePropertyNames = template._ownPropertyNames;
       cssBuild = template._cssBuild;
     }
@@ -144,10 +152,79 @@ class ShadyCSS {
       )
     );
   }
-  applyStyle(host, overrideProps) {
-    let is = host.getAttribute('is') || host.localName;
+  _ensureApplyShim() {
+    if (this._applyShim) {
+      return;
+    } else if (window.ShadyCSS.ApplyShim) {
+      this._applyShim = window.ShadyCSS.ApplyShim;
+      this._applyShim['invalidCallback'] = ApplyShimUtils.invalidate;
+    } else {
+      this._applyShim = {
+        /* eslint-disable no-unused-vars */
+        ['detectMixin'](str){return false},
+        ['transformRule'](ast){},
+        ['transformRules'](ast, name){},
+        /* eslint-enable no-unused-vars */
+      }
+    }
+  }
+  _ensureCustomStyleInterface() {
+    if (this._customStyleInterface) {
+      return;
+    } else if (window.ShadyCSS.CustomStyleInterface) {
+      this._customStyleInterface = /** @type {!CustomStyleInterfaceInterface} */(window.ShadyCSS.CustomStyleInterface);
+      /** @type {function(!HTMLStyleElement)} */
+      this._customStyleInterface['transformCallback'] = (style) => {this.transformCustomStyleForDocument(style)};
+      this._customStyleInterface['validateCallback'] = () => {
+        requestAnimationFrame(() => {
+          if (this._customStyleInterface['enqueued'] || this._elementsHaveApplied) {
+            this.flushCustomStyles();
+          }
+        })
+      };
+    } else {
+      this._customStyleInterface = /** @type {!CustomStyleInterfaceInterface} */({
+        ['processStyles']() {},
+        ['enqueued']: false,
+        ['getStyleForCustomStyle'](s) { return null } // eslint-disable-line no-unused-vars
+      })
+    }
+  }
+  _ensure() {
+    this._ensureApplyShim();
+    this._ensureCustomStyleInterface();
+  }
+  /**
+   * Flush and apply custom styles to document
+   */
+  flushCustomStyles() {
+    this._ensure();
+    let customStyles = this._customStyleInterface['processStyles']();
+    // early return if custom-styles don't need validation
+    if (!this._customStyleInterface['enqueued']) {
+      return;
+    }
+    if (!nativeCssVariables) {
+      this._updateProperties(this._documentOwner, this._documentOwnerStyleInfo);
+      this._applyCustomStyles(customStyles);
+    } else {
+      this._revalidateCustomStyleApplyShim(customStyles);
+    }
+    this._customStyleInterface['enqueued'] = false;
+    // if custom elements have upgraded and there are no native css variables, we must recalculate the whole tree
+    if (this._elementsHaveApplied && !nativeCssVariables) {
+      this.styleDocument();
+    }
+  }
+  /**
+   * Apply styles for the given element
+   *
+   * @param {!HTMLElement} host
+   * @param {Object=} overrideProps
+   */
+  styleElement(host, overrideProps) {
+    let {is} = StyleUtil.getIsExtends(host);
     let styleInfo = StyleInfo.get(host);
-    let hasApplied = Boolean(styleInfo);
     if (!styleInfo) {
       styleInfo = this._prepareHost(host);
     }
@@ -155,88 +232,43 @@ class ShadyCSS {
     if (!this._isRootOwner(host)) {
       this._elementsHaveApplied = true;
     }
-    if (window.CustomStyle) {
-      let CS = window.CustomStyle;
-      if (CS._documentDirty) {
-        CS.findStyles();
-        if (!this.nativeCss) {
-          this._updateProperties(this._documentOwner, this._documentOwnerStyleInfo);
-        } else if (!this.nativeCssApply) {
-          CS._revalidateApplyShim();
-        }
-        CS.applyStyles();
-        // if no elements have booted yet, we can just update the document and be done
-        if (!this._elementsHaveApplied) {
-          return;
-        }
-        // if no native css custom properties, we must recalculate the whole tree
-        if (!this.nativeCss) {
-          this.updateStyles();
-          /*
-          When updateStyles() runs, this element may not have a shadowroot yet.
-          If not, we need to make sure that this element runs `applyStyle` on itself at least once to generate a style
-          */
-          if (hasApplied) {
-            return;
-          }
-        }
-      }
-    }
     if (overrideProps) {
       styleInfo.overrideStyleProperties =
         styleInfo.overrideStyleProperties || {};
       Object.assign(styleInfo.overrideStyleProperties, overrideProps);
     }
-    if (this.nativeCss) {
+    if (!nativeCssVariables) {
+     this._updateProperties(host, styleInfo);
+      if (styleInfo.ownStylePropertyNames && styleInfo.ownStylePropertyNames.length) {
+        this._applyStyleProperties(host, styleInfo);
+      }
+    } else {
       if (styleInfo.overrideStyleProperties) {
-        this._updateNativeProperties(host, styleInfo.overrideStyleProperties);
+        updateNativeProperties(host, styleInfo.overrideStyleProperties);
       }
       let template = templateMap[is];
       // bail early if there is no shadowroot for this element
       if (!template && !this._isRootOwner(host)) {
         return;
       }
-      if (template && template._applyShimInvalid && template._style) {
+      if (template && template._style && !ApplyShimUtils.templateIsValid(template)) {
         // update template
-        if (!template._validating) {
-          ApplyShim.transformRules(template._styleAst, is);
+        if (!ApplyShimUtils.templateIsValidating(template)) {
+          this._ensure();
+          this._applyShim['transformRules'](template['_styleAst'], is);
           template._style.textContent = StyleTransformer.elementStyles(host, styleInfo.styleRules);
-          StyleInfo.startValidating(is);
+          ApplyShimUtils.startValidatingTemplate(template);
         }
         // update instance if native shadowdom
-        if (this.nativeShadow) {
+        if (nativeShadow) {
           let root = host.shadowRoot;
           if (root) {
             let style = root.querySelector('style');
             style.textContent = StyleTransformer.elementStyles(host, styleInfo.styleRules);
           }
         }
-        styleInfo.styleRules = template._styleAst;
+        styleInfo.styleRules = template['_styleAst'];
       }
-    } else {
-      this._updateProperties(host, styleInfo);
-      if (styleInfo.ownStylePropertyNames && styleInfo.ownStylePropertyNames.length) {
-        this._applyStyleProperties(host, styleInfo);
-      }
-    }
-    if (hasApplied) {
-      let root = this._isRootOwner(host) ? host : host.shadowRoot;
-      // note: some elements may not have a root!
-      if (root) {
-        this._applyToDescendants(root);
-      }
-    }
-  }
-  _applyToDescendants(root) {
-    // note: fallback to childNodes to support recursing into SVG which
-    // does not support children in some browsers (Edge/IE)
-    let c$ = root.children || root.childNodes;
-    for (let i = 0, c; i < c$.length; i++) {
-      c = c$[i];
-      if (c.shadowRoot) {
-        this.applyStyle(c);
-      }
-      this._applyToDescendants(c);
     }
   }
   _styleOwnerForNode(node) {
@@ -255,7 +287,7 @@ class ShadyCSS {
     return (node === this._documentOwner);
   }
   _applyStyleProperties(host, styleInfo) {
-    let is = host.getAttribute('is') || host.localName;
+    let is = StyleUtil.getIsExtends(host).is;
     let cacheEntry = styleCache.fetch(is, styleInfo.styleProperties, styleInfo.ownStylePropertyNames);
     let cachedScopeSelector = cacheEntry && cacheEntry.scopeSelector;
     let cachedStyle = cacheEntry ? cacheEntry.styleElement : null;
@@ -263,7 +295,7 @@ class ShadyCSS {
     // only generate new scope if cached style is not found
     styleInfo.scopeSelector = cachedScopeSelector || this._generateScopeSelector(is);
     let style = StyleProperties.applyElementStyle(host, styleInfo.styleProperties, styleInfo.scopeSelector, cachedStyle);
-    if (!this.nativeShadow) {
+    if (!nativeShadow) {
       StyleProperties.applyElementScopeSelector(host, styleInfo.scopeSelector, oldScopeSelector);
     }
     if (!cacheEntry) {
@@ -299,22 +331,63 @@ class ShadyCSS {
       }
     }
   }
-  _updateNativeProperties(element, properties) {
-    // remove previous properties
-    for (let p in properties) {
-      // NOTE: for bc with shim, don't apply null values.
-      if (p === null) {
-        element.style.removeProperty(p);
-      } else {
-        element.style.setProperty(p, properties[p]);
+  /**
+   * Update styles of the whole document
+   *
+   * @param {Object=} properties
+   */
+  styleDocument(properties) {
+    this.styleSubtree(this._documentOwner, properties);
+  }
+  /**
+   * Update styles of a subtree
+   *
+   * @param {!HTMLElement} host
+   * @param {Object=} properties
+   */
+  styleSubtree(host, properties) {
+    let root = host.shadowRoot;
+    if (root || this._isRootOwner(host)) {
+      this.styleElement(host, properties);
+    }
+    // process the shadowdom children of `host`
+    let shadowChildren = root && (root.children || root.childNodes);
+    if (shadowChildren) {
+      for (let i = 0; i < shadowChildren.length; i++) {
+        let c = /** @type {!HTMLElement} */(shadowChildren[i]);
+        this.styleSubtree(c);
+      }
+    } else {
+      // process the lightdom children of `host`
+      let children = host.children || host.childNodes;
+      if (children) {
+        for (let i = 0; i < children.length; i++) {
+          let c = /** @type {!HTMLElement} */(children[i]);
+          this.styleSubtree(c);
+        }
       }
     }
   }
-  updateStyles(properties) {
-    this.applyStyle(this._documentOwner, properties);
-  }
   /* Custom Style operations */
-  _transformCustomStyleForDocument(style) {
+  _revalidateCustomStyleApplyShim(customStyles) {
+    for (let i = 0; i < customStyles.length; i++) {
+      let c = customStyles[i];
+      let s = this._customStyleInterface['getStyleForCustomStyle'](c);
+      if (s) {
+        this._revalidateApplyShim(s);
+      }
+    }
+  }
+  _applyCustomStyles(customStyles) {
+    for (let i = 0; i < customStyles.length; i++) {
+      let c = customStyles[i];
+      let s = this._customStyleInterface['getStyleForCustomStyle'](c);
+      if (s) {
+        StyleProperties.applyCustomStyle(s, this._documentOwnerStyleInfo.styleProperties);
+      }
+    }
+  }
+  transformCustomStyleForDocument(style) {
     let ast = StyleUtil.rulesForStyle(style);
     StyleUtil.forEachRule(ast, (rule) => {
       if (nativeShadow) {
@@ -322,31 +395,28 @@ class ShadyCSS {
       } else {
         StyleTransformer.documentRule(rule);
       }
-      if (this.nativeCss && !this.nativeCssApply) {
-        ApplyShim.transformRule(rule);
+      if (nativeCssVariables) {
+        this._ensure();
+        this._applyShim['transformRule'](rule);
       }
     });
-    if (this.nativeCss) {
+    if (nativeCssVariables) {
       style.textContent = StyleUtil.toCssText(ast);
     } else {
       this._documentOwnerStyleInfo.styleRules.rules.push(ast);
     }
   }
   _revalidateApplyShim(style) {
-    if (this.nativeCss && !this.nativeCssApply) {
+    if (nativeCssVariables) {
       let ast = StyleUtil.rulesForStyle(style);
-      ApplyShim.transformRules(ast);
+      this._ensure();
+      this._applyShim['transformRules'](ast);
       style.textContent = StyleUtil.toCssText(ast);
-    }
-  }
-  _applyCustomStyleToDocument(style) {
-    if (!this.nativeCss) {
-      StyleProperties.applyCustomStyle(style, this._documentOwnerStyleInfo.styleProperties);
     }
   }
   getComputedStyleValue(element, property) {
     let value;
-    if (!this.nativeCss) {
+    if (!nativeCssVariables) {
       // element is either a style host, or an ancestor of a style host
       let styleInfo = StyleInfo.get(element) || StyleInfo.get(this._styleOwnerForNode(element));
       value = styleInfo.styleProperties[property];
@@ -382,7 +452,7 @@ class ShadyCSS {
     if (scopeName) {
       classes.push(StyleTransformer.SCOPE_NAME, scopeName);
     }
-    if (!this.nativeCss) {
+    if (!nativeCssVariables) {
       let styleInfo = StyleInfo.get(element);
       if (styleInfo && styleInfo.scopeSelector) {
         classes.push(StyleProperties.XSCOPE_NAME, styleInfo.scopeSelector);
@@ -395,4 +465,28 @@ class ShadyCSS {
   }
 }
 
-window['ShadyCSS'] = new ShadyCSS();
+/* exports */
+ScopingShim.prototype['flush'] = ScopingShim.prototype.flush;
+ScopingShim.prototype['prepareTemplate'] = ScopingShim.prototype.prepareTemplate;
+ScopingShim.prototype['styleElement'] = ScopingShim.prototype.styleElement;
+ScopingShim.prototype['styleDocument'] = ScopingShim.prototype.styleDocument;
+ScopingShim.prototype['styleSubtree'] = ScopingShim.prototype.styleSubtree;
+ScopingShim.prototype['getComputedStyleValue'] = ScopingShim.prototype.getComputedStyleValue;
+ScopingShim.prototype['setElementClass'] = ScopingShim.prototype.setElementClass;
+ScopingShim.prototype['_styleInfoForNode'] = ScopingShim.prototype._styleInfoForNode;
+ScopingShim.prototype['transformCustomStyleForDocument'] = ScopingShim.prototype.transformCustomStyleForDocument;
+ScopingShim.prototype['getStyleAst'] = ScopingShim.prototype.getStyleAst;
+ScopingShim.prototype['styleAstToString'] = ScopingShim.prototype.styleAstToString;
+ScopingShim.prototype['flushCustomStyles'] = ScopingShim.prototype.flushCustomStyles;
+Object.defineProperties(ScopingShim.prototype, {
+  'nativeShadow': {
+    get() {
+      return nativeShadow;
+    }
+  },
+  'nativeCss': {
+    get() {
+      return nativeCssVariables;
+    }
+  }
+});

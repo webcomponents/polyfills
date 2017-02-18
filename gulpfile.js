@@ -15,92 +15,22 @@
 
 const gulp = require('gulp');
 const sourcemaps = require('gulp-sourcemaps');
-const babel = require('gulp-babel');
 const del = require('del');
 const rename = require('gulp-rename');
 const rollup = require('rollup-stream');
 const buffer = require('vinyl-buffer');
 const source = require('vinyl-source-stream');
-
-function singleLicenseComment() {
-  let hasLicense = false;
-  return (comment) => {
-    if (hasLicense) {
-      return false;
-    }
-    return hasLicense = /@license/.test(comment);
-  }
-}
-
-const babiliConfig = {
-  presets: ['babili'],
-  shouldPrintComment: singleLicenseComment()
-};
-
-const es5Config = {
-  presets: ['es2015']
-}
-
-gulp.task('minify', () => {
-  return rollup({
-    entry: 'index.js',
-    format: 'iife',
-    moduleName: 'shadycss',
-    sourceMap: true
-  })
-  .pipe(source('index.js'))
-  .pipe(buffer())
-  .pipe(sourcemaps.init({loadMaps: true}))
-  .pipe(babel(babiliConfig))
-  .pipe(rename('shadycss.min.js'))
-  .pipe(sourcemaps.write('.'))
-  .pipe(gulp.dest('./'))
-});
-
-gulp.task('debug', () => {
-  return rollup({
-    entry: 'index.js',
-    format: 'iife',
-    moduleName: 'shadycss',
-    sourceMap: true
-  })
-  .pipe(source('index.js'))
-  .pipe(buffer())
-  .pipe(sourcemaps.init({loadMaps: true}))
-  .pipe(rename('shadycss.min.js'))
-  .pipe(sourcemaps.write('.'))
-  .pipe(gulp.dest('./'))
-})
-
-gulp.task('es5', () => {
-  return rollup({
-    entry: 'index.js',
-    format: 'iife',
-    moduleName: 'shadycss',
-    sourceMap: true
-  })
-  .pipe(source('index.js'))
-  .pipe(buffer())
-  .pipe(sourcemaps.init({loadMaps: true}))
-  .pipe(babel(es5Config))
-  .pipe(rename('shadycss.min.js'))
-  .pipe(sourcemaps.write('.'))
-  .pipe(gulp.dest('./'))
-})
+const closure = require('google-closure-compiler').gulp();
+const size = require('gulp-size');
+const runseq = require('run-sequence');
 
 const modules = [
-  'apply-shim',
   'css-parse',
   'custom-style-element',
   'make-element',
-  'style-cache',
-  'style-info',
-  'style-placeholder',
-  'style-properties',
-  'style-settings',
-  'style-transformer',
+  'svg-in-shadow',
   'style-util',
-  'svg-in-shadow'
+  'style-transformer'
 ];
 
 const moduleTasks = modules.map((m) => {
@@ -116,8 +46,65 @@ const moduleTasks = modules.map((m) => {
   return `test-module-${m}`;
 });
 
-gulp.task('test-modules', moduleTasks);
-
 gulp.task('clean-test-modules', () => del(['tests/module/generated']));
 
-gulp.task('default', ['minify', 'test-modules']);
+gulp.task('test-modules', (cb) => {
+  runseq('clean-test-modules', moduleTasks, cb);
+});
+
+function closurify(entry) {
+  gulp.task(`closure-${entry}`, () => {
+    return gulp.src(['src/*.js', 'entrypoints/*.js'])
+    .pipe(sourcemaps.init())
+    .pipe(closure({
+      new_type_inf: true,
+      compilation_level: 'ADVANCED',
+      language_in: 'ES6_STRICT',
+      language_out: 'ES5_STRICT',
+      output_wrapper: '(function(){\n%output%\n}).call(self)',
+      assume_function_wrapper: true,
+      js_output_file: `${entry}.min.js`,
+      entry_point: `/entrypoints/${entry}.js`,
+      dependency_mode: 'STRICT',
+      warning_level: 'VERBOSE',
+      rewrite_polyfills: false,
+      externs: 'externs/shadycss-externs.js'
+    }))
+    .pipe(size({showFiles: true, showTotal: false, gzip: true}))
+    .pipe(sourcemaps.write('.'))
+    .pipe(gulp.dest('.'))
+  });
+  return `closure-${entry}`;
+}
+
+function debugify(entry) {
+  gulp.task(`debug-${entry}`, () => {
+    return rollup({
+      entry: `entrypoints/${entry}.js`,
+      format: 'iife',
+      moduleName: '${entry}',
+    })
+    .pipe(source(`${entry}.js`, 'entrypoints'))
+    .pipe(buffer())
+    .pipe(sourcemaps.init({loadMaps: true}))
+    .pipe(rename(`${entry}.min.js`))
+    .pipe(size({showFiles: true, showTotal: false, gzip: true}))
+    .pipe(gulp.dest('./'))
+  });
+  return `debug-${entry}`;
+}
+
+const entrypoints = [
+  'scoping-shim',
+  'apply-shim',
+  'custom-style-interface'
+]
+
+let closureTasks = entrypoints.map((e) => closurify(e));
+let debugTasks = entrypoints.map((e) => debugify(e));
+
+gulp.task('default', ['closure', 'test-modules']);
+
+gulp.task('closure', closureTasks);
+
+gulp.task('debug', debugTasks);

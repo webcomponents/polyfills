@@ -1,6 +1,6 @@
 /**
 @license
-Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
+Copyright (c) 2017 The Polymer Project Authors. All rights reserved.
 This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
 The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
 The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
@@ -10,6 +10,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 'use strict';
 
+import {StyleNode} from './css-parse' // eslint-disable-line no-unused-vars
 import * as StyleUtil from './style-util'
 import {nativeShadow} from './style-settings'
 
@@ -43,8 +44,8 @@ class StyleTransformer {
   // in the tree. This facilitates transforming css into scoped rules.
   dom(node, scope, shouldRemoveScope) {
     // one time optimization to skip scoping...
-    if (node.__styleScoped) {
-      node.__styleScoped = null;
+    if (node['__styleScoped']) {
+      node['__styleScoped'] = null;
     } else {
       this._transformDom(node, scope || '', shouldRemoveScope);
     }
@@ -94,16 +95,20 @@ class StyleTransformer {
   }
 
   elementStyles(element, styleRules, callback) {
-    let cssBuildType = element.__cssBuild;
+    let cssBuildType = element['__cssBuild'];
     // no need to shim selectors if settings.useNativeShadow, also
     // a shady css build will already have transformed selectors
     // NOTE: This method may be called as part of static or property shimming.
     // When there is a targeted build it will not be called for static shimming,
     // but when the property shim is used it is called and should opt out of
     // static shimming work when a proper build exists.
-    let cssText = (nativeShadow || cssBuildType === 'shady') ?
-    StyleUtil.toCssText(styleRules, callback) :
-    this.css(styleRules, element.is, element.extends, callback) + '\n\n';
+    let cssText = '';
+    if (nativeShadow || cssBuildType === 'shady') {
+      cssText = StyleUtil.toCssText(styleRules, callback);
+    } else {
+      let {is, typeExtension} = StyleUtil.getIsExtends(element);
+      cssText = this.css(styleRules, is, typeExtension, callback) + '\n\n';
+    }
     return cssText.trim();
   }
 
@@ -115,7 +120,7 @@ class StyleTransformer {
     let hostScope = this._calcHostScope(scope, ext);
     scope = this._calcElementScope(scope);
     let self = this;
-    return StyleUtil.toCssText(rules, function(rule) {
+    return StyleUtil.toCssText(rules, function(/** StyleNode */rule) {
       if (!rule.isScoped) {
         self.rule(rule, scope, hostScope);
         rule.isScoped = true;
@@ -135,7 +140,7 @@ class StyleTransformer {
   }
 
   _calcHostScope(scope, ext) {
-    return ext ? '[is=' +  scope + ']' : scope;
+    return ext ? `[is=${scope}]` : scope;
   }
 
   rule(rule, scope, hostScope) {
@@ -143,16 +148,29 @@ class StyleTransformer {
       scope, hostScope);
   }
 
-  // transforms a css rule to a scoped rule.
+  /**
+   * transforms a css rule to a scoped rule.
+   *
+   * @param {StyleNode} rule
+   * @param {Function} transformer
+   * @param {string=} scope
+   * @param {string=} hostScope
+   */
   _transformRule(rule, transformer, scope, hostScope) {
     // NOTE: save transformedSelector for subsequent matching of elements
     // against selectors (e.g. when calculating style properties)
-    rule.selector = rule.transformedSelector =
+    rule['selector'] = rule.transformedSelector =
       this._transformRuleCss(rule, transformer, scope, hostScope);
   }
 
+  /**
+   * @param {StyleNode} rule
+   * @param {Function} transformer
+   * @param {string=} scope
+   * @param {string=} hostScope
+   */
   _transformRuleCss(rule, transformer, scope, hostScope) {
-    let p$ = rule.selector.split(COMPLEX_SELECTOR_SEP);
+    let p$ = rule['selector'].split(COMPLEX_SELECTOR_SEP);
     // we want to skip transformation of rules that appear in keyframes,
     // because they are keyframe selectors, not element selectors.
     if (!StyleUtil.isKeyframesSelector(rule)) {
@@ -163,6 +181,11 @@ class StyleTransformer {
     return p$.join(COMPLEX_SELECTOR_SEP);
   }
 
+/**
+ * @param {string} selector
+ * @param {string} scope
+ * @param {string=} hostScope
+ */
   _transformComplexSelector(selector, scope, hostScope) {
     let stop = false;
     selector = selector.trim();
@@ -251,19 +274,28 @@ class StyleTransformer {
     }
   }
 
+  /**
+   * @param {StyleNode} rule
+   */
   documentRule(rule) {
     // reset selector in case this is redone.
-    rule.selector = rule.parsedSelector;
+    rule['selector'] = rule['parsedSelector'];
     this.normalizeRootSelector(rule);
     this._transformRule(rule, this._transformDocumentSelector);
   }
 
+  /**
+   * @param {StyleNode} rule
+   */
   normalizeRootSelector(rule) {
-    if (rule.selector === ROOT) {
-      rule.selector = 'html';
+    if (rule['selector'] === ROOT) {
+      rule['selector'] = 'html';
     }
   }
 
+/**
+ * @param {string} selector
+ */
   _transformDocumentSelector(selector) {
     return selector.match(SLOTTED) ?
       this._transformComplexSelector(selector, SCOPE_DOC_SELECTOR) :

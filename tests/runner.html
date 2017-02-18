@@ -8,65 +8,80 @@
     Code distributed by Google as part of the polymer project is also
     subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 -->
-<title>ShadyCSS Tests</title>
+<title>ScopingShim Tests</title>
 <meta charset="utf-8">
 
 <script src="../../web-component-tester/browser.js"></script>
 
 <script>
+(function(){
   var suites = [
     'css-parse.html',
     'apply-shim.html',
+    'placeholder-ordering.html',
     'scoping.html',
     'mixin-ordering.html',
     'svg.html',
+    'style-transformer.html',
     'custom-style.html',
     'custom-style-late.html'
   ];
-      // http://eddmann.com/posts/cartesian-product-in-javascript/
-    function flatten(arr) { return [].concat.apply([], arr) }
-    function product(sets) {
-      return sets.reduce(function(acc, set) {
-        return flatten(acc.map(function(x) {
-           return set.map(function(y) { return x.concat(y); });
-        }));
-      }, [[]]);
-    }
-    function combinations(suites, flags) {
-      return product(flags).reduce(function(list, f) {
-        f = f.filter(function(i) { return i; }).join('&');
-        return list.concat(suites.map(function(s) { return s + (f ? '?' + f : '') }))
-      }, []);
-    }
+  // http://eddmann.com/posts/cartesian-product-in-javascript/
+  function flatten(arr) { return [].concat.apply([], arr) }
+  function product(sets) {
+    return sets.reduce(function(acc, set) {
+      return flatten(acc.map(function(x) {
+          return set.map(function(y) { return x.concat(y); });
+      }));
+    }, [[]]);
+  }
+  function combinations(suites, flags) {
+    return product(flags).reduce(function(list, f) {
+      f = f.filter(function(i) { return i; }).join('&');
+      return list.concat(suites.map(function(s) { return s + (f ? '?' + f : '') }))
+    }, []);
+  }
 
-    function addUrlOption(previous, next) {
-      previous = previous || '';
-      next = next || '';
-      return previous + (previous ? '&' : '') + next;
-    }
+  function addUrlOption(previous, next) {
+    previous = previous || '';
+    next = next || '';
+    return previous + (previous ? '&' : '') + next;
+  }
 
-    // test shadowdom/custom elements polyfills together
-    // prefering both if possible.
-    var matrix = [''];
-    var webcomponents = '';
-    if (window.customElements) {
-      webcomponents = 'wc-register=true';
-    }
-    // if native is available, make sure to test polyfill
-    if (Element.prototype.attachShadow) {
-      webcomponents = addUrlOption(webcomponents, 'wc-shadydom=true');
-    }
-    // ce + sd becomes a single test iteration.
-    if (webcomponents) {
-      matrix.push(webcomponents);
-    }
-    // economize testing by testing css shimming
-    // only against 1 environment (native or polyfill).
-    if (window.CSS && CSS.supports && CSS.supports('box-shadow', '0 0 0 var(--foo)')) {
-      var last = matrix[matrix.length-1];
-      matrix.push(addUrlOption(last, 'wc-shimcssproperties=true'));
-    }
-    suites = combinations(suites, [matrix]);
+  // test shadowdom/custom elements polyfills together
+  // prefering both if possible.
+  var matrix = [''];
+  var webcomponents = '';
+  if (window.customElements) {
+    webcomponents = 'wc-register=true';
+  }
+  // if native is available, make sure to test polyfill
+  if (Element.prototype.attachShadow && document.documentElement.getRootNode) {
+    webcomponents = addUrlOption(webcomponents, 'wc-shadydom=true');
+  }
+  // ce + sd becomes a single test iteration.
+  if (webcomponents) {
+    matrix.push(webcomponents);
+  }
+  // economize testing by testing css shimming
+  // only against 1 environment (native or polyfill).
+  if (window.CSS && CSS.supports && CSS.supports('box-shadow', '0 0 0 var(--foo)')) {
+    var last = matrix[matrix.length-1];
+    matrix.push(addUrlOption(last, 'wc-shimcssproperties=true'));
+  }
+  suites = combinations(suites, [matrix]);
+
+  if (matrix.length > 2) {
+    suites = suites.concat([
+      'no-scopingshim/apply-shim.html',
+      'no-scopingshim/mixin-ordering.html',
+      'no-scopingshim/custom-style.html',
+      'no-scopingshim/custom-style-late.html',
+      'no-applyshim/custom-style.html',
+      'no-applyshim/custom-style-late.html'
+    ]);
+  }
 
   WCT.loadSuites(suites);
+})();
 </script>
