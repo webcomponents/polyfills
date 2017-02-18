@@ -11,14 +11,26 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <html>
 <head>
   <meta charset="utf-8">
-  <script src="../../web-component-tester/browser.js"></script>
+  <script src="../../webcomponents-platform/webcomponents-platform.js"></script>
+  <script src="../../template/template.js"></script>
   <script>
     ShadyDOM = {force: true};
     if (window.customElements) {
       customElements.forcePolyfill = true;
     }
   </script>
-  <script src="../../webcomponentsjs/webcomponents-lite.js"></script>
+  <script src="../shadydom.min.js"></script>
+  <script src="../../custom-elements/custom-elements.min.js"></script>
+  <script>
+    // Ensure customElements are updated when document is ready.
+    if (customElements.polyfillWrapFlushCallback) {
+      customElements.polyfillWrapFlushCallback(function(cb) {
+        document.addEventListener('DOMContentLoaded', cb);
+      });
+    }
+  </script>
+
+  <script src="../../web-component-tester/browser.js"></script>
 </head>
 <body>
 
@@ -498,6 +510,12 @@ suite('activeElement', function() {
     assert.equal(r_1.shadowRoot.activeElement, r_1_1, 'r_1.shadowRoot.activeElement === r_1_1');
     assert.equal(r_1_0.shadowRoot.activeElement, null, 'r_1_0.shadowRoot.activeElement === null');
     assert.equal(r_1_1.shadowRoot.activeElement, null, 'r_1_1.shadowRoot.activeElement === null');
+  });
+
+  test('activeElement correctly updated after it gets removed from the document', function() {
+    r.focus();
+    r.parentNode.removeChild(r);
+    assert.notEqual(document.activeElement, r, 'document.activeElement !== r');
   });
 });
 

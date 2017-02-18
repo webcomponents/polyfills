@@ -18,7 +18,9 @@
     "tests"
   ],
   "devDependencies": {
-    "web-component-tester": "^4.3.5",
-    "webcomponentsjs": "webcomponents/webcomponentsjs#v1"
+    "web-component-tester": "^5",
+    "template": "webcomponents/template#master",
+    "custom-elements": "webcomponents/custom-elements#master",
+    "webcomponents-platform": "webcomponents/webcomponents-platform#master"
   }
 }
