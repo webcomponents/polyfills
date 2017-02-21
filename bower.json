@@ -1,6 +1,6 @@
 {
   "name": "shadycss",
-  "main": "shadycss.min.js",
+  "main": "scoping-shim.min.js",
   "authors": [
     "The Polymer Authors"
   ],
