@@ -32,5 +32,13 @@ export function updateNativeProperties(element, properties) {
  * @return {string}
  */
 export function getComputedStyleValue(element, property) {
-  return window.getComputedStyle(element).getPropertyValue(property).trim();
+  /**
+   * @const {string}
+   */
+  const value = window.getComputedStyle(element).getPropertyValue(property);
+  if (!value) {
+    return '';
+  } else {
+    return value.trim();
+  }
 }
