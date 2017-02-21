@@ -43,7 +43,10 @@ function addNode(container, node, ref_node) {
   // TODO(sorvell): revisit flow since `ipAdded` needed here if
   // node is a fragment that has a patched QSA.
   let handled = _maybeDistribute(node, container, ownerRoot, ipAdded) ||
-    container.shadyRoot;
+    container.shadyRoot ||
+    // handled if ref_node parent is a root that is rendering.
+    (ref_node && utils.isShadyRoot(ref_node.parentNode) &&
+      ref_node.parentNode._renderPending);
   return handled;
 }
 
@@ -368,8 +371,7 @@ export function insertBefore(parent, node, ref_node) {
       }
     }
     // if adding to a shadyRoot, add to host instead
-    let container = utils.isShadyRoot(parent) ?
-      parent.host : parent;
+    let container = utils.isShadyRoot(parent) ? parent.host : parent;
     if (ref_node) {
       nativeMethods.insertBefore.call(container, node, ref_node);
     } else {
