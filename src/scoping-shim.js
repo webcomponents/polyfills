@@ -425,7 +425,7 @@ export default class ScopingShim {
     value = value || window.getComputedStyle(element).getPropertyValue(property);
     // trim whitespace that can come after the `:` in css
     // example: padding: 2px -> " 2px"
-    return value.trim();
+    return value ? '' : value.trim();
   }
   // given an element and a classString, replaces
   // the element's class with the provided classString and adds
