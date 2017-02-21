@@ -22,7 +22,7 @@
     "template": "webcomponents/template#master",
     "html-imports": "webcomponents/html-imports#master",
     "custom-elements": "webcomponents/custom-elements#master",
-    "shadydom": "webcomponents/shadydom#split-shadycss",
+    "shadydom": "webcomponents/shadydom#master",
     "webcomponents-platform": "webcomponents/webcomponents-platform#master"
   }
 }
