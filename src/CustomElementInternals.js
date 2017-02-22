@@ -1,5 +1,5 @@
-import * as Utilities from './Utilities';
-import CEState from './CustomElementState';
+import * as Utilities from './Utilities.js';
+import CEState from './CustomElementState.js';
 
 export default class CustomElementInternals {
   constructor() {

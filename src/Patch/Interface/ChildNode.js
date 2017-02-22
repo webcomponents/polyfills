@@ -1,5 +1,5 @@
-import CustomElementInternals from '../../CustomElementInternals';
-import * as Utilities from '../../Utilities';
+import CustomElementInternals from '../../CustomElementInternals.js';
+import * as Utilities from '../../Utilities.js';
 
 /**
  * @typedef {{

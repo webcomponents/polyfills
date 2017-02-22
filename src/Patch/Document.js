@@ -1,8 +1,8 @@
-import Native from './Native';
-import CustomElementInternals from '../CustomElementInternals';
-import * as Utilities from '../Utilities';
+import Native from './Native.js';
+import CustomElementInternals from '../CustomElementInternals.js';
+import * as Utilities from '../Utilities.js';
 
-import PatchParentNode from './Interface/ParentNode';
+import PatchParentNode from './Interface/ParentNode.js';
 
 /**
  * @param {!CustomElementInternals} internals
