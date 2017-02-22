@@ -90,8 +90,10 @@ export let unobserveChildren = function(handle) {
 }
 
 export function filterMutations(mutations, target) {
+  /** @const {Node} */
   const targetRootNode = target.getRootNode();
   return mutations.map(function(mutation) {
+    /** @const {boolean} */
     const mutationInScope = (targetRootNode === mutation.target.getRootNode());
     if (mutationInScope && mutation.addedNodes) {
       let nodes = Array.from(mutation.addedNodes).filter(function(n) {
