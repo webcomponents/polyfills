@@ -1,7 +1,7 @@
-import CustomElementInternals from './CustomElementInternals';
-import DocumentConstructionObserver from './DocumentConstructionObserver';
-import Deferred from './Deferred';
-import * as Utilities from './Utilities';
+import CustomElementInternals from './CustomElementInternals.js';
+import DocumentConstructionObserver from './DocumentConstructionObserver.js';
+import Deferred from './Deferred.js';
+import * as Utilities from './Utilities.js';
 
 /**
  * @unrestricted

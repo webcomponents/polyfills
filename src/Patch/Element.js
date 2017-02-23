@@ -1,10 +1,10 @@
-import Native from './Native';
-import CustomElementInternals from '../CustomElementInternals';
-import CEState from '../CustomElementState';
-import * as Utilities from '../Utilities';
+import Native from './Native.js';
+import CustomElementInternals from '../CustomElementInternals.js';
+import CEState from '../CustomElementState.js';
+import * as Utilities from '../Utilities.js';
 
-import PatchParentNode from './Interface/ParentNode';
-import PatchChildNode from './Interface/ChildNode';
+import PatchParentNode from './Interface/ParentNode.js';
+import PatchChildNode from './Interface/ChildNode.js';
 
 /**
  * @param {!CustomElementInternals} internals

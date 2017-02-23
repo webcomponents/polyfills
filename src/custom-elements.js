@@ -8,13 +8,13 @@
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
-import CustomElementInternals from './CustomElementInternals';
-import CustomElementRegistry from './CustomElementRegistry';
+import CustomElementInternals from './CustomElementInternals.js';
+import CustomElementRegistry from './CustomElementRegistry.js';
 
-import PatchHTMLElement from './Patch/HTMLElement';
-import PatchDocument from './Patch/Document';
-import PatchNode from './Patch/Node';
-import PatchElement from './Patch/Element';
+import PatchHTMLElement from './Patch/HTMLElement.js';
+import PatchDocument from './Patch/Document.js';
+import PatchNode from './Patch/Node.js';
+import PatchElement from './Patch/Element.js';
 
 const priorCustomElements = window['customElements'];
 

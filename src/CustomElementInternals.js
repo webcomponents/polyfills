@@ -1,6 +1,6 @@
-import * as Utilities from './Utilities';
-import CEState from './CustomElementState';
-import CustomElementReactionsStack from './CustomElementReactionsStack';
+import * as Utilities from './Utilities.js';
+import CEState from './CustomElementState.js';
+import CustomElementReactionsStack from './CustomElementReactionsStack.js';
 
 export default class CustomElementInternals {
   constructor() {

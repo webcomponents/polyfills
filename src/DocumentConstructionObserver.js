@@ -1,4 +1,4 @@
-import CustomElementInternals from './CustomElementInternals';
+import CustomElementInternals from './CustomElementInternals.js';
 
 export default class DocumentConstructionObserver {
   constructor(internals, doc) {
