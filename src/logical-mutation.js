@@ -369,10 +369,14 @@ export function removeAttribute(node, attr) {
 export function insertBefore(parent, node, ref_node) {
   if (ref_node) {
     let p = getProperty(ref_node, 'parentNode');
-    if (p !== undefined && p !== parent) {
-      throw Error('The ref_node to be inserted before is not a child ' +
-        'of this node');
+    if ((p !== undefined && p !== parent) ||
+      (p === undefined && parentNode(ref_node) !== parent)) {
+      throw Error(`Failed to execute 'insertBefore' on 'Node': The node ` +
+       `before which the new node is to be inserted is not a child of this node.`);
     }
+  }
+  if (ref_node === node) {
+    return node;
   }
   // remove node from its current position iff it's in a tree.
   if (node.nodeType !== Node.DOCUMENT_FRAGMENT_NODE) {

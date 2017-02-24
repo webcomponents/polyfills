@@ -823,6 +823,25 @@ suite('insertBefore', function() {
     assert.deepEqual(container.childNodes, [slot, b, before]);
   });
 
+  test('insertBefore no-ops when ref_node and node are the same', function() {
+    var e = document.createElement('div');
+    document.body.appendChild(e);
+    var div = document.createElement('div');
+    e.appendChild(div);
+    e.insertBefore(div, div);
+    assert.deepEqual(e.childNodes, [div]);
+  });
+
+  test('insertBefore throws when ref_node is not in parent', function() {
+    var e = document.createElement('div');
+    document.body.appendChild(e);
+    var div1 = document.createElement('div');
+    var div2 = document.createElement('div');
+    assert.throws(function() {
+      e.insertBefore(div1, div2);
+    });
+  });
+
 });
 
 suite('Accessors', function() {
