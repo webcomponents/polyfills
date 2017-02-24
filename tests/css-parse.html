@@ -96,6 +96,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
     .bar {}
   </style>
+
+  <style id="empty"></style>
 <script>
 
   function sanitizeCss(text) {
@@ -171,6 +173,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       assert.equal(t.rules[0].selector, '.foo .bar');
       assert.equal(t.rules[1].selector, '.foo .bar');
       assert.equal(t.rules[2].selector, '.foo .bar');
+    });
+
+    test('empty styles are are handled', function() {
+      var s = document.querySelector('#empty');
+      var t = window.CssParse.parse(s.textContent);
+      window.CssParse.stringify(t);
     });
 
   });
