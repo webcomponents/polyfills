@@ -765,7 +765,7 @@ suite('insertBefore', function() {
     // insertBefore ref_node a when it is not yet distributed.
     e.shadowRoot.insertBefore(b, a);
     ShadyDOM.flush();
-    assert.deepEqual(e.shadowRoot.childNodes, [s, b, a])
+    assert.sameMembers(e.shadowRoot.childNodes, [s, b, a])
   });
 
   test('insertBefore while ref_node undistributed', function() {
@@ -779,7 +779,7 @@ suite('insertBefore', function() {
     // insertBefore ref_node a when it is not yet distributed.
     e.insertBefore(b, a);
     ShadyDOM.flush();
-    assert.deepEqual(e.childNodes, [b, a])
+    assert.sameMembers(e.childNodes, [b, a])
   });
 
   test('insertBefore while ref_node in host not yet distributed', function() {
@@ -798,8 +798,8 @@ suite('insertBefore', function() {
     // insertBefore ref_node a when it is not yet distributed.
     e.insertBefore(b, a);
     ShadyDOM.flush();
-    assert.deepEqual(e.childNodes, [b, a])
-    assert.deepEqual(slot.assignedNodes(), [b, a]);
+    assert.sameMembers(e.childNodes, [b, a])
+    assert.sameMembers(slot.assignedNodes(), [b, a]);
   });
 
   test('insertBefore while ref_node in container not yet distributed', function() {
@@ -820,7 +820,7 @@ suite('insertBefore', function() {
     // insertBefore ref_node a when it is not yet distributed.
     container.insertBefore(b, before);
     ShadyDOM.flush();
-    assert.deepEqual(container.childNodes, [slot, b, before]);
+    assert.sameMembers(container.childNodes, [slot, b, before]);
   });
 
   test('insertBefore no-ops when ref_node and node are the same', function() {
@@ -829,7 +829,7 @@ suite('insertBefore', function() {
     var div = document.createElement('div');
     e.appendChild(div);
     e.insertBefore(div, div);
-    assert.deepEqual(e.childNodes, [div]);
+    assert.sameMembers(e.childNodes, [div]);
   });
 
   test('insertBefore throws when ref_node is not in parent', function() {
