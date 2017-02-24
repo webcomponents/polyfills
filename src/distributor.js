@@ -74,7 +74,7 @@ export default class {
       // only get logical parent.
       let parent = p.parentNode;
       if (parent && parent.shadyRoot &&
-          this.hasInsertionPoint(parent.shadyRoot)) {
+          parent.shadyRoot.hasInsertionPoint()) {
         dirtyRoots.push(parent.shadyRoot);
       }
     }

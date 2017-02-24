@@ -76,10 +76,10 @@ export function patchPrototype(obj, mixin) {
     let patchProto = Object.create(proto);
     patchProto.__sourceProto = proto;
     extend(patchProto, mixin);
-    proto.__patchProto = patchProto;
+    proto['__patchProto'] = patchProto;
   }
   // old browsers don't have setPrototypeOf
-  obj.__proto__ = proto.__patchProto;
+  obj.__proto__ = proto['__patchProto'];
 }
 
 

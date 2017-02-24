@@ -24,7 +24,7 @@ function addNode(container, node, ref_node) {
   if (ownerRoot) {
     // optimization: special insertion point tracking
     // TODO(sorvell): verify that the renderPending check here should not be needed.
-    if (node.__noInsertionPoint && !ownerRoot._changePending) {
+    if (node['__noInsertionPoint'] && !ownerRoot._changePending) {
       ownerRoot._skipUpdateInsertionPoints = true;
     }
     // note: we always need to see if an insertion point is added
@@ -43,7 +43,14 @@ function addNode(container, node, ref_node) {
   // TODO(sorvell): revisit flow since `ipAdded` needed here if
   // node is a fragment that has a patched QSA.
   let handled = _maybeDistribute(node, container, ownerRoot, ipAdded) ||
-    container.shadyRoot;
+    container.shadyRoot ||
+    // TODO(sorvell): we *should* consider the add "handled"
+    // if the container or ownerRoot is `_renderPending`.
+    // However, this will regress performance right now and is blocked on a
+    // fix for https://github.com/webcomponents/shadydom/issues/95
+    // handled if ref_node parent is a root that is rendering.
+    (ref_node && utils.isShadyRoot(ref_node.parentNode) &&
+      ref_node.parentNode._renderPending);
   return handled;
 }
 
@@ -77,7 +84,11 @@ function removeNode(node) {
   return distributed;
 }
 
-
+/**
+ * @param {Node} node
+ * @param {Node=} addedNode
+ * @param {Node=} removedNode
+ */
 function _scheduleObserver(node, addedNode, removedNode) {
   let observer = node.__shady && node.__shady.observer;
   if (observer) {
@@ -108,7 +119,11 @@ function _hasCachedOwnerRoot(node) {
   return Boolean(node.__ownerShadyRoot !== undefined);
 }
 
-export function getRootNode(node) {
+/**
+ * @param {Node} node
+ * @param {Object=} options
+ */
+export function getRootNode(node, options) { // eslint-disable-line no-unused-vars
   if (!node || !node.nodeType) {
     return;
   }
@@ -141,7 +156,7 @@ function _maybeDistribute(node, container, ownerRoot, ipAdded) {
   // and forces distribution.
   let insertionPointTag = ownerRoot && ownerRoot.getInsertionPointTag() || '';
   let fragContent = (node.nodeType === Node.DOCUMENT_FRAGMENT_NODE) &&
-    !node.__noInsertionPoint &&
+    !node['__noInsertionPoint'] &&
     insertionPointTag && node.querySelector(insertionPointTag);
   let wrappedContent = fragContent &&
     (fragContent.parentNode.nodeType !==
@@ -178,7 +193,7 @@ function _maybeAddInsertionPoint(node, parent, root) {
   let added;
   let insertionPointTag = root.getInsertionPointTag();
   if (node.nodeType === Node.DOCUMENT_FRAGMENT_NODE &&
-    !node.__noInsertionPoint) {
+    !node['__noInsertionPoint']) {
     let c$ = node.querySelectorAll(insertionPointTag);
     for (let i=0, n, np, na; (i<c$.length) && (n=c$[i]); i++) {
       np = n.parentNode;
@@ -284,6 +299,11 @@ function distributeAttributeChange(node, name) {
 // NOTE: `query` is used primarily for ShadyDOM's querySelector impl,
 // but it's also generally useful to recurse through the element tree
 // and is used by Polymer's styling system.
+/**
+ * @param {Node} node
+ * @param {Function} matcher
+ * @param {Function=} halter
+ */
 export function query(node, matcher, halter) {
   let list = [];
   _queryElements(node.childNodes, matcher,
@@ -323,11 +343,11 @@ let scopingShim = null;
 
 export function setAttribute(node, attr, value) {
   if (!scopingShim) {
-    scopingShim = window.ShadyCSS && window.ShadyCSS.ScopingShim;
+    scopingShim = window['ShadyCSS'] && window['ShadyCSS']['ScopingShim'];
   }
   // avoid scoping elements in non-main document to avoid template documents
   if (scopingShim && attr === 'class' && node.ownerDocument === document) {
-    scopingShim.setElementClass(node, value);
+    scopingShim['setElementClass'](node, value);
   } else {
     nativeMethods.setAttribute.call(node, attr, value);
     distributeAttributeChange(node, attr);
@@ -345,13 +365,22 @@ export function removeAttribute(node, attr) {
 // 2. container is a shadyRoot (don't distribute, instead set
 // container to container.host.
 // 3. node is <content> (host of container needs distribution)
+/**
+ * @param {Node} parent
+ * @param {Node} node
+ * @param {Node=} ref_node
+ */
 export function insertBefore(parent, node, ref_node) {
   if (ref_node) {
     let p = getProperty(ref_node, 'parentNode');
-    if (p !== undefined && p !== parent) {
-      throw Error('The ref_node to be inserted before is not a child ' +
-        'of this node');
+    if ((p !== undefined && p !== parent) ||
+      (p === undefined && parentNode(ref_node) !== parent)) {
+      throw Error(`Failed to execute 'insertBefore' on 'Node': The node ` +
+       `before which the new node is to be inserted is not a child of this node.`);
     }
+  }
+  if (ref_node === node) {
+    return node;
   }
   // remove node from its current position iff it's in a tree.
   if (node.nodeType !== Node.DOCUMENT_FRAGMENT_NODE) {
@@ -364,12 +393,11 @@ export function insertBefore(parent, node, ref_node) {
       let root = utils.ownerShadyRootForNode(ref_node);
       if (root) {
         ref_node = ref_node.localName === root.getInsertionPointTag() ?
-          firstComposedNode(ref_node) : ref_node;
+          firstComposedNode(/** @type {!HTMLSlotElement} */(ref_node)) : ref_node;
       }
     }
     // if adding to a shadyRoot, add to host instead
-    let container = utils.isShadyRoot(parent) ?
-      parent.host : parent;
+    let container = utils.isShadyRoot(parent) ? /** @type {ShadowRoot} */(parent).host : parent;
     if (ref_node) {
       nativeMethods.insertBefore.call(container, node, ref_node);
     } else {

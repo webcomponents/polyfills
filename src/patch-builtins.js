@@ -40,20 +40,32 @@ let nodeMixin = {
     return mutation.removeChild(this, node);
   },
 
+  /**
+   * @this {Node}
+   */
   replaceChild(node, ref_node) {
     this.insertBefore(node, ref_node);
     this.removeChild(ref_node);
     return node;
   },
 
+  /**
+   * @this {Node}
+   */
   cloneNode(deep) {
     return mutation.cloneNode(this, deep);
   },
 
+  /**
+   * @this {Node}
+   */
   getRootNode(options) {
     return mutation.getRootNode(this, options);
   },
 
+  /**
+   * @this {Node}
+   */
   get isConnected() {
     // Fast path for distributed nodes.
     const ownerDocument = this.ownerDocument;
@@ -63,7 +75,7 @@ let nodeMixin = {
 
     let node = this;
     while (node && !(node instanceof Document)) {
-      node = node.parentNode || (node instanceof ShadyRoot ? node.host : undefined);
+      node = node.parentNode || (node instanceof ShadyRoot ? /** @type {ShadowRoot} */(node).host : undefined);
     }
     return !!(node && node instanceof Document);
   }
@@ -72,6 +84,9 @@ let nodeMixin = {
 
 // NOTE: For some reason `Text` redefines `assignedSlot`
 let textMixin = {
+  /**
+   * @this {Text}
+   */
   get assignedSlot() {
     return getAssignedSlot(this);
   }
@@ -80,6 +95,9 @@ let textMixin = {
 let fragmentMixin = {
 
   // TODO(sorvell): consider doing native QSA and filtering results.
+  /**
+   * @this {DocumentFragment}
+   */
   querySelector(selector) {
     // match selector and halt on first result.
     let result = mutation.query(this, function(n) {
@@ -90,6 +108,9 @@ let fragmentMixin = {
     return result || null;
   },
 
+  /**
+   * @this {DocumentFragment}
+   */
   querySelectorAll(selector) {
     return mutation.query(this, function(n) {
       return utils.matchesSelector(n, selector);
@@ -100,6 +121,9 @@ let fragmentMixin = {
 
 let slotMixin = {
 
+  /**
+   * @this {HTMLSlotElement}
+   */
   assignedNodes(options) {
     if (this.localName === 'slot') {
       mutation.renderRootNode(this);
@@ -114,26 +138,44 @@ let slotMixin = {
 
 let elementMixin = utils.extendAll({
 
+  /**
+   * @this {HTMLElement}
+   */
   setAttribute(name, value) {
     mutation.setAttribute(this, name, value);
   },
 
+  /**
+   * @this {HTMLElement}
+   */
   removeAttribute(name) {
     mutation.removeAttribute(this, name);
   },
 
+  /**
+   * @this {HTMLElement}
+   */
   attachShadow(options) {
     return attachShadow(this, options);
   },
 
+  /**
+   * @this {HTMLElement}
+   */
   get slot() {
     return this.getAttribute('slot');
   },
 
+  /**
+   * @this {HTMLElement}
+   */
   set slot(value) {
     this.setAttribute('slot', value);
   },
 
+  /**
+   * @this {HTMLElement}
+   */
   get assignedSlot() {
     return getAssignedSlot(this);
   }
@@ -143,6 +185,9 @@ let elementMixin = utils.extendAll({
 Object.defineProperties(elementMixin, ShadowRootAccessor);
 
 let documentMixin = utils.extendAll({
+  /**
+   * @this {Document}
+   */
   importNode(node, deep) {
     return mutation.importNode(node, deep);
   }

@@ -81,7 +81,12 @@ let plaintextParents = makeSet([
   'noscript'
 ]);
 
-export function getOuterHTML(node, parentNode, composed) {
+/**
+ * @param {Node} node
+ * @param {Node} parentNode
+ * @param {Function=} callback
+ */
+export function getOuterHTML(node, parentNode, callback) {
   switch (node.nodeType) {
     case Node.ELEMENT_NODE: {
       let tagName = node.localName;
@@ -94,17 +99,17 @@ export function getOuterHTML(node, parentNode, composed) {
       if (voidElements[tagName]) {
         return s;
       }
-      return s + getInnerHTML(node, composed) + '</' + tagName + '>';
+      return s + getInnerHTML(node, callback) + '</' + tagName + '>';
     }
     case Node.TEXT_NODE: {
-      let data = node.data;
+      let data = /** @type {Text} */ (node).data;
       if (parentNode && plaintextParents[parentNode.localName]) {
         return data;
       }
       return escapeData(data);
     }
     case Node.COMMENT_NODE: {
-      return '<!--' + node.data + '-->';
+      return '<!--' + /** @type {Comment} */ (node).data + '-->';
     }
     default: {
       window.console.error(node);
@@ -113,14 +118,18 @@ export function getOuterHTML(node, parentNode, composed) {
   }
 }
 
-export function getInnerHTML(node, composed) {
+/**
+ * @param {Node} node
+ * @param {Function=} callback
+ */
+export function getInnerHTML(node, callback) {
   if (node.localName === 'template') {
-    node = node.content;
+    node =  /** @type {HTMLTemplateElement} */ (node).content;
   }
   let s = '';
-  let c$ = composed ? composed(node) : node.childNodes;
+  let c$ = callback ? callback(node) : node.childNodes;
   for (let i=0, l=c$.length, child; (i<l) && (child=c$[i]); i++) {
-    s += getOuterHTML(child, node, composed);
+    s += getOuterHTML(child, node, callback);
   }
   return s;
 }
