@@ -829,7 +829,7 @@ suite('insertBefore', function() {
     var div = document.createElement('div');
     e.appendChild(div);
     e.insertBefore(div, div);
-    assert.sameMembers(e.childNodes, [div]);
+    assert.sameMembers(Array.from(e.childNodes), [div]);
   });
 
   test('insertBefore throws when ref_node is not in parent', function() {
