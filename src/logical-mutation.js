@@ -44,6 +44,10 @@ function addNode(container, node, ref_node) {
   // node is a fragment that has a patched QSA.
   let handled = _maybeDistribute(node, container, ownerRoot, ipAdded) ||
     container.shadyRoot ||
+    // TODO(sorvell): we *should* consider the add "handled"
+    // if the container or ownerRoot is `_renderPending`.
+    // However, this will regress performance right now and is blocked on a
+    // fix for https://github.com/webcomponents/shadydom/issues/95
     // handled if ref_node parent is a root that is rendering.
     (ref_node && utils.isShadyRoot(ref_node.parentNode) &&
       ref_node.parentNode._renderPending);
