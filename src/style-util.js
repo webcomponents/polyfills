@@ -17,8 +17,12 @@ import {MEDIA_MATCH} from './common-regex';
 /**
  * @param {string|StyleNode} rules
  * @param {function(StyleNode)=} callback
+ * @return {string}
  */
 export function toCssText (rules, callback) {
+  if (!rules) {
+    return '';
+  }
   if (typeof rules === 'string') {
     rules = parse(rules);
   }
@@ -36,7 +40,7 @@ export function rulesForStyle(style) {
   if (!style['__cssRules'] && style.textContent) {
     style['__cssRules'] = parse(style.textContent);
   }
-  return style['__cssRules'];
+  return style['__cssRules'] || null;
 }
 
 // Tests if a rule is a keyframes selector, which looks almost exactly

@@ -17,8 +17,8 @@ import documentWait from './document-wait'
  */
 export let CustomStyleProvider;
 
-const PROCESSED_MARKER = '__processedByShadyCSS';
 const SEEN_MARKER = '__seenByShadyCSS';
+const CACHED_STYLE = '__shadyCSSCachedStyle';
 
 /** @type {?function(!HTMLStyleElement)} */
 let transformFn = null;
@@ -71,6 +71,9 @@ export default class CustomStyleInterface {
    * @return {HTMLStyleElement}
    */
   getStyleForCustomStyle(customStyle) {
+    if (customStyle[CACHED_STYLE]) {
+      return customStyle[CACHED_STYLE];
+    }
     let style;
     if (customStyle['getStyle']) {
       style = customStyle['getStyle']();
@@ -86,12 +89,11 @@ export default class CustomStyleInterface {
     let cs = this['customStyles'];
     for (let i = 0; i < cs.length; i++) {
       let customStyle = cs[i];
-      if (customStyle[PROCESSED_MARKER]) {
+      if (customStyle[CACHED_STYLE]) {
         continue;
       }
       let style = this.getStyleForCustomStyle(customStyle);
       if (style) {
-        customStyle[PROCESSED_MARKER] = true;
         // HTMLImports polyfill may have cloned the style into the main document,
         // which is referenced with __appliedElement.
         // Also, we must copy over the attributes.
@@ -102,9 +104,11 @@ export default class CustomStyleInterface {
             appliedStyle.setAttribute(attr.name, attr.value);
           }
         }
+        let styleToTransform = appliedStyle || style;
         if (transformFn) {
-          transformFn(appliedStyle || style);
+          transformFn(styleToTransform);
         }
+        customStyle[CACHED_STYLE] = styleToTransform;
       }
     }
     return cs;
