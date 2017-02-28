@@ -345,8 +345,7 @@ export function setAttribute(node, attr, value) {
   if (!scopingShim) {
     scopingShim = window['ShadyCSS'] && window['ShadyCSS']['ScopingShim'];
   }
-  // avoid scoping elements in non-main document to avoid template documents
-  if (scopingShim && attr === 'class' && node.ownerDocument === document) {
+  if (scopingShim && attr === 'class') {
     scopingShim['setElementClass'](node, value);
   } else {
     nativeMethods.setAttribute.call(node, attr, value);
