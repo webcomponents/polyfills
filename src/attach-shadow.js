@@ -252,6 +252,7 @@ ShadyRoot.prototype.getInsertionPointTag = function() {
   return this._distributor.insertionPointTag;
 }
 
+ShadyRoot.prototype['__insertionPoints'] = null;
 Object.defineProperty(ShadyRoot.prototype, '_insertionPoints', {
 
   /**

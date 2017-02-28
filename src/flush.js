@@ -32,4 +32,4 @@ export function flush() {
   return didFlush;
 }
 
-flush.list = flushList;
+flush['list'] = flushList;
