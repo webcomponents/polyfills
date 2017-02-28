@@ -53,8 +53,30 @@
       }
     },
 
+    fixUrlsInTemplates(element, base) {
+      const t$ = element.querySelectorAll('template');
+      for (let i = 0; i < t$.length; i++) {
+        Path.fixUrlsInTemplate(t$[i], base);
+      }
+    },
+
+    fixUrlsInTemplate(template, base) {
+      // If template is not supported, still resolve urls within it.
+      const content = template.content || template;
+      const n$ = content.querySelectorAll('style, [src], [style]');
+      for (let i = 0; i < n$.length; i++) {
+        const n = n$[i];
+        if (n.localName == 'style') {
+          Path.resolveUrlsInStyle(n, base);
+        } else {
+          Path.fixUrlAttributes(n, base);
+        }
+      }
+      Path.fixUrlsInTemplates(content, base);
+    },
+
     fixUrlAttributes(element, base) {
-      const attrs = ['action', 'src', 'href', 'url', 'style'];
+      const attrs = ['src', 'style'];
       for (let i = 0, a; i < attrs.length && (a = attrs[i]); i++) {
         const at = element.attributes[a];
         const v = at && at.value;
@@ -66,29 +88,6 @@
             Path.replaceAttrUrl(v, base);
         }
       }
-    },
-
-    fixUrlsInTemplates(element, base) {
-      const t$ = element.querySelectorAll('template');
-      for (let i = 0; i < t$.length; i++) {
-        Path.fixUrlsInTemplate(t$[i], base);
-      }
-    },
-
-    fixUrlsInTemplate(template, base) {
-      // If template is not supported, still resolve urls within it.
-      const content = template.content || template;
-      const n$ = content.querySelectorAll(
-        'style, form[action], [src], [href], [url], [style]');
-      for (let i = 0; i < n$.length; i++) {
-        const n = n$[i];
-        if (n.localName == 'style') {
-          Path.resolveUrlsInStyle(n, base);
-        } else {
-          Path.fixUrlAttributes(n, base);
-        }
-      }
-      Path.fixUrlsInTemplates(content, base);
     },
 
     resolveUrlsInStyle(style, linkUrl) {
