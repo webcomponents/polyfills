@@ -79,8 +79,3 @@ const customElements = {
 }
 window.customElements = customElements;
 
-/** @type {Object} */
-Node.prototype.__shady;
-
-/** @type {Array} */
-ShadowRoot.prototype._insertionPoints;

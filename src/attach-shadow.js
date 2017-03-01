@@ -101,17 +101,18 @@ ShadyRoot.prototype._rendererForHost = function() {
 
 ShadyRoot.prototype.render = function() {
   if (this._renderPending) {
-    this._getRenderRoot()._render();
+    this._getRenderRoot()['_render']();
   }
 }
 
-ShadyRoot.prototype._render = function() {
+// NOTE: avoid renaming to ease testability.
+ShadyRoot.prototype['_render'] = function() {
   this._renderPending = false;
   this._changePending = false;
   if (!this._skipUpdateInsertionPoints) {
     this.updateInsertionPoints();
   } else if (!this._hasRendered) {
-    this._insertionPoints = [];
+    this.__insertionPoints = [];
   }
   this._skipUpdateInsertionPoints = false;
   // TODO(sorvell): can add a first render optimization here
@@ -135,12 +136,12 @@ ShadyRoot.prototype.forceRender = function() {
 ShadyRoot.prototype.distribute = function() {
   let dirtyRoots = this._distributor.distribute();
   for (let i=0; i<dirtyRoots.length; i++) {
-    dirtyRoots[i]._render();
+    dirtyRoots[i]['_render']();
   }
 }
 
 ShadyRoot.prototype.updateInsertionPoints = function() {
-  let i$ = this['__insertionPoints'];
+  let i$ = this._insertionPoints;
   // if any insertion points have been removed, clear their distribution info
   if (i$) {
     for (let i=0, c; i < i$.length; i++) {
@@ -164,10 +165,6 @@ ShadyRoot.prototype.updateInsertionPoints = function() {
   }
 }
 
-ShadyRoot.prototype.hasInsertionPoint = function() {
-  return this._distributor.hasInsertionPoint();
-}
-
 ShadyRoot.prototype.compose = function() {
   // compose self
   // note: it's important to mark this clean before distribution
@@ -182,7 +179,7 @@ ShadyRoot.prototype.compose = function() {
 // based on logical distribution.
 ShadyRoot.prototype._composeTree = function() {
   this._updateChildNodes(this.host, this._composeNode(this.host));
-  let p$ = this._insertionPoints || [];
+  let p$ = this._getInsertionPoints();
   for (let i=0, l=p$.length, p, parent; (i<l) && (p=p$[i]); i++) {
     parent = p.parentNode;
     if ((parent !== this.host) && (parent !== this)) {
@@ -252,29 +249,16 @@ ShadyRoot.prototype.getInsertionPointTag = function() {
   return this._distributor.insertionPointTag;
 }
 
-ShadyRoot.prototype['__insertionPoints'] = null;
-Object.defineProperty(ShadyRoot.prototype, '_insertionPoints', {
+ShadyRoot.prototype.hasInsertionPoint = function() {
+  return Boolean(this._insertionPoints && this._insertionPoints.length);
+}
 
-  /**
-   * @this {ShadyRoot}
-   */
-  get: function() {
-    if (!this['__insertionPoints']) {
-      this.updateInsertionPoints();
-    }
-    return this['__insertionPoints'] || (this['__insertionPoints'] = []);
-  },
-
-  /**
-   * @this {ShadyRoot}
-   */
-  set: function(insertionPoints) {
-    this['__insertionPoints'] = insertionPoints;
-  },
-
-  configurable: true
-
-})
+ShadyRoot.prototype._getInsertionPoints = function() {
+  if (!this._insertionPoints) {
+    this.updateInsertionPoints();
+  }
+  return this._insertionPoints;
+}
 
 /**
   Implements a pared down version of ShadowDOM's scoping, which is easy to

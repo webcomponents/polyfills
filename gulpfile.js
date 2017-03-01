@@ -26,7 +26,7 @@ gulp.task('default', () => {
     .pipe(sourcemaps.init())
     .pipe(closureCompiler({
       new_type_inf: true,
-      compilation_level: 'SIMPLE',
+      compilation_level: 'ADVANCED',
       language_in: 'ES6_STRICT',
       language_out: 'ES5_STRICT',
       output_wrapper: '(function(){\n%output%\n}).call(self)',

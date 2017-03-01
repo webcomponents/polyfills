@@ -194,7 +194,7 @@ let documentMixin = utils.extendAll({
 }, fragmentMixin);
 
 Object.defineProperties(documentMixin, {
-  _activeElement: ActiveElementAccessor.activeElement
+  '_activeElement': ActiveElementAccessor.activeElement
 });
 
 function patchBuiltin(proto, obj) {
