@@ -29,13 +29,13 @@
 
     test('baseURI updated', function() {
       var rootLink = document.head.querySelector('link[rel=import]');
-      assert.equal(rootLink.href, rootLink.import.baseURI, 'baseURI ok');
+      assert.equal(rootLink.href, rootLink.import.baseURI, 'rootLink baseURI ok');
 
       var linkInA = rootLink.import.querySelector('link[rel=import]');
-      assert.equal(linkInA.href, linkInA.import.baseURI, 'baseURI ok');
+      assert.equal(linkInA.href, linkInA.import.baseURI, 'linkInA baseURI ok');
 
       var linkInB = linkInA.import.querySelector('link[rel=import]');
-      assert.equal(linkInB.href, linkInB.import.baseURI, 'baseURI ok');
+      assert.equal(linkInB.href, linkInB.import.baseURI, 'linkInB baseURI ok');
     });
 
     test('returns the correct import document', function() {
