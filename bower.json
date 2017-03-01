@@ -21,6 +21,7 @@
     "web-component-tester": "^5",
     "template": "webcomponents/template#master",
     "custom-elements": "webcomponents/custom-elements#master",
-    "webcomponents-platform": "webcomponents/webcomponents-platform#master"
+    "webcomponents-platform": "webcomponents/webcomponents-platform#master",
+    "shadycss": "webcomponents/shadycss#master"
   }
 }
