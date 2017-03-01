@@ -219,7 +219,7 @@ function _nodeNeedsDistribution(node) {
 
 function _removeDistributedChildren(root, container) {
   let hostNeedsDist;
-  let ip$ = root._insertionPoints;
+  let ip$ = root._getInsertionPoints();
   for (let i=0; i<ip$.length; i++) {
     let insertionPoint = ip$[i];
     if (_contains(container, insertionPoint)) {

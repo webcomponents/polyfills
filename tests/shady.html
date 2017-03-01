@@ -145,14 +145,14 @@ test('Reproject', function() {
     assert.strictEqual(getComposedHTML(host),
         '<div id="p">a: <a></a>b: <b slot="b"></b></div>');
 
-    assertArrayEqual(host.__shady.childNodes, [a]);
-    assert.strictEqual(a.__shady.parentNode, host);
-    assertArrayEqual(host.shadowRoot.__shady.childNodes, [p]);
-    assert.strictEqual(p.__shady.parentNode, host.shadowRoot);
-    assertArrayEqual(p.__shady.childNodes, [b, content]);
-    assert.strictEqual(b.__shady.parentNode, p);
-    assert.strictEqual(content.__shady.parentNode, p);
-    assertArrayEqual(p.shadowRoot.__shady.childNodes,
+    assertArrayEqual(host.childNodes, [a]);
+    assert.strictEqual(a.parentNode, host);
+    assertArrayEqual(host.shadowRoot.childNodes, [p]);
+    assert.strictEqual(p.parentNode, host.shadowRoot);
+    assertArrayEqual(p.childNodes, [b, content]);
+    assert.strictEqual(b.parentNode, p);
+    assert.strictEqual(content.parentNode, p);
+    assertArrayEqual(p.shadowRoot.childNodes,
         [textNodeA, contentA, textNodeB, contentB]);
   }
 

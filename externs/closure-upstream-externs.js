@@ -43,6 +43,12 @@ HTMLSlotElement.prototype.assignedNodes = function(options){};
 /** @type {HTMLSlotElement} */
 Node.prototype.assignedSlot;
 
+/** @type {boolean} */
+Node.prototype.isConnected;
+
+/** @type {string} */
+Element.prototype.slot;
+
 /** @constructor */
 function InputDeviceCapabilities(){}
 
@@ -73,5 +79,3 @@ const customElements = {
 }
 window.customElements = customElements;
 
-/** @type {Object} */
-Node.prototype.__shady;

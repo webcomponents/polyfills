@@ -314,7 +314,8 @@ export function addEventListener(type, fn, optionsOrCapture) {
 
   if (nonBubblingEventsToRetarget[type]) {
     this.__handlers = this.__handlers || {};
-    this.__handlers[type] = this.__handlers[type] || {capture: [], bubble: []};
+    this.__handlers[type] = this.__handlers[type] ||
+      {'capture': [], 'bubble': []};
     this.__handlers[type][capture ? 'capture' : 'bubble'].push(wrapperFn);
   } else {
     nativeAddEventListener.call(this, type, wrapperFn, optionsOrCapture);

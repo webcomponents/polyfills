@@ -33,17 +33,12 @@ export default class {
     return this.root.querySelectorAll(this.insertionPointTag);
   }
 
-  hasInsertionPoint() {
-    return Boolean(this.root._insertionPoints &&
-      this.root._insertionPoints.length);
-  }
-
   isInsertionPoint(node) {
     return node.localName && node.localName == this.insertionPointTag;
   }
 
   distribute() {
-    if (this.hasInsertionPoint()) {
+    if (this.root.hasInsertionPoint()) {
       return this.distributePool(this.root, this.collectPool());
     }
     return [];
@@ -65,7 +60,7 @@ export default class {
   // array where applicable.
   distributePool(node, pool) {
     let dirtyRoots = [];
-    let p$ = this.root._insertionPoints;
+    let p$ = this.root._getInsertionPoints();
     for (let i=0, l=p$.length, p; (i<l) && (p=p$[i]); i++) {
       this.distributeInsertionPoint(p, pool);
       // provoke redistribution on insertion point parents
