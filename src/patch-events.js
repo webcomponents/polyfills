@@ -16,8 +16,6 @@ import {addEventListener as nativeAddEventListener,
 
 // https://github.com/w3c/webcomponents/issues/513#issuecomment-224183937
 let alwaysComposed = {
-  blur: true,
-  focus: true,
   focusin: true,
   focusout: true,
   click: true,
