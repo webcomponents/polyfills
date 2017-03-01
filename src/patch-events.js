@@ -112,7 +112,8 @@ let eventMixin = {
    * @this {Event}
    */
   get composed() {
-    if (this.isTrusted && this.__composed === undefined) {
+    // isTrusted may not exist in this browser, so just check if isTrusted is explicitly false
+    if (this.isTrusted !== false && this.__composed === undefined) {
       this.__composed = alwaysComposed[this.type];
     }
     return this.__composed || false;
