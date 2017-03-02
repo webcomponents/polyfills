@@ -41,7 +41,7 @@ function addNode(container, node, ref_node) {
       ownerRoot._skipUpdateInsertionPoints = false;
     }
   }
-  if (container.__shady && container.__shady.firstChild) {
+  if (container.__shady && container.__shady.firstChild !== undefined) {
     logicalTree.recordInsertBefore(node, container, ref_node);
   }
   // if not distributing and not adding to host, do a fast path addition
