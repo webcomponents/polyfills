@@ -17,7 +17,7 @@ settings.hasNativeShadowDOM = Boolean(Element.prototype.attachShadow && Node.pro
 let desc = Object.getOwnPropertyDescriptor(Node.prototype, 'firstChild');
 
 settings.hasDescriptors = Boolean(desc && desc.configurable && desc.get);
-settings.inUse = settings.force || !settings.hasNativeShadowDOM;
+settings.inUse = settings['force'] || !settings.hasNativeShadowDOM;
 
 export function isShadyRoot(obj) {
   return Boolean(obj.__localName === 'ShadyRoot');

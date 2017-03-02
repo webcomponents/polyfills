@@ -34,7 +34,7 @@ gulp.task('default', () => {
       js_output_file: 'shadydom.min.js',
       warning_level: 'VERBOSE',
       rewrite_polyfills: false,
-      externs: 'externs/closure-upstream-externs.js'
+      externs: 'externs/shadydom.js'
     }))
     .pipe(size({showFiles: true, showTotal: false, gzip: true}))
     .pipe(sourcemaps.write('.'))

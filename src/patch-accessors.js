@@ -31,15 +31,17 @@ function clearNode(node) {
   }
 }
 
-const nativeInnerHTMLDesc =
+const nativeInnerHTMLDesc = /** @type {ObjectPropertyDescriptor} */(
   Object.getOwnPropertyDescriptor(Element.prototype, 'innerHTML') ||
-  Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'innerHTML');
+  Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'innerHTML'));
 
 const inertDoc = document.implementation.createHTMLDocument('inert');
 const htmlContainer = inertDoc.createElement('div');
 
-const nativeActiveElementDescriptor = Object.getOwnPropertyDescriptor(
-  Document.prototype, 'activeElement');
+const nativeActiveElementDescriptor =
+  /** @type {ObjectPropertyDescriptor} */(
+    Object.getOwnPropertyDescriptor(Document.prototype, 'activeElement')
+  );
 function getDocumentActiveElement() {
   if (nativeActiveElementDescriptor && nativeActiveElementDescriptor.get) {
     return nativeActiveElementDescriptor.get.call(document);

@@ -242,7 +242,7 @@ export function patchBuiltins() {
     patchAccessors(window.DocumentFragment.prototype);
     patchAccessors(window.Element.prototype);
     let nativeHTMLElement =
-      (window.customElements && customElements.nativeHTMLElement) ||
+      (window['customElements'] && window['customElements']['nativeHTMLElement']) ||
       HTMLElement;
     patchAccessors(nativeHTMLElement.prototype);
     patchAccessors(window.Document.prototype);

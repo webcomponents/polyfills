@@ -29,22 +29,23 @@ import {patchEvents} from './patch-events'
 import {ShadyRoot} from './attach-shadow'
 
 if (utils.settings.inUse) {
+  let ShadyDOM = {
+    // TODO(sorvell): remove when Polymer does not depend on this.
+    'inUse': utils.settings.inUse,
+    // TODO(sorvell): remove when Polymer does not depend on this
+    'patch': (node) => node,
+    'isShadyRoot': utils.isShadyRoot,
+    'enqueue': enqueue,
+    'flush': flush,
+    'settings': utils.settings,
+    'filterMutations': filterMutations,
+    'observeChildren': observeChildren,
+    'unobserveChildren': unobserveChildren,
+    'nativeMethods': nativeMethods,
+    'nativeTree': nativeTree
+  };
 
-  window['ShadyDOM'] = {};
-
-  // TODO(sorvell): remove when Polymer does not depend on this.
-  window['ShadyDOM']['inUse'] = utils.settings.inUse,
-  // TODO(sorvell): remove when Polymer does not depend on this.
-  window['ShadyDOM']['patch'] = function(node) { return node; };
-  window['ShadyDOM']['isShadyRoot'] = utils.isShadyRoot;
-  window['ShadyDOM']['enqueue'] = enqueue;
-  window['ShadyDOM']['flush'] = flush;
-  window['ShadyDOM']['settings'] = utils.settings;
-  window['ShadyDOM']['filterMutations'] = filterMutations;
-  window['ShadyDOM']['observeChildren'] = observeChildren;
-  window['ShadyDOM']['unobserveChildren'] = unobserveChildren;
-  window['ShadyDOM']['nativeMethods'] = nativeMethods;
-  window['ShadyDOM']['nativeTree'] = nativeTree;
+  window['ShadyDOM'] = ShadyDOM;
 
   // Apply patches to events...
   patchEvents();
