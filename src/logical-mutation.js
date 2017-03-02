@@ -11,13 +11,18 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 'use strict';
 
 import * as utils from './utils'
-import {getProperty, hasProperty} from './logical-properties'
 import * as logicalTree from './logical-tree'
 import * as nativeMethods from './native-methods'
 import {parentNode} from './native-tree'
 
-// Try to add node. Record logical info, track insertion points, perform
-// distribution iff needed. Return true if the add is handled.
+/**
+ * Try to add node. Record logical info, track insertion points, perform
+ * distribution iff needed. Return true if the add is handled.
+ * @param {Node} container
+ * @param {Node} node
+ * @param {Node} ref_node
+ * @return {boolean}
+ */
 function addNode(container, node, ref_node) {
   let ownerRoot = utils.ownerShadyRootForNode(container);
   let ipAdded;
@@ -36,7 +41,7 @@ function addNode(container, node, ref_node) {
       ownerRoot._skipUpdateInsertionPoints = false;
     }
   }
-  if (hasProperty(container, 'firstChild')) {
+  if (container.__shady && container.__shady.firstChild !== undefined) {
     logicalTree.recordInsertBefore(node, container, ref_node);
   }
   // if not distributing and not adding to host, do a fast path addition
@@ -54,14 +59,18 @@ function addNode(container, node, ref_node) {
   return handled;
 }
 
-// Try to remove node: update logical info and perform distribution iff
-// needed. Return true if the removal has been handled.
-// note that it's possible for both the node's host and its parent
-// to require distribution... both cases are handled here.
+
+/**
+ * Try to remove node: update logical info and perform distribution iff
+ * needed. Return true if the removal has been handled.
+ * note that it's possible for both the node's host and its parent
+ * to require distribution... both cases are handled here.
+ * @param {Node} node
+ * @return {boolean}
+ */
 function removeNode(node) {
   // important that we want to do this only if the node has a logical parent
-  let logicalParent = hasProperty(node, 'parentNode') &&
-    getProperty(node, 'parentNode');
+  let logicalParent = node.__shady && node.__shady.parentNode;
   let distributed;
   let ownerRoot = utils.ownerShadyRootForNode(node);
   if (logicalParent || ownerRoot) {
@@ -371,7 +380,7 @@ export function removeAttribute(node, attr) {
  */
 export function insertBefore(parent, node, ref_node) {
   if (ref_node) {
-    let p = getProperty(ref_node, 'parentNode');
+    let p = ref_node.__shady && ref_node.__shady.parentNode;
     if ((p !== undefined && p !== parent) ||
       (p === undefined && parentNode(ref_node) !== parent)) {
       throw Error(`Failed to execute 'insertBefore' on 'Node': The node ` +
@@ -383,7 +392,7 @@ export function insertBefore(parent, node, ref_node) {
   }
   // remove node from its current position iff it's in a tree.
   if (node.nodeType !== Node.DOCUMENT_FRAGMENT_NODE) {
-    let parent = getProperty(node, 'parentNode');
+    let parent = node.__shady && node.__shady.parentNode;
     removeNodeFromParent(node, parent);
   }
   if (!addNode(parent, node, ref_node)) {

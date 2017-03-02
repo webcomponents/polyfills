@@ -13,13 +13,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 import * as utils from './utils'
 import * as mutation from './logical-mutation'
 import {ActiveElementAccessor, ShadowRootAccessor, patchAccessors} from './patch-accessors'
-import {getProperty} from './logical-properties'
 import {addEventListener, removeEventListener} from './patch-events'
 import {attachShadow, ShadyRoot} from './attach-shadow'
 
 function getAssignedSlot(node) {
   mutation.renderRootNode(node);
-  return getProperty(node, 'assignedSlot') || null;
+  return node.__shady && node.__shady.assignedSlot || null;
 }
 
 let nodeMixin = {
@@ -242,7 +241,7 @@ export function patchBuiltins() {
     patchAccessors(window.DocumentFragment.prototype);
     patchAccessors(window.Element.prototype);
     let nativeHTMLElement =
-      (window.customElements && customElements.nativeHTMLElement) ||
+      (window['customElements'] && window['customElements']['nativeHTMLElement']) ||
       HTMLElement;
     patchAccessors(nativeHTMLElement.prototype);
     patchAccessors(window.Document.prototype);
