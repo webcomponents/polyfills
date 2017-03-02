@@ -304,6 +304,19 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <slot></slot>
 </template>
 
+<template id="self-test">
+  <style>
+    :host {
+      --border: 10px solid rgb(123, 123, 123);
+    }
+
+    a {
+      border: var(--border);
+    }
+  </style>
+  <a>I should be red.</a>
+</template>
+
 <script>
 (function() {
   function assertComputed(element, value, property, pseudo) {
@@ -686,6 +699,15 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       flush();
       assertComputed(e2, '2px');
       document.body.removeChild(e2);
+    });
+
+    test('self-use is supported', function() {
+      makeElement('self-test');
+      var e = document.createElement('self-test');
+      document.body.appendChild(e);
+      flush();
+      assertComputed(e.shadowRoot.firstElementChild, '10px');
+      document.body.removeChild(e);
     });
 
   });

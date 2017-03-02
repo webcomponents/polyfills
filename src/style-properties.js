@@ -303,7 +303,7 @@ class StyleProperties {
       return;
     }
     let {is, typeExtension} = StyleUtil.getIsExtends(scope);
-    let hostScope = scope.is ?
+    let hostScope = is ?
       StyleTransformer._calcHostScope(is, typeExtension) :
       'html';
     let parsedSelector = rule['parsedSelector'];
