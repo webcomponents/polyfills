@@ -191,7 +191,7 @@ ShadyRoot.prototype._composeTree = function() {
 // Returns the list of nodes which should be rendered inside `node`.
 ShadyRoot.prototype._composeNode = function(node) {
   let children = [];
-  let c$ = (node['__shadyRoot'] || node).childNodes;
+  let c$ = ((node.__shady && node.__shady.root) || node).childNodes;
   for (let i = 0; i < c$.length; i++) {
     let child = c$[i];
     if (this._distributor.isInsertionPoint(child)) {
