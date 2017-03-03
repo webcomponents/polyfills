@@ -345,13 +345,14 @@ export let ShadowRootAccessor = {
      * @this {HTMLElement}
      */
     get() {
-      return this.shadyRoot;
+      return this.__shady && this.__shady.root || null;
     },
     /**
      * @this {HTMLElement}
      */
     set(value) {
-      this.shadyRoot = value;
+      this.__shady = this.__shady || {};
+      this.__shady.root = value;
     },
     configurable: true
   }

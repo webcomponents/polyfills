@@ -37,3 +37,8 @@ Node.prototype.isConnected;
 
 /** @type {string} */
 Element.prototype.slot;
+
+/**
+ * @type {Object}
+ */
+Node.prototype.__shady;

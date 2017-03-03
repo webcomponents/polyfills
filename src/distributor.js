@@ -68,9 +68,9 @@ export default class {
       // scope invalidates their distribution.
       // only get logical parent.
       let parent = p.parentNode;
-      if (parent && parent.shadyRoot &&
-          parent.shadyRoot.hasInsertionPoint()) {
-        dirtyRoots.push(parent.shadyRoot);
+      let root = parent && parent.__shady && parent.__shady.root
+      if (root && root.hasInsertionPoint()) {
+        dirtyRoots.push(root);
       }
     }
     for (let i=0; i < pool.length; i++) {

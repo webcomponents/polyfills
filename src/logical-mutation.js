@@ -48,7 +48,7 @@ function addNode(container, node, ref_node) {
   // TODO(sorvell): revisit flow since `ipAdded` needed here if
   // node is a fragment that has a patched QSA.
   let handled = _maybeDistribute(node, container, ownerRoot, ipAdded) ||
-    container.shadyRoot ||
+    container.__shady.root ||
     // TODO(sorvell): we *should* consider the add "handled"
     // if the container or ownerRoot is `_renderPending`.
     // However, this will regress performance right now and is blocked on a
@@ -125,7 +125,7 @@ function removeNodeFromParent(node, logicalParent) {
 }
 
 function _hasCachedOwnerRoot(node) {
-  return Boolean(node.__ownerShadyRoot !== undefined);
+  return Boolean(node.__shady && node.__shady.ownerShadyRoot !== undefined);
 }
 
 /**
@@ -136,7 +136,8 @@ export function getRootNode(node, options) { // eslint-disable-line no-unused-va
   if (!node || !node.nodeType) {
     return;
   }
-  let root = node.__ownerShadyRoot;
+  node.__shady = node.__shady || {};
+  let root = node.__shady.ownerShadyRoot;
   if (root === undefined) {
     if (utils.isShadyRoot(node)) {
       root = node;
@@ -150,7 +151,7 @@ export function getRootNode(node, options) { // eslint-disable-line no-unused-va
     // If this happens and we cache the result, the value can become stale
     // because for perf we avoid processing the subtree of added fragments.
     if (document.documentElement.contains(node)) {
-      node.__ownerShadyRoot = root;
+      node.__shady.ownerShadyRoot = root;
     }
   }
   return root;
@@ -186,7 +187,8 @@ function _maybeDistribute(node, container, ownerRoot, ipAdded) {
   }
   let needsDist = _nodeNeedsDistribution(container);
   if (needsDist) {
-    updateRootViaContentChange(container.shadyRoot);
+    let root = container.__shady && container.__shady.root;
+    updateRootViaContentChange(root);
   }
   // Return true when distribution will fully handle the composition
   // Note that if a content was being inserted that was wrapped by a node,
@@ -222,8 +224,8 @@ function _maybeAddInsertionPoint(node, parent, root) {
 }
 
 function _nodeNeedsDistribution(node) {
-  return node && node.shadyRoot &&
-    node.shadyRoot.hasInsertionPoint();
+  let root = node && node.__shady && node.__shady.root;
+  return root && root.hasInsertionPoint();
 }
 
 function _removeDistributedChildren(root, container) {
@@ -263,7 +265,8 @@ function _removeOwnerShadyRoot(node) {
       _removeOwnerShadyRoot(n);
     }
   }
-  node.__ownerShadyRoot = undefined;
+  node.__shady = node.__shady || {};
+  node.__shady.ownerShadyRoot = undefined;
 }
 
 // TODO(sorvell): This will fail if distribution that affects this
@@ -283,7 +286,7 @@ function firstComposedNode(insertionPoint) {
 function maybeDistributeParent(node) {
   let parent = node.parentNode;
   if (_nodeNeedsDistribution(parent)) {
-    updateRootViaContentChange(parent.shadyRoot);
+    updateRootViaContentChange(parent.__shady.root);
     return true;
   }
 }
