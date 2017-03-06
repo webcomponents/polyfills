@@ -32,6 +32,18 @@ WCT = {waitFor: function (cb) {HTMLImports.whenReady(cb)}}
       border: 2px solid red;
     }
   }
+
+  </style>
+</custom-style>
+<custom-style>
+  <style>
+  :root {
+    --svg-icon: url("data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7");
+    --svg-icon-2: url("data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7");
+  }
+  .base64 {
+    background-image: var(--svg-icon);
+  }
   </style>
 </custom-style>
 
@@ -60,6 +72,8 @@ WCT = {waitFor: function (cb) {HTMLImports.whenReady(cb)}}
 
 <x-outer id="target"></x-outer>
 
+<div class="base64">base64</div>
+
 <script>
   suite('Custom Style upgrades', function() {
     suiteSetup(function() {
@@ -76,6 +90,10 @@ WCT = {waitFor: function (cb) {HTMLImports.whenReady(cb)}}
       var inner = target.shadowRoot.querySelector('x-inner');
       assert.equal(getComputedStyle(target).borderTopWidth.trim(), '2px');
       assert.equal(getComputedStyle(inner).borderTopWidth.trim(), '2px');
+    });
+    test('custom-style with base64 in variable', function() {
+      var target = document.querySelector('.base64');
+      assert.match(getComputedStyle(target).backgroundImage, /url\("?data\:image\/gif;base64,R0lGODlhAQABAIAAAAAAAP\/\/\/yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"?\)/);
     });
   });
 </script>
