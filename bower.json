@@ -24,5 +24,6 @@
     "custom-elements": "webcomponents/custom-elements#master",
     "shadydom": "webcomponents/shadydom#master",
     "webcomponents-platform": "webcomponents/webcomponents-platform#master"
-  }
+  },
+  "version": "1.0.0-rc.2"
 }
