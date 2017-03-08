@@ -64,17 +64,21 @@ class ApplyShimInterface {
   }
   flushCustomStyles() {
     this.ensure();
-    if (this.customStyleInterface) {
-      let styles = this.customStyleInterface['processStyles']();
-      for (let i = 0; i < styles.length; i++ ) {
-        let cs = styles[i];
-        let style = this.customStyleInterface['getStyleForCustomStyle'](cs);
-        if (style) {
-          applyShim.transformCustomStyle(style);
-        }
-      }
-      this.customStyleInterface['enqueued'] = false;
+    if (!this.customStyleInterface) {
+      return;
     }
+    let styles = this.customStyleInterface['processStyles']();
+    if (!this.customStyleInterface['enqueued']) {
+      return;
+    }
+    for (let i = 0; i < styles.length; i++ ) {
+      let cs = styles[i];
+      let style = this.customStyleInterface['getStyleForCustomStyle'](cs);
+      if (style) {
+        applyShim.transformCustomStyle(style);
+      }
+    }
+    this.customStyleInterface['enqueued'] = false;
   }
   /**
    * @param {HTMLElement} element
