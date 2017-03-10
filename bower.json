@@ -14,7 +14,10 @@
     "node_modules",
     "bower_components",
     "test",
-    "tests"
+    "tests",
+    "src",
+    "gulpfile.js",
+    "package.json"
   ],
   "devDependencies": {
     "web-component-tester": "^5",
