@@ -554,7 +554,7 @@
     if (element['__loaded']) {
       callback && callback();
     } else if (isImportLink(element) &&
-      ( /** @type {!HTMLLinkElement}*/ (element).import === null) ||
+      (!useNative && /** @type {!HTMLLinkElement}*/ (element).import === null) ||
       (element.import && /** @type {!HTMLLinkElement}*/ (element).import.readyState === 'complete')) {
       // This import has already been loaded but its __loaded property got removed. Ensure
       // we set it back!
