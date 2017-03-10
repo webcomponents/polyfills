@@ -553,6 +553,13 @@
   const whenElementLoaded = (element, callback) => {
     if (element['__loaded']) {
       callback && callback();
+    } else if (isImportLink(element) &&
+      ( /** @type {!HTMLLinkElement}*/ (element).import === null) ||
+      (element.import && /** @type {!HTMLLinkElement}*/ (element).import.readyState === 'complete')) {
+      // This import has already been loaded but its __loaded property got removed. Ensure
+      // we set it back!
+      element['__loaded'] = true;
+      callback && callback();
     } else if (element.localName === 'script' && !element.src) {
       // Inline scripts don't trigger load/error events, consider them already loaded.
       element['__loaded'] = true;
