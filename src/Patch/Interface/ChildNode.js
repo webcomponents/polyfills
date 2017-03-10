@@ -76,24 +76,46 @@ export default function(internals, destination, builtIn) {
      * @param {...(!Node|string)} nodes
      */
     function(...nodes) {
-      // TODO: Fix this for when one of `nodes` is a DocumentFragment!
-      const connectedBefore = /** @type {!Array<!Node>} */ (nodes.filter(node => {
-        // DocumentFragments are not connected and will not be added to the list.
-        return node instanceof Node && Utilities.isConnected(node);
-      }));
+      /**
+       * A copy of `nodes`, with any DocumentFragment replaced by its children.
+       * @type {!Array<!Node>}
+       */
+      const flattenedNodes = [];
+
+      /**
+       * Elements in `nodes` that were connected before this call.
+       * @type {!Array<!Node>}
+       */
+      const connectedElements = [];
+
+      for (var i = 0; i < nodes.length; i++) {
+        const node = nodes[i];
+
+        if (node instanceof Element && Utilities.isConnected(node)) {
+          connectedElements.push(node);
+        }
+
+        if (node instanceof DocumentFragment) {
+          for (let child = node.firstChild; child; child = child.nextSibling) {
+            flattenedNodes.push(child);
+          }
+        } else {
+          flattenedNodes.push(node);
+        }
+      }
 
       const wasConnected = Utilities.isConnected(this);
 
       builtIn.replaceWith.apply(this, nodes);
 
-      for (let i = 0; i < connectedBefore.length; i++) {
-        internals.disconnectTree(connectedBefore[i]);
+      for (let i = 0; i < connectedElements.length; i++) {
+        internals.disconnectTree(connectedElements[i]);
       }
 
       if (wasConnected) {
         internals.disconnectTree(this);
-        for (let i = 0; i < nodes.length; i++) {
-          const node = nodes[i];
+        for (let i = 0; i < flattenedNodes.length; i++) {
+          const node = flattenedNodes[i];
           if (node instanceof Element) {
             internals.connectTree(node);
           }
