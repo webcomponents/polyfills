@@ -18,93 +18,97 @@ let ChildNodeNativeMethods;
  */
 export default function(internals, destination, builtIn) {
   /**
-   * @param {...(!Node|string)} nodes
+   * @param {!function(...(!Node|string))} builtInMethod
+   * @return {!function(...(!Node|string))}
    */
-  destination['before'] = function(...nodes) {
-    // TODO: Fix this for when one of `nodes` is a DocumentFragment!
-    const connectedBefore = /** @type {!Array<!Node>} */ (nodes.filter(node => {
-      // DocumentFragments are not connected and will not be added to the list.
-      return node instanceof Node && Utilities.isConnected(node);
-    }));
+  function beforeAfterPatch(builtInMethod) {
+    return function(...nodes) {
+      /**
+       * A copy of `nodes`, with any DocumentFragment replaced by its children.
+       * @type {!Array<!Node>}
+       */
+      const flattenedNodes = [];
 
-    builtIn.before.apply(this, nodes);
+      /**
+       * Elements in `nodes` that were connected before this call.
+       * @type {!Array<!Node>}
+       */
+      const connectedElements = [];
 
-    for (let i = 0; i < connectedBefore.length; i++) {
-      internals.disconnectTree(connectedBefore[i]);
-    }
-
-    if (Utilities.isConnected(this)) {
-      for (let i = 0; i < nodes.length; i++) {
+      for (var i = 0; i < nodes.length; i++) {
         const node = nodes[i];
-        if (node instanceof Element) {
-          internals.connectTree(node);
+
+        if (node instanceof Element && Utilities.isConnected(node)) {
+          connectedElements.push(node);
+        }
+
+        if (node instanceof DocumentFragment) {
+          for (let child = node.firstChild; child; child = child.nextSibling) {
+            flattenedNodes.push(child);
+          }
+        } else {
+          flattenedNodes.push(node);
         }
       }
-    }
-  };
 
-  /**
-   * @param {...(!Node|string)} nodes
-   */
-  destination['after'] = function(...nodes) {
-    // TODO: Fix this for when one of `nodes` is a DocumentFragment!
-    const connectedBefore = /** @type {!Array<!Node>} */ (nodes.filter(node => {
-      // DocumentFragments are not connected and will not be added to the list.
-      return node instanceof Node && Utilities.isConnected(node);
-    }));
+      builtInMethod.apply(this, nodes);
 
-    builtIn.after.apply(this, nodes);
+      for (let i = 0; i < connectedElements.length; i++) {
+        internals.disconnectTree(connectedElements[i]);
+      }
 
-    for (let i = 0; i < connectedBefore.length; i++) {
-      internals.disconnectTree(connectedBefore[i]);
-    }
-
-    if (Utilities.isConnected(this)) {
-      for (let i = 0; i < nodes.length; i++) {
-        const node = nodes[i];
-        if (node instanceof Element) {
-          internals.connectTree(node);
+      if (Utilities.isConnected(this)) {
+        for (let i = 0; i < flattenedNodes.length; i++) {
+          const node = flattenedNodes[i];
+          if (node instanceof Element) {
+            internals.connectTree(node);
+          }
         }
       }
-    }
-  };
+    };
+  }
 
-  /**
-   * @param {...(!Node|string)} nodes
-   */
-  destination['replaceWith'] = function(...nodes) {
-    // TODO: Fix this for when one of `nodes` is a DocumentFragment!
-    const connectedBefore = /** @type {!Array<!Node>} */ (nodes.filter(node => {
-      // DocumentFragments are not connected and will not be added to the list.
-      return node instanceof Node && Utilities.isConnected(node);
-    }));
+  Utilities.setPropertyUnchecked(destination, 'before', beforeAfterPatch(builtIn.before));
+  Utilities.setPropertyUnchecked(destination, 'after', beforeAfterPatch(builtIn.after));
 
-    const wasConnected = Utilities.isConnected(this);
+  Utilities.setPropertyUnchecked(destination, 'replaceWith',
+    /**
+     * @param {...(!Node|string)} nodes
+     */
+    function(...nodes) {
+      // TODO: Fix this for when one of `nodes` is a DocumentFragment!
+      const connectedBefore = /** @type {!Array<!Node>} */ (nodes.filter(node => {
+        // DocumentFragments are not connected and will not be added to the list.
+        return node instanceof Node && Utilities.isConnected(node);
+      }));
 
-    builtIn.replaceWith.apply(this, nodes);
+      const wasConnected = Utilities.isConnected(this);
 
-    for (let i = 0; i < connectedBefore.length; i++) {
-      internals.disconnectTree(connectedBefore[i]);
-    }
+      builtIn.replaceWith.apply(this, nodes);
 
-    if (wasConnected) {
-      internals.disconnectTree(this);
-      for (let i = 0; i < nodes.length; i++) {
-        const node = nodes[i];
-        if (node instanceof Element) {
-          internals.connectTree(node);
+      for (let i = 0; i < connectedBefore.length; i++) {
+        internals.disconnectTree(connectedBefore[i]);
+      }
+
+      if (wasConnected) {
+        internals.disconnectTree(this);
+        for (let i = 0; i < nodes.length; i++) {
+          const node = nodes[i];
+          if (node instanceof Element) {
+            internals.connectTree(node);
+          }
         }
       }
-    }
-  };
+    });
 
-  destination['remove'] = function() {
-    const wasConnected = Utilities.isConnected(this);
+  Utilities.setPropertyUnchecked(destination, 'remove',
+    function() {
+      const wasConnected = Utilities.isConnected(this);
 
-    builtIn.remove.call(this);
+      builtIn.remove.call(this);
 
-    if (wasConnected) {
-      internals.disconnectTree(this);
-    }
-  };
+      if (wasConnected) {
+        internals.disconnectTree(this);
+      }
+    });
 };
