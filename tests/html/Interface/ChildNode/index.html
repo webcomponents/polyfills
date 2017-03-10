@@ -495,6 +495,45 @@ suite('ChildNode', function() {
         assert.equal(element2.disconnectedCallbackCount, 0);
     });
   });
+
+  suite('remove', function() {
+    let localName;
+    let constructor;
+    let connectedElement1;
+    let disconnectedElement1;
+
+    setup(function() {
+      localName = generateLocalName();
+      defineWithLocalName(localName);
+
+      connectedElement1 = document.createElement(localName);
+      document.body.appendChild(connectedElement1);
+
+      disconnectedElement1 = document.createElement(localName);
+      assert.equal(disconnectedElement1.connectedCallbackCount, 0);
+      assert.equal(disconnectedElement1.disconnectedCallbackCount, 0);
+    });
+
+    test('Removing a connected node calls `disconnectedCallback`.', function() {
+      assert.equal(connectedElement1.connectedCallbackCount, 1);
+      assert.equal(connectedElement1.disconnectedCallbackCount, 0);
+
+      connectedElement1.remove();
+
+      assert.equal(connectedElement1.connectedCallbackCount, 1);
+      assert.equal(connectedElement1.disconnectedCallbackCount, 1);
+    });
+
+    test('Removing a disconnected node does not call any callbacks.', function() {
+      assert.equal(disconnectedElement1.connectedCallbackCount, 0);
+      assert.equal(disconnectedElement1.disconnectedCallbackCount, 0);
+
+      disconnectedElement1.remove();
+
+      assert.equal(disconnectedElement1.connectedCallbackCount, 0);
+      assert.equal(disconnectedElement1.disconnectedCallbackCount, 0);
+    });
+  });
 });
 </script>
 </body>
