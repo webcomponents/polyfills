@@ -690,7 +690,9 @@
     // NOTE: a <link rel=import> will have `link.baseURI === link.href`, as the link
     // itself is used as the `import` document.
     const native_baseURI = Object.getOwnPropertyDescriptor(Node.prototype, 'baseURI');
-    Object.defineProperty(Node.prototype, 'baseURI', {
+    // NOTE: in safari9 baseURI is not configurable, so we set it on the Element prototype. 
+    const klass = !native_baseURI || native_baseURI.configurable ? Node : Element;
+    Object.defineProperty(klass.prototype, 'baseURI', {
       get() {
         const ownerDoc = /** @type {HTMLLinkElement} */ (isImportLink(this) ? this : importForElement(this));
         if (ownerDoc) return ownerDoc.href;
