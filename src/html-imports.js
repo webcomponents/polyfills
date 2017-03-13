@@ -49,55 +49,9 @@
           Path.replaceAttrUrl(element.getAttribute('src'), base));
       }
       if (element.localName === 'style') {
-        Path.resolveUrlsInStyle(element, base);
+        const r = Path.replaceUrls(element.textContent, base, CSS_URL_REGEXP);
+        element.textContent = Path.replaceUrls(r, base, CSS_IMPORT_REGEXP);
       }
-    },
-
-    fixUrlsInTemplates(element, base) {
-      const t$ = element.querySelectorAll('template');
-      for (let i = 0; i < t$.length; i++) {
-        Path.fixUrlsInTemplate(t$[i], base);
-      }
-    },
-
-    fixUrlsInTemplate(template, base) {
-      // If template is not supported, still resolve urls within it.
-      const content = template.content || template;
-      const n$ = content.querySelectorAll('style, [src], [style]');
-      for (let i = 0; i < n$.length; i++) {
-        const n = n$[i];
-        if (n.localName == 'style') {
-          Path.resolveUrlsInStyle(n, base);
-        } else {
-          Path.fixUrlAttributes(n, base);
-        }
-      }
-      Path.fixUrlsInTemplates(content, base);
-    },
-
-    fixUrlAttributes(element, base) {
-      const attrs = ['src', 'style'];
-      for (let i = 0, a; i < attrs.length && (a = attrs[i]); i++) {
-        const at = element.attributes[a];
-        const v = at && at.value;
-        // Skip bound attribute values (assume binding is done via {} and []).
-        // TODO(valdrin) consider exposing a library-implementable hook.
-        if (v && (v.search(/({{|\[\[)/) < 0)) {
-          at.value = (a === 'style') ?
-            Path.resolveUrlsInCssText(v, base) :
-            Path.replaceAttrUrl(v, base);
-        }
-      }
-    },
-
-    resolveUrlsInStyle(style, linkUrl) {
-      style.textContent = Path.resolveUrlsInCssText(style.textContent, linkUrl);
-    },
-
-    resolveUrlsInCssText(cssText, linkUrl) {
-      let r = Path.replaceUrls(cssText, linkUrl, CSS_URL_REGEXP);
-      r = Path.replaceUrls(r, linkUrl, CSS_IMPORT_REGEXP);
-      return r;
     },
 
     replaceUrls(text, linkUrl, regexp) {
@@ -362,7 +316,6 @@
           inlineScriptIndex++;
         }
       }
-      Path.fixUrlsInTemplates(content, url);
       return content;
     }
 
@@ -590,6 +543,13 @@
    */
   const whenElementLoaded = (element, callback) => {
     if (element['__loaded']) {
+      callback && callback();
+    } else if (isImportLink(element) &&
+      (!useNative && /** @type {!HTMLLinkElement}*/ (element).import === null) ||
+      (element.import && /** @type {!HTMLLinkElement}*/ (element).import.readyState === 'complete')) {
+      // This import has already been loaded but its __loaded property got removed. Ensure
+      // we set it back!
+      element['__loaded'] = true;
       callback && callback();
     } else if (element.localName === 'script' && !element.src) {
       // Inline scripts don't trigger load/error events, consider them already loaded.
