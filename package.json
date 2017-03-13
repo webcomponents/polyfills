@@ -3,6 +3,16 @@
   "version": "0.0.1",
   "description": "shadydom.js",
   "main": "shadydom.min.js",
+  "keywords": [
+    "shady-dom",
+    "shadydom",
+    "shadow-dom",
+    "shadowdom",
+    "web-components",
+    "webcomponents",
+    "polyfill",
+    "shim"
+  ],
   "directories": {
     "test": "tests"
   },
