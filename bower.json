@@ -9,7 +9,7 @@
   "keywords": [
     "webcomponents"
   ],
-  "homepage": "https://github.com/webcomponents/shadydom",
+  "homepage": "https://webcomponents.org/polyfills",
   "ignore": [
     "**/.*",
     "node_modules",
