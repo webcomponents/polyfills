@@ -27,7 +27,7 @@
     "build": "gulp",
     "test": "wct"
   },
-  "homepage": "http://webcomponents.org",
+  "homepage": "https://webcomponents.org/polyfills",
   "devDependencies": {
     "google-closure-compiler": "20170124.0.0",
     "gulp": "^3.8.8",
