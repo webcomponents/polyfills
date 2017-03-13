@@ -1,7 +1,7 @@
 {
   "name": "@webcomponents/shadydom",
   "version": "0.0.1",
-  "description": "shadydom.js",
+  "description": "Shadow DOM polyfill",
   "main": "shadydom.min.js",
   "directories": {
     "test": "tests"
