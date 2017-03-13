@@ -7,7 +7,14 @@
   ],
   "license": "BSD-3-Clause",
   "keywords": [
-    "webcomponents"
+    "shady-dom",
+    "shadydom",
+    "shadow-dom",
+    "shadowdom",
+    "web-components",
+    "webcomponents",
+    "polyfill",
+    "shim"
   ],
   "homepage": "https://github.com/webcomponents/shadydom",
   "ignore": [
