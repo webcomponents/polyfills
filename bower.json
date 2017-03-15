@@ -14,7 +14,10 @@
     "node_modules",
     "bower_components",
     "test",
-    "tests"
+    "tests",
+    "src",
+    "gulpfile.js",
+    "package.json"
   ],
   "devDependencies": {
     "web-component-tester": "^5",
@@ -24,5 +27,6 @@
     "custom-elements": "webcomponents/custom-elements#master",
     "shadydom": "webcomponents/shadydom#master",
     "webcomponents-platform": "webcomponents/webcomponents-platform#master"
-  }
+  },
+  "version": "1.0.0-rc.2"
 }
