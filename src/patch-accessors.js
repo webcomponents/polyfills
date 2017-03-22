@@ -123,7 +123,7 @@ let OutsideAccessors = {
      * @this {HTMLElement}
      */
     get() {
-      return this.getAttribute('class');
+      return this.getAttribute('class') || '';
     },
     /**
      * @this {HTMLElement}
