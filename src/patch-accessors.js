@@ -105,7 +105,7 @@ let OutsideAccessors = {
      */
     get() {
       let className =  this.getAttribute('class');
-      return this.getAttribute('class') ? className : '';
+      return className ? className : '';
     },
     /**
      * @this {HTMLElement}
