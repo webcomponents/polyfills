@@ -10,14 +10,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 'use strict';
 
-export let settings = window.ShadyDOM || {};
+export let settings = window['ShadyDOM'] || {};
 
 settings.hasNativeShadowDOM = Boolean(Element.prototype.attachShadow && Node.prototype.getRootNode);
 
 let desc = Object.getOwnPropertyDescriptor(Node.prototype, 'firstChild');
 
 settings.hasDescriptors = Boolean(desc && desc.configurable && desc.get);
-settings.inUse = settings.force || !settings.hasNativeShadowDOM;
+settings.inUse = settings['force'] || !settings.hasNativeShadowDOM;
 
 export function isShadyRoot(obj) {
   return Boolean(obj.__localName === 'ShadyRoot');
@@ -76,10 +76,10 @@ export function patchPrototype(obj, mixin) {
     let patchProto = Object.create(proto);
     patchProto.__sourceProto = proto;
     extend(patchProto, mixin);
-    proto.__patchProto = patchProto;
+    proto['__patchProto'] = patchProto;
   }
   // old browsers don't have setPrototypeOf
-  obj.__proto__ = proto.__patchProto;
+  obj.__proto__ = proto['__patchProto'];
 }
 
 

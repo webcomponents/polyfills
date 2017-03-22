@@ -1,7 +1,7 @@
 {
   "name": "@webcomponents/shadydom",
   "version": "0.0.1",
-  "description": "shadydom.js",
+  "description": "Shadow DOM polyfill",
   "main": "shadydom.min.js",
   "directories": {
     "test": "tests"
@@ -22,12 +22,12 @@
   "devDependencies": {
     "eslint": "^3.4.0",
     "eslint-plugin-html": "^2.0.0",
-    "google-closure-compiler": "^20170124.0.0",
+    "google-closure-compiler": "^20170218.0.0",
     "gulp": "^3.8.8",
     "gulp-rename": "^1.2.2",
     "gulp-rollup": "^2.5.1",
     "gulp-size": "^2.1.0",
-    "gulp-sourcemaps": "^1.6.0",
+    "gulp-sourcemaps": "^2.4.1",
     "web-component-tester": "^6.0.0-prerelease.4"
   }
 }

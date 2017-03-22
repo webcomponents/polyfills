@@ -11,14 +11,30 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <html>
 <head>
   <meta charset="utf-8">
-  <script src="../../web-component-tester/browser.js"></script>
+  <script src="../../webcomponents-platform/webcomponents-platform.js"></script>
+  <script src="../../template/template.js"></script>
   <script>
     ShadyDOM = {force: true};
     if (window.customElements) {
       customElements.forcePolyfill = true;
     }
   </script>
-  <script src="../../webcomponentsjs/webcomponents-lite.js"></script>
+  <script src="../shadydom.min.js"></script>
+  <script src="../../custom-elements/custom-elements.min.js"></script>
+  <script>
+    // Ensure customElements are updated when document is ready.
+    if (customElements.polyfillWrapFlushCallback) {
+      customElements.polyfillWrapFlushCallback(function(cb) {
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', cb);
+        } else {
+          cb();
+        }
+      });
+    }
+  </script>
+
+  <script src="../../web-component-tester/browser.js"></script>
 </head>
 <body>
 
@@ -726,6 +742,104 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     var assignedNodes = echo.shadowRoot.firstElementChild.assignedNodes();
     assert.equal(assignedNodes[0].localName, 'x-stamps-peer');
     assert.equal(assignedNodes[1].id, 'peer');
+  });
+
+});
+
+suite('insertBefore', function() {
+  test('insertBefore while ref_node in shadowRoot not yet distributed', function() {
+    var e = document.createElement('div');
+    document.body.appendChild(e);
+    e.attachShadow({mode: 'open'});
+    ShadyDOM.flush();
+    var frag = document.createDocumentFragment();
+    var s = document.createElement('slot');
+    var a = document.createElement('div');
+    frag.appendChild(s);
+    frag.appendChild(a);
+    // 1. append fragment with <slot> and ref_node a
+    // 2. because of the <slot>, the root will distribute and not do fast path insertion
+    // 3. this leaves node a in outer space until distribution.
+    e.shadowRoot.appendChild(frag);
+    var b = document.createElement('div');
+    // insertBefore ref_node a when it is not yet distributed.
+    e.shadowRoot.insertBefore(b, a);
+    ShadyDOM.flush();
+    assert.sameMembers(e.shadowRoot.childNodes, [s, b, a])
+  });
+
+  test('insertBefore while ref_node undistributed', function() {
+    var e = document.createElement('div');
+    document.body.appendChild(e);
+    e.attachShadow({mode: 'open'});
+    ShadyDOM.flush();
+    var a = document.createElement('div');
+    e.appendChild(a);
+    var b = document.createElement('div');
+    // insertBefore ref_node a when it is not yet distributed.
+    e.insertBefore(b, a);
+    ShadyDOM.flush();
+    assert.sameMembers(e.childNodes, [b, a])
+  });
+
+  test('insertBefore while ref_node in host not yet distributed', function() {
+    var e = document.createElement('div');
+    document.body.appendChild(e);
+    var frag = document.createDocumentFragment();
+    frag.appendChild(document.createElement('div'));
+    var slot = document.createElement('slot');
+    frag.firstChild.appendChild(slot);
+    e.attachShadow({mode: 'open'});
+    e.shadowRoot.appendChild(frag);
+    ShadyDOM.flush();
+    var a = document.createElement('div');
+    e.appendChild(a);
+    var b = document.createElement('div');
+    // insertBefore ref_node a when it is not yet distributed.
+    e.insertBefore(b, a);
+    ShadyDOM.flush();
+    assert.sameMembers(e.childNodes, [b, a])
+    assert.sameMembers(slot.assignedNodes(), [b, a]);
+  });
+
+  test('insertBefore while ref_node in container not yet distributed', function() {
+    var e = document.createElement('div');
+    document.body.appendChild(e);
+    var frag = document.createDocumentFragment();
+    var container = document.createElement('div');
+    frag.appendChild(container);
+    var slot = document.createElement('slot');
+    container.appendChild(slot);
+    var before = document.createElement('div');
+    container.appendChild(before);
+    e.attachShadow({mode: 'open'});
+    e.shadowRoot.appendChild(frag);
+    ShadyDOM.flush();
+    // inserting into container that includes a slot before distribution
+    var b = document.createElement('div');
+    // insertBefore ref_node a when it is not yet distributed.
+    container.insertBefore(b, before);
+    ShadyDOM.flush();
+    assert.sameMembers(container.childNodes, [slot, b, before]);
+  });
+
+  test('insertBefore no-ops when ref_node and node are the same', function() {
+    var e = document.createElement('div');
+    document.body.appendChild(e);
+    var div = document.createElement('div');
+    e.appendChild(div);
+    e.insertBefore(div, div);
+    assert.sameMembers(Array.from(e.childNodes), [div]);
+  });
+
+  test('insertBefore throws when ref_node is not in parent', function() {
+    var e = document.createElement('div');
+    document.body.appendChild(e);
+    var div1 = document.createElement('div');
+    var div2 = document.createElement('div');
+    assert.throws(function() {
+      e.insertBefore(div1, div2);
+    });
   });
 
 });

@@ -16,52 +16,50 @@ import {addEventListener as nativeAddEventListener,
 
 // https://github.com/w3c/webcomponents/issues/513#issuecomment-224183937
 let alwaysComposed = {
-  blur: true,
-  focus: true,
-  focusin: true,
-  focusout: true,
-  click: true,
-  dblclick: true,
-  mousedown: true,
-  mouseenter: true,
-  mouseleave: true,
-  mousemove: true,
-  mouseout: true,
-  mouseover: true,
-  mouseup: true,
-  wheel: true,
-  beforeinput: true,
-  input: true,
-  keydown: true,
-  keyup: true,
-  compositionstart: true,
-  compositionupdate: true,
-  compositionend: true,
-  touchstart: true,
-  touchend: true,
-  touchmove: true,
-  touchcancel: true,
-  pointerover: true,
-  pointerenter: true,
-  pointerdown: true,
-  pointermove: true,
-  pointerup: true,
-  pointercancel: true,
-  pointerout: true,
-  pointerleave: true,
-  gotpointercapture: true,
-  lostpointercapture: true,
-  dragstart: true,
-  drag: true,
-  dragenter: true,
-  dragleave: true,
-  dragover: true,
-  drop: true,
-  dragend: true,
-  DOMActivate: true,
-  DOMFocusIn: true,
-  DOMFocusOut: true,
-  keypress: true
+  'focusin': true,
+  'focusout': true,
+  'click': true,
+  'dblclick': true,
+  'mousedown': true,
+  'mouseenter': true,
+  'mouseleave': true,
+  'mousemove': true,
+  'mouseout': true,
+  'mouseover': true,
+  'mouseup': true,
+  'wheel': true,
+  'beforeinput': true,
+  'input': true,
+  'keydown': true,
+  'keyup': true,
+  'compositionstart': true,
+  'compositionupdate': true,
+  'compositionend': true,
+  'touchstart': true,
+  'touchend': true,
+  'touchmove': true,
+  'touchcancel': true,
+  'pointerover': true,
+  'pointerenter': true,
+  'pointerdown': true,
+  'pointermove': true,
+  'pointerup': true,
+  'pointercancel': true,
+  'pointerout': true,
+  'pointerleave': true,
+  'gotpointercapture': true,
+  'lostpointercapture': true,
+  'dragstart': true,
+  'drag': true,
+  'dragenter': true,
+  'dragleave': true,
+  'dragover': true,
+  'drop': true,
+  'dragend': true,
+  'DOMActivate': true,
+  'DOMFocusIn': true,
+  'DOMFocusOut': true,
+  'keypress': true
 };
 
 function pathComposer(startNode, composed) {
@@ -108,25 +106,38 @@ function retarget(refNode, path) {
 
 let eventMixin = {
 
+  /**
+   * @this {Event}
+   */
   get composed() {
-    if (this.isTrusted && this.__composed === undefined) {
+    // isTrusted may not exist in this browser, so just check if isTrusted is explicitly false
+    if (this.isTrusted !== false && this.__composed === undefined) {
       this.__composed = alwaysComposed[this.type];
     }
     return this.__composed || false;
   },
 
+  /**
+   * @this {Event}
+   */
   composedPath() {
     if (!this.__composedPath) {
-      this.__composedPath = pathComposer(this.__target, this.composed);
+      this.__composedPath = pathComposer(this['__target'], this.composed);
     }
     return this.__composedPath;
   },
 
+  /**
+   * @this {Event}
+   */
   get target() {
     return retarget(this.currentTarget, this.composedPath());
   },
 
   // http://w3c.github.io/webcomponents/spec/shadow/#event-relatedtarget-retargeting
+  /**
+   * @this {Event}
+   */
   get relatedTarget() {
     if (!this.__relatedTarget) {
       return null;
@@ -137,10 +148,16 @@ let eventMixin = {
     // find the deepest node in relatedTarget composed path that is in the same root with the currentTarget
     return retarget(this.currentTarget, this.__relatedTargetComposedPath);
   },
+  /**
+   * @this {Event}
+   */
   stopPropagation() {
     Event.prototype.stopPropagation.call(this);
     this.__propagationStopped = true;
   },
+  /**
+   * @this {Event}
+   */
   stopImmediatePropagation() {
     Event.prototype.stopImmediatePropagation.call(this);
     this.__immediatePropagationStopped = true;
@@ -154,7 +171,7 @@ function mixinComposedFlag(Base) {
   // try to do `Base.call` with a dom construtor.
   let klazz = function(type, options) {
     let event = new Base(type, options);
-    event.__composed = options && Boolean(options.composed);
+    event.__composed = options && Boolean(options['composed']);
     return event;
   }
   // put constructor properties on subclass
@@ -164,9 +181,10 @@ function mixinComposedFlag(Base) {
 }
 
 let nonBubblingEventsToRetarget = {
-  focus: true,
-  blur: true
+  'focus': true,
+  'blur': true
 };
+
 
 function fireHandlers(event, node, phase) {
   let hs = node.__handlers && node.__handlers[event.type] &&
@@ -221,6 +239,24 @@ function retargetNonBubblingEvent(e) {
   }
 }
 
+function listenerSettingsEqual(savedListener, node, type, capture, once, passive) {
+  let {
+    node: savedNode,
+    type: savedType,
+    capture: savedCapture,
+    once: savedOnce,
+    passive: savedPassive
+  } = savedListener;
+  return node === savedNode &&
+    type === savedType &&
+    capture === savedCapture &&
+    once === savedOnce &&
+    passive === savedPassive;
+}
+
+/**
+ * @this {Event}
+ */
 export function addEventListener(type, fn, optionsOrCapture) {
   if (!fn) {
     return;
@@ -245,11 +281,7 @@ export function addEventListener(type, fn, optionsOrCapture) {
   if (fn.__eventWrappers) {
     // Stop if the wrapper function has already been created.
     for (let i = 0; i < fn.__eventWrappers.length; i++) {
-      if (fn.__eventWrappers[i].node === this &&
-          fn.__eventWrappers[i].type === type &&
-          fn.__eventWrappers[i].capture === capture &&
-          fn.__eventWrappers[i].once === once &&
-          fn.__eventWrappers[i].passive === passive) {
+      if (listenerSettingsEqual(fn.__eventWrappers[i], this, type, capture, once, passive)) {
         return;
       }
     }
@@ -257,12 +289,15 @@ export function addEventListener(type, fn, optionsOrCapture) {
     fn.__eventWrappers = [];
   }
 
+  /**
+   * @this {HTMLElement}
+   */
   const wrapperFn = function(e) {
     // Support `once` option.
     if (once) {
       this.removeEventListener(type, fn, optionsOrCapture);
     }
-    if (!e.__target) {
+    if (!e['__target']) {
       patchEvent(e);
     }
     // There are two critera that should stop events from firing on this node
@@ -275,7 +310,7 @@ export function addEventListener(type, fn, optionsOrCapture) {
           return;
         }
       }
-      return fn(e);
+      return fn.call(this, e);
     }
   };
   // Store the wrapper information.
@@ -290,13 +325,17 @@ export function addEventListener(type, fn, optionsOrCapture) {
 
   if (nonBubblingEventsToRetarget[type]) {
     this.__handlers = this.__handlers || {};
-    this.__handlers[type] = this.__handlers[type] || {capture: [], bubble: []};
+    this.__handlers[type] = this.__handlers[type] ||
+      {'capture': [], 'bubble': []};
     this.__handlers[type][capture ? 'capture' : 'bubble'].push(wrapperFn);
   } else {
     nativeAddEventListener.call(this, type, wrapperFn, optionsOrCapture);
   }
 }
 
+/**
+ * @this {Event}
+ */
 export function removeEventListener(type, fn, optionsOrCapture) {
   if (!fn) {
     return;
@@ -317,11 +356,7 @@ export function removeEventListener(type, fn, optionsOrCapture) {
   let wrapperFn = undefined;
   if (fn.__eventWrappers) {
     for (let i = 0; i < fn.__eventWrappers.length; i++) {
-      if (fn.__eventWrappers[i].node === this &&
-          fn.__eventWrappers[i].type === type &&
-          fn.__eventWrappers[i].capture === capture &&
-          fn.__eventWrappers[i].once === once &&
-          fn.__eventWrappers[i].passive === passive) {
+      if (listenerSettingsEqual(fn.__eventWrappers[i], this, type, capture, once, passive)) {
         wrapperFn = fn.__eventWrappers.splice(i, 1)[0].wrapperFn;
         // Cleanup.
         if (!fn.__eventWrappers.length) {
@@ -346,17 +381,16 @@ export function removeEventListener(type, fn, optionsOrCapture) {
 function activateFocusEventOverrides() {
   for (let ev in nonBubblingEventsToRetarget) {
     window.addEventListener(ev, function(e) {
-      if (!e.__target) {
+      if (!e['__target']) {
         patchEvent(e);
         retargetNonBubblingEvent(e);
-        e.stopImmediatePropagation();
       }
     }, true);
   }
 }
 
 function patchEvent(event) {
-  event.__target = event.target;
+  event['__target'] = event.target;
   event.__relatedTarget = event.relatedTarget;
   // patch event prototype if we can
   if (utils.settings.hasDescriptors) {

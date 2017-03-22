@@ -11,20 +11,25 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 'use strict';
 
 import * as utils from './utils'
-import {getProperty, hasProperty} from './logical-properties'
 import * as logicalTree from './logical-tree'
 import * as nativeMethods from './native-methods'
 import {parentNode} from './native-tree'
 
-// Try to add node. Record logical info, track insertion points, perform
-// distribution iff needed. Return true if the add is handled.
+/**
+ * Try to add node. Record logical info, track insertion points, perform
+ * distribution iff needed. Return true if the add is handled.
+ * @param {Node} container
+ * @param {Node} node
+ * @param {Node} ref_node
+ * @return {boolean}
+ */
 function addNode(container, node, ref_node) {
   let ownerRoot = utils.ownerShadyRootForNode(container);
   let ipAdded;
   if (ownerRoot) {
     // optimization: special insertion point tracking
     // TODO(sorvell): verify that the renderPending check here should not be needed.
-    if (node.__noInsertionPoint && !ownerRoot._changePending) {
+    if (node['__noInsertionPoint'] && !ownerRoot._changePending) {
       ownerRoot._skipUpdateInsertionPoints = true;
     }
     // note: we always need to see if an insertion point is added
@@ -36,25 +41,36 @@ function addNode(container, node, ref_node) {
       ownerRoot._skipUpdateInsertionPoints = false;
     }
   }
-  if (hasProperty(container, 'firstChild')) {
+  if (container.__shady && container.__shady.firstChild !== undefined) {
     logicalTree.recordInsertBefore(node, container, ref_node);
   }
   // if not distributing and not adding to host, do a fast path addition
   // TODO(sorvell): revisit flow since `ipAdded` needed here if
   // node is a fragment that has a patched QSA.
   let handled = _maybeDistribute(node, container, ownerRoot, ipAdded) ||
-    container.shadyRoot;
+    container.__shady.root ||
+    // TODO(sorvell): we *should* consider the add "handled"
+    // if the container or ownerRoot is `_renderPending`.
+    // However, this will regress performance right now and is blocked on a
+    // fix for https://github.com/webcomponents/shadydom/issues/95
+    // handled if ref_node parent is a root that is rendering.
+    (ref_node && utils.isShadyRoot(ref_node.parentNode) &&
+      ref_node.parentNode._renderPending);
   return handled;
 }
 
-// Try to remove node: update logical info and perform distribution iff
-// needed. Return true if the removal has been handled.
-// note that it's possible for both the node's host and its parent
-// to require distribution... both cases are handled here.
+
+/**
+ * Try to remove node: update logical info and perform distribution iff
+ * needed. Return true if the removal has been handled.
+ * note that it's possible for both the node's host and its parent
+ * to require distribution... both cases are handled here.
+ * @param {Node} node
+ * @return {boolean}
+ */
 function removeNode(node) {
   // important that we want to do this only if the node has a logical parent
-  let logicalParent = hasProperty(node, 'parentNode') &&
-    getProperty(node, 'parentNode');
+  let logicalParent = node.__shady && node.__shady.parentNode;
   let distributed;
   let ownerRoot = utils.ownerShadyRootForNode(node);
   if (logicalParent || ownerRoot) {
@@ -77,7 +93,11 @@ function removeNode(node) {
   return distributed;
 }
 
-
+/**
+ * @param {Node} node
+ * @param {Node=} addedNode
+ * @param {Node=} removedNode
+ */
 function _scheduleObserver(node, addedNode, removedNode) {
   let observer = node.__shady && node.__shady.observer;
   if (observer) {
@@ -105,14 +125,19 @@ function removeNodeFromParent(node, logicalParent) {
 }
 
 function _hasCachedOwnerRoot(node) {
-  return Boolean(node.__ownerShadyRoot !== undefined);
+  return Boolean(node.__shady && node.__shady.ownerShadyRoot !== undefined);
 }
 
-export function getRootNode(node) {
+/**
+ * @param {Node} node
+ * @param {Object=} options
+ */
+export function getRootNode(node, options) { // eslint-disable-line no-unused-vars
   if (!node || !node.nodeType) {
     return;
   }
-  let root = node.__ownerShadyRoot;
+  node.__shady = node.__shady || {};
+  let root = node.__shady.ownerShadyRoot;
   if (root === undefined) {
     if (utils.isShadyRoot(node)) {
       root = node;
@@ -126,7 +151,7 @@ export function getRootNode(node) {
     // If this happens and we cache the result, the value can become stale
     // because for perf we avoid processing the subtree of added fragments.
     if (document.documentElement.contains(node)) {
-      node.__ownerShadyRoot = root;
+      node.__shady.ownerShadyRoot = root;
     }
   }
   return root;
@@ -141,7 +166,7 @@ function _maybeDistribute(node, container, ownerRoot, ipAdded) {
   // and forces distribution.
   let insertionPointTag = ownerRoot && ownerRoot.getInsertionPointTag() || '';
   let fragContent = (node.nodeType === Node.DOCUMENT_FRAGMENT_NODE) &&
-    !node.__noInsertionPoint &&
+    !node['__noInsertionPoint'] &&
     insertionPointTag && node.querySelector(insertionPointTag);
   let wrappedContent = fragContent &&
     (fragContent.parentNode.nodeType !==
@@ -162,7 +187,8 @@ function _maybeDistribute(node, container, ownerRoot, ipAdded) {
   }
   let needsDist = _nodeNeedsDistribution(container);
   if (needsDist) {
-    updateRootViaContentChange(container.shadyRoot);
+    let root = container.__shady && container.__shady.root;
+    updateRootViaContentChange(root);
   }
   // Return true when distribution will fully handle the composition
   // Note that if a content was being inserted that was wrapped by a node,
@@ -178,7 +204,7 @@ function _maybeAddInsertionPoint(node, parent, root) {
   let added;
   let insertionPointTag = root.getInsertionPointTag();
   if (node.nodeType === Node.DOCUMENT_FRAGMENT_NODE &&
-    !node.__noInsertionPoint) {
+    !node['__noInsertionPoint']) {
     let c$ = node.querySelectorAll(insertionPointTag);
     for (let i=0, n, np, na; (i<c$.length) && (n=c$[i]); i++) {
       np = n.parentNode;
@@ -198,13 +224,13 @@ function _maybeAddInsertionPoint(node, parent, root) {
 }
 
 function _nodeNeedsDistribution(node) {
-  return node && node.shadyRoot &&
-    node.shadyRoot.hasInsertionPoint();
+  let root = node && node.__shady && node.__shady.root;
+  return root && root.hasInsertionPoint();
 }
 
 function _removeDistributedChildren(root, container) {
   let hostNeedsDist;
-  let ip$ = root._insertionPoints;
+  let ip$ = root._getInsertionPoints();
   for (let i=0; i<ip$.length; i++) {
     let insertionPoint = ip$[i];
     if (_contains(container, insertionPoint)) {
@@ -239,7 +265,8 @@ function _removeOwnerShadyRoot(node) {
       _removeOwnerShadyRoot(n);
     }
   }
-  node.__ownerShadyRoot = undefined;
+  node.__shady = node.__shady || {};
+  node.__shady.ownerShadyRoot = undefined;
 }
 
 // TODO(sorvell): This will fail if distribution that affects this
@@ -259,7 +286,7 @@ function firstComposedNode(insertionPoint) {
 function maybeDistributeParent(node) {
   let parent = node.parentNode;
   if (_nodeNeedsDistribution(parent)) {
-    updateRootViaContentChange(parent.shadyRoot);
+    updateRootViaContentChange(parent.__shady.root);
     return true;
   }
 }
@@ -284,6 +311,11 @@ function distributeAttributeChange(node, name) {
 // NOTE: `query` is used primarily for ShadyDOM's querySelector impl,
 // but it's also generally useful to recurse through the element tree
 // and is used by Polymer's styling system.
+/**
+ * @param {Node} node
+ * @param {Function} matcher
+ * @param {Function=} halter
+ */
 export function query(node, matcher, halter) {
   let list = [];
   _queryElements(node.childNodes, matcher,
@@ -319,10 +351,14 @@ export function renderRootNode(element) {
   }
 }
 
+let scopingShim = null;
+
 export function setAttribute(node, attr, value) {
-  // avoid scoping elements in non-main document to avoid template documents
-  if (window.ShadyCSS && attr === 'class' && node.ownerDocument === document) {
-    window.ShadyCSS.setElementClass(node, value);
+  if (!scopingShim) {
+    scopingShim = window['ShadyCSS'] && window['ShadyCSS']['ScopingShim'];
+  }
+  if (scopingShim && attr === 'class') {
+    scopingShim['setElementClass'](node, value);
   } else {
     nativeMethods.setAttribute.call(node, attr, value);
     distributeAttributeChange(node, attr);
@@ -340,17 +376,26 @@ export function removeAttribute(node, attr) {
 // 2. container is a shadyRoot (don't distribute, instead set
 // container to container.host.
 // 3. node is <content> (host of container needs distribution)
+/**
+ * @param {Node} parent
+ * @param {Node} node
+ * @param {Node=} ref_node
+ */
 export function insertBefore(parent, node, ref_node) {
   if (ref_node) {
-    let p = getProperty(ref_node, 'parentNode');
-    if (p !== undefined && p !== parent) {
-      throw Error('The ref_node to be inserted before is not a child ' +
-        'of this node');
+    let p = ref_node.__shady && ref_node.__shady.parentNode;
+    if ((p !== undefined && p !== parent) ||
+      (p === undefined && parentNode(ref_node) !== parent)) {
+      throw Error(`Failed to execute 'insertBefore' on 'Node': The node ` +
+       `before which the new node is to be inserted is not a child of this node.`);
     }
+  }
+  if (ref_node === node) {
+    return node;
   }
   // remove node from its current position iff it's in a tree.
   if (node.nodeType !== Node.DOCUMENT_FRAGMENT_NODE) {
-    let parent = getProperty(node, 'parentNode');
+    let parent = node.__shady && node.__shady.parentNode;
     removeNodeFromParent(node, parent);
   }
   if (!addNode(parent, node, ref_node)) {
@@ -359,12 +404,11 @@ export function insertBefore(parent, node, ref_node) {
       let root = utils.ownerShadyRootForNode(ref_node);
       if (root) {
         ref_node = ref_node.localName === root.getInsertionPointTag() ?
-          firstComposedNode(ref_node) : ref_node;
+          firstComposedNode(/** @type {!HTMLSlotElement} */(ref_node)) : ref_node;
       }
     }
     // if adding to a shadyRoot, add to host instead
-    let container = utils.isShadyRoot(parent) ?
-      parent.host : parent;
+    let container = utils.isShadyRoot(parent) ? /** @type {ShadowRoot} */(parent).host : parent;
     if (ref_node) {
       nativeMethods.insertBefore.call(container, node, ref_node);
     } else {

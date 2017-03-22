@@ -10,14 +10,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 'use strict';
 
-import {hasProperty} from './logical-properties'
 import {patchInsideElementAccessors, patchOutsideElementAccessors} from './patch-accessors'
 import {firstChild, lastChild, childNodes} from './native-tree'
 
 export function recordInsertBefore(node, container, ref_node) {
   patchInsideElementAccessors(container);
   container.__shady = container.__shady || {};
-  if (hasProperty(container, 'firstChild')) {
+  if (container.__shady.firstChild !== undefined) {
     container.__shady.childNodes = null;
   }
   // handle document fragments
@@ -28,7 +27,7 @@ export function recordInsertBefore(node, container, ref_node) {
     }
     // cleanup logical dom in doc fragment.
     node.__shady = node.__shady || {};
-    let resetTo = hasProperty(node, 'firstChild') ? null : undefined;
+    let resetTo = (node.__shady.firstChild !== undefined) ? null : undefined;
     node.__shady.firstChild = node.__shady.lastChild = resetTo;
     node.__shady.childNodes = resetTo;
   } else {
@@ -96,14 +95,14 @@ export function recordRemoveChild(node, container) {
   // from `null` which is set if info is null.
   node.__shady.parentNode = node.__shady.previousSibling =
     node.__shady.nextSibling = undefined;
-  if (hasProperty(container, 'childNodes')) {
+  if (container.__shady.childNodes !== undefined) {
     // remove caching of childNodes
     container.__shady.childNodes = null;
   }
 }
 
 export let recordChildNodes = function(node) {
-  if (!hasProperty(node, 'firstChild')) {
+  if (!node.__shady || node.__shady.firstChild === undefined) {
     node.__shady = node.__shady || {};
     node.__shady.firstChild = firstChild(node);
     node.__shady.lastChild = lastChild(node);

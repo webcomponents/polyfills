@@ -12,18 +12,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 import * as utils from './utils'
 import {getInnerHTML} from './innerHTML'
-import {getProperty, hasProperty} from './logical-properties'
 import * as nativeTree from './native-tree'
-
-function generateSimpleDescriptor(prop) {
-  return {
-    get() {
-      let l = getProperty(this, prop);
-      return l !== undefined ? l : nativeTree[prop](this);
-    },
-    configurable: true
-  }
-}
 
 function clearNode(node) {
   while (node.firstChild) {
@@ -31,15 +20,17 @@ function clearNode(node) {
   }
 }
 
-const nativeInnerHTMLDesc =
+const nativeInnerHTMLDesc = /** @type {ObjectPropertyDescriptor} */(
   Object.getOwnPropertyDescriptor(Element.prototype, 'innerHTML') ||
-  Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'innerHTML');
+  Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'innerHTML'));
 
 const inertDoc = document.implementation.createHTMLDocument('inert');
 const htmlContainer = inertDoc.createElement('div');
 
-const nativeActiveElementDescriptor = Object.getOwnPropertyDescriptor(
-  Document.prototype, 'activeElement');
+const nativeActiveElementDescriptor =
+  /** @type {ObjectPropertyDescriptor} */(
+    Object.getOwnPropertyDescriptor(Document.prototype, 'activeElement')
+  );
 function getDocumentActiveElement() {
   if (nativeActiveElementDescriptor && nativeActiveElementDescriptor.get) {
     return nativeActiveElementDescriptor.get.call(document);
@@ -50,7 +41,10 @@ function getDocumentActiveElement() {
 
 function activeElementForNode(node) {
   let active = getDocumentActiveElement();
-  if (!active) {
+  // In IE11, activeElement might be an empty object if the document is
+  // contained in an iframe.
+  // https://developer.microsoft.com/en-us/microsoft-edge/platform/issues/10998788/
+  if (!active || !active.nodeType) {
     return null;
   }
   let isShadyRoot = !!(utils.isShadyRoot(node));
@@ -87,19 +81,53 @@ function activeElementForNode(node) {
 }
 
 let OutsideAccessors = {
-  // node...
-  parentElement: generateSimpleDescriptor('parentElement'),
 
-  parentNode: generateSimpleDescriptor('parentNode'),
+  parentElement: {
+    /** @this {Node} */
+    get() {
+      let l = this.__shady && this.__shady.parentElement;
+      return l !== undefined ? l : nativeTree.parentElement(this);
+    },
+    configurable: true
+  },
 
-  nextSibling: generateSimpleDescriptor('nextSibling'),
+  parentNode: {
+    /** @this {Node} */
+    get() {
+      let l = this.__shady && this.__shady.parentNode;
+      return l !== undefined ? l : nativeTree.parentNode(this);
+    },
+    configurable: true
+  },
 
-  previousSibling: generateSimpleDescriptor('previousSibling'),
+  nextSibling: {
+    /** @this {Node} */
+    get() {
+      let l = this.__shady && this.__shady.nextSibling;
+      return l !== undefined ? l : nativeTree.nextSibling(this);
+    },
+    configurable: true
+  },
+
+  previousSibling: {
+    /** @this {Node} */
+    get() {
+      let l = this.__shady && this.__shady.previousSibling;
+      return l !== undefined ? l : nativeTree.previousSibling(this);
+    },
+    configurable: true
+  },
 
   className: {
+    /**
+     * @this {HTMLElement}
+     */
     get() {
       return this.getAttribute('class');
     },
+    /**
+     * @this {HTMLElement}
+     */
     set(value) {
       this.setAttribute('class', value);
     },
@@ -108,8 +136,11 @@ let OutsideAccessors = {
 
   // fragment, element, document
   nextElementSibling: {
+    /**
+     * @this {HTMLElement}
+     */
     get() {
-      if (hasProperty(this, 'nextSibling')) {
+      if (this.__shady && this.__shady.nextSibling !== undefined) {
         let n = this.nextSibling;
         while (n && n.nodeType !== Node.ELEMENT_NODE) {
           n = n.nextSibling;
@@ -123,8 +154,11 @@ let OutsideAccessors = {
   },
 
   previousElementSibling: {
+    /**
+     * @this {HTMLElement}
+     */
     get() {
-      if (hasProperty(this, 'previousSibling')) {
+      if (this.__shady && this.__shady.previousSibling !== undefined) {
         let n = this.previousSibling;
         while (n && n.nodeType !== Node.ELEMENT_NODE) {
           n = n.previousSibling;
@@ -142,8 +176,11 @@ let OutsideAccessors = {
 let InsideAccessors = {
 
   childNodes: {
+    /**
+     * @this {HTMLElement}
+     */
     get() {
-      if (hasProperty(this, 'firstChild')) {
+      if (this.__shady && this.__shady.firstChild !== undefined) {
         if (!this.__shady.childNodes) {
           this.__shady.childNodes = [];
           for (let n=this.firstChild; n; n=n.nextSibling) {
@@ -158,13 +195,30 @@ let InsideAccessors = {
     configurable: true
   },
 
-  firstChild: generateSimpleDescriptor('firstChild'),
+  firstChild: {
+    /** @this {HTMLElement} */
+    get() {
+      let l = this.__shady && this.__shady.firstChild;
+      return l !== undefined ? l : nativeTree.firstChild(this);
+    },
+    configurable: true
+  },
 
-  lastChild: generateSimpleDescriptor('lastChild'),
+  lastChild: {
+  /** @this {HTMLElement} */
+    get() {
+      let l = this.__shady && this.__shady.lastChild;
+      return l !== undefined ? l : nativeTree.lastChild(this);
+    },
+    configurable: true
+  },
 
   textContent: {
+    /**
+     * @this {HTMLElement}
+     */
     get() {
-      if (hasProperty(this, 'firstChild')) {
+      if (this.__shady && this.__shady.firstChild !== undefined) {
         let tc = [];
         for (let i = 0, cn = this.childNodes, c; (c = cn[i]); i++) {
           if (c.nodeType !== Node.COMMENT_NODE) {
@@ -176,6 +230,9 @@ let InsideAccessors = {
         return nativeTree.textContent(this);
       }
     },
+    /**
+     * @this {HTMLElement}
+     */
     set(text) {
       if (this.nodeType !== Node.ELEMENT_NODE) {
         // TODO(sorvell): can't do this if patch nodeValue.
@@ -192,8 +249,11 @@ let InsideAccessors = {
 
   // fragment, element, document
   firstElementChild: {
+    /**
+     * @this {HTMLElement}
+     */
     get() {
-      if (hasProperty(this, 'firstChild')) {
+      if (this.__shady && this.__shady.firstChild !== undefined) {
         let n = this.firstChild;
         while (n && n.nodeType !== Node.ELEMENT_NODE) {
           n = n.nextSibling;
@@ -207,8 +267,11 @@ let InsideAccessors = {
   },
 
   lastElementChild: {
+    /**
+     * @this {HTMLElement}
+     */
     get() {
-      if (hasProperty(this, 'lastChild')) {
+      if (this.__shady && this.__shady.lastChild !== undefined) {
         let n = this.lastChild;
         while (n && n.nodeType !== Node.ELEMENT_NODE) {
           n = n.previousSibling;
@@ -222,8 +285,11 @@ let InsideAccessors = {
   },
 
   children: {
+    /**
+     * @this {HTMLElement}
+     */
     get() {
-      if (hasProperty(this, 'firstChild')) {
+      if (this.__shady && this.__shady.firstChild !== undefined) {
         return Array.prototype.filter.call(this.childNodes, function(n) {
           return (n.nodeType === Node.ELEMENT_NODE);
         });
@@ -236,16 +302,24 @@ let InsideAccessors = {
 
   // element (HTMLElement on IE11)
   innerHTML: {
+    /**
+     * @this {HTMLElement}
+     */
     get() {
-      let content = this.localName === 'template' ? this.content : this;
-      if (hasProperty(this, 'firstChild')) {
+      let content = this.localName === 'template' ?
+        /** @type {HTMLTemplateElement} */(this).content : this;
+      if (this.__shady && this.__shady.firstChild !== undefined) {
         return getInnerHTML(content);
       } else {
         return nativeTree.innerHTML(content);
       }
     },
+    /**
+     * @this {HTMLElement}
+     */
     set(text) {
-      let content = this.localName === 'template' ? this.content : this;
+      let content = this.localName === 'template' ?
+        /** @type {HTMLTemplateElement} */(this).content : this;
       clearNode(content);
       if (nativeInnerHTMLDesc && nativeInnerHTMLDesc.set) {
         nativeInnerHTMLDesc.set.call(htmlContainer, text);
@@ -265,12 +339,20 @@ let InsideAccessors = {
 // Must be patched on instance on browsers that support native Shadow DOM
 // but do not have builtin accessors (old Chrome).
 export let ShadowRootAccessor = {
+
   shadowRoot: {
+    /**
+     * @this {HTMLElement}
+     */
     get() {
-      return this.shadyRoot;
+      return this.__shady && this.__shady.root || null;
     },
+    /**
+     * @this {HTMLElement}
+     */
     set(value) {
-      this.shadyRoot = value;
+      this.__shady = this.__shady || {};
+      this.__shady.root = value;
     },
     configurable: true
   }
@@ -282,9 +364,15 @@ export let ShadowRootAccessor = {
 export let ActiveElementAccessor = {
 
   activeElement: {
+    /**
+     * @this {HTMLElement}
+     */
     get() {
       return activeElementForNode(this);
     },
+    /**
+     * @this {HTMLElement}
+     */
     set() {},
     configurable: true
   }
@@ -293,6 +381,11 @@ export let ActiveElementAccessor = {
 
 // patch a group of descriptors on an object only if it exists or if the `force`
 // argument is true.
+/**
+ * @param {!Object} obj
+ * @param {!Object} descriptors
+ * @param {boolean=} force
+ */
 function patchAccessorGroup(obj, descriptors, force) {
   for (let p in descriptors) {
     let objDesc = Object.getOwnPropertyDescriptor(obj, p);
