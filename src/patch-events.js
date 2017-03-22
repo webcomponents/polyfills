@@ -310,7 +310,7 @@ export function addEventListener(type, fn, optionsOrCapture) {
           return;
         }
       }
-      return fn(e);
+      return fn.call(this, e);
     }
   };
   // Store the wrapper information.
