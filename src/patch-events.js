@@ -239,6 +239,21 @@ function retargetNonBubblingEvent(e) {
   }
 }
 
+function listenerSettingsEqual(savedListener, node, type, capture, once, passive) {
+  let {
+    node: savedNode,
+    type: savedType,
+    capture: savedCapture,
+    once: savedOnce,
+    passive: savedPassive
+  } = savedListener;
+  return node === savedNode &&
+    type === savedType &&
+    capture === savedCapture &&
+    once === savedOnce &&
+    passive === savedPassive;
+}
+
 /**
  * @this {Event}
  */
@@ -266,11 +281,7 @@ export function addEventListener(type, fn, optionsOrCapture) {
   if (fn.__eventWrappers) {
     // Stop if the wrapper function has already been created.
     for (let i = 0; i < fn.__eventWrappers.length; i++) {
-      if (fn.__eventWrappers[i].node === this &&
-          fn.__eventWrappers[i].type === type &&
-          fn.__eventWrappers[i].capture === capture &&
-          fn.__eventWrappers[i].once === once &&
-          fn.__eventWrappers[i].passive === passive) {
+      if (listenerSettingsEqual(fn.__eventWrappers[i], this, type, capture, once, passive)) {
         return;
       }
     }
@@ -345,11 +356,7 @@ export function removeEventListener(type, fn, optionsOrCapture) {
   let wrapperFn = undefined;
   if (fn.__eventWrappers) {
     for (let i = 0; i < fn.__eventWrappers.length; i++) {
-      if (fn.__eventWrappers[i].node === this &&
-          fn.__eventWrappers[i].type === type &&
-          fn.__eventWrappers[i].capture === capture &&
-          fn.__eventWrappers[i].once === once &&
-          fn.__eventWrappers[i].passive === passive) {
+      if (listenerSettingsEqual(fn.__eventWrappers[i], this, type, capture, once, passive)) {
         wrapperFn = fn.__eventWrappers.splice(i, 1)[0].wrapperFn;
         // Cleanup.
         if (!fn.__eventWrappers.length) {
@@ -377,7 +384,6 @@ function activateFocusEventOverrides() {
       if (!e['__target']) {
         patchEvent(e);
         retargetNonBubblingEvent(e);
-        e.stopImmediatePropagation();
       }
     }, true);
   }
