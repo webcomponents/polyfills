@@ -1,6 +1,6 @@
 {
   "name": "shadydom",
-  "description": "shadydom.js",
+  "description": "Shadow DOM polyfill",
   "main": "shadydom.min.js",
   "authors": [
     "The Polymer Authors"
