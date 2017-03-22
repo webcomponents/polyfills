@@ -18,7 +18,7 @@ the `ShadyDOM = {force: true}` in a script prior to loading the polyfill.
 ```html
 <div id="host"></div>
 <script>
-  host.attachShadow({mode: 'open');
+  host.attachShadow({mode: 'open'});
   host.shadowRoot.appendChild(document.createElement('a'));
 </script>
 
