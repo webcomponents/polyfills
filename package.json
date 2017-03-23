@@ -6,6 +6,10 @@
   "directories": {
     "test": "tests"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/webcomponents/shadycss.git"
+  },
   "author": "The Polymer Authors",
   "license": "BSD-3-Clause",
   "bugs": {
