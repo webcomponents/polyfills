@@ -8,7 +8,6 @@
   "keywords": [
     "webcomponents"
   ],
-  "homepage": "https://github.com/webcomponents/shadycss",
   "ignore": [
     "**/.*",
     "node_modules",
