@@ -16,9 +16,9 @@
   "license": "BSD-3-Clause",
   "ignore": [],
   "devDependencies": {
-    "web-component-tester": "6.0.0-prerelease.3",
-    "webcomponents-platform": "webcomponents/platform#master",
+    "web-component-tester": "^6.0.0-prerelease.3",
+    "webcomponents-platform": "webcomponents/webcomponents-platform#^v1.0.0-rc.1",
     "es6-promise": "stefanpenner/es6-promise#^4.0.0",
-    "html-imports": "webcomponents/html-imports#master"
+    "html-imports": "webcomponents/html-imports#^v1.0.0-rc.1"
   }
 }
