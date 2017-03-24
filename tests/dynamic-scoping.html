@@ -85,7 +85,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     suite('Dynamic Scoping', () => {
       function stamp(parent, host) {
         let template = host.shadowRoot.querySelector('template#renderer')
-        let el = template.content.cloneNode(true).firstElementChild;
+        let el = template.content.cloneNode(true).querySelector('div.target');
         el.textContent = `stamped by ${host.id}`;
         parent.appendChild(el);
         return el;
