@@ -16,70 +16,77 @@ import {getIsExtends} from './style-util'
 
 export let flush = function() {};
 
-if (!nativeShadow) {
-  let elementNeedsScoping = (element) => {
-    return (element.classList &&
-      !element.classList.contains(StyleTransformer.SCOPE_NAME) ||
-      // note: necessary for IE11
-      (element instanceof window['SVGElement'] && (!element.hasAttribute('class') ||
-      element.getAttribute('class').indexOf(StyleTransformer.SCOPE_NAME) < 0)));
+/**
+ * @param {HTMLElement} element
+ * @return {!Array<string>}
+ */
+function getClasses(element) {
+  let classes = [];
+  if (element.classList) {
+    classes = Array.from(element.classList);
+  } else if (element instanceof window['SVGElement'] && element.hasAttribute('class')) {
+    classes = element.getAttribute('class').split(/\s+/);
   }
+  return classes;
+}
+
+/**
+ * @param {HTMLElement} element
+ * @return {string}
+ */
+function getCurrentScope(element) {
+  let classes = getClasses(element);
+  let idx = classes.indexOf(StyleTransformer.SCOPE_NAME);
+  if (idx > -1) {
+    return classes[idx + 1];
+  }
+  return '';
+}
 
 /**
  * @param {Array<MutationRecord|null>|null} mxns
  */
-  let handler = (mxns) => {
-    for (let x=0; x < mxns.length; x++) {
-      let mxn = mxns[x];
-      if (mxn.target === document.documentElement ||
-        mxn.target === document.head) {
+function handler(mxns) {
+  for (let x=0; x < mxns.length; x++) {
+    let mxn = mxns[x];
+    if (mxn.target === document.documentElement ||
+      mxn.target === document.head) {
+      continue;
+    }
+    for (let i=0; i < mxn.addedNodes.length; i++) {
+      let n = mxn.addedNodes[i];
+      if (n.nodeType !== Node.ELEMENT_NODE) {
         continue;
       }
-      for (let i=0; i < mxn.addedNodes.length; i++) {
-        let n = mxn.addedNodes[i];
-        if (elementNeedsScoping(n)) {
-          let root = n.getRootNode();
-          if (root.nodeType === Node.DOCUMENT_FRAGMENT_NODE) {
-            // may no longer be in a shadowroot
-            let host = /** @type {ShadowRoot} */(root).host;
-            if (host) {
-              let {is: scope} = getIsExtends(host);
-              StyleTransformer.dom(n, scope);
-            }
-          }
+      n = /** @type {HTMLElement} */(n); // eslint-disable-line no-self-assign
+      let root = n.getRootNode();
+      let currentScope = getCurrentScope(n);
+      // node was scoped, but now is in document
+      if (currentScope && root === n.ownerDocument) {
+        StyleTransformer.dom(n, currentScope, true);
+      } else if (root.nodeType === Node.DOCUMENT_FRAGMENT_NODE) {
+        let newScope;
+        let host = /** @type {ShadowRoot} */(root).host;
+        newScope = getIsExtends(host).is;
+        if (currentScope === newScope) {
+          continue;
         }
-      }
-      for (let i=0; i < mxn.removedNodes.length; i++) {
-        let n = /** @type {HTMLElement} */(mxn.removedNodes[i]);
-        if (n.nodeType === Node.ELEMENT_NODE) {
-          let classes = undefined;
-          if (n.classList) {
-            classes = Array.from(n.classList);
-          } else if (n.hasAttribute('class')) {
-            classes = n.getAttribute('class').split(/\s+/);
-          }
-          if (classes !== undefined) {
-            // NOTE: relies on the scoping class always being adjacent to the
-            // SCOPE_NAME class.
-            let classIdx = classes.indexOf(StyleTransformer.SCOPE_NAME);
-            if (classIdx >= 0) {
-              let scope = classes[classIdx + 1];
-              if (scope) {
-                StyleTransformer.dom(n, scope, true);
-              }
-            }
-          }
+        if (currentScope) {
+          StyleTransformer.dom(n, currentScope, true);
         }
+        StyleTransformer.dom(n, newScope);
       }
     }
-  };
+  }
+}
 
+if (!nativeShadow) {
   let observer = new MutationObserver(handler);
   let start = (node) => {
     observer.observe(node, {childList: true, subtree: true});
   }
-  let nativeCustomElements = (window.customElements &&
-    !window['customElements']['flush']);
+  let nativeCustomElements = (window['customElements'] &&
+    !window['customElements']['polyfillWrapFlushCallback']);
   // need to start immediately with native custom elements
   // TODO(dfreedm): with polyfilled HTMLImports and native custom elements
   // excessive mutations may be observed; this can be optimized via cooperation
