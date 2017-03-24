@@ -1,14 +1,23 @@
 {
   "name": "shadycss",
+  "version": "1.0.0-rc.2",
   "main": "scoping-shim.min.js",
+  "description": "Shadow CSS polyfill",
   "authors": [
-    "The Polymer Authors"
+    "The Polymer Project Authors (https://polymer.github.io/AUTHORS.txt)"
   ],
   "license": "BSD-3-Clause",
   "keywords": [
-    "webcomponents"
+    "shady-css",
+    "shadycss",
+    "shadow-css",
+    "shadowcss",
+    "web-components",
+    "webcomponents",
+    "polyfill",
+    "shim"
   ],
-  "homepage": "https://github.com/webcomponents/shadycss",
+  "homepage": "https://webcomponents.org/polyfills",
   "ignore": [
     "**/.*",
     "node_modules",
@@ -27,6 +36,5 @@
     "custom-elements": "webcomponents/custom-elements#master",
     "shadydom": "webcomponents/shadydom#master",
     "webcomponents-platform": "webcomponents/webcomponents-platform#master"
-  },
-  "version": "1.0.0-rc.2"
+  }
 }
