@@ -61,7 +61,7 @@ function closurify(entry) {
       compilation_level: 'ADVANCED',
       language_in: 'ES6_STRICT',
       language_out: 'ES5_STRICT',
-      output_wrapper: '(function(){\n%output%\n}).call(self)',
+      output_wrapper: '(function(){\n%output%\n}).call(self);',
       assume_function_wrapper: true,
       js_output_file: `${entry}.min.js`,
       entry_point: `/entrypoints/${entry}.js`,
@@ -105,6 +105,8 @@ let debugTasks = entrypoints.map((e) => debugify(e));
 
 gulp.task('default', ['closure', 'test-modules']);
 
-gulp.task('closure', closureTasks);
+gulp.task('closure', (cb) => {
+  runseq(...closureTasks, cb);
+});
 
 gulp.task('debug', debugTasks);
