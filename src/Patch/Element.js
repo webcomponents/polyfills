@@ -131,9 +131,7 @@ export default function(internals) {
       const oldValue = Native.Element_getAttribute.call(this, name);
       Native.Element_setAttribute.call(this, name, newValue);
       newValue = Native.Element_getAttribute.call(this, name);
-      if (oldValue !== newValue) {
-        internals.attributeChangedCallback(this, name, oldValue, newValue, null);
-      }
+      internals.attributeChangedCallback(this, name, oldValue, newValue, null);
     });
 
   Utilities.setPropertyUnchecked(Element.prototype, 'setAttributeNS',
