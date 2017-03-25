@@ -1,7 +1,7 @@
 {
   "name": "@webcomponents/shadycss",
   "version": "1.0.0-rc.2",
-  "description": "Shadow CSS polyfill",
+  "description": "Styling helpers for ShadyDOM",
   "main": "shadycss.min.js",
   "directories": {
     "test": "tests"
