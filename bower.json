@@ -23,12 +23,7 @@
   "ignore": [
     "**/.*",
     "node_modules",
-    "bower_components",
-    "test",
-    "tests",
-    "src",
-    "gulpfile.js",
-    "package.json"
+    "bower_components"
   ],
   "devDependencies": {
     "web-component-tester": "6.0.0-prerelease.3"
