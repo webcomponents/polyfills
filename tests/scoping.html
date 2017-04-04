@@ -12,12 +12,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <head>
   <meta charset="utf-8">
   <script>
-    window.ShadyDOM = {force: true};
-    window.ShadyCSS = {shimshadow: true};
-  </script>
-  <script>
   WCT = {waitFor: function (cb) {HTMLImports.whenReady(cb)}}
   </script>
+  <script src="./test-flags.js"></script>
   <script src="../../web-component-tester/browser.js"></script>
   <script src="../../webcomponents-platform/webcomponents-platform.js"></script>
   <script src="../../es6-promise/dist/es6-promise.auto.min.js"></script>
@@ -30,11 +27,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <script src="../custom-style-interface.min.js"></script>
   <script src="module/generated/make-element.js"></script>
 
-  <style>
-    #priority.style-scope {
-      border: 1px solid black;
-    }
-  </style>
+  <custom-style>
+    <style>
+      div#priority {
+        border: 1px solid black;
+      }
+    </style>
+  </custom-style>
 </head>
 <body>
 
@@ -345,10 +344,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   }
 
   function flush() {
-    if (window.customElements.flush) {
-      window.customElements.flush();
+    if (window.ShadyDOM) {
+      window.ShadyDOM.flush();
     }
-    window.ShadyDOM.flush();
     window.ShadyCSS.ScopingShim.flush();
   }
 
@@ -656,20 +654,29 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       document.body.removeChild(x);
     });
 
-    test('element style precedence below document styles', function() {
+    test(':host selectors always lowest priority', function() {
+      var priority = findNode('el.$.priority');
+      assertComputed(priority, '9px');
       el.setAttribute('class', 'wide');
-      assertComputed(findNode('el.$.priority'), '1px');
+      assertComputed(priority, '9px');
     });
 
     test('svg elements properly scoped', function() {
+      if (window.ShadyCSS.nativeShadow) {
+        this.skip();
+      }
       var circle = findNode('el.$.circle');
-      assert.include(circle.getAttribute('class'), 'x-scoped');
-      assert.include(circle.getAttribute('class'), 'style-scope');
-      assert.notInclude(circle.getAttribute('class'), 'null');
+      var classes = (circle.getAttribute('class') || '').split(/\s+/);
+      assert.include(classes, 'x-scoped');
+      assert.include(classes, 'style-scope');
+      assert.notInclude(classes, 'null');
       assertComputed(circle, '1px', 'strokeWidth');
     });
 
     test('set attribute class has style scoping selectors', function() {
+      if (window.ShadyCSS.nativeShadow) {
+        this.skip();
+      }
       var s = findNode('el.$.scopeClass');
       var scope = findNode('el.$.scopeClass.$.scope');
       assert.isTrue(s.classList.contains('style-scope'));
@@ -706,7 +713,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       var e = document.createElement('self-test');
       document.body.appendChild(e);
       flush();
-      assertComputed(e.shadowRoot.firstElementChild, '10px');
+      assertComputed(e.shadowRoot.querySelector('a'), '10px');
       document.body.removeChild(e);
     });
 

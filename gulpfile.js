@@ -105,6 +105,8 @@ let debugTasks = entrypoints.map((e) => debugify(e));
 
 gulp.task('default', ['closure', 'test-modules']);
 
-gulp.task('closure', closureTasks);
+gulp.task('closure', (cb) => {
+  runseq(...closureTasks, cb);
+});
 
 gulp.task('debug', debugTasks);
