@@ -131,9 +131,7 @@ export default function(internals) {
       const oldValue = Native.Element_getAttribute.call(this, name);
       Native.Element_setAttribute.call(this, name, newValue);
       newValue = Native.Element_getAttribute.call(this, name);
-      if (oldValue !== newValue) {
-        internals.attributeChangedCallback(this, name, oldValue, newValue, null);
-      }
+      internals.attributeChangedCallback(this, name, oldValue, newValue, null);
     });
 
   Utilities.setPropertyUnchecked(Element.prototype, 'setAttributeNS',
@@ -152,9 +150,7 @@ export default function(internals) {
       const oldValue = Native.Element_getAttributeNS.call(this, namespace, name);
       Native.Element_setAttributeNS.call(this, namespace, name, newValue);
       newValue = Native.Element_getAttributeNS.call(this, namespace, name);
-      if (oldValue !== newValue) {
-        internals.attributeChangedCallback(this, name, oldValue, newValue, namespace);
-      }
+      internals.attributeChangedCallback(this, name, oldValue, newValue, namespace);
     });
 
   Utilities.setPropertyUnchecked(Element.prototype, 'removeAttribute',
