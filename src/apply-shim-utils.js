@@ -12,6 +12,22 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 import templateMap from './template-map'
 import {StyleNode} from './css-parse' // eslint-disable-line no-unused-vars
 
+/*
+ * Utilities for handling invalidating apply-shim mixins for a given template.
+ *
+ * The invalidation strategy involves keeping track of the "current" version of a template's mixins, and updating that count when a mixin is invalidated.
+ * The template
+ */
+
+/** @const {string} */
+const CURRENT_VERSION = '_applyShimCurrentVersion';
+
+/** @const {string} */
+const NEXT_VERSION = '_applyShimNextVersion';
+
+/** @const {string} */
+const VALIDATING_FOR = '_applyShimValidatingFor';
+
 /**
  * @const {Promise<void>}
  */
@@ -31,7 +47,12 @@ export function invalidate(elementName){
  * @param {HTMLTemplateElement} template
  */
 export function invalidateTemplate(template) {
-  template['_applyShimInvalid'] = true;
+  // default the current version to 0
+  template[CURRENT_VERSION] = template[CURRENT_VERSION] || 0;
+  // ensure the "validating for" flag exists
+  template[VALIDATING_FOR] = template[VALIDATING_FOR] || template[CURRENT_VERSION];
+  // increment the next version
+  template[NEXT_VERSION] = (template[NEXT_VERSION] || 0) + 1;
 }
 
 /**
@@ -51,7 +72,7 @@ export function isValid(elementName) {
  * @return {boolean}
  */
 export function templateIsValid(template) {
-  return !template['_applyShimInvalid'];
+  return template[CURRENT_VERSION] === template[NEXT_VERSION];
 }
 
 /**
@@ -71,7 +92,7 @@ export function isValidating(elementName) {
  * @return {boolean}
  */
 export function templateIsValidating(template) {
-  return template._validating;
+  return template[VALIDATING_FOR] === template[NEXT_VERSION];
 }
 
 /**
@@ -89,10 +110,14 @@ export function startValidating(elementName) {
  * @param {HTMLTemplateElement} template
  */
 export function startValidatingTemplate(template) {
+  // remember that the current "next version" is the reason for this validation cycle
+  template[VALIDATING_FOR] = template[NEXT_VERSION];
+  // however, there only needs to be one async task to clear the counters
   if (!template._validating) {
     template._validating = true;
     promise.then(function() {
-      template['_applyShimInvalid'] = false;
+      // sync the current version to let future invalidations cause a refresh cycle
+      template[CURRENT_VERSION] = template[NEXT_VERSION];
       template._validating = false;
     });
   }
