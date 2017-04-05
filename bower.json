@@ -2,7 +2,7 @@
   "name": "shadycss",
   "version": "1.0.0-rc.2",
   "main": "scoping-shim.min.js",
-  "description": "Shadow CSS polyfill",
+  "description": "Styling helpers for ShadyDOM",
   "authors": [
     "The Polymer Project Authors (https://polymer.github.io/AUTHORS.txt)"
   ],
@@ -23,10 +23,7 @@
     "node_modules",
     "bower_components",
     "test",
-    "tests",
-    "src",
-    "gulpfile.js",
-    "package.json"
+    "tests"
   ],
   "devDependencies": {
     "web-component-tester": "^5",

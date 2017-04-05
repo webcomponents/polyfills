@@ -10,8 +10,18 @@
     "type": "git",
     "url": "https://github.com/webcomponents/shadycss.git"
   },
-  "author": "The Polymer Authors",
+  "author": "The Polymer Project Authors (https://polymer.github.io/AUTHORS.txt)",
   "license": "BSD-3-Clause",
+  "keywords": [
+    "shady-css",
+    "shadycss",
+    "shadow-css",
+    "shadowcss",
+    "web-components",
+    "webcomponents",
+    "polyfill",
+    "shim"
+  ],
   "bugs": {
     "url": "https://github.com/webcomponents/shadycss/issues"
   },
@@ -20,7 +30,7 @@
     "lint": "eslint src test entrypoints",
     "test": "npm run lint && gulp test-modules && wct"
   },
-  "homepage": "http://webcomponents.org",
+  "homepage": "https://webcomponents.org/polyfills",
   "devDependencies": {
     "del": "^2.2.2",
     "eslint": "^3.4.0",
