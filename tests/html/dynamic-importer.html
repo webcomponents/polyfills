@@ -1,0 +1,38 @@
+<!doctype html>
+<!--
+    @license
+    Copyright (c) 2017 The Polymer Project Authors. All rights reserved.
+    This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+    The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+    The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+    Code distributed by Google as part of the polymer project is also
+    subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<html>
+
+<head>
+  <title>HTML Dynamic Importer</title>
+  <script src="../../html-imports.min.js"></script>
+  <script>
+    WCT = {
+      waitFor: function(cb) {
+        cb();
+      }
+    };
+  </script>
+  <script src="../../../web-component-tester/browser.js"></script>
+  <link rel="import" href="imports/dynamic-importer.html">
+</head>
+
+<body>
+  <script>
+    test('dynamic importer', function(done) {
+      HTMLImports.whenReady(function() {
+        assert.deepEqual(window.loaded, ['a', 'b', 'c', 'd']);
+        done();
+      });
+    });
+  </script>
+</body>
+
+</html>
