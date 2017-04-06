@@ -26,7 +26,7 @@ const CURRENT_VERSION = '_applyShimCurrentVersion';
 const NEXT_VERSION = '_applyShimNextVersion';
 
 /** @const {string} */
-const VALIDATING_FOR = '_applyShimValidatingFor';
+const VALIDATING_VERSION = '_applyShimValidatingVersion';
 
 /**
  * @const {Promise<void>}
@@ -44,13 +44,19 @@ export function invalidate(elementName){
 }
 
 /**
+ * This function can be called multiple times to mark a template invalid
+ * and signal that the style inside must be regenerated.
+ *
+ * Use `startValidatingTemplate` to begin an asynchronous validation cycle.
+ * During that cycle, call `templateIsValidating` to see if the template must
+ * be revalidated
  * @param {HTMLTemplateElement} template
  */
 export function invalidateTemplate(template) {
   // default the current version to 0
   template[CURRENT_VERSION] = template[CURRENT_VERSION] || 0;
   // ensure the "validating for" flag exists
-  template[VALIDATING_FOR] = template[VALIDATING_FOR] || template[CURRENT_VERSION];
+  template[VALIDATING_VERSION] = template[VALIDATING_VERSION] || 0;
   // increment the next version
   template[NEXT_VERSION] = (template[NEXT_VERSION] || 0) + 1;
 }
@@ -88,11 +94,13 @@ export function isValidating(elementName) {
 }
 
 /**
+ * Returns true if the template is currently invalid and `startValidating` has been called since the last invalidation.
+ * If false, the template must be validated.
  * @param {HTMLTemplateElement} template
  * @return {boolean}
  */
 export function templateIsValidating(template) {
-  return template[VALIDATING_FOR] === template[NEXT_VERSION];
+  return !templateIsValid(template) && template[VALIDATING_VERSION] === template[NEXT_VERSION];
 }
 
 /**
@@ -107,11 +115,15 @@ export function startValidating(elementName) {
 }
 
 /**
+ * Begin an asynchronous invalidation cycle.
+ * This should be called after every validation of a template
+ *
+ * After one microtask, the template will be marked as valid until the next call to `invalidateTemplate`
  * @param {HTMLTemplateElement} template
  */
 export function startValidatingTemplate(template) {
   // remember that the current "next version" is the reason for this validation cycle
-  template[VALIDATING_FOR] = template[NEXT_VERSION];
+  template[VALIDATING_VERSION] = template[NEXT_VERSION];
   // however, there only needs to be one async task to clear the counters
   if (!template._validating) {
     template._validating = true;
