@@ -1,6 +1,6 @@
 {
   "name": "@webcomponents/html-imports",
-  "version": "1.0.0-rc.2",
+  "version": "1.0.0-rc.3",
   "description": "HTML Imports polyfill",
   "main": "html-imports.min.js",
   "directories": {
@@ -32,6 +32,6 @@
     "google-closure-compiler": "^20170218.0.0",
     "gulp": "^3.8.8",
     "gulp-sourcemaps": "^2.4.0",
-    "web-component-tester": "^6.0.0-prerelease.4"
+    "web-component-tester": "6.0.0-prerelease.3"
   }
 }

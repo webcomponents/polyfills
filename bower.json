@@ -2,7 +2,7 @@
   "name": "html-imports",
   "main": "html-imports.min.js",
   "description": "HTML Imports polyfill",
-  "version": "1.0.0-rc.2",
+  "version": "1.0.0-rc.3",
   "homepage": "https://webcomponents.org/polyfills",
   "authors": [
     "The Polymer Authors (https://polymer.github.io/AUTHORS.txt)"
