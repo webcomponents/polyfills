@@ -325,9 +325,7 @@
      */
     processImportsIfLoadingDone() {
       // Wait until all resources are ready, then load import resources.
-      if (this.inflight) {
-        return;
-      }
+      if (this.inflight) return;
 
       // Stop observing, flatten & load resource, then restart observing <head>.
       this.dynamicImportsMO.disconnect();
@@ -343,6 +341,11 @@
         stylesOk = false;
       const onLoadingDone = () => {
         if (stylesOk && scriptsOk) {
+          // Catch any imports that might have been added while we
+          // weren't looking, wait for them as well.
+          this.loadImports(document);
+          if (this.inflight) return;
+
           // Restart observing.
           this.dynamicImportsMO.observe(document.head, {
             childList: true,
