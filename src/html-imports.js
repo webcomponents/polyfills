@@ -692,15 +692,16 @@
     // on native or polyfilled html-imports.
     // NOTE: a <link rel=import> will have `link.baseURI === link.href`, as the link
     // itself is used as the `import` document.
+    /** @type {Object|undefined} */
     const native_baseURI = Object.getOwnPropertyDescriptor(Node.prototype, 'baseURI');
-    // NOTE: in safari9 baseURI is not configurable, so we set it on the Element prototype. 
+    // NOTE: if not configurable (e.g. safari9), set it on the Element prototype. 
     const klass = !native_baseURI || native_baseURI.configurable ? Node : Element;
     Object.defineProperty(klass.prototype, 'baseURI', {
       get() {
         const ownerDoc = /** @type {HTMLLinkElement} */ (isImportLink(this) ? this : importForElement(this));
         if (ownerDoc) return ownerDoc.href;
         // Use native baseURI if possible.
-        if (native_baseURI) return native_baseURI.get.call(this);
+        if (native_baseURI && native_baseURI.get) return native_baseURI.get.call(this);
         // Polyfill it if not available.
         const base = /** @type {HTMLBaseElement} */ (document.querySelector('base'));
         return (base || window.location).href;
