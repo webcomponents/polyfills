@@ -67,6 +67,10 @@ function handler(mxns) {
       } else if (root.nodeType === Node.DOCUMENT_FRAGMENT_NODE) {
         let newScope;
         let host = /** @type {ShadowRoot} */(root).host;
+        // element may no longer be in a shadowroot
+        if (!host) {
+          continue;
+        }
         newScope = getIsExtends(host).is;
         if (currentScope === newScope) {
           continue;
