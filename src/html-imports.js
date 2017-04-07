@@ -192,18 +192,16 @@
       // events can be done when all resources are ready.
       this.inflight = 0;
       this.dynamicImportsMO = new MutationObserver(m => this.handleMutations(m));
+      // Observe changes on <head>.
+      this.dynamicImportsMO.observe(document.head, {
+        childList: true,
+        subtree: true
+      });
       // 1. Load imports contents
       // 2. Assign them to first import links on the document
       // 3. Wait for import styles & scripts to be done loading/running
       // 4. Fire load/error events
-      whenDocumentReady(() => {
-        // Observe changes on <head>.
-        this.dynamicImportsMO.observe(document.head, {
-          childList: true,
-          subtree: true
-        });
-        this.loadImports(document);
-      });
+      this.loadImports(document);
     }
 
     /**
@@ -382,13 +380,6 @@
           n.readyState = 'loading';
           // Suppress Closure warning about incompatible subtype assignment.
           ( /** @type {!HTMLElement} */ (n).import = n);
-          // Override baseURI so that link.import.baseURI can be used seemlessly
-          // on native or polyfilled html-imports.
-          Object.defineProperty(n, 'baseURI', {
-            get: () => n.href,
-            configurable: true,
-            enumerable: true
-          });
           this.flatten(imp);
           n.appendChild(imp);
         }
@@ -697,7 +688,29 @@
     document.addEventListener('load', onLoadingDone, true /* useCapture */ );
     document.addEventListener('error', onLoadingDone, true /* useCapture */ );
   } else {
-    new Importer();
+    // Override baseURI so that imported elements' baseURI can be used seemlessly
+    // on native or polyfilled html-imports.
+    // NOTE: a <link rel=import> will have `link.baseURI === link.href`, as the link
+    // itself is used as the `import` document.
+    /** @type {Object|undefined} */
+    const native_baseURI = Object.getOwnPropertyDescriptor(Node.prototype, 'baseURI');
+    // NOTE: if not configurable (e.g. safari9), set it on the Element prototype. 
+    const klass = !native_baseURI || native_baseURI.configurable ? Node : Element;
+    Object.defineProperty(klass.prototype, 'baseURI', {
+      get() {
+        const ownerDoc = /** @type {HTMLLinkElement} */ (isImportLink(this) ? this : importForElement(this));
+        if (ownerDoc) return ownerDoc.href;
+        // Use native baseURI if possible.
+        if (native_baseURI && native_baseURI.get) return native_baseURI.get.call(this);
+        // Polyfill it if not available.
+        const base = /** @type {HTMLBaseElement} */ (document.querySelector('base'));
+        return (base || window.location).href;
+      },
+      configurable: true,
+      enumerable: true
+    });
+
+    whenDocumentReady(() => new Importer());
   }
 
   /**
