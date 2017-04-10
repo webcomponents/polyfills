@@ -545,9 +545,13 @@ class StyleProperties {
         }
       // shady and cache hit but not in document
       } else if (!style.parentNode) {
+        if (IS_IE && cssText.indexOf('@media') > -1) {
+            // @media rules may be stale in IE 10 and 11
+            // refresh the text content of the style to revalidate them.
+          style.textContent = cssText;
+        }
         StyleUtil.applyStyle(style, null, styleInfo.placeholder);
       }
-
     }
     // ensure this style is our custom style and increment its use count.
     if (style) {
@@ -557,10 +561,6 @@ class StyleProperties {
         style['_useCount']++;
       }
       styleInfo.customStyle = style;
-    }
-    // @media rules may be stale in IE 10 and 11
-    if (IS_IE) {
-      style.textContent = style.textContent;
     }
     return style;
   }
