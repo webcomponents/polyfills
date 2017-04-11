@@ -1,6 +1,6 @@
 {
   "name": "shadycss",
-  "version": "1.0.0-rc.4",
+  "version": "1.0.0-rc.5",
   "main": "scoping-shim.min.js",
   "description": "Styling helpers for ShadyDOM",
   "authors": [
