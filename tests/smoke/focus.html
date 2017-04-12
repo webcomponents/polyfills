@@ -15,17 +15,29 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     ShadyDOM = {force: true};
   </script>
   <script src="../../shadydom.min.js"></script>
-  <style>
-    input {
-      display: block;
-      font-size: 1rem;
-    }
-  </style>
 </head>
 <body>
-  <label>
-    Will not show caret when input it focused&hellip;
-    <input type="text">
-  </label>
+  <div>
+    <label>
+      Will not show caret when input it focused&hellip;<br>
+      <input type="text">
+    </label>
+  </div>
+  <hr>
+  <style>
+    #host {
+      border: 2px solid black;
+    }
+  </style>
+  <div id="host"></div>
+  <script>
+    host.tabIndex = 1;
+    host.attachShadow({mode: 'open'});
+    host.shadowRoot.appendChild(document.createElement('input'));
+    host.addEventListener('focus', (e) => {console.log('focus host', e.relatedTarget)});
+    host.shadowRoot.firstElementChild.addEventListener('focus', (e) => {console.log('focus input', e.relatedTarget)});
+    host.addEventListener('blur', (e) => {console.log('blur host', e.relatedTarget)});
+    host.shadowRoot.firstElementChild.addEventListener('blur', (e) => {console.log('blur input', e.relatedTarget)});
+  </script>
 </body>
 </html>
