@@ -260,6 +260,26 @@ ShadyRoot.prototype._getInsertionPoints = function() {
   return this._insertionPoints;
 }
 
+ShadyRoot.prototype.addEventListener = function(type, fn, optionsOrCapture) {
+  if (typeof optionsOrCapture !== 'object') {
+    optionsOrCapture = {
+      capture: Boolean(optionsOrCapture)
+    }
+  }
+  optionsOrCapture.__shadyTarget = this;
+  this.host.addEventListener(type, fn, optionsOrCapture);
+}
+
+ShadyRoot.prototype.removeEventListener = function(type, fn, optionsOrCapture) {
+  if (typeof optionsOrCapture !== 'object') {
+    optionsOrCapture = {
+      capture: Boolean(optionsOrCapture)
+    }
+  }
+  optionsOrCapture.__shadyTarget = this;
+  this.host.removeEventListener(type, fn, optionsOrCapture);
+}
+
 /**
   Implements a pared down version of ShadowDOM's scoping, which is easy to
   polyfill across browsers.
