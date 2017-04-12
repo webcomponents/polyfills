@@ -237,6 +237,21 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       assert.deepEqual([el, document.body, document.documentElement, document, window], path);
     });
 
+    test('events can be received on shadowRoot', function() {
+      var el = createEnabledElement('x-event-scoped');
+      var composed, scoped;
+      el.shadowRoot.addEventListener('composed', function() {
+        composed = true;
+      });
+      el.shadowRoot.addEventListener('scoped', function() {
+        scoped = true;
+      });
+      el.fireComposed()
+      el.fireScoped();
+      assert.isTrue(composed, 'composed events should fire on shadowRoot');
+      assert.isTrue(scoped, 'scoped events should fire on shadowRoot');
+    });
+
     test('composed focus and blur events retarget up tree', function() {
     var el = createEnabledElement('x-focus');
     el.fireComposed();
@@ -345,7 +360,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         bot.dispatchEvent(ev);
 
         assert.isAbove(recv.length, 0);
-        pathCompare([bot, top], recv);
+        pathCompare([bot, top, top.shadowRoot], recv);
       });
     });
 

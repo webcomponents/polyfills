@@ -254,6 +254,15 @@ function listenerSettingsEqual(savedListener, node, type, capture, once, passive
     passive === savedPassive;
 }
 
+export function findListener(wrappers, node, type, capture, once, passive) {
+  for (let i = 0; i < wrappers.length; i++) {
+    if (listenerSettingsEqual(wrappers[i], node, type, capture, once, passive)) {
+      return i;
+    }
+  }
+  return -1;
+}
+
 /**
  * @this {Event}
  */
@@ -278,12 +287,15 @@ export function addEventListener(type, fn, optionsOrCapture) {
     once = false;
     passive = false;
   }
+  // hack to let ShadyRoots have event listeners
+  // event listener will be on host, but `currentTarget`
+  // will be set to shadyroot for event listener
+  let target = optionsOrCapture && optionsOrCapture.__shadyTarget || this;
+
   if (fn.__eventWrappers) {
     // Stop if the wrapper function has already been created.
-    for (let i = 0; i < fn.__eventWrappers.length; i++) {
-      if (listenerSettingsEqual(fn.__eventWrappers[i], this, type, capture, once, passive)) {
-        return;
-      }
+    if (findListener(fn.__eventWrappers, target, type, capture, once, passive) > -1) {
+      return;
     }
   } else {
     fn.__eventWrappers = [];
@@ -300,17 +312,26 @@ export function addEventListener(type, fn, optionsOrCapture) {
     if (!e['__target']) {
       patchEvent(e);
     }
+    if (target !== this) {
+      // replace `currentTarget` to make `target` and `relatedTarget` correct for inside the shadowroot
+      Object.defineProperty(e, 'currentTarget', {get() { return target }, configurable: true});
+    }
     // There are two critera that should stop events from firing on this node
     // 1. the event is not composed and the current node is not in the same root as the target
     // 2. when bubbling, if after retargeting, relatedTarget and target point to the same node
-    if (e.composed || e.composedPath().indexOf(this) > -1) {
+    if (e.composed || e.composedPath().indexOf(target) > -1) {
       if (e.eventPhase === Event.BUBBLING_PHASE) {
         if (e.target === e.relatedTarget) {
           e.stopImmediatePropagation();
           return;
         }
       }
-      return fn.call(this, e);
+      let ret = fn.call(target, e);
+      if (target !== this) {
+        // replace the "correct" `currentTarget`
+        delete e['currentTarget'];
+      }
+      return ret;
     }
   };
   // Store the wrapper information.
@@ -352,17 +373,16 @@ export function removeEventListener(type, fn, optionsOrCapture) {
     once = false;
     passive = false;
   }
+  let target = optionsOrCapture && optionsOrCapture.__shadyTarget || this;
   // Search the wrapped function.
   let wrapperFn = undefined;
   if (fn.__eventWrappers) {
-    for (let i = 0; i < fn.__eventWrappers.length; i++) {
-      if (listenerSettingsEqual(fn.__eventWrappers[i], this, type, capture, once, passive)) {
-        wrapperFn = fn.__eventWrappers.splice(i, 1)[0].wrapperFn;
-        // Cleanup.
-        if (!fn.__eventWrappers.length) {
-          fn.__eventWrappers = undefined;
-        }
-        break;
+    let idx = findListener(fn.__eventWrappers, target, type, capture, once, passive);
+    if (idx > -1) {
+      wrapperFn = fn.__eventWrappers.splice(idx, 1)[0].wrapperFn;
+      // Cleanup.
+      if (!fn.__eventWrappers.length) {
+        fn.__eventWrappers = undefined;
       }
     }
   }
