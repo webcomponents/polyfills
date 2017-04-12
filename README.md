@@ -24,6 +24,19 @@ the `ShadyDOM = {force: true}` in a script prior to loading the polyfill.
 
 ```
 
+## Building and Testing
+
+For building and testing, first run
+```
+npm install
+bower install
+```
+
+To build, make sure gulp is installed and `gulp`.
+
+To test, run `npm test`
+
+
 ## Limitations
 
 ShadyDOM distribution is asynchronous for performance reasons. This means that
