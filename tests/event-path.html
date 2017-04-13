@@ -297,6 +297,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   });
 
   test('scoped focus and blur events do not retarget', function() {
+    var e = new Event('focus');
+    if (e.isTrusted !== false) {
+      // skip browser if we cannot distinguish
+      // native focus events from user created ones
+      this.skip();
+    }
     var el = createEnabledElement('x-focus');
     el.fireScoped();
     assert.equal(el.events.length, 1);
