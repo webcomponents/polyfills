@@ -189,7 +189,15 @@ let documentMixin = utils.extendAll({
    */
   importNode(node, deep) {
     return mutation.importNode(node, deep);
+  },
+
+  /**
+   * @this {Document}
+   */
+  getElementById(id) {
+    return this.querySelector(`#${id}`);
   }
+
 }, fragmentMixin);
 
 Object.defineProperties(documentMixin, {

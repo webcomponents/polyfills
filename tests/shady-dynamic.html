@@ -301,7 +301,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     testElement = document.querySelector('x-test');
   });
 
-  test('querySelector (local)', function() {
+  test('shadowRoot.querySelector', function() {
     var projected = testElement.shadowRoot.querySelector('#projected');
     assert.equal(projected.textContent, 'projected');
     var p2 = testElement.querySelector('#projected');
@@ -314,7 +314,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     assert.equal(p.localName, 'x-project');
   });
 
-  test('querySelectorAll (local)', function() {
+  test('shadowRoot.querySelectorAll', function() {
     var rere = testElement.shadowRoot.querySelector('x-rereproject');
     var re = rere.shadowRoot.querySelector('x-reproject');
     var p = re.shadowRoot.querySelector('x-project');
@@ -328,7 +328,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     assert.equal(pList.length, 1);
   });
 
-  test('querySelector (light)', function() {
+  test('shadowRoot.getElementById', function() {
+    var projected = testElement.shadowRoot.getElementById('projected');
+    assert.equal(projected.textContent, 'projected');
+  });
+
+  test('element.querySelector', function() {
     var projected = testElement.shadowRoot.querySelector('#projected');
     var rere = testElement.shadowRoot.querySelector('x-rereproject');
     var re = rere.shadowRoot.querySelector('x-reproject');
@@ -338,7 +343,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     assert(p.querySelector('slot'));
   });
 
-  test('querySelectorAll (light)', function() {
+  test('element.querySelectorAll', function() {
     var projected = testElement.shadowRoot.querySelector('#projected');
     var rere = testElement.shadowRoot.querySelector('x-rereproject');
     var re = rere.shadowRoot.querySelector('x-reproject');
@@ -348,9 +353,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     assert(p.querySelectorAll('slot').length, 1);
   });
 
-  test('querySelector document', function() {
+  test('document.querySelector', function() {
     assert.ok(document.querySelector('body'));
   });
+
+  test('document.getElementById', function() {
+    var p2 = document.getElementById('projected');
+    assert.isNull(p2);
+  })
 
   test('projection', function() {
     var projected = testElement.shadowRoot.querySelector('#projected');
