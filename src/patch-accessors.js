@@ -85,7 +85,10 @@ let OutsideAccessors = {
   parentElement: {
     /** @this {Node} */
     get() {
-      let l = this.__shady && this.__shady.parentElement;
+      let l = this.__shady && this.__shady.parentNode;
+      if (l && l.nodeType !== Node.ELEMENT_NODE) {
+        l = null;
+      }
       return l !== undefined ? l : nativeTree.parentElement(this);
     },
     configurable: true
@@ -195,6 +198,14 @@ let InsideAccessors = {
     configurable: true
   },
 
+  childElementCount: {
+    /** @this {HTMLElement} */
+    get() {
+      return this.children.length;
+    },
+    configurable: true
+  },
+
   firstChild: {
     /** @this {HTMLElement} */
     get() {
@@ -239,9 +250,7 @@ let InsideAccessors = {
         this.nodeValue = text;
       } else {
         clearNode(this);
-        if (text) {
-          this.appendChild(document.createTextNode(text));
-        }
+        this.appendChild(document.createTextNode(text));
       }
     },
     configurable: true

@@ -639,9 +639,25 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     assert.equal(projected.parentNode, rere);
   });
 
+  test('parentElement', function() {
+    var rere = testElement.shadowRoot.querySelector('x-rereproject');
+    var projected = testElement.shadowRoot.querySelector('#projected');
+    assert.equal(testElement.parentElement, wrap(document.body));
+    assert.equal(projected.parentElement, rere);
+  });
+
   test('childNodes is an array', function() {
     var test = document.querySelector('x-test');
     assert.isTrue(Array.isArray(test.childNodes));
+  });
+
+  test('childElementCount', function() {
+    var test = document.querySelector('x-test');
+    assert.equal(test.childElementCount, 0);
+    var rere = test.shadowRoot.querySelector('x-rereproject');
+    assert.equal(rere.childElementCount, 1);
+    var projected = test.shadowRoot.querySelector('#projected');
+    assert.equal(projected.childElementCount, 0);
   });
 
   test('cloneNode shallow', function() {
