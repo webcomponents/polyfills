@@ -145,6 +145,35 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   });
   </script>
 
+  <template id="x-nested-focus">
+    <div id="child"></div>
+  </template>
+  <script>
+    defineTestElement('x-nested-focus', function() {
+      this.events = [];
+      this.lastFocus = null;
+      this.child = this.shadowRoot.querySelector('#child');
+      this.addEventListener('focus', this.focusHandler.bind(this));
+      this.addEventListener('blur', this.focusHandler.bind(this));
+      this.child.addEventListener('focus', this.focusHandler.bind(this));
+      this.child.addEventListener('blur', this.focusHandler.bind(this));
+    }, {
+      focusHandler(e) {
+        this.events.push({type: e.type, target: e.target, relatedTarget: e.relatedTarget});
+      },
+      focus(node) {
+        // use MouseEvent instead of FocusEvent so we can skip patching the FocusEvent constructor
+        let blur = new MouseEvent('blur', {composed: true, relatedTarget: node});
+        if (this.lastFocus) {
+          this.lastFocus.dispatchEvent(blur);
+        }
+        let focus = new MouseEvent('focus', {composed: true, relatedTarget: this.lastFocus});
+        node.dispatchEvent(focus);
+        this.lastFocus = node;
+      }
+    })
+  </script>
+
   <template id="x-a">
     <div id="child" on-foo="childFooHandler"></div>
     <div id="child2"></div>
@@ -262,12 +291,49 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   });
 
   test('scoped focus and blur events do not retarget', function() {
+    var e = new Event('focus');
+    if (e.isTrusted !== false) {
+      // skip browser if we cannot distinguish
+      // native focus events from user created ones
+      this.skip();
+    }
     var el = createEnabledElement('x-focus');
     el.fireScoped();
     assert.equal(el.events.length, 1);
     assert.equal(el.events[0], el.child);
     el.parentNode.removeChild(el);
   });
+
+  test('focus and blur are nested', function() {
+    var el = createEnabledElement('x-nested-focus');
+    el.focus(el.child);
+    el.focus(el);
+    assert.equal(el.events.length, 3);
+    var filtered = el.events.map(ev => ({type: ev.type, target: ev.target}));
+    assert.deepEqual(filtered, [
+      {type: 'focus', target: el.child},
+      {type: 'focus', target: el},
+      {type: 'blur', target: el.child},
+    ]);
+    el.parentNode.removeChild(el);
+  });
+
+  test('focus and blur events have relatedTarget', function() {
+    var el = createEnabledElement('x-nested-focus');
+    el.focus(el.child);
+    assert.equal(el.events.length, 2);
+    assert.deepEqual(el.events, [
+      {type: 'focus', target: el.child, relatedTarget: null},
+      {type: 'focus', target: el, relatedTarget: null},
+    ]);
+    el.focus(el);
+    assert.equal(el.events.length, 3);
+    assert.deepEqual(el.events, [
+      {type: 'focus', target: el.child, relatedTarget: null},
+      {type: 'focus', target: el, relatedTarget: null},
+      {type: 'blur', target: el.child, relatedTarget: el}
+    ])
+  })
 
   test('composed relatedTarget retargets', function() {
     var container = stampNodes('#relatedtarget');

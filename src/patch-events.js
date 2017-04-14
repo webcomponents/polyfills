@@ -16,6 +16,8 @@ import {addEventListener as nativeAddEventListener,
 
 // https://github.com/w3c/webcomponents/issues/513#issuecomment-224183937
 let alwaysComposed = {
+  'blur': true,
+  'focus': true,
   'focusin': true,
   'focusout': true,
   'click': true,
@@ -191,6 +193,9 @@ function fireHandlers(event, node, phase) {
     node.__handlers[event.type][phase];
   if (hs) {
     for (let i = 0, fn; (fn = hs[i]); i++) {
+      if (event.target === event.relatedTarget) {
+        return;
+      }
       fn.call(node, event);
       if (event.__immediatePropagationStopped) {
         return;
