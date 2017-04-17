@@ -224,7 +224,7 @@ function retargetNonBubblingEvent(e) {
   }
 
   // set the event phase to `AT_TARGET` as in spec
-  Object.defineProperty(e, 'eventPhase', {value: Event.AT_TARGET});
+  Object.defineProperty(e, 'eventPhase', {get() { return Event.AT_TARGET }});
 
   // the event only needs to be fired when owner roots change when iterating the event path
   // keep track of the last seen owner root

@@ -204,8 +204,9 @@ let htmlElementMixin = utils.extendAll({
    */
   blur() {
     let root = this.shadowRoot;
-    if(root && root.activeElement) {
-      root.activeElement.blur();
+    let shadowActive = root && root.activeElement;
+    if (shadowActive) {
+      shadowActive.blur();
     } else {
       nativeBlur.call(this);
     }
