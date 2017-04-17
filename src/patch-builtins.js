@@ -196,6 +196,23 @@ Object.defineProperties(documentMixin, {
   '_activeElement': ActiveElementAccessor.activeElement
 });
 
+let nativeBlur = HTMLElement.prototype.blur;
+
+let htmlElementMixin = utils.extendAll({
+  /**
+   * @this {HTMLElement}
+   */
+  blur() {
+    let root = this.shadowRoot;
+    let shadowActive = root && root.activeElement;
+    if (shadowActive) {
+      shadowActive.blur();
+    } else {
+      nativeBlur.call(this);
+    }
+  }
+})
+
 function patchBuiltin(proto, obj) {
   let n$ = Object.getOwnPropertyNames(obj);
   for (let i=0; i < n$.length; i++) {
@@ -221,6 +238,9 @@ function patchBuiltin(proto, obj) {
 // elements are individually patched when needed (see e.g.
 // `patchInside/OutsideElementAccessors` in `patch-accessors.js`).
 export function patchBuiltins() {
+  let nativeHTMLElement =
+    (window['customElements'] && window['customElements']['nativeHTMLElement']) ||
+    HTMLElement;
   // These patches can always be done, for all supported browsers.
   patchBuiltin(window.Node.prototype, nodeMixin);
   patchBuiltin(window.Text.prototype, textMixin);
@@ -230,6 +250,7 @@ export function patchBuiltins() {
   if (window.HTMLSlotElement) {
     patchBuiltin(window.HTMLSlotElement.prototype, slotMixin);
   }
+  patchBuiltin(nativeHTMLElement.prototype, htmlElementMixin);
   // These patches can *only* be done
   // on browsers that have proper property descriptors on builtin prototypes.
   // This includes: IE11, Edge, Chrome >= 4?; Safari >= 10, Firefox
@@ -240,9 +261,6 @@ export function patchBuiltins() {
     patchAccessors(window.Text.prototype);
     patchAccessors(window.DocumentFragment.prototype);
     patchAccessors(window.Element.prototype);
-    let nativeHTMLElement =
-      (window['customElements'] && window['customElements']['nativeHTMLElement']) ||
-      HTMLElement;
     patchAccessors(nativeHTMLElement.prototype);
     patchAccessors(window.Document.prototype);
     if (window.HTMLSlotElement) {

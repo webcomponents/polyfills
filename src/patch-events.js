@@ -224,7 +224,7 @@ function retargetNonBubblingEvent(e) {
   }
 
   // set the event phase to `AT_TARGET` as in spec
-  Object.defineProperty(e, 'eventPhase', {value: Event.AT_TARGET});
+  Object.defineProperty(e, 'eventPhase', {get() { return Event.AT_TARGET }});
 
   // the event only needs to be fired when owner roots change when iterating the event path
   // keep track of the last seen owner root
@@ -317,24 +317,35 @@ export function addEventListener(type, fn, optionsOrCapture) {
     if (!e['__target']) {
       patchEvent(e);
     }
+    let lastCurrentTargetDesc;
     if (target !== this) {
       // replace `currentTarget` to make `target` and `relatedTarget` correct for inside the shadowroot
+      lastCurrentTargetDesc = Object.getOwnPropertyDescriptor(e, 'currentTarget');
       Object.defineProperty(e, 'currentTarget', {get() { return target }, configurable: true});
     }
     // There are two critera that should stop events from firing on this node
     // 1. the event is not composed and the current node is not in the same root as the target
     // 2. when bubbling, if after retargeting, relatedTarget and target point to the same node
     if (e.composed || e.composedPath().indexOf(target) > -1) {
-      if (e.eventPhase === Event.BUBBLING_PHASE) {
-        if (e.target === e.relatedTarget) {
+      if (e.target === e.relatedTarget) {
+        if (e.eventPhase === Event.BUBBLING_PHASE) {
           e.stopImmediatePropagation();
-          return;
         }
+        return;
+      }
+      // prevent non-bubbling events from triggering bubbling handlers on shadowroot, but only if not in capture phase
+      if (e.eventPhase !== Event.CAPTURING_PHASE && !e.bubbles && e.target !== target) {
+        return;
       }
       let ret = fn.call(target, e);
       if (target !== this) {
         // replace the "correct" `currentTarget`
-        delete e['currentTarget'];
+        if (lastCurrentTargetDesc) {
+          Object.defineProperty(e, 'currentTarget', lastCurrentTargetDesc);
+          lastCurrentTargetDesc = null;
+        } else {
+          delete e['currentTarget'];
+        }
       }
       return ret;
     }

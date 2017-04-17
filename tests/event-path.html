@@ -14,7 +14,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <script src="../../webcomponents-platform/webcomponents-platform.js"></script>
   <script src="../../template/template.js"></script>
   <script>
-    ShadyDOM = {force: true};
+    ShadyDOM = {force: true, flush(){}};
   </script>
   <script src="../shadydom.min.js"></script>
   <script src="../../custom-elements/custom-elements.min.js"></script>
@@ -146,10 +146,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   </script>
 
   <template id="x-nested-focus">
-    <div id="child"></div>
+    <input id="child">
   </template>
   <script>
     defineTestElement('x-nested-focus', function() {
+      this.tabIndex = -1;
       this.events = [];
       this.lastFocus = null;
       this.child = this.shadowRoot.querySelector('#child');
@@ -332,7 +333,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       {type: 'focus', target: el.child, relatedTarget: null},
       {type: 'focus', target: el, relatedTarget: null},
       {type: 'blur', target: el.child, relatedTarget: el}
-    ])
+    ]);
+    el.parentNode.removeChild(el);
   })
 
   test('composed relatedTarget retargets', function() {
@@ -370,6 +372,23 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     assert.equal(el.events.length, 2);
     assert.equal(el.events[0], el.child);
     assert.equal(el.events[1], el);
+    el.parentNode.removeChild(el);
+  });
+
+  test('.focus() and .blur() work as expected', function() {
+    // NOTE: IE 11 fails to work for some reason in Saucelabs when running with WCT
+    // Passes when running locally with WCT on the same Saucelabs VMs :/
+    if (navigator.userAgent.match(/Trident/)) {
+      this.skip();
+    }
+    var el = createEnabledElement('x-nested-focus');
+    el.child.focus();
+    assert.equal(document._activeElement, el);
+    assert.equal(el.shadowRoot.activeElement, el.child);
+    el.blur();
+    assert.equal(el.shadowRoot.activeElement, null);
+    assert.notEqual(document._activeElement, el);
+    el.parentNode.removeChild(el);
   });
 
     suite('composedPath', function() {
@@ -388,6 +407,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         ShadyDOM.flush();
         var ev = new Event('foo', {bubbles: true, composed: true});
         a.dispatchEvent(ev);
+        el.parentNode.removeChild(el);
       });
 
       test('focus events retarget', function() {
@@ -425,8 +445,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         var ev = new Event('focus', {composed: true});
         bot.dispatchEvent(ev);
 
-        assert.isAbove(recv.length, 0);
-        pathCompare([bot, top, top.shadowRoot], recv);
+        assert.equal(recv.length, 2);
+        pathCompare([bot, top], recv);
+        top.parentNode.removeChild(top);
       });
     });
 
