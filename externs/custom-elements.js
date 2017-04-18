@@ -1,4 +1,3 @@
-var CustomElementRegistry;
 CustomElementRegistry.prototype.forcePolyfill = false;
 
 class AlreadyConstructedMarker {}
@@ -42,9 +41,6 @@ Node.prototype.__CE_isImportDocument;
 Node.prototype.__CE_documentLoadHandled;
 
 // Apply generally to Node.
-
-/** @type {boolean|undefined} */
-Node.prototype.isConnected;
 
 /** @type {boolean|undefined} */
 Node.prototype.__CE_patched;

@@ -240,6 +240,26 @@ suite('Custom Element Reactions', function() {
       assert.equal(changed[0].newValue, 'test1', 'newValue');
     });
 
+    test('called even if attribute value hasn\'t changed', function () {
+      var calls = 0;
+      class XBoo extends HTMLElement {
+        static get observedAttributes () {
+          return ['foo'];
+        }
+        attributeChangedCallback(name, oldValue, newValue) {
+          calls += 1;
+        }
+      }
+      var element = document.createElement('x-boo-at2');
+
+      customElements.define('x-boo-at2', XBoo);
+      work.appendChild(element);
+      element.setAttribute('foo', 'foo');
+      element.setAttribute('foo', 'foo');
+
+      assert.equal(calls, 2);
+    })
+
   });
 
   suite('connectedCallback', function() {
