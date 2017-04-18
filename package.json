@@ -1,6 +1,6 @@
 {
   "name": "@webcomponents/shadydom",
-  "version": "1.0.0-rc.2",
+  "version": "1.0.0-rc.3",
   "description": "Shadow DOM polyfill",
   "main": "shadydom.min.js",
   "directories": {
@@ -22,7 +22,7 @@
   "devDependencies": {
     "eslint": "^3.4.0",
     "eslint-plugin-html": "^2.0.0",
-    "google-closure-compiler": "^20170218.0.0",
+    "google-closure-compiler": "^20170409.0.0",
     "gulp": "^3.8.8",
     "gulp-rename": "^1.2.2",
     "gulp-rollup": "^2.5.1",
