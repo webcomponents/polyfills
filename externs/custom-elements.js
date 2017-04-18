@@ -1,4 +1,5 @@
-CustomElementRegistry.prototype.forcePolyfill = false;
+/** @type {boolean|undefined} */
+CustomElementRegistry.prototype.forcePolyfill;
 
 class AlreadyConstructedMarker {}
 
