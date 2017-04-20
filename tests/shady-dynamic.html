@@ -770,6 +770,30 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     assert.equal(assignedNodes[1].id, 'peer');
   });
 
+  test('dispatchEvent forces distribution', function() {
+    var e = document.createElement('x-echo');
+    document.body.appendChild(e);
+    var html = '<div id="added"></div>';
+    e.innerHTML = html;
+    e.dispatchEvent(new Event('foo'));
+    assert.equal(ShadyDOM.nativeTree.innerHTML(e), html);
+    document.body.removeChild(e);
+  });
+
+  test('dispatchEvent on element pending distribution bubbles correctly', function() {
+    var e = document.createElement('x-distribute');
+    document.body.appendChild(e);
+    var c = e.shadowRoot.getElementById('notTestContainer');
+    var eventCount = 0;
+    e.addEventListener('foo', function() { eventCount++ });
+    c.addEventListener('foo', function() { eventCount++ });
+    var div = document.createElement('div');
+    e.appendChild(div);
+    div.dispatchEvent(new Event('foo', {bubbles: true}));
+    assert.equal(eventCount, 2, 'event did not bubble through root and to target');
+    document.body.removeChild(e);
+  });
+
 });
 
 suite('insertBefore', function() {

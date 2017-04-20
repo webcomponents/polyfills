@@ -11,6 +11,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 'use strict';
 
 import * as utils from './utils'
+import {flush} from './flush'
+import {dispatchEvent} from './native-methods'
 import * as mutation from './logical-mutation'
 import {ActiveElementAccessor, ShadowRootAccessor, patchAccessors} from './patch-accessors'
 import {addEventListener, removeEventListener} from './patch-events'
@@ -177,6 +179,11 @@ let elementMixin = utils.extendAll({
    */
   get assignedSlot() {
     return getAssignedSlot(this);
+  },
+
+  dispatchEvent(event) {
+    flush();
+    return dispatchEvent.call(this, event);
   }
 
 }, fragmentMixin, slotMixin);
