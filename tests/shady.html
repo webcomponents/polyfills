@@ -554,6 +554,23 @@ suite('Patch of addEventListener/removeEventListener', function() {
     assert.equal(callback.callCount, 2, 'listeners removed (callCount did not increase)');
   });
 
+  test('add listener with `handleEvent` function', function() {
+    var obj = {handleEvent: sinon.stub()};
+    el1.addEventListener('click', obj);
+    el2.addEventListener('click', obj);
+    el1.click();
+    assert.isTrue(obj.handleEvent.calledOn(obj), 'called on object listened');
+    assert.isTrue(obj.handleEvent.args[0][0] instanceof Event, 'called with event argument');
+    assert.equal(obj.handleEvent.callCount, 1, 'called once');
+    el2.click();
+    assert.equal(obj.handleEvent.callCount, 2, 'called twice');
+    el1.removeEventListener('click', obj);
+    el2.removeEventListener('click', obj);
+    el1.click();
+    el2.click();
+    assert.equal(obj.handleEvent.callCount, 2, 'listeners removed (callCount did not increase)');
+  });
+
 });
 
 function getEffectiveChildNodes(node) {

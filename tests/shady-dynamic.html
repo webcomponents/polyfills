@@ -651,6 +651,26 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     assert.isTrue(Array.isArray(test.childNodes));
   });
 
+  test('childNodes.item(index)', function() {
+    var el = document.createElement('x-echo');
+    var d1 = document.createElement('div');
+    var t1 = document.createTextNode('');
+    el.appendChild(d1);
+    el.insertBefore(t1, d1);
+    assert.equal(el.childNodes.item(0), t1);
+    assert.equal(el.childNodes.item(1), d1);
+  });
+
+  test('children.item(index)', function() {
+    var el = document.createElement('x-echo');
+    var d1 = document.createElement('div');
+    var d2 = document.createElement('div');
+    el.appendChild(d1);
+    el.insertBefore(d2, d1);
+    assert.equal(el.children.item(0), d2);
+    assert.equal(el.children.item(1), d1);
+  });
+
   test('childElementCount', function() {
     var test = document.querySelector('x-test');
     assert.equal(test.childElementCount, 0);

@@ -183,6 +183,7 @@ let InsideAccessors = {
      * @this {HTMLElement}
      */
     get() {
+      let childNodes;
       if (this.__shady && this.__shady.firstChild !== undefined) {
         if (!this.__shady.childNodes) {
           this.__shady.childNodes = [];
@@ -190,10 +191,14 @@ let InsideAccessors = {
             this.__shady.childNodes.push(n);
           }
         }
-        return this.__shady.childNodes;
+        childNodes = this.__shady.childNodes;
       } else {
-        return nativeTree.childNodes(this);
+        childNodes = nativeTree.childNodes(this);
       }
+      childNodes.item = function(index) {
+        return childNodes[index];
+      }
+      return childNodes;
     },
     configurable: true
   },
@@ -298,13 +303,18 @@ let InsideAccessors = {
      * @this {HTMLElement}
      */
     get() {
+      let children;
       if (this.__shady && this.__shady.firstChild !== undefined) {
-        return Array.prototype.filter.call(this.childNodes, function(n) {
+        children = Array.prototype.filter.call(this.childNodes, function(n) {
           return (n.nodeType === Node.ELEMENT_NODE);
         });
       } else {
-        return nativeTree.children(this);
+        children = nativeTree.children(this);
       }
+      children.item = function(index) {
+        return children[index];
+      }
+      return children;
     },
     configurable: true
   },
