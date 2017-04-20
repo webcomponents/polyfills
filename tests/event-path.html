@@ -116,6 +116,34 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     });
   </script>
 
+  <template id="x-event-scoped-window">
+    <div id="scoped"></div>
+  </template>
+    <script>
+    defineTestElement('x-event-scoped-window', function() {
+      this.scoped = this.shadowRoot.querySelector('#scoped');
+      this.windowEvents = [];
+      window.addEventListener('composed', this.windowHandler.bind(this));
+      window.addEventListener('scoped', this.windowHandler.bind(this));
+    }, {
+      windowHandler: function(e) {
+        this.windowEvents.push({
+          target: e.target,
+          type: e.type,
+          path: e.composedPath()
+        });
+      },
+      fireComposed: function() {
+        return this.scoped.dispatchEvent(
+          new Event('composed', {composed: true, bubbles: true}));
+      },
+      fireScoped: function(){
+        return this.scoped.dispatchEvent(
+          new Event('scoped', {bubbles: true}));
+      }
+    });
+  </script>
+
   <template id="x-focus">
     <style>
       :host {
@@ -234,6 +262,33 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       el.fireComposed();
       assert.equal(el.hostEvents[0].target, el);
       assert.equal(el.childEvents[0].target, el.scoped);
+      el.parentNode.removeChild(el);
+    });
+    test('window events retarget', function() {
+      var el = createEnabledElement('x-event-scoped-window');
+      el.fireComposed();
+      assert.equal(el.windowEvents[0].target, el);
+      el.parentNode.removeChild(el);
+    });
+
+    test('window remove event listener', function() {
+      var el = createEnabledElement('x-event-scoped-window');
+      var listener = function(e) {
+        el.windowListenerEvents = el.windowListenerEvents ? el.windowListenerEvents+1 : 1;
+      };
+      window.addEventListener("composed", listener);
+      el.fireComposed();
+      assert.equal(1, el.windowListenerEvents);
+      window.removeEventListener("composed", listener);
+      el.fireComposed();
+      assert.equal(1, el.windowListenerEvents);
+      el.parentNode.removeChild(el);
+    });
+
+    test('scoped event does not reach window', function() {
+      var el = createEnabledElement('x-event-scoped-window');
+      el.fireScoped();
+      assert.equal(0, el.windowEvents.length);
       el.parentNode.removeChild(el);
     });
 

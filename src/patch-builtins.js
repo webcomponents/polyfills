@@ -23,6 +23,13 @@ function getAssignedSlot(node) {
   return node.__shady && node.__shady.assignedSlot || null;
 }
 
+let windowMixin = {
+
+  addEventListener: addEventListener,
+
+  removeEventListener: removeEventListener
+};
+
 let nodeMixin = {
 
   addEventListener: addEventListener,
@@ -261,6 +268,7 @@ export function patchBuiltins() {
     HTMLElement;
   // These patches can always be done, for all supported browsers.
   patchBuiltin(window.Node.prototype, nodeMixin);
+  patchBuiltin(window.Window.prototype, windowMixin);
   patchBuiltin(window.Text.prototype, textMixin);
   patchBuiltin(window.DocumentFragment.prototype, fragmentMixin);
   patchBuiltin(window.Element.prototype, elementMixin);
