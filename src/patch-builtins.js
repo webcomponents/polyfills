@@ -79,6 +79,14 @@ let nodeMixin = {
       node = node.parentNode || (node instanceof ShadyRoot ? /** @type {ShadowRoot} */(node).host : undefined);
     }
     return !!(node && node instanceof Document);
+  },
+
+  /**
+   * @this {Node}
+   */
+  dispatchEvent(event) {
+    flush();
+    return dispatchEvent.call(this, event);
   }
 
 };
@@ -179,11 +187,6 @@ let elementMixin = utils.extendAll({
    */
   get assignedSlot() {
     return getAssignedSlot(this);
-  },
-
-  dispatchEvent(event) {
-    flush();
-    return dispatchEvent.call(this, event);
   }
 
 }, fragmentMixin, slotMixin);

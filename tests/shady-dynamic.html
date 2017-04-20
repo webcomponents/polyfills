@@ -295,7 +295,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   suite('ShadyDOM', function() {
 
   var testElement;
-  var wrap = window.wrap || function(n){ return n; };
 
   suiteSetup(function() {
     testElement = document.querySelector('x-test');
@@ -635,14 +634,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   test('parentNode', function() {
     var rere = testElement.shadowRoot.querySelector('x-rereproject');
     var projected = testElement.shadowRoot.querySelector('#projected');
-    assert.equal(testElement.parentNode, wrap(document.body));
+    assert.equal(testElement.parentNode, document.body);
     assert.equal(projected.parentNode, rere);
   });
 
   test('parentElement', function() {
     var rere = testElement.shadowRoot.querySelector('x-rereproject');
     var projected = testElement.shadowRoot.querySelector('#projected');
-    assert.equal(testElement.parentElement, wrap(document.body));
+    assert.equal(testElement.parentElement, document.body);
     assert.equal(projected.parentElement, rere);
   });
 
@@ -790,12 +789,23 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     assert.equal(assignedNodes[1].id, 'peer');
   });
 
-  test('dispatchEvent forces distribution', function() {
+  test('dispatchEvent on element forces distribution', function() {
     var e = document.createElement('x-echo');
     document.body.appendChild(e);
     var html = '<div id="added"></div>';
     e.innerHTML = html;
     e.dispatchEvent(new Event('foo'));
+    assert.equal(ShadyDOM.nativeTree.innerHTML(e), html);
+    document.body.removeChild(e);
+  });
+
+  test('dispatchEvent on text forces distribution', function() {
+    var e = document.createElement('x-echo');
+    document.body.appendChild(e);
+    var html = 'some text';
+    e.innerHTML = html;
+    assert.isTrue(e.firstChild.nodeType == Node.TEXT_NODE);
+    e.firstChild.dispatchEvent(new Event('foo'));
     assert.equal(ShadyDOM.nativeTree.innerHTML(e), html);
     document.body.removeChild(e);
   });
