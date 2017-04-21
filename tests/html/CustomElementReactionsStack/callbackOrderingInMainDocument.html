@@ -11,24 +11,37 @@
 <script>
   window.LOG = [];
 
+  window.addEventListener('custom-element:log', function(e) {
+    window.LOG.push(e.detail.text);
+  });
+
+  function dispatchLogEvent(target, text) {
+    target.dispatchEvent(new CustomEvent('custom-element:log', {
+      bubbles: true,
+      detail: {
+        text: text,
+      },
+    }));
+  }
+
   customElements.define('custom-element', class extends HTMLElement {
     constructor() {
       super();
       this.constructor.instanceCount = (this.constructor.instanceCount || 0) + 1;
-      window.LOG.push(`custom-element constructor ${this.constructor.instanceCount}`);
+      dispatchLogEvent(this, `custom-element constructor ${this.constructor.instanceCount}`);
     }
 
     connectedCallback() {
-      window.LOG.push(`#${this.id} connected`);
+      dispatchLogEvent(this, `#${this.id} connected`);
     }
 
     disconnectedCallback() {
-      window.LOG.push(`#${this.id} disconnected`);
+      dispatchLogEvent(this, `#${this.id} disconnected`);
     }
 
     static get observedAttributes() { return ['attr']; }
     attributeChangedCallback(name, oldValue, newValue, namespace) {
-      window.LOG.push(`#${this.id} attributeChangedCallback ${name}`);
+      dispatchLogEvent(this, `#${this.id} attributeChangedCallback ${name}`);
     }
   });
 </script>
