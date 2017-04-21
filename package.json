@@ -28,7 +28,7 @@
   "scripts": {
     "test": "wct"
   },
-  "homepage": "http://webcomponents.org",
+  "homepage": "https://webcomponents.org/polyfills",
   "devDependencies": {
     "eslint": "^3.4.0",
     "eslint-plugin-html": "^2.0.0",
