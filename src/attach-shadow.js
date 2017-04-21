@@ -280,6 +280,10 @@ ShadyRoot.prototype.removeEventListener = function(type, fn, optionsOrCapture) {
   this.host.removeEventListener(type, fn, optionsOrCapture);
 }
 
+ShadyRoot.prototype.getElementById = function(id) {
+  return this.querySelector(`#${id}`);
+}
+
 /**
   Implements a pared down version of ShadowDOM's scoping, which is easy to
   polyfill across browsers.

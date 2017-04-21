@@ -271,8 +271,8 @@ export function findListener(wrappers, node, type, capture, once, passive) {
 /**
  * @this {Event}
  */
-export function addEventListener(type, fn, optionsOrCapture) {
-  if (!fn) {
+export function addEventListener(type, fnOrObj, optionsOrCapture) {
+  if (!fnOrObj) {
     return;
   }
 
@@ -297,13 +297,13 @@ export function addEventListener(type, fn, optionsOrCapture) {
   // will be set to shadyroot for event listener
   let target = optionsOrCapture && optionsOrCapture.__shadyTarget || this;
 
-  if (fn.__eventWrappers) {
+  if (fnOrObj.__eventWrappers) {
     // Stop if the wrapper function has already been created.
-    if (findListener(fn.__eventWrappers, target, type, capture, once, passive) > -1) {
+    if (findListener(fnOrObj.__eventWrappers, target, type, capture, once, passive) > -1) {
       return;
     }
   } else {
-    fn.__eventWrappers = [];
+    fnOrObj.__eventWrappers = [];
   }
 
   /**
@@ -312,7 +312,7 @@ export function addEventListener(type, fn, optionsOrCapture) {
   const wrapperFn = function(e) {
     // Support `once` option.
     if (once) {
-      this.removeEventListener(type, fn, optionsOrCapture);
+      this.removeEventListener(type, fnOrObj, optionsOrCapture);
     }
     if (!e['__target']) {
       patchEvent(e);
@@ -337,7 +337,9 @@ export function addEventListener(type, fn, optionsOrCapture) {
       if (e.eventPhase !== Event.CAPTURING_PHASE && !e.bubbles && e.target !== target) {
         return;
       }
-      let ret = fn.call(target, e);
+      let ret = (typeof fnOrObj === 'object' && fnOrObj.handleEvent) ?
+        fnOrObj.handleEvent(e) :
+        fnOrObj.call(target, e);
       if (target !== this) {
         // replace the "correct" `currentTarget`
         if (lastCurrentTargetDesc) {
@@ -351,7 +353,7 @@ export function addEventListener(type, fn, optionsOrCapture) {
     }
   };
   // Store the wrapper information.
-  fn.__eventWrappers.push({
+  fnOrObj.__eventWrappers.push({
     node: this,
     type: type,
     capture: capture,
@@ -373,8 +375,8 @@ export function addEventListener(type, fn, optionsOrCapture) {
 /**
  * @this {Event}
  */
-export function removeEventListener(type, fn, optionsOrCapture) {
-  if (!fn) {
+export function removeEventListener(type, fnOrObj, optionsOrCapture) {
+  if (!fnOrObj) {
     return;
   }
 
@@ -392,18 +394,18 @@ export function removeEventListener(type, fn, optionsOrCapture) {
   let target = optionsOrCapture && optionsOrCapture.__shadyTarget || this;
   // Search the wrapped function.
   let wrapperFn = undefined;
-  if (fn.__eventWrappers) {
-    let idx = findListener(fn.__eventWrappers, target, type, capture, once, passive);
+  if (fnOrObj.__eventWrappers) {
+    let idx = findListener(fnOrObj.__eventWrappers, target, type, capture, once, passive);
     if (idx > -1) {
-      wrapperFn = fn.__eventWrappers.splice(idx, 1)[0].wrapperFn;
+      wrapperFn = fnOrObj.__eventWrappers.splice(idx, 1)[0].wrapperFn;
       // Cleanup.
-      if (!fn.__eventWrappers.length) {
-        fn.__eventWrappers = undefined;
+      if (!fnOrObj.__eventWrappers.length) {
+        fnOrObj.__eventWrappers = undefined;
       }
     }
   }
 
-  nativeRemoveEventListener.call(this, type, wrapperFn || fn, optionsOrCapture);
+  nativeRemoveEventListener.call(this, type, wrapperFn || fnOrObj, optionsOrCapture);
   if (wrapperFn && nonBubblingEventsToRetarget[type] &&
       this.__handlers && this.__handlers[type]) {
     const arr = this.__handlers[type][capture ? 'capture' : 'bubble'];

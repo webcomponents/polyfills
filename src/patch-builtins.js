@@ -11,6 +11,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 'use strict';
 
 import * as utils from './utils'
+import {flush} from './flush'
+import {dispatchEvent} from './native-methods'
 import * as mutation from './logical-mutation'
 import {ActiveElementAccessor, ShadowRootAccessor, patchAccessors} from './patch-accessors'
 import {addEventListener, removeEventListener} from './patch-events'
@@ -77,6 +79,14 @@ let nodeMixin = {
       node = node.parentNode || (node instanceof ShadyRoot ? /** @type {ShadowRoot} */(node).host : undefined);
     }
     return !!(node && node instanceof Document);
+  },
+
+  /**
+   * @this {Node}
+   */
+  dispatchEvent(event) {
+    flush();
+    return dispatchEvent.call(this, event);
   }
 
 };
@@ -189,7 +199,15 @@ let documentMixin = utils.extendAll({
    */
   importNode(node, deep) {
     return mutation.importNode(node, deep);
+  },
+
+  /**
+   * @this {Document}
+   */
+  getElementById(id) {
+    return this.querySelector(`#${id}`);
   }
+
 }, fragmentMixin);
 
 Object.defineProperties(documentMixin, {

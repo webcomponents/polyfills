@@ -35,8 +35,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     }
   </script>
 
-  <!-- <script src="../../webcomponentsjs/webcomponents-lite.js"></script> -->
-
   <script src="../../web-component-tester/browser.js"></script>
 </head>
 <body>
@@ -465,7 +463,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       ShadyDOM.flush();
       assert.equal(div.assignedSlot, slot);
       // Remove
-      noDist.shadowRoot.querySelector('#static').removeChild(wrapper);
+      var static = noDist.shadowRoot.querySelector('#static');
+      static.removeChild(wrapper);
       ShadyDOM.flush();
       assert.equal(div.assignedSlot, null);
       document.body.removeChild(noDist);

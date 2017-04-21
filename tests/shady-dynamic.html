@@ -295,13 +295,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   suite('ShadyDOM', function() {
 
   var testElement;
-  var wrap = window.wrap || function(n){ return n; };
 
   suiteSetup(function() {
     testElement = document.querySelector('x-test');
   });
 
-  test('querySelector (local)', function() {
+  test('shadowRoot.querySelector', function() {
     var projected = testElement.shadowRoot.querySelector('#projected');
     assert.equal(projected.textContent, 'projected');
     var p2 = testElement.querySelector('#projected');
@@ -314,7 +313,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     assert.equal(p.localName, 'x-project');
   });
 
-  test('querySelectorAll (local)', function() {
+  test('shadowRoot.querySelectorAll', function() {
     var rere = testElement.shadowRoot.querySelector('x-rereproject');
     var re = rere.shadowRoot.querySelector('x-reproject');
     var p = re.shadowRoot.querySelector('x-project');
@@ -328,7 +327,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     assert.equal(pList.length, 1);
   });
 
-  test('querySelector (light)', function() {
+  test('shadowRoot.getElementById', function() {
+    var projected = testElement.shadowRoot.getElementById('projected');
+    assert.equal(projected.textContent, 'projected');
+  });
+
+  test('element.querySelector', function() {
     var projected = testElement.shadowRoot.querySelector('#projected');
     var rere = testElement.shadowRoot.querySelector('x-rereproject');
     var re = rere.shadowRoot.querySelector('x-reproject');
@@ -338,7 +342,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     assert(p.querySelector('slot'));
   });
 
-  test('querySelectorAll (light)', function() {
+  test('element.querySelectorAll', function() {
     var projected = testElement.shadowRoot.querySelector('#projected');
     var rere = testElement.shadowRoot.querySelector('x-rereproject');
     var re = rere.shadowRoot.querySelector('x-reproject');
@@ -348,9 +352,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     assert(p.querySelectorAll('slot').length, 1);
   });
 
-  test('querySelector document', function() {
+  test('document.querySelector', function() {
     assert.ok(document.querySelector('body'));
   });
+
+  test('document.getElementById', function() {
+    var p2 = document.getElementById('projected');
+    assert.isNull(p2);
+  })
 
   test('projection', function() {
     var projected = testElement.shadowRoot.querySelector('#projected');
@@ -625,13 +634,49 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   test('parentNode', function() {
     var rere = testElement.shadowRoot.querySelector('x-rereproject');
     var projected = testElement.shadowRoot.querySelector('#projected');
-    assert.equal(testElement.parentNode, wrap(document.body));
+    assert.equal(testElement.parentNode, document.body);
     assert.equal(projected.parentNode, rere);
+  });
+
+  test('parentElement', function() {
+    var rere = testElement.shadowRoot.querySelector('x-rereproject');
+    var projected = testElement.shadowRoot.querySelector('#projected');
+    assert.equal(testElement.parentElement, document.body);
+    assert.equal(projected.parentElement, rere);
   });
 
   test('childNodes is an array', function() {
     var test = document.querySelector('x-test');
     assert.isTrue(Array.isArray(test.childNodes));
+  });
+
+  test('childNodes.item(index)', function() {
+    var el = document.createElement('x-echo');
+    var d1 = document.createElement('div');
+    var t1 = document.createTextNode('');
+    el.appendChild(d1);
+    el.insertBefore(t1, d1);
+    assert.equal(el.childNodes.item(0), t1);
+    assert.equal(el.childNodes.item(1), d1);
+  });
+
+  test('children.item(index)', function() {
+    var el = document.createElement('x-echo');
+    var d1 = document.createElement('div');
+    var d2 = document.createElement('div');
+    el.appendChild(d1);
+    el.insertBefore(d2, d1);
+    assert.equal(el.children.item(0), d2);
+    assert.equal(el.children.item(1), d1);
+  });
+
+  test('childElementCount', function() {
+    var test = document.querySelector('x-test');
+    assert.equal(test.childElementCount, 0);
+    var rere = test.shadowRoot.querySelector('x-rereproject');
+    assert.equal(rere.childElementCount, 1);
+    var projected = test.shadowRoot.querySelector('#projected');
+    assert.equal(projected.childElementCount, 0);
   });
 
   test('cloneNode shallow', function() {
@@ -742,6 +787,41 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     var assignedNodes = echo.shadowRoot.firstElementChild.assignedNodes();
     assert.equal(assignedNodes[0].localName, 'x-stamps-peer');
     assert.equal(assignedNodes[1].id, 'peer');
+  });
+
+  test('dispatchEvent on element forces distribution', function() {
+    var e = document.createElement('x-echo');
+    document.body.appendChild(e);
+    var html = '<div id="added"></div>';
+    e.innerHTML = html;
+    e.dispatchEvent(new Event('foo'));
+    assert.equal(ShadyDOM.nativeTree.innerHTML(e), html);
+    document.body.removeChild(e);
+  });
+
+  test('dispatchEvent on text forces distribution', function() {
+    var e = document.createElement('x-echo');
+    document.body.appendChild(e);
+    var html = 'some text';
+    e.innerHTML = html;
+    assert.isTrue(e.firstChild.nodeType == Node.TEXT_NODE);
+    e.firstChild.dispatchEvent(new Event('foo'));
+    assert.equal(ShadyDOM.nativeTree.innerHTML(e), html);
+    document.body.removeChild(e);
+  });
+
+  test('dispatchEvent on element pending distribution bubbles correctly', function() {
+    var e = document.createElement('x-distribute');
+    document.body.appendChild(e);
+    var c = e.shadowRoot.getElementById('notTestContainer');
+    var eventCount = 0;
+    e.addEventListener('foo', function() { eventCount++ });
+    c.addEventListener('foo', function() { eventCount++ });
+    var div = document.createElement('div');
+    e.appendChild(div);
+    div.dispatchEvent(new Event('foo', {bubbles: true}));
+    assert.equal(eventCount, 2, 'event did not bubble through root and to target');
+    document.body.removeChild(e);
   });
 
 });
