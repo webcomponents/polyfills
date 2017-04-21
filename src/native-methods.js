@@ -19,4 +19,6 @@ export let cloneNode = Element.prototype.cloneNode;
 export let importNode = Document.prototype.importNode;
 export let addEventListener = Element.prototype.addEventListener;
 export let removeEventListener = Element.prototype.removeEventListener;
+export let windowAddEventListener = Window.prototype.addEventListener;
+export let windowRemoveEventListener = Window.prototype.removeEventListener;
 export let dispatchEvent = Element.prototype.dispatchEvent;
