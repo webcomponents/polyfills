@@ -144,34 +144,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     });
   </script>
 
-  <template id="x-event-scoped-document">
-    <div id="scoped"></div>
-  </template>
-    <script>
-    defineTestElement('x-event-scoped-document', function() {
-      this.scoped = this.shadowRoot.querySelector('#scoped');
-      this.documentEvents = [];
-      document.addEventListener('composed', this.handler.bind(this));
-      document.addEventListener('scoped', this.handler.bind(this));
-    }, {
-      handler: function(e) {
-        this.documentEvents.push({
-          target: e.target,
-          type: e.type,
-          path: e.composedPath()
-        });
-      },
-      fireComposed: function() {
-        return this.scoped.dispatchEvent(
-          new Event('composed', {composed: true, bubbles: true}));
-      },
-      fireScoped: function(){
-        return this.scoped.dispatchEvent(
-          new Event('scoped', {bubbles: true}));
-      }
-    });
-  </script>
-
   <template id="x-focus">
     <style>
       :host {
@@ -317,34 +289,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       var el = createEnabledElement('x-event-scoped-window');
       el.fireScoped();
       assert.equal(0, el.windowEvents.length);
-      el.parentNode.removeChild(el);
-    });
-
-    test('document events retarget', function() {
-      var el = createEnabledElement('x-event-scoped-document');
-      el.fireComposed();
-      assert.equal(el.documentEvents[0].target, el);
-      el.parentNode.removeChild(el);
-    });
-
-    test('document remove event listener', function() {
-      var el = createEnabledElement('x-event-scoped-document');
-      var listener = function(e) {
-        el.listenerEvents = el.listenerEvents ? el.listenerEvents+1 : 1;
-      };
-      document.addEventListener("composed", listener);
-      el.fireComposed();
-      assert.equal(1, el.listenerEvents);
-      document.removeEventListener("composed", listener);
-      el.fireComposed();
-      assert.equal(1, el.listenerEvents);
-      el.parentNode.removeChild(el);
-    });
-
-    test('scoped event does not reach document', function() {
-      var el = createEnabledElement('x-event-scoped-document');
-      el.fireScoped();
-      assert.equal(0, el.documentEvents.length);
       el.parentNode.removeChild(el);
     });
 
