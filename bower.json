@@ -24,5 +24,5 @@
     "webcomponents-platform": "webcomponents/webcomponents-platform#master",
     "shadycss": "webcomponents/shadycss#master"
   },
-  "version": "1.0.0-rc.4"
+  "version": "1.0.0-rc.5"
 }
