@@ -294,7 +294,7 @@ export function addEventListener(type, fnOrObj, optionsOrCapture) {
   // hack to let ShadyRoots have event listeners
   // event listener will be on host, but `currentTarget`
   // will be set to shadyroot for event listener
-  let target = optionsOrCapture && optionsOrCapture.__shadyTarget || this;
+  let target = (optionsOrCapture && optionsOrCapture.__shadyTarget) || this;
 
   if (fnOrObj.__eventWrappers) {
     // Stop if the wrapper function has already been created.
@@ -392,7 +392,7 @@ export function removeEventListener(type, fnOrObj, optionsOrCapture) {
     once = false;
     passive = false;
   }
-  let target = optionsOrCapture && optionsOrCapture.__shadyTarget || this;
+  let target = (optionsOrCapture && optionsOrCapture.__shadyTarget) || this;
   // Search the wrapped function.
   let wrapperFn = undefined;
   if (fnOrObj.__eventWrappers) {
