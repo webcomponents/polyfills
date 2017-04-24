@@ -25,9 +25,13 @@ function getAssignedSlot(node) {
 
 let windowMixin = {
 
-  addEventListener: addEventListener,
+  // NOTE: ensure these methods are bound to `window` so that `this` is correct
+  // when called directly from global context without a receiver; e.g.
+  // `addEventListener(...)`.
+  addEventListener: addEventListener.bind(window),
 
-  removeEventListener: removeEventListener
+  removeEventListener: removeEventListener.bind(window)
+
 };
 
 let nodeMixin = {

@@ -294,9 +294,7 @@ export function addEventListener(type, fnOrObj, optionsOrCapture) {
   // hack to let ShadyRoots have event listeners
   // event listener will be on host, but `currentTarget`
   // will be set to shadyroot for event listener
-  // NOTE: if no `this`, we assume this method was called on window.
-  let context = this || window;
-  let target = (optionsOrCapture && optionsOrCapture.__shadyTarget) || context;
+  let target = (optionsOrCapture && optionsOrCapture.__shadyTarget) || this;
 
   if (fnOrObj.__eventWrappers) {
     // Stop if the wrapper function has already been created.
@@ -355,7 +353,7 @@ export function addEventListener(type, fnOrObj, optionsOrCapture) {
   };
   // Store the wrapper information.
   fnOrObj.__eventWrappers.push({
-    node: context,
+    node: this,
     type: type,
     capture: capture,
     once: once,
@@ -364,14 +362,14 @@ export function addEventListener(type, fnOrObj, optionsOrCapture) {
   });
 
   if (nonBubblingEventsToRetarget[type]) {
-    context.__handlers = context.__handlers || {};
-    context.__handlers[type] = context.__handlers[type] ||
+    this.__handlers = this.__handlers || {};
+    this.__handlers[type] = this.__handlers[type] ||
       {'capture': [], 'bubble': []};
-    context.__handlers[type][capture ? 'capture' : 'bubble'].push(wrapperFn);
+    this.__handlers[type][capture ? 'capture' : 'bubble'].push(wrapperFn);
   } else {
-    let ael = context instanceof Window ? nativeMethods.windowAddEventListener :
+    let ael = this instanceof Window ? nativeMethods.windowAddEventListener :
       nativeMethods.addEventListener;
-    ael.call(context, type, wrapperFn, optionsOrCapture);
+    ael.call(this, type, wrapperFn, optionsOrCapture);
   }
 }
 
@@ -394,9 +392,7 @@ export function removeEventListener(type, fnOrObj, optionsOrCapture) {
     once = false;
     passive = false;
   }
-  // NOTE: if no `this`, we assume this method was called on window.
-  let context = this || window;
-  let target = (optionsOrCapture && optionsOrCapture.__shadyTarget) || context;
+  let target = (optionsOrCapture && optionsOrCapture.__shadyTarget) || this;
   // Search the wrapped function.
   let wrapperFn = undefined;
   if (fnOrObj.__eventWrappers) {
@@ -409,12 +405,12 @@ export function removeEventListener(type, fnOrObj, optionsOrCapture) {
       }
     }
   }
-  let rel = context instanceof Window ? nativeMethods.windowRemoveEventListener :
+  let rel = this instanceof Window ? nativeMethods.windowRemoveEventListener :
     nativeMethods.removeEventListener;
-  rel.call(context, type, wrapperFn || fnOrObj, optionsOrCapture);
+  rel.call(this, type, wrapperFn || fnOrObj, optionsOrCapture);
   if (wrapperFn && nonBubblingEventsToRetarget[type] &&
-      context.__handlers && context.__handlers[type]) {
-    const arr = context.__handlers[type][capture ? 'capture' : 'bubble'];
+      this.__handlers && this.__handlers[type]) {
+    const arr = this.__handlers[type][capture ? 'capture' : 'bubble'];
     const idx = arr.indexOf(wrapperFn);
     if (idx > -1) {
       arr.splice(idx, 1);
