@@ -313,6 +313,20 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       el.parentNode.removeChild(el);
     });
 
+    test('implicit window add/remove event listener', function() {
+      var el = createEnabledElement('x-event-scoped-window');
+      var listener = function(e) {
+        el.windowListenerEvents = el.windowListenerEvents ? el.windowListenerEvents+1 : 1;
+      };
+      addEventListener("composed", listener);
+      el.fireComposed();
+      assert.equal(1, el.windowListenerEvents);
+      removeEventListener("composed", listener);
+      el.fireComposed();
+      assert.equal(1, el.windowListenerEvents);
+      el.parentNode.removeChild(el);
+    });
+
     test('scoped event does not reach window', function() {
       var el = createEnabledElement('x-event-scoped-window');
       el.fireScoped();
