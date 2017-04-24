@@ -593,17 +593,16 @@
    * @param {!function()} callback
    */
   const whenDocumentReady = callback => {
-    if (document.readyState !== 'loading') {
-      callback();
-    } else {
-      const stateChanged = () => {
-        if (document.readyState !== 'loading') {
-          document.removeEventListener('readystatechange', stateChanged);
-          callback();
-        }
+    const stateChanged = () => {
+      // NOTE: Firefox can hit readystate interactive without document.body existing.
+      // This is anti-spec, but we handle it here anyways by waiting for next change.
+      if (document.readyState !== 'loading' && !!document.body) {
+        document.removeEventListener('readystatechange', stateChanged);
+        callback();
       }
-      document.addEventListener('readystatechange', stateChanged);
     }
+    document.addEventListener('readystatechange', stateChanged);
+    stateChanged();
   }
 
   /**
