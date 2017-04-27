@@ -111,6 +111,11 @@ suite('render content', function() {
              '<slot name="b"></slot><slot name="a"></slot>',
              '<a slot="b">b</a><a slot="b">c</a><a slot="a">a</a>');
 
+  testRender('slot b b b a a a (fallback)',
+             '<a slot="a">a</a> <a slot="b">b</a>',
+             '<slot name="b">b1</slot><slot name="b">b2</slot><slot name="b">b3</slot><slot name="a">a1</slot><slot name="a">a2</slot><slot name="a">a3</slot>',
+             '<a slot="b">b</a>b2b3<a slot="a">a</a>a2a3');
+
   testRender('slot c catchall',
              '<span>a</span><span>b</span><span slot="c">c</span><span>d</span>',
              '<slot name="c"></slot><slot></slot>',

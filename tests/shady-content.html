@@ -70,10 +70,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     }
   </script>
 
-  <template id="x-dist">
-    x-dist
-    <div id="distWrapper"><slot id="content"></slot></div>
-  </template>
+  <template id="x-dist">x-dist<span id="distWrapper"><slot id="content"></slot></span></template>
   <script>
     defineTestElement('x-dist');
   </script>
@@ -687,6 +684,109 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       ShadyDOM.flush();
       assert.equal(slot.assignedNodes({flatten: true})[1], child);
 
+    });
+
+    test('append/remove multiple slots with same name (catchall) to element', function() {
+      var el = document.createElement('x-dist');
+      document.body.appendChild(el);
+      var frag = document.createDocumentFragment();
+      var s1 = document.createElement('slot');
+      s1.innerHTML = 'fallback1';
+      var s2 = document.createElement('slot');
+      s2.innerHTML = 'fallback2';
+      var s3 = document.createElement('slot');
+      s3.innerHTML = 'fallback3';
+      frag.appendChild(s1);
+      frag.appendChild(s2);
+      frag.appendChild(s3);
+      el.shadowRoot.appendChild(frag);
+      var span = document.createElement('span');
+      span.textContent = 'hi';
+      el.appendChild(span);
+      ShadyDOM.flush();
+      assert.equal(ShadyDOM.nativeTree.textContent(el), 'x-disthifallback1fallback2fallback3', 'composed textContent incorrect');
+      var origSlot = el.shadowRoot.querySelector('slot');
+      origSlot.innerHTML = 'fallbackOrig';
+      var s0 = document.createElement('slot');
+      s0.innerHTML = 'fallback0';
+      el.shadowRoot.insertBefore(s0, el.shadowRoot.firstChild);
+      ShadyDOM.flush();
+      assert.equal(ShadyDOM.nativeTree.textContent(el), 'hix-distfallbackOrigfallback1fallback2fallback3', 'composed textContent incorrect');
+      var s4 = document.createElement('slot');
+      s4.innerHTML = 'fallback4';
+      var s5 = document.createElement('slot');
+      s5.innerHTML = 'fallback5';
+      var slotContainer = document.createElement('span');
+      slotContainer.appendChild(s4);
+      slotContainer.appendChild(s5);
+      el.shadowRoot.insertBefore(slotContainer, s2);
+      var s6 = document.createElement('slot');
+      s6.innerHTML = 'fallback6';
+      el.shadowRoot.appendChild(s6);
+      ShadyDOM.flush();
+      assert.equal(ShadyDOM.nativeTree.textContent(el), 'hix-distfallbackOrigfallback1fallback4fallback5fallback2fallback3fallback6', 'composed textContent incorrect');
+      el.shadowRoot.removeChild(slotContainer);
+      ShadyDOM.flush();
+      assert.equal(ShadyDOM.nativeTree.textContent(el), 'hix-distfallbackOrigfallback1fallback2fallback3fallback6', 'composed textContent incorrect');
+      el.shadowRoot.removeChild(s0);
+      el.shadowRoot.removeChild(s1);
+      el.shadowRoot.removeChild(s2);
+      el.shadowRoot.removeChild(s3);
+      origSlot.parentNode.removeChild(origSlot);
+      ShadyDOM.flush();
+      assert.equal(ShadyDOM.nativeTree.textContent(el), 'x-disthi', 'composed textContent incorrect');
+      document.body.removeChild(el);
+    });
+
+    test('append/remove multiple slots with same name to element', function() {
+      var el = document.createElement('x-dist');
+      document.body.appendChild(el);
+      var frag = document.createDocumentFragment();
+      var s1 = document.createElement('slot');
+      s1.setAttribute('name', 'foo');
+      s1.innerHTML = 'fallback1';
+      var s2 = document.createElement('slot');
+      s2.setAttribute('name', 'foo');
+      s2.innerHTML = 'fallback2';
+      var s3 = document.createElement('slot');
+      s3.setAttribute('name', 'foo');
+      s3.innerHTML = 'fallback3';
+      frag.appendChild(s1);
+      frag.appendChild(s2);
+      frag.appendChild(s3);
+      el.shadowRoot.appendChild(frag);
+      var span = document.createElement('span');
+      span.textContent = 'hi';
+      el.appendChild(span);
+      ShadyDOM.flush();
+      assert.equal(ShadyDOM.nativeTree.textContent(el), 'x-disthifallback1fallback2fallback3', 'composed textContent incorrect');
+      var origSlot = el.shadowRoot.querySelector('slot');
+      origSlot.innerHTML = 'fallbackOrig';
+      var s0 = document.createElement('slot');
+      s0.setAttribute('name', 'foo');
+      s0.innerHTML = 'fallback0';
+      el.shadowRoot.insertBefore(s0, el.shadowRoot.firstChild);
+      ShadyDOM.flush();
+      assert.equal(ShadyDOM.nativeTree.textContent(el), 'fallback0x-disthifallback1fallback2fallback3', 'composed textContent incorrect');
+      var s4 = document.createElement('slot');
+      s4.setAttribute('name', 'foo');
+      s4.innerHTML = 'fallback4';
+      var s5 = document.createElement('slot');
+      s5.setAttribute('name', 'foo');
+      s5.innerHTML = 'fallback5';
+      var slotContainer = document.createElement('span');
+      slotContainer.appendChild(s4);
+      slotContainer.appendChild(s5);
+      el.shadowRoot.insertBefore(slotContainer, s2);
+      ShadyDOM.flush();
+      assert.equal(ShadyDOM.nativeTree.textContent(el), 'fallback0x-disthifallback1fallback4fallback5fallback2fallback3', 'composed textContent incorrect');
+      el.shadowRoot.removeChild(slotContainer);
+      ShadyDOM.flush();
+      assert.equal(ShadyDOM.nativeTree.textContent(el), 'fallback0x-disthifallback1fallback2fallback3', 'composed textContent incorrect');
+      span.slot = 'foo';
+      ShadyDOM.flush();
+      assert.equal(ShadyDOM.nativeTree.textContent(el), 'hix-distfallbackOrigfallback1fallback2fallback3', 'composed textContent incorrect');
+      document.body.removeChild(el);
     });
 
     test('composed children distributed', function() {

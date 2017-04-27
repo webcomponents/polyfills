@@ -14,16 +14,17 @@ import {calculateSplices} from './array-splice'
 import * as utils from './utils'
 import {enqueue} from './flush'
 import {recordChildNodes} from './logical-tree'
-import {removeChild, insertBefore} from './native-methods'
+import {removeChild, insertBefore, dispatchEvent} from './native-methods'
 import {parentNode, childNodes} from './native-tree'
 import {patchShadowRootAccessors} from './patch-accessors'
-import Distributor from './distributor'
 
 // Do not export this object. It must be passed as the first argument to the
 // ShadyRoot constructor in `attachShadow` to prevent the constructor from
 // throwing. This prevents the user from being able to manually construct a
 // ShadyRoot (i.e. `new ShadowRoot()`).
 const ShadyRootConstructionToken = {};
+
+const CATCHALL_NAME = '__catchall';
 
 /**
  * @constructor
@@ -57,17 +58,20 @@ ShadyRoot.prototype._init = function(host) {
   // state flags
   this._renderPending = false;
   this._hasRendered = false;
-  this._changePending = false;
-  this._distributor = new Distributor(this);
-  this.update();
+  this._slotList = [];
+  this._slotMap = null;
+  // fast path initial render: remove existing physical dom.
+  let c$ = childNodes(host);
+  for (let i=0, l=c$.length; i < l; i++) {
+    removeChild.call(host, c$[i])
+  }
 }
 
-
 // async render
-ShadyRoot.prototype.update = function() {
+ShadyRoot.prototype._asyncRender = function() {
   if (!this._renderPending) {
     this._renderPending = true;
-    enqueue(() => this.render());
+    enqueue(() => this._render());
   }
 }
 
@@ -92,94 +96,145 @@ ShadyRoot.prototype._rendererForHost = function() {
     let c$ = this.host.childNodes;
     for (let i=0, c; i < c$.length; i++) {
       c = c$[i];
-      if (this._distributor.isInsertionPoint(c)) {
+      if (this._isInsertionPoint(c)) {
         return root;
       }
     }
   }
 }
 
-ShadyRoot.prototype.render = function() {
+ShadyRoot.prototype._render = function() {
   if (this._renderPending) {
-    this._getRenderRoot()['_render']();
+    this._getRenderRoot()['_renderRoot']();
   }
 }
 
 // NOTE: avoid renaming to ease testability.
-ShadyRoot.prototype['_render'] = function() {
+ShadyRoot.prototype['_renderRoot'] = function() {
   this._renderPending = false;
-  this._changePending = false;
-  if (!this._skipUpdateInsertionPoints) {
-    this.updateInsertionPoints();
-  } else if (!this._hasRendered) {
-    this.__insertionPoints = [];
-  }
-  this._skipUpdateInsertionPoints = false;
-  // TODO(sorvell): can add a first render optimization here
-  // to use if there are no insertion points
-  // 1. clear host node of composed children
-  // 2. appendChild the shadowRoot itself or (more robust) its logical children
-  // NOTE: this didn't seem worth it in perf testing
-  // but not ready to delete this info.
-  // logical
-  this.distribute();
-  // physical
-  this.compose();
+  this._distribute();
+  this._compose();
   this._hasRendered = true;
 }
 
-ShadyRoot.prototype.forceRender = function() {
-  this._renderPending = true;
-  this.render();
-}
-
-ShadyRoot.prototype.distribute = function() {
-  let dirtyRoots = this._distributor.distribute();
-  for (let i=0; i<dirtyRoots.length; i++) {
-    dirtyRoots[i]['_render']();
+ShadyRoot.prototype._distribute = function() {
+  // capture # of previously assigned nodes to help determin if dirty.
+  for (let i=0, slot; i < this._slotList.length; i++) {
+    slot = this._slotList[i];
+    this._clearSlotAssignedNodes(slot);
+  }
+  if (!this._slotMap) {
+    this._updateSlotMap();
+  }
+  // distribute host children.
+  for (let n=this.host.firstChild; n; n=n.nextSibling) {
+    this._distributeNodeToSlot(n);
+  }
+  // fallback content, slotchange, and dirty roots
+  for (let i=0, slot; i < this._slotList.length; i++) {
+    slot = this._slotList[i];
+    // distribute fallback content
+    if (!slot.__shady.assignedNodes.length) {
+      for (let n=slot.firstChild; n; n=n.nextSibling) {
+        this._distributeNodeToSlot(n, slot);
+      }
+    }
+    let slotParentRoot = slot.parentNode.shadowRoot;
+    if (slotParentRoot && slotParentRoot._hasInsertionPoint()) {
+      slotParentRoot['_renderRoot']();
+    }
+    slot.__shady.distributedNodes = [];
+    this._addDistributedNodes(slot.__shady.distributedNodes, slot);
+    let prevAssignedNodes = slot.__shady._previouslyAssignedNodes;
+    if (prevAssignedNodes) {
+      for (let i=0; i < prevAssignedNodes.length; i++) {
+        prevAssignedNodes[i].__shady._prevAssignedSlot = null;
+      }
+      slot.__shady._previouslyAssignedNodes = null;
+      // dirty if previously less assigned nodes than previously assigned.
+      if (prevAssignedNodes.length > slot.__shady.assignedNodes.length) {
+        slot.__shady.dirty = true;
+      }
+    }
+    // NOTE: cannot bubble correctly here so not setting bubbles: true
+    // Safari tech preview does not bubble but chrome does
+    // Spec says it bubbles (https://dom.spec.whatwg.org/#mutation-observers)
+    if (slot.__shady.dirty) {
+      slot.__shady.dirty = false;
+      this._fireSlotChange(slot);
+    }
   }
 }
 
-ShadyRoot.prototype.updateInsertionPoints = function() {
-  let i$ = this._insertionPoints;
-  // if any insertion points have been removed, clear their distribution info
-  if (i$) {
-    for (let i=0, c; i < i$.length; i++) {
-      c = i$[i];
-      if (c.getRootNode() !== this) {
-        this._distributor.clearAssignedSlots(c);
+ShadyRoot.prototype._distributeNodeToSlot = function(node, slot) {
+  node.__shady = node.__shady || {};
+  let oldSlot = node.__shady._prevAssignedSlot;
+  node.__shady._prevAssignedSlot = null;
+  if (!slot) {
+    let name = node.slot || CATCHALL_NAME;
+    slot = this._slotMap[name];
+  }
+  if (slot) {
+    slot.__shady.assignedNodes.push(node);
+    node.__shady.assignedSlot = slot;
+  } else {
+    node.__shady.assignedSlot = undefined;
+  }
+  if (oldSlot !== node.__shady.assignedSlot) {
+    // TODO(sorvell): add test to verify this is needed.
+    if (oldSlot) {
+      oldSlot.__shady.dirty = true;
+    }
+    if (node.__shady.assignedSlot) {
+      node.__shady.assignedSlot.__shady.dirty = true;
+    }
+  }
+}
+
+ShadyRoot.prototype._clearSlotAssignedNodes = function(slot) {
+  let n$ = slot.__shady.assignedNodes;
+  slot.__shady.assignedNodes = [];
+  slot.__shady._previouslyAssignedNodes = n$;
+  if (n$) {
+    for (let i=0; i < n$.length; i++) {
+      let n = n$[i];
+      n.__shady._prevAssignedSlot = n.__shady.assignedSlot;
+      // only clear if it was previously set to this slot;
+      // this helps ensure that if the node has otherwise been distributed
+      // ignore it.
+      if (n.__shady.assignedSlot === slot) {
+        n.__shady.assignedSlot = null;
       }
     }
   }
-  i$ = this._insertionPoints = this._distributor.getInsertionPoints();
-  // ensure insertionPoints's and their parents have logical dom info.
-  // save logical tree info
-  // a. for shadyRoot
-  // b. for insertion points (fallback)
-  // c. for parents of insertion points
-  for (let i=0, c; i < i$.length; i++) {
-    c = i$[i];
-    c.__shady = c.__shady || {};
-    recordChildNodes(c);
-    recordChildNodes(c.parentNode);
+}
+
+ShadyRoot.prototype._addDistributedNodes = function(list, insertionPoint) {
+  let n$ = insertionPoint.__shady.assignedNodes;
+  for (let i=0, n; (i<n$.length) && (n=n$[i]); i++) {
+    if (n.localName == 'slot') {
+      this._addDistributedNodes(list, n);
+    } else {
+      list.push(n$[i]);
+    }
   }
 }
 
-ShadyRoot.prototype.compose = function() {
-  // compose self
-  // note: it's important to mark this clean before distribution
-  // so that attachment that provokes additional distribution (e.g.
-  // adding something to your parentNode) works
-  this._composeTree();
-  // TODO(sorvell): See fast paths here in Polymer v1
-  // (these seem unnecessary)
+ShadyRoot.prototype._fireSlotChange = function(slot) {
+  // NOTE: cannot bubble correctly here so not setting bubbles: true
+  // Safari tech preview does not bubble but chrome does
+  // Spec says it bubbles (https://dom.spec.whatwg.org/#mutation-observers)
+  dispatchEvent.call(slot, new Event('slotchange'));
+  if (slot.__shady.assignedSlot) {
+    this._fireSlotChange(slot.__shady.assignedSlot);
+  }
 }
 
 // Reify dom such that it is at its correct rendering position
 // based on logical distribution.
-ShadyRoot.prototype._composeTree = function() {
+ShadyRoot.prototype._compose = function() {
   this._updateChildNodes(this.host, this._composeNode(this.host));
-  let p$ = this._getInsertionPoints();
+  let p$ = this._slotList;
   for (let i=0, l=p$.length, p, parent; (i<l) && (p=p$[i]); i++) {
     parent = p.parentNode;
     if ((parent !== this.host) && (parent !== this)) {
@@ -194,12 +249,13 @@ ShadyRoot.prototype._composeNode = function(node) {
   let c$ = ((node.__shady && node.__shady.root) || node).childNodes;
   for (let i = 0; i < c$.length; i++) {
     let child = c$[i];
-    if (this._distributor.isInsertionPoint(child)) {
+    if (this._isInsertionPoint(child)) {
       let distributedNodes = child.__shady.distributedNodes ||
         (child.__shady.distributedNodes = []);
       for (let j = 0; j < distributedNodes.length; j++) {
         let distributedNode = distributedNodes[j];
-        if (this.isFinalDestination(child, distributedNode)) {
+        // this is final destination if insertionPoint has no assignedSlot.
+        if (this._isFinalDestination(child)) {
           children.push(distributedNode);
         }
       }
@@ -210,10 +266,13 @@ ShadyRoot.prototype._composeNode = function(node) {
   return children;
 }
 
-ShadyRoot.prototype.isFinalDestination = function(insertionPoint, node) {
-  return this._distributor.isFinalDestination(
-    insertionPoint, node);
+ShadyRoot.prototype._isFinalDestination = function(slot) {
+  return !slot.__shady.assignedSlot;
 }
+
+ShadyRoot.prototype._isInsertionPoint = function(node) {
+    return node.localName == 'slot';
+  }
 
 // Ensures that the rendered node list inside `container` is `children`.
 ShadyRoot.prototype._updateChildNodes = function(container, children) {
@@ -239,25 +298,140 @@ ShadyRoot.prototype._updateChildNodes = function(container, children) {
     for (let j=s.index, n; j < s.index + s.addedCount; j++) {
       n = children[j];
       insertBefore.call(container, n, next);
-      // TODO(sorvell): is this splice strictly needed?
       composed.splice(j, 0, n);
     }
   }
 }
 
-ShadyRoot.prototype.getInsertionPointTag = function() {
-  return this._distributor.insertionPointTag;
-}
-
-ShadyRoot.prototype.hasInsertionPoint = function() {
-  return Boolean(this._insertionPoints && this._insertionPoints.length);
-}
-
-ShadyRoot.prototype._getInsertionPoints = function() {
-  if (!this._insertionPoints) {
-    this.updateInsertionPoints();
+ShadyRoot.prototype._addSlots = function(slots) {
+  let slotNamesToSort;
+  for (let i=0; i < slots.length; i++) {
+    let slot = slots[i];
+    // ensure insertionPoints's and their parents have logical dom info.
+    // save logical tree info
+    // a. for shadyRoot
+    // b. for insertion points (fallback)
+    // c. for parents of insertion points
+    slot.__shady = slot.__shady || {};
+    recordChildNodes(slot);
+    recordChildNodes(slot.parentNode);
+    let name = this._nameForSlot(slot);
+    if (this._slotMap && this._slotMap[name]) {
+      slotNamesToSort = slotNamesToSort || {};
+      slotNamesToSort[name] = true;
+    }
+    this._slotList.push(slot);
   }
-  return this._insertionPoints;
+  // TODO(sorvell): add tests to verify slots add/removing slots
+    // with the same name (or catchall)
+  if (slotNamesToSort) {
+    for (let n in slotNamesToSort) {
+      let slotsForName = this._extractSlotsOfName(n);
+      let sorted = this._sortSlots(slotsForName);
+      this._slotList.push(...sorted);
+    }
+  }
+  this._updateSlotMap();
+}
+
+ShadyRoot.prototype._nameForSlot = function(slot) {
+  return slot['name'] || slot.getAttribute('name') || CATCHALL_NAME;
+}
+
+ShadyRoot.prototype._extractSlotsOfName = function(name) {
+  let slots;
+  for (let i=0; i < this._slotList.length; i++) {
+    let slot = this._slotList[i];
+    let n = this._nameForSlot(slot);
+    if (n == name) {
+      this._slotList.splice(i, 1);
+      i--;
+      slots = slots || [];
+      slots.push(slot);
+    }
+  }
+  return slots;
+}
+
+ShadyRoot.prototype._sortSlots = function(slots) {
+  return slots.sort((a, b) => {
+    let listA = ancestorList(a);
+    let listB = ancestorList(b);
+    for (var i=0; i < listA.length; i++) {
+      let nA = listA[i];
+      let nB = listB[i];
+      if (nA !== nB) {
+        let c$ = Array.from(nA.parentNode.childNodes);
+        return c$.indexOf(nA) > c$.indexOf(nB);
+      }
+    }
+  });
+}
+
+function ancestorList(node) {
+  let ancestors = [];
+  do {
+    ancestors.unshift(node);
+  } while ((node = node.parentNode));
+  return ancestors;
+}
+
+function contains(container, node) {
+  while (node) {
+    if (node == container) {
+      return true;
+    }
+    node = node.parentNode;
+  }
+}
+
+ShadyRoot.prototype._removeContainerSlots = function(container) {
+  let didRemove;
+  for (let i=0; i<this._slotList.length; i++) {
+    let slot = this._slotList[i];
+    if (contains(container, slot)) {
+      this._slotList.splice(i, 1);
+      this._removeAssignedNodes(slot);
+      i--;
+      didRemove = true;
+    }
+  }
+  this._updateSlotMap();
+  return didRemove;
+}
+
+ShadyRoot.prototype._removeSlot = function(slot) {
+  let i = this._slotList.indexOf(slot);
+  if (i > -1) {
+    this._slotList.splice(i, 1);
+    this._removeAssignedNodes(slot);
+  }
+}
+
+ShadyRoot.prototype._removeAssignedNodes = function(slot) {
+  let n$ = slot.assignedNodes({flatten: true});
+  for (let i=0; i<n$.length; i++) {
+    let node = n$[i];
+    let parent = parentNode(node);
+    if (parent) {
+      removeChild.call(parent, node);
+    }
+  }
+}
+
+ShadyRoot.prototype._updateSlotMap = function() {
+  this._slotMap = {};
+  for (let i=0; i<this._slotList.length; i++) {
+    let slot = this._slotList[i];
+    let name = this._nameForSlot(slot);
+    if (!this._slotMap[name]) {
+      this._slotMap[name] = slot;
+    }
+  }
+}
+
+ShadyRoot.prototype._hasInsertionPoint = function() {
+  return Boolean(this._slotList.length);
 }
 
 ShadyRoot.prototype.addEventListener = function(type, fn, optionsOrCapture) {
