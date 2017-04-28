@@ -362,7 +362,7 @@ ShadyRoot.prototype._sortSlots = function(slots) {
       let nB = listB[i];
       if (nA !== nB) {
         let c$ = Array.from(nA.parentNode.childNodes);
-        return c$.indexOf(nA) > c$.indexOf(nB);
+        return c$.indexOf(nA) - c$.indexOf(nB);
       }
     }
   });
