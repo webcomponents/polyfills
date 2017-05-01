@@ -17,17 +17,16 @@ export let nativeCssVariables = (!navigator.userAgent.match('AppleWebKit/601') &
 window.CSS && CSS.supports && CSS.supports('box-shadow', '0 0 0 var(--foo)'));
 
 /**
- * @param {ShadyCSSOptions | ShadyCSSInterface | undefined} settings
+ * @param {(ShadyCSSOptions | ShadyCSSInterface)=} settings
  */
 function parseSettings(settings) {
   if (settings) {
-    nativeCssVariables = nativeCssVariables && !settings['nativeCss'] && !settings['shimcssproperties'];
-    nativeShadow = nativeShadow && !settings['nativeShadow'] && !settings['shimshadow'];
+    nativeCssVariables = settings['shimcssproperties'] ? false : nativeCssVariables;
   }
 }
 
 if (window.ShadyCSS) {
-  parseSettings(window.ShadyCSS);
+  nativeCssVariables = window.ShadyCSS.nativeCss;
 } else if (window['WebComponents']) {
   parseSettings(window['WebComponents']['flags']);
 }
