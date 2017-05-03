@@ -116,7 +116,7 @@
   // ptototype chain of built-in elements.
   window.HTMLElement.prototype = NativeHTMLElement.prototype;
 
-  let define = (tagname, elementClass) => {
+  const define = (tagname, elementClass) => {
     const elementProto = elementClass.prototype;
     const StandInElement = class extends NativeHTMLElement {
       constructor() {
@@ -149,9 +149,9 @@
     constructorByTagname.set(tagname, elementClass);
     nativeDefine.call(window.customElements, tagname, StandInElement);
   };
-  
-  let get = (tagname) => constructorByTagname.get(tagname);
-  
+
+  const get = (tagname) => constructorByTagname.get(tagname);
+
   // Workaround for Safari bug where patching customElements can be lost, likely
   // due to native wrapper garbage collection issue
   Object.defineProperty(window, 'customElements',
@@ -160,5 +160,5 @@
     {value: define, configurable: true, writable: true});
   Object.defineProperty(window.customElements, 'get',
     {value: get, configurable: true, writable: true});
-    
+
 })();
