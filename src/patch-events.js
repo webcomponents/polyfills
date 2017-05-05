@@ -268,6 +268,19 @@ export function findListener(wrappers, node, type, capture, once, passive) {
 }
 
 /**
+ * Firefox can throw on accessing __eventWrappers inside of `removeEventListener` during a selenium run
+ * Try/Catch accessing __eventWrappers to work around
+ * https://bugzilla.mozilla.org/show_bug.cgi?id=1353074
+ */
+function getEventWrappers(eventLike) {
+  let wrappers = null;
+  try {
+    wrappers = eventLike.__eventWrappers;
+  } catch (e) {} // eslint-disable-line no-empty
+  return wrappers;
+}
+
+/**
  * @this {Event}
  */
 export function addEventListener(type, fnOrObj, optionsOrCapture) {
@@ -296,9 +309,10 @@ export function addEventListener(type, fnOrObj, optionsOrCapture) {
   // will be set to shadyroot for event listener
   let target = (optionsOrCapture && optionsOrCapture.__shadyTarget) || this;
 
-  if (fnOrObj.__eventWrappers) {
+  let wrappers = fnOrObj.__eventWrappers;
+  if (wrappers) {
     // Stop if the wrapper function has already been created.
-    if (findListener(fnOrObj.__eventWrappers, target, type, capture, once, passive) > -1) {
+    if (findListener(wrappers, target, type, capture, once, passive) > -1) {
       return;
     }
   } else {
@@ -395,12 +409,13 @@ export function removeEventListener(type, fnOrObj, optionsOrCapture) {
   let target = (optionsOrCapture && optionsOrCapture.__shadyTarget) || this;
   // Search the wrapped function.
   let wrapperFn = undefined;
-  if (fnOrObj.__eventWrappers) {
-    let idx = findListener(fnOrObj.__eventWrappers, target, type, capture, once, passive);
+  let wrappers = getEventWrappers(fnOrObj);
+  if (wrappers) {
+    let idx = findListener(wrappers, target, type, capture, once, passive);
     if (idx > -1) {
-      wrapperFn = fnOrObj.__eventWrappers.splice(idx, 1)[0].wrapperFn;
+      wrapperFn = wrappers.splice(idx, 1)[0].wrapperFn;
       // Cleanup.
-      if (!fnOrObj.__eventWrappers.length) {
+      if (!wrappers.length) {
         fnOrObj.__eventWrappers = undefined;
       }
     }
