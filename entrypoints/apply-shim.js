@@ -26,14 +26,14 @@ class ApplyShimInterface {
   constructor() {
     /** @type {?CustomStyleInterfaceInterface} */
     this.customStyleInterface = null;
-    this.booted = false;
+    this.hasHookedCustomStyleInterface = false;
     documentWait(() => {
       this.ensure();
     });
     applyShim['invalidCallback'] = ApplyShimUtils.invalidate;
   }
   ensure() {
-    if (this.booted) {
+    if (this.hasHookedCustomStyleInterface) {
       return;
     }
     this.customStyleInterface = window.ShadyCSS.CustomStyleInterface;
@@ -48,8 +48,8 @@ class ApplyShimInterface {
           }
         });
       }
+      this.hasHookedCustomStyleInterface = true;
     }
-    this.booted = true;
   }
   /**
    * @param {!HTMLTemplateElement} template
