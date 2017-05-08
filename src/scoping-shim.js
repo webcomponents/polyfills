@@ -10,20 +10,20 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 'use strict';
 
-import {parse, StyleNode} from './css-parse'
-import {nativeShadow, nativeCssVariables} from './style-settings'
-import StyleTransformer from './style-transformer'
-import * as StyleUtil from './style-util'
-import StyleProperties from './style-properties'
-import placeholderMap from './style-placeholder'
-import StyleInfo from './style-info'
-import StyleCache from './style-cache'
-import {flush as watcherFlush} from './document-watcher'
-import templateMap from './template-map'
-import * as ApplyShimUtils from './apply-shim-utils'
-import documentWait from './document-wait'
-import {updateNativeProperties} from './common-utils'
-import {CustomStyleInterfaceInterface} from './custom-style-interface' //eslint-disable-line no-unused-vars
+import {parse, StyleNode} from './css-parse.js'
+import {nativeShadow, nativeCssVariables} from './style-settings.js'
+import StyleTransformer from './style-transformer.js'
+import * as StyleUtil from './style-util.js'
+import StyleProperties from './style-properties.js'
+import placeholderMap from './style-placeholder.js'
+import StyleInfo from './style-info.js'
+import StyleCache from './style-cache.js'
+import {flush as watcherFlush} from './document-watcher.js'
+import templateMap from './template-map.js'
+import * as ApplyShimUtils from './apply-shim-utils.js'
+import documentWait from './document-wait.js'
+import {updateNativeProperties} from './common-utils.js'
+import {CustomStyleInterfaceInterface} from './custom-style-interface.js' //eslint-disable-line no-unused-vars
 
 /**
  * @const {StyleCache}
