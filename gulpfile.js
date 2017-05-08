@@ -54,7 +54,7 @@ gulp.task('test-modules', (cb) => {
 
 function closurify(entry) {
   gulp.task(`closure-${entry}`, () => {
-    return gulp.src(['src/*.js', 'entrypoints/*.js'])
+    return gulp.src(['src/*.js', 'entrypoints/*.js'], {base: './'})
     .pipe(sourcemaps.init())
     .pipe(closure({
       new_type_inf: true,
@@ -64,7 +64,7 @@ function closurify(entry) {
       output_wrapper: '(function(){\n%output%\n}).call(self);',
       assume_function_wrapper: true,
       js_output_file: `${entry}.min.js`,
-      entry_point: `/entrypoints/${entry}.js`,
+      entry_point: `./entrypoints/${entry}.js`,
       dependency_mode: 'STRICT',
       warning_level: 'VERBOSE',
       rewrite_polyfills: false,
