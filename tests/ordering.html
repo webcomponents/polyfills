@@ -151,10 +151,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     let order = decodeURIComponent(flags.order || 'scoping,apply,custom').split(',');
     let steps = chain(order.map(o => orderSteps[o]));
     let otherFlags = `${flags.ce ? 'ce' : ''} ${flags.shadydom ? 'shadydom' : ''} ${flags.shimcssproperties ? 'shimcssproperties' : ''}`;
+    let needsScopingShim = window.ShadyDOM && window.ShadyDOM.inUse || flags.shimcssproperties;
 
     test(`${order.join(', ')} with ${otherFlags}`, function() {
       console.log(order, flags);
-      if (order.indexOf('scoping') === -1 && flags.shadydom) {
+      if (order.indexOf('scoping') === -1 && needsScopingShim) {
         this.skip();
       }
       return steps.then(
