@@ -140,8 +140,14 @@ Object.defineProperties(CustomStyleInterface.prototype, {
      * @this {CustomStyleInterface}
      */
     set(fn) {
+      let needsEnqueue = false;
+      if (!validateFn) {
+        needsEnqueue = true;
+      }
       validateFn = fn;
-      this.enqueueDocumentValidation();
+      if (needsEnqueue) {
+        this.enqueueDocumentValidation();
+      }
     },
   }
 })

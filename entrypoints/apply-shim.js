@@ -26,7 +26,6 @@ class ApplyShimInterface {
   constructor() {
     /** @type {?CustomStyleInterfaceInterface} */
     this.customStyleInterface = null;
-    this.elementsHaveApplied = false;
     documentWait(() => {
       this.ensure();
     });
@@ -106,7 +105,6 @@ class ApplyShimInterface {
    */
   styleElement(element) {
     this.ensure();
-    this.elementsHaveApplied = true;
     let {is} = getIsExtends(element);
     let template = templateMap[is];
     if (template && !ApplyShimUtils.templateIsValid(template)) {

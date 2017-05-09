@@ -17,7 +17,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   suite('Settings', () => {
     let origCss;
     let origShady;
-    test('settings remain correct no matter the order of components loaded', (done) => {
+    test(`settings remain correct no matter the order of components loaded ${JSON.stringify(window.WebComponents.flags)}`, (done) => {
       let script = document.createElement('script');
       script.src = '../custom-style-interface.min.js';
       script.onerror = (err) => done(err);

@@ -15,12 +15,12 @@ A simple webcomponents helper
 
 window.makeElement = (name, connectedCallback) => {
   let template = document.querySelector(`template#${name}`);
-  if (template) {
+  if (template && window.ShadyCSS) {
     window.ShadyCSS.prepareTemplate(template, name);
   }
   window.customElements.define(name, class extends window.HTMLElement {
     connectedCallback() {
-      window.ShadyCSS.styleElement(this);
+      window.ShadyCSS && window.ShadyCSS.styleElement(this);
       if (template && !this.shadowRoot) {
         this.attachShadow({mode: 'open'});
         this.shadowRoot.appendChild(document.importNode(template.content, true));

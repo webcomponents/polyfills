@@ -20,13 +20,19 @@ window.CSS && CSS.supports && CSS.supports('box-shadow', '0 0 0 var(--foo)'));
  * @param {(ShadyCSSOptions | ShadyCSSInterface)=} settings
  */
 function parseSettings(settings) {
-  if (settings) {
-    nativeCssVariables = settings['shimcssproperties'] ? false : nativeCssVariables;
+  if (settings && settings['shimcssproperties']) {
+    nativeCssVariables = false;
   }
 }
 
 if (window.ShadyCSS) {
-  nativeCssVariables = window.ShadyCSS.nativeCss;
+  if (window.ShadyCSS.nativeCss !== undefined) {
+    nativeCssVariables = window.ShadyCSS.nativeCss;
+  } else {
+    parseSettings(window.ShadyCSS);
+    // reset window.ShadyCSS to set up the API
+    window.ShadyCSS = null;
+  }
 } else if (window['WebComponents']) {
   parseSettings(window['WebComponents']['flags']);
 }

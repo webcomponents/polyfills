@@ -75,6 +75,16 @@
   }
   suites = combinations(suites, [matrix]);
 
+  var orderingScenarios = [
+    'wc-order=apply,custom',
+    'wc-order=scoping,apply,custom',
+    'wc-order=apply,early,custom',
+    'wc-order=scoping,early,apply,custom',
+    'wc-order=scoping,apply,early,custom'
+  ];
+
+  suites = suites.concat(combinations(['ordering.html'], [matrix, orderingScenarios]));
+
   if (matrix.length > 2) {
     suites = suites.concat([
       'no-scopingshim/apply-shim.html',
@@ -87,6 +97,7 @@
     ]);
   }
 
+  // console.log(suites);
   WCT.loadSuites(suites);
 })();
 </script>
