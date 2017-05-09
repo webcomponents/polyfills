@@ -73,6 +73,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 import {forEachRule, processVariableAndFallback, rulesForStyle, toCssText} from './style-util.js'
 import {MIXIN_MATCH, VAR_ASSIGN} from './common-regex.js'
+import {detectMixin} from './common-utils.js'
 import {StyleNode} from './css-parse.js' // eslint-disable-line no-unused-vars
 
 const APPLY_NAME_CLEAN = /;\s*/m;
@@ -148,11 +149,7 @@ class ApplyShim {
    * @return {boolean}
    */
   detectMixin(cssText) {
-    const has = MIXIN_MATCH.test(cssText) || VAR_ASSIGN.test(cssText);
-    // reset state of the regexes
-    MIXIN_MATCH.lastIndex = 0;
-    VAR_ASSIGN.lastIndex = 0;
-    return has;
+    return detectMixin(cssText);
   }
   /**
    * @param {!HTMLTemplateElement} template
