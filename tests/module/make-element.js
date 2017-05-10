@@ -13,16 +13,14 @@ A simple webcomponents helper
 */
 'use strict';
 
-const ShadyCSS = window.ShadyCSS;
-
 window.makeElement = (name, connectedCallback) => {
   let template = document.querySelector(`template#${name}`);
-  if (template) {
-    ShadyCSS.prepareTemplate(template, name);
+  if (template && window.ShadyCSS) {
+    window.ShadyCSS.prepareTemplate(template, name);
   }
   window.customElements.define(name, class extends window.HTMLElement {
     connectedCallback() {
-      ShadyCSS.styleElement(this);
+      window.ShadyCSS && window.ShadyCSS.styleElement(this);
       if (template && !this.shadowRoot) {
         this.attachShadow({mode: 'open'});
         this.shadowRoot.appendChild(document.importNode(template.content, true));

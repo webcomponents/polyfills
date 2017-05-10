@@ -43,4 +43,10 @@
     window['customElements']['forcePolyfill'] = forceCE;
   }
 
+  var forceShimCss = flags['shimcssproperties'];
+  if (forceShimCss) {
+    window['ShadyCSS'] = window['ShadyCSS'] || {};
+    window['ShadyCSS']['shimcssproperties'] = true;
+  }
+
 })();

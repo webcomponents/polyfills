@@ -22,7 +22,7 @@ import {flush as watcherFlush} from './document-watcher.js'
 import templateMap from './template-map.js'
 import * as ApplyShimUtils from './apply-shim-utils.js'
 import documentWait from './document-wait.js'
-import {updateNativeProperties} from './common-utils.js'
+import {updateNativeProperties, detectMixin} from './common-utils.js'
 import {CustomStyleInterfaceInterface} from './custom-style-interface.js' //eslint-disable-line no-unused-vars
 
 /**
@@ -102,10 +102,10 @@ export default class ScopingShim {
     }
     // check if the styling has mixin definitions or uses
     this._ensure();
-    let hasMixins = this._applyShim['detectMixin'](cssText);
+    let hasMixins = detectMixin(cssText)
     let ast = parse(cssText);
     // only run the applyshim transforms if there is a mixin involved
-    if (hasMixins && nativeCssVariables) {
+    if (hasMixins && nativeCssVariables && this._applyShim) {
       this._applyShim['transformRules'](ast, elementName);
     }
     template['_styleAst'] = ast;
@@ -158,14 +158,6 @@ export default class ScopingShim {
     } else if (window.ShadyCSS && window.ShadyCSS.ApplyShim) {
       this._applyShim = window.ShadyCSS.ApplyShim;
       this._applyShim['invalidCallback'] = ApplyShimUtils.invalidate;
-    } else {
-      this._applyShim = {
-        /* eslint-disable no-unused-vars */
-        ['detectMixin'](str){return false},
-        ['transformRule'](ast){},
-        ['transformRules'](ast, name){},
-        /* eslint-enable no-unused-vars */
-      }
     }
   }
   _ensureCustomStyleInterface() {
@@ -182,12 +174,6 @@ export default class ScopingShim {
           }
         })
       };
-    } else {
-      this._customStyleInterface = /** @type {!CustomStyleInterfaceInterface} */({
-        ['processStyles']() {},
-        ['enqueued']: false,
-        ['getStyleForCustomStyle'](s) { return null } // eslint-disable-line no-unused-vars
-      })
     }
   }
   _ensure() {
@@ -199,6 +185,9 @@ export default class ScopingShim {
    */
   flushCustomStyles() {
     this._ensure();
+    if (!this._customStyleInterface) {
+      return;
+    }
     let customStyles = this._customStyleInterface['processStyles']();
     // early return if custom-styles don't need validation
     if (!this._customStyleInterface['enqueued']) {
@@ -255,7 +244,7 @@ export default class ScopingShim {
         // update template
         if (!ApplyShimUtils.templateIsValidating(template)) {
           this._ensure();
-          this._applyShim['transformRules'](template['_styleAst'], is);
+          this._applyShim && this._applyShim['transformRules'](template['_styleAst'], is);
           template._style.textContent = StyleTransformer.elementStyles(host, styleInfo.styleRules);
           ApplyShimUtils.startValidatingTemplate(template);
         }
@@ -397,7 +386,7 @@ export default class ScopingShim {
       }
       if (nativeCssVariables) {
         this._ensure();
-        this._applyShim['transformRule'](rule);
+        this._applyShim && this._applyShim['transformRule'](rule);
       }
     });
     if (nativeCssVariables) {
@@ -407,7 +396,7 @@ export default class ScopingShim {
     }
   }
   _revalidateApplyShim(style) {
-    if (nativeCssVariables) {
+    if (nativeCssVariables && this._applyShim) {
       let ast = StyleUtil.rulesForStyle(style);
       this._ensure();
       this._applyShim['transformRules'](ast);
