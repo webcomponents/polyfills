@@ -1,6 +1,6 @@
 {
   "name": "@webcomponents/custom-elements",
-  "version": "1.0.0-rc.4",
+  "version": "1.0.0-rc.5",
   "description": "HTML Custom Elements Polyfill",
   "main": "custom-elements.min.js",
   "directories": {
@@ -34,5 +34,7 @@
     "vinyl-source-stream": "^1.1.0",
     "web-component-tester": "^6.0.0-prerelease.3"
   },
-  "publishConfig" : { "access": "public" }
+  "publishConfig": {
+    "access": "public"
+  }
 }
