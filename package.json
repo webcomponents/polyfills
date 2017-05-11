@@ -30,9 +30,10 @@
   },
   "homepage": "https://webcomponents.org/polyfills",
   "devDependencies": {
-    "@webcomponents/custom-elements": "^1.0.0-rc.5",
-    "@webcomponents/template": "^1.0.0-rc.2",
-    "@webcomponents/webcomponents-platform": "^1.0.0-rc.3",
+    "@webcomponents/custom-elements": "^1.0.0",
+    "@webcomponents/shadycss": "^1.0.0",
+    "@webcomponents/template": "^1.0.0",
+    "@webcomponents/webcomponents-platform": "^1.0.0",
     "eslint": "^3.4.0",
     "eslint-plugin-html": "^2.0.0",
     "google-closure-compiler": "^20170409.0.0",
