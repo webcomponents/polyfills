@@ -1,6 +1,6 @@
 {
   "name": "@webcomponents/shadydom",
-  "version": "1.0.0-rc.6",
+  "version": "1.0.0-rc.8",
   "description": "Shadow DOM polyfill",
   "main": "shadydom.min.js",
   "keywords": [
@@ -43,5 +43,7 @@
     "gulp-sourcemaps": "^2.4.1",
     "web-component-tester": "^6.0.0-prerelease.4"
   },
-  "publishConfig" : { "access": "public" }
+  "publishConfig": {
+    "access": "public"
+  }
 }
