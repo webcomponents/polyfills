@@ -1,6 +1,6 @@
 {
   "name": "@webcomponents/shadycss",
-  "version": "1.0.0-rc.5",
+  "version": "1.0.0-rc.6",
   "description": "Styling helpers for ShadyDOM",
   "main": "shadycss.min.js",
   "directories": {
@@ -52,5 +52,7 @@
     "vinyl-source-stream": "^1.1.0",
     "web-component-tester": "^6.0.0-prerelease.4"
   },
-  "publishConfig" : { "access": "public" }
+  "publishConfig": {
+    "access": "public"
+  }
 }
