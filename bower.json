@@ -30,6 +30,5 @@
     "custom-elements": "webcomponents/custom-elements#master",
     "webcomponents-platform": "webcomponents/webcomponents-platform#master",
     "shadycss": "webcomponents/shadycss#master"
-  },
-  "version": "1.0.0-rc.6"
+  }
 }
