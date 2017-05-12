@@ -1,6 +1,6 @@
 {
   "name": "@webcomponents/custom-elements",
-  "version": "1.0.0-rc.4",
+  "version": "1.0.0",
   "description": "HTML Custom Elements Polyfill",
   "main": "custom-elements.min.js",
   "directories": {
@@ -22,12 +22,19 @@
   },
   "homepage": "http://webcomponents.org",
   "devDependencies": {
+    "@webcomponents/html-imports": "^1.0.0",
+    "@webcomponents/template": "^1.0.0",
+    "@webcomponents/webcomponents-platform": "^1.0.0",
     "bower": "^1.8.0",
+    "es6-promise": "^4.1.0",
     "google-closure-compiler": "^20170409.0.0",
     "gulp": "^3.8.8",
     "gulp-sourcemaps": "^1.6.0",
     "rollup-stream": "^1.14.0",
     "vinyl-source-stream": "^1.1.0",
     "web-component-tester": "^6.0.0-prerelease.3"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
