@@ -25,12 +25,12 @@
     "tests"
   ],
   "devDependencies": {
-    "web-component-tester": "^5",
+    "web-component-tester": "^6",
     "es6-promise": "stefanpenner/es6-promise#^4.0.0",
-    "template": "webcomponents/template#^1.0.0-rc.1",
-    "html-imports": "webcomponents/html-imports#^1.0.0-rc.2",
-    "custom-elements": "webcomponents/custom-elements#^1.0.0-rc.1",
-    "shadydom": "webcomponents/shadydom#^1.0.0-rc.2",
-    "webcomponents-platform": "webcomponents/webcomponents-platform#^1.0.0-rc.1"
+    "template": "webcomponents/template#^1.0.0",
+    "html-imports": "webcomponents/html-imports#^1.0.0",
+    "custom-elements": "webcomponents/custom-elements#^1.0.0",
+    "shadydom": "webcomponents/shadydom#^1.0.0",
+    "webcomponents-platform": "webcomponents/webcomponents-platform#^1.0.0"
   }
 }
