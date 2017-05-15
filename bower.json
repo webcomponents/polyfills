@@ -25,10 +25,10 @@
     "tests"
   ],
   "devDependencies": {
-    "web-component-tester": "^5",
-    "template": "webcomponents/template#master",
-    "custom-elements": "webcomponents/custom-elements#master",
-    "webcomponents-platform": "webcomponents/webcomponents-platform#master",
-    "shadycss": "webcomponents/shadycss#master"
+    "web-component-tester": "^6",
+    "template": "webcomponents/template#^1",
+    "custom-elements": "webcomponents/custom-elements#^1",
+    "webcomponents-platform": "webcomponents/webcomponents-platform#^1",
+    "shadycss": "webcomponents/shadycss#^1"
   }
 }
