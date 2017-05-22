@@ -12,5 +12,5 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 A simple shim to generate a testable module
 */
 
-import * as StyleSettings from '../../src/style-properties'
+import * as StyleSettings from '../../src/style-settings'
 window['StyleSettings'] = StyleSettings;

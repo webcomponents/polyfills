@@ -46,5 +46,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       }
       document.head.appendChild(script);
     });
-  })
+    test('Native CSS Custom Properties disabled if ShadyDOM is in use', () => {
+      if (!window.ShadyDOM || !window.ShadyDOM.inUse) {
+        assert.isTrue(window.ShadyCSS.nativeCss, 'nativeCss should be enabled if not using ShadyDOM');
+      }
+    })
+  });
 </script>
