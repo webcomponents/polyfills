@@ -49,4 +49,6 @@
     window['ShadyCSS']['shimcssproperties'] = true;
   }
 
+  window['WebComponents']['ready'] = true;
+
 })();

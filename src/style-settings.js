@@ -22,7 +22,7 @@ function calcCssVariables(settings) {
   } else {
     // chrome 49 has semi-working css vars, check if box-shadow works
     // safari 9.1 has a recalc bug: https://bugs.webkit.org/show_bug.cgi?id=155782
-    nativeCssVariables = Boolean(!navigator.userAgent.match('AppleWebKit/601') &&
+    nativeCssVariables = nativeShadow || Boolean(!navigator.userAgent.match('AppleWebKit/601') &&
       window.CSS && CSS.supports && CSS.supports('box-shadow', '0 0 0 var(--foo)'));
   }
 }
