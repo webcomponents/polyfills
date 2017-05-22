@@ -30,7 +30,8 @@ const modules = [
   'make-element',
   'svg-in-shadow',
   'style-util',
-  'style-transformer'
+  'style-transformer',
+  'style-settings'
 ];
 
 const moduleTasks = modules.map((m) => {
