@@ -38,7 +38,7 @@ suite('ChildNode', function() {
   function beforeAfterSuite(methodName) {
     suite(methodName, function() {
       if (!(methodName in Element.prototype)) {
-        test.skip('ChildNode#' + methodName + ' is not implemented by this browser.');
+        test.skip('Element#' + methodName + ' is not implemented by this browser.');
         return;
       }
 
@@ -248,7 +248,7 @@ suite('ChildNode', function() {
 
   suite('replaceWith', function() {
     if (!('replaceWith' in Element.prototype)) {
-      test.skip('ChildNode#replaceWith is not implemented by this browser.');
+      test.skip('Element#replaceWith is not implemented by this browser.');
       return;
     }
 
@@ -508,7 +508,7 @@ suite('ChildNode', function() {
 
   suite('remove', function() {
     if (!('remove' in Element.prototype)) {
-      test.skip('ChildNode#remove is not implemented by this browser.');
+      test.skip('Element#remove is not implemented by this browser.');
       return;
     }
 
