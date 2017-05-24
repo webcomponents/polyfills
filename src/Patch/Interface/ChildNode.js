@@ -68,69 +68,78 @@ export default function(internals, destination, builtIn) {
     };
   }
 
-  Utilities.setPropertyUnchecked(destination, 'before', beforeAfterPatch(builtIn.before));
-  Utilities.setPropertyUnchecked(destination, 'after', beforeAfterPatch(builtIn.after));
+  if (builtIn.before !== undefined) {
+    Utilities.setPropertyUnchecked(destination, 'before', beforeAfterPatch(builtIn.before));
+  }
 
-  Utilities.setPropertyUnchecked(destination, 'replaceWith',
-    /**
-     * @param {...(!Node|string)} nodes
-     */
-    function(...nodes) {
+  if (builtIn.before !== undefined) {
+    Utilities.setPropertyUnchecked(destination, 'after', beforeAfterPatch(builtIn.after));
+  }
+
+  if (builtIn.replaceWith !== undefined) {
+    Utilities.setPropertyUnchecked(destination, 'replaceWith',
       /**
-       * A copy of `nodes`, with any DocumentFragment replaced by its children.
-       * @type {!Array<!Node>}
+       * @param {...(!Node|string)} nodes
        */
-      const flattenedNodes = [];
+      function(...nodes) {
+        /**
+         * A copy of `nodes`, with any DocumentFragment replaced by its children.
+         * @type {!Array<!Node>}
+         */
+        const flattenedNodes = [];
 
-      /**
-       * Elements in `nodes` that were connected before this call.
-       * @type {!Array<!Node>}
-       */
-      const connectedElements = [];
+        /**
+         * Elements in `nodes` that were connected before this call.
+         * @type {!Array<!Node>}
+         */
+        const connectedElements = [];
 
-      for (var i = 0; i < nodes.length; i++) {
-        const node = nodes[i];
+        for (var i = 0; i < nodes.length; i++) {
+          const node = nodes[i];
 
-        if (node instanceof Element && Utilities.isConnected(node)) {
-          connectedElements.push(node);
-        }
-
-        if (node instanceof DocumentFragment) {
-          for (let child = node.firstChild; child; child = child.nextSibling) {
-            flattenedNodes.push(child);
+          if (node instanceof Element && Utilities.isConnected(node)) {
+            connectedElements.push(node);
           }
-        } else {
-          flattenedNodes.push(node);
-        }
-      }
 
-      const wasConnected = Utilities.isConnected(this);
-
-      builtIn.replaceWith.apply(this, nodes);
-
-      for (let i = 0; i < connectedElements.length; i++) {
-        internals.disconnectTree(connectedElements[i]);
-      }
-
-      if (wasConnected) {
-        internals.disconnectTree(this);
-        for (let i = 0; i < flattenedNodes.length; i++) {
-          const node = flattenedNodes[i];
-          if (node instanceof Element) {
-            internals.connectTree(node);
+          if (node instanceof DocumentFragment) {
+            for (let child = node.firstChild; child; child = child.nextSibling) {
+              flattenedNodes.push(child);
+            }
+          } else {
+            flattenedNodes.push(node);
           }
         }
-      }
-    });
 
-  Utilities.setPropertyUnchecked(destination, 'remove',
-    function() {
-      const wasConnected = Utilities.isConnected(this);
+        const wasConnected = Utilities.isConnected(this);
 
-      builtIn.remove.call(this);
+        builtIn.replaceWith.apply(this, nodes);
 
-      if (wasConnected) {
-        internals.disconnectTree(this);
-      }
-    });
+        for (let i = 0; i < connectedElements.length; i++) {
+          internals.disconnectTree(connectedElements[i]);
+        }
+
+        if (wasConnected) {
+          internals.disconnectTree(this);
+          for (let i = 0; i < flattenedNodes.length; i++) {
+            const node = flattenedNodes[i];
+            if (node instanceof Element) {
+              internals.connectTree(node);
+            }
+          }
+        }
+      });
+    }
+
+  if (builtIn.remove !== undefined) {
+    Utilities.setPropertyUnchecked(destination, 'remove',
+      function() {
+        const wasConnected = Utilities.isConnected(this);
+
+        builtIn.remove.call(this);
+
+        if (wasConnected) {
+          internals.disconnectTree(this);
+        }
+      });
+  }
 };

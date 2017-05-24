@@ -37,6 +37,11 @@ function defineWithLocalName(localName) {
 suite('ChildNode', function() {
   function beforeAfterSuite(methodName) {
     suite(methodName, function() {
+      if (!(methodName in Element.prototype)) {
+        test.skip('ChildNode#' + methodName + ' is not implemented by this browser.');
+        return;
+      }
+
       let localName;
       let constructor;
       let element1;
@@ -242,6 +247,11 @@ suite('ChildNode', function() {
   beforeAfterSuite('after');
 
   suite('replaceWith', function() {
+    if (!('replaceWith' in Element.prototype)) {
+      test.skip('ChildNode#replaceWith is not implemented by this browser.');
+      return;
+    }
+
     let localName;
     let constructor;
     let element1;
@@ -497,6 +507,11 @@ suite('ChildNode', function() {
   });
 
   suite('remove', function() {
+    if (!('remove' in Element.prototype)) {
+      test.skip('ChildNode#remove is not implemented by this browser.');
+      return;
+    }
+
     let localName;
     let constructor;
     let connectedElement1;
