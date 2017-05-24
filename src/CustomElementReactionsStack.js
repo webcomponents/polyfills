@@ -56,7 +56,7 @@ export default class CustomElementReactionsStack {
 
   /**
    * Pops and flushes the top-most queue of the reactions stack. Must be called
-   * when entering any API marked with `CEReactions`.
+   * when exiting any API marked with `CEReactions`.
    */
   popQueue() {
     const stack = this._stack;

@@ -107,26 +107,26 @@ export default function(internals) {
 
 
   Utilities.setPropertyUnchecked(Element.prototype, 'setAttribute',
-      /**
-       * @this {Element}
-       * @param {string} name
-       * @param {string} newValue
-       */
-      function(name, newValue) {
-        // Fast path for non-custom elements.
-        if (this.__CE_state !== CEState.custom) {
-          return Native.Element_setAttribute.call(this, name, newValue);
-        }
+    /**
+     * @this {Element}
+     * @param {string} name
+     * @param {string} newValue
+     */
+    function(name, newValue) {
+      // Fast path for non-custom elements.
+      if (this.__CE_state !== CEState.custom) {
+        return Native.Element_setAttribute.call(this, name, newValue);
+      }
 
-        internals.pushCEReactionsQueue();
+      internals.pushCEReactionsQueue();
 
-        const oldValue = Native.Element_getAttribute.call(this, name);
-        Native.Element_setAttribute.call(this, name, newValue);
-        newValue = Native.Element_getAttribute.call(this, name);
-        internals.attributeChangedCallback(this, name, oldValue, newValue, null);
+      const oldValue = Native.Element_getAttribute.call(this, name);
+      Native.Element_setAttribute.call(this, name, newValue);
+      newValue = Native.Element_getAttribute.call(this, name);
+      internals.attributeChangedCallback(this, name, oldValue, newValue, null);
 
-        internals.popCEReactionsQueue();
-      });
+      internals.popCEReactionsQueue();
+    });
 
   Utilities.setPropertyUnchecked(Element.prototype, 'setAttributeNS',
     /**
