@@ -17,8 +17,8 @@
   },
   "scripts": {
     "bower-install": "$(npm bin)/bower install",
-    "build": "$(npm bin)/gulp",
-    "test": "$(npm bin)/wct"
+    "build": "gulp",
+    "test": "wct"
   },
   "homepage": "http://webcomponents.org",
   "devDependencies": {
