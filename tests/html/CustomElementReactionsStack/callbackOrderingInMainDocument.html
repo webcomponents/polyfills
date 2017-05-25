@@ -16,12 +16,26 @@
   });
 
   function dispatchLogEvent(target, text) {
-    target.dispatchEvent(new CustomEvent('custom-element:log', {
-      bubbles: true,
-      detail: {
-        text: text,
-      },
-    }));
+    var type = 'custom-element:log';
+    var bubbles = true;
+    var cancelable = false;
+    var detail = {
+      text: text,
+    };
+
+    var logEvent;
+    try {
+      logEvent = new CustomEvent(type, {
+        bubbles: bubbles,
+        cancelable: cancelable,
+        detail: detail
+      });
+    } catch (e) {
+      logEvent = document.createEvent("CustomEvent");
+      logEvent.initCustomEvent(type, bubbles, cancelable, detail);
+    }
+
+    target.dispatchEvent(logEvent);
   }
 
   customElements.define('custom-element', class extends HTMLElement {
