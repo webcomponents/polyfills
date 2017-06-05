@@ -1,6 +1,6 @@
 # ShadyCSS
 
-ShadyCSS provides a library to simulate ShadowDOM style encapsulation (ScopingShim), a shim for the proposed CSS mixin `@apply` styntax (ApplyShim), and a library to integrate document-level stylesheets with both of the former libraries (CustomStyleInterface).
+ShadyCSS provides a library to simulate ShadowDOM style encapsulation (ScopingShim), a shim for the proposed CSS mixin `@apply` syntax (ApplyShim), and a library to integrate document-level stylesheets with both of the former libraries (CustomStyleInterface).
 
 ## Requirements
 ShadyCSS requires support for the `<template>` element, ShadowDOM, MutationObserver, Promise, and Object.assign
