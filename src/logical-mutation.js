@@ -40,7 +40,9 @@ export function insertBefore(parent, node, ref_node) {
   }
   // remove from existing location
   if (node.parentNode) {
-    node.parentNode.removeChild(node);
+    // note: avoid node.removeChild as this *can* trigger another patched
+    // method (e.g. custom elements) and we want only the shady method to run.
+    removeChild(node.parentNode, node);
   }
   // add to new parent
   let ownerRoot = utils.ownerShadyRootForNode(parent);
