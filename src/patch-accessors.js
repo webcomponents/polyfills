@@ -8,11 +8,9 @@ Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 */
 
-'use strict';
-
-import * as utils from './utils'
-import {getInnerHTML} from './innerHTML'
-import * as nativeTree from './native-tree'
+import * as utils from './utils.js';
+import {getInnerHTML} from './innerHTML.js';
+import * as nativeTree from './native-tree.js';
 
 function clearNode(node) {
   while (node.firstChild) {

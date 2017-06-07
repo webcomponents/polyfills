@@ -8,10 +8,8 @@ Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 */
 
-'use strict';
-
-import * as utils from './utils'
-import * as nativeMethods from './native-methods'
+import * as utils from './utils.js';
+import * as nativeMethods from './native-methods.js';
 
 // https://github.com/w3c/webcomponents/issues/513#issuecomment-224183937
 let alwaysComposed = {

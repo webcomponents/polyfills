@@ -8,15 +8,13 @@ Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 */
 
-'use strict';
-
-import * as utils from './utils'
-import {flush} from './flush'
-import {dispatchEvent} from './native-methods'
-import * as mutation from './logical-mutation'
-import {ActiveElementAccessor, ShadowRootAccessor, patchAccessors} from './patch-accessors'
-import {addEventListener, removeEventListener} from './patch-events'
-import {attachShadow, ShadyRoot} from './attach-shadow'
+import * as utils from './utils.js';
+import {flush} from './flush.js';
+import {dispatchEvent} from './native-methods.js';
+import * as mutation from './logical-mutation.js';
+import {ActiveElementAccessor, ShadowRootAccessor, patchAccessors} from './patch-accessors.js';
+import {addEventListener, removeEventListener} from './patch-events.js';
+import {attachShadow, ShadyRoot} from './attach-shadow.js';
 
 function getAssignedSlot(node) {
   mutation.renderRootNode(node);

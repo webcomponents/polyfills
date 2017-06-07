@@ -8,8 +8,6 @@ Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 */
 
-'use strict';
-
 export let appendChild = Element.prototype.appendChild;
 export let insertBefore = Element.prototype.insertBefore;
 export let removeChild = Element.prototype.removeChild;
