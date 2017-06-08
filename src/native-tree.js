@@ -8,9 +8,7 @@ Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 */
 
-'use strict';
-
-import {getInnerHTML} from './innerHTML'
+import {getInnerHTML} from './innerHTML.js';
 
 let nodeWalker = document.createTreeWalker(document, NodeFilter.SHOW_ALL,
   null, false);

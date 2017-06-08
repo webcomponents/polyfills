@@ -8,10 +8,8 @@ Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 */
 
-'use strict';
-
-import {removeChild, dispatchEvent} from './native-methods'
-import {parentNode} from './native-tree'
+import {removeChild, dispatchEvent} from './native-methods.js';
+import {parentNode} from './native-tree.js';
 
 // NOTE: normalize event contruction where necessary (IE11)
 let NormalizedEvent = typeof Event === 'function' ? Event :
