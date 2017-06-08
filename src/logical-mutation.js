@@ -8,12 +8,10 @@ Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 */
 
-'use strict';
-
-import * as utils from './utils'
-import * as logicalTree from './logical-tree'
-import * as nativeMethods from './native-methods'
-import {parentNode} from './native-tree'
+import * as utils from './utils.js';
+import * as logicalTree from './logical-tree.js';
+import * as nativeMethods from './native-methods.js';
+import {parentNode} from './native-tree.js';
 
 // cases in which we may not be able to just do standard native call
 // 1. container has a shadyRoot (needsDistribution IFF the shadyRoot

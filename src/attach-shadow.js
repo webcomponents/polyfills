@@ -8,15 +8,13 @@ Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 */
 
-'use strict';
-
-import {calculateSplices} from './array-splice'
-import * as utils from './utils'
-import {enqueue} from './flush'
-import {recordChildNodes} from './logical-tree'
-import {removeChild, insertBefore, dispatchEvent} from './native-methods'
-import {parentNode, childNodes} from './native-tree'
-import {patchShadowRootAccessors} from './patch-accessors'
+import {calculateSplices} from './array-splice.js';
+import * as utils from './utils.js';
+import {enqueue} from './flush.js';
+import {recordChildNodes} from './logical-tree.js';
+import {removeChild, insertBefore} from './native-methods.js';
+import {parentNode, childNodes} from './native-tree.js';
+import {patchShadowRootAccessors} from './patch-accessors.js';
 
 // Do not export this object. It must be passed as the first argument to the
 // ShadyRoot constructor in `attachShadow` to prevent the constructor from

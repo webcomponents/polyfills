@@ -1,6 +1,6 @@
 {
   "name": "@webcomponents/shadydom",
-  "version": "1.0.0-rc.6",
+  "version": "1.0.0",
   "description": "Shadow DOM polyfill",
   "main": "shadydom.min.js",
   "keywords": [
@@ -30,6 +30,10 @@
   },
   "homepage": "https://webcomponents.org/polyfills",
   "devDependencies": {
+    "@webcomponents/custom-elements": "^1.0.0",
+    "@webcomponents/shadycss": "^1.0.0",
+    "@webcomponents/template": "^1.0.0",
+    "@webcomponents/webcomponents-platform": "^1.0.0",
     "eslint": "^3.4.0",
     "eslint-plugin-html": "^2.0.0",
     "google-closure-compiler": "^20170409.0.0",
@@ -38,6 +42,9 @@
     "gulp-rollup": "^2.5.1",
     "gulp-size": "^2.1.0",
     "gulp-sourcemaps": "^2.4.1",
-    "web-component-tester": "^6.0.0-prerelease.4"
+    "web-component-tester": "^6.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

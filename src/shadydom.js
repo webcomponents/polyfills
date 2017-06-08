@@ -18,15 +18,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
  * libraries, and frameworks that use DOM tree manipulation apis.
  */
 
-'use strict';
-import * as utils from './utils'
-import {flush, enqueue} from './flush'
-import {observeChildren, unobserveChildren, filterMutations} from './observe-changes'
-import * as nativeMethods from './native-methods'
-import * as nativeTree from './native-tree'
-import {patchBuiltins} from './patch-builtins'
-import {patchEvents} from './patch-events'
-import {ShadyRoot} from './attach-shadow'
+import * as utils from './utils.js';
+import {flush, enqueue} from './flush.js';
+import {observeChildren, unobserveChildren, filterMutations} from './observe-changes.js';
+import * as nativeMethods from './native-methods.js';
+import * as nativeTree from './native-tree.js';
+import {patchBuiltins} from './patch-builtins.js';
+import {patchEvents} from './patch-events.js';
+import {ShadyRoot} from './attach-shadow.js';
 
 if (utils.settings.inUse) {
   let ShadyDOM = {

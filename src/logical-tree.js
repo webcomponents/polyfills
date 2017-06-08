@@ -8,10 +8,8 @@ Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 */
 
-'use strict';
-
-import {patchInsideElementAccessors, patchOutsideElementAccessors} from './patch-accessors'
-import {firstChild, lastChild, childNodes} from './native-tree'
+import {patchInsideElementAccessors, patchOutsideElementAccessors} from './patch-accessors.js';
+import {firstChild, lastChild, childNodes} from './native-tree.js';
 
 export function recordInsertBefore(node, container, ref_node) {
   patchInsideElementAccessors(container);
