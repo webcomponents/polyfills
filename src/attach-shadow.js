@@ -12,7 +12,7 @@ import {calculateSplices} from './array-splice.js';
 import * as utils from './utils.js';
 import {enqueue} from './flush.js';
 import {recordChildNodes} from './logical-tree.js';
-import {removeChild, insertBefore} from './native-methods.js';
+import {removeChild, insertBefore, dispatchEvent} from './native-methods.js';
 import {parentNode, childNodes} from './native-tree.js';
 import {patchShadowRootAccessors} from './patch-accessors.js';
 
