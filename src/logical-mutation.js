@@ -110,7 +110,7 @@ export function removeChild(parent, node) {
   removeOwnerShadyRoot(node);
   if (ownerRoot) {
     let changeSlotContent = logicalParent && logicalParent.localName === 'slot';
-    removingInsertionPoint = ownerRoot._removeContainerSlots(node);
+    removingInsertionPoint = ownerRoot._removeContainedSlots(node);
     if (removingInsertionPoint || changeSlotContent) {
       ownerRoot._asyncRender();
     }
@@ -169,19 +169,24 @@ function distributeNodeIfNeeded(node) {
   }
 }
 
+/**
+ * Should be called whenever an attribute changes. If the `slot` attribute
+ * changes, provokes rendering if necessary. If a `<slot>` element's `name`
+ * attribute changes, updates the root's slot map and renders.
+ * @param {*} node 
+ * @param {*} name 
+ */
 function distributeAttributeChange(node, name) {
   if (name === 'slot') {
     distributeNodeIfNeeded(node.parentNode);
   } else if (node.localName === 'slot' && name === 'name') {
     let root = utils.ownerShadyRootForNode(node);
     if (root) {
-      root._removeSlot(node);
-      root._addSlots([node]);
+      root._updateSlotMap();
       root._asyncRender();
     }
   }
 }
-
 
 /**
  * @param {Node} node

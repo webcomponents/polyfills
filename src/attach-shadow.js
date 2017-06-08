@@ -154,9 +154,6 @@ ShadyRoot.prototype._distribute = function() {
         slot.__shady.dirty = true;
       }
     }
-    // NOTE: cannot bubble correctly here so not setting bubbles: true
-    // Safari tech preview does not bubble but chrome does
-    // Spec says it bubbles (https://dom.spec.whatwg.org/#mutation-observers)
     if (slot.__shady.dirty) {
       slot.__shady.dirty = false;
       this._fireSlotChange(slot);
@@ -301,6 +298,10 @@ ShadyRoot.prototype._updateChildNodes = function(container, children) {
   }
 }
 
+/**
+ * Adds the given slots. Slots are maintained in an dom-ordered list.
+ * In addition a map of name to slot is updated.
+ */
 ShadyRoot.prototype._addSlots = function(slots) {
   let slotNamesToSort;
   for (let i=0; i < slots.length; i++) {
@@ -320,8 +321,6 @@ ShadyRoot.prototype._addSlots = function(slots) {
     }
     this._slotList.push(slot);
   }
-  // TODO(sorvell): add tests to verify slots add/removing slots
-    // with the same name (or catchall)
   if (slotNamesToSort) {
     for (let n in slotNamesToSort) {
       let slotsForName = this._extractSlotsOfName(n);
@@ -351,6 +350,9 @@ ShadyRoot.prototype._extractSlotsOfName = function(name) {
   return slots;
 }
 
+/**
+ * Slots are kept in an ordered list. Here they are sorted by dom-tree order.
+ */
 ShadyRoot.prototype._sortSlots = function(slots) {
   return slots.sort((a, b) => {
     let listA = ancestorList(a);
@@ -383,7 +385,11 @@ function contains(container, node) {
   }
 }
 
-ShadyRoot.prototype._removeContainerSlots = function(container) {
+/**
+ * Given a `container` element, removes any contained slot elements,
+ * resorts the slot list, and updates the slot map.
+ */
+ShadyRoot.prototype._removeContainedSlots = function(container) {
   let didRemove;
   for (let i=0; i<this._slotList.length; i++) {
     let slot = this._slotList[i];
@@ -396,14 +402,6 @@ ShadyRoot.prototype._removeContainerSlots = function(container) {
   }
   this._updateSlotMap();
   return didRemove;
-}
-
-ShadyRoot.prototype._removeSlot = function(slot) {
-  let i = this._slotList.indexOf(slot);
-  if (i > -1) {
-    this._slotList.splice(i, 1);
-    this._removeAssignedNodes(slot);
-  }
 }
 
 ShadyRoot.prototype._removeAssignedNodes = function(slot) {
