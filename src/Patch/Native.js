@@ -27,7 +27,7 @@ export default {
   Element_after: Env.Element['after'],
   Element_replaceWith: Env.Element['replaceWith'],
   Element_remove: Env.Element['remove'],
-  HTMLElement: window.HTMLElement,
+  HTMLElement: Env.HTMLElement,
   HTMLElement_innerHTML: Env.HTMLElement.innerHTML,
   HTMLElement_insertAdjacentElement: Env.HTMLElement['insertAdjacentElement'],
 };

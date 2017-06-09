@@ -1,4 +1,5 @@
-import Native from './Native.js';
+import * as Env from '../Environment.js';
+import * as EnvProxy from '../EnvironmentProxy.js';
 import CustomElementInternals from '../CustomElementInternals.js';
 import CEState from '../CustomElementState.js';
 import AlreadyConstructedMarker from '../AlreadyConstructedMarker.js';
@@ -26,7 +27,7 @@ export default function(internals) {
       const constructionStack = definition.constructionStack;
 
       if (constructionStack.length === 0) {
-        const element = Native.Document_createElement.call(document, definition.localName);
+        const element = EnvProxy.createElement(document, definition.localName);
         Object.setPrototypeOf(element, constructor.prototype);
         element.__CE_state = CEState.custom;
         element.__CE_definition = definition;
@@ -47,7 +48,7 @@ export default function(internals) {
       return element;
     }
 
-    HTMLElement.prototype = Native.HTMLElement.prototype;
+    HTMLElement.prototype = Env.HTMLElement.constructor.value.prototype;
 
     return HTMLElement;
   })();
