@@ -1,3 +1,4 @@
+import * as EnvProxy from './EnvironmentProxy.js';
 import CustomElementInternals from './CustomElementInternals.js';
 
 export default class DocumentConstructionObserver {
@@ -22,14 +23,14 @@ export default class DocumentConstructionObserver {
     // document.
     this._internals.patchAndUpgradeTree(this._document);
 
-    if (this._document.readyState === 'loading') {
-      this._observer = new MutationObserver(this._handleMutations.bind(this));
+    if (EnvProxy.readyState(this._document) === 'loading') {
+      this._observer = new EnvProxy.MutationObserver(this._handleMutations.bind(this));
 
       // Nodes created by the parser are given to the observer *before* the next
       // task runs. Inline scripts are run in a new task. This means that the
       // observer will be able to handle the newly parsed nodes before the inline
       // script is run.
-      this._observer.observe(this._document, {
+      EnvProxy.observe(this._observer, this._document, {
         childList: true,
         subtree: true,
       });
@@ -38,7 +39,7 @@ export default class DocumentConstructionObserver {
 
   disconnect() {
     if (this._observer) {
-      this._observer.disconnect();
+      EnvProxy.disconnect(this._observer);
     }
   }
 
@@ -49,13 +50,13 @@ export default class DocumentConstructionObserver {
     // Once the document's `readyState` is 'interactive' or 'complete', all new
     // nodes created within that document will be the result of script and
     // should be handled by patching.
-    const readyState = this._document.readyState;
+    const readyState = EnvProxy.readyState(this._document);
     if (readyState === 'interactive' || readyState === 'complete') {
       this.disconnect();
     }
 
     for (let i = 0; i < mutations.length; i++) {
-      const addedNodes = mutations[i].addedNodes;
+      const addedNodes = EnvProxy.addedNodes(mutations[i]);
       for (let j = 0; j < addedNodes.length; j++) {
         const node = addedNodes[j];
         this._internals.patchAndUpgradeTree(node);

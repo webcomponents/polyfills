@@ -1,3 +1,4 @@
+import * as EnvProxy from './EnvironmentProxy.js';
 import * as Utilities from './Utilities.js';
 import CEState from './CustomElementState.js';
 
@@ -173,7 +174,7 @@ export default class CustomElementInternals {
     const elements = [];
 
     const gatherElements = element => {
-      if (element.localName === 'link' && element.getAttribute('rel') === 'import') {
+      if (EnvProxy.localName(element) === 'link' && EnvProxy.getAttribute(element, 'rel') === 'import') {
         // The HTML Imports polyfill sets a descendant element of the link to
         // the `import` property, specifically this is *not* a Document.
         const importNode = /** @type {?Node} */ (element.import);
@@ -186,7 +187,7 @@ export default class CustomElementInternals {
         } else {
           // If this link's import root is not available, its contents can't be
           // walked. Wait for 'load' and walk it when it's ready.
-          element.addEventListener('load', () => {
+          EnvProxy.addEventListener(element, 'load', () => {
             const importNode = /** @type {!Node} */ (element.import);
 
             if (importNode.__CE_documentLoadHandled) return;
@@ -262,7 +263,7 @@ export default class CustomElementInternals {
       const observedAttributes = definition.observedAttributes;
       for (let i = 0; i < observedAttributes.length; i++) {
         const name = observedAttributes[i];
-        const value = element.getAttribute(name);
+        const value = EnvProxy.getAttribute(element, name);
         if (value !== null) {
           this.attributeChangedCallback(element, name, null, value, null);
         }
