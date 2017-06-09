@@ -248,14 +248,15 @@ ShadyRoot.prototype._fireSlotChange = function(slot) {
 // Reify dom such that it is at its correct rendering position
 // based on logical distribution.
 ShadyRoot.prototype._compose = function() {
-  this._updateChildNodes(this.host, this._composeNode(this.host.shadowRoot));
+  // compose shadwoRoot
+  this._updateChildNodes(this.host, this._composeNode(this));
   const slots = this._slotList;
   let composeList = [];
   for (let i=0; i < slots.length; i++) {
     const parent = slots[i].parentNode;
     /* compose node only if:
-      (1) parent is not the shadowRoot since the shadowRoot as this is not a 
-      valid composed location
+      (1) parent is not the shadowRoot since shadowRoot has already composed
+      into the host
       (2) parent does not have a shadowRoot since it will have composed via
       distribution of dirty roots
       (3) we're not already composing it 
