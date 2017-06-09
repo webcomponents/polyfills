@@ -100,7 +100,7 @@ let nodeMixin = {
 
 };
 
-// NOTE: For some reason `Text` redefines `assignedSlot`
+// NOTE: For some reason 'Text' redefines 'assignedSlot'
 let textMixin = {
   /**
    * @this {Text}
@@ -146,7 +146,7 @@ let slotMixin = {
     if (this.localName === 'slot') {
       mutation.renderRootNode(this);
       return this.__shady ?
-        ((options && options.flatten ? this.__shady.distributedNodes :
+        ((options && options.flatten ? this.__shady.flattenedNodes :
         this.__shady.assignedNodes) || []) :
         [];
     }

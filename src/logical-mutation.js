@@ -92,8 +92,10 @@ function findContainedSlots(node) {
 }
 
 /**
-  Removes the given `node` from the element's `lightChildren`.
-  This method also performs dom composition.
+ * Removes the given `node` from the element's `lightChildren`.
+ * This method also performs dom composition.
+ * @param {Node} parent
+ * @param {Node} node
 */
 export function removeChild(parent, node) {
   if (node.parentNode !== parent) {
@@ -118,7 +120,7 @@ export function removeChild(parent, node) {
   if (!handled) {
     // if removing from a shadyRoot, remove form host instead
     let container = utils.isShadyRoot(parent) ?
-      parent.host :
+      /** @type {ShadowRoot} */(parent).host :
       parent;
     // not guaranteed to physically be in container; e.g.
     // undistributed nodes.
@@ -150,8 +152,13 @@ function hasCachedOwnerRoot(node) {
 // NOTE(sorvell): This will fail if distribution that affects this
 // question is pending; this is expected to be exceedingly rare, but if
 // the issue comes up, we can force a flush in this case.
+/**
+ * Finds the first flattened node that is composed in the slot's parent.
+ * @param {HTMLSlotElement} insertionPoint 
+ * @returns {Node} first composed node
+ */
 function firstComposedNode(insertionPoint) {
-  let n$ = insertionPoint.assignedNodes({flatten: true});
+  let n$ = insertionPoint.__shady.flattenedNodes;
   let root = getRootNode(insertionPoint);
   for (let i=0, l=n$.length, n; (i<l) && (n=n$[i]); i++) {
     // means that we're composed to this spot.
@@ -159,6 +166,7 @@ function firstComposedNode(insertionPoint) {
       return n;
     }
   }
+  return null;
 }
 
 function distributeNodeIfNeeded(node) {
@@ -173,8 +181,8 @@ function distributeNodeIfNeeded(node) {
  * Should be called whenever an attribute changes. If the `slot` attribute
  * changes, provokes rendering if necessary. If a `<slot>` element's `name`
  * attribute changes, updates the root's slot map and renders.
- * @param {*} node 
- * @param {*} name 
+ * @param {Node} node 
+ * @param {string} name 
  */
 function distributeAttributeChange(node, name) {
   if (name === 'slot') {

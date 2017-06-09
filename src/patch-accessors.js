@@ -246,6 +246,7 @@ let InsideAccessors = {
     },
     /**
      * @this {HTMLElement}
+     * @param {string} text
      */
     set(text) {
       if (this.nodeType !== Node.ELEMENT_NODE) {

@@ -116,7 +116,7 @@ ShadyRoot.prototype['_renderRoot'] = function() {
 }
 
 ShadyRoot.prototype._distribute = function() {
-  // capture # of previously assigned nodes to help determin if dirty.
+  // capture # of previously assigned nodes to help determine if dirty.
   for (let i=0, slot; i < this._slotList.length; i++) {
     slot = this._slotList[i];
     this._clearSlotAssignedNodes(slot);
@@ -141,8 +141,8 @@ ShadyRoot.prototype._distribute = function() {
     if (slotParentRoot && slotParentRoot._hasInsertionPoint()) {
       slotParentRoot['_renderRoot']();
     }
-    slot.__shady.distributedNodes = [];
-    this._addDistributedNodes(slot.__shady.distributedNodes, slot);
+    this._addAssignedToFlattenedNodes(slot.__shady.flattenedNodes, 
+      slot.__shady.assignedNodes);
     let prevAssignedNodes = slot.__shady._previouslyAssignedNodes;
     if (prevAssignedNodes) {
       for (let i=0; i < prevAssignedNodes.length; i++) {
@@ -154,6 +154,10 @@ ShadyRoot.prototype._distribute = function() {
         slot.__shady.dirty = true;
       }
     }
+    /* Note: A slot is marked dirty whenever a node is newly assigned to it 
+    or a node is assigned to a different slot (done in `_distributeNodeToSlot`) 
+    or if the number of nodes assigned to the slot has decreased (done above);
+     */
     if (slot.__shady.dirty) {
       slot.__shady.dirty = false;
       this._fireSlotChange(slot);
@@ -161,10 +165,21 @@ ShadyRoot.prototype._distribute = function() {
   }
 }
 
-ShadyRoot.prototype._distributeNodeToSlot = function(node, slot) {
+/**
+ * Distributes given `node` to the appropriate slot based on its `slot` 
+ * attribute. If `forcedSlot` is given, then the node is distributed to the
+ * `forcedSlot`.
+ * Note: slot to which the node is assigned will be marked dirty for firing 
+ * `slotchange`.
+ * @param {Node} node
+ * @param {Node=} forcedSlot
+ * 
+ */
+ShadyRoot.prototype._distributeNodeToSlot = function(node, forcedSlot) {
   node.__shady = node.__shady || {};
   let oldSlot = node.__shady._prevAssignedSlot;
   node.__shady._prevAssignedSlot = null;
+  let slot = forcedSlot;
   if (!slot) {
     let name = node.slot || CATCHALL_NAME;
     slot = this._slotMap[name];
@@ -176,19 +191,25 @@ ShadyRoot.prototype._distributeNodeToSlot = function(node, slot) {
     node.__shady.assignedSlot = undefined;
   }
   if (oldSlot !== node.__shady.assignedSlot) {
-    // TODO(sorvell): add test to verify this is needed.
-    if (oldSlot) {
-      oldSlot.__shady.dirty = true;
-    }
     if (node.__shady.assignedSlot) {
       node.__shady.assignedSlot.__shady.dirty = true;
     }
   }
 }
 
+/**
+ * Clears the assignedNodes tracking data for a given `slot`. Note, the current 
+ * assigned node data is tracked (via _previouslyAssignedNodes and 
+ * _prevAssignedSlot) to see if `slotchange` should fire. This data may be out
+ *  of date at this time because the assigned nodes may have already been 
+ * distributed to another root. This is ok since this data is only used to 
+ * track changes.
+ * @param {HTMLSlotElement} slot
+ */
 ShadyRoot.prototype._clearSlotAssignedNodes = function(slot) {
   let n$ = slot.__shady.assignedNodes;
   slot.__shady.assignedNodes = [];
+  slot.__shady.flattenedNodes = [];
   slot.__shady._previouslyAssignedNodes = n$;
   if (n$) {
     for (let i=0; i < n$.length; i++) {
@@ -204,13 +225,12 @@ ShadyRoot.prototype._clearSlotAssignedNodes = function(slot) {
   }
 }
 
-ShadyRoot.prototype._addDistributedNodes = function(list, insertionPoint) {
-  let n$ = insertionPoint.__shady.assignedNodes;
-  for (let i=0, n; (i<n$.length) && (n=n$[i]); i++) {
+ShadyRoot.prototype._addAssignedToFlattenedNodes = function(flattened, asssigned) {
+  for (let i=0, n; (i<asssigned.length) && (n=asssigned[i]); i++) {
     if (n.localName == 'slot') {
-      this._addDistributedNodes(list, n);
+      this._addAssignedToFlattenedNodes(flattened, n.__shady.assignedNodes);
     } else {
-      list.push(n$[i]);
+      flattened.push(asssigned[i]);
     }
   }
 }
@@ -228,31 +248,42 @@ ShadyRoot.prototype._fireSlotChange = function(slot) {
 // Reify dom such that it is at its correct rendering position
 // based on logical distribution.
 ShadyRoot.prototype._compose = function() {
-  this._updateChildNodes(this.host, this._composeNode(this.host));
-  let p$ = this._slotList;
-  for (let i=0, l=p$.length, p, parent; (i<l) && (p=p$[i]); i++) {
-    parent = p.parentNode;
-    if ((parent !== this.host) && (parent !== this)) {
-      this._updateChildNodes(parent, this._composeNode(parent));
+  this._updateChildNodes(this.host, this._composeNode(this.host.shadowRoot));
+  const slots = this._slotList;
+  let composeList = [];
+  for (let i=0; i < slots.length; i++) {
+    const parent = slots[i].parentNode;
+    /* compose node only if:
+      (1) parent is not the shadowRoot since the shadowRoot as this is not a 
+      valid composed location
+      (2) parent does not have a shadowRoot since it will have composed via
+      distribution of dirty roots
+      (3) we're not already composing it 
+      [consider (n^2) but rare better than Set]
+    */
+    if (parent !== this && !parent.shadowRoot && 
+      composeList.indexOf(parent) < 0) {
+      composeList.push(parent);
     }
+  }
+  for (let i=0; i < composeList.length; i++) {
+    const node = composeList[i];
+    this._updateChildNodes(node, this._composeNode(node));
   }
 }
 
 // Returns the list of nodes which should be rendered inside `node`.
 ShadyRoot.prototype._composeNode = function(node) {
   let children = [];
-  let c$ = ((node.__shady && node.__shady.root) || node).childNodes;
+  let c$ = node.childNodes;
   for (let i = 0; i < c$.length; i++) {
     let child = c$[i];
-    if (this._isInsertionPoint(child)) {
-      let distributedNodes = child.__shady.distributedNodes ||
-        (child.__shady.distributedNodes = []);
-      for (let j = 0; j < distributedNodes.length; j++) {
-        let distributedNode = distributedNodes[j];
-        // this is final destination if insertionPoint has no assignedSlot.
-        if (this._isFinalDestination(child)) {
+    // Note: this is final destination if insertionPoint has no assignedSlot.
+    if (this._isInsertionPoint(child) && this._isFinalDestination(child)) {
+      let flattenedNodes = child.__shady.flattenedNodes;
+      for (let j = 0; j < flattenedNodes.length; j++) {
+        let distributedNode = flattenedNodes[j];
           children.push(distributedNode);
-        }
       }
     } else {
       children.push(child);
@@ -304,6 +335,7 @@ ShadyRoot.prototype._updateChildNodes = function(container, children) {
  */
 ShadyRoot.prototype._addSlots = function(slots) {
   let slotNamesToSort;
+  this._slotMap = this._slotMap || {};
   for (let i=0; i < slots.length; i++) {
     let slot = slots[i];
     // ensure insertionPoints's and their parents have logical dom info.
@@ -320,15 +352,16 @@ ShadyRoot.prototype._addSlots = function(slots) {
       slotNamesToSort[name] = true;
     }
     this._slotList.push(slot);
+    this._slotMap[name] = slot;
   }
   if (slotNamesToSort) {
     for (let n in slotNamesToSort) {
       let slotsForName = this._extractSlotsOfName(n);
       let sorted = this._sortSlots(slotsForName);
       this._slotList.push(...sorted);
+      this._slotMap[n] = sorted[0];
     }
   }
-  this._updateSlotMap();
 }
 
 ShadyRoot.prototype._nameForSlot = function(slot) {
@@ -351,9 +384,13 @@ ShadyRoot.prototype._extractSlotsOfName = function(name) {
 }
 
 /**
- * Slots are kept in an ordered list. Here they are sorted by dom-tree order.
+ * Slots are kept in an ordered list. Slots with the same name 
+ * are sorted here by tree order.
  */
 ShadyRoot.prototype._sortSlots = function(slots) {
+  // NOTE: Cannot use `compareDocumentPosition` because it's not polyfilled, 
+  // but the code here could be used to polyfill the preceeding/following info 
+  // in `compareDocumentPosition`.
   return slots.sort((a, b) => {
     let listA = ancestorList(a);
     let listB = ancestorList(b);
@@ -376,6 +413,7 @@ function ancestorList(node) {
   return ancestors;
 }
 
+// NOTE: could be used to help polyfill `document.contains`.
 function contains(container, node) {
   while (node) {
     if (node == container) {
@@ -386,8 +424,9 @@ function contains(container, node) {
 }
 
 /**
- * Given a `container` element, removes any contained slot elements,
- * resorts the slot list, and updates the slot map.
+ * Removes from the `_slotList` any slots contained within `container` and then
+ * updates the `_slotMap`. Any removed slots also have their `assignedNodes`
+ * removed from comopsed dom.
  */
 ShadyRoot.prototype._removeContainedSlots = function(container) {
   let didRemove;
@@ -395,7 +434,7 @@ ShadyRoot.prototype._removeContainedSlots = function(container) {
     let slot = this._slotList[i];
     if (contains(container, slot)) {
       this._slotList.splice(i, 1);
-      this._removeAssignedNodes(slot);
+      this._removeFlattenedNodes(slot);
       i--;
       didRemove = true;
     }
@@ -404,13 +443,15 @@ ShadyRoot.prototype._removeContainedSlots = function(container) {
   return didRemove;
 }
 
-ShadyRoot.prototype._removeAssignedNodes = function(slot) {
-  let n$ = slot.assignedNodes({flatten: true});
-  for (let i=0; i<n$.length; i++) {
-    let node = n$[i];
-    let parent = parentNode(node);
-    if (parent) {
-      removeChild.call(parent, node);
+ShadyRoot.prototype._removeFlattenedNodes = function(slot) {
+  let n$ = slot.__shady.flattenedNodes;
+  if (n$) {
+    for (let i=0; i<n$.length; i++) {
+      let node = n$[i];
+      let parent = parentNode(node);
+      if (parent) {
+        removeChild.call(parent, node);
+      }
     }
   }
 }
@@ -451,7 +492,8 @@ ShadyRoot.prototype.removeEventListener = function(type, fn, optionsOrCapture) {
 }
 
 ShadyRoot.prototype.getElementById = function(id) {
-  return this.querySelector(`#${id}`);
+  const el = this.querySelector(`#${id}`);
+  return (el instanceof HTMLElement) ? el : null;
 }
 
 /**
