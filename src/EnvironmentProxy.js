@@ -5,8 +5,17 @@ const method = descriptor => descriptor ? descriptor.value : () => undefined;
 
 // Document
 
+const createElementMethod = method(Env.Document.createElement);
+export const createElement = (doc, localName) => createElementMethod.call(doc, localName);
+
+const createElementNSMethod = method(Env.Document.createElementNS);
+export const createElementNS = (doc, namespace, qualifiedName) => createElementNSMethod.call(doc, namespace, qualifiedName);
+
+const importNodeMethod = method(Env.Document.importNode);
+export const importNode = (doc, node, deep) => importNodeMethod.call(doc, node, deep);
+
 const readyStateGetter = getter(Env.Document.readyState);
-export const readyState = (node, attrName) => readyStateGetter.call(node, attrName);
+export const readyState = doc => readyStateGetter.call(doc);
 
 // Element
 

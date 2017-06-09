@@ -1,4 +1,5 @@
-import Native from './Native.js';
+import * as Env from '../Environment.js';
+import * as EnvProxy from '../EnvironmentProxy.js';
 import CustomElementInternals from '../CustomElementInternals.js';
 import * as Utilities from '../Utilities.js';
 
@@ -24,7 +25,7 @@ export default function(internals) {
       }
 
       const result = /** @type {!Element} */
-        (Native.Document_createElement.call(this, localName));
+        EnvProxy.createElement(this, localName);
       internals.patch(result);
       return result;
     });
@@ -37,7 +38,7 @@ export default function(internals) {
      * @return {!Node}
      */
     function(node, deep) {
-      const clone = Native.Document_importNode.call(this, node, deep);
+      const clone = EnvProxy.importNode(this, node, deep);
       // Only create custom elements if this document is associated with the registry.
       if (!this.__CE_hasRegistry) {
         internals.patchTree(clone);
@@ -66,13 +67,13 @@ export default function(internals) {
       }
 
       const result = /** @type {!Element} */
-        (Native.Document_createElementNS.call(this, namespace, localName));
+        EnvProxy.createElementNS(this, namespace, localName);
       internals.patch(result);
       return result;
     });
 
   PatchParentNode(internals, Document.prototype, {
-    prepend: Native.Document_prepend,
-    append: Native.Document_append,
+    prepend: (Env.Document.prepend || {}).value,
+    append: (Env.Document.append || {}).value,
   });
 };

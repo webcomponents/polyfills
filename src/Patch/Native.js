@@ -1,9 +1,11 @@
+import * as Env from '../Environment.js';
+
 export default {
-  Document_createElement: window.Document.prototype.createElement,
-  Document_createElementNS: window.Document.prototype.createElementNS,
-  Document_importNode: window.Document.prototype.importNode,
-  Document_prepend: window.Document.prototype['prepend'],
-  Document_append: window.Document.prototype['append'],
+  Document_createElement: Env.Document.createElement.value,
+  Document_createElementNS: Env.Document.createElementNS.value,
+  Document_importNode: Env.Document.importNode.value,
+  Document_prepend: (Env.Document.prepend || {}).value,
+  Document_append: (Env.Document.append || {}).value,
   Node_cloneNode: window.Node.prototype.cloneNode,
   Node_appendChild: window.Node.prototype.appendChild,
   Node_insertBefore: window.Node.prototype.insertBefore,
