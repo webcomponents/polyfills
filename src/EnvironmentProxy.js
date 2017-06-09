@@ -11,6 +11,9 @@ export const createElement = (doc, localName) => createElementMethod.call(doc, l
 const createElementNSMethod = method(Env.Document.createElementNS);
 export const createElementNS = (doc, namespace, qualifiedName) => createElementNSMethod.call(doc, namespace, qualifiedName);
 
+const createTextNodeMethod = method(Env.Document.createTextNode);
+export const createTextNode = (doc, localName) => createTextNodeMethod.call(doc, localName);
+
 const importNodeMethod = method(Env.Document.importNode);
 export const importNode = (doc, node, deep) => importNodeMethod.call(doc, node, deep);
 
@@ -80,6 +83,9 @@ export const cloneNode = (node, deep) => cloneNodeMethod.call(node, deep);
 const firstChildGetter = getter(Env.Node.firstChild);
 export const firstChild = node => firstChildGetter.call(node);
 
+const insertBeforeMethod = method(Env.Node.insertBefore);
+export const insertBefore = (node, newChild, refChild) => insertBeforeMethod.call(node, newChild, refChild);
+
 const isConnectedGetter = getter(Env.Node.isConnected);
 export const isConnected = node => isConnectedGetter.call(node);
 
@@ -94,3 +100,6 @@ export const parentNode = node => parentNodeGetter.call(node);
 
 const removeChildMethod = method(Env.Node.removeChild);
 export const removeChild = (node, deep) => removeChildMethod.call(node, deep);
+
+const replaceChildMethod = method(Env.Node.replaceChild);
+export const replaceChild = (node, newChild, oldChild) => replaceChildMethod.call(node, newChild, oldChild);
