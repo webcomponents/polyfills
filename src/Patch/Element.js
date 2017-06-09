@@ -1,4 +1,5 @@
-import Native from './Native.js';
+import * as Env from '../Environment.js';
+import * as EnvProxy from '../EnvironmentProxy.js';
 import CustomElementInternals from '../CustomElementInternals.js';
 import CEState from '../CustomElementState.js';
 import * as Utilities from '../Utilities.js';
@@ -10,7 +11,7 @@ import PatchChildNode from './Interface/ChildNode.js';
  * @param {!CustomElementInternals} internals
  */
 export default function(internals) {
-  if (Native.Element_attachShadow) {
+  if (Env.Element.attachShadow) {
     Utilities.setPropertyUnchecked(Element.prototype, 'attachShadow',
       /**
        * @this {Element}
@@ -18,7 +19,7 @@ export default function(internals) {
        * @return {ShadowRoot}
        */
       function(init) {
-        const shadowRoot = Native.Element_attachShadow.call(this, init);
+        const shadowRoot = EnvProxy.attachShadow(this, init);
         this.__CE_shadowRoot = shadowRoot;
         return shadowRoot;
       });
@@ -74,14 +75,16 @@ export default function(internals) {
     });
   }
 
-  if (Native.Element_innerHTML && Native.Element_innerHTML.get) {
-    patch_innerHTML(Element.prototype, Native.Element_innerHTML);
-  } else if (Native.HTMLElement_innerHTML && Native.HTMLElement_innerHTML.get) {
-    patch_innerHTML(HTMLElement.prototype, Native.HTMLElement_innerHTML);
+  if (Env.Element.innerHTML && Env.Element.innerHTML.get) {
+    patch_innerHTML(Element.prototype, Env.Element.innerHTML);
+  } else if (Env.HTMLElement.innerHTML && Env.HTMLElement.innerHTML.get) {
+    patch_innerHTML(HTMLElement.prototype, Env.HTMLElement.innerHTML);
   } else {
+    // In this case, `innerHTML` has no exposed getter but still exists. Rather
+    // than using the environment proxy, we have to get and set it directly.
 
     /** @type {HTMLDivElement} */
-    const rawDiv = Native.Document_createElement.call(document, 'div');
+    const rawDiv = EnvProxy.createElement(document, 'div');
 
     internals.addPatch(function(element) {
       patch_innerHTML(element, {
@@ -91,7 +94,7 @@ export default function(internals) {
         // of the element and returning the resulting element's `innerHTML`.
         // TODO: Is this too expensive?
         get: /** @this {Element} */ function() {
-          return Native.Node_cloneNode.call(this, true).innerHTML;
+          return EnvProxy.cloneNode(this, true).innerHTML;
         },
         // Implements setting `innerHTML` by creating an unpatched element,
         // setting `innerHTML` of that element and replacing the target
@@ -101,14 +104,17 @@ export default function(internals) {
           // We need to do this because `template.appendChild` does not
           // route into `template.content`.
           /** @type {!Node} */
-          const content = this.localName === 'template' ? (/** @type {!HTMLTemplateElement} */ (this)).content : this;
+          const content =
+            (EnvProxy.localName(this) === 'template')
+            ? EnvProxy.content(/** @type {!HTMLTemplateElement} */ (this))
+            : this;
           rawDiv.innerHTML = assignedValue;
 
-          while (content.childNodes.length > 0) {
-            Native.Node_removeChild.call(content, content.childNodes[0]);
+          while (EnvProxy.childNodes(content).length > 0) {
+            EnvProxy.removeChild(content, content.childNodes[0]);
           }
-          while (rawDiv.childNodes.length > 0) {
-            Native.Node_appendChild.call(content, rawDiv.childNodes[0]);
+          while (EnvProxy.childNodes(rawDiv).length > 0) {
+            EnvProxy.appendChild(content, rawDiv.childNodes[0]);
           }
         },
       });
@@ -125,12 +131,12 @@ export default function(internals) {
     function(name, newValue) {
       // Fast path for non-custom elements.
       if (this.__CE_state !== CEState.custom) {
-        return Native.Element_setAttribute.call(this, name, newValue);
+        return EnvProxy.setAttribute(this, name, newValue);
       }
 
-      const oldValue = Native.Element_getAttribute.call(this, name);
-      Native.Element_setAttribute.call(this, name, newValue);
-      newValue = Native.Element_getAttribute.call(this, name);
+      const oldValue = EnvProxy.getAttribute(this, name);
+      EnvProxy.setAttribute(this, name, newValue);
+      newValue = EnvProxy.getAttribute(this, name);
       internals.attributeChangedCallback(this, name, oldValue, newValue, null);
     });
 
@@ -144,12 +150,12 @@ export default function(internals) {
     function(namespace, name, newValue) {
       // Fast path for non-custom elements.
       if (this.__CE_state !== CEState.custom) {
-        return Native.Element_setAttributeNS.call(this, namespace, name, newValue);
+        return EnvProxy.setAttributeNS(this, namespace, name, newValue);
       }
 
-      const oldValue = Native.Element_getAttributeNS.call(this, namespace, name);
-      Native.Element_setAttributeNS.call(this, namespace, name, newValue);
-      newValue = Native.Element_getAttributeNS.call(this, namespace, name);
+      const oldValue = EnvProxy.getAttributeNS(this, namespace, name);
+      EnvProxy.setAttributeNS(this, namespace, name, newValue);
+      newValue = EnvProxy.getAttributeNS(this, namespace, name);
       internals.attributeChangedCallback(this, name, oldValue, newValue, namespace);
     });
 
@@ -161,11 +167,11 @@ export default function(internals) {
     function(name) {
       // Fast path for non-custom elements.
       if (this.__CE_state !== CEState.custom) {
-        return Native.Element_removeAttribute.call(this, name);
+        return EnvProxy.removeAttribute(this, name);
       }
 
-      const oldValue = Native.Element_getAttribute.call(this, name);
-      Native.Element_removeAttribute.call(this, name);
+      const oldValue = EnvProxy.getAttribute(this, name);
+      EnvProxy.removeAttribute(this, name);
       if (oldValue !== null) {
         internals.attributeChangedCallback(this, name, oldValue, null, null);
       }
@@ -180,15 +186,15 @@ export default function(internals) {
     function(namespace, name) {
       // Fast path for non-custom elements.
       if (this.__CE_state !== CEState.custom) {
-        return Native.Element_removeAttributeNS.call(this, namespace, name);
+        return EnvProxy.removeAttributeNS(this, namespace, name);
       }
 
-      const oldValue = Native.Element_getAttributeNS.call(this, namespace, name);
-      Native.Element_removeAttributeNS.call(this, namespace, name);
+      const oldValue = EnvProxy.getAttributeNS(this, namespace, name);
+      EnvProxy.removeAttributeNS(this, namespace, name);
       // In older browsers, `Element#getAttributeNS` may return the empty string
       // instead of null if the attribute does not exist. For details, see;
       // https://developer.mozilla.org/en-US/docs/Web/API/Element/getAttributeNS#Notes
-      const newValue = Native.Element_getAttributeNS.call(this, namespace, name);
+      const newValue = EnvProxy.getAttributeNS(this, namespace, name);
       if (oldValue !== newValue) {
         internals.attributeChangedCallback(this, name, oldValue, newValue, namespace);
       }
@@ -219,24 +225,24 @@ export default function(internals) {
       });
   }
 
-  if (Native.HTMLElement_insertAdjacentElement) {
-    patch_insertAdjacentElement(HTMLElement.prototype, Native.HTMLElement_insertAdjacentElement);
-  } else if (Native.Element_insertAdjacentElement) {
-    patch_insertAdjacentElement(Element.prototype, Native.Element_insertAdjacentElement);
+  if (Env.HTMLElement['insertAdjacentElement'] && Env.HTMLElement['insertAdjacentElement'].value) {
+    patch_insertAdjacentElement(HTMLElement.prototype, Env.HTMLElement['insertAdjacentElement'].value);
+  } else if (Env.Element['insertAdjacentElement'] && Env.Element['insertAdjacentElement'].value) {
+    patch_insertAdjacentElement(Element.prototype, Env.Element['insertAdjacentElement'].value);
   } else {
     console.warn('Custom Elements: `Element#insertAdjacentElement` was not patched.');
   }
 
 
   PatchParentNode(internals, Element.prototype, {
-    prepend: Native.Element_prepend,
-    append: Native.Element_append,
+    prepend: (Env.Element.prepend || {}).value,
+    append: (Env.Element.append || {}).value,
   });
 
   PatchChildNode(internals, Element.prototype, {
-    before: Native.Element_before,
-    after: Native.Element_after,
-    replaceWith: Native.Element_replaceWith,
-    remove: Native.Element_remove,
+    before: (Env.Element.before || {}).value,
+    after: (Env.Element.after || {}).value,
+    replaceWith: (Env.Element.replaceWith || {}).value,
+    remove: (Env.Element.remove || {}).value,
   });
 };

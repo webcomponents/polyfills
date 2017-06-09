@@ -12,6 +12,8 @@ function getOwnPropertyDescriptors(target) {
 
 export const Document = getOwnPropertyDescriptors(window.Document.prototype);
 export const Element = getOwnPropertyDescriptors(window.Element.prototype);
+export const HTMLElement = getOwnPropertyDescriptors(window.HTMLElement.prototype);
+export const HTMLTemplateElement = getOwnPropertyDescriptors(window.HTMLElement.prototype);
 export const MutationObserver = getOwnPropertyDescriptors(window.MutationObserver.prototype);
 export const MutationRecord = getOwnPropertyDescriptors(window.MutationRecord.prototype);
 export const Node = getOwnPropertyDescriptors(window.Node.prototype);
