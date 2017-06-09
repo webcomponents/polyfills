@@ -25,7 +25,7 @@ export default function(internals) {
       }
 
       const result = /** @type {!Element} */
-        EnvProxy.createElement(this, localName);
+        (EnvProxy.createElement(this, localName));
       internals.patch(result);
       return result;
     });
@@ -67,7 +67,7 @@ export default function(internals) {
       }
 
       const result = /** @type {!Element} */
-        EnvProxy.createElementNS(this, namespace, localName);
+        (EnvProxy.createElementNS(this, namespace, localName));
       internals.patch(result);
       return result;
     });

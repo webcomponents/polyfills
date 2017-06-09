@@ -29,7 +29,7 @@ const getAttributeMethod = method(Env.Element.getAttribute);
 export const getAttribute = (node, name) => getAttributeMethod.call(node, name);
 
 const getAttributeNSMethod = method(Env.Element.getAttributeNS);
-export const getAttributeNS = (node, ns, name, value) => getAttributeNSMethod.call(node, ns, name, value);
+export const getAttributeNS = (node, ns, name) => getAttributeNSMethod.call(node, ns, name);
 
 const localNameGetter = getter(Env.Element.localName);
 export const localName = node => localNameGetter.call(node);
