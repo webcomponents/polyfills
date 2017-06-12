@@ -48,7 +48,7 @@ export default function(internals) {
       return element;
     }
 
-    HTMLElement.prototype = Env.HTMLElement.constructor.value.prototype;
+    HTMLElement.prototype = Env.HTMLElement.proto;
 
     return HTMLElement;
   })();

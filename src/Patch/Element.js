@@ -225,10 +225,10 @@ export default function(internals) {
       });
   }
 
-  if (Env.HTMLElement['insertAdjacentElement'] && Env.HTMLElement['insertAdjacentElement'].value) {
-    patch_insertAdjacentElement(HTMLElement.prototype, Env.HTMLElement['insertAdjacentElement'].value);
-  } else if (Env.Element['insertAdjacentElement'] && Env.Element['insertAdjacentElement'].value) {
-    patch_insertAdjacentElement(Element.prototype, Env.Element['insertAdjacentElement'].value);
+  if (Env.HTMLElement.insertAdjacentElement && Env.HTMLElement.insertAdjacentElement.value) {
+    patch_insertAdjacentElement(HTMLElement.prototype, Env.HTMLElement.insertAdjacentElement.value);
+  } else if (Env.Element.insertAdjacentElement && Env.Element.insertAdjacentElement.value) {
+    patch_insertAdjacentElement(Element.prototype, Env.Element.insertAdjacentElement.value);
   } else {
     console.warn('Custom Elements: `Element#insertAdjacentElement` was not patched.');
   }

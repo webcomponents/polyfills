@@ -1,3 +1,4 @@
+import * as Env from './Environment.js';
 import * as EnvProxy from './EnvironmentProxy.js';
 import CustomElementInternals from './CustomElementInternals.js';
 
@@ -24,7 +25,7 @@ export default class DocumentConstructionObserver {
     this._internals.patchAndUpgradeTree(this._document);
 
     if (EnvProxy.readyState(this._document) === 'loading') {
-      this._observer = new EnvProxy.MutationObserver(this._handleMutations.bind(this));
+      this._observer = new Env.MutationObserver.self(this._handleMutations.bind(this));
 
       // Nodes created by the parser are given to the observer *before* the next
       // task runs. Inline scripts are run in a new task. This means that the

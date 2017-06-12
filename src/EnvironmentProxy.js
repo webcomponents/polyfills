@@ -53,8 +53,6 @@ export const content = node => contentGetter.call(node);
 
 // MutationObserver
 
-export const MutationObserver = method(Env.MutationObserver.constructor);
-
 const observeMethod = method(Env.MutationObserver.observe);
 export const observe = (mutationObserver, target, options) => observeMethod.call(mutationObserver, target, options);
 
