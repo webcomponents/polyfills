@@ -54,8 +54,8 @@ let nodeMixin = {
    * @this {Node}
    */
   replaceChild(node, ref_node) {
-    this.insertBefore(node, ref_node);
-    this.removeChild(ref_node);
+    mutation.insertBefore(this, node, ref_node);
+    mutation.removeChild(this, ref_node);
     return node;
   },
 
@@ -188,7 +188,7 @@ let elementMixin = utils.extendAll({
    * @this {HTMLElement}
    */
   set slot(value) {
-    this.setAttribute('slot', value);
+    mutation.setAttribute(this, 'slot', value);
   },
 
   /**
@@ -214,7 +214,7 @@ let documentMixin = utils.extendAll({
    * @this {Document}
    */
   getElementById(id) {
-    return this.querySelector(`#${id}`);
+    return fragmentMixin.querySelector.call(this, `#${id}`);
   }
 
 }, fragmentMixin);

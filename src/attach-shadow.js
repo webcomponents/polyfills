@@ -121,9 +121,6 @@ ShadyRoot.prototype._distribute = function() {
     slot = this._slotList[i];
     this._clearSlotAssignedNodes(slot);
   }
-  if (!this._slotMap) {
-    this._updateSlotMap();
-  }
   // distribute host children.
   for (let n=this.host.firstChild; n; n=n.nextSibling) {
     this._distributeNodeToSlot(n);
@@ -182,7 +179,8 @@ ShadyRoot.prototype._distributeNodeToSlot = function(node, forcedSlot) {
   let slot = forcedSlot;
   if (!slot) {
     let name = node.slot || CATCHALL_NAME;
-    slot = this._slotMap[name];
+    const list = this._slotMap[name];
+    slot = list && list[0];
   }
   if (slot) {
     slot.__shady.assignedNodes.push(node);
@@ -247,29 +245,29 @@ ShadyRoot.prototype._fireSlotChange = function(slot) {
 
 // Reify dom such that it is at its correct rendering position
 // based on logical distribution.
+// NOTE: here we only compose parents of <slot> elements and not the 
+// shadowRoot into the host. The latter is performend via a fast path
+// in the `logical-mutation`.insertBefore.
 ShadyRoot.prototype._compose = function() {
-  // compose shadwoRoot
-  this._updateChildNodes(this.host, this._composeNode(this));
   const slots = this._slotList;
   let composeList = [];
   for (let i=0; i < slots.length; i++) {
     const parent = slots[i].parentNode;
     /* compose node only if:
-      (1) parent is not the shadowRoot since shadowRoot has already composed
-      into the host
-      (2) parent does not have a shadowRoot since it will have composed via
-      distribution of dirty roots
-      (3) we're not already composing it 
+      (1) parent does not have a shadowRoot since shadowRoot has already 
+      composed into the host
+      (2) we're not already composing it 
       [consider (n^2) but rare better than Set]
     */
-    if (parent !== this && !parent.shadowRoot && 
+    if (!parent.shadowRoot && 
       composeList.indexOf(parent) < 0) {
       composeList.push(parent);
     }
   }
   for (let i=0; i < composeList.length; i++) {
     const node = composeList[i];
-    this._updateChildNodes(node, this._composeNode(node));
+    const targetNode = node === this ? this.host : node;
+    this._updateChildNodes(targetNode, this._composeNode(node));
   }
 }
 
@@ -279,8 +277,10 @@ ShadyRoot.prototype._composeNode = function(node) {
   let c$ = node.childNodes;
   for (let i = 0; i < c$.length; i++) {
     let child = c$[i];
-    // Note: this is final destination if insertionPoint has no assignedSlot.
-    if (this._isInsertionPoint(child) && this._isFinalDestination(child)) {
+    // Note: if we see a slot here, the nodes are guaranteed to need to be
+    // composed here. This is because if there is redistribution, it has 
+    // already been handled by this point.
+    if (this._isInsertionPoint(child)) {
       let flattenedNodes = child.__shady.flattenedNodes;
       for (let j = 0; j < flattenedNodes.length; j++) {
         let distributedNode = flattenedNodes[j];
@@ -291,10 +291,6 @@ ShadyRoot.prototype._composeNode = function(node) {
     }
   }
   return children;
-}
-
-ShadyRoot.prototype._isFinalDestination = function(slot) {
-  return !slot.__shady.assignedSlot;
 }
 
 ShadyRoot.prototype._isInsertionPoint = function(node) {
@@ -348,40 +344,38 @@ ShadyRoot.prototype._addSlots = function(slots) {
     recordChildNodes(slot);
     recordChildNodes(slot.parentNode);
     let name = this._nameForSlot(slot);
-    if (this._slotMap && this._slotMap[name]) {
+    if (this._slotMap[name]) {
       slotNamesToSort = slotNamesToSort || {};
       slotNamesToSort[name] = true;
+      this._slotMap[name].push(slot);
+    } else {
+      this._slotMap[name] = [slot];
     }
-    this._slotList.push(slot);
-    this._slotMap[name] = slot;
   }
   if (slotNamesToSort) {
     for (let n in slotNamesToSort) {
-      let slotsForName = this._extractSlotsOfName(n);
-      let sorted = this._sortSlots(slotsForName);
-      this._slotList.push(...sorted);
-      this._slotMap[n] = sorted[0];
+      this._slotMap[n] = this._sortSlots(this._slotMap[n]);
+    }
+  }
+  this._updateSlotList();
+}
+
+ShadyRoot.prototype._updateSlotList = function() {
+  let list = this._slotList || (this._slotList = []);
+  list.length = 0;
+  const map = this._slotMap;
+  for (let n in map) {
+    const slots = map[n];
+    for (let i=0; i < slots.length; i++) {
+      list.push(slots[i]);
     }
   }
 }
 
 ShadyRoot.prototype._nameForSlot = function(slot) {
-  return slot['name'] || slot.getAttribute('name') || CATCHALL_NAME;
-}
-
-ShadyRoot.prototype._extractSlotsOfName = function(name) {
-  let slots;
-  for (let i=0; i < this._slotList.length; i++) {
-    let slot = this._slotList[i];
-    let n = this._nameForSlot(slot);
-    if (n == name) {
-      this._slotList.splice(i, 1);
-      i--;
-      slots = slots || [];
-      slots.push(slot);
-    }
-  }
-  return slots;
+  const name = slot['name'] || slot.getAttribute('name') || CATCHALL_NAME;
+  slot.__slotName = name;
+  return name;
 }
 
 /**
@@ -425,23 +419,48 @@ function contains(container, node) {
 }
 
 /**
- * Removes from the `_slotList` any slots contained within `container` and then
- * updates the `_slotMap`. Any removed slots also have their `assignedNodes`
- * removed from comopsed dom.
+ * Removes from tracked slot data any slots contained within `container` and 
+ * then updates the tracked data (_slotList and _slotMap). 
+ * Any removed slots also have their `assignedNodes` removed from comopsed dom.
  */
 ShadyRoot.prototype._removeContainedSlots = function(container) {
   let didRemove;
-  for (let i=0; i<this._slotList.length; i++) {
-    let slot = this._slotList[i];
-    if (contains(container, slot)) {
-      this._slotList.splice(i, 1);
-      this._removeFlattenedNodes(slot);
-      i--;
-      didRemove = true;
+  const map = this._slotMap;
+  for (let n in map) {
+    let slots = map[n];
+    for (let i=0; i < slots.length; i++) {
+      let slot = slots[i];
+      if (contains(container, slot)) {
+        slots.splice(i, 1);
+        i--;
+        this._removeFlattenedNodes(slot);
+        didRemove = true;
+      }
     }
   }
-  this._updateSlotMap();
+  this._updateSlotList();
   return didRemove;
+}
+
+ShadyRoot.prototype._updateSlotName = function(slot) {
+  const oldName = slot.__slotName;
+  const name = this._nameForSlot(slot);
+  if (name === oldName) {
+    return;
+  }
+  // remove from existing tracking
+  let slots = this._slotMap[oldName];
+  const i = slots.indexOf(slot);
+  if (i >= 0) {
+    slots.splice(i, 1);
+  }
+  // add to new location and sort if nedessary
+  let list = this._slotMap[name] || (this._slotMap[name] = []);
+  list.push(slot);
+  if (list.length > 1) {
+    this._slotMap[name] = this._sortSlots(list);
+    this._updateSlotList();
+  }
 }
 
 ShadyRoot.prototype._removeFlattenedNodes = function(slot) {
@@ -453,17 +472,6 @@ ShadyRoot.prototype._removeFlattenedNodes = function(slot) {
       if (parent) {
         removeChild.call(parent, node);
       }
-    }
-  }
-}
-
-ShadyRoot.prototype._updateSlotMap = function() {
-  this._slotMap = {};
-  for (let i=0; i<this._slotList.length; i++) {
-    let slot = this._slotList[i];
-    let name = this._nameForSlot(slot);
-    if (!this._slotMap[name]) {
-      this._slotMap[name] = slot;
     }
   }
 }

@@ -13,12 +13,11 @@ import * as logicalTree from './logical-tree.js';
 import * as nativeMethods from './native-methods.js';
 import {parentNode} from './native-tree.js';
 
-// cases in which we may not be able to just do standard native call
-// 1. container has a shadyRoot (needsDistribution IFF the shadyRoot
-// has an insertion point)
-// 2. container is a shadyRoot (don't distribute, instead set
-// container to container.host.
-// 3. node is <content> (host of container needs distribution)
+// Patched `insertBefore`. Note that all mutations that add nodes are routed
+// here. When a <slot> is added or a node is added to a host with a shadowRoot
+// with a slot, a standard dom `insert` call is aborted and `_asyncRender`
+// is called on the relevant shadowRoot. In all other cases, a standard dom
+// `insert` can be made, but the location and ref_node may need to be changed.
 /**
  * @param {Node} parent
  * @param {Node} node
@@ -38,31 +37,39 @@ export function insertBefore(parent, node, ref_node) {
   }
   // remove from existing location
   if (node.parentNode) {
-    // note: avoid node.removeChild as this *can* trigger another patched
+    // NOTE: avoid node.removeChild as this *can* trigger another patched
     // method (e.g. custom elements) and we want only the shady method to run.
     removeChild(node.parentNode, node);
   }
   // add to new parent
+  let preventNativeInsert;
   let ownerRoot = utils.ownerShadyRootForNode(parent);
+  // if a slot is added, must render containing root.
   let slotsAdded = ownerRoot && findContainedSlots(node);
-  if (parent.__shady && parent.__shady.firstChild !== undefined) {
-    logicalTree.recordInsertBefore(node, parent, ref_node);
-  }
   if (ownerRoot && (parent.localName === 'slot' || slotsAdded)) {
     ownerRoot._asyncRender();
   }
-  let handled = distributeNodeIfNeeded(parent) || parent.__shady.root;
-  if (!handled) {
-    if (ref_node) {
-      // if ref_node is an insertion point replace with first distributed node
-      let root = utils.ownerShadyRootForNode(ref_node);
-      if (root) {
-        ref_node = ref_node.localName === 'slot' ?
-          firstComposedNode(/** @type {!HTMLSlotElement} */(ref_node)) : ref_node;
-      }
+  if (utils.hasLogicalChildNodes(parent)) {
+    logicalTree.recordInsertBefore(node, parent, ref_node);
+    // when inserting into a host with a shadowRoot with slot, use 
+    // `shadowRoot._asyncRender()` via `attach-shadow` module
+    if (hasShadowRootWithSlot(parent)) {
+      parent.__shady.root._asyncRender();
+      preventNativeInsert = true;
+    // when inserting into a host with shadowRoot with NO slot, do nothing
+    // as the node should not be added to composed dome anywhere.
+    } else if (parent.__shady.root) {
+      preventNativeInsert = true;
     }
+  }
+  if (!preventNativeInsert) {
     // if adding to a shadyRoot, add to host instead
-    let container = utils.isShadyRoot(parent) ? /** @type {ShadowRoot} */(parent).host : parent;
+    let container = utils.isShadyRoot(parent) ? 
+      /** @type {ShadowRoot} */(parent).host : parent;
+    // if ref_node, get the ref_node that's actually in composed dom.
+    if (ref_node) {
+      ref_node = firstComposedNode(ref_node);
+    }
     if (ref_node) {
       nativeMethods.insertBefore.call(container, node, ref_node);
     } else {
@@ -92,7 +99,8 @@ function findContainedSlots(node) {
 }
 
 /**
- * Removes the given `node` from the element's `lightChildren`.
+ * Patched `removeChild`. Note that all dom "removals" are routed here.
+ * Removes the given `node` from the element's `children`.
  * This method also performs dom composition.
  * @param {Node} parent
  * @param {Node} node
@@ -102,30 +110,39 @@ export function removeChild(parent, node) {
     throw Error('The node to be removed is not a child of this node: ' +
       node);
   }
-  let logicalParent = node.__shady && node.__shady.parentNode;
+  let preventNativeRemove;
   let ownerRoot = utils.ownerShadyRootForNode(node);
-  let handled, removingInsertionPoint;
-  if (logicalParent) {
-    handled = distributeNodeIfNeeded(node.parentNode);
-    logicalTree.recordRemoveChild(node, logicalParent);
+  let removingInsertionPoint;
+  if (utils.hasLogicalChildNodes(parent)) {
+    logicalTree.recordRemoveChild(node, parent);
+    if (hasShadowRootWithSlot(parent)) {
+      parent.__shady.root._asyncRender();
+      preventNativeRemove = true;
+    }
   }
   removeOwnerShadyRoot(node);
+  // if removing slot, must render containing root
   if (ownerRoot) {
-    let changeSlotContent = logicalParent && logicalParent.localName === 'slot';
+    let changeSlotContent = parent && parent.localName === 'slot';
+    if (changeSlotContent) {
+      preventNativeRemove = true;
+    }
     removingInsertionPoint = ownerRoot._removeContainedSlots(node);
     if (removingInsertionPoint || changeSlotContent) {
       ownerRoot._asyncRender();
     }
   }
-  if (!handled) {
+  if (!preventNativeRemove) {
     // if removing from a shadyRoot, remove form host instead
     let container = utils.isShadyRoot(parent) ?
       /** @type {ShadowRoot} */(parent).host :
       parent;
     // not guaranteed to physically be in container; e.g.
-    // undistributed nodes.
-    let nativeParent = parentNode(node);
-    if (container === nativeParent) {
+    // (1) if parent has a shadyRoot, element may or may not at distributed 
+    // location (could be undistributed)
+    // (2) if parent is a slot, element may not ben in composed dom
+    if (!(parent.__shady.root || node.localName === 'slot') || 
+      (container === parentNode(node))) {
       nativeMethods.removeChild.call(container, node);
     }
   }
@@ -141,40 +158,35 @@ function removeOwnerShadyRoot(node) {
       removeOwnerShadyRoot(n);
     }
   }
-  node.__shady = node.__shady || {};
-  node.__shady.ownerShadyRoot = undefined;
+  if (node.__shady) {
+    node.__shady.ownerShadyRoot = undefined;
+  }
 }
 
 function hasCachedOwnerRoot(node) {
   return Boolean(node.__shady && node.__shady.ownerShadyRoot !== undefined);
 }
 
-// NOTE(sorvell): This will fail if distribution that affects this
-// question is pending; this is expected to be exceedingly rare, but if
-// the issue comes up, we can force a flush in this case.
 /**
- * Finds the first flattened node that is composed in the slot's parent.
- * @param {HTMLSlotElement} insertionPoint 
+ * Finds the first flattened node that is composed in the node's parent.
+ * If the given node is a slot, then the first flattened node is returned
+ * if it exists, otherwise advance to the node's nextSibling.
+ * @param {Node} node within which to find first composed node
  * @returns {Node} first composed node
  */
-function firstComposedNode(insertionPoint) {
-  let n$ = insertionPoint.__shady.flattenedNodes;
-  let root = getRootNode(insertionPoint);
-  for (let i=0, l=n$.length, n; (i<l) && (n=n$[i]); i++) {
-    // means that we're composed to this spot.
-    if (root._isFinalDestination(insertionPoint, n)) {
-      return n;
-    }
+function firstComposedNode(node) {
+  let composed = node;
+  if (node && node.localName === 'slot') {
+    let flattened = node.__shady.flattenedNodes;
+    composed = flattened && flattened.length ? flattened[0] : 
+      firstComposedNode(node.nextSibling);
   }
-  return null;
+  return composed;
 }
 
-function distributeNodeIfNeeded(node) {
+function hasShadowRootWithSlot(node) {
   let root = node && node.__shady && node.__shady.root;
-  if (root && root._hasInsertionPoint()) {
-    root._asyncRender();
-    return true;
-  }
+  return (root && root._hasInsertionPoint());
 }
 
 /**
@@ -186,11 +198,14 @@ function distributeNodeIfNeeded(node) {
  */
 function distributeAttributeChange(node, name) {
   if (name === 'slot') {
-    distributeNodeIfNeeded(node.parentNode);
+    const parent = node.parentNode;
+    if (hasShadowRootWithSlot(parent)) {
+      parent.__shady.root._asyncRender();
+    }
   } else if (node.localName === 'slot' && name === 'name') {
     let root = utils.ownerShadyRootForNode(node);
     if (root) {
-      root._updateSlotMap();
+      root._updateSlotName(node);
       root._asyncRender();
     }
   }
