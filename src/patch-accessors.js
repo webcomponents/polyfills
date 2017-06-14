@@ -365,13 +365,6 @@ export let ShadowRootAccessor = {
     get() {
       return this.__shady && this.__shady.publicRoot || null;
     },
-    /**
-     * @this {HTMLElement}
-     */
-    set(value) {
-      this.__shady = this.__shady || {};
-      this.__shady.publicRoot = value;
-    },
     configurable: true
   }
 };
