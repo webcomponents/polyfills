@@ -28,7 +28,7 @@ const CATCHALL_NAME = '__catchall';
  * @constructor
  * @extends {ShadowRoot}
  */
-export let ShadyRoot = function(token, host) {
+export let ShadyRoot = function(token, host, options) {
   if (token !== ShadyRootConstructionToken) {
     throw new TypeError('Illegal constructor');
   }
@@ -36,13 +36,13 @@ export let ShadyRoot = function(token, host) {
   // DocumentFragment cannot be subclassed on older browsers.
   let shadowRoot = document.createDocumentFragment();
   shadowRoot.__proto__ = ShadyRoot.prototype;
-  /** @type {ShadyRoot} */ (shadowRoot)._init(host);
+  /** @type {ShadyRoot} */ (shadowRoot)._init(host, options);
   return shadowRoot;
 };
 
 ShadyRoot.prototype = Object.create(DocumentFragment.prototype);
 
-ShadyRoot.prototype._init = function(host) {
+ShadyRoot.prototype._init = function(host, options) {
   // NOTE: set a fake local name so this element can be
   // distinguished from a DocumentFragment when patching.
   // FF doesn't allow this to be `localName`
@@ -51,8 +51,11 @@ ShadyRoot.prototype._init = function(host) {
   recordChildNodes(host);
   recordChildNodes(this);
   // root <=> host
-  host.shadowRoot = this;
   this.host = host;
+  this._mode = options && options.mode;
+  host.__shady = host.__shady || {};
+  host.__shady.root = this;
+  host.__shady.publicRoot = this._mode !== 'closed' ? this : null;
   // state flags
   this._renderPending = false;
   this._hasRendered = false;
@@ -134,7 +137,8 @@ ShadyRoot.prototype._distribute = function() {
         this._distributeNodeToSlot(n, slot);
       }
     }
-    let slotParentRoot = slot.parentNode.shadowRoot;
+    const slotParent = slot.parentNode;
+    const slotParentRoot = slotParent.__shady && slotParent.__shady.root;
     if (slotParentRoot && slotParentRoot._hasInsertionPoint()) {
       slotParentRoot['_renderRoot']();
     }
@@ -259,7 +263,7 @@ ShadyRoot.prototype._compose = function() {
       (2) we're not already composing it 
       [consider (n^2) but rare better than Set]
     */
-    if (!parent.shadowRoot && 
+    if (!(parent.__shady && parent.__shady.root) && 
       composeList.indexOf(parent) < 0) {
       composeList.push(parent);
     }
@@ -333,6 +337,7 @@ ShadyRoot.prototype._updateChildNodes = function(container, children) {
 ShadyRoot.prototype._addSlots = function(slots) {
   let slotNamesToSort;
   this._slotMap = this._slotMap || {};
+  this._slotList = this._slotList || [];
   for (let i=0; i < slots.length; i++) {
     let slot = slots[i];
     // ensure insertionPoints's and their parents have logical dom info.
@@ -351,23 +356,11 @@ ShadyRoot.prototype._addSlots = function(slots) {
     } else {
       this._slotMap[name] = [slot];
     }
+    this._slotList.push(slot);
   }
   if (slotNamesToSort) {
     for (let n in slotNamesToSort) {
       this._slotMap[n] = this._sortSlots(this._slotMap[n]);
-    }
-  }
-  this._updateSlotList();
-}
-
-ShadyRoot.prototype._updateSlotList = function() {
-  let list = this._slotList || (this._slotList = []);
-  list.length = 0;
-  const map = this._slotMap;
-  for (let n in map) {
-    const slots = map[n];
-    for (let i=0; i < slots.length; i++) {
-      list.push(slots[i]);
     }
   }
 }
@@ -425,6 +418,8 @@ function contains(container, node) {
  */
 ShadyRoot.prototype._removeContainedSlots = function(container) {
   let didRemove;
+  this._slotMap = this._slotMap || {};
+  this._slotList = this._slotList || [];
   const map = this._slotMap;
   for (let n in map) {
     let slots = map[n];
@@ -432,13 +427,16 @@ ShadyRoot.prototype._removeContainedSlots = function(container) {
       let slot = slots[i];
       if (contains(container, slot)) {
         slots.splice(i, 1);
+        const x = this._slotList.indexOf(slot);
+        if (x >= 0) {
+          this._slotList.splice(x, 1);
+        }
         i--;
         this._removeFlattenedNodes(slot);
         didRemove = true;
       }
     }
   }
-  this._updateSlotList();
   return didRemove;
 }
 
@@ -459,7 +457,6 @@ ShadyRoot.prototype._updateSlotName = function(slot) {
   list.push(slot);
   if (list.length > 1) {
     this._slotMap[name] = this._sortSlots(list);
-    this._updateSlotList();
   }
 }
 
@@ -516,7 +513,7 @@ export function attachShadow(host, options) {
   if (!options) {
     throw 'Not enough arguments.'
   }
-  return new ShadyRoot(ShadyRootConstructionToken, host);
+  return new ShadyRoot(ShadyRootConstructionToken, host, options);
 }
 
 patchShadowRootAccessors(ShadyRoot.prototype);

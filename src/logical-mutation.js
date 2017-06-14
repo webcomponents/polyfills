@@ -49,7 +49,7 @@ export function insertBefore(parent, node, ref_node) {
   if (ownerRoot && (parent.localName === 'slot' || slotsAdded)) {
     ownerRoot._asyncRender();
   }
-  if (utils.hasLogicalChildNodes(parent)) {
+  if (utils.isTrackingLogicalChildNodes(parent)) {
     logicalTree.recordInsertBefore(node, parent, ref_node);
     // when inserting into a host with a shadowRoot with slot, use 
     // `shadowRoot._asyncRender()` via `attach-shadow` module
@@ -69,8 +69,6 @@ export function insertBefore(parent, node, ref_node) {
     // if ref_node, get the ref_node that's actually in composed dom.
     if (ref_node) {
       ref_node = firstComposedNode(ref_node);
-    }
-    if (ref_node) {
       nativeMethods.insertBefore.call(container, node, ref_node);
     } else {
       nativeMethods.appendChild.call(container, node);
@@ -113,7 +111,7 @@ export function removeChild(parent, node) {
   let preventNativeRemove;
   let ownerRoot = utils.ownerShadyRootForNode(node);
   let removingInsertionPoint;
-  if (utils.hasLogicalChildNodes(parent)) {
+  if (utils.isTrackingLogicalChildNodes(parent)) {
     logicalTree.recordRemoveChild(node, parent);
     if (hasShadowRootWithSlot(parent)) {
       parent.__shady.root._asyncRender();

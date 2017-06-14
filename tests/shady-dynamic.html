@@ -326,6 +326,18 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     testElement = document.querySelector('x-test');
   });
 
+  test('mode `open` exposes `.shadowRoot`', function() {
+    let div = document.createElement('div');
+    div.attachShadow({mode: 'open'});
+    assert.ok(div.shadowRoot);
+  });
+
+  test('mode `closed` hides `.shadowRoot`', function() {
+    let div = document.createElement('div');
+    div.attachShadow({mode: 'closed'});
+    assert.notOk(div.shadowRoot);
+  });
+
   test('shadowRoot.querySelector', function() {
     var projected = testElement.shadowRoot.querySelector('#projected');
     assert.equal(projected.textContent, 'projected');

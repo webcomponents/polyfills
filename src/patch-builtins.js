@@ -230,7 +230,7 @@ let htmlElementMixin = utils.extendAll({
    * @this {HTMLElement}
    */
   blur() {
-    let root = this.shadowRoot;
+    let root = this.__shady && this.__shady.root;
     let shadowActive = root && root.activeElement;
     if (shadowActive) {
       shadowActive.blur();
