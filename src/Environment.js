@@ -50,14 +50,14 @@ export const HTMLElement = {
   insertAdjacentElement: getDescriptor(envHTMLElement_proto, 'insertAdjacentElement'),
 };
 
+export const HTMLTemplateElement = {};
 const envHTMLTemplateElement = window['HTMLTemplateElement'];
-const envHTMLTemplateElement_proto = envHTMLTemplateElement['prototype'];
-export const HTMLTemplateElement = {
-  self: envHTMLTemplateElement,
-  proto: envHTMLTemplateElement_proto,
-
-  content: getDescriptor(envHTMLTemplateElement_proto, 'content'),
-};
+if (envHTMLTemplateElement) {
+  const envHTMLTemplateElement_proto = envHTMLTemplateElement['prototype'];
+  HTMLTemplateElement.self = envHTMLTemplateElement;
+  HTMLTemplateElement.proto = envHTMLTemplateElement_proto;
+  HTMLTemplateElement.content = getDescriptor(envHTMLTemplateElement_proto, 'content');
+}
 
 const envMutationObserver = window['MutationObserver'];
 const envMutationObserver_proto = envMutationObserver['prototype'];
