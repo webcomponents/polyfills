@@ -47,6 +47,7 @@ export const HTMLElement = {
   proto: envHTMLElement_proto,
 
   innerHTML: getDescriptor(envHTMLElement_proto, 'innerHTML'),
+  insertAdjacentElement: getDescriptor(envHTMLElement_proto, 'insertAdjacentElement'),
 };
 
 const envHTMLTemplateElement = window['HTMLTemplateElement'];
