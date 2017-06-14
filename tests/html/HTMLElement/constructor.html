@@ -11,10 +11,6 @@
 </head>
 <body>
 
-<template id="bad-custom-element-1">
-  <bad-custom-element-1></bad-custom-element-1>
-</template>
-
 <script>
 function generateLocalName() {
   return 'test-element-' + Math.random().toString(32).substring(2);
@@ -75,21 +71,23 @@ suite('Constructing elements', function() {
   test('Custom element constructors may not cause more instances of the same ' +
     'custom element to be created before calling into `HTMLElement` (e.g. via ' +
     '`super()`).', function() {
-      let createSelf = true;
-      customElements.define('bad-custom-element-1', class extends HTMLElement {
-        constructor() {
-          if (createSelf) {
-            createSelf = false;
-            document.createElement('bad-custom-element-1');
-          }
-
-          super();
-        }
-      });
+      const element = document.createElement('bad-custom-element-1');
+      document.body.appendChild(element);
 
       assert.throws(function() {
-        document.importNode(document.querySelector('#bad-custom-element-1').content, true);
+        let createSelf = true;
+        customElements.define('bad-custom-element-1', class extends HTMLElement {
+          constructor() {
+            if (createSelf) {
+              createSelf = false;
+              document.createElement('bad-custom-element-1');
+            }
+            super();
+          }
+        });
       });
+
+      document.body.removeChild(element);
     });
 });
 </script>
