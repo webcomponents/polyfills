@@ -1,7 +1,7 @@
 const getDescriptor = (o, p) => Object.getOwnPropertyDescriptor(o, p);
 
 const envDocument = window['Document'];
-const envDocument_proto = envDocument.prototype;
+const envDocument_proto = envDocument['prototype'];
 export const Document = {
   self: envDocument,
   // Closure's renaming breaks if this property is named `prototype`.
@@ -17,7 +17,7 @@ export const Document = {
 };
 
 const envElement = window['Element'];
-const envElement_proto = envElement.prototype;
+const envElement_proto = envElement['prototype'];
 export const Element = {
   self: envElement,
   proto: envElement_proto,
