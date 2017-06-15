@@ -1,7 +1,7 @@
-import Native from './Native';
-import CustomElementInternals from '../CustomElementInternals';
-import CEState from '../CustomElementState';
-import AlreadyConstructedMarker from '../AlreadyConstructedMarker';
+import Native from './Native.js';
+import CustomElementInternals from '../CustomElementInternals.js';
+import CEState from '../CustomElementState.js';
+import AlreadyConstructedMarker from '../AlreadyConstructedMarker.js';
 
 /**
  * @param {!CustomElementInternals} internals

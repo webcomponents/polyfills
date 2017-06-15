@@ -1,7 +1,6 @@
 {
   "name": "custom-elements",
   "main": "custom-elements.min.js",
-  "version": "1.0.0-alpha.3",
   "homepage": "http://webcomponents.org",
   "authors": [
     "The Polymer Authors"
@@ -13,12 +12,12 @@
   "keywords": [
     "webcomponents"
   ],
-  "license": "BSD",
+  "license": "BSD-3-Clause",
   "ignore": [],
   "devDependencies": {
-    "web-component-tester": "6.0.0-prerelease.3",
-    "webcomponents-platform": "webcomponents/platform#master",
+    "web-component-tester": "^6.0.0",
+    "webcomponents-platform": "webcomponents/webcomponents-platform#^1.0.0",
     "es6-promise": "stefanpenner/es6-promise#^4.0.0",
-    "html-imports": "webcomponents/html-imports#master"
+    "html-imports": "webcomponents/html-imports#^1.0.0"
   }
 }
