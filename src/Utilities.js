@@ -1,3 +1,4 @@
+import * as Env from './Environment.js';
 import * as EnvProxy from './EnvironmentProxy.js';
 
 const reservedTagList = new Set([
@@ -76,8 +77,8 @@ export function walkDeepDescendantElements(root, callback, visitedImports = new 
 
       callback(element);
 
-      const localName = EnvProxy.localName(element);
-      if (localName === 'link' && EnvProxy.getAttribute(element, 'rel') === 'import') {
+      const localName = Env.ElementProxy.localName(element);
+      if (localName === 'link' && Env.ElementProxy.getAttribute(element, 'rel') === 'import') {
         // If this import (polyfilled or not) has it's root node available,
         // walk it.
         const importNode = /** @type {!Node} */ (element.import);

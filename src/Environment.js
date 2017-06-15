@@ -1,34 +1,12 @@
 import {default as Document, Proxy as DocumentProxy} from './Environment/Document.js';
+import {default as Element, Proxy as ElementProxy} from './Environment/Element.js';
 
 export {
   Document, DocumentProxy,
+  Element, ElementProxy,
 };
 
 const getDescriptor = (o, p) => Object.getOwnPropertyDescriptor(o, p);
-
-const envElement = window['Element'];
-const envElement_proto = envElement['prototype'];
-export const Element = {
-  self: envElement,
-  proto: envElement_proto,
-
-  after: getDescriptor(envElement_proto, 'after'),
-  append: getDescriptor(envElement_proto, 'append'),
-  attachShadow: getDescriptor(envElement_proto, 'attachShadow'),
-  before: getDescriptor(envElement_proto, 'before'),
-  getAttribute: getDescriptor(envElement_proto, 'getAttribute'),
-  getAttributeNS: getDescriptor(envElement_proto, 'getAttributeNS'),
-  innerHTML: getDescriptor(envElement_proto, 'innerHTML'),
-  insertAdjacentElement: getDescriptor(envElement_proto, 'insertAdjacentElement'),
-  localName: getDescriptor(envElement_proto, 'localName'),
-  prepend: getDescriptor(envElement_proto, 'prepend'),
-  remove: getDescriptor(envElement_proto, 'remove'),
-  removeAttribute: getDescriptor(envElement_proto, 'removeAttribute'),
-  removeAttributeNS: getDescriptor(envElement_proto, 'removeAttributeNS'),
-  replaceWith: getDescriptor(envElement_proto, 'replaceWith'),
-  setAttribute: getDescriptor(envElement_proto, 'setAttribute'),
-  setAttributeNS: getDescriptor(envElement_proto, 'setAttributeNS'),
-};
 
 const envHTMLElement = window['HTMLElement'];
 const envHTMLElement_proto = envHTMLElement['prototype'];

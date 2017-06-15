@@ -3,32 +3,6 @@ import * as Env from './Environment.js';
 const getter = descriptor => descriptor ? descriptor.get : () => undefined;
 const method = descriptor => descriptor ? descriptor.value : () => undefined;
 
-// Element
-
-const attachShadowMethod = method(Env.Element.attachShadow);
-export const attachShadow = (node, options) => attachShadowMethod.call(node, options);
-
-const getAttributeMethod = method(Env.Element.getAttribute);
-export const getAttribute = (node, name) => getAttributeMethod.call(node, name);
-
-const getAttributeNSMethod = method(Env.Element.getAttributeNS);
-export const getAttributeNS = (node, ns, name) => getAttributeNSMethod.call(node, ns, name);
-
-const localNameGetter = getter(Env.Element.localName);
-export const localName = node => localNameGetter.call(node);
-
-const removeAttributeMethod = method(Env.Element.removeAttribute);
-export const removeAttribute = (node, name) => removeAttributeMethod.call(node, name);
-
-const removeAttributeNSMethod = method(Env.Element.removeAttributeNS);
-export const removeAttributeNS = (node, ns, name) => removeAttributeNSMethod.call(node, ns, name);
-
-const setAttributeMethod = method(Env.Element.setAttribute);
-export const setAttribute = (node, name, value) => setAttributeMethod.call(node, name, value);
-
-const setAttributeNSMethod = method(Env.Element.setAttributeNS);
-export const setAttributeNS = (node, ns, name, value) => setAttributeNSMethod.call(node, ns, name, value);
-
 // HTMLTemplateElement
 
 const contentGetter = getter(Env.HTMLTemplateElement.content);

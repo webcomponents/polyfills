@@ -19,7 +19,7 @@ export default function(internals) {
        * @return {ShadowRoot}
        */
       function(init) {
-        const shadowRoot = EnvProxy.attachShadow(this, init);
+        const shadowRoot = Env.ElementProxy.attachShadow(this, init);
         this.__CE_shadowRoot = shadowRoot;
         return shadowRoot;
       });
@@ -105,7 +105,7 @@ export default function(internals) {
           // route into `template.content`.
           /** @type {!Node} */
           const content =
-            (EnvProxy.localName(this) === 'template')
+            (Env.ElementProxy.localName(this) === 'template')
             ? EnvProxy.content(/** @type {!HTMLTemplateElement} */ (this))
             : this;
           rawDiv.innerHTML = assignedValue;
@@ -131,12 +131,12 @@ export default function(internals) {
     function(name, newValue) {
       // Fast path for non-custom elements.
       if (this.__CE_state !== CEState.custom) {
-        return EnvProxy.setAttribute(this, name, newValue);
+        return Env.ElementProxy.setAttribute(this, name, newValue);
       }
 
-      const oldValue = EnvProxy.getAttribute(this, name);
-      EnvProxy.setAttribute(this, name, newValue);
-      newValue = EnvProxy.getAttribute(this, name);
+      const oldValue = Env.ElementProxy.getAttribute(this, name);
+      Env.ElementProxy.setAttribute(this, name, newValue);
+      newValue = Env.ElementProxy.getAttribute(this, name);
       internals.attributeChangedCallback(this, name, oldValue, newValue, null);
     });
 
@@ -150,12 +150,12 @@ export default function(internals) {
     function(namespace, name, newValue) {
       // Fast path for non-custom elements.
       if (this.__CE_state !== CEState.custom) {
-        return EnvProxy.setAttributeNS(this, namespace, name, newValue);
+        return Env.ElementProxy.setAttributeNS(this, namespace, name, newValue);
       }
 
-      const oldValue = EnvProxy.getAttributeNS(this, namespace, name);
-      EnvProxy.setAttributeNS(this, namespace, name, newValue);
-      newValue = EnvProxy.getAttributeNS(this, namespace, name);
+      const oldValue = Env.ElementProxy.getAttributeNS(this, namespace, name);
+      Env.ElementProxy.setAttributeNS(this, namespace, name, newValue);
+      newValue = Env.ElementProxy.getAttributeNS(this, namespace, name);
       internals.attributeChangedCallback(this, name, oldValue, newValue, namespace);
     });
 
@@ -167,11 +167,11 @@ export default function(internals) {
     function(name) {
       // Fast path for non-custom elements.
       if (this.__CE_state !== CEState.custom) {
-        return EnvProxy.removeAttribute(this, name);
+        return Env.ElementProxy.removeAttribute(this, name);
       }
 
-      const oldValue = EnvProxy.getAttribute(this, name);
-      EnvProxy.removeAttribute(this, name);
+      const oldValue = Env.ElementProxy.getAttribute(this, name);
+      Env.ElementProxy.removeAttribute(this, name);
       if (oldValue !== null) {
         internals.attributeChangedCallback(this, name, oldValue, null, null);
       }
@@ -186,15 +186,15 @@ export default function(internals) {
     function(namespace, name) {
       // Fast path for non-custom elements.
       if (this.__CE_state !== CEState.custom) {
-        return EnvProxy.removeAttributeNS(this, namespace, name);
+        return Env.ElementProxy.removeAttributeNS(this, namespace, name);
       }
 
-      const oldValue = EnvProxy.getAttributeNS(this, namespace, name);
-      EnvProxy.removeAttributeNS(this, namespace, name);
+      const oldValue = Env.ElementProxy.getAttributeNS(this, namespace, name);
+      Env.ElementProxy.removeAttributeNS(this, namespace, name);
       // In older browsers, `Element#getAttributeNS` may return the empty string
       // instead of null if the attribute does not exist. For details, see;
       // https://developer.mozilla.org/en-US/docs/Web/API/Element/getAttributeNS#Notes
-      const newValue = EnvProxy.getAttributeNS(this, namespace, name);
+      const newValue = Env.ElementProxy.getAttributeNS(this, namespace, name);
       if (oldValue !== newValue) {
         internals.attributeChangedCallback(this, name, oldValue, newValue, namespace);
       }
