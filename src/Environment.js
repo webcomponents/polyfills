@@ -3,6 +3,7 @@ import {default as Element, Proxy as ElementProxy} from './Environment/Element.j
 import {default as HTMLElement, Proxy as HTMLElementProxy} from './Environment/HTMLElement.js';
 import {default as HTMLTemplateElement, Proxy as HTMLTemplateElementProxy} from './Environment/HTMLTemplateElement.js';
 import {default as MutationObserver, Proxy as MutationObserverProxy} from './Environment/MutationObserver.js';
+import {default as MutationRecord, Proxy as MutationRecordProxy} from './Environment/MutationRecord.js';
 
 export {
   Document, DocumentProxy,
@@ -10,18 +11,10 @@ export {
   HTMLElement, HTMLElementProxy,
   HTMLTemplateElement, HTMLTemplateElementProxy,
   MutationObserver, MutationObserverProxy,
+  MutationRecord, MutationRecordProxy,
 };
 
 const getDescriptor = (o, p) => Object.getOwnPropertyDescriptor(o, p);
-
-const envMutationRecord = window['MutationRecord'];
-const envMutationRecord_proto = envMutationRecord['prototype'];
-export const MutationRecord = {
-  self: envMutationRecord,
-  proto: envMutationRecord_proto,
-
-  addedNodes: getDescriptor(envMutationRecord_proto, 'addedNodes'),
-};
 
 const envNode = window['Node'];
 const envNode_proto = envNode['prototype'];
