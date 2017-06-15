@@ -1,4 +1,5 @@
 import * as Env from '../Environment.js';
+import {default as EnvElement, Proxy as ElementProxy} from '../Environment/Element.js';
 import CustomElementInternals from '../CustomElementInternals.js';
 import CEState from '../CustomElementState.js';
 import * as Utilities from '../Utilities.js';
@@ -10,7 +11,7 @@ import PatchChildNode from './Interface/ChildNode.js';
  * @param {!CustomElementInternals} internals
  */
 export default function(internals) {
-  if (Env.Element.attachShadow) {
+  if (EnvElement.attachShadow) {
     Utilities.setPropertyUnchecked(Element.prototype, 'attachShadow',
       /**
        * @this {Element}
@@ -18,7 +19,7 @@ export default function(internals) {
        * @return {ShadowRoot}
        */
       function(init) {
-        const shadowRoot = Env.ElementProxy.attachShadow(this, init);
+        const shadowRoot = ElementProxy.attachShadow(this, init);
         this.__CE_shadowRoot = shadowRoot;
         return shadowRoot;
       });
@@ -74,8 +75,8 @@ export default function(internals) {
     });
   }
 
-  if (Env.Element.innerHTML && Env.Element.innerHTML.get) {
-    patch_innerHTML(Element.prototype, Env.Element.innerHTML);
+  if (EnvElement.innerHTML && EnvElement.innerHTML.get) {
+    patch_innerHTML(Element.prototype, EnvElement.innerHTML);
   } else if (Env.HTMLElement.innerHTML && Env.HTMLElement.innerHTML.get) {
     patch_innerHTML(HTMLElement.prototype, Env.HTMLElement.innerHTML);
   } else {
@@ -104,7 +105,7 @@ export default function(internals) {
           // route into `template.content`.
           /** @type {!Node} */
           const content =
-            (Env.ElementProxy.localName(this) === 'template')
+            (ElementProxy.localName(this) === 'template')
             ? Env.HTMLTemplateElementProxy.content(/** @type {!HTMLTemplateElement} */ (this))
             : this;
           rawDiv.innerHTML = assignedValue;
@@ -130,12 +131,12 @@ export default function(internals) {
     function(name, newValue) {
       // Fast path for non-custom elements.
       if (this.__CE_state !== CEState.custom) {
-        return Env.ElementProxy.setAttribute(this, name, newValue);
+        return ElementProxy.setAttribute(this, name, newValue);
       }
 
-      const oldValue = Env.ElementProxy.getAttribute(this, name);
-      Env.ElementProxy.setAttribute(this, name, newValue);
-      newValue = Env.ElementProxy.getAttribute(this, name);
+      const oldValue = ElementProxy.getAttribute(this, name);
+      ElementProxy.setAttribute(this, name, newValue);
+      newValue = ElementProxy.getAttribute(this, name);
       internals.attributeChangedCallback(this, name, oldValue, newValue, null);
     });
 
@@ -149,12 +150,12 @@ export default function(internals) {
     function(namespace, name, newValue) {
       // Fast path for non-custom elements.
       if (this.__CE_state !== CEState.custom) {
-        return Env.ElementProxy.setAttributeNS(this, namespace, name, newValue);
+        return ElementProxy.setAttributeNS(this, namespace, name, newValue);
       }
 
-      const oldValue = Env.ElementProxy.getAttributeNS(this, namespace, name);
-      Env.ElementProxy.setAttributeNS(this, namespace, name, newValue);
-      newValue = Env.ElementProxy.getAttributeNS(this, namespace, name);
+      const oldValue = ElementProxy.getAttributeNS(this, namespace, name);
+      ElementProxy.setAttributeNS(this, namespace, name, newValue);
+      newValue = ElementProxy.getAttributeNS(this, namespace, name);
       internals.attributeChangedCallback(this, name, oldValue, newValue, namespace);
     });
 
@@ -166,11 +167,11 @@ export default function(internals) {
     function(name) {
       // Fast path for non-custom elements.
       if (this.__CE_state !== CEState.custom) {
-        return Env.ElementProxy.removeAttribute(this, name);
+        return ElementProxy.removeAttribute(this, name);
       }
 
-      const oldValue = Env.ElementProxy.getAttribute(this, name);
-      Env.ElementProxy.removeAttribute(this, name);
+      const oldValue = ElementProxy.getAttribute(this, name);
+      ElementProxy.removeAttribute(this, name);
       if (oldValue !== null) {
         internals.attributeChangedCallback(this, name, oldValue, null, null);
       }
@@ -185,15 +186,15 @@ export default function(internals) {
     function(namespace, name) {
       // Fast path for non-custom elements.
       if (this.__CE_state !== CEState.custom) {
-        return Env.ElementProxy.removeAttributeNS(this, namespace, name);
+        return ElementProxy.removeAttributeNS(this, namespace, name);
       }
 
-      const oldValue = Env.ElementProxy.getAttributeNS(this, namespace, name);
-      Env.ElementProxy.removeAttributeNS(this, namespace, name);
+      const oldValue = ElementProxy.getAttributeNS(this, namespace, name);
+      ElementProxy.removeAttributeNS(this, namespace, name);
       // In older browsers, `Element#getAttributeNS` may return the empty string
       // instead of null if the attribute does not exist. For details, see;
       // https://developer.mozilla.org/en-US/docs/Web/API/Element/getAttributeNS#Notes
-      const newValue = Env.ElementProxy.getAttributeNS(this, namespace, name);
+      const newValue = ElementProxy.getAttributeNS(this, namespace, name);
       if (oldValue !== newValue) {
         internals.attributeChangedCallback(this, name, oldValue, newValue, namespace);
       }
@@ -226,22 +227,22 @@ export default function(internals) {
 
   if (Env.HTMLElement.insertAdjacentElement && Env.HTMLElement.insertAdjacentElement.value) {
     patch_insertAdjacentElement(HTMLElement.prototype, Env.HTMLElement.insertAdjacentElement.value);
-  } else if (Env.Element.insertAdjacentElement && Env.Element.insertAdjacentElement.value) {
-    patch_insertAdjacentElement(Element.prototype, Env.Element.insertAdjacentElement.value);
+  } else if (EnvElement.insertAdjacentElement && EnvElement.insertAdjacentElement.value) {
+    patch_insertAdjacentElement(Element.prototype, EnvElement.insertAdjacentElement.value);
   } else {
     console.warn('Custom Elements: `Element#insertAdjacentElement` was not patched.');
   }
 
 
   PatchParentNode(internals, Element.prototype, {
-    prepend: (Env.Element.prepend || {}).value,
-    append: (Env.Element.append || {}).value,
+    prepend: (EnvElement.prepend || {}).value,
+    append: (EnvElement.append || {}).value,
   });
 
   PatchChildNode(internals, Element.prototype, {
-    before: (Env.Element.before || {}).value,
-    after: (Env.Element.after || {}).value,
-    replaceWith: (Env.Element.replaceWith || {}).value,
-    remove: (Env.Element.remove || {}).value,
+    before: (EnvElement.before || {}).value,
+    after: (EnvElement.after || {}).value,
+    replaceWith: (EnvElement.replaceWith || {}).value,
+    remove: (EnvElement.remove || {}).value,
   });
 };

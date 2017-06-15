@@ -1,4 +1,5 @@
 import * as Env from './Environment.js';
+import {Proxy as ElementProxy} from './Environment/Element.js';
 import * as Utilities from './Utilities.js';
 import CEState from './CustomElementState.js';
 
@@ -174,8 +175,8 @@ export default class CustomElementInternals {
     const elements = [];
 
     const gatherElements = element => {
-      if (Env.ElementProxy.localName(element) === 'link' &&
-          Env.ElementProxy.getAttribute(element, 'rel') === 'import') {
+      if (ElementProxy.localName(element) === 'link' &&
+          ElementProxy.getAttribute(element, 'rel') === 'import') {
         // The HTML Imports polyfill sets a descendant element of the link to
         // the `import` property, specifically this is *not* a Document.
         const importNode = /** @type {?Node} */ (element.import);
@@ -264,7 +265,7 @@ export default class CustomElementInternals {
       const observedAttributes = definition.observedAttributes;
       for (let i = 0; i < observedAttributes.length; i++) {
         const name = observedAttributes[i];
-        const value = Env.ElementProxy.getAttribute(element, name);
+        const value = ElementProxy.getAttribute(element, name);
         if (value !== null) {
           this.attributeChangedCallback(element, name, null, value, null);
         }
