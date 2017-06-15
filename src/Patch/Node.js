@@ -1,4 +1,5 @@
 import * as Env from '../Environment.js';
+import {Proxy as DocumentProxy} from '../Environment/Document.js';
 import CustomElementInternals from '../CustomElementInternals.js';
 import * as Utilities from '../Utilities.js';
 
@@ -229,7 +230,7 @@ export default function(internals) {
           while (child = Env.NodeProxy.firstChild(this)) {
             Env.NodeProxy.removeChild(this, child);
           }
-          Env.NodeProxy.appendChild(this, Env.DocumentProxy.createTextNode(document, assignedValue));
+          Env.NodeProxy.appendChild(this, DocumentProxy.createTextNode(document, assignedValue));
         },
       });
     });

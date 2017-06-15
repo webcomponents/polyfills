@@ -1,4 +1,5 @@
 import * as Env from './Environment.js';
+import {Proxy as DocumentProxy} from './Environment/Document.js';
 import CustomElementInternals from './CustomElementInternals.js';
 
 export default class DocumentConstructionObserver {
@@ -23,7 +24,7 @@ export default class DocumentConstructionObserver {
     // document.
     this._internals.patchAndUpgradeTree(this._document);
 
-    if (Env.DocumentProxy.readyState(this._document) === 'loading') {
+    if (DocumentProxy.readyState(this._document) === 'loading') {
       this._observer = new Env.MutationObserver.self(this._handleMutations.bind(this));
 
       // Nodes created by the parser are given to the observer *before* the next
@@ -50,7 +51,7 @@ export default class DocumentConstructionObserver {
     // Once the document's `readyState` is 'interactive' or 'complete', all new
     // nodes created within that document will be the result of script and
     // should be handled by patching.
-    const readyState = Env.DocumentProxy.readyState(this._document);
+    const readyState = DocumentProxy.readyState(this._document);
     if (readyState === 'interactive' || readyState === 'complete') {
       this.disconnect();
     }

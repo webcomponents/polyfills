@@ -1,4 +1,5 @@
 import * as Env from '../Environment.js';
+import {Proxy as DocumentProxy} from '../Environment/Document.js';
 import CustomElementInternals from '../CustomElementInternals.js';
 import CEState from '../CustomElementState.js';
 import AlreadyConstructedMarker from '../AlreadyConstructedMarker.js';
@@ -26,7 +27,7 @@ export default function(internals) {
       const constructionStack = definition.constructionStack;
 
       if (constructionStack.length === 0) {
-        const element = Env.DocumentProxy.createElement(document, definition.localName);
+        const element = DocumentProxy.createElement(document, definition.localName);
         Object.setPrototypeOf(element, constructor.prototype);
         element.__CE_state = CEState.custom;
         element.__CE_definition = definition;

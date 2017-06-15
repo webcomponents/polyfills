@@ -1,4 +1,5 @@
 import * as Env from '../Environment.js';
+import {Proxy as DocumentProxy} from '../Environment/Document.js';
 import {default as EnvElement, Proxy as ElementProxy} from '../Environment/Element.js';
 import CustomElementInternals from '../CustomElementInternals.js';
 import CEState from '../CustomElementState.js';
@@ -84,7 +85,7 @@ export default function(internals) {
     // than using the environment proxy, we have to get and set it directly.
 
     /** @type {HTMLDivElement} */
-    const rawDiv = Env.DocumentProxy.createElement(document, 'div');
+    const rawDiv = DocumentProxy.createElement(document, 'div');
 
     internals.addPatch(function(element) {
       patch_innerHTML(element, {
