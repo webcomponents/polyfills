@@ -84,7 +84,7 @@ export default function(internals) {
     // than using the environment proxy, we have to get and set it directly.
 
     /** @type {HTMLDivElement} */
-    const rawDiv = EnvProxy.createElement(document, 'div');
+    const rawDiv = Env.DocumentProxy.createElement(document, 'div');
 
     internals.addPatch(function(element) {
       patch_innerHTML(element, {

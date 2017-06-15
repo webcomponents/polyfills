@@ -27,7 +27,7 @@ export default function(internals) {
       const constructionStack = definition.constructionStack;
 
       if (constructionStack.length === 0) {
-        const element = EnvProxy.createElement(document, definition.localName);
+        const element = Env.DocumentProxy.createElement(document, definition.localName);
         Object.setPrototypeOf(element, constructor.prototype);
         element.__CE_state = CEState.custom;
         element.__CE_definition = definition;

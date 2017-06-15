@@ -230,7 +230,7 @@ export default function(internals) {
           while (child = EnvProxy.firstChild(this)) {
             EnvProxy.removeChild(this, child);
           }
-          EnvProxy.appendChild(this, EnvProxy.createTextNode(document, assignedValue));
+          EnvProxy.appendChild(this, Env.DocumentProxy.createTextNode(document, assignedValue));
         },
       });
     });

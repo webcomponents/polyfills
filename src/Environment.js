@@ -1,20 +1,10 @@
-const getDescriptor = (o, p) => Object.getOwnPropertyDescriptor(o, p);
+import {default as Document, Proxy as DocumentProxy} from './Environment/Document.js';
 
-const envDocument = window['Document'];
-const envDocument_proto = envDocument['prototype'];
-export const Document = {
-  self: envDocument,
-  // Closure's renaming breaks if this property is named `prototype`.
-  proto: envDocument_proto,
-
-  append: getDescriptor(envDocument_proto, 'append'),
-  createElement: getDescriptor(envDocument_proto, 'createElement'),
-  createElementNS: getDescriptor(envDocument_proto, 'createElementNS'),
-  createTextNode: getDescriptor(envDocument_proto, 'createTextNode'),
-  importNode: getDescriptor(envDocument_proto, 'importNode'),
-  prepend: getDescriptor(envDocument_proto, 'prepend'),
-  readyState: getDescriptor(envDocument_proto, 'readyState'),
+export {
+  Document, DocumentProxy,
 };
+
+const getDescriptor = (o, p) => Object.getOwnPropertyDescriptor(o, p);
 
 const envElement = window['Element'];
 const envElement_proto = envElement['prototype'];
