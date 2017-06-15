@@ -106,7 +106,7 @@ export default function(internals) {
           /** @type {!Node} */
           const content =
             (Env.ElementProxy.localName(this) === 'template')
-            ? EnvProxy.content(/** @type {!HTMLTemplateElement} */ (this))
+            ? Env.HTMLTemplateElementProxy.content(/** @type {!HTMLTemplateElement} */ (this))
             : this;
           rawDiv.innerHTML = assignedValue;
 

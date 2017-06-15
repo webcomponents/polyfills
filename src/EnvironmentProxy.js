@@ -3,11 +3,6 @@ import * as Env from './Environment.js';
 const getter = descriptor => descriptor ? descriptor.get : () => undefined;
 const method = descriptor => descriptor ? descriptor.value : () => undefined;
 
-// HTMLTemplateElement
-
-const contentGetter = getter(Env.HTMLTemplateElement.content);
-export const content = node => contentGetter.call(node);
-
 // MutationObserver
 
 const observeMethod = method(Env.MutationObserver.observe);
