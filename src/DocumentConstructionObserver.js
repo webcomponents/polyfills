@@ -1,5 +1,6 @@
 import * as Env from './Environment.js';
 import {Proxy as DocumentProxy} from './Environment/Document.js';
+import {default as EnvMutationObserver, Proxy as MutationObserverProxy} from './Environment/MutationObserver.js';
 import CustomElementInternals from './CustomElementInternals.js';
 
 export default class DocumentConstructionObserver {
@@ -25,13 +26,13 @@ export default class DocumentConstructionObserver {
     this._internals.patchAndUpgradeTree(this._document);
 
     if (DocumentProxy.readyState(this._document) === 'loading') {
-      this._observer = new Env.MutationObserver.self(this._handleMutations.bind(this));
+      this._observer = new EnvMutationObserver.self(this._handleMutations.bind(this));
 
       // Nodes created by the parser are given to the observer *before* the next
       // task runs. Inline scripts are run in a new task. This means that the
       // observer will be able to handle the newly parsed nodes before the inline
       // script is run.
-      Env.MutationObserverProxy.observe(this._observer, this._document, {
+      MutationObserverProxy.observe(this._observer, this._document, {
         childList: true,
         subtree: true,
       });
@@ -40,7 +41,7 @@ export default class DocumentConstructionObserver {
 
   disconnect() {
     if (this._observer) {
-      Env.MutationObserverProxy.disconnect(this._observer);
+      MutationObserverProxy.disconnect(this._observer);
     }
   }
 
