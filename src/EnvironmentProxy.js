@@ -3,14 +3,6 @@ import * as Env from './Environment.js';
 const getter = descriptor => descriptor ? descriptor.get : () => undefined;
 const method = descriptor => descriptor ? descriptor.value : () => undefined;
 
-// MutationObserver
-
-const observeMethod = method(Env.MutationObserver.observe);
-export const observe = (mutationObserver, target, options) => observeMethod.call(mutationObserver, target, options);
-
-const disconnectMethod = method(Env.MutationObserver.disconnect);
-export const disconnect = mutationObserver => disconnectMethod.call(mutationObserver);
-
 // MutationRecord
 
 const addedNodesGetter = getter(Env.MutationRecord.addedNodes);

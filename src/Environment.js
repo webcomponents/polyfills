@@ -2,25 +2,17 @@ import {default as Document, Proxy as DocumentProxy} from './Environment/Documen
 import {default as Element, Proxy as ElementProxy} from './Environment/Element.js';
 import {default as HTMLElement, Proxy as HTMLElementProxy} from './Environment/HTMLElement.js';
 import {default as HTMLTemplateElement, Proxy as HTMLTemplateElementProxy} from './Environment/HTMLTemplateElement.js';
+import {default as MutationObserver, Proxy as MutationObserverProxy} from './Environment/MutationObserver.js';
 
 export {
   Document, DocumentProxy,
   Element, ElementProxy,
   HTMLElement, HTMLElementProxy,
   HTMLTemplateElement, HTMLTemplateElementProxy,
+  MutationObserver, MutationObserverProxy,
 };
 
 const getDescriptor = (o, p) => Object.getOwnPropertyDescriptor(o, p);
-
-const envMutationObserver = window['MutationObserver'];
-const envMutationObserver_proto = envMutationObserver['prototype'];
-export const MutationObserver = {
-  self: envMutationObserver,
-  proto: envMutationObserver_proto,
-
-  disconnect: getDescriptor(envMutationObserver_proto, 'disconnect'),
-  observe: getDescriptor(envMutationObserver_proto, 'observe'),
-};
 
 const envMutationRecord = window['MutationRecord'];
 const envMutationRecord_proto = envMutationRecord['prototype'];

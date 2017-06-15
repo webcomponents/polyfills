@@ -31,7 +31,7 @@ export default class DocumentConstructionObserver {
       // task runs. Inline scripts are run in a new task. This means that the
       // observer will be able to handle the newly parsed nodes before the inline
       // script is run.
-      EnvProxy.observe(this._observer, this._document, {
+      Env.MutationObserverProxy.observe(this._observer, this._document, {
         childList: true,
         subtree: true,
       });
@@ -40,7 +40,7 @@ export default class DocumentConstructionObserver {
 
   disconnect() {
     if (this._observer) {
-      EnvProxy.disconnect(this._observer);
+      Env.MutationObserverProxy.disconnect(this._observer);
     }
   }
 
