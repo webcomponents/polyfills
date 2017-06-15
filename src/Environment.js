@@ -1,22 +1,14 @@
 import {default as Document, Proxy as DocumentProxy} from './Environment/Document.js';
 import {default as Element, Proxy as ElementProxy} from './Environment/Element.js';
+import {default as HTMLElement, Proxy as HTMLElementProxy} from './Environment/HTMLElement.js';
 
 export {
   Document, DocumentProxy,
   Element, ElementProxy,
+  HTMLElement, HTMLElementProxy,
 };
 
 const getDescriptor = (o, p) => Object.getOwnPropertyDescriptor(o, p);
-
-const envHTMLElement = window['HTMLElement'];
-const envHTMLElement_proto = envHTMLElement['prototype'];
-export const HTMLElement = {
-  self: envHTMLElement,
-  proto: envHTMLElement_proto,
-
-  innerHTML: getDescriptor(envHTMLElement_proto, 'innerHTML'),
-  insertAdjacentElement: getDescriptor(envHTMLElement_proto, 'insertAdjacentElement'),
-};
 
 export const HTMLTemplateElement = {};
 const envHTMLTemplateElement = window['HTMLTemplateElement'];
