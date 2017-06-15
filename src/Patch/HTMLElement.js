@@ -1,5 +1,4 @@
 import * as Env from '../Environment.js';
-import * as EnvProxy from '../EnvironmentProxy.js';
 import CustomElementInternals from '../CustomElementInternals.js';
 import CEState from '../CustomElementState.js';
 import AlreadyConstructedMarker from '../AlreadyConstructedMarker.js';

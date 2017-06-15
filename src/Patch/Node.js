@@ -1,5 +1,4 @@
 import * as Env from '../Environment.js';
-import * as EnvProxy from '../EnvironmentProxy.js';
 import CustomElementInternals from '../CustomElementInternals.js';
 import * as Utilities from '../Utilities.js';
 
@@ -19,8 +18,8 @@ export default function(internals) {
      */
     function(node, refNode) {
       if (node instanceof DocumentFragment) {
-        const insertedNodes = Array.prototype.slice.apply(EnvProxy.childNodes(node));
-        const nativeResult = EnvProxy.insertBefore(this, node, refNode);
+        const insertedNodes = Array.prototype.slice.apply(Env.NodeProxy.childNodes(node));
+        const nativeResult = Env.NodeProxy.insertBefore(this, node, refNode);
 
         // DocumentFragments can't be connected, so `disconnectTree` will never
         // need to be called on a DocumentFragment's children after inserting it.
@@ -35,7 +34,7 @@ export default function(internals) {
       }
 
       const nodeWasConnected = Utilities.isConnected(node);
-      const nativeResult = EnvProxy.insertBefore(this, node, refNode);
+      const nativeResult = Env.NodeProxy.insertBefore(this, node, refNode);
 
       if (nodeWasConnected) {
         internals.disconnectTree(node);
@@ -56,8 +55,8 @@ export default function(internals) {
      */
     function(node) {
       if (node instanceof DocumentFragment) {
-        const insertedNodes = Array.prototype.slice.apply(EnvProxy.childNodes(node));
-        const nativeResult = EnvProxy.appendChild(this, node);
+        const insertedNodes = Array.prototype.slice.apply(Env.NodeProxy.childNodes(node));
+        const nativeResult = Env.NodeProxy.appendChild(this, node);
 
         // DocumentFragments can't be connected, so `disconnectTree` will never
         // need to be called on a DocumentFragment's children after inserting it.
@@ -72,7 +71,7 @@ export default function(internals) {
       }
 
       const nodeWasConnected = Utilities.isConnected(node);
-      const nativeResult = EnvProxy.appendChild(this, node);
+      const nativeResult = Env.NodeProxy.appendChild(this, node);
 
       if (nodeWasConnected) {
         internals.disconnectTree(node);
@@ -92,7 +91,7 @@ export default function(internals) {
      * @return {!Node}
      */
     function(deep) {
-      const clone = EnvProxy.cloneNode(this, deep);
+      const clone = Env.NodeProxy.cloneNode(this, deep);
       // Only create custom elements if this element's owner document is
       // associated with the registry.
       if (!this.ownerDocument.__CE_hasRegistry) {
@@ -111,7 +110,7 @@ export default function(internals) {
      */
     function(node) {
       const nodeWasConnected = Utilities.isConnected(node);
-      const nativeResult = EnvProxy.removeChild(this, node);
+      const nativeResult = Env.NodeProxy.removeChild(this, node);
 
       if (nodeWasConnected) {
         internals.disconnectTree(node);
@@ -129,8 +128,8 @@ export default function(internals) {
      */
     function(nodeToInsert, nodeToRemove) {
       if (nodeToInsert instanceof DocumentFragment) {
-        const insertedNodes = Array.prototype.slice.apply(EnvProxy.childNodes(nodeToInsert));
-        const nativeResult = EnvProxy.replaceChild(this, nodeToInsert, nodeToRemove);
+        const insertedNodes = Array.prototype.slice.apply(Env.NodeProxy.childNodes(nodeToInsert));
+        const nativeResult = Env.NodeProxy.replaceChild(this, nodeToInsert, nodeToRemove);
 
         // DocumentFragments can't be connected, so `disconnectTree` will never
         // need to be called on a DocumentFragment's children after inserting it.
@@ -146,7 +145,7 @@ export default function(internals) {
       }
 
       const nodeToInsertWasConnected = Utilities.isConnected(nodeToInsert);
-      const nativeResult = EnvProxy.replaceChild(this, nodeToInsert, nodeToRemove);
+      const nativeResult = Env.NodeProxy.replaceChild(this, nodeToInsert, nodeToRemove);
       const thisIsConnected = Utilities.isConnected(this);
 
       if (thisIsConnected) {
@@ -180,10 +179,10 @@ export default function(internals) {
         let removedNodes = undefined;
         // Checking for `firstChild` is faster than reading `childNodes.length`
         // to compare with 0.
-        if (EnvProxy.firstChild(this)) {
+        if (Env.NodeProxy.firstChild(this)) {
           // Using `childNodes` is faster than `children`, even though we only
           // care about elements.
-          const childNodes = EnvProxy.childNodes(this);
+          const childNodes = Env.NodeProxy.childNodes(this);
           const childNodesLength = childNodes.length;
           if (childNodesLength > 0 && Utilities.isConnected(this)) {
             // Copying an array by iterating is faster than using slice.
@@ -218,7 +217,7 @@ export default function(internals) {
           /** @type {!Array<string>} */
           const parts = [];
 
-          const childNodes = EnvProxy.childNodes(this);
+          const childNodes = Env.NodeProxy.childNodes(this);
           for (let i = 0; i < childNodes.length; i++) {
             parts.push(childNodes[i].textContent);
           }
@@ -227,10 +226,10 @@ export default function(internals) {
         },
         set: /** @this {Node} */ function(assignedValue) {
           let child;
-          while (child = EnvProxy.firstChild(this)) {
-            EnvProxy.removeChild(this, child);
+          while (child = Env.NodeProxy.firstChild(this)) {
+            Env.NodeProxy.removeChild(this, child);
           }
-          EnvProxy.appendChild(this, Env.DocumentProxy.createTextNode(document, assignedValue));
+          Env.NodeProxy.appendChild(this, Env.DocumentProxy.createTextNode(document, assignedValue));
         },
       });
     });

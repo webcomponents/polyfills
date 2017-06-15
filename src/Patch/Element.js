@@ -1,5 +1,4 @@
 import * as Env from '../Environment.js';
-import * as EnvProxy from '../EnvironmentProxy.js';
 import CustomElementInternals from '../CustomElementInternals.js';
 import CEState from '../CustomElementState.js';
 import * as Utilities from '../Utilities.js';
@@ -94,7 +93,7 @@ export default function(internals) {
         // of the element and returning the resulting element's `innerHTML`.
         // TODO: Is this too expensive?
         get: /** @this {Element} */ function() {
-          return EnvProxy.cloneNode(this, true).innerHTML;
+          return Env.NodeProxy.cloneNode(this, true).innerHTML;
         },
         // Implements setting `innerHTML` by creating an unpatched element,
         // setting `innerHTML` of that element and replacing the target
@@ -110,11 +109,11 @@ export default function(internals) {
             : this;
           rawDiv.innerHTML = assignedValue;
 
-          while (EnvProxy.childNodes(content).length > 0) {
-            EnvProxy.removeChild(content, content.childNodes[0]);
+          while (Env.NodeProxy.childNodes(content).length > 0) {
+            Env.NodeProxy.removeChild(content, content.childNodes[0]);
           }
-          while (EnvProxy.childNodes(rawDiv).length > 0) {
-            EnvProxy.appendChild(content, rawDiv.childNodes[0]);
+          while (Env.NodeProxy.childNodes(rawDiv).length > 0) {
+            Env.NodeProxy.appendChild(content, rawDiv.childNodes[0]);
           }
         },
       });

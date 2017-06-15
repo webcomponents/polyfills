@@ -1,5 +1,4 @@
 import * as Env from '../Environment.js';
-import * as EnvProxy from '../EnvironmentProxy.js';
 import CustomElementInternals from '../CustomElementInternals.js';
 import * as Utilities from '../Utilities.js';
 

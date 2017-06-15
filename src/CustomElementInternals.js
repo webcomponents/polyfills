@@ -1,5 +1,4 @@
 import * as Env from './Environment.js';
-import * as EnvProxy from './EnvironmentProxy.js';
 import * as Utilities from './Utilities.js';
 import CEState from './CustomElementState.js';
 
@@ -189,7 +188,7 @@ export default class CustomElementInternals {
         } else {
           // If this link's import root is not available, its contents can't be
           // walked. Wait for 'load' and walk it when it's ready.
-          EnvProxy.addEventListener(element, 'load', () => {
+          Env.NodeProxy.addEventListener(element, 'load', () => {
             const importNode = /** @type {!Node} */ (element.import);
 
             if (importNode.__CE_documentLoadHandled) return;
