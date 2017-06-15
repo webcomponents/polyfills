@@ -2,6 +2,7 @@ import * as Env from '../Environment.js';
 import {Proxy as DocumentProxy} from '../Environment/Document.js';
 import {default as EnvElement, Proxy as ElementProxy} from '../Environment/Element.js';
 import EnvHTMLElement from '../Environment/HTMLElement.js';
+import HTMLTemplateElementProxy from '../Environment/HTMLTemplateElement.js';
 import CustomElementInternals from '../CustomElementInternals.js';
 import CEState from '../CustomElementState.js';
 import * as Utilities from '../Utilities.js';
@@ -108,7 +109,7 @@ export default function(internals) {
           /** @type {!Node} */
           const content =
             (ElementProxy.localName(this) === 'template')
-            ? Env.HTMLTemplateElementProxy.content(/** @type {!HTMLTemplateElement} */ (this))
+            ? HTMLTemplateElementProxy.content(/** @type {!HTMLTemplateElement} */ (this))
             : this;
           rawDiv.innerHTML = assignedValue;
 
