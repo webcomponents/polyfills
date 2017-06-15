@@ -1,6 +1,6 @@
-import * as Env from './Environment.js';
 import {Proxy as DocumentProxy} from './Environment/Document.js';
 import {default as EnvMutationObserver, Proxy as MutationObserverProxy} from './Environment/MutationObserver.js';
+import {default as EnvMutationRecord, Proxy as MutationRecordProxy} from './Environment/MutationRecord.js';
 import CustomElementInternals from './CustomElementInternals.js';
 
 export default class DocumentConstructionObserver {
@@ -58,7 +58,7 @@ export default class DocumentConstructionObserver {
     }
 
     for (let i = 0; i < mutations.length; i++) {
-      const addedNodes = Env.MutationRecordProxy.addedNodes(mutations[i]);
+      const addedNodes = MutationRecordProxy.addedNodes(mutations[i]);
       for (let j = 0; j < addedNodes.length; j++) {
         const node = addedNodes[j];
         this._internals.patchAndUpgradeTree(node);
