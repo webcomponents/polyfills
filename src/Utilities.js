@@ -1,5 +1,5 @@
-import * as Env from './Environment.js';
 import {Proxy as ElementProxy} from './Environment/Element.js';
+import {Proxy as NodeProxy} from './Environment/Node.js';
 
 const reservedTagList = new Set([
   'annotation-xml',
@@ -29,7 +29,7 @@ export function isValidCustomElementName(localName) {
  */
 export function isConnected(node) {
   // Use `Node#isConnected`, if defined.
-  const nativeValue = Env.NodeProxy.isConnected(node);
+  const nativeValue = NodeProxy.isConnected(node);
   if (nativeValue !== undefined) {
     return nativeValue;
   }
@@ -37,7 +37,7 @@ export function isConnected(node) {
   /** @type {?Node|undefined} */
   let current = node;
   while (current && !(current.__CE_isImportDocument || current instanceof Document)) {
-    current = Env.NodeProxy.parentNode(current) || (window.ShadowRoot && current instanceof ShadowRoot ? current.host : undefined);
+    current = NodeProxy.parentNode(current) || (window.ShadowRoot && current instanceof ShadowRoot ? current.host : undefined);
   }
   return !!(current && (current.__CE_isImportDocument || current instanceof Document));
 }
@@ -49,10 +49,10 @@ export function isConnected(node) {
  */
 function nextSiblingOrAncestorSibling(root, start) {
   let node = start;
-  while (node && node !== root && !Env.NodeProxy.nextSibling(node)) {
-    node = Env.NodeProxy.parentNode(node);
+  while (node && node !== root && !NodeProxy.nextSibling(node)) {
+    node = NodeProxy.parentNode(node);
   }
-  return (!node || node === root) ? null : Env.NodeProxy.nextSibling(node);
+  return (!node || node === root) ? null : NodeProxy.nextSibling(node);
 }
 
 /**
@@ -61,7 +61,7 @@ function nextSiblingOrAncestorSibling(root, start) {
  * @return {?Node}
  */
 function nextNode(root, start) {
-  return Env.NodeProxy.firstChild(start) || nextSiblingOrAncestorSibling(root, start);
+  return NodeProxy.firstChild(start) || nextSiblingOrAncestorSibling(root, start);
 }
 
 /**
@@ -72,7 +72,7 @@ function nextNode(root, start) {
 export function walkDeepDescendantElements(root, callback, visitedImports = new Set()) {
   let node = root;
   while (node) {
-    if (Env.NodeProxy.nodeType(node) === Node.ELEMENT_NODE) {
+    if (NodeProxy.nodeType(node) === Node.ELEMENT_NODE) {
       const element = /** @type {!Element} */(node);
 
       callback(element);
@@ -86,7 +86,7 @@ export function walkDeepDescendantElements(root, callback, visitedImports = new 
           // Prevent multiple walks of the same import root.
           visitedImports.add(importNode);
 
-          for (let child = Env.NodeProxy.firstChild(importNode); child; child = Env.NodeProxy.nextSibling(child)) {
+          for (let child = NodeProxy.firstChild(importNode); child; child = NodeProxy.nextSibling(child)) {
             walkDeepDescendantElements(child, callback, visitedImports);
           }
         }
@@ -108,7 +108,7 @@ export function walkDeepDescendantElements(root, callback, visitedImports = new 
       // Walk shadow roots.
       const shadowRoot = element.__CE_shadowRoot;
       if (shadowRoot) {
-        for (let child = Env.NodeProxy.firstChild(shadowRoot); child; child = Env.NodeProxy.nextSibling(child)) {
+        for (let child = NodeProxy.firstChild(shadowRoot); child; child = NodeProxy.nextSibling(child)) {
           walkDeepDescendantElements(child, callback, visitedImports);
         }
       }

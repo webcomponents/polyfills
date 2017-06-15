@@ -1,8 +1,8 @@
-import * as Env from '../Environment.js';
 import {Proxy as DocumentProxy} from '../Environment/Document.js';
 import {default as EnvElement, Proxy as ElementProxy} from '../Environment/Element.js';
 import EnvHTMLElement from '../Environment/HTMLElement.js';
 import HTMLTemplateElementProxy from '../Environment/HTMLTemplateElement.js';
+import {Proxy as NodeProxy} from '../Environment/Node.js';
 import CustomElementInternals from '../CustomElementInternals.js';
 import CEState from '../CustomElementState.js';
 import * as Utilities from '../Utilities.js';
@@ -97,7 +97,7 @@ export default function(internals) {
         // of the element and returning the resulting element's `innerHTML`.
         // TODO: Is this too expensive?
         get: /** @this {Element} */ function() {
-          return Env.NodeProxy.cloneNode(this, true).innerHTML;
+          return NodeProxy.cloneNode(this, true).innerHTML;
         },
         // Implements setting `innerHTML` by creating an unpatched element,
         // setting `innerHTML` of that element and replacing the target
@@ -113,11 +113,11 @@ export default function(internals) {
             : this;
           rawDiv.innerHTML = assignedValue;
 
-          while (Env.NodeProxy.childNodes(content).length > 0) {
-            Env.NodeProxy.removeChild(content, content.childNodes[0]);
+          while (NodeProxy.childNodes(content).length > 0) {
+            NodeProxy.removeChild(content, content.childNodes[0]);
           }
-          while (Env.NodeProxy.childNodes(rawDiv).length > 0) {
-            Env.NodeProxy.appendChild(content, rawDiv.childNodes[0]);
+          while (NodeProxy.childNodes(rawDiv).length > 0) {
+            NodeProxy.appendChild(content, rawDiv.childNodes[0]);
           }
         },
       });
