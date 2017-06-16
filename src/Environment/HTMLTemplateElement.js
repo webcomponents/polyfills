@@ -1,17 +1,14 @@
 import {getDescriptor, getter, method} from "./Utilities.js";
 
-const HTMLTemplateElement = {};
-const envHTMLTemplateElement = window['HTMLTemplateElement'];
-if (envHTMLTemplateElement) {
-  const envHTMLTemplateElement_proto = envHTMLTemplateElement['prototype'];
-  HTMLTemplateElement.self = envHTMLTemplateElement;
-  HTMLTemplateElement.proto = envHTMLTemplateElement_proto;
-  HTMLTemplateElement.content = getDescriptor(envHTMLTemplateElement_proto, 'content');
-}
-export default HTMLTemplateElement;
+export const constructor = window['HTMLTemplateElement'];
+export const prototype = constructor ? constructor['prototype'] : undefined;
 
-const contentGetter = getter(HTMLTemplateElement.content, function() { return this.content; });
+export const descriptors = !prototype ? {} : {
+  content: getDescriptor(prototype, 'content'),
+};
 
-export const Proxy = {
+const contentGetter = getter(descriptors.content, function() { return this.content; });
+
+export const proxy = {
   content: node => contentGetter.call(node),
 };
