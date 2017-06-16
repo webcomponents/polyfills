@@ -1,42 +1,38 @@
 import {getDescriptor, getter, method} from "./Utilities.js";
 
-const envNode = window['Node'];
-const envNode_proto = envNode['prototype'];
+export const constructor = window['Node'];
+export const prototype = constructor['prototype'];
 
-const Node = {
-  self: envNode,
-  proto: envNode_proto,
-
-  addEventListener: getDescriptor(envNode_proto, 'addEventListener'),
-  appendChild: getDescriptor(envNode_proto, 'appendChild'),
-  childNodes: getDescriptor(envNode_proto, 'childNodes'),
-  cloneNode: getDescriptor(envNode_proto, 'cloneNode'),
-  firstChild: getDescriptor(envNode_proto, 'firstChild'),
-  insertBefore: getDescriptor(envNode_proto, 'insertBefore'),
-  isConnected: getDescriptor(envNode_proto, 'isConnected'),
-  nextSibling: getDescriptor(envNode_proto, 'nextSibling'),
-  nodeType: getDescriptor(envNode_proto, 'nodeType'),
-  parentNode: getDescriptor(envNode_proto, 'parentNode'),
-  removeChild: getDescriptor(envNode_proto, 'removeChild'),
-  replaceChild: getDescriptor(envNode_proto, 'replaceChild'),
-  textContent: getDescriptor(envNode_proto, 'textContent'),
+export const descriptors = {
+  addEventListener: getDescriptor(prototype, 'addEventListener'),
+  appendChild: getDescriptor(prototype, 'appendChild'),
+  childNodes: getDescriptor(prototype, 'childNodes'),
+  cloneNode: getDescriptor(prototype, 'cloneNode'),
+  firstChild: getDescriptor(prototype, 'firstChild'),
+  insertBefore: getDescriptor(prototype, 'insertBefore'),
+  isConnected: getDescriptor(prototype, 'isConnected'),
+  nextSibling: getDescriptor(prototype, 'nextSibling'),
+  nodeType: getDescriptor(prototype, 'nodeType'),
+  parentNode: getDescriptor(prototype, 'parentNode'),
+  removeChild: getDescriptor(prototype, 'removeChild'),
+  replaceChild: getDescriptor(prototype, 'replaceChild'),
+  textContent: getDescriptor(prototype, 'textContent'),
 };
-export default Node;
 
-const addEventListenerMethod = method(Node.addEventListener);
-const appendChildMethod = method(Node.appendChild);
-const childNodesGetter = getter(Node.childNodes, function() { return this.childNodes; });
-const cloneNodeMethod = method(Node.cloneNode);
-const firstChildGetter = getter(Node.firstChild, function() { return this.firstChild; });
-const insertBeforeMethod = method(Node.insertBefore);
-const isConnectedGetter = getter(Node.isConnected, function() { return this.isConnected; });
-const nextSiblingGetter = getter(Node.nextSibling, function() { return this.nextSibling; });
-const nodeTypeGetter = getter(Node.nodeType, function() { return this.nodeType; });
-const parentNodeGetter = getter(Node.parentNode, function() { return this.parentNode; });
-const removeChildMethod = method(Node.removeChild);
-const replaceChildMethod = method(Node.replaceChild);
+const addEventListenerMethod = method(descriptors.addEventListener);
+const appendChildMethod = method(descriptors.appendChild);
+const childNodesGetter = getter(descriptors.childNodes, function() { return this.childNodes; });
+const cloneNodeMethod = method(descriptors.cloneNode);
+const firstChildGetter = getter(descriptors.firstChild, function() { return this.firstChild; });
+const insertBeforeMethod = method(descriptors.insertBefore);
+const isConnectedGetter = getter(descriptors.isConnected, function() { return this.isConnected; });
+const nextSiblingGetter = getter(descriptors.nextSibling, function() { return this.nextSibling; });
+const nodeTypeGetter = getter(descriptors.nodeType, function() { return this.nodeType; });
+const parentNodeGetter = getter(descriptors.parentNode, function() { return this.parentNode; });
+const removeChildMethod = method(descriptors.removeChild);
+const replaceChildMethod = method(descriptors.replaceChild);
 
-export const Proxy = {
+export const proxy = {
   addEventListener: (node, type, callback, options) => addEventListenerMethod.call(node, type, callback, options),
   appendChild: (node, deep) => appendChildMethod.call(node, deep),
   childNodes: node => childNodesGetter.call(node),

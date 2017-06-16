@@ -1,5 +1,5 @@
 import {proxy as ElementProxy} from './Environment/Element.js';
-import {Proxy as NodeProxy} from './Environment/Node.js';
+import {proxy as NodeProxy} from './Environment/Node.js';
 
 const reservedTagList = new Set([
   'annotation-xml',

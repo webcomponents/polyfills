@@ -1,5 +1,5 @@
 import {proxy as ElementProxy} from './Environment/Element.js';
-import {Proxy as NodeProxy} from './Environment/Node.js';
+import {proxy as NodeProxy} from './Environment/Node.js';
 import * as Utilities from './Utilities.js';
 import CEState from './CustomElementState.js';
 

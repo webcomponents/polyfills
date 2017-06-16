@@ -2,7 +2,7 @@ import {proxy as DocumentProxy} from '../Environment/Document.js';
 import {descriptors as ElementDesc, proxy as ElementProxy} from '../Environment/Element.js';
 import {descriptors as HTMLElementDesc} from '../Environment/HTMLElement.js';
 import {proxy as HTMLTemplateElementProxy} from '../Environment/HTMLTemplateElement.js';
-import {Proxy as NodeProxy} from '../Environment/Node.js';
+import {proxy as NodeProxy} from '../Environment/Node.js';
 import CustomElementInternals from '../CustomElementInternals.js';
 import CEState from '../CustomElementState.js';
 import * as Utilities from '../Utilities.js';
