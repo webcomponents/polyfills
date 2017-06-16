@@ -1,6 +1,6 @@
 import {proxy as DocumentProxy} from './Environment/Document.js';
 import {constructor as MutationObserverCtor, proxy as MutationObserverProxy} from './Environment/MutationObserver.js';
-import {default as EnvMutationRecord, Proxy as MutationRecordProxy} from './Environment/MutationRecord.js';
+import {proxy as MutationRecordProxy} from './Environment/MutationRecord.js';
 import CustomElementInternals from './CustomElementInternals.js';
 
 export default class DocumentConstructionObserver {
