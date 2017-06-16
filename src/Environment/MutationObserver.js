@@ -1,21 +1,17 @@
 import {getDescriptor, getter, method} from "./Utilities.js";
 
-const envMutationObserver = window['MutationObserver'];
-const envMutationObserver_proto = envMutationObserver['prototype'];
+export const constructor = window['MutationObserver'];
+export const prototype = constructor['prototype'];
 
-const MutationObserver = {
-  self: envMutationObserver,
-  proto: envMutationObserver_proto,
-
-  disconnect: getDescriptor(envMutationObserver_proto, 'disconnect'),
-  observe: getDescriptor(envMutationObserver_proto, 'observe'),
+export const descriptors = {
+  disconnect: getDescriptor(prototype, 'disconnect'),
+  observe: getDescriptor(prototype, 'observe'),
 };
-export default MutationObserver;
 
-const disconnectMethod = method(MutationObserver.disconnect);
-const observeMethod = method(MutationObserver.observe);
+const disconnectMethod = method(descriptors.disconnect);
+const observeMethod = method(descriptors.observe);
 
-export const Proxy = {
+export const proxy = {
   disconnect: mutationObserver => disconnectMethod.call(mutationObserver),
   observe: (mutationObserver, target, options) => observeMethod.call(mutationObserver, target, options),
 };
