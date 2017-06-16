@@ -1,41 +1,37 @@
 import {getDescriptor, getter, method} from "./Utilities.js";
 
-const envElement = window['Element'];
-const envElement_proto = envElement['prototype'];
+export const constructor = window['Element'];
+export const prototype = constructor['prototype'];
 
-const Element = {
-  self: envElement,
-  proto: envElement_proto,
-
-  after: getDescriptor(envElement_proto, 'after'),
-  append: getDescriptor(envElement_proto, 'append'),
-  attachShadow: getDescriptor(envElement_proto, 'attachShadow'),
-  before: getDescriptor(envElement_proto, 'before'),
-  getAttribute: getDescriptor(envElement_proto, 'getAttribute'),
-  getAttributeNS: getDescriptor(envElement_proto, 'getAttributeNS'),
-  innerHTML: getDescriptor(envElement_proto, 'innerHTML'),
-  insertAdjacentElement: getDescriptor(envElement_proto, 'insertAdjacentElement'),
-  localName: getDescriptor(envElement_proto, 'localName'),
-  prepend: getDescriptor(envElement_proto, 'prepend'),
-  remove: getDescriptor(envElement_proto, 'remove'),
-  removeAttribute: getDescriptor(envElement_proto, 'removeAttribute'),
-  removeAttributeNS: getDescriptor(envElement_proto, 'removeAttributeNS'),
-  replaceWith: getDescriptor(envElement_proto, 'replaceWith'),
-  setAttribute: getDescriptor(envElement_proto, 'setAttribute'),
-  setAttributeNS: getDescriptor(envElement_proto, 'setAttributeNS'),
+export const descriptors = {
+  after: getDescriptor(prototype, 'after'),
+  append: getDescriptor(prototype, 'append'),
+  attachShadow: getDescriptor(prototype, 'attachShadow'),
+  before: getDescriptor(prototype, 'before'),
+  getAttribute: getDescriptor(prototype, 'getAttribute'),
+  getAttributeNS: getDescriptor(prototype, 'getAttributeNS'),
+  innerHTML: getDescriptor(prototype, 'innerHTML'),
+  insertAdjacentElement: getDescriptor(prototype, 'insertAdjacentElement'),
+  localName: getDescriptor(prototype, 'localName'),
+  prepend: getDescriptor(prototype, 'prepend'),
+  remove: getDescriptor(prototype, 'remove'),
+  removeAttribute: getDescriptor(prototype, 'removeAttribute'),
+  removeAttributeNS: getDescriptor(prototype, 'removeAttributeNS'),
+  replaceWith: getDescriptor(prototype, 'replaceWith'),
+  setAttribute: getDescriptor(prototype, 'setAttribute'),
+  setAttributeNS: getDescriptor(prototype, 'setAttributeNS'),
 };
-export default Element;
 
-const attachShadowMethod = method(Element.attachShadow);
-const getAttributeMethod = method(Element.getAttribute);
-const getAttributeNSMethod = method(Element.getAttributeNS);
-const localNameGetter = getter(Element.localName, function() { return this.localName; });
-const removeAttributeMethod = method(Element.removeAttribute);
-const removeAttributeNSMethod = method(Element.removeAttributeNS);
-const setAttributeMethod = method(Element.setAttribute);
-const setAttributeNSMethod = method(Element.setAttributeNS);
+const attachShadowMethod = method(descriptors.attachShadow);
+const getAttributeMethod = method(descriptors.getAttribute);
+const getAttributeNSMethod = method(descriptors.getAttributeNS);
+const localNameGetter = getter(descriptors.localName, function() { return this.localName; });
+const removeAttributeMethod = method(descriptors.removeAttribute);
+const removeAttributeNSMethod = method(descriptors.removeAttributeNS);
+const setAttributeMethod = method(descriptors.setAttribute);
+const setAttributeNSMethod = method(descriptors.setAttributeNS);
 
-export const Proxy = {
+export const proxy = {
   attachShadow: (node, options) => attachShadowMethod.call(node, options),
   getAttribute: (node, name) => getAttributeMethod.call(node, name),
   getAttributeNS: (node, ns, name) => getAttributeNSMethod.call(node, ns, name),

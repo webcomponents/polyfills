@@ -1,5 +1,5 @@
 import {proxy as DocumentProxy} from '../Environment/Document.js';
-import {default as EnvElement, Proxy as ElementProxy} from '../Environment/Element.js';
+import {descriptors as ElementDesc, proxy as ElementProxy} from '../Environment/Element.js';
 import EnvHTMLElement from '../Environment/HTMLElement.js';
 import {Proxy as HTMLTemplateElementProxy} from '../Environment/HTMLTemplateElement.js';
 import {Proxy as NodeProxy} from '../Environment/Node.js';
@@ -14,7 +14,7 @@ import PatchChildNode from './Interface/ChildNode.js';
  * @param {!CustomElementInternals} internals
  */
 export default function(internals) {
-  if (EnvElement.attachShadow) {
+  if (ElementDesc.attachShadow) {
     Utilities.setPropertyUnchecked(Element.prototype, 'attachShadow',
       /**
        * @this {Element}
@@ -78,8 +78,8 @@ export default function(internals) {
     });
   }
 
-  if (EnvElement.innerHTML && EnvElement.innerHTML.get) {
-    patch_innerHTML(Element.prototype, EnvElement.innerHTML);
+  if (ElementDesc.innerHTML && ElementDesc.innerHTML.get) {
+    patch_innerHTML(Element.prototype, ElementDesc.innerHTML);
   } else if (EnvHTMLElement.innerHTML && EnvHTMLElement.innerHTML.get) {
     patch_innerHTML(HTMLElement.prototype, EnvHTMLElement.innerHTML);
   } else {
@@ -230,22 +230,22 @@ export default function(internals) {
 
   if (EnvHTMLElement.insertAdjacentElement && EnvHTMLElement.insertAdjacentElement.value) {
     patch_insertAdjacentElement(HTMLElement.prototype, EnvHTMLElement.insertAdjacentElement.value);
-  } else if (EnvElement.insertAdjacentElement && EnvElement.insertAdjacentElement.value) {
-    patch_insertAdjacentElement(Element.prototype, EnvElement.insertAdjacentElement.value);
+  } else if (ElementDesc.insertAdjacentElement && ElementDesc.insertAdjacentElement.value) {
+    patch_insertAdjacentElement(Element.prototype, ElementDesc.insertAdjacentElement.value);
   } else {
     console.warn('Custom Elements: `Element#insertAdjacentElement` was not patched.');
   }
 
 
   PatchParentNode(internals, Element.prototype, {
-    prepend: (EnvElement.prepend || {}).value,
-    append: (EnvElement.append || {}).value,
+    prepend: (ElementDesc.prepend || {}).value,
+    append: (ElementDesc.append || {}).value,
   });
 
   PatchChildNode(internals, Element.prototype, {
-    before: (EnvElement.before || {}).value,
-    after: (EnvElement.after || {}).value,
-    replaceWith: (EnvElement.replaceWith || {}).value,
-    remove: (EnvElement.remove || {}).value,
+    before: (ElementDesc.before || {}).value,
+    after: (ElementDesc.after || {}).value,
+    replaceWith: (ElementDesc.replaceWith || {}).value,
+    remove: (ElementDesc.remove || {}).value,
   });
 };
