@@ -11,7 +11,7 @@ const MutationRecord = {
 };
 export default MutationRecord;
 
-const addedNodesGetter = getter(MutationRecord.addedNodes);
+const addedNodesGetter = getter(MutationRecord.addedNodes, function() { return this.addedNodes; });
 
 export const Proxy = {
   addedNodes: node => addedNodesGetter.call(node),

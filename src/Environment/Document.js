@@ -22,7 +22,7 @@ const createElementMethod = method(Document.createElement);
 const createElementNSMethod = method(Document.createElementNS);
 const createTextNodeMethod = method(Document.createTextNode);
 const importNodeMethod = method(Document.importNode);
-const readyStateGetter = getter(Document.readyState);
+const readyStateGetter = getter(Document.readyState, function() { return this.readyState; });
 
 export const Proxy = {
   createElement: (doc, localName) => createElementMethod.call(doc, localName),

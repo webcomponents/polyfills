@@ -10,7 +10,7 @@ if (envHTMLTemplateElement) {
 }
 export default HTMLTemplateElement;
 
-const contentGetter = getter(HTMLTemplateElement.content);
+const contentGetter = getter(HTMLTemplateElement.content, function() { return this.content; });
 
 export const Proxy = {
   content: node => contentGetter.call(node),

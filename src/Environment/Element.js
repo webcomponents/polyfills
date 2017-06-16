@@ -29,7 +29,7 @@ export default Element;
 const attachShadowMethod = method(Element.attachShadow);
 const getAttributeMethod = method(Element.getAttribute);
 const getAttributeNSMethod = method(Element.getAttributeNS);
-const localNameGetter = getter(Element.localName);
+const localNameGetter = getter(Element.localName, function() { return this.localName; });
 const removeAttributeMethod = method(Element.removeAttribute);
 const removeAttributeNSMethod = method(Element.removeAttributeNS);
 const setAttributeMethod = method(Element.setAttribute);

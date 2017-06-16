@@ -25,14 +25,14 @@ export default Node;
 
 const addEventListenerMethod = method(Node.addEventListener);
 const appendChildMethod = method(Node.appendChild);
-const childNodesGetter = getter(Node.childNodes);
+const childNodesGetter = getter(Node.childNodes, function() { return this.childNodes; });
 const cloneNodeMethod = method(Node.cloneNode);
-const firstChildGetter = getter(Node.firstChild);
+const firstChildGetter = getter(Node.firstChild, function() { return this.firstChild; });
 const insertBeforeMethod = method(Node.insertBefore);
-const isConnectedGetter = getter(Node.isConnected);
-const nextSiblingGetter = getter(Node.nextSibling);
-const nodeTypeGetter = getter(Node.nodeType);
-const parentNodeGetter = getter(Node.parentNode);
+const isConnectedGetter = getter(Node.isConnected, function() { return this.isConnected; });
+const nextSiblingGetter = getter(Node.nextSibling, function() { return this.nextSibling; });
+const nodeTypeGetter = getter(Node.nodeType, function() { return this.nodeType; });
+const parentNodeGetter = getter(Node.parentNode, function() { return this.parentNode; });
 const removeChildMethod = method(Node.removeChild);
 const replaceChildMethod = method(Node.replaceChild);
 
