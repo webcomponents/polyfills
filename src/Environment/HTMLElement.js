@@ -1,15 +1,11 @@
 import {getDescriptor, getter, method} from "./Utilities.js";
 
-const envHTMLElement = window['HTMLElement'];
-const envHTMLElement_proto = envHTMLElement['prototype'];
+export const constructor = window['HTMLElement'];
+export const prototype = constructor['prototype'];
 
-const HTMLElement = {
-  self: envHTMLElement,
-  proto: envHTMLElement_proto,
-
-  innerHTML: getDescriptor(envHTMLElement_proto, 'innerHTML'),
-  insertAdjacentElement: getDescriptor(envHTMLElement_proto, 'insertAdjacentElement'),
+export const descriptors = {
+  innerHTML: getDescriptor(prototype, 'innerHTML'),
+  insertAdjacentElement: getDescriptor(prototype, 'insertAdjacentElement'),
 };
-export default HTMLElement;
 
-export const Proxy = {};
+export const proxy = {};

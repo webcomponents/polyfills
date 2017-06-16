@@ -1,6 +1,6 @@
 import {proxy as DocumentProxy} from '../Environment/Document.js';
 import {descriptors as ElementDesc, proxy as ElementProxy} from '../Environment/Element.js';
-import EnvHTMLElement from '../Environment/HTMLElement.js';
+import {descriptors as HTMLElementDesc} from '../Environment/HTMLElement.js';
 import {Proxy as HTMLTemplateElementProxy} from '../Environment/HTMLTemplateElement.js';
 import {Proxy as NodeProxy} from '../Environment/Node.js';
 import CustomElementInternals from '../CustomElementInternals.js';
@@ -80,8 +80,8 @@ export default function(internals) {
 
   if (ElementDesc.innerHTML && ElementDesc.innerHTML.get) {
     patch_innerHTML(Element.prototype, ElementDesc.innerHTML);
-  } else if (EnvHTMLElement.innerHTML && EnvHTMLElement.innerHTML.get) {
-    patch_innerHTML(HTMLElement.prototype, EnvHTMLElement.innerHTML);
+  } else if (HTMLElementDesc.innerHTML && HTMLElementDesc.innerHTML.get) {
+    patch_innerHTML(HTMLElement.prototype, HTMLElementDesc.innerHTML);
   } else {
     // In this case, `innerHTML` has no exposed getter but still exists. Rather
     // than using the environment proxy, we have to get and set it directly.
@@ -228,8 +228,8 @@ export default function(internals) {
       });
   }
 
-  if (EnvHTMLElement.insertAdjacentElement && EnvHTMLElement.insertAdjacentElement.value) {
-    patch_insertAdjacentElement(HTMLElement.prototype, EnvHTMLElement.insertAdjacentElement.value);
+  if (HTMLElementDesc.insertAdjacentElement && HTMLElementDesc.insertAdjacentElement.value) {
+    patch_insertAdjacentElement(HTMLElement.prototype, HTMLElementDesc.insertAdjacentElement.value);
   } else if (ElementDesc.insertAdjacentElement && ElementDesc.insertAdjacentElement.value) {
     patch_insertAdjacentElement(Element.prototype, ElementDesc.insertAdjacentElement.value);
   } else {

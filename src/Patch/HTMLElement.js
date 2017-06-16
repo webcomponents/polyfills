@@ -1,5 +1,5 @@
 import {proxy as DocumentProxy} from '../Environment/Document.js';
-import EnvHTMLElement from '../Environment/HTMLElement.js';
+import {prototype as HTMLElementProto} from '../Environment/HTMLElement.js';
 import CustomElementInternals from '../CustomElementInternals.js';
 import CEState from '../CustomElementState.js';
 import AlreadyConstructedMarker from '../AlreadyConstructedMarker.js';
@@ -48,7 +48,7 @@ export default function(internals) {
       return element;
     }
 
-    HTMLElement.prototype = EnvHTMLElement.proto;
+    HTMLElement.prototype = HTMLElementProto;
 
     return HTMLElement;
   })();
