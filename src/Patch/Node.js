@@ -1,4 +1,4 @@
-import {Proxy as DocumentProxy} from '../Environment/Document.js';
+import {proxy as DocumentProxy} from '../Environment/Document.js';
 import {default as EnvNode, Proxy as NodeProxy} from '../Environment/Node.js';
 import CustomElementInternals from '../CustomElementInternals.js';
 import * as Utilities from '../Utilities.js';

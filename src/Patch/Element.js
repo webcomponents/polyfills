@@ -1,4 +1,4 @@
-import {Proxy as DocumentProxy} from '../Environment/Document.js';
+import {proxy as DocumentProxy} from '../Environment/Document.js';
 import {default as EnvElement, Proxy as ElementProxy} from '../Environment/Element.js';
 import EnvHTMLElement from '../Environment/HTMLElement.js';
 import {Proxy as HTMLTemplateElementProxy} from '../Environment/HTMLTemplateElement.js';

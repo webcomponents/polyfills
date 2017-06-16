@@ -1,4 +1,4 @@
-import {Proxy as DocumentProxy} from '../Environment/Document.js';
+import {proxy as DocumentProxy} from '../Environment/Document.js';
 import EnvHTMLElement from '../Environment/HTMLElement.js';
 import CustomElementInternals from '../CustomElementInternals.js';
 import CEState from '../CustomElementState.js';

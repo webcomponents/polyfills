@@ -1,4 +1,4 @@
-import {default as EnvDocument, Proxy as DocumentProxy} from '../Environment/Document.js';
+import {descriptors as DocumentDesc, proxy as DocumentProxy} from '../Environment/Document.js';
 import CustomElementInternals from '../CustomElementInternals.js';
 import * as Utilities from '../Utilities.js';
 
@@ -72,7 +72,7 @@ export default function(internals) {
     });
 
   PatchParentNode(internals, Document.prototype, {
-    prepend: (EnvDocument.prepend || {}).value,
-    append: (EnvDocument.append || {}).value,
+    prepend: (DocumentDesc.prepend || {}).value,
+    append: (DocumentDesc.append || {}).value,
   });
 };

@@ -1,4 +1,4 @@
-import {Proxy as DocumentProxy} from './Environment/Document.js';
+import {proxy as DocumentProxy} from './Environment/Document.js';
 import {default as EnvMutationObserver, Proxy as MutationObserverProxy} from './Environment/MutationObserver.js';
 import {default as EnvMutationRecord, Proxy as MutationRecordProxy} from './Environment/MutationRecord.js';
 import CustomElementInternals from './CustomElementInternals.js';

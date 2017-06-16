@@ -1,30 +1,25 @@
 import {getDescriptor, getter, method} from "./Utilities.js";
 
-const envDocument = window['Document'];
-const envDocument_proto = envDocument['prototype'];
+export const constructor = window['Document'];
+export const prototype = constructor['prototype'];
 
-const Document = {
-  self: envDocument,
-  // Closure's renaming breaks if this property is named `prototype`.
-  proto: envDocument_proto,
-
-  append: getDescriptor(envDocument_proto, 'append'),
-  createElement: getDescriptor(envDocument_proto, 'createElement'),
-  createElementNS: getDescriptor(envDocument_proto, 'createElementNS'),
-  createTextNode: getDescriptor(envDocument_proto, 'createTextNode'),
-  importNode: getDescriptor(envDocument_proto, 'importNode'),
-  prepend: getDescriptor(envDocument_proto, 'prepend'),
-  readyState: getDescriptor(envDocument_proto, 'readyState'),
+export const descriptors = {
+  append: getDescriptor(prototype, 'append'),
+  createElement: getDescriptor(prototype, 'createElement'),
+  createElementNS: getDescriptor(prototype, 'createElementNS'),
+  createTextNode: getDescriptor(prototype, 'createTextNode'),
+  importNode: getDescriptor(prototype, 'importNode'),
+  prepend: getDescriptor(prototype, 'prepend'),
+  readyState: getDescriptor(prototype, 'readyState'),
 };
-export default Document;
 
-const createElementMethod = method(Document.createElement);
-const createElementNSMethod = method(Document.createElementNS);
-const createTextNodeMethod = method(Document.createTextNode);
-const importNodeMethod = method(Document.importNode);
-const readyStateGetter = getter(Document.readyState, function() { return this.readyState; });
+const createElementMethod = method(descriptors.createElement);
+const createElementNSMethod = method(descriptors.createElementNS);
+const createTextNodeMethod = method(descriptors.createTextNode);
+const importNodeMethod = method(descriptors.importNode);
+const readyStateGetter = getter(descriptors.readyState, function() { return this.readyState; });
 
-export const Proxy = {
+export const proxy = {
   createElement: (doc, localName) => createElementMethod.call(doc, localName),
   createElementNS: (doc, namespace, qualifiedName) => createElementNSMethod.call(doc, namespace, qualifiedName),
   createTextNode: (doc, localName) => createTextNodeMethod.call(doc, localName),
