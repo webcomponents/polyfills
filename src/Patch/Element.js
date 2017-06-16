@@ -1,7 +1,7 @@
 import {Proxy as DocumentProxy} from '../Environment/Document.js';
 import {default as EnvElement, Proxy as ElementProxy} from '../Environment/Element.js';
 import EnvHTMLElement from '../Environment/HTMLElement.js';
-import HTMLTemplateElementProxy from '../Environment/HTMLTemplateElement.js';
+import {Proxy as HTMLTemplateElementProxy} from '../Environment/HTMLTemplateElement.js';
 import {Proxy as NodeProxy} from '../Environment/Node.js';
 import CustomElementInternals from '../CustomElementInternals.js';
 import CEState from '../CustomElementState.js';
