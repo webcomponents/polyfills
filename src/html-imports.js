@@ -132,7 +132,9 @@
         request.onload = () => {
           // Servers redirecting an import can add a Location header to help us
           // polyfill correctly. Handle relative and full paths.
-          let redirectedUrl = request.getResponseHeader('Location');
+          // Prefer responseURL which already resolves redirects
+          // https://xhr.spec.whatwg.org/#the-responseurl-attribute
+          let redirectedUrl = request.responseURL || request.getResponseHeader('Location');
           if (redirectedUrl && redirectedUrl.indexOf('/') === 0) {
             // In IE location.origin might not work
             // https://connect.microsoft.com/IE/feedback/details/1763802/location-origin-is-undefined-in-ie-11-on-windows-10-but-works-on-windows-7
