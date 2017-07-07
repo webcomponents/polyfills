@@ -280,12 +280,12 @@ ShadyRoot.prototype.removeEventListener = function(type, fn, optionsOrCapture) {
 }
 
 ShadyRoot.prototype.getElementById = function(id) {
-  let resultt = mutation.query(this, function(n) {
-      return n.id == id;
-    }, function(n) {
-      return Boolean(n);
-    })[0];
-    return resultt || null;
+  let result = mutation.query(this, function(n) {
+    return n.id == id;
+  }, function(n) {
+    return Boolean(n);
+  })[0];
+  return result || null;
 }
 
 /**
