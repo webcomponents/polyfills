@@ -8,6 +8,7 @@ Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 */
 
+import * as mutation from './logical-mutation.js';
 import {calculateSplices} from './array-splice.js';
 import * as utils from './utils.js';
 import {enqueue} from './flush.js';
@@ -279,7 +280,12 @@ ShadyRoot.prototype.removeEventListener = function(type, fn, optionsOrCapture) {
 }
 
 ShadyRoot.prototype.getElementById = function(id) {
-  return this.querySelector(`#${id}`);
+  let result = mutation.query(this, function(n) {
+    return n.id == id;
+  }, function(n) {
+    return Boolean(n);
+  })[0];
+  return result || null;
 }
 
 /**
