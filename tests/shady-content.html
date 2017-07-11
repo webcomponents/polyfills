@@ -63,6 +63,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           this._initialized = true;
           this.attachShadow({mode: 'open'});
           this.shadowRoot.appendChild(document.importNode(template.content, true));
+          var idEls = this.shadowRoot.querySelectorAll('[id]');
+          this.$ = {};
+          for (var i=0; i < idEls.length; i++) {
+            var el = idEls[i];
+            this.$[el.id] = el;
+          }
         }
       }
 
@@ -70,12 +76,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     }
   </script>
 
-  <template id="x-dist">
-    x-dist
-    <div id="distWrapper"><slot id="content"></slot></div>
-  </template>
+  <template id="x-dist">x-dist<span id="distWrapper"><slot id="content"></slot></span></template>
   <script>
     defineTestElement('x-dist');
+  </script>
+
+  <template id="x-dist-slot-name-change"><div id="c1"><slot id="f1" name="foo">foo1</slot><slot id="f2" name="foo">foo2</slot></div><div id="c2"><slot id="b1" name="bar">bar1</slot><slot id="b2" name="bar">bar2</slot></div></template>
+  <script>
+    defineTestElement('x-dist-slot-name-change');
   </script>
 
   <template id="x-dist-simple">
@@ -687,6 +695,186 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       ShadyDOM.flush();
       assert.equal(slot.assignedNodes({flatten: true})[1], child);
 
+    });
+
+    test('append/remove multiple slots with same name (catchall) to element', function() {
+      var el = document.createElement('x-dist');
+      document.body.appendChild(el);
+      var frag = document.createDocumentFragment();
+      var s1 = document.createElement('slot');
+      s1.innerHTML = 'fallback1';
+      var s2 = document.createElement('slot');
+      s2.innerHTML = 'fallback2';
+      var s3 = document.createElement('slot');
+      s3.innerHTML = 'fallback3';
+      frag.appendChild(s1);
+      frag.appendChild(s2);
+      frag.appendChild(s3);
+      el.shadowRoot.appendChild(frag);
+      var span = document.createElement('span');
+      span.textContent = 'hi';
+      el.appendChild(span);
+      ShadyDOM.flush();
+      assert.equal(ShadyDOM.nativeTree.textContent(el), 'x-disthifallback1fallback2fallback3', 'composed textContent incorrect');
+      var origSlot = el.shadowRoot.querySelector('slot');
+      origSlot.innerHTML = 'fallbackOrig';
+      var s0 = document.createElement('slot');
+      s0.innerHTML = 'fallback0';
+      el.shadowRoot.insertBefore(s0, el.shadowRoot.firstChild);
+      ShadyDOM.flush();
+      assert.equal(ShadyDOM.nativeTree.textContent(el), 'hix-distfallbackOrigfallback1fallback2fallback3', 'composed textContent incorrect');
+      var s4 = document.createElement('slot');
+      s4.innerHTML = 'fallback4';
+      var s5 = document.createElement('slot');
+      s5.innerHTML = 'fallback5';
+      var slotContainer = document.createElement('span');
+      slotContainer.appendChild(s4);
+      slotContainer.appendChild(s5);
+      el.shadowRoot.insertBefore(slotContainer, s2);
+      var s6 = document.createElement('slot');
+      s6.innerHTML = 'fallback6';
+      el.shadowRoot.appendChild(s6);
+      ShadyDOM.flush();
+      assert.equal(ShadyDOM.nativeTree.textContent(el), 'hix-distfallbackOrigfallback1fallback4fallback5fallback2fallback3fallback6', 'composed textContent incorrect');
+      el.shadowRoot.removeChild(slotContainer);
+      ShadyDOM.flush();
+      assert.equal(ShadyDOM.nativeTree.textContent(el), 'hix-distfallbackOrigfallback1fallback2fallback3fallback6', 'composed textContent incorrect');
+      el.shadowRoot.removeChild(s0);
+      el.shadowRoot.removeChild(s1);
+      el.shadowRoot.removeChild(s2);
+      el.shadowRoot.removeChild(s3);
+      origSlot.parentNode.removeChild(origSlot);
+      ShadyDOM.flush();
+      assert.equal(ShadyDOM.nativeTree.textContent(el), 'x-disthi', 'composed textContent incorrect');
+      document.body.removeChild(el);
+    });
+
+    test('append/remove multiple slots with same name to element', function() {
+      var el = document.createElement('x-dist');
+      document.body.appendChild(el);
+      var frag = document.createDocumentFragment();
+      var s1 = document.createElement('slot');
+      s1.setAttribute('name', 'foo');
+      s1.innerHTML = 'fallback1';
+      var s2 = document.createElement('slot');
+      s2.setAttribute('name', 'foo');
+      s2.innerHTML = 'fallback2';
+      var s3 = document.createElement('slot');
+      s3.setAttribute('name', 'foo');
+      s3.innerHTML = 'fallback3';
+      frag.appendChild(s1);
+      frag.appendChild(s2);
+      frag.appendChild(s3);
+      el.shadowRoot.appendChild(frag);
+      var span = document.createElement('span');
+      span.textContent = 'hi';
+      el.appendChild(span);
+      ShadyDOM.flush();
+      assert.equal(ShadyDOM.nativeTree.textContent(el), 'x-disthifallback1fallback2fallback3', 'composed textContent incorrect');
+      var origSlot = el.shadowRoot.querySelector('slot');
+      origSlot.innerHTML = 'fallbackOrig';
+      var s0 = document.createElement('slot');
+      s0.setAttribute('name', 'foo');
+      s0.innerHTML = 'fallback0';
+      el.shadowRoot.insertBefore(s0, el.shadowRoot.firstChild);
+      ShadyDOM.flush();
+      assert.equal(ShadyDOM.nativeTree.textContent(el), 'fallback0x-disthifallback1fallback2fallback3', 'composed textContent incorrect');
+      var s4 = document.createElement('slot');
+      s4.setAttribute('name', 'foo');
+      s4.innerHTML = 'fallback4';
+      var s5 = document.createElement('slot');
+      s5.setAttribute('name', 'foo');
+      s5.innerHTML = 'fallback5';
+      var slotContainer = document.createElement('span');
+      slotContainer.appendChild(s4);
+      slotContainer.appendChild(s5);
+      el.shadowRoot.insertBefore(slotContainer, s2);
+      ShadyDOM.flush();
+      assert.equal(ShadyDOM.nativeTree.textContent(el), 'fallback0x-disthifallback1fallback4fallback5fallback2fallback3', 'composed textContent incorrect');
+      el.shadowRoot.removeChild(slotContainer);
+      ShadyDOM.flush();
+      assert.equal(ShadyDOM.nativeTree.textContent(el), 'fallback0x-disthifallback1fallback2fallback3', 'composed textContent incorrect');
+      span.slot = 'foo';
+      ShadyDOM.flush();
+      assert.equal(ShadyDOM.nativeTree.textContent(el), 'hix-distfallbackOrigfallback1fallback2fallback3', 'composed textContent incorrect');
+      document.body.removeChild(el);
+    });
+
+    test('change slot name duplicating existing slot names', function() {
+      var el = document.createElement('x-dist-slot-name-change');
+      document.body.appendChild(el);
+      var foo = document.createElement('div');
+      foo.setAttribute('slot', 'foo');
+      foo.textContent = 'fooChild';
+      var bar = document.createElement('div');
+      bar.setAttribute('slot', 'bar');
+      bar.textContent = 'barChild';
+      el.appendChild(foo);
+      el.appendChild(bar);
+      ShadyDOM.flush();
+      assert.deepEqual(el.$.f1.assignedNodes(), [foo]);
+      assert.deepEqual(el.$.b1.assignedNodes(), [bar]);
+      assert.equal(ShadyDOM.nativeTree.textContent(el.$.c1), 'fooChildfoo2');
+      assert.equal(ShadyDOM.nativeTree.textContent(el.$.c2), 'barChildbar2');
+      var slot = document.createElement('slot');
+      slot.setAttribute('name', 'foo');
+      slot.appendChild(document.createTextNode('test'));
+      el.$.c1.appendChild(slot);
+      ShadyDOM.flush();
+      assert.equal(ShadyDOM.nativeTree.textContent(el.$.c1), 'fooChildfoo2test');
+      slot.setAttribute('name', 'bar');
+      ShadyDOM.flush();
+      assert.equal(ShadyDOM.nativeTree.textContent(el.$.c1), 'fooChildfoo2barChild');
+      assert.equal(ShadyDOM.nativeTree.textContent(el.$.c2), 'bar1bar2');
+      el.$.f1.setAttribute('name', 'bar');
+      ShadyDOM.flush();
+      assert.equal(ShadyDOM.nativeTree.textContent(el.$.c1), 'barChildfooChildtest');
+      assert.equal(ShadyDOM.nativeTree.textContent(el.$.c2), 'bar1bar2');
+      el.$.f2.setAttribute('name', 'bar');
+      ShadyDOM.flush();
+      assert.equal(ShadyDOM.nativeTree.textContent(el.$.c1), 'barChildfoo2test');
+      assert.equal(ShadyDOM.nativeTree.textContent(el.$.c2), 'bar1bar2');
+      slot.setAttribute('name', 'foo');
+      ShadyDOM.flush();
+      assert.equal(ShadyDOM.nativeTree.textContent(el.$.c1), 'barChildfoo2fooChild');
+      assert.equal(ShadyDOM.nativeTree.textContent(el.$.c2), 'bar1bar2');
+      el.$.f2.setAttribute('name', 'foo');
+      ShadyDOM.flush();
+      assert.equal(ShadyDOM.nativeTree.textContent(el.$.c1), 'barChildfooChildtest');
+      assert.equal(ShadyDOM.nativeTree.textContent(el.$.c2), 'bar1bar2');
+      el.$.f1.setAttribute('name', 'foo');
+      ShadyDOM.flush();
+      assert.equal(ShadyDOM.nativeTree.textContent(el.$.c1), 'fooChildfoo2test');
+      assert.equal(ShadyDOM.nativeTree.textContent(el.$.c2), 'barChildbar2');
+      document.body.removeChild(el);
+    });
+
+    test('composition around slots', function() {
+      var el = document.createElement('x-dist-slot-name-change');
+      document.body.appendChild(el);
+      ShadyDOM.flush();
+      var a = document.createElement('div');
+      a.textContent = 'a';
+      el.$.c1.appendChild(a);
+      assert.equal(ShadyDOM.nativeTree.textContent(el.$.c1), 'foo1foo2a');
+      el.$.c1.insertBefore(a, el.$.f2);
+      assert.equal(ShadyDOM.nativeTree.textContent(el.$.c1), 'foo1afoo2');
+      el.$.c1.insertBefore(a, el.$.f1);
+      assert.equal(ShadyDOM.nativeTree.textContent(el.$.c1), 'afoo1foo2');
+      var slot = document.createElement('slot');
+      slot.setAttribute('name', 'foo');
+      el.$.c1.insertBefore(slot, el.$.f2);
+      var slot2 = document.createElement('slot');
+      slot2.setAttribute('name', 'foo');
+      el.$.c1.insertBefore(slot2, el.$.f2);
+      ShadyDOM.flush();
+      assert.equal(ShadyDOM.nativeTree.textContent(el.$.c1), 'afoo1foo2');
+      el.$.c1.insertBefore(a, slot2);
+      assert.equal(ShadyDOM.nativeTree.textContent(el.$.c1), 'foo1afoo2');
+      el.$.c1.insertBefore(a, slot);
+      assert.equal(ShadyDOM.nativeTree.textContent(el.$.c1), 'foo1afoo2');
+      el.$.c1.insertBefore(a, el.$.f1);
+      assert.equal(ShadyDOM.nativeTree.textContent(el.$.c1), 'afoo1foo2');
     });
 
     test('composed children distributed', function() {

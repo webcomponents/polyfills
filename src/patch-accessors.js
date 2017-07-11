@@ -182,7 +182,7 @@ let InsideAccessors = {
      */
     get() {
       let childNodes;
-      if (this.__shady && this.__shady.firstChild !== undefined) {
+      if (utils.isTrackingLogicalChildNodes(this)) {
         if (!this.__shady.childNodes) {
           this.__shady.childNodes = [];
           for (let n=this.firstChild; n; n=n.nextSibling) {
@@ -232,7 +232,7 @@ let InsideAccessors = {
      * @this {HTMLElement}
      */
     get() {
-      if (this.__shady && this.__shady.firstChild !== undefined) {
+      if (utils.isTrackingLogicalChildNodes(this)) {
         let tc = [];
         for (let i = 0, cn = this.childNodes, c; (c = cn[i]); i++) {
           if (c.nodeType !== Node.COMMENT_NODE) {
@@ -246,6 +246,7 @@ let InsideAccessors = {
     },
     /**
      * @this {HTMLElement}
+     * @param {string} text
      */
     set(text) {
       if (this.nodeType !== Node.ELEMENT_NODE) {
@@ -302,7 +303,7 @@ let InsideAccessors = {
      */
     get() {
       let children;
-      if (this.__shady && this.__shady.firstChild !== undefined) {
+      if (utils.isTrackingLogicalChildNodes(this)) {
         children = Array.prototype.filter.call(this.childNodes, function(n) {
           return (n.nodeType === Node.ELEMENT_NODE);
         });
@@ -325,7 +326,7 @@ let InsideAccessors = {
     get() {
       let content = this.localName === 'template' ?
         /** @type {HTMLTemplateElement} */(this).content : this;
-      if (this.__shady && this.__shady.firstChild !== undefined) {
+      if (utils.isTrackingLogicalChildNodes(this)) {
         return getInnerHTML(content);
       } else {
         return nativeTree.innerHTML(content);
@@ -362,14 +363,7 @@ export let ShadowRootAccessor = {
      * @this {HTMLElement}
      */
     get() {
-      return this.__shady && this.__shady.root || null;
-    },
-    /**
-     * @this {HTMLElement}
-     */
-    set(value) {
-      this.__shady = this.__shady || {};
-      this.__shady.root = value;
+      return this.__shady && this.__shady.publicRoot || null;
     },
     configurable: true
   }

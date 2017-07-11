@@ -13,82 +13,200 @@ import * as logicalTree from './logical-tree.js';
 import * as nativeMethods from './native-methods.js';
 import {parentNode} from './native-tree.js';
 
+// Patched `insertBefore`. Note that all mutations that add nodes are routed
+// here. When a <slot> is added or a node is added to a host with a shadowRoot
+// with a slot, a standard dom `insert` call is aborted and `_asyncRender`
+// is called on the relevant shadowRoot. In all other cases, a standard dom
+// `insert` can be made, but the location and ref_node may need to be changed.
 /**
- * Try to add node. Record logical info, track insertion points, perform
- * distribution iff needed. Return true if the add is handled.
- * @param {Node} container
+ * @param {Node} parent
  * @param {Node} node
- * @param {Node} ref_node
- * @return {boolean}
+ * @param {Node=} ref_node
  */
-function addNode(container, node, ref_node) {
-  let ownerRoot = utils.ownerShadyRootForNode(container);
-  let ipAdded;
-  if (ownerRoot) {
-    // optimization: special insertion point tracking
-    // TODO(sorvell): verify that the renderPending check here should not be needed.
-    if (node['__noInsertionPoint'] && !ownerRoot._changePending) {
-      ownerRoot._skipUpdateInsertionPoints = true;
-    }
-    // note: we always need to see if an insertion point is added
-    // since this saves logical tree info; however, invalidation state
-    // needs
-    ipAdded = _maybeAddInsertionPoint(node, container, ownerRoot);
-    // invalidate insertion points IFF not already invalid!
-    if (ipAdded) {
-      ownerRoot._skipUpdateInsertionPoints = false;
+export function insertBefore(parent, node, ref_node) {
+  if (ref_node) {
+    let p = ref_node.__shady && ref_node.__shady.parentNode;
+    if ((p !== undefined && p !== parent) ||
+      (p === undefined && parentNode(ref_node) !== parent)) {
+      throw Error(`Failed to execute 'insertBefore' on 'Node': The node ` +
+       `before which the new node is to be inserted is not a child of this node.`);
     }
   }
-  if (container.__shady && container.__shady.firstChild !== undefined) {
-    logicalTree.recordInsertBefore(node, container, ref_node);
+  if (ref_node === node) {
+    return node;
   }
-  // if not distributing and not adding to host, do a fast path addition
-  // TODO(sorvell): revisit flow since `ipAdded` needed here if
-  // node is a fragment that has a patched QSA.
-  let handled = _maybeDistribute(node, container, ownerRoot, ipAdded) ||
-    container.__shady.root ||
-    // TODO(sorvell): we *should* consider the add "handled"
-    // if the container or ownerRoot is `_renderPending`.
-    // However, this will regress performance right now and is blocked on a
-    // fix for https://github.com/webcomponents/shadydom/issues/95
-    // handled if ref_node parent is a root that is rendering.
-    (ref_node && utils.isShadyRoot(ref_node.parentNode) &&
-      ref_node.parentNode._renderPending);
-  return handled;
+  // remove from existing location
+  if (node.parentNode) {
+    // NOTE: avoid node.removeChild as this *can* trigger another patched
+    // method (e.g. custom elements) and we want only the shady method to run.
+    removeChild(node.parentNode, node);
+  }
+  // add to new parent
+  let preventNativeInsert;
+  let ownerRoot = utils.ownerShadyRootForNode(parent);
+  // if a slot is added, must render containing root.
+  let slotsAdded = ownerRoot && findContainedSlots(node);
+  if (ownerRoot && (parent.localName === 'slot' || slotsAdded)) {
+    ownerRoot._asyncRender();
+  }
+  if (utils.isTrackingLogicalChildNodes(parent)) {
+    logicalTree.recordInsertBefore(node, parent, ref_node);
+    // when inserting into a host with a shadowRoot with slot, use 
+    // `shadowRoot._asyncRender()` via `attach-shadow` module
+    if (hasShadowRootWithSlot(parent)) {
+      parent.__shady.root._asyncRender();
+      preventNativeInsert = true;
+    // when inserting into a host with shadowRoot with NO slot, do nothing
+    // as the node should not be added to composed dome anywhere.
+    } else if (parent.__shady.root) {
+      preventNativeInsert = true;
+    }
+  }
+  if (!preventNativeInsert) {
+    // if adding to a shadyRoot, add to host instead
+    let container = utils.isShadyRoot(parent) ? 
+      /** @type {ShadowRoot} */(parent).host : parent;
+    // if ref_node, get the ref_node that's actually in composed dom.
+    if (ref_node) {
+      ref_node = firstComposedNode(ref_node);
+      nativeMethods.insertBefore.call(container, node, ref_node);
+    } else {
+      nativeMethods.appendChild.call(container, node);
+    }
+  }
+  scheduleObserver(parent, node);
+  // with insertion complete, can safely update insertion points.
+  if (slotsAdded) {
+    ownerRoot._addSlots(slotsAdded);
+  }
+  return node;
 }
 
-
-/**
- * Try to remove node: update logical info and perform distribution iff
- * needed. Return true if the removal has been handled.
- * note that it's possible for both the node's host and its parent
- * to require distribution... both cases are handled here.
- * @param {Node} node
- * @return {boolean}
- */
-function removeNode(node) {
-  // important that we want to do this only if the node has a logical parent
-  let logicalParent = node.__shady && node.__shady.parentNode;
-  let distributed;
-  let ownerRoot = utils.ownerShadyRootForNode(node);
-  if (logicalParent || ownerRoot) {
-    // distribute node's parent iff needed
-    distributed = maybeDistributeParent(node);
-    if (logicalParent) {
-      logicalTree.recordRemoveChild(node, logicalParent);
+function findContainedSlots(node) {
+  if (!node['__noInsertionPoint']) {
+    let slots;
+    if (node.localName === 'slot') {
+      slots = [node];
+    } else if (node.querySelectorAll) {
+      slots = node.querySelectorAll('slot');
     }
-    // remove node from root and distribute it iff needed
-    let removedDistributed = ownerRoot &&
-      _removeDistributedChildren(ownerRoot, node);
-    let addedInsertionPoint = (logicalParent && ownerRoot &&
-      logicalParent.localName === ownerRoot.getInsertionPointTag());
-    if (removedDistributed || addedInsertionPoint) {
-      ownerRoot._skipUpdateInsertionPoints = false;
-      updateRootViaContentChange(ownerRoot);
+    if (slots && slots.length) {
+      return slots;
     }
   }
-  _removeOwnerShadyRoot(node);
-  return distributed;
+}
+
+/**
+ * Patched `removeChild`. Note that all dom "removals" are routed here.
+ * Removes the given `node` from the element's `children`.
+ * This method also performs dom composition.
+ * @param {Node} parent
+ * @param {Node} node
+*/
+export function removeChild(parent, node) {
+  if (node.parentNode !== parent) {
+    throw Error('The node to be removed is not a child of this node: ' +
+      node);
+  }
+  let preventNativeRemove;
+  let ownerRoot = utils.ownerShadyRootForNode(node);
+  let removingInsertionPoint;
+  if (utils.isTrackingLogicalChildNodes(parent)) {
+    logicalTree.recordRemoveChild(node, parent);
+    if (hasShadowRootWithSlot(parent)) {
+      parent.__shady.root._asyncRender();
+      preventNativeRemove = true;
+    }
+  }
+  removeOwnerShadyRoot(node);
+  // if removing slot, must render containing root
+  if (ownerRoot) {
+    let changeSlotContent = parent && parent.localName === 'slot';
+    if (changeSlotContent) {
+      preventNativeRemove = true;
+    }
+    removingInsertionPoint = ownerRoot._removeContainedSlots(node);
+    if (removingInsertionPoint || changeSlotContent) {
+      ownerRoot._asyncRender();
+    }
+  }
+  if (!preventNativeRemove) {
+    // if removing from a shadyRoot, remove form host instead
+    let container = utils.isShadyRoot(parent) ?
+      /** @type {ShadowRoot} */(parent).host :
+      parent;
+    // not guaranteed to physically be in container; e.g.
+    // (1) if parent has a shadyRoot, element may or may not at distributed 
+    // location (could be undistributed)
+    // (2) if parent is a slot, element may not ben in composed dom
+    if (!(parent.__shady.root || node.localName === 'slot') || 
+      (container === parentNode(node))) {
+      nativeMethods.removeChild.call(container, node);
+    }
+  }
+  scheduleObserver(parent, null, node);
+  return node;
+}
+
+function removeOwnerShadyRoot(node) {
+  // optimization: only reset the tree if node is actually in a root
+  if (hasCachedOwnerRoot(node)) {
+    let c$ = node.childNodes;
+    for (let i=0, l=c$.length, n; (i<l) && (n=c$[i]); i++) {
+      removeOwnerShadyRoot(n);
+    }
+  }
+  if (node.__shady) {
+    node.__shady.ownerShadyRoot = undefined;
+  }
+}
+
+function hasCachedOwnerRoot(node) {
+  return Boolean(node.__shady && node.__shady.ownerShadyRoot !== undefined);
+}
+
+/**
+ * Finds the first flattened node that is composed in the node's parent.
+ * If the given node is a slot, then the first flattened node is returned
+ * if it exists, otherwise advance to the node's nextSibling.
+ * @param {Node} node within which to find first composed node
+ * @returns {Node} first composed node
+ */
+function firstComposedNode(node) {
+  let composed = node;
+  if (node && node.localName === 'slot') {
+    let flattened = node.__shady.flattenedNodes;
+    composed = flattened && flattened.length ? flattened[0] : 
+      firstComposedNode(node.nextSibling);
+  }
+  return composed;
+}
+
+function hasShadowRootWithSlot(node) {
+  let root = node && node.__shady && node.__shady.root;
+  return (root && root._hasInsertionPoint());
+}
+
+/**
+ * Should be called whenever an attribute changes. If the `slot` attribute
+ * changes, provokes rendering if necessary. If a `<slot>` element's `name`
+ * attribute changes, updates the root's slot map and renders.
+ * @param {Node} node 
+ * @param {string} name 
+ */
+function distributeAttributeChange(node, name) {
+  if (name === 'slot') {
+    const parent = node.parentNode;
+    if (hasShadowRootWithSlot(parent)) {
+      parent.__shady.root._asyncRender();
+    }
+  } else if (node.localName === 'slot' && name === 'name') {
+    let root = utils.ownerShadyRootForNode(node);
+    if (root) {
+      root._updateSlotName(node);
+      root._asyncRender();
+    }
+  }
 }
 
 /**
@@ -96,7 +214,7 @@ function removeNode(node) {
  * @param {Node=} addedNode
  * @param {Node=} removedNode
  */
-function _scheduleObserver(node, addedNode, removedNode) {
+function scheduleObserver(node, addedNode, removedNode) {
   let observer = node.__shady && node.__shady.observer;
   if (observer) {
     if (addedNode) {
@@ -107,23 +225,6 @@ function _scheduleObserver(node, addedNode, removedNode) {
     }
     observer.schedule();
   }
-}
-
-function removeNodeFromParent(node, logicalParent) {
-  if (logicalParent) {
-    _scheduleObserver(logicalParent, null, node);
-    return removeNode(node);
-  } else {
-    // composed but not logical parent
-    if (node.parentNode) {
-      nativeMethods.removeChild.call(node.parentNode, node);
-    }
-    _removeOwnerShadyRoot(node);
-  }
-}
-
-function _hasCachedOwnerRoot(node) {
-  return Boolean(node.__shady && node.__shady.ownerShadyRoot !== undefined);
 }
 
 /**
@@ -155,157 +256,6 @@ export function getRootNode(node, options) { // eslint-disable-line no-unused-va
   return root;
 }
 
-function _maybeDistribute(node, container, ownerRoot, ipAdded) {
-  // TODO(sorvell): technically we should check non-fragment nodes for
-  // <content> children but since this case is assumed to be exceedingly
-  // rare, we avoid the cost and will address with some specific api
-  // when the need arises.  For now, the user must call
-  // distributeContent(true), which updates insertion points manually
-  // and forces distribution.
-  let insertionPointTag = ownerRoot && ownerRoot.getInsertionPointTag() || '';
-  let fragContent = (node.nodeType === Node.DOCUMENT_FRAGMENT_NODE) &&
-    !node['__noInsertionPoint'] &&
-    insertionPointTag && node.querySelector(insertionPointTag);
-  let wrappedContent = fragContent &&
-    (fragContent.parentNode.nodeType !==
-    Node.DOCUMENT_FRAGMENT_NODE);
-  let hasContent = fragContent || (node.localName === insertionPointTag);
-  // There are 3 possible cases where a distribution may need to occur:
-  // 1. <content> being inserted (the host of the shady root where
-  //    content is inserted needs distribution)
-  // 2. children being inserted into parent with a shady root (parent
-  //    needs distribution)
-  // 3. container is an insertionPoint
-  if (hasContent || (container.localName === insertionPointTag) || ipAdded) {
-    if (ownerRoot) {
-      // note, insertion point list update is handled after node
-      // mutations are complete
-      updateRootViaContentChange(ownerRoot);
-    }
-  }
-  let needsDist = _nodeNeedsDistribution(container);
-  if (needsDist) {
-    let root = container.__shady && container.__shady.root;
-    updateRootViaContentChange(root);
-  }
-  // Return true when distribution will fully handle the composition
-  // Note that if a content was being inserted that was wrapped by a node,
-  // and the parent does not need distribution, return false to allow
-  // the nodes to be added directly, after which children may be
-  // distributed and composed into the wrapping node(s)
-  return needsDist || (hasContent && !wrappedContent);
-}
-
-/* note: parent argument is required since node may have an out
-of date parent at this point; returns true if a <content> is being added */
-function _maybeAddInsertionPoint(node, parent, root) {
-  let added;
-  let insertionPointTag = root.getInsertionPointTag();
-  if (node.nodeType === Node.DOCUMENT_FRAGMENT_NODE &&
-    !node['__noInsertionPoint']) {
-    let c$ = node.querySelectorAll(insertionPointTag);
-    for (let i=0, n, np, na; (i<c$.length) && (n=c$[i]); i++) {
-      np = n.parentNode;
-      // don't allow node's parent to be fragment itself
-      if (np === node) {
-        np = parent;
-      }
-      na = _maybeAddInsertionPoint(n, np, root);
-      added = added || na;
-    }
-  } else if (node.localName === insertionPointTag) {
-    logicalTree.recordChildNodes(parent);
-    logicalTree.recordChildNodes(node);
-    added = true;
-  }
-  return added;
-}
-
-function _nodeNeedsDistribution(node) {
-  let root = node && node.__shady && node.__shady.root;
-  return root && root.hasInsertionPoint();
-}
-
-function _removeDistributedChildren(root, container) {
-  let hostNeedsDist;
-  let ip$ = root._getInsertionPoints();
-  for (let i=0; i<ip$.length; i++) {
-    let insertionPoint = ip$[i];
-    if (_contains(container, insertionPoint)) {
-      let dc$ = insertionPoint.assignedNodes({flatten: true});
-      for (let j=0; j<dc$.length; j++) {
-        hostNeedsDist = true;
-        let node = dc$[j];
-        let parent = parentNode(node);
-        if (parent) {
-          nativeMethods.removeChild.call(parent, node);
-        }
-      }
-    }
-  }
-  return hostNeedsDist;
-}
-
-function _contains(container, node) {
-  while (node) {
-    if (node == container) {
-      return true;
-    }
-    node = node.parentNode;
-  }
-}
-
-function _removeOwnerShadyRoot(node) {
-  // optimization: only reset the tree if node is actually in a root
-  if (_hasCachedOwnerRoot(node)) {
-    let c$ = node.childNodes;
-    for (let i=0, l=c$.length, n; (i<l) && (n=c$[i]); i++) {
-      _removeOwnerShadyRoot(n);
-    }
-  }
-  node.__shady = node.__shady || {};
-  node.__shady.ownerShadyRoot = undefined;
-}
-
-// TODO(sorvell): This will fail if distribution that affects this
-// question is pending; this is expected to be exceedingly rare, but if
-// the issue comes up, we can force a flush in this case.
-function firstComposedNode(insertionPoint) {
-  let n$ = insertionPoint.assignedNodes({flatten: true});
-  let root = getRootNode(insertionPoint);
-  for (let i=0, l=n$.length, n; (i<l) && (n=n$[i]); i++) {
-    // means that we're composed to this spot.
-    if (root.isFinalDestination(insertionPoint, n)) {
-      return n;
-    }
-  }
-}
-
-function maybeDistributeParent(node) {
-  let parent = node.parentNode;
-  if (_nodeNeedsDistribution(parent)) {
-    updateRootViaContentChange(parent.__shady.root);
-    return true;
-  }
-}
-
-function updateRootViaContentChange(root) {
-  // mark root as mutation based on a mutation
-  root._changePending = true;
-  root.update();
-}
-
-function distributeAttributeChange(node, name) {
-  if (name === 'slot') {
-    maybeDistributeParent(node);
-  } else if (node.localName === 'slot' && name === 'name') {
-    let root = utils.ownerShadyRootForNode(node);
-    if (root) {
-      root.update();
-    }
-  }
-}
-
 // NOTE: `query` is used primarily for ShadyDOM's querySelector impl,
 // but it's also generally useful to recurse through the element tree
 // and is used by Polymer's styling system.
@@ -316,21 +266,21 @@ function distributeAttributeChange(node, name) {
  */
 export function query(node, matcher, halter) {
   let list = [];
-  _queryElements(node.childNodes, matcher,
+  queryElements(node.childNodes, matcher,
     halter, list);
   return list;
 }
 
-function _queryElements(elements, matcher, halter, list) {
+function queryElements(elements, matcher, halter, list) {
   for (let i=0, l=elements.length, c; (i<l) && (c=elements[i]); i++) {
     if (c.nodeType === Node.ELEMENT_NODE &&
-        _queryElement(c, matcher, halter, list)) {
+        queryElement(c, matcher, halter, list)) {
       return true;
     }
   }
 }
 
-function _queryElement(node, matcher, halter, list) {
+function queryElement(node, matcher, halter, list) {
   let result = matcher(node);
   if (result) {
     list.push(node);
@@ -338,14 +288,14 @@ function _queryElement(node, matcher, halter, list) {
   if (halter && halter(result)) {
     return result;
   }
-  _queryElements(node.childNodes, matcher,
+  queryElements(node.childNodes, matcher,
     halter, list);
 }
 
 export function renderRootNode(element) {
   var root = element.getRootNode();
   if (utils.isShadyRoot(root)) {
-    root.render();
+    root._render();
   }
 }
 
@@ -366,80 +316,6 @@ export function setAttribute(node, attr, value) {
 export function removeAttribute(node, attr) {
   nativeMethods.removeAttribute.call(node, attr);
   distributeAttributeChange(node, attr);
-}
-
-// cases in which we may not be able to just do standard native call
-// 1. container has a shadyRoot (needsDistribution IFF the shadyRoot
-// has an insertion point)
-// 2. container is a shadyRoot (don't distribute, instead set
-// container to container.host.
-// 3. node is <content> (host of container needs distribution)
-/**
- * @param {Node} parent
- * @param {Node} node
- * @param {Node=} ref_node
- */
-export function insertBefore(parent, node, ref_node) {
-  if (ref_node) {
-    let p = ref_node.__shady && ref_node.__shady.parentNode;
-    if ((p !== undefined && p !== parent) ||
-      (p === undefined && parentNode(ref_node) !== parent)) {
-      throw Error(`Failed to execute 'insertBefore' on 'Node': The node ` +
-       `before which the new node is to be inserted is not a child of this node.`);
-    }
-  }
-  if (ref_node === node) {
-    return node;
-  }
-  // remove node from its current position iff it's in a tree.
-  if (node.nodeType !== Node.DOCUMENT_FRAGMENT_NODE) {
-    let parent = node.__shady && node.__shady.parentNode;
-    removeNodeFromParent(node, parent);
-  }
-  if (!addNode(parent, node, ref_node)) {
-    if (ref_node) {
-      // if ref_node is an insertion point replace with first distributed node
-      let root = utils.ownerShadyRootForNode(ref_node);
-      if (root) {
-        ref_node = ref_node.localName === root.getInsertionPointTag() ?
-          firstComposedNode(/** @type {!HTMLSlotElement} */(ref_node)) : ref_node;
-      }
-    }
-    // if adding to a shadyRoot, add to host instead
-    let container = utils.isShadyRoot(parent) ? /** @type {ShadowRoot} */(parent).host : parent;
-    if (ref_node) {
-      nativeMethods.insertBefore.call(container, node, ref_node);
-    } else {
-      nativeMethods.appendChild.call(container, node);
-    }
-  }
-  _scheduleObserver(parent, node);
-  return node;
-}
-
-/**
-  Removes the given `node` from the element's `lightChildren`.
-  This method also performs dom composition.
-*/
-export function removeChild(parent, node) {
-  if (node.parentNode !== parent) {
-    throw Error('The node to be removed is not a child of this node: ' +
-      node);
-  }
-  if (!removeNode(node)) {
-    // if removing from a shadyRoot, remove form host instead
-    let container = utils.isShadyRoot(parent) ?
-      parent.host :
-      parent;
-    // not guaranteed to physically be in container; e.g.
-    // undistributed nodes.
-    let nativeParent = parentNode(node);
-    if (container === nativeParent) {
-      nativeMethods.removeChild.call(container, node);
-    }
-  }
-  _scheduleObserver(parent, null, node);
-  return node;
 }
 
 export function cloneNode(node, deep) {

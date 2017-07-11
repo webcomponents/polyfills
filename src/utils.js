@@ -17,6 +17,10 @@ let desc = Object.getOwnPropertyDescriptor(Node.prototype, 'firstChild');
 settings.hasDescriptors = Boolean(desc && desc.configurable && desc.get);
 settings.inUse = settings['force'] || !settings.hasNativeShadowDOM;
 
+export function isTrackingLogicalChildNodes(node) {
+  return (node.__shady && node.__shady.firstChild !== undefined);
+}
+
 export function isShadyRoot(obj) {
   return Boolean(obj.__localName === 'ShadyRoot');
 }

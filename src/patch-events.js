@@ -228,7 +228,8 @@ function retargetNonBubblingEvent(e) {
   let lastFiredRoot;
   for (let i = 0; i < path.length; i++) {
     node = path[i];
-    if (i === 0 || (node.shadowRoot && node.shadowRoot === lastFiredRoot)) {
+    const root = node.__shady && node.__shady.root;
+    if (i === 0 || (root && root === lastFiredRoot)) {
       fireHandlers(e, node, 'bubble');
       // don't bother with window, it doesn't have `getRootNode` and will be last in the path anyway
       if (node !== window) {
