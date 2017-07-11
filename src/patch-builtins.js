@@ -214,7 +214,12 @@ let documentMixin = utils.extendAll({
    * @this {Document}
    */
   getElementById(id) {
-    return fragmentMixin.querySelector.call(this, `#${id}`);
+    let result = mutation.query(this, function(n) {
+      return n.id == id;
+    }, function(n) {
+      return Boolean(n);
+    })[0];
+    return result || null;
   }
 
 }, fragmentMixin);

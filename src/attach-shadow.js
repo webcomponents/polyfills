@@ -8,6 +8,7 @@ Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 */
 
+import * as mutation from './logical-mutation.js';
 import {calculateSplices} from './array-splice.js';
 import * as utils from './utils.js';
 import {enqueue} from './flush.js';
@@ -142,7 +143,7 @@ ShadyRoot.prototype._distribute = function() {
     if (slotParentRoot && slotParentRoot._hasInsertionPoint()) {
       slotParentRoot['_renderRoot']();
     }
-    this._addAssignedToFlattenedNodes(slot.__shady.flattenedNodes, 
+    this._addAssignedToFlattenedNodes(slot.__shady.flattenedNodes,
       slot.__shady.assignedNodes);
     let prevAssignedNodes = slot.__shady._previouslyAssignedNodes;
     if (prevAssignedNodes) {
@@ -155,8 +156,8 @@ ShadyRoot.prototype._distribute = function() {
         slot.__shady.dirty = true;
       }
     }
-    /* Note: A slot is marked dirty whenever a node is newly assigned to it 
-    or a node is assigned to a different slot (done in `_distributeNodeToSlot`) 
+    /* Note: A slot is marked dirty whenever a node is newly assigned to it
+    or a node is assigned to a different slot (done in `_distributeNodeToSlot`)
     or if the number of nodes assigned to the slot has decreased (done above);
      */
     if (slot.__shady.dirty) {
@@ -167,14 +168,14 @@ ShadyRoot.prototype._distribute = function() {
 }
 
 /**
- * Distributes given `node` to the appropriate slot based on its `slot` 
+ * Distributes given `node` to the appropriate slot based on its `slot`
  * attribute. If `forcedSlot` is given, then the node is distributed to the
  * `forcedSlot`.
- * Note: slot to which the node is assigned will be marked dirty for firing 
+ * Note: slot to which the node is assigned will be marked dirty for firing
  * `slotchange`.
  * @param {Node} node
  * @param {Node=} forcedSlot
- * 
+ *
  */
 ShadyRoot.prototype._distributeNodeToSlot = function(node, forcedSlot) {
   node.__shady = node.__shady || {};
@@ -200,11 +201,11 @@ ShadyRoot.prototype._distributeNodeToSlot = function(node, forcedSlot) {
 }
 
 /**
- * Clears the assignedNodes tracking data for a given `slot`. Note, the current 
- * assigned node data is tracked (via _previouslyAssignedNodes and 
+ * Clears the assignedNodes tracking data for a given `slot`. Note, the current
+ * assigned node data is tracked (via _previouslyAssignedNodes and
  * _prevAssignedSlot) to see if `slotchange` should fire. This data may be out
- *  of date at this time because the assigned nodes may have already been 
- * distributed to another root. This is ok since this data is only used to 
+ *  of date at this time because the assigned nodes may have already been
+ * distributed to another root. This is ok since this data is only used to
  * track changes.
  * @param {HTMLSlotElement} slot
  */
@@ -249,7 +250,7 @@ ShadyRoot.prototype._fireSlotChange = function(slot) {
 
 // Reify dom such that it is at its correct rendering position
 // based on logical distribution.
-// NOTE: here we only compose parents of <slot> elements and not the 
+// NOTE: here we only compose parents of <slot> elements and not the
 // shadowRoot into the host. The latter is performend via a fast path
 // in the `logical-mutation`.insertBefore.
 ShadyRoot.prototype._compose = function() {
@@ -258,12 +259,12 @@ ShadyRoot.prototype._compose = function() {
   for (let i=0; i < slots.length; i++) {
     const parent = slots[i].parentNode;
     /* compose node only if:
-      (1) parent does not have a shadowRoot since shadowRoot has already 
+      (1) parent does not have a shadowRoot since shadowRoot has already
       composed into the host
-      (2) we're not already composing it 
+      (2) we're not already composing it
       [consider (n^2) but rare better than Set]
     */
-    if (!(parent.__shady && parent.__shady.root) && 
+    if (!(parent.__shady && parent.__shady.root) &&
       composeList.indexOf(parent) < 0) {
       composeList.push(parent);
     }
@@ -282,7 +283,7 @@ ShadyRoot.prototype._composeNode = function(node) {
   for (let i = 0; i < c$.length; i++) {
     let child = c$[i];
     // Note: if we see a slot here, the nodes are guaranteed to need to be
-    // composed here. This is because if there is redistribution, it has 
+    // composed here. This is because if there is redistribution, it has
     // already been handled by this point.
     if (this._isInsertionPoint(child)) {
       let flattenedNodes = child.__shady.flattenedNodes;
@@ -372,12 +373,12 @@ ShadyRoot.prototype._nameForSlot = function(slot) {
 }
 
 /**
- * Slots are kept in an ordered list. Slots with the same name 
+ * Slots are kept in an ordered list. Slots with the same name
  * are sorted here by tree order.
  */
 ShadyRoot.prototype._sortSlots = function(slots) {
-  // NOTE: Cannot use `compareDocumentPosition` because it's not polyfilled, 
-  // but the code here could be used to polyfill the preceeding/following info 
+  // NOTE: Cannot use `compareDocumentPosition` because it's not polyfilled,
+  // but the code here could be used to polyfill the preceeding/following info
   // in `compareDocumentPosition`.
   return slots.sort((a, b) => {
     let listA = ancestorList(a);
@@ -412,8 +413,8 @@ function contains(container, node) {
 }
 
 /**
- * Removes from tracked slot data any slots contained within `container` and 
- * then updates the tracked data (_slotList and _slotMap). 
+ * Removes from tracked slot data any slots contained within `container` and
+ * then updates the tracked data (_slotList and _slotMap).
  * Any removed slots also have their `assignedNodes` removed from comopsed dom.
  */
 ShadyRoot.prototype._removeContainedSlots = function(container) {
@@ -498,8 +499,12 @@ ShadyRoot.prototype.removeEventListener = function(type, fn, optionsOrCapture) {
 }
 
 ShadyRoot.prototype.getElementById = function(id) {
-  const el = this.querySelector(`#${id}`);
-  return (el instanceof HTMLElement) ? el : null;
+  let result = mutation.query(this, function(n) {
+    return n.id == id;
+  }, function(n) {
+    return Boolean(n);
+  })[0];
+  return result || null;
 }
 
 /**

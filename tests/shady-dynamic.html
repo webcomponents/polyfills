@@ -114,6 +114,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     defineTestElement('x-test');
   </script>
 
+  <template id="x-test-esc">
+    <x-rereproject><span id="projected/escape">projected with id that needs escaping</span></x-rereproject>
+  </template>
+
+  <script>
+    defineTestElement('x-test-esc');
+  </script>
+
   <template id="x-test-no-distribute">
     <span>Local dom without insertion point.</span>
   </template>
@@ -244,6 +252,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 <x-test></x-test>
 
+<x-test-esc></x-test-esc>
+
 <div class="accessors">
   <x-test-no-distribute><div class="child"></div></x-test-no-distribute>
   <x-project><div class="child"></div></x-project>
@@ -321,9 +331,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   suite('ShadyDOM', function() {
 
   var testElement;
+  var testElementEsc;
 
   suiteSetup(function() {
     testElement = document.querySelector('x-test');
+    testElementEsc = document.querySelector('x-test-esc');
   });
 
   test('mode `open` exposes `.shadowRoot`', function() {
@@ -370,6 +382,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     assert.equal(projected.textContent, 'projected');
   });
 
+  test('shadowRoot.getElementByIdEscStr', function() {
+    var projected = testElementEsc.shadowRoot.getElementById('projected/escape');
+    assert.equal(projected.textContent, 'projected with id that needs escaping');
+  });
+
   test('element.querySelector', function() {
     var projected = testElement.shadowRoot.querySelector('#projected');
     var rere = testElement.shadowRoot.querySelector('x-rereproject');
@@ -396,6 +413,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
   test('document.getElementById', function() {
     var p2 = document.getElementById('projected');
+    assert.isNull(p2);
+  });
+
+  test('document.getElementByIdEscStr', function() {
+    var p2 = document.getElementById('projected/escape');
     assert.isNull(p2);
   })
 
