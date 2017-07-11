@@ -1,5 +1,9 @@
 import {proxy as DocumentProxy} from '../Environment/Document.js';
-import {descriptors as NodeDesc, proxy as NodeProxy} from '../Environment/Node.js';
+import {
+  descriptors as NodeDesc,
+  prototype as NodeProto,
+  proxy as NodeProxy,
+} from '../Environment/Node.js';
 import CustomElementInternals from '../CustomElementInternals.js';
 import * as Utilities from '../Utilities.js';
 
@@ -10,7 +14,7 @@ export default function(internals) {
   // `Node#nodeValue` is implemented on `Attr`.
   // `Node#textContent` is implemented on `Attr`, `Element`.
 
-  Utilities.setPropertyUnchecked(Node.prototype, 'insertBefore',
+  Utilities.setPropertyUnchecked(NodeProto, 'insertBefore',
     /**
      * @this {Node}
      * @param {!Node} node
@@ -48,7 +52,7 @@ export default function(internals) {
       return nativeResult;
     });
 
-  Utilities.setPropertyUnchecked(Node.prototype, 'appendChild',
+  Utilities.setPropertyUnchecked(NodeProto, 'appendChild',
     /**
      * @this {Node}
      * @param {!Node} node
@@ -85,7 +89,7 @@ export default function(internals) {
       return nativeResult;
     });
 
-  Utilities.setPropertyUnchecked(Node.prototype, 'cloneNode',
+  Utilities.setPropertyUnchecked(NodeProto, 'cloneNode',
     /**
      * @this {Node}
      * @param {boolean=} deep
@@ -103,7 +107,7 @@ export default function(internals) {
       return clone;
     });
 
-  Utilities.setPropertyUnchecked(Node.prototype, 'removeChild',
+  Utilities.setPropertyUnchecked(NodeProto, 'removeChild',
     /**
      * @this {Node}
      * @param {!Node} node
@@ -120,7 +124,7 @@ export default function(internals) {
       return nativeResult;
     });
 
-  Utilities.setPropertyUnchecked(Node.prototype, 'replaceChild',
+  Utilities.setPropertyUnchecked(NodeProto, 'replaceChild',
     /**
      * @this {Node}
      * @param {!Node} nodeToInsert
@@ -206,7 +210,7 @@ export default function(internals) {
   }
 
   if (NodeDesc.textContent && NodeDesc.textContent.get) {
-    patch_textContent(Node.prototype, NodeDesc.textContent);
+    patch_textContent(NodeProto, NodeDesc.textContent);
   } else {
     internals.addPatch(function(element) {
       patch_textContent(element, {

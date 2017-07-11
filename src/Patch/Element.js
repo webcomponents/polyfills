@@ -1,6 +1,13 @@
 import {proxy as DocumentProxy} from '../Environment/Document.js';
-import {descriptors as ElementDesc, proxy as ElementProxy} from '../Environment/Element.js';
-import {descriptors as HTMLElementDesc} from '../Environment/HTMLElement.js';
+import {
+  descriptors as ElementDesc,
+  prototype as ElementProto,
+  proxy as ElementProxy,
+} from '../Environment/Element.js';
+import {
+  descriptors as HTMLElementDesc,
+  prototype as HTMLElementProto,
+} from '../Environment/HTMLElement.js';
 import {proxy as HTMLTemplateElementProxy} from '../Environment/HTMLTemplateElement.js';
 import {proxy as NodeProxy} from '../Environment/Node.js';
 import CustomElementInternals from '../CustomElementInternals.js';
@@ -15,7 +22,7 @@ import PatchChildNode from './Interface/ChildNode.js';
  */
 export default function(internals) {
   if (ElementDesc.attachShadow) {
-    Utilities.setPropertyUnchecked(Element.prototype, 'attachShadow',
+    Utilities.setPropertyUnchecked(ElementProto, 'attachShadow',
       /**
        * @this {Element}
        * @param {!{mode: string}} init
@@ -79,9 +86,9 @@ export default function(internals) {
   }
 
   if (ElementDesc.innerHTML && ElementDesc.innerHTML.get) {
-    patch_innerHTML(Element.prototype, ElementDesc.innerHTML);
+    patch_innerHTML(ElementProto, ElementDesc.innerHTML);
   } else if (HTMLElementDesc.innerHTML && HTMLElementDesc.innerHTML.get) {
-    patch_innerHTML(HTMLElement.prototype, HTMLElementDesc.innerHTML);
+    patch_innerHTML(HTMLElementProto, HTMLElementDesc.innerHTML);
   } else {
     // In this case, `innerHTML` has no exposed getter but still exists. Rather
     // than using the environment proxy, we have to get and set it directly.
@@ -125,7 +132,7 @@ export default function(internals) {
   }
 
 
-  Utilities.setPropertyUnchecked(Element.prototype, 'setAttribute',
+  Utilities.setPropertyUnchecked(ElementProto, 'setAttribute',
     /**
      * @this {Element}
      * @param {string} name
@@ -143,7 +150,7 @@ export default function(internals) {
       internals.attributeChangedCallback(this, name, oldValue, newValue, null);
     });
 
-  Utilities.setPropertyUnchecked(Element.prototype, 'setAttributeNS',
+  Utilities.setPropertyUnchecked(ElementProto, 'setAttributeNS',
     /**
      * @this {Element}
      * @param {?string} namespace
@@ -162,7 +169,7 @@ export default function(internals) {
       internals.attributeChangedCallback(this, name, oldValue, newValue, namespace);
     });
 
-  Utilities.setPropertyUnchecked(Element.prototype, 'removeAttribute',
+  Utilities.setPropertyUnchecked(ElementProto, 'removeAttribute',
     /**
      * @this {Element}
      * @param {string} name
@@ -180,7 +187,7 @@ export default function(internals) {
       }
     });
 
-  Utilities.setPropertyUnchecked(Element.prototype, 'removeAttributeNS',
+  Utilities.setPropertyUnchecked(ElementProto, 'removeAttributeNS',
     /**
      * @this {Element}
      * @param {?string} namespace
@@ -229,20 +236,20 @@ export default function(internals) {
   }
 
   if (HTMLElementDesc.insertAdjacentElement && HTMLElementDesc.insertAdjacentElement.value) {
-    patch_insertAdjacentElement(HTMLElement.prototype, HTMLElementDesc.insertAdjacentElement.value);
+    patch_insertAdjacentElement(HTMLElementProto, HTMLElementDesc.insertAdjacentElement.value);
   } else if (ElementDesc.insertAdjacentElement && ElementDesc.insertAdjacentElement.value) {
-    patch_insertAdjacentElement(Element.prototype, ElementDesc.insertAdjacentElement.value);
+    patch_insertAdjacentElement(ElementProto, ElementDesc.insertAdjacentElement.value);
   } else {
     console.warn('Custom Elements: `Element#insertAdjacentElement` was not patched.');
   }
 
 
-  PatchParentNode(internals, Element.prototype, {
+  PatchParentNode(internals, ElementProto, {
     prepend: (ElementDesc.prepend || {}).value,
     append: (ElementDesc.append || {}).value,
   });
 
-  PatchChildNode(internals, Element.prototype, {
+  PatchChildNode(internals, ElementProto, {
     before: (ElementDesc.before || {}).value,
     after: (ElementDesc.after || {}).value,
     replaceWith: (ElementDesc.replaceWith || {}).value,

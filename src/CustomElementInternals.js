@@ -1,5 +1,5 @@
 import {proxy as ElementProxy} from './Environment/Element.js';
-import {proxy as NodeProxy} from './Environment/Node.js';
+import {constructor as NodeCtor, proxy as NodeProxy} from './Environment/Node.js';
 import * as Utilities from './Utilities.js';
 import CEState from './CustomElementState.js';
 
@@ -181,7 +181,7 @@ export default class CustomElementInternals {
         // the `import` property, specifically this is *not* a Document.
         const importNode = /** @type {?Node} */ (element.import);
 
-        if (importNode instanceof Node && importNode.readyState === 'complete') {
+        if (importNode instanceof NodeCtor && importNode.readyState === 'complete') {
           importNode.__CE_isImportDocument = true;
 
           // Connected links are associated with the registry.

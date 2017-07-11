@@ -1,4 +1,8 @@
-import {descriptors as DocumentDesc, proxy as DocumentProxy} from '../Environment/Document.js';
+import {
+  descriptors as DocumentDesc,
+  prototype as DocumentProto,
+  proxy as DocumentProxy,
+} from '../Environment/Document.js';
 import CustomElementInternals from '../CustomElementInternals.js';
 import * as Utilities from '../Utilities.js';
 
@@ -8,7 +12,7 @@ import PatchParentNode from './Interface/ParentNode.js';
  * @param {!CustomElementInternals} internals
  */
 export default function(internals) {
-  Utilities.setPropertyUnchecked(Document.prototype, 'createElement',
+  Utilities.setPropertyUnchecked(DocumentProto, 'createElement',
     /**
      * @this {Document}
      * @param {string} localName
@@ -29,7 +33,7 @@ export default function(internals) {
       return result;
     });
 
-  Utilities.setPropertyUnchecked(Document.prototype, 'importNode',
+  Utilities.setPropertyUnchecked(DocumentProto, 'importNode',
     /**
      * @this {Document}
      * @param {!Node} node
@@ -49,7 +53,7 @@ export default function(internals) {
 
   const NS_HTML = "http://www.w3.org/1999/xhtml";
 
-  Utilities.setPropertyUnchecked(Document.prototype, 'createElementNS',
+  Utilities.setPropertyUnchecked(DocumentProto, 'createElementNS',
     /**
      * @this {Document}
      * @param {?string} namespace
@@ -71,7 +75,7 @@ export default function(internals) {
       return result;
     });
 
-  PatchParentNode(internals, Document.prototype, {
+  PatchParentNode(internals, DocumentProto, {
     prepend: (DocumentDesc.prepend || {}).value,
     append: (DocumentDesc.append || {}).value,
   });
