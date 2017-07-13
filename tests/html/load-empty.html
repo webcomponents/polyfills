@@ -33,12 +33,14 @@
       window.importLoaded = importLoadedWithCallback();
     </script>
     <link rel="import" href="imports/load-empty.html" onload="importLoaded(event)">
+    <link rel="import" href="imports/empty-script.html" onload="importLoaded(event)">
+    <link rel="import" href="imports/empty-style.html" onload="importLoaded(event)">
 
   </head>
   <body>
     <script>
       test('load empty resource', function() {
-        chai.assert.equal(loadEvents, 1, 'expected # of load events');
+        chai.assert.equal(loadEvents, 3, 'expected # of load events');
       });
       test('load empty resource asynchronously', function(done) {
         loadEvents = 0;
