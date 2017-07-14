@@ -1,0 +1,201 @@
+<!doctype html>
+<!--
+@license
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="../../webcomponents-platform/webcomponents-platform.js"></script>
+  <script src="../../template/template.js"></script>
+  <script>
+    ShadyDOM = {force: true};
+    if (window.customElements) {
+      customElements.forcePolyfill = true;
+    }
+  </script>
+  <script src="../shadydom.min.js"></script>
+  <script src="../../custom-elements/custom-elements.min.js"></script>
+  <script>
+    // Ensure customElements are updated when document is ready.
+    if (customElements.polyfillWrapFlushCallback) {
+      customElements.polyfillWrapFlushCallback(function(cb) {
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', cb);
+        } else {
+          cb();
+        }
+      });
+    }
+  </script>
+
+  <script src="../../web-component-tester/browser.js"></script>
+</head>
+<body>
+
+  <script>
+    window.defineTestElement = function(name, connected) {
+      var template = document.querySelector('#' + name);
+      // es5 compat class
+      function Klass() {
+        const self = (window.Reflect && Reflect.construct)
+          ? Reflect.construct(HTMLElement, [], this.constructor || Klass)
+          : HTMLElement.call(this);
+        return self;
+      }
+
+      Klass.prototype = Object.create(HTMLElement.prototype, {
+        'constructor': {
+          value: Klass,
+          configurable: true,
+          writable: true
+        }
+      });
+
+      Klass.prototype.connectedCallback = function() {
+        if (!this._initialized) {
+          this._initialized = true;
+          if (connected) {
+            connected.call(this);
+          }
+          if (template) {
+            this.attachShadow({mode: 'open'});
+            this.shadowRoot.appendChild(document.importNode(template.content, true));
+          }
+        }
+      }
+
+      customElements.define(name, Klass);
+    }
+
+    window.makeFocusable = function() {
+      this.setAttribute('tabIndex', -1);
+    }
+  </script>
+
+  <template id="x-test"><div>before</div><slot></slot><div>after</div></template>
+  <script>
+    defineTestElement('x-test');
+  </script>
+
+<script>
+
+  'use strict';
+
+  suite('nativeTree', function() {
+
+    let el;
+
+    setup(function() {
+      el = document.createElement('x-test');
+      let d = document.createElement('div');
+      d.textContent = 'content';
+      el.appendChild(d);
+      document.body.appendChild(el);
+      ShadyDOM.flush();
+    });
+
+    teardown(function() {
+      el.parentNode.removeChild(el);
+    });
+
+
+    test('node accessors', function() {
+      let srFirst = el.shadowRoot.firstChild;
+      let srLast = el.shadowRoot.lastChild;
+      let content = el.firstChild;
+      assert.equal(ShadyDOM.nativeTree.firstChild(el), srFirst);
+      assert.equal(ShadyDOM.nativeTree.lastChild(el), srLast);
+      assert.equal(ShadyDOM.nativeTree.parentNode(srFirst), el);
+      assert.equal(ShadyDOM.nativeTree.nextSibling(srFirst), content);
+      assert.equal(ShadyDOM.nativeTree.nextSibling(content), srLast);
+      assert.equal(ShadyDOM.nativeTree.previousSibling(srLast), content);
+      assert.equal(ShadyDOM.nativeTree.previousSibling(content), srFirst);
+      assert.deepEqual(ShadyDOM.nativeTree.childNodes(el), [srFirst, content, srLast])
+    });
+
+    test('element accessors', function() {
+      let srFirst = el.shadowRoot.firstChild;
+      let srLast = el.shadowRoot.lastChild;
+      let content = el.firstChild;
+      assert.equal(ShadyDOM.nativeTree.firstElementChild(el), srFirst);
+      assert.equal(ShadyDOM.nativeTree.lastElementChild(el), srLast);
+      assert.equal(ShadyDOM.nativeTree.parentElement(srFirst), el);
+      assert.equal(ShadyDOM.nativeTree.nextElementSibling(srFirst), content);
+      assert.equal(ShadyDOM.nativeTree.nextElementSibling(content), srLast);
+      assert.equal(ShadyDOM.nativeTree.previousElementSibling(srLast), content);
+      assert.equal(ShadyDOM.nativeTree.previousElementSibling(content), srFirst);
+      assert.deepEqual(ShadyDOM.nativeTree.children(el), [srFirst, content, srLast])
+    });
+
+    test('textConent', function() {
+      assert.equal(ShadyDOM.nativeTree.textContent(el), 'beforecontentafter');
+    });
+
+    test('innerHTML', function() {
+      assert.equal(ShadyDOM.nativeTree.innerHTML(el), '<div>before</div><div>content</div><div>after</div>');
+    });
+
+  });
+
+  suite('nativeMethods', function() {
+
+    let el;
+
+    setup(function() {
+      el = document.createElement('x-test');
+      let d = document.createElement('div');
+      d.textContent = 'content';
+      el.appendChild(d);
+      document.body.appendChild(el);
+      ShadyDOM.flush();
+    });
+
+    teardown(function() {
+      el.parentNode.removeChild(el);
+    });
+
+    test('appendChild', function() {
+      let d = document.createElement('div');
+      ShadyDOM.nativeMethods.appendChild.call(el, d);
+      assert.equal(ShadyDOM.nativeTree.lastChild(el), d);
+    });
+
+    test('insertBefore', function() {
+      let d = document.createElement('div');
+      let srFirst = el.shadowRoot.firstChild;
+      ShadyDOM.nativeMethods.insertBefore.call(el, d, srFirst);
+      assert.equal(ShadyDOM.nativeTree.firstChild(el), d);
+    });
+
+    test('removeChild', function() {
+      let srFirst = el.shadowRoot.firstChild;
+      let srLast = el.shadowRoot.lastChild;
+      let content = el.firstChild;
+      ShadyDOM.nativeMethods.removeChild.call(el, srFirst);
+      ShadyDOM.nativeMethods.removeChild.call(el, content);
+      ShadyDOM.nativeMethods.removeChild.call(el, srLast);
+      assert.equal(ShadyDOM.nativeTree.childNodes(el).length, 0);
+    });
+
+    test('querySelector/querySelectorAll', function() {
+      let srFirst = el.shadowRoot.firstChild;
+      let srLast = el.shadowRoot.lastChild;
+      let content = el.firstChild;
+      assert.equal(ShadyDOM.nativeMethods.querySelector.call(el, 'div'), srFirst);
+      let qsa = ShadyDOM.nativeMethods.querySelectorAll.call(el, '*');
+      qsa = Array.prototype.slice.call(qsa);
+      assert.deepEqual(qsa,[srFirst, content, srLast]);
+    });
+
+  });
+
+</script>
+
+</body>
+</html>

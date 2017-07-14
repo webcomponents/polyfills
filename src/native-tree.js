@@ -93,16 +93,19 @@ export function innerHTML(node) {
 }
 
 export function textContent(node) {
-  if (node.nodeType !== Node.ELEMENT_NODE) {
-    return node.nodeValue;
+  switch (node.nodeType) {
+    case Node.ELEMENT_NODE:
+    case Node.DOCUMENT_FRAGMENT_NODE:
+      let textWalker = document.createTreeWalker(node, NodeFilter.SHOW_TEXT,
+        null, false);
+      let content = '', n;
+      while ( (n = textWalker.nextNode()) ) {
+        // TODO(sorvell): can't use textContent since we patch it on Node.prototype!
+        // However, should probably patch it only on element.
+        content += n.nodeValue;
+      }
+      return content;
+    default:
+      return node.nodeValue;
   }
-  let textWalker = document.createTreeWalker(node, NodeFilter.SHOW_TEXT,
-    null, false);
-  let content = '', n;
-  while ( (n = textWalker.nextNode()) ) {
-    // TODO(sorvell): can't use textContent since we patch it on Node.prototype!
-    // However, should probably patch it only on element.
-    content += n.nodeValue;
-  }
-  return content;
 }

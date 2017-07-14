@@ -249,12 +249,16 @@ let InsideAccessors = {
      * @param {string} text
      */
     set(text) {
-      if (this.nodeType !== Node.ELEMENT_NODE) {
-        // TODO(sorvell): can't do this if patch nodeValue.
-        this.nodeValue = text;
-      } else {
-        clearNode(this);
-        this.appendChild(document.createTextNode(text));
+      switch (this.nodeType) {
+        case Node.ELEMENT_NODE:
+        case Node.DOCUMENT_FRAGMENT_NODE:
+          clearNode(this);
+          this.appendChild(document.createTextNode(text));
+          break;
+        default:
+          // TODO(sorvell): can't do this if patch nodeValue.
+          this.nodeValue = text;
+          break;
       }
     },
     configurable: true
