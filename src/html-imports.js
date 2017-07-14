@@ -29,6 +29,20 @@
     });
   }
 
+  /**
+   * @param {Array|NodeList|NamedNodeMap} list
+   * @param {!Function} callback
+   * @param {boolean=} inverseOrder
+   */
+  const forEach = (list, callback, inverseOrder) => {
+    const length = list ? list.length : 0;
+    const increment = inverseOrder ? -1 : 1;
+    let i = inverseOrder ? length - 1 : 0;
+    for (; i < length && i >= 0; i = i + increment) {
+      callback(list[i], i);
+    }
+  };
+
   /********************* path fixup *********************/
   const ABS_URL_TEST = /(^\/)|(^#)|(^[\w-\d]*:)/;
   const CSS_URL_REGEXP = /(url\()([^)]*)(\))/g;
@@ -212,9 +226,7 @@
     loadImports(doc) {
       const links = /** @type {!NodeList<!HTMLLinkElement>} */
         (doc.querySelectorAll(importSelector));
-      for (let i = 0, l = links.length; i < l; i++) {
-        this.loadImport(links[i]);
-      }
+      forEach(links, link => this.loadImport(link));
     }
 
     /**
@@ -301,7 +313,7 @@
         (content.querySelectorAll(importDependenciesSelector));
       // For source map hints.
       let inlineScriptIndex = 0;
-      for (let i = 0, l = n$.length, n; i < l && (n = n$[i]); i++) {
+      forEach(n$, n => {
         // Listen for load/error events, then fix urls.
         whenElementLoaded(n);
         Path.fixUrls(n, url);
@@ -317,7 +329,7 @@
           n.textContent = '';
           inlineScriptIndex++;
         }
-      }
+      });
       return content;
     }
 
@@ -372,7 +384,7 @@
     flatten(doc) {
       const n$ = /** @type {!NodeList<!HTMLLinkElement>} */
         (doc.querySelectorAll(importSelector));
-      for (let i = 0, l = n$.length, n; i < l && (n = n$[i]); i++) {
+      forEach(n$, n => {
         const imp = this.documents[n.href];
         n.import = /** @type {!Document} */ (imp);
         if (imp && imp.nodeType === Node.DOCUMENT_FRAGMENT_NODE) {
@@ -385,7 +397,7 @@
           this.flatten(imp);
           n.appendChild(imp);
         }
-      }
+      });
     }
 
     /**
@@ -407,9 +419,7 @@
             (document.createElement('script'));
           // Remove import-dependency attribute to avoid double cloning.
           s.removeAttribute(importDependencyAttr);
-          for (let j = 0, ll = s.attributes.length; j < ll; j++) {
-            clone.setAttribute(s.attributes[j].name, s.attributes[j].value);
-          }
+          forEach(s.attributes, attr => clone.setAttribute(attr.name, attr.value));
           // Update currentScript and replace original with clone script.
           currentScript = clone;
           s.parentNode.replaceChild(clone, s);
@@ -442,7 +452,7 @@
       // If there is one <link rel=stylesheet> imported, we must move all imported
       // links and styles to <head>.
       const needsMove = isIE && !!document.querySelector(disabledLinkSelector);
-      for (let i = 0, l = s$.length, s; i < l && (s = s$[i]); i++) {
+      forEach(s$, s => {
         // Listen for load/error events, remove selector once is done loading.
         whenElementLoaded(s, () => {
           s.removeAttribute(importDependencyAttr);
@@ -472,7 +482,7 @@
           // Enable the loading of <link rel=stylesheet>.
           s.removeAttribute('type');
         }
-      }
+      });
     }
 
     /**
@@ -482,9 +492,7 @@
       const n$ = /** @type {!NodeList<!HTMLLinkElement>} */
         (document.querySelectorAll(importSelector));
       // Inverse order to have events firing bottom-up.
-      for (let i = n$.length - 1, n; i >= 0 && (n = n$[i]); i--) {
-        this.fireEventIfNeeded(n);
-      }
+      forEach(n$, n => this.fireEventIfNeeded(n), true);
     }
 
     /**
@@ -510,16 +518,8 @@
      * @param {Array<MutationRecord>} mutations
      */
     handleMutations(mutations) {
-      for (let i = 0; i < mutations.length; i++) {
-        const m = mutations[i];
-        if (!m.addedNodes) {
-          continue;
-        }
-        for (let ii = 0; ii < m.addedNodes.length; ii++) {
-          const elem = m.addedNodes[ii];
-          if (!elem || elem.nodeType !== Node.ELEMENT_NODE) {
-            continue;
-          }
+      forEach(mutations, m => forEach(m.addedNodes, elem => {
+        if (elem && elem.nodeType === Node.ELEMENT_NODE) {
           // NOTE: added scripts are not updating currentScript in IE.
           if (isImportLink(elem)) {
             this.loadImport( /** @type {!HTMLLinkElement} */ (elem));
@@ -527,7 +527,7 @@
             this.loadImports( /** @type {!Element} */ (elem));
           }
         }
-      }
+      }));
     }
   }
 
@@ -615,13 +615,11 @@
       callback();
       return;
     }
-    for (let i = 0, l = imports.length, imp; i < l && (imp = imports[i]); i++) {
-      whenElementLoaded(imp, () => {
-        if (--pending === 0) {
-          callback();
-        }
-      });
-    }
+    forEach(imports, imp => whenElementLoaded(imp, () => {
+      if (--pending === 0) {
+        callback();
+      }
+    }));
   }
 
   /**
@@ -666,11 +664,11 @@
     // or have .import defined.
     const imps = /** @type {!NodeList<!HTMLLinkElement>} */
       (document.querySelectorAll(importSelector));
-    for (let i = 0, l = imps.length, imp; i < l && (imp = imps[i]); i++) {
+    forEach(imps, imp => {
       if (!imp.import || imp.import.readyState !== 'loading') {
         imp['__loaded'] = true;
       }
-    }
+    });
     // Listen for load/error events to capture dynamically added scripts.
     /**
      * @type {!function(!Event)}
