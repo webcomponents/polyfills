@@ -24,6 +24,9 @@ import {parentNode} from './native-tree.js';
  * @param {Node=} ref_node
  */
 export function insertBefore(parent, node, ref_node) {
+  if (node === parent) {
+    throw Error(`Failed to execute 'appendChild' on 'Node': The new child element contains the parent.`);
+  }
   if (ref_node) {
     let p = ref_node.__shady && ref_node.__shady.parentNode;
     if ((p !== undefined && p !== parent) ||
@@ -51,7 +54,7 @@ export function insertBefore(parent, node, ref_node) {
   }
   if (utils.isTrackingLogicalChildNodes(parent)) {
     logicalTree.recordInsertBefore(node, parent, ref_node);
-    // when inserting into a host with a shadowRoot with slot, use 
+    // when inserting into a host with a shadowRoot with slot, use
     // `shadowRoot._asyncRender()` via `attach-shadow` module
     if (hasShadowRootWithSlot(parent)) {
       parent.__shady.root._asyncRender();
@@ -64,7 +67,7 @@ export function insertBefore(parent, node, ref_node) {
   }
   if (!preventNativeInsert) {
     // if adding to a shadyRoot, add to host instead
-    let container = utils.isShadyRoot(parent) ? 
+    let container = utils.isShadyRoot(parent) ?
       /** @type {ShadowRoot} */(parent).host : parent;
     // if ref_node, get the ref_node that's actually in composed dom.
     if (ref_node) {
@@ -136,10 +139,10 @@ export function removeChild(parent, node) {
       /** @type {ShadowRoot} */(parent).host :
       parent;
     // not guaranteed to physically be in container; e.g.
-    // (1) if parent has a shadyRoot, element may or may not at distributed 
+    // (1) if parent has a shadyRoot, element may or may not at distributed
     // location (could be undistributed)
     // (2) if parent is a slot, element may not ben in composed dom
-    if (!(parent.__shady.root || node.localName === 'slot') || 
+    if (!(parent.__shady.root || node.localName === 'slot') ||
       (container === parentNode(node))) {
       nativeMethods.removeChild.call(container, node);
     }
@@ -176,7 +179,7 @@ function firstComposedNode(node) {
   let composed = node;
   if (node && node.localName === 'slot') {
     let flattened = node.__shady.flattenedNodes;
-    composed = flattened && flattened.length ? flattened[0] : 
+    composed = flattened && flattened.length ? flattened[0] :
       firstComposedNode(node.nextSibling);
   }
   return composed;
@@ -191,8 +194,8 @@ function hasShadowRootWithSlot(node) {
  * Should be called whenever an attribute changes. If the `slot` attribute
  * changes, provokes rendering if necessary. If a `<slot>` element's `name`
  * attribute changes, updates the root's slot map and renders.
- * @param {Node} node 
- * @param {string} name 
+ * @param {Node} node
+ * @param {string} name
  */
 function distributeAttributeChange(node, name) {
   if (name === 'slot') {
