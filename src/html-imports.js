@@ -547,8 +547,10 @@
   const whenElementLoaded = (element, callback) => {
     if (element['__loaded']) {
       callback && callback();
-    } else if (element.localName === 'script' && !element.src) {
-      // Inline scripts don't trigger load/error events, consider them already loaded.
+    } else if ((element.localName === 'script' && !element.src) ||
+      (element.localName === 'style' && !element.firstChild)) {
+      // Inline scripts and empty styles don't trigger load/error events,
+      // consider them already loaded.
       element['__loaded'] = true;
       callback && callback();
     } else {
