@@ -178,7 +178,7 @@ function hasCachedOwnerRoot(node) {
 function firstComposedNode(node) {
   let composed = node;
   if (node && node.localName === 'slot') {
-    let flattened = node.__shady.flattenedNodes;
+    let flattened = node.__shady && node.__shady.flattenedNodes;
     composed = flattened && flattened.length ? flattened[0] :
       firstComposedNode(node.nextSibling);
   }
