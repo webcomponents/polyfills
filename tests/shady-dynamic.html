@@ -249,6 +249,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   })();
   </script>
 
+<template id="insertBeforeSlot">
+  <div id="slotHost">
+    <slot></slot>
+  </div>
+</template>
 
 <x-test></x-test>
 
@@ -523,6 +528,17 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     s.textContent = 'Added2';
     rere.insertBefore(s, ref);
     assert.equal(testElement.shadowRoot.querySelector('#added2'), s);
+  });
+
+  test('insertBefore before a <slot> in light', function() {
+    var template = document.querySelector('template#insertBeforeSlot');
+    var frag = template.content.cloneNode(true);
+    var div = frag.querySelector('div#slotHost');
+    var slot = div.firstElementChild;
+    document.body.appendChild(frag);
+    var el = document.createElement('span');
+    div.insertBefore(el, slot);
+    div.parentNode.removeChild(div);
   });
 
   test('removeChild (light)', function() {
