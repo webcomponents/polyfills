@@ -45,9 +45,9 @@ export default class CustomElementRegistry {
 
     /**
      * @private
-     * @type {!Array<string>}
+     * @type {!Array<!CustomElementDefinition>}
      */
-    this._unflushedLocalNames = [];
+    this._pendingDefinitions = [];
 
     /**
      * @private
@@ -120,9 +120,7 @@ export default class CustomElementRegistry {
       constructionStack: [],
     };
 
-    this._internals.setDefinition(localName, definition);
-
-    this._unflushedLocalNames.push(localName);
+    this._pendingDefinitions.push(definition);
 
     // If we've already called the flush callback and it hasn't called back yet,
     // don't call it again.
@@ -137,12 +135,44 @@ export default class CustomElementRegistry {
     // happen if a flush callback keeps the function it is given and calls it
     // multiple times.
     if (this._flushPending === false) return;
-
     this._flushPending = false;
-    this._internals.patchAndUpgradeTree(document);
 
-    while (this._unflushedLocalNames.length > 0) {
-      const localName = this._unflushedLocalNames.shift();
+    const pendingDefinitions = this._pendingDefinitions;
+    const localNameToUpgradableElements = new Map();
+    for (let i = 0; i < pendingDefinitions.length; i++) {
+      localNameToUpgradableElements.set(pendingDefinitions[i].localName, []);
+    }
+
+    this._internals.patchAndUpgradeTree(document, {
+      upgrade: element => {
+        // Attempt to upgrade using *non-pending* definitions.
+        this._internals.upgradeElement(element);
+
+        // If the element was upgraded, then no pending definition applies to it.
+        if (element.__CE_state !== undefined) return;
+
+        // If there is an applicable pending definition for the element, add the
+        // element to the set of upgradable elements for that definition.
+        let upgradableElements = localNameToUpgradableElements.get(element.localName);
+        if (upgradableElements) {
+          upgradableElements.push(element);
+        }
+      },
+    });
+
+    while (pendingDefinitions.length > 0) {
+      const definition = pendingDefinitions.shift();
+      const localName = definition.localName;
+
+      this._internals.setDefinition(localName, definition);
+
+      // Attempt to upgrade all applicable elements.
+      const upgradableElements = localNameToUpgradableElements.get(definition.localName);
+      for (let i = 0; i < upgradableElements.length; i++) {
+        this._internals.upgradeElement(upgradableElements[i]);
+      }
+
+      // Resolve any promises created by `whenDefined` for the definition.
       const deferred = this._whenDefinedDeferred.get(localName);
       if (deferred) {
         deferred.resolve(undefined);
@@ -184,7 +214,7 @@ export default class CustomElementRegistry {
     // Resolve immediately only if the given local name has a definition *and*
     // the full document walk to upgrade elements with that local name has
     // already happened.
-    if (definition && this._unflushedLocalNames.indexOf(localName) === -1) {
+    if (definition && !this._pendingDefinitions.some(d => d.localName === localName)) {
       deferred.resolve(undefined);
     }
 
