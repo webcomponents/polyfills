@@ -167,9 +167,15 @@ export default class CustomElementInternals {
    *     Reactions in the popped stack are invoked.)
    *
    * @param {!Node} root
-   * @param {!Set<Node>=} visitedImports
+   * @param {{
+   *   visitedImports: (!Set<!Node>|undefined),
+   *   upgrade: (!function(!Element)|undefined),
+   * }=} options
    */
-  patchAndUpgradeTree(root, visitedImports = new Set()) {
+  patchAndUpgradeTree(root, options = {}) {
+    const visitedImports = options.visitedImports || new Set();
+    const upgrade = options.upgrade || (element => this.upgradeElement(element));
+
     const elements = [];
 
     const gatherElements = element => {
@@ -205,7 +211,7 @@ export default class CustomElementInternals {
             const clonedVisitedImports = new Set(visitedImports);
             visitedImports.delete(importNode);
 
-            this.patchAndUpgradeTree(importNode, visitedImports);
+            this.patchAndUpgradeTree(importNode, {visitedImports, upgrade});
           });
         }
       } else {
@@ -224,7 +230,7 @@ export default class CustomElementInternals {
     }
 
     for (let i = 0; i < elements.length; i++) {
-      this.upgradeElement(elements[i]);
+      upgrade(elements[i]);
     }
   }
 
