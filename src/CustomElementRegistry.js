@@ -138,6 +138,7 @@ export default class CustomElementRegistry {
     this._flushPending = false;
 
     const pendingDefinitions = this._pendingDefinitions;
+    /** @type {!Map<string, !Array<!Element>>} */
     const localNameToUpgradableElements = new Map();
     for (let i = 0; i < pendingDefinitions.length; i++) {
       localNameToUpgradableElements.set(pendingDefinitions[i].localName, []);

@@ -168,8 +168,8 @@ export default class CustomElementInternals {
    *
    * @param {!Node} root
    * @param {{
-   *   visitedImports: !Set<Node>=,
-   *   upgrade: !function(Element)=,
+   *   visitedImports: (!Set<!Node>|undefined),
+   *   upgrade: (!function(!Element)|undefined),
    * }=} options
    */
   patchAndUpgradeTree(root, options = {}) {
