@@ -271,6 +271,26 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <div id="bar3" attr="bar3" a="a">bar3</div>
 </template>
 
+<template id="x-adjacent-sibling">
+  <style>
+    div {
+      border: 20px solid black;
+    }
+    #foo2 + #foo1 {
+      border: 2px solid black;
+    }
+    #foo1 + #foo2 {
+      border: 4px solid black;
+    }
+    #foo2 + #foo3 {
+      border: 6px solid black;
+    }
+  </style>
+  <div id="foo1"></div>
+  <div id="foo2"></div>
+  <div id="foo3"></div>
+</template>
+
 <template id="svg">
   <svg class="svg" viewBox="0 0 24 24">
     <circle id="circle" r="12" cx="12" cy="12" />
@@ -314,6 +334,19 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     }
   </style>
   <a>I should be red.</a>
+</template>
+
+<template id="nth-plus-one">
+  <style>
+    .foo.bar {
+      color: rgb(255, 0, 0);
+    }
+    div:nth-child(n+1) {
+      color: rgb(0, 255, 0);
+    }
+  </style>
+  <div>1</div>
+  <div class="foo bar">2</div>
 </template>
 
 <script>
@@ -638,6 +671,18 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       document.body.removeChild(x);
     });
 
+    test('adjacent sibling selectors', function() {
+      makeElement('x-adjacent-sibling');
+      var x = document.createElement('x-adjacent-sibling');
+      x.id = 'x';
+      document.body.appendChild(x);
+      flush();
+      assertComputed(findNode('x.$.foo1'), '20px');
+      assertComputed(findNode('x.$.foo2'), '4px');
+      assertComputed(findNode('x.$.foo3'), '6px');
+      document.body.removeChild(x);
+    })
+
     test('svg classes are dynamically scoped correctly', function() {
       var x = document.createElement('x-dynamic-svg');
       x.id = 'x';
@@ -714,6 +759,15 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       document.body.appendChild(e);
       flush();
       assertComputed(e.shadowRoot.querySelector('a'), '10px');
+      document.body.removeChild(e);
+    });
+
+    test('nth-child selectors work correctly with plusses', function() {
+      makeElement('nth-plus-one');
+      var e = document.createElement('nth-plus-one');
+      document.body.appendChild(e);
+      flush();
+      assertComputed(e.shadowRoot.querySelector('.foo'), 'rgb(255, 0, 0)', 'color');
       document.body.removeChild(e);
     });
 
