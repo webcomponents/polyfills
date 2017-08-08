@@ -316,6 +316,19 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <a>I should be red.</a>
 </template>
 
+<template id="nth-plus-one">
+  <style>
+    .foo.bar {
+      color: rgb(255, 0, 0);
+    }
+    div:nth-child(n+1) {
+      color: rgb(0, 255, 0);
+    }
+  </style>
+  <div>1</div>
+  <div class="foo bar">2</div>
+</template>
+
 <script>
 (function() {
   function assertComputed(element, value, property, pseudo) {
@@ -714,6 +727,15 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       document.body.appendChild(e);
       flush();
       assertComputed(e.shadowRoot.querySelector('a'), '10px');
+      document.body.removeChild(e);
+    });
+
+    test('nth-child selectors work correctly with plusses', function() {
+      makeElement('nth-plus-one');
+      var e = document.createElement('nth-plus-one');
+      document.body.appendChild(e);
+      flush();
+      assertComputed(e.shadowRoot.querySelector('.foo'), 'rgb(255, 0, 0)', 'color');
       document.body.removeChild(e);
     });
 
