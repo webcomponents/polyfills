@@ -1,6 +1,6 @@
 {
   "name": "@webcomponents/shadycss",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Styling helpers for ShadyDOM",
   "main": "shadycss.min.js",
   "directories": {
