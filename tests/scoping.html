@@ -271,6 +271,26 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <div id="bar3" attr="bar3" a="a">bar3</div>
 </template>
 
+<template id="x-adjacent-sibling">
+  <style>
+    div {
+      border: 20px solid black;
+    }
+    #foo2 + #foo1 {
+      border: 2px solid black;
+    }
+    #foo1 + #foo2 {
+      border: 4px solid black;
+    }
+    #foo2 + #foo3 {
+      border: 6px solid black;
+    }
+  </style>
+  <div id="foo1"></div>
+  <div id="foo2"></div>
+  <div id="foo3"></div>
+</template>
+
 <template id="svg">
   <svg class="svg" viewBox="0 0 24 24">
     <circle id="circle" r="12" cx="12" cy="12" />
@@ -650,6 +670,18 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       assertComputed(findNode('x.$.bar3'), '6px');
       document.body.removeChild(x);
     });
+
+    test('adjacent sibling selectors', function() {
+      makeElement('x-adjacent-sibling');
+      var x = document.createElement('x-adjacent-sibling');
+      x.id = 'x';
+      document.body.appendChild(x);
+      flush();
+      assertComputed(findNode('x.$.foo1'), '20px');
+      assertComputed(findNode('x.$.foo2'), '4px');
+      assertComputed(findNode('x.$.foo3'), '6px');
+      document.body.removeChild(x);
+    })
 
     test('svg classes are dynamically scoped correctly', function() {
       var x = document.createElement('x-dynamic-svg');
