@@ -11,6 +11,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 import * as utils from './utils.js';
 import * as nativeMethods from './native-methods.js';
 
+/*
+Make this name unique so it is unlikely to conflict with properties on objects passed to `addEventListener`
+https://github.com/webcomponents/shadydom/issues/173
+*/
+const /** string */ eventWrappersName = `__eventWrappers${Date.now()}`;
+
 // https://github.com/w3c/webcomponents/issues/513#issuecomment-224183937
 let alwaysComposed = {
   'blur': true,
@@ -267,14 +273,14 @@ export function findListener(wrappers, node, type, capture, once, passive) {
 }
 
 /**
- * Firefox can throw on accessing __eventWrappers inside of `removeEventListener` during a selenium run
- * Try/Catch accessing __eventWrappers to work around
+ * Firefox can throw on accessing eventWrappers inside of `removeEventListener` during a selenium run
+ * Try/Catch accessing eventWrappers to work around
  * https://bugzilla.mozilla.org/show_bug.cgi?id=1353074
  */
 function getEventWrappers(eventLike) {
   let wrappers = null;
   try {
-    wrappers = eventLike.__eventWrappers;
+    wrappers = eventLike[eventWrappersName];
   } catch (e) {} // eslint-disable-line no-empty
   return wrappers;
 }
@@ -308,14 +314,14 @@ export function addEventListener(type, fnOrObj, optionsOrCapture) {
   // will be set to shadyroot for event listener
   let target = (optionsOrCapture && optionsOrCapture.__shadyTarget) || this;
 
-  let wrappers = fnOrObj.__eventWrappers;
+  let wrappers = fnOrObj[eventWrappersName];
   if (wrappers) {
     // Stop if the wrapper function has already been created.
     if (findListener(wrappers, target, type, capture, once, passive) > -1) {
       return;
     }
   } else {
-    fnOrObj.__eventWrappers = [];
+    fnOrObj[eventWrappersName] = [];
   }
 
   /**
@@ -365,7 +371,7 @@ export function addEventListener(type, fnOrObj, optionsOrCapture) {
     }
   };
   // Store the wrapper information.
-  fnOrObj.__eventWrappers.push({
+  fnOrObj[eventWrappersName].push({
     node: this,
     type: type,
     capture: capture,
@@ -415,7 +421,7 @@ export function removeEventListener(type, fnOrObj, optionsOrCapture) {
       wrapperFn = wrappers.splice(idx, 1)[0].wrapperFn;
       // Cleanup.
       if (!wrappers.length) {
-        fnOrObj.__eventWrappers = undefined;
+        fnOrObj[eventWrappersName] = undefined;
       }
     }
   }
