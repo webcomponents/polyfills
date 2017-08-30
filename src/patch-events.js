@@ -11,6 +11,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 import * as utils from './utils.js';
 import * as nativeMethods from './native-methods.js';
 
+/*
+Make this name unique so it is unlikely to conflict with properties on objects passed to `addEventListener`
+https://github.com/webcomponents/shadydom/issues/173
+*/
 const /** string */ eventWrappersName = `__eventWrappers${Date.now()}`;
 
 // https://github.com/w3c/webcomponents/issues/513#issuecomment-224183937
