@@ -352,7 +352,7 @@ export function addEventListener(type, fnOrObj, optionsOrCapture) {
         return;
       }
       // prevent non-bubbling events from triggering bubbling handlers on shadowroot, but only if not in capture phase
-      if (e.eventPhase !== Event.CAPTURING_PHASE && !e.bubbles && e.target !== target) {
+      if (e.eventPhase !== Event.CAPTURING_PHASE && !e.bubbles && e.target !== target && !(target instanceof Window)) {
         return;
       }
       let ret = (typeof fnOrObj === 'object' && fnOrObj.handleEvent) ?
