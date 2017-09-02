@@ -11,6 +11,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 import * as utils from './utils.js';
 import {getInnerHTML} from './innerHTML.js';
 import * as nativeTree from './native-tree.js';
+import {contains as nativeContains} from './native-methods.js';
 
 function clearNode(node) {
   while (node.firstChild) {
@@ -56,7 +57,7 @@ function activeElementForNode(node) {
     // element is not a descendant of the host (in the composed tree),
     // then it doesn't have an active element.
     if (node.host === active ||
-        !node.host.contains(active)) {
+        !nativeContains.call(node.host, active)) {
       return null;
     }
   }

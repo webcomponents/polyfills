@@ -10,7 +10,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 import * as utils from './utils.js';
 import {flush} from './flush.js';
-import {dispatchEvent} from './native-methods.js';
+import {dispatchEvent, contains as nativeContains} from './native-methods.js';
 import * as mutation from './logical-mutation.js';
 import {ActiveElementAccessor, ShadowRootAccessor, patchAccessors} from './patch-accessors.js';
 import {addEventListener, removeEventListener} from './patch-events.js';
@@ -73,15 +73,21 @@ let nodeMixin = {
     return mutation.getRootNode(this, options);
   },
 
+  contains(node) {
+    return utils.contains(this, node);
+  },
+
   /**
    * @this {Node}
    */
   get isConnected() {
     // Fast path for distributed nodes.
     const ownerDocument = this.ownerDocument;
-    if (ownerDocument && ownerDocument.contains && ownerDocument.contains(this)) return true;
+    if (ownerDocument && ownerDocument.contains &&
+      nativeContains.call(ownerDocument, this)) return true;
     const ownerDocumentElement = ownerDocument.documentElement;
-    if (ownerDocumentElement && ownerDocumentElement.contains && ownerDocumentElement.contains(this)) return true;
+    if (ownerDocumentElement && ownerDocumentElement.contains &&
+      nativeContains.call(ownerDocumentElement, this)) return true;
 
     let node = this;
     while (node && !(node instanceof Document)) {
