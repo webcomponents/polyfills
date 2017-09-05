@@ -74,7 +74,8 @@ function handler(mxns) {
         newScope = getIsExtends(host).is;
         if (currentScope === newScope) {
           // make sure all the subtree elements are scoped correctly
-          let unscoped = window['ShadyDOM']['nativeMethods']['querySelectorAll'].call(n, `:not(.${currentScope})`);
+          let unscoped = window['ShadyDOM']['nativeMethods']['querySelectorAll'].call(
+            n, `:not(.${StyleTransformer.SCOPE_NAME})`);
           unscoped.forEach((n) => {
             StyleTransformer.element(n, currentScope);
           });
