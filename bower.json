@@ -25,7 +25,7 @@
     "tests"
   ],
   "devDependencies": {
-    "web-component-tester": "^6",
+    "web-component-tester": "^6.1.5",
     "template": "webcomponents/template#^1",
     "custom-elements": "webcomponents/custom-elements#^1",
     "webcomponents-platform": "webcomponents/webcomponents-platform#^1",
