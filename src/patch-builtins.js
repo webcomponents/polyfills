@@ -83,12 +83,12 @@ let nodeMixin = {
   get isConnected() {
     // Fast path for distributed nodes.
     const ownerDocument = this.ownerDocument;
-    if (ownerDocument && ownerDocument.contains &&
-      nativeContains.call(ownerDocument, this)) return true;
-    const ownerDocumentElement = ownerDocument.documentElement;
-    if (ownerDocumentElement && ownerDocumentElement.contains &&
-      nativeContains.call(ownerDocumentElement, this)) return true;
-
+    if (utils.hasDocumentContains && nativeContains.call(ownerDocument, this)) {
+      return true;
+    }
+    if (nativeContains.call(ownerDocument.documentElement, this)) {
+      return true;
+    }
     let node = this;
     while (node && !(node instanceof Document)) {
       node = node.parentNode || (node instanceof ShadyRoot ? /** @type {ShadowRoot} */(node).host : undefined);

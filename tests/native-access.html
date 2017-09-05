@@ -196,7 +196,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     test('contains', function() {
       let srFirst = el.shadowRoot.firstChild;
       assert.isTrue(ShadyDOM.nativeMethods.contains.call(el, srFirst));
-      assert.isTrue(ShadyDOM.nativeMethods.contains.call(document, srFirst));
+      assert.isTrue(ShadyDOM.nativeMethods.contains.call(document.documentElement, srFirst));
     });
 
   });
