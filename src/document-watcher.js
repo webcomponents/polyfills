@@ -73,6 +73,11 @@ function handler(mxns) {
         }
         newScope = getIsExtends(host).is;
         if (currentScope === newScope) {
+          // make sure all the subtree elements are scoped correctly
+          let unscoped = window['ShadyDOM']['nativeMethods']['querySelectorAll'].call(n, `:not(.${currentScope})`);
+          unscoped.forEach((n) => {
+            StyleTransformer.element(n, currentScope);
+          });
           continue;
         }
         if (currentScope) {
