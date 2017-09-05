@@ -76,9 +76,9 @@ function handler(mxns) {
           // make sure all the subtree elements are scoped correctly
           let unscoped = window['ShadyDOM']['nativeMethods']['querySelectorAll'].call(
             n, `:not(.${StyleTransformer.SCOPE_NAME})`);
-          unscoped.forEach((n) => {
-            StyleTransformer.element(n, currentScope);
-          });
+          for (let j = 0; j < unscoped.length; j++) {
+            StyleTransformer.element(unscoped[j], currentScope);
+          }
           continue;
         }
         if (currentScope) {
