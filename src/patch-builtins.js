@@ -86,7 +86,8 @@ let nodeMixin = {
     if (utils.hasDocumentContains && nativeContains.call(ownerDocument, this)) {
       return true;
     }
-    if (nativeContains.call(ownerDocument.documentElement, this)) {
+    if (ownerDocument.documentElement &&
+      nativeContains.call(ownerDocument.documentElement, this)) {
       return true;
     }
     let node = this;
