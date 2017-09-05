@@ -114,4 +114,5 @@ export function contains(container, node) {
     }
     node = node.parentNode;
   }
+  return false;
 }
