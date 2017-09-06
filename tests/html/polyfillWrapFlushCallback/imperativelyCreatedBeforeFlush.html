@@ -1,0 +1,42 @@
+<!doctype html>
+<html>
+<head>
+<title>customElements#polyfillWrapFlushCallback</title>
+<script>
+  (window.customElements = window.customElements || {}).forcePolyfill = true;
+</script>
+<script src="../../../../es6-promise/dist/es6-promise.auto.min.js"></script>
+<script src="../../../../web-component-tester/browser.js"></script>
+<script src="../../../custom-elements.min.js"></script>
+</head>
+<body>
+  <script>
+  /**
+   * @license
+   * Copyright (c) 2017 The Polymer Project Authors. All rights reserved.
+   * This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+   * The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+   * The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+   * Code distributed by Google as part of the polymer project is also
+   * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+   */
+
+  test('Elements are upgraded when created imperatively, even if the flush ' +
+    'callback has not been called.', function() {
+      let flush = undefined;
+      customElements.polyfillWrapFlushCallback(fn => {
+        flush = fn;
+      });
+
+      class CustomElement0 extends HTMLElement {}
+      customElements.define('custom-element-0', CustomElement0);
+      assert.equal(customElements.get('custom-element-0'), CustomElement0);
+
+      const element = document.createElement('custom-element-0');
+      assert.instanceOf(element, CustomElement0);
+
+      flush();
+    });
+  </script>
+</body>
+</html>
