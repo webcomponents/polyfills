@@ -81,6 +81,18 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
   <x-container></x-container>
 
+  <template id="x-dynamic">
+    <style>
+      span {
+        background-color: rgb(123, 123, 123);
+      }
+    </style>
+    <div id="container">
+    </div>
+  </template>
+
+  <x-dynamic></x-dynamic>
+
   <script>
     suite('Dynamic Scoping', () => {
       function stamp(parent, host) {
@@ -106,6 +118,20 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             done();
           });
         }, 300);
+      });
+      test('DOM is scoped correctly when created dynamically inside a scoped container', (done) => {
+        makeElement('x-dynamic', function() {
+          let div = this.shadowRoot.querySelector('#container');
+          let newDiv = div.cloneNode(true);
+          let span = document.createElement('span');
+          span.textContent = 'created dynamically';
+          newDiv.appendChild(span);
+          this.shadowRoot.appendChild(newDiv);
+          requestAnimationFrame(() => {
+            assert.equal(getComputedStyle(span).backgroundColor, 'rgb(123, 123, 123)');
+            done();
+          })
+        });
       });
     });
   </script>
