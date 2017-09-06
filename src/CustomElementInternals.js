@@ -184,9 +184,17 @@ export default class CustomElementInternals {
    *     Reactions in the popped stack are invoked.)
    *
    * @param {!Node} root
-   * @param {!Set<Node>=} visitedImports
+   * @param {{
+   *   visitedImports: (!Set<!Node>|undefined),
+   *   upgrade: (!function(!Element)|undefined),
+   * }=} options
    */
-  patchAndUpgradeTree(root, visitedImports = new Set()) {
+  patchAndUpgradeTree(root, options = {}) {
+    const visitedImports = options.visitedImports || new Set();
+    const upgrade = options.upgrade || (element => this.upgradeElement(element));
+
+    const elements = [];
+
     const gatherElements = element => {
       if (element.localName === 'link' && element.getAttribute('rel') === 'import') {
         // The HTML Imports polyfill sets a descendant element of the link to
@@ -221,7 +229,7 @@ export default class CustomElementInternals {
             visitedImports.delete(importNode);
 
             this.pushCEReactionsQueue();
-            this.patchAndUpgradeTree(importNode, visitedImports);
+            this.patchAndUpgradeTree(importNode, {visitedImports, upgrade});
             this.popCEReactionsQueue();
           });
         }
@@ -236,6 +244,16 @@ export default class CustomElementInternals {
     // `walkDeepDescendantElements` populates (and internally checks against)
     // `visitedImports` when traversing a loaded import.
     Utilities.walkDeepDescendantElements(root, gatherElements, visitedImports);
+
+    if (this._hasPatches) {
+      for (let i = 0; i < elements.length; i++) {
+        this.patch(elements[i]);
+      }
+    }
+
+    for (let i = 0; i < elements.length; i++) {
+      upgrade(elements[i]);
+    }
   }
 
   /**
