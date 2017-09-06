@@ -193,6 +193,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       assert.deepEqual(qsa,[srFirst, content, srLast]);
     });
 
+    test('contains', function() {
+      let srFirst = el.shadowRoot.firstChild;
+      assert.isTrue(ShadyDOM.nativeMethods.contains.call(el, srFirst));
+      assert.isTrue(ShadyDOM.nativeMethods.contains.call(document.documentElement, srFirst));
+    });
+
   });
 
 </script>

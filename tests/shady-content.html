@@ -471,8 +471,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       ShadyDOM.flush();
       assert.equal(div.assignedSlot, slot);
       // Remove
-      var static = noDist.shadowRoot.querySelector('#static');
-      static.removeChild(wrapper);
+      var s = noDist.shadowRoot.querySelector('#static');
+      s.removeChild(wrapper);
       ShadyDOM.flush();
       assert.equal(div.assignedSlot, null);
       document.body.removeChild(noDist);

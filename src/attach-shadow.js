@@ -402,16 +402,6 @@ function ancestorList(node) {
   return ancestors;
 }
 
-// NOTE: could be used to help polyfill `document.contains`.
-function contains(container, node) {
-  while (node) {
-    if (node == container) {
-      return true;
-    }
-    node = node.parentNode;
-  }
-}
-
 /**
  * Removes from tracked slot data any slots contained within `container` and
  * then updates the tracked data (_slotList and _slotMap).
@@ -426,7 +416,7 @@ ShadyRoot.prototype._removeContainedSlots = function(container) {
     let slots = map[n];
     for (let i=0; i < slots.length; i++) {
       let slot = slots[i];
-      if (contains(container, slot)) {
+      if (utils.contains(container, slot)) {
         slots.splice(i, 1);
         const x = this._slotList.indexOf(slot);
         if (x >= 0) {

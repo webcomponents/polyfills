@@ -252,7 +252,7 @@ export function getRootNode(node, options) { // eslint-disable-line no-unused-va
     // can be cached while an element is inside a fragment.
     // If this happens and we cache the result, the value can become stale
     // because for perf we avoid processing the subtree of added fragments.
-    if (document.documentElement.contains(node)) {
+    if (nativeMethods.contains.call(document.documentElement, node)) {
       node.__shady.ownerShadyRoot = root;
     }
   }

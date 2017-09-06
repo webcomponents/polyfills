@@ -106,3 +106,15 @@ export function microtask(callback) {
   queue.push(callback);
   twiddle.textContent = content++;
 }
+
+export const hasDocumentContains = Boolean(document.contains);
+
+export function contains(container, node) {
+  while (node) {
+    if (node == container) {
+      return true;
+    }
+    node = node.parentNode;
+  }
+  return false;
+}

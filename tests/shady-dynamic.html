@@ -1035,6 +1035,17 @@ suite('insertBefore', function() {
     });
   });
 
+  test('contains', function() {
+    var e = document.createElement('x-simple');
+    document.body.appendChild(e);
+    assert.isTrue(document.contains(e));
+    assert.isFalse(document.contains(e.shadowRoot.firstChild));
+    assert.isFalse(e.contains(e.firstChild));
+    assert.isTrue(e.shadowRoot.contains(e.shadowRoot.firstChild));
+    assert.isFalse(e.shadowRoot.contains(document));
+    document.body.removeChild(e);
+  });
+
 });
 
 suite('Accessors', function() {
