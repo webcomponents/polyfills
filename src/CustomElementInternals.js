@@ -234,10 +234,7 @@ export default class CustomElementInternals {
           });
         }
       } else {
-        if (this._hasPatches) {
-          this.patch(element);
-        }
-        this.upgradeElement(element);
+        elements.push(element);
       }
     };
 
