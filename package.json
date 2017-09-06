@@ -1,6 +1,6 @@
 {
   "name": "@webcomponents/custom-elements",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "HTML Custom Elements Polyfill",
   "main": "custom-elements.min.js",
   "directories": {
