@@ -1,5 +1,6 @@
 window.PATCHES = (function() {
   const targets = [
+    'CustomElementRegistry',
     'Document',
     'DocumentFragment',
     'Element',
@@ -8,14 +9,17 @@ window.PATCHES = (function() {
   ];
 
   const PATCHES = new Map();
-  PATCHES.__currentDepth = -Infinity;
-  PATCHES.__maxDepth = 0;
-  PATCHES.allowDepth = function(maxDepth, fn) {
-    PATCHES.__currentDepth = 0;
-    PATCHES.__maxDepth = maxDepth;
-    fn();
-    PATCHES.__currentDepth = -Infinity;
-    PATCHES.__maxDepth = 0;
+  let currentDepth = -Infinity;
+  let maxDepth = 0;
+  PATCHES.allowDepth = function(max, fn) {
+    currentDepth = 0;
+    maxDepth = max;
+    try {
+      fn();
+    } finally {
+      currentDepth = -Infinity;
+      maxDepth = 0;
+    }
   };
 
   for (const targetName of targets) {
@@ -37,24 +41,22 @@ window.PATCHES = (function() {
 
       function depthGuard(original) {
         return function() {
-          PATCHES.__currentDepth++;
+          currentDepth++;
           try {
-            if (PATCHES.__currentDepth > PATCHES.__maxDepth) {
+            if (currentDepth > maxDepth) {
               throw new Error(`Unexpected access of ${targetName}#${propertyName}.`);
             }
             return original.apply(this, arguments);
           } finally {
-            PATCHES.__currentDepth--;
+            currentDepth--;
           }
         };
       }
 
-      if (descriptor.value) {
-        if (descriptor.value instanceof Function) {
-          const original = descriptor.value;
-          newDescriptor.value = depthGuard(original);
-          propertyInfo.value = original;
-        }
+      if (descriptor.value && descriptor.value instanceof Function) {
+        const original = descriptor.value;
+        newDescriptor.value = depthGuard(original);
+        propertyInfo.value = original;
       }
 
       if (descriptor.get) {
