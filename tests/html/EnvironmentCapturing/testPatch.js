@@ -8,11 +8,14 @@ window.PATCHES = (function() {
   ];
 
   const PATCHES = new Map();
-  PATCHES.__allow = true;
-  PATCHES.disallowWithin = function(fn) {
-    PATCHES.__allow = false;
+  PATCHES.__currentDepth = -Infinity;
+  PATCHES.__maxDepth = 0;
+  PATCHES.allowDepth = function(maxDepth, fn) {
+    PATCHES.__currentDepth = 0;
+    PATCHES.__maxDepth = maxDepth;
     fn();
-    PATCHES.__allow = true;
+    PATCHES.__currentDepth = -Infinity;
+    PATCHES.__maxDepth = 0;
   };
 
   for (const targetName of targets) {
@@ -23,9 +26,7 @@ window.PATCHES = (function() {
 
     const properties = Object.getOwnPropertyDescriptors(target.prototype);
     for (const propertyName of Object.keys(properties)) {
-      const propertyInfo = {
-        allowCount: 0,
-      };
+      const propertyInfo = {};
       targetInfo.set(propertyName, propertyInfo);
 
       const descriptor = Object.getOwnPropertyDescriptor(target.prototype, propertyName);
@@ -34,42 +35,37 @@ window.PATCHES = (function() {
         enumerable: descriptor.enumerable,
       };
 
-      function attemptAccess() {
-        if (!PATCHES.__allow && propertyInfo.allowCount <= 0) {
-          throw new Error(`Unexpected access of ${targetName}#${propertyName}.`);
-        }
-        propertyInfo.allowCount--;
+      function depthGuard(original) {
+        return function() {
+          PATCHES.__currentDepth++;
+          try {
+            if (PATCHES.__currentDepth > PATCHES.__maxDepth) {
+              throw new Error(`Unexpected access of ${targetName}#${propertyName}.`);
+            }
+            return original.apply(this, arguments);
+          } finally {
+            PATCHES.__currentDepth--;
+          }
+        };
       }
 
       if (descriptor.value) {
         if (descriptor.value instanceof Function) {
           const original = descriptor.value;
-          newDescriptor.value = function() {
-            attemptAccess();
-            return original.apply(this, arguments);
-          };
-
+          newDescriptor.value = depthGuard(original);
           propertyInfo.value = original;
         }
       }
 
       if (descriptor.get) {
         const original = descriptor.get;
-        newDescriptor.get = function() {
-          attemptAccess();
-          return original.apply(this, arguments);
-        };
-
+        newDescriptor.get = depthGuard(original);
         propertyInfo.get = original;
       }
 
       if (descriptor.set) {
         const original = descriptor.set;
-        newDescriptor.set = function() {
-          attemptAccess();
-          return original.apply(this, arguments);
-        };
-
+        newDescriptor.set = depthGuard(original);
         propertyInfo.set = original;
       }
 
