@@ -8,6 +8,7 @@
 <script src="../../../../es6-promise/dist/es6-promise.auto.min.js"></script>
 <script src="../../../../web-component-tester/browser.js"></script>
 <script src="../../../custom-elements.min.js"></script>
+<script src="../EnvironmentCapturing/testPatch.js"></script>
 <script>
   function generateLocalName() {
     return 'test-element-' + Math.random().toString(32).substring(2);
@@ -33,6 +34,11 @@
   }
 
   suite('Appending to a connected Node.', function() {
+    const appendChild = PATCHES.get('Node').get('appendChild').value;
+    const createDocumentFragment = PATCHES.get('Document').get('createDocumentFragment').value;
+    const createElement = PATCHES.get('Document').get('createElement').value;
+    const createTextNode = PATCHES.get('Document').get('createTextNode').value;
+
     let connectedNode;
 
     setup(function() {
@@ -46,115 +52,133 @@
 
     test('Appending an uncustomized element with a definition upgrades the ' +
       'element and calls `connectedCallback`.', function() {
-        const localName = generateLocalName();
-        const element = document.createElement(localName);
-        // Define after creating to prevent upgrade.
-        defineWithLocalName(localName);
+        PATCHES.disallowWithin(function() {
+          const localName = generateLocalName();
 
-        assert(!element.constructed);
+          const element = createElement.call(document, localName);
+          // Define after creating to prevent upgrade.
+          PATCHES.get('Document').get('readyState').allowCount = 1;
+          defineWithLocalName(localName);
 
-        connectedNode.appendChild(element);
+          assert(!element.constructed);
 
-        assert(element.constructed);
-        assert.equal(element.connectedCallbackCount, 1);
-        assert.equal(element.disconnectedCallbackCount, 0);
+          appendChild.call(connectedNode, element);
+
+          assert(element.constructed);
+          assert.equal(element.connectedCallbackCount, 1);
+          assert.equal(element.disconnectedCallbackCount, 0);
+        });
       });
 
     test('Appending a disconnected customized element calls `connectedCallback`.',
       function() {
-        const localName = generateLocalName();
-        // Define before creating to cause the element to be constructed.
-        defineWithLocalName(localName);
-        const element = document.createElement(localName);
+        PATCHES.disallowWithin(function() {
+          const localName = generateLocalName();
 
-        assert(element.constructed);
-        assert.equal(element.connectedCallbackCount, 0);
-        assert.equal(element.disconnectedCallbackCount, 0);
+          // Define before creating to cause the element to be constructed.
+          PATCHES.get('Document').get('readyState').allowCount = 1;
+          defineWithLocalName(localName);
+          const element = createElement.call(document, localName);
 
-        connectedNode.appendChild(element);
+          assert(element.constructed);
+          assert.equal(element.connectedCallbackCount, 0);
+          assert.equal(element.disconnectedCallbackCount, 0);
 
-        assert.equal(element.connectedCallbackCount, 1);
-        assert.equal(element.disconnectedCallbackCount, 0);
+          appendChild.call(connectedNode, element);
+
+          assert.equal(element.connectedCallbackCount, 1);
+          assert.equal(element.disconnectedCallbackCount, 0);
+        });
       });
 
     test('Appending a connected customized element calls `disconnectedCallback` ' +
       'and `connectedCallback`.', function() {
-        const localName = generateLocalName();
-        // Define before creating to cause the element to be constructed.
-        defineWithLocalName(localName);
-        const element = document.createElement(localName);
+        PATCHES.disallowWithin(function() {
+          const localName = generateLocalName();
 
-        assert(element.constructed);
-        assert.equal(element.connectedCallbackCount, 0);
-        assert.equal(element.disconnectedCallbackCount, 0);
+          // Define before creating to cause the element to be constructed.
+          PATCHES.get('Document').get('readyState').allowCount = 1;
+          defineWithLocalName(localName);
+          const element = createElement.call(document, localName);
 
-        connectedNode.appendChild(element);
+          assert(element.constructed);
+          assert.equal(element.connectedCallbackCount, 0);
+          assert.equal(element.disconnectedCallbackCount, 0);
 
-        assert.equal(element.connectedCallbackCount, 1);
-        assert.equal(element.disconnectedCallbackCount, 0);
+          appendChild.call(connectedNode, element);
 
-        connectedNode.appendChild(document.createElement('hr'));
+          assert.equal(element.connectedCallbackCount, 1);
+          assert.equal(element.disconnectedCallbackCount, 0);
 
-        connectedNode.appendChild(element);
+          appendChild.call(connectedNode, createElement.call(document, 'hr'));
 
-        assert.equal(element.connectedCallbackCount, 2);
-        assert.equal(element.disconnectedCallbackCount, 1);
+          appendChild.call(connectedNode, element);
+
+          assert.equal(element.connectedCallbackCount, 2);
+          assert.equal(element.disconnectedCallbackCount, 1);
+        });
       });
 
     test('Appending a DocumentFragment containing uncustomized custom elements ' +
       'with definitions upgrades the elements and calls `connectedCallback`.',
       function() {
-        const localName = generateLocalName();
+        PATCHES.disallowWithin(function() {
+          const localName = generateLocalName();
 
-        const fragment = document.createDocumentFragment();
-        const element1 = document.createElement(localName);
-        fragment.appendChild(element1);
-        fragment.appendChild(document.createTextNode('text'));
-        const element2 = document.createElement(localName);
-        fragment.appendChild(element2);
+          const fragment = createDocumentFragment.call(document);
+          const element1 = createElement.call(document, localName);
+          appendChild.call(fragment, element1);
+          appendChild.call(fragment, createTextNode.call(document, 'text'));
+          const element2 = createElement.call(document, localName);
+          appendChild.call(fragment, element2);
 
-        // Define after creating to prevent upgrade.
-        defineWithLocalName(localName);
+          // Define after creating to prevent upgrade.
+          PATCHES.get('Document').get('readyState').allowCount = 1;
+          defineWithLocalName(localName);
 
-        assert(!element1.constructed);
-        assert(!element2.constructed);
+          assert(!element1.constructed);
+          assert(!element2.constructed);
 
-        connectedNode.appendChild(fragment);
+          appendChild.call(connectedNode, fragment);
 
-        assert(element1.constructed);
-        assert.equal(element1.connectedCallbackCount, 1);
-        assert.equal(element1.disconnectedCallbackCount, 0);
-        assert(element2.constructed);
-        assert.equal(element2.connectedCallbackCount, 1);
-        assert.equal(element2.disconnectedCallbackCount, 0);
+          assert(element1.constructed);
+          assert.equal(element1.connectedCallbackCount, 1);
+          assert.equal(element1.disconnectedCallbackCount, 0);
+          assert(element2.constructed);
+          assert.equal(element2.connectedCallbackCount, 1);
+          assert.equal(element2.disconnectedCallbackCount, 0);
+        });
       });
 
     test('Appending a DocumentFragment containing customized elements calls ' +
       '`connectedCallback`.', function() {
-        const localName = generateLocalName();
-        // Define before creating to cause the element to be constructed.
-        defineWithLocalName(localName);
+        PATCHES.disallowWithin(function() {
+          const localName = generateLocalName();
+          // Define before creating to cause the element to be constructed.
+          PATCHES.get('Document').get('readyState').allowCount = 1;
+          defineWithLocalName(localName);
 
-        const fragment = document.createDocumentFragment();
-        const element1 = document.createElement(localName);
-        fragment.appendChild(element1);
-        fragment.appendChild(document.createTextNode('text'));
-        const element2 = document.createElement(localName);
-        fragment.appendChild(element2);
+          const fragment = createDocumentFragment.call(document);
+          const element1 = createElement.call(document, localName);
+          appendChild.call(fragment, element1);
+          appendChild.call(fragment, createTextNode.call(document, 'text'));
+          const element2 = createElement.call(document, localName);
+          appendChild.call(fragment, element2);
 
-        assert(element1.constructed);
-        assert.equal(element1.connectedCallbackCount, 0);
-        assert.equal(element1.disconnectedCallbackCount, 0);
-        assert(element2.constructed);
-        assert.equal(element2.connectedCallbackCount, 0);
-        assert.equal(element2.disconnectedCallbackCount, 0);
+          assert(element1.constructed);
+          assert.equal(element1.connectedCallbackCount, 0);
+          assert.equal(element1.disconnectedCallbackCount, 0);
+          assert(element2.constructed);
+          assert.equal(element2.connectedCallbackCount, 0);
+          assert.equal(element2.disconnectedCallbackCount, 0);
 
-        connectedNode.appendChild(fragment);
+          appendChild.call(connectedNode, fragment);
 
-        assert.equal(element1.connectedCallbackCount, 1);
-        assert.equal(element1.disconnectedCallbackCount, 0);
-        assert.equal(element2.connectedCallbackCount, 1);
-        assert.equal(element2.disconnectedCallbackCount, 0);
+          assert.equal(element1.connectedCallbackCount, 1);
+          assert.equal(element1.disconnectedCallbackCount, 0);
+          assert.equal(element2.connectedCallbackCount, 1);
+          assert.equal(element2.disconnectedCallbackCount, 0);
+        });
       });
   });
 

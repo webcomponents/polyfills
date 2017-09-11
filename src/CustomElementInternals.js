@@ -244,7 +244,8 @@ export default class CustomElementInternals {
     const currentState = element.__CE_state;
     if (currentState !== undefined) return;
 
-    const definition = this.localNameToDefinition(element.localName);
+    const localName = ElementProxy.localName(element)
+    const definition = this.localNameToDefinition(localName);
     if (!definition) return;
 
     definition.constructionStack.push(element);

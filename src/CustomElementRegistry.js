@@ -2,6 +2,7 @@ import CustomElementInternals from './CustomElementInternals.js';
 import DocumentConstructionObserver from './DocumentConstructionObserver.js';
 import Deferred from './Deferred.js';
 import * as Utilities from './Utilities.js';
+import { proxy as ElementProxy } from './Environment/Element.js';
 
 /**
  * @unrestricted
@@ -162,7 +163,7 @@ export default class CustomElementRegistry {
         // Ignore the element if it has already upgraded or failed to upgrade.
         if (element.__CE_state !== undefined) return;
 
-        const localName = element.localName;
+        const localName = ElementProxy.localName(element);
 
         // If there is an applicable pending definition for the element, add the
         // element to the list of elements to be upgraded with that definition.
