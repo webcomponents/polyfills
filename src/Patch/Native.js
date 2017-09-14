@@ -4,6 +4,8 @@ export default {
   Document_importNode: window.Document.prototype.importNode,
   Document_prepend: window.Document.prototype['prepend'],
   Document_append: window.Document.prototype['append'],
+  DocumentFragment_prepend: window.DocumentFragment.prototype['prepend'],
+  DocumentFragment_append: window.DocumentFragment.prototype['append'],
   Node_cloneNode: window.Node.prototype.cloneNode,
   Node_appendChild: window.Node.prototype.appendChild,
   Node_insertBefore: window.Node.prototype.insertBefore,
