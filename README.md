@@ -80,6 +80,8 @@ and [HTML](https://html.spec.whatwg.org/) specifications are marked with the
     If you replace the prototype of your constructor `F`, you must make sure
     that `F.prototype.constructor === F` remains true. Otherwise, the polyfill
     will not be able to create or upgrade your custom elements.
+- The [`:defined` CSS pseudo-class](https://html.spec.whatwg.org/multipage/semantics-other.html#pseudo-classes)
+  is not supported.
 
 ### ES5 vs ES2015
 
