@@ -209,9 +209,9 @@ export default class CustomElementInternals {
             // walk that import again, even if it was partially walked later
             // during the same `patchAndUpgradeTree` call.
             const clonedVisitedImports = new Set(visitedImports);
-            visitedImports.delete(importNode);
+            clonedVisitedImports.delete(importNode);
 
-            this.patchAndUpgradeTree(importNode, {visitedImports, upgrade});
+            this.patchAndUpgradeTree(importNode, {visitedImports: clonedVisitedImports, upgrade});
           });
         }
       } else {
