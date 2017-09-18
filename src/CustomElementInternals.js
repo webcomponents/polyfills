@@ -187,7 +187,7 @@ export default class CustomElementInternals {
           ElementProxy.getAttribute(element, 'rel') === 'import') {
         // The HTML Imports polyfill sets a descendant element of the link to
         // the `import` property, specifically this is *not* a Document.
-        const importNode = /** @type {?Node} */ HTMLLinkElementProxy.import(element);
+        const importNode = /** @type {?Node} */ (HTMLLinkElementProxy.import(element));
         const readyState = importNode instanceof DocumentCtor
           // Native HTML Imports.
           ? DocumentProxy.readyState(importNode)
