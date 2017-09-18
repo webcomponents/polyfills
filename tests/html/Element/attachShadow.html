@@ -8,6 +8,7 @@
 <script src="../../../../es6-promise/dist/es6-promise.auto.min.js"></script>
 <script src="../../../../web-component-tester/browser.js"></script>
 <script src="../../../custom-elements.min.js"></script>
+<script src="../EnvironmentCapturing/testPatch.js"></script>
 </head>
 <body>
 <script>
@@ -47,43 +48,47 @@ suite('Elements inside ShadowRoots have their callbacks called.', function() {
   const testFn = hasAttachShadow ? test : test.skip;
 
   testFn('Open ShadowRoots', function() {
-    const div = document.createElement('div');
-    div.attachShadow({mode: 'open'});
+    PATCHES.allowDepth(1, function() {
+      const div = document.createElement('div');
+      div.attachShadow({mode: 'open'});
 
-    div.shadowRoot.appendChild(element);
+      div.shadowRoot.appendChild(element);
 
-    assert.equal(element.connectedCallbackCount, 0);
-    assert.equal(element.disconnectedCallbackCount, 0);
+      assert.equal(element.connectedCallbackCount, 0);
+      assert.equal(element.disconnectedCallbackCount, 0);
 
-    document.body.appendChild(div);
+      document.body.appendChild(div);
 
-    assert.equal(element.connectedCallbackCount, 1);
-    assert.equal(element.disconnectedCallbackCount, 0);
+      assert.equal(element.connectedCallbackCount, 1);
+      assert.equal(element.disconnectedCallbackCount, 0);
 
-    document.body.removeChild(div);
+      document.body.removeChild(div);
 
-    assert.equal(element.connectedCallbackCount, 1);
-    assert.equal(element.disconnectedCallbackCount, 1);
+      assert.equal(element.connectedCallbackCount, 1);
+      assert.equal(element.disconnectedCallbackCount, 1);
+    });
   });
 
   testFn('Closed ShadowRoots', function() {
-    const div = document.createElement('div');
-    const shadowRoot = div.attachShadow({mode: 'closed'});
+    PATCHES.allowDepth(1, function() {
+      const div = document.createElement('div');
+      const shadowRoot = div.attachShadow({mode: 'closed'});
 
-    shadowRoot.appendChild(element);
+      shadowRoot.appendChild(element);
 
-    assert.equal(element.connectedCallbackCount, 0);
-    assert.equal(element.disconnectedCallbackCount, 0);
+      assert.equal(element.connectedCallbackCount, 0);
+      assert.equal(element.disconnectedCallbackCount, 0);
 
-    document.body.appendChild(div);
+      document.body.appendChild(div);
 
-    assert.equal(element.connectedCallbackCount, 1);
-    assert.equal(element.disconnectedCallbackCount, 0);
+      assert.equal(element.connectedCallbackCount, 1);
+      assert.equal(element.disconnectedCallbackCount, 0);
 
-    document.body.removeChild(div);
+      document.body.removeChild(div);
 
-    assert.equal(element.connectedCallbackCount, 1);
-    assert.equal(element.disconnectedCallbackCount, 1);
+      assert.equal(element.connectedCallbackCount, 1);
+      assert.equal(element.disconnectedCallbackCount, 1);
+    });
   });
 });
 </script>
