@@ -8,6 +8,7 @@
 <script src="../../../../es6-promise/dist/es6-promise.auto.min.js"></script>
 <script src="../../../../web-component-tester/browser.js"></script>
 <script src="../../../custom-elements.min.js"></script>
+<script src="../EnvironmentCapturing/testPatch.js"></script>
 </head>
 <body>
 <script>
@@ -57,24 +58,28 @@ suite('Setting new values.', function() {
   });
 
   test('Changes to unobserved attributes do not trigger callbacks.', function() {
-    const element = document.createElement(localName1);
+    PATCHES.allowDepth(1, function() {
+      const element = document.createElement(localName1);
 
-    assert.equal(element.attrCallbackArgs.length, 0);
+      assert.equal(element.attrCallbackArgs.length, 0);
 
-    element.setAttributeNS('ns', 'attr', 'abc');
+      element.setAttributeNS('ns', 'attr', 'abc');
 
-    assert.equal(element.attrCallbackArgs.length, 0);
+      assert.equal(element.attrCallbackArgs.length, 0);
+    });
   });
 
   test('Changes to observed attributes trigger callbacks.', function() {
-    const element = document.createElement(localName2);
+    PATCHES.allowDepth(1, function() {
+      const element = document.createElement(localName2);
 
-    assert.equal(element.attrCallbackArgs.length, 0);
+      assert.equal(element.attrCallbackArgs.length, 0);
 
-    element.setAttributeNS('ns', 'attr', 'abc');
+      element.setAttributeNS('ns', 'attr', 'abc');
 
-    assert.equal(element.attrCallbackArgs.length, 1);
-    assert.deepEqual(element.attrCallbackArgs[0], ['attr', NON_EXISTANT_VALUE, 'abc', 'ns']);
+      assert.equal(element.attrCallbackArgs.length, 1);
+      assert.deepEqual(element.attrCallbackArgs[0], ['attr', NON_EXISTANT_VALUE, 'abc', 'ns']);
+    });
   });
 });
 
@@ -87,35 +92,39 @@ suite('Changing previously set values.', function() {
   });
 
   test('Setting an observed attribute to its current value triggers a callback.', function() {
-    const element = document.createElement(localName);
+    PATCHES.allowDepth(1, function() {
+      const element = document.createElement(localName);
 
-    assert.equal(element.attrCallbackArgs.length, 0);
+      assert.equal(element.attrCallbackArgs.length, 0);
 
-    element.setAttributeNS('ns', 'attr', 'abc');
+      element.setAttributeNS('ns', 'attr', 'abc');
 
-    assert.equal(element.attrCallbackArgs.length, 1);
-    assert.deepEqual(element.attrCallbackArgs[0], ['attr', NON_EXISTANT_VALUE, 'abc', 'ns']);
+      assert.equal(element.attrCallbackArgs.length, 1);
+      assert.deepEqual(element.attrCallbackArgs[0], ['attr', NON_EXISTANT_VALUE, 'abc', 'ns']);
 
-    element.setAttributeNS('ns', 'attr', 'abc');
+      element.setAttributeNS('ns', 'attr', 'abc');
 
-    assert.equal(element.attrCallbackArgs.length, 2);
-    assert.deepEqual(element.attrCallbackArgs[0], ['attr', NON_EXISTANT_VALUE, 'abc', 'ns']);
+      assert.equal(element.attrCallbackArgs.length, 2);
+      assert.deepEqual(element.attrCallbackArgs[0], ['attr', NON_EXISTANT_VALUE, 'abc', 'ns']);
+    });
   });
 
   test('Setting an observed attribute to a different value triggers a callback.', function() {
-    const element = document.createElement(localName);
+    PATCHES.allowDepth(1, function() {
+      const element = document.createElement(localName);
 
-    assert.equal(element.attrCallbackArgs.length, 0);
+      assert.equal(element.attrCallbackArgs.length, 0);
 
-    element.setAttributeNS('ns', 'attr', 'abc');
+      element.setAttributeNS('ns', 'attr', 'abc');
 
-    assert.equal(element.attrCallbackArgs.length, 1);
-    assert.deepEqual(element.attrCallbackArgs[0], ['attr', NON_EXISTANT_VALUE, 'abc', 'ns']);
+      assert.equal(element.attrCallbackArgs.length, 1);
+      assert.deepEqual(element.attrCallbackArgs[0], ['attr', NON_EXISTANT_VALUE, 'abc', 'ns']);
 
-    element.setAttributeNS('ns', 'attr', 'def');
+      element.setAttributeNS('ns', 'attr', 'def');
 
-    assert.equal(element.attrCallbackArgs.length, 2);
-    assert.deepEqual(element.attrCallbackArgs[1], ['attr', 'abc', 'def', 'ns']);
+      assert.equal(element.attrCallbackArgs.length, 2);
+      assert.deepEqual(element.attrCallbackArgs[1], ['attr', 'abc', 'def', 'ns']);
+    });
   });
 });
 </script>
