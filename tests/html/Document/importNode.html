@@ -8,6 +8,7 @@
 <script src="../../../../es6-promise/dist/es6-promise.auto.min.js"></script>
 <script src="../../../../web-component-tester/browser.js"></script>
 <script src="../../../custom-elements.min.js"></script>
+<script src="../EnvironmentCapturing/testPatch.js"></script>
 </head>
 <body>
 <script>
@@ -66,20 +67,24 @@ suite('Importing foreign nodes with a custom element.', function() {
   });
 
   test('Importing foreign nodes with defined custom elements creates those elements.', function() {
-    const importedNode = document.importNode(foreignNode, true);
+    PATCHES.allowDepth(1, function() {
+      const importedNode = document.importNode(foreignNode, true);
 
-    assert(importedNode instanceof constructor1);
-    assert(importedNode.children[0] instanceof constructor2);
+      assert(importedNode instanceof constructor1);
+      assert(importedNode.children[0] instanceof constructor2);
+    });
   });
 
   test('Importing foreign nodes with defined custom elements into a document ' +
     'that is not associated with the registry does not create those elements.',
     function() {
-      const doc = document.implementation.createHTMLDocument("title");
-      const importedNode = doc.importNode(foreignNode, true);
+      PATCHES.allowDepth(1, function() {
+        const doc = document.implementation.createHTMLDocument("title");
+        const importedNode = doc.importNode(foreignNode, true);
 
-      assert(!(importedNode instanceof constructor1));
-      assert(!(importedNode.children[0] instanceof constructor2));
+        assert(!(importedNode instanceof constructor1));
+        assert(!(importedNode.children[0] instanceof constructor2));
+      });
     });
 });
 </script>
