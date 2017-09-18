@@ -8,6 +8,7 @@
 <script src="../../../../es6-promise/dist/es6-promise.auto.min.js"></script>
 <script src="../../../../web-component-tester/browser.js"></script>
 <script src="../../../custom-elements.min.js"></script>
+<script src="../EnvironmentCapturing/testPatch.js"></script>
 <script>
   function generateLocalName() {
     return 'test-element-' + Math.random().toString(32).substring(2);
@@ -34,39 +35,43 @@
 
   test('Removing a connected customized element calls `disconnectedCallback`.',
     function() {
-      const localName = generateLocalName();
-      defineWithLocalName(localName);
+      PATCHES.allowDepth(1, function() {
+        const localName = generateLocalName();
+        defineWithLocalName(localName);
 
-      const element = document.createElement(localName);
-      assert(element.constructed);
+        const element = document.createElement(localName);
+        assert(element.constructed);
 
-      document.body.appendChild(element);
+        document.body.appendChild(element);
 
-      assert.equal(element.connectedCallbackCount, 1);
-      assert.equal(element.disconnectedCallbackCount, 0);
+        assert.equal(element.connectedCallbackCount, 1);
+        assert.equal(element.disconnectedCallbackCount, 0);
 
-      document.body.removeChild(element);
+        document.body.removeChild(element);
 
-      assert.equal(element.connectedCallbackCount, 1);
-      assert.equal(element.disconnectedCallbackCount, 1);
+        assert.equal(element.connectedCallbackCount, 1);
+        assert.equal(element.disconnectedCallbackCount, 1);
+      });
     });
 
   test('Removing a disconnected customized element does nothing.', function() {
-    const localName = generateLocalName();
-    defineWithLocalName(localName);
+    PATCHES.allowDepth(1, function() {
+      const localName = generateLocalName();
+      defineWithLocalName(localName);
 
-    const disconnectedParent = document.createElement('div');
-    const element = document.createElement(localName);
+      const disconnectedParent = document.createElement('div');
+      const element = document.createElement(localName);
 
-    disconnectedParent.appendChild(element);
+      disconnectedParent.appendChild(element);
 
-    assert.equal(element.connectedCallbackCount, 0);
-    assert.equal(element.disconnectedCallbackCount, 0);
+      assert.equal(element.connectedCallbackCount, 0);
+      assert.equal(element.disconnectedCallbackCount, 0);
 
-    disconnectedParent.removeChild(element);
+      disconnectedParent.removeChild(element);
 
-    assert.equal(element.connectedCallbackCount, 0);
-    assert.equal(element.disconnectedCallbackCount, 0);
+      assert.equal(element.connectedCallbackCount, 0);
+      assert.equal(element.disconnectedCallbackCount, 0);
+    });
   });
 </script>
 </head>
