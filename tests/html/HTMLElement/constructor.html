@@ -8,6 +8,7 @@
 <script src="../../../../es6-promise/dist/es6-promise.auto.min.js"></script>
 <script src="../../../../web-component-tester/browser.js"></script>
 <script src="../../../custom-elements.min.js"></script>
+<script src="../EnvironmentCapturing/testPatch.js"></script>
 </head>
 <body>
 
@@ -49,28 +50,35 @@ suite('Constructing elements', function() {
   });
 
   test('Custom elements can be constructed from their constructor.', function() {
-    const element = new constructor();
+    PATCHES.allowDepth(1, function() {
+      const element = new constructor();
 
-    assert(element instanceof constructor);
-    assert(element instanceof HTMLElement);
-    // The native `Element` function is not replaced, only patched; check that the
-    // prototype chain is correctly connected.
-    assert(element instanceof Element);
-    assert.equal(element.localName, localName);
+      assert(element instanceof constructor);
+      assert(element instanceof HTMLElement);
+      // The native `Element` function is not replaced, only patched; check that the
+      // prototype chain is correctly connected.
+      assert(element instanceof Element);
+      assert.equal(element.localName, localName);
+    });
   });
 
   test('Custom element constructors must be given to `customElements.define` ' +
     'to be constructed.', function() {
-      class CustomElement extends HTMLElement {}
+      PATCHES.allowDepth(1, function() {
+        class CustomElement extends HTMLElement {}
 
-      assert.throws(function() {
-        new CustomElement();
+        assert.throws(function() {
+          new CustomElement();
+        });
       });
     });
 
   test('Custom element constructors may not cause more instances of the same ' +
     'custom element to be created before calling into `HTMLElement` (e.g. via ' +
     '`super()`).', function() {
+      // This test is not wrapped in a call to `PATCHES.allowDepth` so that the
+      // constructor can (invalidly) call `document.createElement`.
+
       const element = document.createElement('bad-custom-element-1');
       document.body.appendChild(element);
 
