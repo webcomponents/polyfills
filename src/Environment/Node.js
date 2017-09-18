@@ -13,6 +13,7 @@ export const descriptors = {
   isConnected: getDescriptor(prototype, 'isConnected'),
   nextSibling: getDescriptor(prototype, 'nextSibling'),
   nodeType: getDescriptor(prototype, 'nodeType'),
+  ownerDocument: getDescriptor(prototype, 'ownerDocument'),
   parentNode: getDescriptor(prototype, 'parentNode'),
   removeChild: getDescriptor(prototype, 'removeChild'),
   replaceChild: getDescriptor(prototype, 'replaceChild'),
@@ -28,6 +29,7 @@ const insertBeforeMethod = method(descriptors.insertBefore);
 const isConnectedGetter = getter(descriptors.isConnected, function() { return this.isConnected; });
 const nextSiblingGetter = getter(descriptors.nextSibling, function() { return this.nextSibling; });
 const nodeTypeGetter = getter(descriptors.nodeType, function() { return this.nodeType; });
+const ownerDocumentGetter = getter(descriptors.ownerDocument, function() { return this.ownerDocument; });
 const parentNodeGetter = getter(descriptors.parentNode, function() { return this.parentNode; });
 const removeChildMethod = method(descriptors.removeChild);
 const replaceChildMethod = method(descriptors.replaceChild);
@@ -42,6 +44,7 @@ export const proxy = {
   isConnected: node => isConnectedGetter.call(node),
   nextSibling: node => nextSiblingGetter.call(node),
   nodeType: node => nodeTypeGetter.call(node),
+  ownerDocument: node => ownerDocumentGetter.call(node),
   parentNode: node => parentNodeGetter.call(node),
   removeChild: (node, deep) => removeChildMethod.call(node, deep),
   replaceChild: (node, newChild, oldChild) => replaceChildMethod.call(node, newChild, oldChild),
