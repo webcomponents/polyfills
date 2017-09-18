@@ -1,4 +1,6 @@
+import {constructor as DocumentCtor, proxy as DocumentProxy} from './Environment/Document.js';
 import {proxy as ElementProxy} from './Environment/Element.js';
+import {proxy as HTMLLinkElementProxy} from './Environment/HTMLLinkElement.js';
 import {constructor as NodeCtor, proxy as NodeProxy} from './Environment/Node.js';
 import * as Utilities from './Utilities.js';
 import CEState from './CustomElementState.js';
@@ -185,9 +187,14 @@ export default class CustomElementInternals {
           ElementProxy.getAttribute(element, 'rel') === 'import') {
         // The HTML Imports polyfill sets a descendant element of the link to
         // the `import` property, specifically this is *not* a Document.
-        const importNode = /** @type {?Node} */ (element.import);
+        const importNode = /** @type {?Node} */ HTMLLinkElementProxy.import(element);
+        const readyState = importNode instanceof DocumentCtor
+          // Native HTML Imports.
+          ? DocumentProxy.readyState(importNode)
+          // HTML Imports polyfill.
+          : (importNode instanceof NodeCtor ? importNode.readyState : undefined);
 
-        if (importNode instanceof NodeCtor && importNode.readyState === 'complete') {
+        if (readyState === 'complete') {
           importNode.__CE_isImportDocument = true;
 
           // Connected links are associated with the registry.
