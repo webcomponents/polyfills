@@ -8,6 +8,7 @@
 <script src="../../../../es6-promise/dist/es6-promise.auto.min.js"></script>
 <script src="../../../../web-component-tester/browser.js"></script>
 <script src="../../../custom-elements.min.js"></script>
+<script src="../EnvironmentCapturing/testPatch.js"></script>
 </head>
 <body>
   <custom-element-0 id="elt_0_0">
@@ -40,39 +41,41 @@
   test('When a flush callback is installed and multiple calls to define are ' +
   'made calling the flush callback causes elements to upgrade in define-call ' +
   'order and then document order.', function() {
-    let flush = undefined;
-    customElements.polyfillWrapFlushCallback(fn => {
-      flush = fn;
-    });
+    PATCHES.allowDepth(1, function() {
+      let flush = undefined;
+      customElements.polyfillWrapFlushCallback(fn => {
+        flush = fn;
+      });
 
-    const upgradeLog = [];
-    class LogIDOnConstruct extends HTMLElement {
-      constructor() {
-        super();
-        upgradeLog.push(this.id);
+      const upgradeLog = [];
+      class LogIDOnConstruct extends HTMLElement {
+        constructor() {
+          super();
+          upgradeLog.push(this.id);
+        }
       }
-    }
 
-    customElements.define('custom-element-0', class extends LogIDOnConstruct {});
-    customElements.define('custom-element-1', class extends LogIDOnConstruct {});
-    customElements.define('custom-element-2', class extends LogIDOnConstruct {});
+      customElements.define('custom-element-0', class extends LogIDOnConstruct {});
+      customElements.define('custom-element-1', class extends LogIDOnConstruct {});
+      customElements.define('custom-element-2', class extends LogIDOnConstruct {});
 
-    assert.deepEqual(upgradeLog, []);
+      assert.deepEqual(upgradeLog, []);
 
-    flush();
+      flush();
 
-    assert.deepEqual(upgradeLog, [
-      "elt_0_0",
-      "elt_0_1",
-      "elt_0_2",
-      "elt_1_0",
-      "elt_1_1",
-      "elt_1_2",
-      "elt_2_0",
-      "elt_2_1",
-      "elt_2_2",
-      "elt_2_3",
-    ]);
+      assert.deepEqual(upgradeLog, [
+        "elt_0_0",
+        "elt_0_1",
+        "elt_0_2",
+        "elt_1_0",
+        "elt_1_1",
+        "elt_1_2",
+        "elt_2_0",
+        "elt_2_1",
+        "elt_2_2",
+        "elt_2_3",
+      ]);
+    });
   });
   </script>
 </body>

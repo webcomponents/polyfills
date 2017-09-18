@@ -8,6 +8,7 @@
 <script src="../../../../es6-promise/dist/es6-promise.auto.min.js"></script>
 <script src="../../../../web-component-tester/browser.js"></script>
 <script src="../../../custom-elements.min.js"></script>
+<script src="../EnvironmentCapturing/testPatch.js"></script>
 </head>
 <body>
   <custom-element></custom-element>
@@ -23,39 +24,41 @@
  */
 
 test('`whenDefined` called after `define` does not resolve until its local name has flushed.', function(done) {
-  const element = document.querySelector('custom-element');
+  PATCHES.allowDepth(1, function() {
+    const element = document.querySelector('custom-element');
 
-  let flushFn = undefined;
-  let resolved = false;
+    let flushFn = undefined;
+    let resolved = false;
 
-  customElements.polyfillWrapFlushCallback(flush => flushFn = flush);
+    customElements.polyfillWrapFlushCallback(flush => flushFn = flush);
 
-  customElements.define('custom-element', class extends HTMLElement {
-    constructor() {
-      super();
-      this.upgraded = true;
-      if (resolved) {
-        done(new Error("`whenDefined` promise was resolved before upgrade!"));
+    customElements.define('custom-element', class extends HTMLElement {
+      constructor() {
+        super();
+        this.upgraded = true;
+        if (resolved) {
+          done(new Error("`whenDefined` promise was resolved before upgrade!"));
+        }
       }
-    }
-  });
+    });
 
-  assert(!element.upgraded);
+    assert(!element.upgraded);
 
-  const promise = customElements.whenDefined('custom-element');
-  promise.then(function() {
-    resolved = true;
+    const promise = customElements.whenDefined('custom-element');
+    promise.then(function() {
+      resolved = true;
+      assert(element.upgraded);
+      done();
+    }).catch(function(err) {
+      done(err);
+    });
+
+    assert(!element.upgraded);
+
+    flushFn();
+
     assert(element.upgraded);
-    done();
-  }).catch(function(err) {
-    done(err);
   });
-
-  assert(!element.upgraded);
-
-  flushFn();
-
-  assert(element.upgraded);
 });
 </script>
 </body>

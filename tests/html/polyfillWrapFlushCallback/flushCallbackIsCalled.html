@@ -8,6 +8,7 @@
 <script src="../../../../es6-promise/dist/es6-promise.auto.min.js"></script>
 <script src="../../../../web-component-tester/browser.js"></script>
 <script src="../../../custom-elements.min.js"></script>
+<script src="../EnvironmentCapturing/testPatch.js"></script>
 <script>
 /**
  * @license
@@ -20,14 +21,16 @@
  */
 
 test('Installed flush callbacks are called with a function when `#define` is called.', function() {
-  let callbackWasCalled = false;
-  customElements.polyfillWrapFlushCallback(f => {
-    callbackWasCalled = true;
-    assert(f instanceof Function);
-    f();
+  PATCHES.allowDepth(1, function() {
+    let callbackWasCalled = false;
+    customElements.polyfillWrapFlushCallback(f => {
+      callbackWasCalled = true;
+      assert(f instanceof Function);
+      f();
+    });
+    customElements.define('x-test', class extends HTMLElement {});
+    assert(callbackWasCalled);
   });
-  customElements.define('x-test', class extends HTMLElement {});
-  assert(callbackWasCalled);
 });
 </script>
 </head>

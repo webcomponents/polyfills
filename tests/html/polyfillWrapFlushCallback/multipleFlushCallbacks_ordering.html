@@ -8,6 +8,7 @@
 <script src="../../../../es6-promise/dist/es6-promise.auto.min.js"></script>
 <script src="../../../../web-component-tester/browser.js"></script>
 <script src="../../../custom-elements.min.js"></script>
+<script src="../EnvironmentCapturing/testPatch.js"></script>
 <script>
 /**
  * @license
@@ -20,22 +21,24 @@
  */
 
 test('Each installed flush callback wraps the previous callback.', function() {
-  let calls = [];
+  PATCHES.allowDepth(1, function() {
+    let calls = [];
 
-  customElements.polyfillWrapFlushCallback(function callbackA(flush){
-    calls.push('callbackA');
-    flush();
+    customElements.polyfillWrapFlushCallback(function callbackA(flush){
+      calls.push('callbackA');
+      flush();
+    });
+    customElements.polyfillWrapFlushCallback(function callbackB(flush){
+      calls.push('callbackB');
+      flush();
+    });
+
+    customElements.define('custom-element-1', class extends HTMLElement {});
+    assert.deepEqual(calls, ['callbackB', 'callbackA']);
+
+    customElements.define('custom-element-2', class extends HTMLElement {});
+    assert.deepEqual(calls, ['callbackB', 'callbackA', 'callbackB', 'callbackA']);
   });
-  customElements.polyfillWrapFlushCallback(function callbackB(flush){
-    calls.push('callbackB');
-    flush();
-  });
-
-  customElements.define('custom-element-1', class extends HTMLElement {});
-  assert.deepEqual(calls, ['callbackB', 'callbackA']);
-
-  customElements.define('custom-element-2', class extends HTMLElement {});
-  assert.deepEqual(calls, ['callbackB', 'callbackA', 'callbackB', 'callbackA']);
 });
 </script>
 </head>
