@@ -8,6 +8,7 @@
 <script src="../../../../es6-promise/dist/es6-promise.auto.min.js"></script>
 <script src="../../../../web-component-tester/browser.js"></script>
 <script src="../../../custom-elements.min.js"></script>
+<script src="../EnvironmentCapturing/testPatch.js"></script>
 </head>
 <body>
 <script>
@@ -49,24 +50,30 @@ suite('Creating a custom element.', function() {
 
   test('Creating a defined custom element with the null namespace creates an ' +
     'instance of that custom element.', function() {
-      const element = document.createElementNS(null, localName);
+      PATCHES.allowDepth(1, function() {
+        const element = document.createElementNS(null, localName);
 
-      assert(element instanceof constructor);
+        assert(element instanceof constructor);
+      });
     });
 
   test('Creating a defined custom element with the explicit HTML namespace ' +
     'creates an instance of that custom element.', function() {
-      const element = document.createElementNS('http://www.w3.org/1999/xhtml', localName);
+      PATCHES.allowDepth(1, function() {
+        const element = document.createElementNS('http://www.w3.org/1999/xhtml', localName);
 
-      assert(element instanceof constructor);
+        assert(element instanceof constructor);
+      });
     });
 
   test('Creating an element with the same local name as a defined custom element ' +
     'but with a non-null or HTML namespace does not create an instance of that ' +
     'custom element.', function() {
-      const element = document.createElementNS('UNKNOWN_NS', localName);
+      PATCHES.allowDepth(1, function() {
+        const element = document.createElementNS('UNKNOWN_NS', localName);
 
-      assert(!(element instanceof constructor));
+        assert(!(element instanceof constructor));
+      });
     });
 });
 </script>
