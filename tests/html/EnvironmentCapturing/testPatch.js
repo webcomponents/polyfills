@@ -22,14 +22,18 @@ window.PATCHES = (function() {
     }
   };
 
-  for (const targetName of targets) {
+  for (let targetIndex = 0; targetIndex < targets.length; targetIndex++) {
+    const targetName = targets[targetIndex];
+
     const targetInfo = new Map();
     PATCHES.set(targetName, targetInfo);
 
     const target = window[targetName];
 
-    const properties = Object.getOwnPropertyDescriptors(target.prototype);
-    for (const propertyName of Object.keys(properties)) {
+    const propertyNames = Object.getOwnPropertyNames(target.prototype);
+    for (let propertyNameIndex = 0; propertyNameIndex < propertyNames.length; propertyNameIndex++) {
+      const propertyName = propertyNames[propertyNameIndex];
+
       const propertyInfo = {};
       targetInfo.set(propertyName, propertyInfo);
 
@@ -71,7 +75,9 @@ window.PATCHES = (function() {
         propertyInfo.set = original;
       }
 
-      Object.defineProperty(target.prototype, propertyName, newDescriptor);
+      if (descriptor.configurable) {
+        Object.defineProperty(target.prototype, propertyName, newDescriptor);
+      }
     }
   }
 
