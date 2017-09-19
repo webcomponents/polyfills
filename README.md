@@ -351,3 +351,10 @@ the polyfill.  This is mainly due to the fact that shimming them would require
 a fetch of the stylesheet text that is async cannot be easily coordinated with
 the upgrade timing of custom elements using them, making it impossible to avoid
 "flash of unstyled content" when running on polyfill.
+
+### (Dynamic) document level styling is not prevented
+
+ShadyCSS mimics the behavior of shadow dom, but it is not able to prevent document
+level styling to affect elements inside a shady dom. Global styles defined in
+`index.html` or any styles not processed by ShadyCSS will affect all elements on the page.
+This includes styles that are dynamically created and appended to the DOM.
