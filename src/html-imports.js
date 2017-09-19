@@ -187,7 +187,7 @@
 
   const importDependencyAttr = 'import-dependency';
 
-  const rootImportSelector = `${importSelector}:not(${importDependencyAttr})`;
+  const rootImportSelector = `${importSelector}:not([${importDependencyAttr}])`;
 
   const pendingScriptsSelector = `script[${importDependencyAttr}]`;
 
