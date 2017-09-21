@@ -36,6 +36,7 @@ window.PatchMonitor = (function() {
 
       for (let targetIndex = 0; targetIndex < targets.length; targetIndex++) {
         const target = targets[targetIndex];
+        if (target === undefined) continue;
 
         const propertyNames = Object.getOwnPropertyNames(target);
         for (let propertyNameIndex = 0; propertyNameIndex < propertyNames.length; propertyNameIndex++) {

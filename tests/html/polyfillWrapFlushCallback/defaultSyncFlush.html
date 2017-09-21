@@ -15,7 +15,7 @@
     Element.prototype,
     HTMLElement.prototype,
     HTMLLinkElement.prototype,
-    HTMLTemplateElement.prototype,
+    window.HTMLTemplateElement ? window.HTMLTemplateElement.prototype : undefined,
     MutationObserver.prototype,
     MutationRecord.prototype,
     Node.prototype,
