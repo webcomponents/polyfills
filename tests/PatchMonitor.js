@@ -1,33 +1,33 @@
-window.PATCHES = (function() {
-  let enableReentrancyGuard = false;
-  let insideReentrancyGuard = false;
+window.PatchMonitor = (function() {
+  let enableGuard = false;
+  let insideGuard = false;
 
-  function createReentrancyGuard({original, target, propertyName}) {
+  function createGuard({original, target, propertyName}) {
     return function() {
-      if (!enableReentrancyGuard) {
+      if (!enableGuard) {
         return original.apply(this, arguments);
       }
 
       try {
-        if (insideReentrancyGuard) {
+        if (insideGuard) {
           throw new Error(`Unexpected access of '${propertyName}'.`);
         }
-        insideReentrancyGuard = true;
+        insideGuard = true;
         return original.apply(this, arguments);
       } finally {
-        insideReentrancyGuard = false;
+        insideGuard = false;
       }
     };
   }
 
-  const PATCHES = {
-    runWithReentrancyGuard(fn) {
-      let oldState = enableReentrancyGuard;
-      enableReentrancyGuard = true;
+  const PatchMonitor = {
+    runGuarded(fn) {
+      let oldState = enableGuard;
+      enableGuard = true;
       try {
         fn();
       } finally {
-        enableReentrancyGuard = oldState;
+        enableGuard = oldState;
       }
     },
 
@@ -65,21 +65,21 @@ window.PATCHES = (function() {
 
         if (descriptor.value && descriptor.value instanceof Function) {
           const original = descriptor.value;
-          newDescriptor.value = createReentrancyGuard({
+          newDescriptor.value = createGuard({
             original, target, propertyName
           });
         }
 
         if (descriptor.get) {
           const original = descriptor.get;
-          newDescriptor.get = createReentrancyGuard({
+          newDescriptor.get = createGuard({
             original, target, propertyName
           });
         }
 
         if (descriptor.set) {
           const original = descriptor.set;
-          newDescriptor.set = createReentrancyGuard({
+          newDescriptor.set = createGuard({
             original, target, propertyName
           });
         }
@@ -91,5 +91,5 @@ window.PATCHES = (function() {
     },
   };
 
-  return PATCHES;
+  return PatchMonitor;
 })();

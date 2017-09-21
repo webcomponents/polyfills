@@ -7,9 +7,9 @@
 </script>
 <script src="../../../../es6-promise/dist/es6-promise.auto.min.js"></script>
 <script src="../../../../web-component-tester/browser.js"></script>
-<script src="../EnvironmentCapturing/testPatch.js"></script>
+<script src="../../PatchMonitor.js"></script>
 <script>
-  window.__records = PATCHES.collect([
+  window.__records = PatchMonitor.collect([
     Document.prototype,
     DocumentFragment.prototype,
     Element.prototype,
@@ -19,7 +19,7 @@
 </script>
 <script src="../../../custom-elements.min.js"></script>
 <script>
-  PATCHES.wrap(window.__records);
+  PatchMonitor.wrap(window.__records);
 </script>
 <script>
   function generateLocalName() {
@@ -59,7 +59,7 @@
 
     test('Inserting an uncustomized element with a definition upgrades the ' +
       'element and calls `connectedCallback`.', function() {
-        PATCHES.runWithReentrancyGuard(function() {
+        PatchMonitor.runGuarded(function() {
           const localName = generateLocalName();
           const element = document.createElement(localName);
           // Define after creating to prevent upgrade.
@@ -77,7 +77,7 @@
 
     test('Inserting a disconnected customized element calls `connectedCallback`.',
       function() {
-        PATCHES.runWithReentrancyGuard(function() {
+        PatchMonitor.runGuarded(function() {
           const localName = generateLocalName();
           // Define before creating to cause the element to be constructed.
           defineWithLocalName(localName);
@@ -96,7 +96,7 @@
 
     test('Inserting a connected customized element calls `disconnectedCallback` ' +
       'and `connectedCallback`.', function() {
-        PATCHES.runWithReentrancyGuard(function() {
+        PatchMonitor.runGuarded(function() {
           const localName = generateLocalName();
           // Define before creating to cause the element to be constructed.
           defineWithLocalName(localName);
@@ -123,7 +123,7 @@
     test('Inserting a DocumentFragment containing uncustomized custom elements ' +
       'with definitions upgrades the elements and calls `connectedCallback`.',
       function() {
-        PATCHES.runWithReentrancyGuard(function() {
+        PatchMonitor.runGuarded(function() {
           const localName = generateLocalName();
 
           const fragment = document.createDocumentFragment();
@@ -152,7 +152,7 @@
 
     test('Inserting a DocumentFragment containing customized elements calls ' +
       '`connectedCallback`.', function() {
-        PATCHES.runWithReentrancyGuard(function() {
+        PatchMonitor.runGuarded(function() {
           const localName = generateLocalName();
           // Define before creating to cause the element to be constructed.
           defineWithLocalName(localName);
@@ -197,7 +197,7 @@
 
     test('Inserting an uncustomized element with a definition does nothing.',
       function() {
-        PATCHES.runWithReentrancyGuard(function() {
+        PatchMonitor.runGuarded(function() {
           const localName = generateLocalName();
           const element = document.createElement(localName);
           // Define after creating to prevent upgrade.
@@ -212,7 +212,7 @@
       });
 
     test('Inserting a disconnected customized element does nothing.', function() {
-      PATCHES.runWithReentrancyGuard(function() {
+      PatchMonitor.runGuarded(function() {
         const localName = generateLocalName();
         // Define before creating to cause the element to be constructed.
         defineWithLocalName(localName);
@@ -231,7 +231,7 @@
 
     test('Inserting a connected customized element calls `disconnectedCallback`.',
       function() {
-        PATCHES.runWithReentrancyGuard(function() {
+        PatchMonitor.runGuarded(function() {
           const localName = generateLocalName();
           // Define before creating to cause the element to be constructed.
           defineWithLocalName(localName);
@@ -255,7 +255,7 @@
 
     test('Inserting a DocumentFragment containing uncustomized custom elements' +
       'with definitions does nothing.', function() {
-        PATCHES.runWithReentrancyGuard(function() {
+        PatchMonitor.runGuarded(function() {
           const localName = generateLocalName();
 
           const fragment = document.createDocumentFragment();
@@ -280,7 +280,7 @@
 
     test('Inserting a DocumentFragment containing customized elements does ' +
       'nothing.', function() {
-        PATCHES.runWithReentrancyGuard(function() {
+        PatchMonitor.runGuarded(function() {
           const localName = generateLocalName();
           // Define before creating to cause the element to be constructed.
           defineWithLocalName(localName);
