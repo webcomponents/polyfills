@@ -33,8 +33,6 @@ export default function(internals) {
         this.__CE_shadowRoot = shadowRoot;
         return shadowRoot;
       });
-  } else {
-    console.warn('Custom Elements: `Element#attachShadow` was not patched.');
   }
 
 
