@@ -88,7 +88,7 @@ suite('Constructing elements', function() {
   test('Custom element constructors may not cause more instances of the same ' +
     'custom element to be created before calling into `HTMLElement` (e.g. via ' +
     '`super()`).', function() {
-      // This test is not wrapped in a call to `PATCHES.allowDepth` so that the
+      // This test is not wrapped in a call to `PatchMonitor.runGuarded` so that the
       // constructor can (invalidly) call `document.createElement`.
 
       const element = document.createElement('bad-custom-element-1');
