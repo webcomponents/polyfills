@@ -7,8 +7,20 @@
 </script>
 <script src="../../../../es6-promise/dist/es6-promise.auto.min.js"></script>
 <script src="../../../../web-component-tester/browser.js"></script>
+<script src="../../PatchMonitor.js"></script>
+<script>
+  window.__records = PatchMonitor.collect([
+    Document.prototype,
+    DocumentFragment.prototype,
+    Element.prototype,
+    HTMLElement.prototype,
+    Node.prototype,
+  ]);
+</script>
 <script src="../../../custom-elements.min.js"></script>
-<script src="../EnvironmentCapturing/testPatch.js"></script>
+<script>
+  PatchMonitor.wrap(window.__records);
+</script>
 </head>
 <body>
 <script>
@@ -48,7 +60,7 @@ suite('Inserting a custom element into a disconnected context element.', functio
   });
 
   test('Inserting a disconnected custom element.', function() {
-    PATCHES.allowDepth(1, function() {
+    PatchMonitor.runGuarded(function() {
       assert.equal(customElement.connectedCallbackCount, 0);
       assert.equal(customElement.disconnectedCallbackCount, 0);
 
@@ -60,7 +72,7 @@ suite('Inserting a custom element into a disconnected context element.', functio
   });
 
   test('Inserting a connected custom element.', function() {
-    PATCHES.allowDepth(1, function() {
+    PatchMonitor.runGuarded(function() {
       document.body.appendChild(customElement);
 
       assert.equal(customElement.connectedCallbackCount, 1);
@@ -94,7 +106,7 @@ suite('Inserting a custom element into a connected context element.', function()
   });
 
   test('Inserting a disconnected custom element.', function() {
-    PATCHES.allowDepth(1, function() {
+    PatchMonitor.runGuarded(function() {
       assert.equal(customElement.connectedCallbackCount, 0);
       assert.equal(customElement.disconnectedCallbackCount, 0);
 
@@ -106,7 +118,7 @@ suite('Inserting a custom element into a connected context element.', function()
   });
 
   test('Inserting a connected custom element.', function() {
-    PATCHES.allowDepth(1, function() {
+    PatchMonitor.runGuarded(function() {
       document.body.appendChild(customElement);
 
       assert.equal(customElement.connectedCallbackCount, 1);

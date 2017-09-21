@@ -7,8 +7,20 @@
 </script>
 <script src="../../../../es6-promise/dist/es6-promise.auto.min.js"></script>
 <script src="../../../../web-component-tester/browser.js"></script>
+<script src="../../PatchMonitor.js"></script>
+<script>
+  window.__records = PatchMonitor.collect([
+    Document.prototype,
+    DocumentFragment.prototype,
+    Element.prototype,
+    HTMLElement.prototype,
+    Node.prototype,
+  ]);
+</script>
 <script src="../../../custom-elements.min.js"></script>
-<script src="../EnvironmentCapturing/testPatch.js"></script>
+<script>
+  PatchMonitor.wrap(window.__records);
+</script>
 </head>
 <body>
 
@@ -50,7 +62,7 @@ suite('Constructing elements', function() {
   });
 
   test('Custom elements can be constructed from their constructor.', function() {
-    PATCHES.allowDepth(1, function() {
+    PatchMonitor.runGuarded(function() {
       const element = new constructor();
 
       assert(element instanceof constructor);
@@ -64,7 +76,7 @@ suite('Constructing elements', function() {
 
   test('Custom element constructors must be given to `customElements.define` ' +
     'to be constructed.', function() {
-      PATCHES.allowDepth(1, function() {
+      PatchMonitor.runGuarded(function() {
         class CustomElement extends HTMLElement {}
 
         assert.throws(function() {

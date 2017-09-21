@@ -7,8 +7,20 @@
 </script>
 <script src="../../../../es6-promise/dist/es6-promise.auto.min.js"></script>
 <script src="../../../../web-component-tester/browser.js"></script>
+<script src="../../PatchMonitor.js"></script>
+<script>
+  window.__records = PatchMonitor.collect([
+    Document.prototype,
+    DocumentFragment.prototype,
+    Element.prototype,
+    HTMLElement.prototype,
+    Node.prototype,
+  ]);
+</script>
 <script src="../../../custom-elements.min.js"></script>
-<script src="../EnvironmentCapturing/testPatch.js"></script>
+<script>
+  PatchMonitor.wrap(window.__records);
+</script>
 </head>
 <body>
   <custom-element></custom-element>
@@ -24,7 +36,7 @@
  */
 
 test('`whenDefined` called after `define` does not resolve until its local name has flushed.', function(done) {
-  PATCHES.allowDepth(1, function() {
+  PatchMonitor.runGuarded(function() {
     const element = document.querySelector('custom-element');
 
     let flushFn = undefined;

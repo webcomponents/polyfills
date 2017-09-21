@@ -7,8 +7,20 @@
 </script>
 <script src="../../../../es6-promise/dist/es6-promise.auto.min.js"></script>
 <script src="../../../../web-component-tester/browser.js"></script>
+<script src="../../PatchMonitor.js"></script>
+<script>
+  window.__records = PatchMonitor.collect([
+    Document.prototype,
+    DocumentFragment.prototype,
+    Element.prototype,
+    HTMLElement.prototype,
+    Node.prototype,
+  ]);
+</script>
 <script src="../../../custom-elements.min.js"></script>
-<script src="../EnvironmentCapturing/testPatch.js"></script>
+<script>
+  PatchMonitor.wrap(window.__records);
+</script>
 </head>
 <body>
 <script>
@@ -53,7 +65,7 @@ suite('Setting new values.', function() {
   });
 
   test('Changes to unobserved attributes do not trigger callbacks.', function() {
-    PATCHES.allowDepth(1, function() {
+    PatchMonitor.runGuarded(function() {
       const element = document.createElement(localName1);
 
       assert.equal(element.attrCallbackArgs.length, 0);
@@ -65,7 +77,7 @@ suite('Setting new values.', function() {
   });
 
   test('Changes to observed attributes trigger callbacks.', function() {
-    PATCHES.allowDepth(1, function() {
+    PatchMonitor.runGuarded(function() {
       const element = document.createElement(localName2);
 
       assert.equal(element.attrCallbackArgs.length, 0);
@@ -87,7 +99,7 @@ suite('Changing previously set values.', function() {
   });
 
   test('Setting an observed attribute to its current value does trigger a callback.', function() {
-    PATCHES.allowDepth(1, function() {
+    PatchMonitor.runGuarded(function() {
       const element = document.createElement(localName);
 
       assert.equal(element.attrCallbackArgs.length, 0);
@@ -104,7 +116,7 @@ suite('Changing previously set values.', function() {
   });
 
   test('Setting an observed attribute to a different value triggers a callback.', function() {
-    PATCHES.allowDepth(1, function() {
+    PatchMonitor.runGuarded(function() {
       const element = document.createElement(localName);
 
       assert.equal(element.attrCallbackArgs.length, 0);

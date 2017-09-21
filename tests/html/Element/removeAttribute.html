@@ -7,8 +7,20 @@
 </script>
 <script src="../../../../es6-promise/dist/es6-promise.auto.min.js"></script>
 <script src="../../../../web-component-tester/browser.js"></script>
+<script src="../../PatchMonitor.js"></script>
+<script>
+  window.__records = PatchMonitor.collect([
+    Document.prototype,
+    DocumentFragment.prototype,
+    Element.prototype,
+    HTMLElement.prototype,
+    Node.prototype,
+  ]);
+</script>
 <script src="../../../custom-elements.min.js"></script>
-<script src="../EnvironmentCapturing/testPatch.js"></script>
+<script>
+  PatchMonitor.wrap(window.__records);
+</script>
 </head>
 <body>
 <script>
@@ -51,7 +63,7 @@ suite('Removing an unset attribute.', function() {
   });
 
   test('Removing an attribute with no value (null) does not trigger a callback.', function() {
-    PATCHES.allowDepth(1, function() {
+    PatchMonitor.runGuarded(function() {
       const element = document.createElement(localName);
 
       element.removeAttribute('attr');
@@ -73,7 +85,7 @@ suite('Removing a set attribute.', function() {
   });
 
   test('Removing an unobserved value does not trigger a callback.', function() {
-    PATCHES.allowDepth(1, function() {
+    PatchMonitor.runGuarded(function() {
       const element = document.createElement(localName1);
 
       assert.equal(element.attrCallbackArgs.length, 0);
@@ -89,7 +101,7 @@ suite('Removing a set attribute.', function() {
   });
 
   test('Removing an observed attribute triggers a callback.', function() {
-    PATCHES.allowDepth(1, function() {
+    PatchMonitor.runGuarded(function() {
       const element = document.createElement(localName2);
 
       assert.equal(element.attrCallbackArgs.length, 0);

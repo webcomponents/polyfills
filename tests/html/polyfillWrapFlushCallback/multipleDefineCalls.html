@@ -7,8 +7,20 @@
 </script>
 <script src="../../../../es6-promise/dist/es6-promise.auto.min.js"></script>
 <script src="../../../../web-component-tester/browser.js"></script>
+<script src="../../PatchMonitor.js"></script>
+<script>
+  window.__records = PatchMonitor.collect([
+    Document.prototype,
+    DocumentFragment.prototype,
+    Element.prototype,
+    HTMLElement.prototype,
+    Node.prototype,
+  ]);
+</script>
 <script src="../../../custom-elements.min.js"></script>
-<script src="../EnvironmentCapturing/testPatch.js"></script>
+<script>
+  PatchMonitor.wrap(window.__records);
+</script>
 <script>
 /**
  * @license
@@ -22,7 +34,7 @@
 
 test('When a flush callback is installed and multiple calls to define are made, ' +
 'the flush callback is called only once during the first call to define.', function() {
-  PATCHES.allowDepth(1, function() {
+  PatchMonitor.runGuarded(function() {
     let flush = undefined;
     let flushCallbackCallCount = 0;
     customElements.polyfillWrapFlushCallback(fn => {

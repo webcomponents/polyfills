@@ -7,8 +7,20 @@
 </script>
 <script src="../../../../es6-promise/dist/es6-promise.auto.min.js"></script>
 <script src="../../../../web-component-tester/browser.js"></script>
+<script src="../../PatchMonitor.js"></script>
+<script>
+  window.__records = PatchMonitor.collect([
+    Document.prototype,
+    DocumentFragment.prototype,
+    Element.prototype,
+    HTMLElement.prototype,
+    Node.prototype,
+  ]);
+</script>
 <script src="../../../custom-elements.min.js"></script>
-<script src="../EnvironmentCapturing/testPatch.js"></script>
+<script>
+  PatchMonitor.wrap(window.__records);
+</script>
 </head>
 <body>
 <script>
@@ -47,7 +59,7 @@ suite('Custom elements in the assigned string are created when setting `innerHTM
   });
 
   test('Disconnected context element', function() {
-    PATCHES.allowDepth(1, function() {
+    PatchMonitor.runGuarded(function() {
       const div = document.createElement('div');
       div.innerHTML = `<${localName1}><${localName2}></${localName2}></${localName1}>`;
 
@@ -64,7 +76,7 @@ suite('Custom elements in the assigned string are created when setting `innerHTM
   });
 
   test('Connected context element', function() {
-    PATCHES.allowDepth(1, function() {
+    PatchMonitor.runGuarded(function() {
       const div = document.createElement('div');
       document.body.appendChild(div);
 
@@ -116,7 +128,7 @@ suite('Custom element descendants of the context element are disconnected when s
   });
 
   test('Disconnected context element', function() {
-    PATCHES.allowDepth(1, function() {
+    PatchMonitor.runGuarded(function() {
       div.innerHTML = "";
 
       // `div` no longer has children.
@@ -134,7 +146,7 @@ suite('Custom element descendants of the context element are disconnected when s
   });
 
   test('Connected context element', function() {
-    PATCHES.allowDepth(1, function() {
+    PatchMonitor.runGuarded(function() {
       document.body.appendChild(div);
 
       assert.equal(div.childNodes.length, 1);

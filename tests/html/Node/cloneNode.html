@@ -7,8 +7,20 @@
 </script>
 <script src="../../../../es6-promise/dist/es6-promise.auto.min.js"></script>
 <script src="../../../../web-component-tester/browser.js"></script>
+<script src="../../PatchMonitor.js"></script>
+<script>
+  window.__records = PatchMonitor.collect([
+    Document.prototype,
+    DocumentFragment.prototype,
+    Element.prototype,
+    HTMLElement.prototype,
+    Node.prototype,
+  ]);
+</script>
 <script src="../../../custom-elements.min.js"></script>
-<script src="../EnvironmentCapturing/testPatch.js"></script>
+<script>
+  PatchMonitor.wrap(window.__records);
+</script>
 <script>
   function generateLocalName() {
     return 'test-element-' + Math.random().toString(32).substring(2);
@@ -35,7 +47,7 @@
 
   test('Cloning a customized element upgrades the cloned tree. (shallow)',
     function() {
-      PATCHES.allowDepth(1, function() {
+      PatchMonitor.runGuarded(function() {
         const localName = generateLocalName();
         defineWithLocalName(localName);
 
@@ -54,7 +66,7 @@
 
   test('Cloning a customized element upgrades the cloned tree. (deep)',
     function() {
-      PATCHES.allowDepth(1, function() {
+      PatchMonitor.runGuarded(function() {
         const localName = generateLocalName();
         defineWithLocalName(localName);
 
