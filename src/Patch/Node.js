@@ -176,7 +176,7 @@ export default function(internals) {
       get: baseDescriptor.get,
       set: /** @this {Node} */ function(assignedValue) {
         // If this is a text node then there are no nodes to disconnect.
-        if (this.nodeType === Node.TEXT_NODE) {
+        if (NodeProxy.nodeType(this) === Node.TEXT_NODE) {
           baseDescriptor.set.call(this, assignedValue);
           return;
         }
