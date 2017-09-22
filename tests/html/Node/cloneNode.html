@@ -7,9 +7,10 @@
 </script>
 <script src="../../../../es6-promise/dist/es6-promise.auto.min.js"></script>
 <script src="../../../../web-component-tester/browser.js"></script>
+<script src="../../../custom-elements.min.js"></script>
 <script src="../../PatchMonitor.js"></script>
 <script>
-  window.__records = PatchMonitor.collect([
+  PatchMonitor.wrap([
     Document.prototype,
     DocumentFragment.prototype,
     Element.prototype,
@@ -20,10 +21,6 @@
     MutationRecord.prototype,
     Node.prototype,
   ]);
-</script>
-<script src="../../../custom-elements.min.js"></script>
-<script>
-  PatchMonitor.wrap(window.__records);
 </script>
 <script>
   function generateLocalName() {

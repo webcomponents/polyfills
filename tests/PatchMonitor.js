@@ -31,9 +31,7 @@ window.PatchMonitor = (function() {
       }
     },
 
-    collect(targets) {
-      const patchRecords = [];
-
+    wrap(targets) {
       for (let targetIndex = 0; targetIndex < targets.length; targetIndex++) {
         const target = targets[targetIndex];
         if (target === undefined) continue;
@@ -42,51 +40,36 @@ window.PatchMonitor = (function() {
         for (let propertyNameIndex = 0; propertyNameIndex < propertyNames.length; propertyNameIndex++) {
           const propertyName = propertyNames[propertyNameIndex];
 
-          patchRecords.push({
-            target: target,
-            propertyName: propertyName,
-          });
-        }
-      }
+          const descriptor = Object.getOwnPropertyDescriptor(target, propertyName);
+          const newDescriptor = {
+            configurable: descriptor.configurable,
+            enumerable: descriptor.enumerable,
+          };
 
-      return patchRecords;
-    },
+          if (descriptor.value && descriptor.value instanceof Function) {
+            const original = descriptor.value;
+            newDescriptor.value = createGuard({
+              original, target, propertyName
+            });
+          }
 
-    wrap(records) {
-      for (let i = 0; i < records.length; i++) {
-        const record = records[i];
-        const target = record.target;
-        const propertyName = record.propertyName;
+          if (descriptor.get) {
+            const original = descriptor.get;
+            newDescriptor.get = createGuard({
+              original, target, propertyName
+            });
+          }
 
-        const descriptor = Object.getOwnPropertyDescriptor(target, propertyName);
-        const newDescriptor = {
-          configurable: descriptor.configurable,
-          enumerable: descriptor.enumerable,
-        };
+          if (descriptor.set) {
+            const original = descriptor.set;
+            newDescriptor.set = createGuard({
+              original, target, propertyName
+            });
+          }
 
-        if (descriptor.value && descriptor.value instanceof Function) {
-          const original = descriptor.value;
-          newDescriptor.value = createGuard({
-            original, target, propertyName
-          });
-        }
-
-        if (descriptor.get) {
-          const original = descriptor.get;
-          newDescriptor.get = createGuard({
-            original, target, propertyName
-          });
-        }
-
-        if (descriptor.set) {
-          const original = descriptor.set;
-          newDescriptor.set = createGuard({
-            original, target, propertyName
-          });
-        }
-
-        if (descriptor.configurable) {
-          Object.defineProperty(target, propertyName, newDescriptor);
+          if (descriptor.configurable) {
+            Object.defineProperty(target, propertyName, newDescriptor);
+          }
         }
       }
     },
