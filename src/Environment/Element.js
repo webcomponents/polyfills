@@ -1,5 +1,5 @@
 import {getDescriptor, getter, method} from "./Utilities.js";
-import {descriptor as NodeDesc} from "./Node.js";
+import {descriptors as NodeDesc} from "./Node.js";
 
 export const constructor = window['Element'];
 export const prototype = constructor['prototype'];
