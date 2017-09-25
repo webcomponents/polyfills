@@ -4,7 +4,6 @@ export const constructor = window['Node'];
 export const prototype = constructor['prototype'];
 
 export const descriptors = {
-  addEventListener: getDescriptor(prototype, 'addEventListener'),
   appendChild: getDescriptor(prototype, 'appendChild'),
   childNodes: getDescriptor(prototype, 'childNodes'),
   cloneNode: getDescriptor(prototype, 'cloneNode'),
@@ -20,7 +19,6 @@ export const descriptors = {
   textContent: getDescriptor(prototype, 'textContent'),
 };
 
-const addEventListenerMethod = method(descriptors.addEventListener);
 const appendChildMethod = method(descriptors.appendChild);
 const childNodesGetter = getter(descriptors.childNodes, function() { return this.childNodes; });
 const cloneNodeMethod = method(descriptors.cloneNode);
@@ -35,7 +33,6 @@ const removeChildMethod = method(descriptors.removeChild);
 const replaceChildMethod = method(descriptors.replaceChild);
 
 export const proxy = {
-  addEventListener: (node, type, callback, options) => addEventListenerMethod.call(node, type, callback, options),
   appendChild: (node, deep) => appendChildMethod.call(node, deep),
   childNodes: node => childNodesGetter.call(node),
   cloneNode: (node, deep) => cloneNodeMethod.call(node, deep),

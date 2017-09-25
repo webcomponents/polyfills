@@ -1,7 +1,8 @@
 import {constructor as DocumentCtor, proxy as DocumentProxy} from './Environment/Document.js';
 import {proxy as ElementProxy} from './Environment/Element.js';
+import {proxy as EventTargetProxy} from './Environment/EventTarget.js';
 import {proxy as HTMLLinkElementProxy} from './Environment/HTMLLinkElement.js';
-import {constructor as NodeCtor, proxy as NodeProxy} from './Environment/Node.js';
+import {constructor as NodeCtor} from './Environment/Node.js';
 import * as Utilities from './Utilities.js';
 import CEState from './CustomElementState.js';
 
@@ -202,7 +203,7 @@ export default class CustomElementInternals {
         } else {
           // If this link's import root is not available, its contents can't be
           // walked. Wait for 'load' and walk it when it's ready.
-          NodeProxy.addEventListener(element, 'load', () => {
+          EventTargetProxy.addEventListener(element, 'load', () => {
             const importNode = /** @type {!Node} */ (element.import);
 
             if (importNode.__CE_documentLoadHandled) return;
