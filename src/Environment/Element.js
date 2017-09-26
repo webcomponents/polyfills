@@ -1,5 +1,4 @@
 import {getDescriptor, getter, method} from "./Utilities.js";
-import {descriptors as NodeDesc} from "./Node.js";
 
 export const constructor = window['Element'];
 export const proto = constructor['prototype'];
@@ -26,7 +25,9 @@ export const descriptors = {
 const attachShadowMethod = method(descriptors.attachShadow);
 const getAttributeMethod = method(descriptors.getAttribute);
 const getAttributeNSMethod = method(descriptors.getAttributeNS);
-const localNameGetter = getter(descriptors.localName || NodeDesc.localName, function() { return this.localName; });
+const localNameGetter = getter(
+  descriptors.localName || /* Edge / IE11 */ getDescriptor(window['Node'].prototype, 'localName'),
+  function() { return this.localName; });
 const removeAttributeMethod = method(descriptors.removeAttribute);
 const removeAttributeNSMethod = method(descriptors.removeAttributeNS);
 const setAttributeMethod = method(descriptors.setAttribute);
