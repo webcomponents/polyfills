@@ -1,12 +1,12 @@
 import {proxy as DocumentProxy} from '../Environment/Document.js';
 import {
   descriptors as ElementDesc,
-  prototype as ElementProto,
+  proto as ElementProto,
   proxy as ElementProxy,
 } from '../Environment/Element.js';
 import {
   descriptors as HTMLElementDesc,
-  prototype as HTMLElementProto,
+  proto as HTMLElementProto,
 } from '../Environment/HTMLElement.js';
 import {proxy as HTMLTemplateElementProxy} from '../Environment/HTMLTemplateElement.js';
 import {proxy as NodeProxy} from '../Environment/Node.js';

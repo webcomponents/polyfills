@@ -1,6 +1,6 @@
 import {
   descriptors as DocumentDesc,
-  prototype as DocumentProto,
+  proto as DocumentProto,
   proxy as DocumentProxy,
 } from '../Environment/Document.js';
 import CustomElementInternals from '../CustomElementInternals.js';

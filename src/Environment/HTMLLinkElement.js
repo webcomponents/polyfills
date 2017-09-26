@@ -1,10 +1,10 @@
 import {getDescriptor, getter, method} from "./Utilities.js";
 
 export const constructor = window['HTMLLinkElement'];
-export const prototype = constructor ? constructor['prototype'] : undefined;
+export const proto = constructor ? constructor['prototype'] : undefined;
 
 export const descriptors = {
-  import: getDescriptor(prototype, 'import'),
+  import: getDescriptor(proto, 'import'),
 };
 
 const importGetter = getter(descriptors.import, function() { return this.import; });

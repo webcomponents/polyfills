@@ -1,11 +1,11 @@
 import {getDescriptor, getter, method} from "./Utilities.js";
 
 export const constructor = window['MutationObserver'];
-export const prototype = constructor['prototype'];
+export const proto = constructor['prototype'];
 
 export const descriptors = {
-  disconnect: getDescriptor(prototype, 'disconnect'),
-  observe: getDescriptor(prototype, 'observe'),
+  disconnect: getDescriptor(proto, 'disconnect'),
+  observe: getDescriptor(proto, 'observe'),
 };
 
 const disconnectMethod = method(descriptors.disconnect);

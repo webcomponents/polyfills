@@ -1,22 +1,22 @@
 import {getDescriptor, getter, method} from "./Utilities.js";
 
 export const constructor = window['Node'];
-export const prototype = constructor['prototype'];
+export const proto = constructor['prototype'];
 
 export const descriptors = {
-  appendChild: getDescriptor(prototype, 'appendChild'),
-  childNodes: getDescriptor(prototype, 'childNodes'),
-  cloneNode: getDescriptor(prototype, 'cloneNode'),
-  firstChild: getDescriptor(prototype, 'firstChild'),
-  insertBefore: getDescriptor(prototype, 'insertBefore'),
-  isConnected: getDescriptor(prototype, 'isConnected'),
-  nextSibling: getDescriptor(prototype, 'nextSibling'),
-  nodeType: getDescriptor(prototype, 'nodeType'),
-  ownerDocument: getDescriptor(prototype, 'ownerDocument'),
-  parentNode: getDescriptor(prototype, 'parentNode'),
-  removeChild: getDescriptor(prototype, 'removeChild'),
-  replaceChild: getDescriptor(prototype, 'replaceChild'),
-  textContent: getDescriptor(prototype, 'textContent'),
+  appendChild: getDescriptor(proto, 'appendChild'),
+  childNodes: getDescriptor(proto, 'childNodes'),
+  cloneNode: getDescriptor(proto, 'cloneNode'),
+  firstChild: getDescriptor(proto, 'firstChild'),
+  insertBefore: getDescriptor(proto, 'insertBefore'),
+  isConnected: getDescriptor(proto, 'isConnected'),
+  nextSibling: getDescriptor(proto, 'nextSibling'),
+  nodeType: getDescriptor(proto, 'nodeType'),
+  ownerDocument: getDescriptor(proto, 'ownerDocument'),
+  parentNode: getDescriptor(proto, 'parentNode'),
+  removeChild: getDescriptor(proto, 'removeChild'),
+  replaceChild: getDescriptor(proto, 'replaceChild'),
+  textContent: getDescriptor(proto, 'textContent'),
 };
 
 const appendChildMethod = method(descriptors.appendChild);

@@ -1,16 +1,16 @@
 import {getDescriptor, getter, method} from "./Utilities.js";
 
 export const constructor = window['Document'];
-export const prototype = constructor['prototype'];
+export const proto = constructor['prototype'];
 
 export const descriptors = {
-  append: getDescriptor(prototype, 'append'),
-  createElement: getDescriptor(prototype, 'createElement'),
-  createElementNS: getDescriptor(prototype, 'createElementNS'),
-  createTextNode: getDescriptor(prototype, 'createTextNode'),
-  importNode: getDescriptor(prototype, 'importNode'),
-  prepend: getDescriptor(prototype, 'prepend'),
-  readyState: getDescriptor(prototype, 'readyState'),
+  append: getDescriptor(proto, 'append'),
+  createElement: getDescriptor(proto, 'createElement'),
+  createElementNS: getDescriptor(proto, 'createElementNS'),
+  createTextNode: getDescriptor(proto, 'createTextNode'),
+  importNode: getDescriptor(proto, 'importNode'),
+  prepend: getDescriptor(proto, 'prepend'),
+  readyState: getDescriptor(proto, 'readyState'),
 };
 
 const createElementMethod = method(descriptors.createElement);

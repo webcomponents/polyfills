@@ -2,25 +2,25 @@ import {getDescriptor, getter, method} from "./Utilities.js";
 import {descriptors as NodeDesc} from "./Node.js";
 
 export const constructor = window['Element'];
-export const prototype = constructor['prototype'];
+export const proto = constructor['prototype'];
 
 export const descriptors = {
-  after: getDescriptor(prototype, 'after'),
-  append: getDescriptor(prototype, 'append'),
-  attachShadow: getDescriptor(prototype, 'attachShadow'),
-  before: getDescriptor(prototype, 'before'),
-  getAttribute: getDescriptor(prototype, 'getAttribute'),
-  getAttributeNS: getDescriptor(prototype, 'getAttributeNS'),
-  innerHTML: getDescriptor(prototype, 'innerHTML'),
-  insertAdjacentElement: getDescriptor(prototype, 'insertAdjacentElement'),
-  localName: getDescriptor(prototype, 'localName'),
-  prepend: getDescriptor(prototype, 'prepend'),
-  remove: getDescriptor(prototype, 'remove'),
-  removeAttribute: getDescriptor(prototype, 'removeAttribute'),
-  removeAttributeNS: getDescriptor(prototype, 'removeAttributeNS'),
-  replaceWith: getDescriptor(prototype, 'replaceWith'),
-  setAttribute: getDescriptor(prototype, 'setAttribute'),
-  setAttributeNS: getDescriptor(prototype, 'setAttributeNS'),
+  after: getDescriptor(proto, 'after'),
+  append: getDescriptor(proto, 'append'),
+  attachShadow: getDescriptor(proto, 'attachShadow'),
+  before: getDescriptor(proto, 'before'),
+  getAttribute: getDescriptor(proto, 'getAttribute'),
+  getAttributeNS: getDescriptor(proto, 'getAttributeNS'),
+  innerHTML: getDescriptor(proto, 'innerHTML'),
+  insertAdjacentElement: getDescriptor(proto, 'insertAdjacentElement'),
+  localName: getDescriptor(proto, 'localName'),
+  prepend: getDescriptor(proto, 'prepend'),
+  remove: getDescriptor(proto, 'remove'),
+  removeAttribute: getDescriptor(proto, 'removeAttribute'),
+  removeAttributeNS: getDescriptor(proto, 'removeAttributeNS'),
+  replaceWith: getDescriptor(proto, 'replaceWith'),
+  setAttribute: getDescriptor(proto, 'setAttribute'),
+  setAttributeNS: getDescriptor(proto, 'setAttributeNS'),
 };
 
 const attachShadowMethod = method(descriptors.attachShadow);

@@ -1,7 +1,7 @@
 import {proxy as DocumentProxy} from '../Environment/Document.js';
 import {
   descriptors as NodeDesc,
-  prototype as NodeProto,
+  proto as NodeProto,
   proxy as NodeProxy,
 } from '../Environment/Node.js';
 import CustomElementInternals from '../CustomElementInternals.js';
