@@ -91,8 +91,7 @@ export default function(internals) {
     // In this case, `innerHTML` has no exposed getter but still exists. Rather
     // than using the environment proxy, we have to get and set it directly.
 
-    /** @type {HTMLDivElement} */
-    const rawDiv = DocumentProxy.createElement(document, 'div');
+    const rawDiv = /** @type {HTMLDivElement} */ (DocumentProxy.createElement(document, 'div'));
 
     internals.addPatch(function(element) {
       patch_innerHTML(element, {
@@ -102,7 +101,8 @@ export default function(internals) {
         // of the element and returning the resulting element's `innerHTML`.
         // TODO: Is this too expensive?
         get: /** @this {Element} */ function() {
-          return NodeProxy.cloneNode(this, true).innerHTML;
+          const clone = /** @type {Element} */ (NodeProxy.cloneNode(this, true))
+          return clone.innerHTML;
         },
         // Implements setting `innerHTML` by creating an unpatched element,
         // setting `innerHTML` of that element and replacing the target
@@ -142,10 +142,10 @@ export default function(internals) {
         return ElementProxy.setAttribute(this, name, newValue);
       }
 
-      const oldValue = ElementProxy.getAttribute(this, name);
+      const before = ElementProxy.getAttribute(this, name);
       ElementProxy.setAttribute(this, name, newValue);
-      newValue = ElementProxy.getAttribute(this, name);
-      internals.attributeChangedCallback(this, name, oldValue, newValue, null);
+      const after = ElementProxy.getAttribute(this, name);
+      internals.attributeChangedCallback(this, name, before, after, null);
     });
 
   Utilities.setPropertyUnchecked(ElementProto, 'setAttributeNS',
@@ -161,10 +161,10 @@ export default function(internals) {
         return ElementProxy.setAttributeNS(this, namespace, name, newValue);
       }
 
-      const oldValue = ElementProxy.getAttributeNS(this, namespace, name);
+      const before = ElementProxy.getAttributeNS(this, namespace, name);
       ElementProxy.setAttributeNS(this, namespace, name, newValue);
-      newValue = ElementProxy.getAttributeNS(this, namespace, name);
-      internals.attributeChangedCallback(this, name, oldValue, newValue, namespace);
+      const after = ElementProxy.getAttributeNS(this, namespace, name);
+      internals.attributeChangedCallback(this, name, before, after, namespace);
     });
 
   Utilities.setPropertyUnchecked(ElementProto, 'removeAttribute',

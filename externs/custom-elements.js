@@ -54,5 +54,5 @@ Element.prototype.__CE_state;
 /** @type {!CustomElementDefinition|undefined} */
 Element.prototype.__CE_definition;
 
-/** @type {!DocumentFragment|undefined} */
+/** @type {!ShadowRoot|null|undefined} */
 Element.prototype.__CE_shadowRoot;

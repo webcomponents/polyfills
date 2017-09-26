@@ -13,12 +13,26 @@ export const descriptors = {
   readyState: getDescriptor(proto, 'readyState'),
 };
 
+/** @type {function(this: Document, !string): !HTMLElement} */
 const createElementMethod = method(descriptors.createElement);
+/** @type {function(this: Document, ?string, !string): !Element} */
 const createElementNSMethod = method(descriptors.createElementNS);
+/** @type {function(this: Document, !string): !Text} */
 const createTextNodeMethod = method(descriptors.createTextNode);
+/** @type {function(this: Document, !Node, boolean=): !Node} */
 const importNodeMethod = method(descriptors.importNode);
+/** @type {function(this: Document): (!string|undefined)} */
 const readyStateGetter = getter(descriptors.readyState, function() { return this.readyState; });
 
+/**
+ * @type {{
+ *   createElement: function(!Document, !string): !Element,
+ *   createElementNS: function(!Document, ?string, !string): !Element,
+ *   createTextNode: function(!Document, !string): !Text,
+ *   importNode: function(!Document, !Node, boolean=): !Node,
+ *   readyState: function(!Document): (!string|undefined),
+ * }}
+ */
 export const proxy = {
   createElement: (doc, localName) => createElementMethod.call(doc, localName),
   createElementNS: (doc, namespace, qualifiedName) => createElementNSMethod.call(doc, namespace, qualifiedName),

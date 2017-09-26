@@ -22,17 +22,37 @@ export const descriptors = {
   setAttributeNS: getDescriptor(proto, 'setAttributeNS'),
 };
 
+/** @type {function(this: Element, !{mode: !string}): ShadowRoot} */
 const attachShadowMethod = method(descriptors.attachShadow);
+/** @type {function(this: Element, !string): ?string} */
 const getAttributeMethod = method(descriptors.getAttribute);
+/** @type {function(this: Element, ?string, !string): ?string} */
 const getAttributeNSMethod = method(descriptors.getAttributeNS);
+/** @type {function(this: Element): !string} */
 const localNameGetter = getter(
   descriptors.localName || /* Edge / IE11 */ getDescriptor(window['Node'].prototype, 'localName'),
   function() { return this.localName; });
+/** @type {function(this: Element, !string)} */
 const removeAttributeMethod = method(descriptors.removeAttribute);
+/** @type {function(this: Element, ?string, !string)} */
 const removeAttributeNSMethod = method(descriptors.removeAttributeNS);
+/** @type {function(this: Element, !string, !string): ?string} */
 const setAttributeMethod = method(descriptors.setAttribute);
+/** @type {function(this: Element, ?string, !string, !string): ?string} */
 const setAttributeNSMethod = method(descriptors.setAttributeNS);
 
+/**
+ * @type {{
+ *   attachShadow: function(!Element, !{mode: !string}): ShadowRoot,
+ *   getAttribute: function(!Element, !string): ?string,
+ *   getAttributeNS: function(!Element, ?string, !string): ?string,
+ *   localName: function(!Element): !string,
+ *   removeAttribute: function(!Element, !string),
+ *   removeAttributeNS: function(!Element, ?string, !string),
+ *   setAttribute: function(!Element, !string, !string): ?string,
+ *   setAttributeNS: function(!Element, ?string, !string, !string): ?string,
+ * }}
+ */
 export const proxy = {
   attachShadow: (node, options) => attachShadowMethod.call(node, options),
   getAttribute: (node, name) => getAttributeMethod.call(node, name),

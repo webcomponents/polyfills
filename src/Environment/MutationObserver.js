@@ -8,9 +8,17 @@ export const descriptors = {
   observe: getDescriptor(proto, 'observe'),
 };
 
+/** @type {function(this: MutationObserver)} */
 const disconnectMethod = method(descriptors.disconnect);
+/** @type {function(this: MutationObserver, !Node, !MutationObserverInit=)} */
 const observeMethod = method(descriptors.observe);
 
+/**
+ * @type {{
+ *   disconnect: function(!MutationObserver),
+ *   observe: function(!MutationObserver, !Node, !MutationObserverInit=),
+ * }}
+ */
 export const proxy = {
   disconnect: mutationObserver => disconnectMethod.call(mutationObserver),
   observe: (mutationObserver, target, options) => observeMethod.call(mutationObserver, target, options),

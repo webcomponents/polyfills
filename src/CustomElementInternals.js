@@ -191,7 +191,7 @@ export default class CustomElementInternals {
         const importNode = /** @type {?Node} */ (HTMLLinkElementProxy.import(element));
         const readyState = importNode instanceof DocumentCtor
           // Native HTML Imports.
-          ? DocumentProxy.readyState(importNode)
+          ? DocumentProxy.readyState(/** @type {!Document} */ (importNode))
           // HTML Imports polyfill.
           : (importNode instanceof NodeCtor ? importNode.readyState : undefined);
 

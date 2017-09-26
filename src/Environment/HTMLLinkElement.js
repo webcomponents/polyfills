@@ -7,8 +7,14 @@ export const descriptors = {
   import: getDescriptor(proto, 'import'),
 };
 
+/** @type {function(this: HTMLLinkElement): ?Document} */
 const importGetter = getter(descriptors.import, function() { return this.import; });
 
+/**
+ * @type {{
+ *   import: function(!HTMLLinkElement): ?Document,
+ * }}
+ */
 export const proxy = {
   import: node => importGetter.call(node),
 };
