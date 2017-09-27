@@ -61,7 +61,7 @@ ShadyRoot.prototype._init = function(host, options) {
   this._renderPending = false;
   this._hasRendered = false;
   this._slotList = [];
-  this._slotMap = null;
+  this._slotMap = {};
   // fast path initial render: remove existing physical dom.
   let c$ = childNodes(host);
   for (let i=0, l=c$.length; i < l; i++) {
@@ -337,8 +337,6 @@ ShadyRoot.prototype._updateChildNodes = function(container, children) {
  */
 ShadyRoot.prototype._addSlots = function(slots) {
   let slotNamesToSort;
-  this._slotMap = this._slotMap || {};
-  this._slotList = this._slotList || [];
   for (let i=0; i < slots.length; i++) {
     let slot = slots[i];
     // ensure insertionPoints's and their parents have logical dom info.
@@ -409,8 +407,6 @@ function ancestorList(node) {
  */
 ShadyRoot.prototype._removeContainedSlots = function(container) {
   let didRemove;
-  this._slotMap = this._slotMap || {};
-  this._slotList = this._slotList || [];
   const map = this._slotMap;
   for (let n in map) {
     let slots = map[n];
