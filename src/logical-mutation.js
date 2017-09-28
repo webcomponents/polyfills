@@ -49,6 +49,9 @@ export function insertBefore(parent, node, ref_node) {
   let ownerRoot = utils.ownerShadyRootForNode(parent);
   // if a slot is added, must render containing root.
   let slotsAdded = ownerRoot && findContainedSlots(node);
+  if (slotsAdded) {
+    ownerRoot._addSlots(slotsAdded);
+  }
   if (ownerRoot && (parent.localName === 'slot' || slotsAdded)) {
     ownerRoot._asyncRender();
   }
@@ -78,10 +81,6 @@ export function insertBefore(parent, node, ref_node) {
     }
   }
   scheduleObserver(parent, node);
-  // with insertion complete, can safely update insertion points.
-  if (slotsAdded) {
-    ownerRoot._addSlots(slotsAdded);
-  }
   return node;
 }
 

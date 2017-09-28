@@ -62,6 +62,7 @@ ShadyRoot.prototype._init = function(host, options) {
   this._hasRendered = false;
   this._slotList = [];
   this._slotMap = {};
+  this.__pendingSlots = [];
   // fast path initial render: remove existing physical dom.
   let c$ = childNodes(host);
   for (let i=0, l=c$.length; i < l; i++) {
@@ -120,6 +121,7 @@ ShadyRoot.prototype['_renderRoot'] = function() {
 }
 
 ShadyRoot.prototype._distribute = function() {
+  this._validateSlots();
   // capture # of previously assigned nodes to help determine if dirty.
   for (let i=0, slot; i < this._slotList.length; i++) {
     slot = this._slotList[i];
@@ -331,11 +333,22 @@ ShadyRoot.prototype._updateChildNodes = function(container, children) {
   }
 }
 
+ShadyRoot.prototype._addSlots = function(slots) {
+  this.__pendingSlots.push(...slots);
+}
+
+ShadyRoot.prototype._validateSlots = function() {
+  if (this.__pendingSlots.length) {
+    this._mapSlots(this.__pendingSlots);
+    this.__pendingSlots = [];
+  }
+}
+
 /**
  * Adds the given slots. Slots are maintained in an dom-ordered list.
  * In addition a map of name to slot is updated.
  */
-ShadyRoot.prototype._addSlots = function(slots) {
+ShadyRoot.prototype._mapSlots = function(slots) {
   let slotNamesToSort;
   for (let i=0; i < slots.length; i++) {
     let slot = slots[i];
@@ -406,6 +419,7 @@ function ancestorList(node) {
  * Any removed slots also have their `assignedNodes` removed from comopsed dom.
  */
 ShadyRoot.prototype._removeContainedSlots = function(container) {
+  this._validateSlots();
   let didRemove;
   const map = this._slotMap;
   for (let n in map) {
@@ -461,6 +475,7 @@ ShadyRoot.prototype._removeFlattenedNodes = function(slot) {
 }
 
 ShadyRoot.prototype._hasInsertionPoint = function() {
+  this._validateSlots();
   return Boolean(this._slotList.length);
 }
 
