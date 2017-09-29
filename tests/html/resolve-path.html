@@ -27,6 +27,7 @@
     test('resolve-path', function() {
       assert.isTrue(window.rootA, './resolve-import-a.html not loaded');
       assert.isTrue(window.importsB, './imports/resolve-import-b.html not loaded');
+      assert.equal(window.importsBCount, 1, './imports/resolve-import-b.html loaded twice');
       assert.isTrue(window.importsC, './imports/resolve-import-c.html not loaded');
       assert.isNotOk(window.rootC, './resolve-import-c.html was loaded');
     });
