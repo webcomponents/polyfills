@@ -44,7 +44,6 @@
   };
 
   /********************* path fixup *********************/
-  const ABS_URL_TEST = /(^\/)|(^#)|(^[\w-\d]*:)/;
   const CSS_URL_REGEXP = /(url\()([^)]*)(\))/g;
   const CSS_IMPORT_REGEXP = /(@import[\s]+(?!url\())([^;]*)(;)/g;
   const STYLESHEET_REGEXP = /(<link[^>]*)(rel=['|"]?stylesheet['|"]?[^>]*>)/g;
@@ -56,11 +55,11 @@
     fixUrls(element, base) {
       if (element.href) {
         element.setAttribute('href',
-          Path.replaceAttrUrl(element.getAttribute('href'), base));
+          Path.resolveUrl(element.getAttribute('href'), base));
       }
       if (element.src) {
         element.setAttribute('src',
-          Path.replaceAttrUrl(element.getAttribute('src'), base));
+          Path.resolveUrl(element.getAttribute('src'), base));
       }
       if (element.localName === 'style') {
         const r = Path.replaceUrls(element.textContent, base, CSS_URL_REGEXP);
@@ -76,14 +75,6 @@
         }
         return pre + '\'' + urlPath + '\'' + post;
       });
-    },
-
-    replaceAttrUrl(text, linkUrl) {
-      if (text && ABS_URL_TEST.test(text)) {
-        return text;
-      } else {
-        return Path.resolveUrl(text, linkUrl);
-      }
     },
 
     resolveUrl(url, base) {
@@ -305,7 +296,7 @@
       // Support <base> in imported docs. Resolve url and remove its href.
       const baseEl = content.querySelector('base');
       if (baseEl) {
-        url = Path.replaceAttrUrl(baseEl.getAttribute('href'), url);
+        url = Path.resolveUrl(baseEl.getAttribute('href'), url);
         baseEl.removeAttribute('href');
       }
 
