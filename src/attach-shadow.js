@@ -230,12 +230,14 @@ ShadyRoot.prototype._clearSlotAssignedNodes = function(slot) {
   }
 }
 
-ShadyRoot.prototype._addAssignedToFlattenedNodes = function(flattened, asssigned) {
-  for (let i=0, n; (i<asssigned.length) && (n=asssigned[i]); i++) {
-    if (n.localName == 'slot') {
-      this._addAssignedToFlattenedNodes(flattened, n.__shady.assignedNodes);
-    } else {
-      flattened.push(asssigned[i]);
+ShadyRoot.prototype._addAssignedToFlattenedNodes = function(flattened, assigned) {
+  if (assigned) {
+    for (let i=0, n; (i<assigned.length) && (n=assigned[i]); i++) {
+      if (n.localName == 'slot') {
+        this._addAssignedToFlattenedNodes(flattened, n.__shady.assignedNodes);
+      } else {
+        flattened.push(assigned[i]);
+      }
     }
   }
 }
