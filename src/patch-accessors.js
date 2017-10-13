@@ -11,6 +11,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 import * as utils from './utils.js';
 import {getInnerHTML} from './innerHTML.js';
 import * as nativeTree from './native-tree.js';
+import {accessors as nativeAccessors} from './native-tree-accessors.js';
 import {contains as nativeContains} from './native-methods.js';
 
 function clearNode(node) {
@@ -19,10 +20,7 @@ function clearNode(node) {
   }
 }
 
-const nativeInnerHTMLDesc = /** @type {ObjectPropertyDescriptor} */(
-  Object.getOwnPropertyDescriptor(Element.prototype, 'innerHTML') ||
-  Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'innerHTML'));
-
+const hasDescriptors = utils.settings.hasDescriptors;
 const inertDoc = document.implementation.createHTMLDocument('inert');
 const htmlContainer = inertDoc.createElement('div');
 
@@ -332,12 +330,12 @@ let InsideAccessors = {
      * @this {HTMLElement}
      */
     get() {
-      let content = this.localName === 'template' ?
-        /** @type {HTMLTemplateElement} */(this).content : this;
       if (utils.isTrackingLogicalChildNodes(this)) {
+        let content = this.localName === 'template' ?
+        /** @type {HTMLTemplateElement} */(this).content : this;
         return getInnerHTML(content);
       } else {
-        return nativeTree.innerHTML(content);
+        return nativeTree.innerHTML(this);
       }
     },
     /**
@@ -347,8 +345,8 @@ let InsideAccessors = {
       let content = this.localName === 'template' ?
         /** @type {HTMLTemplateElement} */(this).content : this;
       clearNode(content);
-      if (nativeInnerHTMLDesc && nativeInnerHTMLDesc.set) {
-        nativeInnerHTMLDesc.set.call(htmlContainer, text);
+      if (hasDescriptors) {
+        nativeAccessors.innerHTML.set.call(htmlContainer, text);
       } else {
         htmlContainer.innerHTML = text;
       }

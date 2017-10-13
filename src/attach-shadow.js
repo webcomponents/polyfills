@@ -64,7 +64,7 @@ ShadyRoot.prototype._init = function(host, options) {
   this._slotMap = {};
   this.__pendingSlots = [];
   // fast path initial render: remove existing physical dom.
-  let c$ = childNodes(host);
+  let c$ = Array.from(childNodes(host));
   for (let i=0, l=c$.length; i < l; i++) {
     removeChild.call(host, c$[i])
   }
@@ -306,7 +306,7 @@ ShadyRoot.prototype._isInsertionPoint = function(node) {
 
 // Ensures that the rendered node list inside `container` is `children`.
 ShadyRoot.prototype._updateChildNodes = function(container, children) {
-  let composed = childNodes(container);
+  let composed = Array.from(childNodes(container));
   let splices = calculateSplices(children, composed);
   // process removals
   for (let i=0, d=0, s; (i<splices.length) && (s=splices[i]); i++) {

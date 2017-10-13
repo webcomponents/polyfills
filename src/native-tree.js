@@ -8,104 +8,50 @@ Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 */
 
-import {getInnerHTML} from './innerHTML.js';
+import * as nativeTreeWalker from './native-tree-walker.js'
+import * as nativeTreeAccessors from './native-tree-accessors.js'
+import * as utils from './utils.js';
 
-let nodeWalker = document.createTreeWalker(document, NodeFilter.SHOW_ALL,
-  null, false);
+const hasDescriptors = utils.settings.hasDescriptors;
 
-let elementWalker = document.createTreeWalker(document, NodeFilter.SHOW_ELEMENT,
-  null, false);
+export let parentNode = hasDescriptors ? nativeTreeAccessors.parentNode :
+  nativeTreeWalker.parentNode;
 
-export function parentNode(node) {
-  nodeWalker.currentNode = node;
-  return nodeWalker.parentNode();
-}
+export let firstChild = hasDescriptors ? nativeTreeAccessors.firstChild :
+nativeTreeWalker.firstChild;
 
-export function firstChild(node) {
-  nodeWalker.currentNode = node;
-  return nodeWalker.firstChild();
-}
+export let lastChild = hasDescriptors ? nativeTreeAccessors.lastChild :
+nativeTreeWalker.lastChild;
 
-export function lastChild(node) {
-  nodeWalker.currentNode = node;
-  return nodeWalker.lastChild();
-}
+export let previousSibling = hasDescriptors ? nativeTreeAccessors.previousSibling :
+nativeTreeWalker.previousSibling;
 
-export function previousSibling(node) {
-  nodeWalker.currentNode = node;
-  return nodeWalker.previousSibling();
-}
+export let nextSibling = hasDescriptors ? nativeTreeAccessors.nextSibling :
+nativeTreeWalker.nextSibling;
 
-export function nextSibling(node) {
-  nodeWalker.currentNode = node;
-  return nodeWalker.nextSibling();
-}
+export let childNodes = hasDescriptors ? nativeTreeAccessors.childNodes :
+nativeTreeWalker.childNodes;
 
-export function childNodes(node) {
-  let nodes = [];
-  nodeWalker.currentNode = node;
-  let n = nodeWalker.firstChild();
-  while (n) {
-    nodes.push(n);
-    n = nodeWalker.nextSibling();
-  }
-  return nodes;
-}
+export let parentElement = hasDescriptors ? nativeTreeAccessors.parentElement :
+nativeTreeWalker.parentElement;
 
-export function parentElement(node) {
-  elementWalker.currentNode = node;
-  return elementWalker.parentNode();
-}
+export let firstElementChild = hasDescriptors ? nativeTreeAccessors.firstElementChild :
+nativeTreeWalker.firstElementChild;
 
-export function firstElementChild(node) {
-  elementWalker.currentNode = node;
-  return elementWalker.firstChild();
-}
+export let lastElementChild = hasDescriptors ? nativeTreeAccessors.lastElementChild :
+nativeTreeWalker.lastElementChild;
 
-export function lastElementChild(node) {
-  elementWalker.currentNode = node;
-  return elementWalker.lastChild();
-}
+export let previousElementSibling = hasDescriptors ? nativeTreeAccessors.previousElementSibling :
+nativeTreeWalker.previousElementSibling;
 
-export function previousElementSibling(node) {
-  elementWalker.currentNode = node;
-  return elementWalker.previousSibling();
-}
+export let nextElementSibling = hasDescriptors ? nativeTreeAccessors.nextElementSibling :
+nativeTreeWalker.nextElementSibling;
 
-export function nextElementSibling(node) {
-  elementWalker.currentNode = node;
-  return elementWalker.nextSibling();
-}
+export let children = hasDescriptors ? nativeTreeAccessors.children :
+nativeTreeWalker.children;
 
-export function children(node) {
-  let nodes = [];
-  elementWalker.currentNode = node;
-  let n = elementWalker.firstChild();
-  while (n) {
-    nodes.push(n);
-    n = elementWalker.nextSibling();
-  }
-  return nodes;
-}
+export let innerHTML = hasDescriptors ? nativeTreeAccessors.innerHTML :
+nativeTreeWalker.innerHTML;
 
-export function innerHTML(node) {
-  return getInnerHTML(node, (n) => childNodes(n));
-}
-
-export function textContent(node) {
-  switch (node.nodeType) {
-    case Node.ELEMENT_NODE:
-    case Node.DOCUMENT_FRAGMENT_NODE:
-      let textWalker = document.createTreeWalker(node, NodeFilter.SHOW_TEXT,
-        null, false);
-      let content = '', n;
-      while ( (n = textWalker.nextNode()) ) {
-        // TODO(sorvell): can't use textContent since we patch it on Node.prototype!
-        // However, should probably patch it only on element.
-        content += n.nodeValue;
-      }
-      return content;
-    default:
-      return node.nodeValue;
-  }
-}
+export let textContent = hasDescriptors ? nativeTreeAccessors.textContent :
+nativeTreeWalker.textContent;

@@ -105,7 +105,7 @@ export let recordChildNodes = function(node) {
     node.__shady.firstChild = firstChild(node);
     node.__shady.lastChild = lastChild(node);
     patchInsideElementAccessors(node);
-    let c$ = node.__shady.childNodes = childNodes(node);
+    let c$ = node.__shady.childNodes = Array.from(childNodes(node));
     for (let i=0, n; (i<c$.length) && (n=c$[i]); i++) {
       n.__shady = n.__shady || {};
       n.__shady.parentNode = node;

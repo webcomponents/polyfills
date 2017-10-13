@@ -116,7 +116,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       assert.equal(ShadyDOM.nativeTree.nextSibling(content), srLast);
       assert.equal(ShadyDOM.nativeTree.previousSibling(srLast), content);
       assert.equal(ShadyDOM.nativeTree.previousSibling(content), srFirst);
-      assert.deepEqual(ShadyDOM.nativeTree.childNodes(el), [srFirst, content, srLast])
+      assert.deepEqual(Array.from(ShadyDOM.nativeTree.childNodes(el)), [srFirst, content, srLast])
     });
 
     test('element accessors', function() {
@@ -130,7 +130,21 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       assert.equal(ShadyDOM.nativeTree.nextElementSibling(content), srLast);
       assert.equal(ShadyDOM.nativeTree.previousElementSibling(srLast), content);
       assert.equal(ShadyDOM.nativeTree.previousElementSibling(content), srFirst);
-      assert.deepEqual(ShadyDOM.nativeTree.children(el), [srFirst, content, srLast])
+      assert.deepEqual(Array.from(ShadyDOM.nativeTree.children(el)), [srFirst, content, srLast])
+    });
+
+    test('fragment accessors', function() {
+      let el = document.createDocumentFragment();
+      let d1 = document.createElement('div');
+      let d2 = document.createElement('div');
+      el.appendChild(d1);
+      el.appendChild(d2);
+      assert.equal(ShadyDOM.nativeTree.firstElementChild(el), d1);
+      assert.equal(ShadyDOM.nativeTree.lastElementChild(el), d2);
+      assert.equal(ShadyDOM.nativeTree.parentNode(d1), el);
+      assert.equal(ShadyDOM.nativeTree.nextElementSibling(d1), d2);
+      assert.equal(ShadyDOM.nativeTree.previousElementSibling(d2), d1);
+      assert.deepEqual(Array.from(ShadyDOM.nativeTree.children(el)), [d1, d2])
     });
 
     test('textConent', function() {
