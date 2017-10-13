@@ -66,6 +66,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     </inner-element>
   </template>
 
+  <template id="outerWithChildTemplate">
+      <outer-element><div></div></outer-element>
+    </template>
+
   <script>
     suite('Slot distribution in various scenarios', function () {
       test('slot distribution is not interrupted by events', function (done) {
@@ -102,9 +106,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         });
       });
 
-      test('slots are safe to query for assigned nodes in element constructors', function () {
+      suite('querying slots for assignedNodes in constructors', function () {
         let innerTemplate = document.querySelector('template#innerTemplate');
         let outerTemplate = document.querySelector('template#outerTemplate');
+        let outerWithChildTemplate = document.querySelector('template#outerWithChildTemplate');
+
         let nodeLength = 0;
 
         class InnerElement extends HTMLElement {
@@ -130,11 +136,24 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         }
         customElements.define('outer-element', OuterElement);
 
-        let el;
-        assert.doesNotThrow(() => {
-          el = document.createElement('outer-element');
+        test('querying for assignedNodes in constructor does not throw', function() {
+          assert.doesNotThrow(() => {
+            el = document.createElement('outer-element');
+          });
+          assert.isAbove(nodeLength, 0)
         });
-        assert.isAbove(nodeLength, 0)
+
+        test('querying for flattened assignedNodes correct after accessing in constructor', function() {
+          const dom = document.importNode(outerWithChildTemplate.content, true);
+          const outer = dom.firstElementChild;
+          const inner = outer.shadowRoot.querySelector('inner-element')
+          const innerSlot = inner.shadowRoot.querySelector('slot');
+          assert.equal(nodeLength, 2);
+          // NOTE: accessing assignedNodes here causes needs to flush the
+          // rendering of the entire distribution tree. In this case, inner
+          // is not dirty, but outer is.
+          assert.equal(innerSlot.assignedNodes({flatten: true}).length, 3);
+        });
       });
 
       test('nested slots work with template innerHTML', function () {
