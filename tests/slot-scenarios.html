@@ -145,7 +145,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
         test('querying for flattened assignedNodes correct after accessing in constructor', function() {
           const dom = document.importNode(outerWithChildTemplate.content, true);
-          const outer = dom.firstElementChild;
+          const outer = dom.querySelector('outer-element');
           const inner = outer.shadowRoot.querySelector('inner-element')
           const innerSlot = inner.shadowRoot.querySelector('slot');
           assert.equal(nodeLength, 2);
