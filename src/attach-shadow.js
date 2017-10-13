@@ -80,7 +80,7 @@ ShadyRoot.prototype._asyncRender = function() {
 
 // returns the oldest renderPending ancestor root.
 ShadyRoot.prototype._getRenderRoot = function() {
-  let renderRoot = this;
+  let renderRoot;
   let root = this;
   while (root) {
     if (root._renderPending) {
@@ -107,8 +107,9 @@ ShadyRoot.prototype._rendererForHost = function() {
 }
 
 ShadyRoot.prototype._render = function() {
-  if (this._renderPending) {
-    this._getRenderRoot()['_renderRoot']();
+  const root = this._getRenderRoot();
+  if (root) {
+    root['_renderRoot']();
   }
 }
 
@@ -230,12 +231,15 @@ ShadyRoot.prototype._clearSlotAssignedNodes = function(slot) {
   }
 }
 
-ShadyRoot.prototype._addAssignedToFlattenedNodes = function(flattened, asssigned) {
-  for (let i=0, n; (i<asssigned.length) && (n=asssigned[i]); i++) {
+ShadyRoot.prototype._addAssignedToFlattenedNodes = function(flattened, assigned) {
+  for (let i=0, n; (i<assigned.length) && (n=assigned[i]); i++) {
     if (n.localName == 'slot') {
-      this._addAssignedToFlattenedNodes(flattened, n.__shady.assignedNodes);
+      const nestedAssigned = n.__shady.assignedNodes;
+      if (nestedAssigned && nestedAssigned.length) {
+        this._addAssignedToFlattenedNodes(flattened, nestedAssigned);
+      }
     } else {
-      flattened.push(asssigned[i]);
+      flattened.push(assigned[i]);
     }
   }
 }
