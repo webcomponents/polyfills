@@ -18,7 +18,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <script>
     ShadyDOM = { force: true };
     if (window.customElements) {
-      // customElements.forcePolyfill = true;
+      customElements.forcePolyfill = true;
     }
   </script>
   <script src="../shadydom.min.js"></script>
@@ -103,9 +103,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       });
 
       test('slots are safe to query for assigned nodes in element constructors', function () {
-        let innerTemplate = document.querySelector('#innerTemplate');
-        let outerTemplate = document.querySelector('#outerTemplate');
+        let innerTemplate = document.querySelector('template#innerTemplate');
+        let outerTemplate = document.querySelector('template#outerTemplate');
         let nodeLength = 0;
+
         class InnerElement extends HTMLElement {
           constructor() {
             super();
