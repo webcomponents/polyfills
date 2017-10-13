@@ -231,15 +231,15 @@ ShadyRoot.prototype._clearSlotAssignedNodes = function(slot) {
   }
 }
 
-ShadyRoot.prototype._addAssignedToFlattenedNodes = function(flattened, asssigned) {
-  for (let i=0, n; (i<asssigned.length) && (n=asssigned[i]); i++) {
+ShadyRoot.prototype._addAssignedToFlattenedNodes = function(flattened, assigned) {
+  for (let i=0, n; (i<assigned.length) && (n=assigned[i]); i++) {
     if (n.localName == 'slot') {
       const nestedAssigned = n.__shady.assignedNodes;
       if (nestedAssigned && nestedAssigned.length) {
         this._addAssignedToFlattenedNodes(flattened, nestedAssigned);
       }
     } else {
-      flattened.push(asssigned[i]);
+      flattened.push(assigned[i]);
     }
   }
 }
