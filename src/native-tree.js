@@ -8,8 +8,8 @@ Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 */
 
-import * as nativeTreeWalker from './native-tree-walker.js'
-import * as nativeTreeAccessors from './native-tree-accessors.js'
+import * as nativeTreeWalker from './native-tree-walker.js';
+import * as nativeTreeAccessors from './native-tree-accessors.js';
 import * as utils from './utils.js';
 
 const hasDescriptors = utils.settings.hasDescriptors;

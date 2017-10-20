@@ -11,7 +11,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 import * as utils from './utils.js';
 import {getInnerHTML} from './innerHTML.js';
 import * as nativeTree from './native-tree.js';
-import {accessors as nativeAccessors} from './native-tree-accessors.js';
+import {nodeAccessors as nativeAccessors} from './native-tree-accessors.js';
 import {contains as nativeContains} from './native-methods.js';
 
 function clearNode(node) {
