@@ -15,10 +15,12 @@ import * as mutation from './logical-mutation.js';
 import {ActiveElementAccessor, ShadowRootAccessor, patchAccessors} from './patch-accessors.js';
 import {addEventListener, removeEventListener} from './patch-events.js';
 import {attachShadow, ShadyRoot} from './attach-shadow.js';
+import {shadyDataForNode} from './shady-data.js';
 
 function getAssignedSlot(node) {
   mutation.renderRootNode(node);
-  return node.__shady && node.__shady.assignedSlot || null;
+  const nodeData = shadyDataForNode(node);
+  return nodeData && nodeData.assignedSlot || null;
 }
 
 let windowMixin = {
@@ -152,9 +154,10 @@ let slotMixin = {
   assignedNodes(options) {
     if (this.localName === 'slot') {
       mutation.renderRootNode(this);
-      return this.__shady ?
-        ((options && options.flatten ? this.__shady.flattenedNodes :
-        this.__shady.assignedNodes) || []) :
+      const nodeData = shadyDataForNode(this);
+      return nodeData ?
+        ((options && options.flatten ? nodeData.flattenedNodes :
+          nodeData.assignedNodes) || []) :
         [];
     }
   }
@@ -242,7 +245,8 @@ let htmlElementMixin = utils.extendAll({
    * @this {HTMLElement}
    */
   blur() {
-    let root = this.__shady && this.__shady.root;
+    const nodeData = shadyDataForNode(this);
+    let root = nodeData && nodeData.root;
     let shadowActive = root && root.activeElement;
     if (shadowActive) {
       shadowActive.blur();

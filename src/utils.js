@@ -7,6 +7,7 @@ The complete set of contributors may be found at http://polymer.github.io/CONTRI
 Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 */
+import {shadyDataForNode} from './shady-data.js';
 
 export let settings = window['ShadyDOM'] || {};
 
@@ -18,7 +19,8 @@ settings.hasDescriptors = Boolean(desc && desc.configurable && desc.get);
 settings.inUse = settings['force'] || !settings.hasNativeShadowDOM;
 
 export function isTrackingLogicalChildNodes(node) {
-  return (node.__shady && node.__shady.firstChild !== undefined);
+  const nodeData = shadyDataForNode(node);
+  return (nodeData && nodeData.firstChild !== undefined);
 }
 
 export function isShadyRoot(obj) {

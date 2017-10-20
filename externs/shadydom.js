@@ -10,12 +10,6 @@
 Element.prototype.slot;
 
 /**
- * Upstream to closure-compiler
- * @type {Object}
- */
-Node.prototype.__shady;
-
-/**
  * Block renaming of properties added to Window to
  * prevent conflicts with other closure-compiler code.
  * @type {Object}

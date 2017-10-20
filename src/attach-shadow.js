@@ -16,6 +16,7 @@ import {recordChildNodes} from './logical-tree.js';
 import {removeChild, insertBefore, dispatchEvent} from './native-methods.js';
 import {parentNode, childNodes} from './native-tree.js';
 import {patchShadowRootAccessors} from './patch-accessors.js';
+import {ensureShadyDataForNode, shadyDataForNode} from './shady-data.js';
 
 // Do not export this object. It must be passed as the first argument to the
 // ShadyRoot constructor in `attachShadow` to prevent the constructor from
@@ -54,9 +55,9 @@ ShadyRoot.prototype._init = function(host, options) {
   // root <=> host
   this.host = host;
   this._mode = options && options.mode;
-  host.__shady = host.__shady || {};
-  host.__shady.root = this;
-  host.__shady.publicRoot = this._mode !== 'closed' ? this : null;
+  const hostData = ensureShadyDataForNode(host);
+  hostData.root = this;
+  hostData.publicRoot = this._mode !== 'closed' ? this : null;
   // state flags
   this._renderPending = false;
   this._hasRendered = false;
@@ -133,38 +134,39 @@ ShadyRoot.prototype._distribute = function() {
     this._distributeNodeToSlot(n);
   }
   // fallback content, slotchange, and dirty roots
-  for (let i=0, slot; i < this._slotList.length; i++) {
-    slot = this._slotList[i];
+  for (let i=0; i < this._slotList.length; i++) {
+    const slot = this._slotList[i];
+    const slotData = shadyDataForNode(slot);
     // distribute fallback content
-    if (!slot.__shady.assignedNodes.length) {
+    if (!slotData.assignedNodes.length) {
       for (let n=slot.firstChild; n; n=n.nextSibling) {
         this._distributeNodeToSlot(n, slot);
       }
     }
-    const slotParent = slot.parentNode;
-    const slotParentRoot = slotParent.__shady && slotParent.__shady.root;
+    const slotParentData = shadyDataForNode(slot.parentNode);
+    const slotParentRoot = slotParentData && slotParentData.root;
     if (slotParentRoot && slotParentRoot._hasInsertionPoint()) {
       slotParentRoot['_renderRoot']();
     }
-    this._addAssignedToFlattenedNodes(slot.__shady.flattenedNodes,
-      slot.__shady.assignedNodes);
-    let prevAssignedNodes = slot.__shady._previouslyAssignedNodes;
+    this._addAssignedToFlattenedNodes(slotData.flattenedNodes,
+      slotData.assignedNodes);
+    let prevAssignedNodes = slotData._previouslyAssignedNodes;
     if (prevAssignedNodes) {
       for (let i=0; i < prevAssignedNodes.length; i++) {
-        prevAssignedNodes[i].__shady._prevAssignedSlot = null;
+        shadyDataForNode(prevAssignedNodes[i])._prevAssignedSlot = null;
       }
-      slot.__shady._previouslyAssignedNodes = null;
+      slotData._previouslyAssignedNodes = null;
       // dirty if previously less assigned nodes than previously assigned.
-      if (prevAssignedNodes.length > slot.__shady.assignedNodes.length) {
-        slot.__shady.dirty = true;
+      if (prevAssignedNodes.length > slotData.assignedNodes.length) {
+        slotData.dirty = true;
       }
     }
     /* Note: A slot is marked dirty whenever a node is newly assigned to it
     or a node is assigned to a different slot (done in `_distributeNodeToSlot`)
     or if the number of nodes assigned to the slot has decreased (done above);
      */
-    if (slot.__shady.dirty) {
-      slot.__shady.dirty = false;
+    if (slotData.dirty) {
+      slotData.dirty = false;
       this._fireSlotChange(slot);
     }
   }
@@ -181,9 +183,9 @@ ShadyRoot.prototype._distribute = function() {
  *
  */
 ShadyRoot.prototype._distributeNodeToSlot = function(node, forcedSlot) {
-  node.__shady = node.__shady || {};
-  let oldSlot = node.__shady._prevAssignedSlot;
-  node.__shady._prevAssignedSlot = null;
+  const nodeData = ensureShadyDataForNode(node);
+  let oldSlot = nodeData._prevAssignedSlot;
+  nodeData._prevAssignedSlot = null;
   let slot = forcedSlot;
   if (!slot) {
     let name = node.slot || CATCHALL_NAME;
@@ -191,14 +193,15 @@ ShadyRoot.prototype._distributeNodeToSlot = function(node, forcedSlot) {
     slot = list && list[0];
   }
   if (slot) {
-    slot.__shady.assignedNodes.push(node);
-    node.__shady.assignedSlot = slot;
+    const slotData = ensureShadyDataForNode(slot);
+    slotData.assignedNodes.push(node);
+    nodeData.assignedSlot = slot;
   } else {
-    node.__shady.assignedSlot = undefined;
+    nodeData.assignedSlot = undefined;
   }
-  if (oldSlot !== node.__shady.assignedSlot) {
-    if (node.__shady.assignedSlot) {
-      node.__shady.assignedSlot.__shady.dirty = true;
+  if (oldSlot !== nodeData.assignedSlot) {
+    if (nodeData.assignedSlot) {
+      ensureShadyDataForNode(nodeData.assignedSlot).dirty = true;
     }
   }
 }
@@ -213,19 +216,20 @@ ShadyRoot.prototype._distributeNodeToSlot = function(node, forcedSlot) {
  * @param {HTMLSlotElement} slot
  */
 ShadyRoot.prototype._clearSlotAssignedNodes = function(slot) {
-  let n$ = slot.__shady.assignedNodes;
-  slot.__shady.assignedNodes = [];
-  slot.__shady.flattenedNodes = [];
-  slot.__shady._previouslyAssignedNodes = n$;
+  const slotData = shadyDataForNode(slot);
+  let n$ = slotData.assignedNodes;
+  slotData.assignedNodes = [];
+  slotData.flattenedNodes = [];
+  slotData._previouslyAssignedNodes = n$;
   if (n$) {
     for (let i=0; i < n$.length; i++) {
-      let n = n$[i];
-      n.__shady._prevAssignedSlot = n.__shady.assignedSlot;
+      let n = shadyDataForNode(n$[i]);
+      n._prevAssignedSlot = n.assignedSlot;
       // only clear if it was previously set to this slot;
       // this helps ensure that if the node has otherwise been distributed
       // ignore it.
-      if (n.__shady.assignedSlot === slot) {
-        n.__shady.assignedSlot = null;
+      if (n.assignedSlot === slot) {
+        n.assignedSlot = null;
       }
     }
   }
@@ -234,7 +238,7 @@ ShadyRoot.prototype._clearSlotAssignedNodes = function(slot) {
 ShadyRoot.prototype._addAssignedToFlattenedNodes = function(flattened, assigned) {
   for (let i=0, n; (i<assigned.length) && (n=assigned[i]); i++) {
     if (n.localName == 'slot') {
-      const nestedAssigned = n.__shady.assignedNodes;
+      const nestedAssigned = shadyDataForNode(n).assignedNodes;
       if (nestedAssigned && nestedAssigned.length) {
         this._addAssignedToFlattenedNodes(flattened, nestedAssigned);
       }
@@ -249,8 +253,9 @@ ShadyRoot.prototype._fireSlotChange = function(slot) {
   // Safari tech preview does not bubble but chrome does
   // Spec says it bubbles (https://dom.spec.whatwg.org/#mutation-observers)
   dispatchEvent.call(slot, new Event('slotchange'));
-  if (slot.__shady.assignedSlot) {
-    this._fireSlotChange(slot.__shady.assignedSlot);
+  const slotData = shadyDataForNode(slot);
+  if (slotData.assignedSlot) {
+    this._fireSlotChange(slotData.assignedSlot);
   }
 }
 
@@ -270,7 +275,8 @@ ShadyRoot.prototype._compose = function() {
       (2) we're not already composing it
       [consider (n^2) but rare better than Set]
     */
-    if (!(parent.__shady && parent.__shady.root) &&
+    const parentData = shadyDataForNode(parent);
+    if (!(parentData && parentData.root) &&
       composeList.indexOf(parent) < 0) {
       composeList.push(parent);
     }
@@ -292,7 +298,7 @@ ShadyRoot.prototype._composeNode = function(node) {
     // composed here. This is because if there is redistribution, it has
     // already been handled by this point.
     if (this._isInsertionPoint(child)) {
-      let flattenedNodes = child.__shady.flattenedNodes;
+      let flattenedNodes = shadyDataForNode(child).flattenedNodes;
       for (let j = 0; j < flattenedNodes.length; j++) {
         let distributedNode = flattenedNodes[j];
           children.push(distributedNode);
@@ -361,7 +367,6 @@ ShadyRoot.prototype._mapSlots = function(slots) {
     // a. for shadyRoot
     // b. for insertion points (fallback)
     // c. for parents of insertion points
-    slot.__shady = slot.__shady || {};
     recordChildNodes(slot);
     recordChildNodes(slot.parentNode);
     let name = this._nameForSlot(slot);
@@ -466,7 +471,7 @@ ShadyRoot.prototype._updateSlotName = function(slot) {
 }
 
 ShadyRoot.prototype._removeFlattenedNodes = function(slot) {
-  let n$ = slot.__shady.flattenedNodes;
+  let n$ = shadyDataForNode(slot).flattenedNodes;
   if (n$) {
     for (let i=0; i<n$.length; i++) {
       let node = n$[i];

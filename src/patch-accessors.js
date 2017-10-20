@@ -13,6 +13,7 @@ import {getInnerHTML} from './innerHTML.js';
 import * as nativeTree from './native-tree.js';
 import {nodeAccessors as nativeAccessors} from './native-tree-accessors.js';
 import {contains as nativeContains} from './native-methods.js';
+import {ensureShadyDataForNode, shadyDataForNode} from './shady-data.js';
 
 function clearNode(node) {
   while (node.firstChild) {
@@ -82,7 +83,8 @@ let OutsideAccessors = {
   parentElement: {
     /** @this {Node} */
     get() {
-      let l = this.__shady && this.__shady.parentNode;
+      const nodeData = shadyDataForNode(this);
+      let l = nodeData && nodeData.parentNode;
       if (l && l.nodeType !== Node.ELEMENT_NODE) {
         l = null;
       }
@@ -94,7 +96,8 @@ let OutsideAccessors = {
   parentNode: {
     /** @this {Node} */
     get() {
-      let l = this.__shady && this.__shady.parentNode;
+      const nodeData = shadyDataForNode(this);
+      const l = nodeData && nodeData.parentNode;
       return l !== undefined ? l : nativeTree.parentNode(this);
     },
     configurable: true
@@ -103,7 +106,8 @@ let OutsideAccessors = {
   nextSibling: {
     /** @this {Node} */
     get() {
-      let l = this.__shady && this.__shady.nextSibling;
+      const nodeData = shadyDataForNode(this);
+      const l = nodeData && nodeData.nextSibling;
       return l !== undefined ? l : nativeTree.nextSibling(this);
     },
     configurable: true
@@ -112,7 +116,8 @@ let OutsideAccessors = {
   previousSibling: {
     /** @this {Node} */
     get() {
-      let l = this.__shady && this.__shady.previousSibling;
+      const nodeData = shadyDataForNode(this);
+      const l = nodeData && nodeData.previousSibling;
       return l !== undefined ? l : nativeTree.previousSibling(this);
     },
     configurable: true
@@ -140,7 +145,8 @@ let OutsideAccessors = {
      * @this {HTMLElement}
      */
     get() {
-      if (this.__shady && this.__shady.nextSibling !== undefined) {
+      const nodeData = shadyDataForNode(this);
+      if (nodeData && nodeData.nextSibling !== undefined) {
         let n = this.nextSibling;
         while (n && n.nodeType !== Node.ELEMENT_NODE) {
           n = n.nextSibling;
@@ -158,7 +164,8 @@ let OutsideAccessors = {
      * @this {HTMLElement}
      */
     get() {
-      if (this.__shady && this.__shady.previousSibling !== undefined) {
+      const nodeData = shadyDataForNode(this);
+      if (nodeData && nodeData.previousSibling !== undefined) {
         let n = this.previousSibling;
         while (n && n.nodeType !== Node.ELEMENT_NODE) {
           n = n.previousSibling;
@@ -182,13 +189,14 @@ let InsideAccessors = {
     get() {
       let childNodes;
       if (utils.isTrackingLogicalChildNodes(this)) {
-        if (!this.__shady.childNodes) {
-          this.__shady.childNodes = [];
+        const nodeData = shadyDataForNode(this);
+        if (!nodeData.childNodes) {
+          nodeData.childNodes = [];
           for (let n=this.firstChild; n; n=n.nextSibling) {
-            this.__shady.childNodes.push(n);
+            nodeData.childNodes.push(n);
           }
         }
-        childNodes = this.__shady.childNodes;
+        childNodes = nodeData.childNodes;
       } else {
         childNodes = nativeTree.childNodes(this);
       }
@@ -211,7 +219,8 @@ let InsideAccessors = {
   firstChild: {
     /** @this {HTMLElement} */
     get() {
-      let l = this.__shady && this.__shady.firstChild;
+      const nodeData = shadyDataForNode(this);
+      const l = nodeData && nodeData.firstChild;
       return l !== undefined ? l : nativeTree.firstChild(this);
     },
     configurable: true
@@ -220,7 +229,8 @@ let InsideAccessors = {
   lastChild: {
   /** @this {HTMLElement} */
     get() {
-      let l = this.__shady && this.__shady.lastChild;
+      const nodeData = shadyDataForNode(this);
+      const l = nodeData && nodeData.lastChild;
       return l !== undefined ? l : nativeTree.lastChild(this);
     },
     configurable: true
@@ -254,7 +264,11 @@ let InsideAccessors = {
           clearNode(this);
           // Document fragments must have no childnodes if setting a blank string
           if (text.length > 0 || this.nodeType === Node.ELEMENT_NODE) {
-            this.appendChild(document.createTextNode(text));
+            if (hasDescriptors) {
+              nativeAccessors.textContent.set.call(this, text);
+            } else {
+              this.appendChild(document.createTextNode(text));
+            }
           }
           break;
         default:
@@ -272,7 +286,8 @@ let InsideAccessors = {
      * @this {HTMLElement}
      */
     get() {
-      if (this.__shady && this.__shady.firstChild !== undefined) {
+      const nodeData = shadyDataForNode(this);
+      if (nodeData && nodeData.firstChild !== undefined) {
         let n = this.firstChild;
         while (n && n.nodeType !== Node.ELEMENT_NODE) {
           n = n.nextSibling;
@@ -290,7 +305,8 @@ let InsideAccessors = {
      * @this {HTMLElement}
      */
     get() {
-      if (this.__shady && this.__shady.lastChild !== undefined) {
+      const nodeData = shadyDataForNode(this);
+      if (nodeData && nodeData.lastChild !== undefined) {
         let n = this.lastChild;
         while (n && n.nodeType !== Node.ELEMENT_NODE) {
           n = n.previousSibling;
@@ -369,7 +385,8 @@ export let ShadowRootAccessor = {
      * @this {HTMLElement}
      */
     get() {
-      return this.__shady && this.__shady.publicRoot || null;
+      const nodeData = shadyDataForNode(this);
+      return nodeData && nodeData.publicRoot || null;
     },
     configurable: true
   }
@@ -431,9 +448,9 @@ export function patchShadowRootAccessors(proto) {
 // ensure an element has patched "outside" accessors; no-op when not needed
 export let patchOutsideElementAccessors = utils.settings.hasDescriptors ?
   function() {} : function(element) {
-    if (!(element.__shady && element.__shady.__outsideAccessors)) {
-      element.__shady = element.__shady || {};
-      element.__shady.__outsideAccessors = true;
+    const sd = ensureShadyDataForNode(element);
+    if (!sd.__outsideAccessors) {
+      sd.__outsideAccessors = true;
       patchAccessorGroup(element, OutsideAccessors, true);
     }
   }
@@ -441,9 +458,8 @@ export let patchOutsideElementAccessors = utils.settings.hasDescriptors ?
 // ensure an element has patched "inside" accessors; no-op when not needed
 export let patchInsideElementAccessors = utils.settings.hasDescriptors ?
   function() {} : function(element) {
-    if (!(element.__shady && element.__shady.__insideAccessors)) {
-      element.__shady = element.__shady || {};
-      element.__shady.__insideAccessors = true;
+    const sd = ensureShadyDataForNode(element);
+    if (!sd.__insideAccessors) {
       patchAccessorGroup(element, InsideAccessors, true);
       patchAccessorGroup(element, ShadowRootAccessor, true);
     }

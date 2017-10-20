@@ -12,6 +12,7 @@ import * as utils from './utils.js';
 import * as logicalTree from './logical-tree.js';
 import * as nativeMethods from './native-methods.js';
 import {parentNode} from './native-tree.js';
+import {ensureShadyDataForNode, shadyDataForNode} from './shady-data.js';
 
 // Patched `insertBefore`. Note that all mutations that add nodes are routed
 // here. When a <slot> is added or a node is added to a host with a shadowRoot
@@ -28,7 +29,8 @@ export function insertBefore(parent, node, ref_node) {
     throw Error(`Failed to execute 'appendChild' on 'Node': The new child element contains the parent.`);
   }
   if (ref_node) {
-    let p = ref_node.__shady && ref_node.__shady.parentNode;
+    const refData = shadyDataForNode(ref_node);
+    const p = refData && refData.parentNode;
     if ((p !== undefined && p !== parent) ||
       (p === undefined && parentNode(ref_node) !== parent)) {
       throw Error(`Failed to execute 'insertBefore' on 'Node': The node ` +
@@ -59,12 +61,13 @@ export function insertBefore(parent, node, ref_node) {
     logicalTree.recordInsertBefore(node, parent, ref_node);
     // when inserting into a host with a shadowRoot with slot, use
     // `shadowRoot._asyncRender()` via `attach-shadow` module
+    const parentData = shadyDataForNode(parent);
     if (hasShadowRootWithSlot(parent)) {
-      parent.__shady.root._asyncRender();
+      parentData.root._asyncRender();
       preventNativeInsert = true;
     // when inserting into a host with shadowRoot with NO slot, do nothing
     // as the node should not be added to composed dome anywhere.
-    } else if (parent.__shady.root) {
+    } else if (parentData.root) {
       preventNativeInsert = true;
     }
   }
@@ -113,10 +116,11 @@ export function removeChild(parent, node) {
   let preventNativeRemove;
   let ownerRoot = utils.ownerShadyRootForNode(node);
   let removingInsertionPoint;
+  const parentData = shadyDataForNode(parent);
   if (utils.isTrackingLogicalChildNodes(parent)) {
     logicalTree.recordRemoveChild(node, parent);
     if (hasShadowRootWithSlot(parent)) {
-      parent.__shady.root._asyncRender();
+      parentData.root._asyncRender();
       preventNativeRemove = true;
     }
   }
@@ -141,7 +145,7 @@ export function removeChild(parent, node) {
     // (1) if parent has a shadyRoot, element may or may not at distributed
     // location (could be undistributed)
     // (2) if parent is a slot, element may not ben in composed dom
-    if (!(parent.__shady.root || node.localName === 'slot') ||
+    if (!(parentData.root || node.localName === 'slot') ||
       (container === parentNode(node))) {
       nativeMethods.removeChild.call(container, node);
     }
@@ -158,13 +162,15 @@ function removeOwnerShadyRoot(node) {
       removeOwnerShadyRoot(n);
     }
   }
-  if (node.__shady) {
-    node.__shady.ownerShadyRoot = undefined;
+  const nodeData = shadyDataForNode(node);
+  if (nodeData) {
+    nodeData.ownerShadyRoot = undefined;
   }
 }
 
 function hasCachedOwnerRoot(node) {
-  return Boolean(node.__shady && node.__shady.ownerShadyRoot !== undefined);
+  const nodeData = shadyDataForNode(node);
+  return Boolean(nodeData && nodeData.ownerShadyRoot !== undefined);
 }
 
 /**
@@ -177,7 +183,8 @@ function hasCachedOwnerRoot(node) {
 function firstComposedNode(node) {
   let composed = node;
   if (node && node.localName === 'slot') {
-    let flattened = node.__shady && node.__shady.flattenedNodes;
+    const nodeData = shadyDataForNode(node);
+    const flattened = nodeData && nodeData.flattenedNodes;
     composed = flattened && flattened.length ? flattened[0] :
       firstComposedNode(node.nextSibling);
   }
@@ -185,7 +192,8 @@ function firstComposedNode(node) {
 }
 
 function hasShadowRootWithSlot(node) {
-  let root = node && node.__shady && node.__shady.root;
+  const nodeData = shadyDataForNode(node);
+  let root = nodeData && nodeData.root;
   return (root && root._hasInsertionPoint());
 }
 
@@ -200,7 +208,7 @@ function distributeAttributeChange(node, name) {
   if (name === 'slot') {
     const parent = node.parentNode;
     if (hasShadowRootWithSlot(parent)) {
-      parent.__shady.root._asyncRender();
+      shadyDataForNode(parent).root._asyncRender();
     }
   } else if (node.localName === 'slot' && name === 'name') {
     let root = utils.ownerShadyRootForNode(node);
@@ -217,7 +225,8 @@ function distributeAttributeChange(node, name) {
  * @param {Node=} removedNode
  */
 function scheduleObserver(node, addedNode, removedNode) {
-  let observer = node.__shady && node.__shady.observer;
+  const nodeData = shadyDataForNode(node);
+  const observer = nodeData && nodeData.observer;
   if (observer) {
     if (addedNode) {
       observer.addedNodes.push(addedNode);
@@ -237,8 +246,8 @@ export function getRootNode(node, options) { // eslint-disable-line no-unused-va
   if (!node || !node.nodeType) {
     return;
   }
-  node.__shady = node.__shady || {};
-  let root = node.__shady.ownerShadyRoot;
+  const nodeData = ensureShadyDataForNode(node);
+  let root = nodeData.ownerShadyRoot;
   if (root === undefined) {
     if (utils.isShadyRoot(node)) {
       root = node;
@@ -252,7 +261,7 @@ export function getRootNode(node, options) { // eslint-disable-line no-unused-va
     // If this happens and we cache the result, the value can become stale
     // because for perf we avoid processing the subtree of added fragments.
     if (nativeMethods.contains.call(document.documentElement, node)) {
-      node.__shady.ownerShadyRoot = root;
+      nodeData.ownerShadyRoot = root;
     }
   }
   return root;
