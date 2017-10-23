@@ -12,7 +12,7 @@ import * as mutation from './logical-mutation.js';
 import {calculateSplices} from './array-splice.js';
 import * as utils from './utils.js';
 import {enqueue} from './flush.js';
-import {recordChildNodes} from './logical-tree.js';
+import {recordChildNodes, recordRootChildNodes} from './logical-tree.js';
 import {removeChild, insertBefore, dispatchEvent} from './native-methods.js';
 import {parentNode, childNodes} from './native-tree.js';
 import {patchShadowRootAccessors} from './patch-accessors.js';
@@ -25,6 +25,7 @@ import {ensureShadyDataForNode, shadyDataForNode} from './shady-data.js';
 const ShadyRootConstructionToken = {};
 
 const CATCHALL_NAME = '__catchall';
+const SHADYROOT_NAME = 'ShadyRoot';
 
 /**
  * @constructor
@@ -48,10 +49,10 @@ ShadyRoot.prototype._init = function(host, options) {
   // NOTE: set a fake local name so this element can be
   // distinguished from a DocumentFragment when patching.
   // FF doesn't allow this to be `localName`
-  this.__localName = 'ShadyRoot';
+  this.__localName = SHADYROOT_NAME;
   // logical dom setup
   recordChildNodes(host);
-  recordChildNodes(this);
+  recordRootChildNodes(this);
   // root <=> host
   this.host = host;
   this._mode = options && options.mode;
@@ -65,7 +66,7 @@ ShadyRoot.prototype._init = function(host, options) {
   this._slotMap = {};
   this.__pendingSlots = [];
   // fast path initial render: remove existing physical dom.
-  let c$ = Array.from(childNodes(host));
+  const c$ = Array.prototype.slice.call(childNodes(host));
   for (let i=0, l=c$.length; i < l; i++) {
     removeChild.call(host, c$[i])
   }

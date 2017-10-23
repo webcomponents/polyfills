@@ -99,11 +99,12 @@ export function recordRemoveChild(node, container) {
 export let recordChildNodes = function(node) {
   const nodeData = ensureShadyDataForNode(node);
   if (nodeData.firstChild === undefined) {
-    nodeData.firstChild = firstChild(node);
-    nodeData.lastChild = lastChild(node);
+    const c$ = Array.prototype.slice.call(childNodes(node));
+    nodeData.firstChild = c$[0] || null;
+    nodeData.lastChild = c$[c$.length-1] || null;
     patchInsideElementAccessors(node);
-    let c$ = nodeData.childNodes = Array.from(childNodes(node));
-    for (let i=0, n; (i<c$.length) && (n=c$[i]); i++) {
+    for (let i=0; i<c$.length; i++) {
+      const n = c$[i];
       const sd = ensureShadyDataForNode(n);
       sd.parentNode = node;
       sd.nextSibling = c$[i+1] || null;
@@ -111,4 +112,12 @@ export let recordChildNodes = function(node) {
       patchOutsideElementAccessors(n);
     }
   }
+}
+
+export let recordRootChildNodes = function(root) {
+  const rootData = ensureShadyDataForNode(root);
+  patchInsideElementAccessors(root);
+  rootData.firstChild = null;
+  rootData.lastChild = null;
+  rootData.childNodes = [];
 }
