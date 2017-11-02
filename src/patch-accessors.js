@@ -346,8 +346,10 @@ let InsideAccessors = {
       const content = this.localName === 'template' ?
         /** @type {HTMLTemplateElement} */(this).content : this;
       clearNode(content);
-      const containerName = this.localName === 'template' ? 'div' :
-        this.localName;
+      let containerName = this.localName;
+      if (!containerName || containerName === 'template') {
+        containerName = 'div';
+      }
       const htmlContainer = inertDoc.createElement(containerName);
       if (nativeInnerHTMLDesc && nativeInnerHTMLDesc.set) {
         nativeInnerHTMLDesc.set.call(htmlContainer, text);
