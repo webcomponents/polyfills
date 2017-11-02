@@ -45,6 +45,19 @@ suite('Custom elements in the assigned string are created when setting `innerHTM
     defineWithLocalName(localName2);
   });
 
+  test('get/set innerHTML on elements with parsing rules', function() {
+    const div = document.createElement('div');
+    const html = '<span>A</span>';
+    div.innerHTML = html;
+    assert.equal(div.innerHTML, html);
+    assert.equal(div.childNodes.length, 1);
+    const table = document.createElement('table');
+    const tableHtml = '<tbody></tbody>';
+    table.innerHTML = tableHtml;
+    assert.equal(table.innerHTML, tableHtml);
+    assert.equal(table.childNodes.length, 1);
+  });
+
   test('Disconnected context element', function() {
     const div = document.createElement('div');
     div.innerHTML = `<${localName1}><${localName2}></${localName2}></${localName1}>`;
