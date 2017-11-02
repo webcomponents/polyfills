@@ -51,10 +51,6 @@ suite('Custom elements in the assigned string are created when setting `innerHTM
     div.innerHTML = html;
     assert.equal(div.innerHTML, html);
     assert.equal(div.childNodes.length, 1);
-    const template = document.createElement('template');
-    template.innerHTML = html;
-    assert.equal(template.innerHTML, html);
-    assert.equal(template.content.childNodes.length, 1);
     const table = document.createElement('table');
     const tableHtml = '<tbody></tbody>';
     table.innerHTML = tableHtml;
