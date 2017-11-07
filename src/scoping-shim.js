@@ -24,6 +24,7 @@ import * as ApplyShimUtils from './apply-shim-utils.js';
 import documentWait from './document-wait.js';
 import {updateNativeProperties, detectMixin} from './common-utils.js';
 import {CustomStyleInterfaceInterface} from './custom-style-interface.js'; // eslint-disable-line no-unused-vars
+import {unscopedAttribute, addUnscopedStyle} from './unscoped-style-handler.js';
 
 /**
  * @const {StyleCache}
@@ -63,8 +64,12 @@ export default class ScopingShim {
     let cssText = [];
     for (let i = 0; i < styles.length; i++) {
       let s = styles[i];
-      cssText.push(s.textContent);
       s.parentNode.removeChild(s);
+      if (s.hasAttribute(unscopedAttribute)) {
+        addUnscopedStyle(s);
+      } else {
+        cssText.push(s.textContent);
+      }
     }
     return cssText.join('').trim();
   }
