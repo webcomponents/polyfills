@@ -70,6 +70,14 @@ WCT = {waitFor: function (cb) {HTMLImports.whenReady(cb)}}
   </style>
 </template>
 
+<template id="host-context">
+  <style>
+    :host-context([foo]) {
+      color: blue;
+    }
+  </style>
+</template>
+
 <script>
 function processTemplate(templateName, elementName) {
   var template = document.querySelector('template#' + templateName);
@@ -153,6 +161,17 @@ suite('Style Transformer', function() {
     test('ShadyDOM', function() {
       window.StyleTransformer.documentRule(rule);
       assert.equal(rule.selector, 'html:not(.style-scope)');
+    });
+  });
+
+  suite(':host-context', function() {
+    var ast;
+    suiteSetup(function() {
+      ast = processTemplate('host-context', 'x-foo');
+    });
+
+    test('no partial support for :host-context', function() {
+      assert.equal(ast.rules[0].selector, ':host-context([foo])');
     });
   });
 

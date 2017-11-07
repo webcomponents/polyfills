@@ -292,7 +292,7 @@ class StyleTransformer {
     // which have been improperly used under Shady DOM. This should be
     // deprecated.
     } else {
-      return selector.replace(HOST, hostScope);
+      return selector.replace(HOST_NO_CONTEXT, hostScope);
     }
   }
 
@@ -334,6 +334,8 @@ let HOST = ':host';
 let ROOT = ':root';
 let SLOTTED = '::slotted';
 let SLOTTED_START = new RegExp(`^(${SLOTTED})`);
+// make sure old `:host-context()` rules do not get partially transformed
+let HOST_NO_CONTEXT = /:host(?!-context)/g;
 // NOTE: this supports 1 nested () pair for things like
 // :host(:not([selected]), more general support requires
 // parsing which seems like overkill
