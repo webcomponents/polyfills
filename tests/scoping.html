@@ -836,9 +836,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       document.body.removeChild(el2);
     });
     test('@apply does not work in shady-unscoped', function() {
-      if (window.ShadyCSS.nativeShadow) {
-        this.skip();
-      }
       makeElement('unscoped-apply-user');
       makeElement('unscoped-apply');
       var el = document.createElement('unscoped-apply');
