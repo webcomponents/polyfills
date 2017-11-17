@@ -349,6 +349,42 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <div class="foo bar">2</div>
 </template>
 
+<template id="shady-unscoped">
+  <style shady-unscoped>
+    .unscoped {
+      color: rgb(255, 0, 0);
+    }
+  </style>
+  <div class="unscoped"></div>
+</template>
+
+<template id="shady-unscoped-2">
+  <style shady-unscoped>
+    .unscoped {
+      color: rgb(255, 0, 0);
+    }
+  </style>
+  <span class="unscoped"></span>
+</template>
+
+<template id="unscoped-apply-user">
+  <style>
+    div {
+      @apply --unscoped-foo;
+    }
+  </style>
+  <div></div>
+</template>
+
+<template id="unscoped-apply">
+  <style shady-unscoped>
+    html, :host > * {
+      --unscoped-foo: {border: 10px solid black};
+    }
+  </style>
+  <unscoped-apply-user></unscoped-apply-user>
+</template>
+
 <script>
 (function() {
   function assertComputed(element, value, property, pseudo) {
@@ -771,6 +807,45 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       document.body.removeChild(e);
     });
 
+  });
+
+  suite('unscoping', function() {
+    suiteSetup(function() {
+      makeElement('shady-unscoped');
+    });
+    test('styles with "shady-unscoped" attr work in Shady and Shadow', function() {
+      var el = document.createElement('shady-unscoped');
+      document.body.appendChild(el);
+      flush();
+      var div = el.shadowRoot.querySelector('div');
+      assertComputed(div, 'rgb(255, 0, 0)', 'color');
+      document.body.removeChild(el);
+    });
+    test('styles with "shady-unscoped" attr deduplicate', function(){
+      if (window.ShadyCSS.nativeShadow) {
+        this.skip();
+      }
+      makeElement('shady-unscoped-2');
+      var el1 = document.createElement('shady-unscoped');
+      var el2 = document.createElement('shady-unscoped-2');
+      document.body.appendChild(el1);
+      document.body.appendChild(el2);
+      flush();
+      assert.equal(document.querySelectorAll('style[shady-unscoped]').length, 1);
+      document.body.removeChild(el1);
+      document.body.removeChild(el2);
+    });
+    test('@apply does not work in shady-unscoped', function() {
+      makeElement('unscoped-apply-user');
+      makeElement('unscoped-apply');
+      var el = document.createElement('unscoped-apply');
+      document.body.appendChild(el);
+      flush();
+      var inner = el.shadowRoot.querySelector('unscoped-apply-user');
+      var target = inner.shadowRoot.querySelector('div');
+      assertComputed(target, '0px');
+      document.body.removeChild(el);
+    });
   });
 
 })();
