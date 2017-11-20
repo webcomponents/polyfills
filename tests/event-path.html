@@ -486,6 +486,16 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     container.parentNode.removeChild(container);
   });
 
+  test('events fire if relatedtarget and target are the same node without retargeting', function() {
+    var container = stampNodes('#relatedtarget');
+    var a = container.children[0];
+    var ev = new MouseEvent('foo', {bubbles: true, composed: true, relatedTarget: a});
+    a.dispatchEvent(ev);
+    assert.property(a, 'event');
+    assert.deepEqual(a.event, {target: a, relatedTarget: a});
+    container.parentNode.removeChild(container);
+  });
+
   test('capturing event listeners fire correctly for focus and blur', function() {
     var el = createEnabledElement('x-focus');
     var timeStamp;

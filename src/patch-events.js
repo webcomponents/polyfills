@@ -345,7 +345,9 @@ export function addEventListener(type, fnOrObj, optionsOrCapture) {
     // 1. the event is not composed and the current node is not in the same root as the target
     // 2. when bubbling, if after retargeting, relatedTarget and target point to the same node
     if (e.composed || e.composedPath().indexOf(target) > -1) {
-      if (e.target === e.relatedTarget) {
+      // if original target and relatedTarget have not changed,
+      // then there has been no retargeting and the event may fire
+      if (e.target === e.relatedTarget && !(e['__target'] === e.target && e['__relatedTarget'] === e.relatedTarget)) {
         if (e.eventPhase === Event.BUBBLING_PHASE) {
           e.stopImmediatePropagation();
         }
