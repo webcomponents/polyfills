@@ -347,7 +347,7 @@ export function addEventListener(type, fnOrObj, optionsOrCapture) {
     if (e.composed || e.composedPath().indexOf(target) > -1) {
       // if original target and relatedTarget have not changed,
       // then there has been no retargeting and the event may fire
-      if (e.target === e.relatedTarget && !(e['__target'] === e.target && e['__relatedTarget'] === e.relatedTarget)) {
+      if (e.target === e.relatedTarget && !(e['__target'] === e.target && e.__relatedTarget === e.relatedTarget)) {
         if (e.eventPhase === Event.BUBBLING_PHASE) {
           e.stopImmediatePropagation();
         }
