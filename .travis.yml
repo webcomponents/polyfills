@@ -1,20 +1,17 @@
 language: node_js
 node_js: stable
 dist: trusty
-sudo: required
+sudo: false
 addons:
   firefox: latest
-  apt:
-    sources:
-    - google-chrome
-    packages:
-    - google-chrome-stable
+  chrome: stable
 before_script:
 - npm install -g bower
 - bower install
 script:
-- xvfb-run wct
-- if [ "${TRAVIS_PULL_REQUEST}" = "false" ]; then wct -s 'windows 10/microsoftedge@14' -s 'windows 8.1/internet explorer@11' -s 'os x 10.11/safari@9' -s 'Linux/chrome@41'; fi
+- xvfb-run wct -l chrome
+- xvfb-run wct -l firefox
+- if [ "${TRAVIS_PULL_REQUEST}" = "false" ]; then wct -s 'windows 10/microsoftedge@14' -s 'windows 10/microsoftedge@15' -s 'windows 8.1/internet explorer@11' -s 'os x 10.11/safari@9' -s 'os x 10.12/safari@10' -s 'os x 10.12/safari@11' -s 'Linux/chrome@41'; fi
 env:
   global:
   - secure: sXR3QH57zDgwBluJLsz2I8mz22Nuw59TtGvvUFh64hv6PoA3X9GI0uYYaZyVDFfqoOKsjvNnxe2OQDa/mdyWrmAHW8W9DmT0jYJ35HABT7LgKFcOdvdbGhv+/0CxWOsV8aanRNMU30QXV9/+DOg5Q+P0v5m6uxkSjAKZLHEDSQu5RKlHYr5SJfLt8ODdT4onrcmUOi6I1OGDD1HEwMo7EEOst5O5JqvuqW5PU1MqE2v+K1V6ENMqwikgrHcFZ9r0MeTk7kpC4Vp/Fe0mc1M26irDrwGCZJHl8lZKxx2unCGQVIwGEOv4XzyvKXi5VRO3cMt7EZPkGtV7yjcnElIrfjWYDv7PnyPPmDigQIh1uN7iocgLwT2JgtylHGCZwRWOuhxWcmPejpDnjYBSq8mPescGZE2yuKwexlxTo4QeCBrHzcyYWt6bHRorAdVYaTLKcIdx5UGzu0gLJ4iLnkzEcu97MiKVN0md3TaEF0XcTfXVhCacF+p1WXQ+XIcrNMhmn+tx0pkBTTdn6G5Mz89+R8aQFOIblQJNlbhsbhLgJYW7ov0Grx3tmaPAW0/uErcg3WHdRUEIa2ibsDUNvYmBKwyI1ocroNnF68g/PYj/PNUTcfdcccn3iBDtREfRBM+Cvm6Nted2CcJB6BRYaYaYJ8Pt2kTGjUI2nrwVKtyrlNY=

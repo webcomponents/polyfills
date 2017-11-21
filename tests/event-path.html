@@ -217,16 +217,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     }, {
       focusHandler(e) {
         this.events.push({type: e.type, target: e.target, relatedTarget: e.relatedTarget});
-      },
-      focus(node) {
-        // use MouseEvent instead of FocusEvent so we can skip patching the FocusEvent constructor
-        let blur = new MouseEvent('blur', {composed: true, relatedTarget: node});
-        if (this.lastFocus) {
-          this.lastFocus.dispatchEvent(blur);
-        }
-        let focus = new MouseEvent('focus', {composed: true, relatedTarget: this.lastFocus});
-        node.dispatchEvent(focus);
-        this.lastFocus = node;
       }
     })
   </script>
@@ -432,33 +422,38 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
   test('focus and blur are nested', function() {
     var el = createEnabledElement('x-nested-focus');
-    el.focus(el.child);
-    el.focus(el);
-    assert.equal(el.events.length, 3);
+    el.focus();
+    el.child.focus();
+    console.log([...el.events]);
+    assert.equal(el.events.length, 2);
     var filtered = el.events.map(ev => ({type: ev.type, target: ev.target}));
     assert.deepEqual(filtered, [
-      {type: 'focus', target: el.child},
       {type: 'focus', target: el},
-      {type: 'blur', target: el.child},
+      {type: 'focus', target: el.child}
     ]);
     el.parentNode.removeChild(el);
   });
 
   test('focus and blur events have relatedTarget', function() {
     var el = createEnabledElement('x-nested-focus');
-    el.focus(el.child);
-    assert.equal(el.events.length, 2);
+    el.child.focus();
     assert.deepEqual(el.events, [
       {type: 'focus', target: el.child, relatedTarget: null},
       {type: 'focus', target: el, relatedTarget: null},
     ]);
-    el.focus(el);
-    assert.equal(el.events.length, 3);
+    el.focus();
     assert.deepEqual(el.events, [
       {type: 'focus', target: el.child, relatedTarget: null},
       {type: 'focus', target: el, relatedTarget: null},
       {type: 'blur', target: el.child, relatedTarget: el}
     ]);
+    el.blur();
+    assert.deepEqual(el.events, [
+      {type: 'focus', target: el.child, relatedTarget: null},
+      {type: 'focus', target: el, relatedTarget: null},
+      {type: 'blur', target: el.child, relatedTarget: el},
+      {type: 'blur', target: el, relatedTarget: null}
+    ])
     el.parentNode.removeChild(el);
   })
 
@@ -525,6 +520,21 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     assert.notEqual(document._activeElement, el);
     el.parentNode.removeChild(el);
   });
+
+    test('focusing a shadow-nested node does not blur the parent', function () {
+      var el = createEnabledElement('x-nested-focus');
+      el.focus();
+      assert.deepEqual(el.events.map(e => ({type: e.type, target: e.target})), [
+        {type: 'focus', target: el}
+      ]);
+      el.child.focus();
+      assert.deepEqual(el.events.map(e => ({type: e.type, target: e.target})), [
+        {type: 'focus', target: el},
+        {type: 'focus', target: el.child}
+      ]);
+
+      el.parentNode.removeChild(el);
+    });
 
     suite('composedPath', function() {
       test('does not confuse anchor with shadowroot', function() {
