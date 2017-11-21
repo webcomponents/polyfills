@@ -302,7 +302,7 @@ export function addEventListener(type, fnOrObj, optionsOrCapture) {
   // for few nodes at most, whereas a node will likely have many event listeners).
   // NOTE(valdrin) invoking external functions is costly, inline has better perf.
   let capture, once, passive;
-  if (typeof optionsOrCapture === 'object') {
+  if (optionsOrCapture && typeof optionsOrCapture === 'object') {
     capture = Boolean(optionsOrCapture.capture);
     once = Boolean(optionsOrCapture.once);
     passive = Boolean(optionsOrCapture.passive);
@@ -404,7 +404,7 @@ export function removeEventListener(type, fnOrObj, optionsOrCapture) {
 
   // NOTE(valdrin) invoking external functions is costly, inline has better perf.
   let capture, once, passive;
-  if (typeof optionsOrCapture === 'object') {
+  if (optionsOrCapture && typeof optionsOrCapture === 'object') {
     capture = Boolean(optionsOrCapture.capture);
     once = Boolean(optionsOrCapture.once);
     passive = Boolean(optionsOrCapture.passive);

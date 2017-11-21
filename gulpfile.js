@@ -22,7 +22,7 @@ let rollup = require('gulp-rollup');
 const size = require('gulp-size');
 
 gulp.task('default', () => {
-  return gulp.src('./src/*.js')
+  return gulp.src('./src/*.js', {base: '.'})
     .pipe(sourcemaps.init())
     .pipe(closureCompiler({
       new_type_inf: true,
