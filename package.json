@@ -26,6 +26,7 @@
     "url": "https://github.com/webcomponents/shadydom/issues"
   },
   "scripts": {
+    "build": "gulp",
     "test": "wct"
   },
   "homepage": "https://webcomponents.org/polyfills",

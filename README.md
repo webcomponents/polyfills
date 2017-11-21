@@ -30,9 +30,8 @@ For building and testing, first run
 ```
 npm install
 bower install
+npm run build
 ```
-
-To build, make sure gulp is installed and `gulp`.
 
 To test, run `npm test`
 
@@ -45,4 +44,3 @@ For testing, `ShadyDOM.flush` may be called to force syncronous composition.
 
 ShadowDOM compatible styling is *not* provided with the ShadyDOM shim. To
 shim ShadowDOM styling, use the [shadycss](https://github.com/webcomponents/shadycss) shim.
-
