@@ -1236,6 +1236,26 @@ suite('Accessors', function() {
     assert.equal(testElement.children.length, 3);
   });
 
+  test('innerHTML on table elements', function() {
+    var element = document.createElement('table');
+    element.innerHTML = '<tbody></tbody>';
+    var tb = element.childNodes[0];
+    assert.equal(tb.localName, 'tbody');
+    tb.innerHTML = '<tr></tr>';
+    var tr = tb.childNodes[0];
+    assert.equal(tr.localName, 'tr');
+    tr.innerHTML = '<td></td>';
+    var td = tr.childNodes[0];
+    assert.equal(td.localName, 'td');
+  });
+
+  test('innerHTML on template element', function() {
+    var element = document.createElement('template');
+    element.innerHTML = '<div>A</div><div>B</div>';
+    assert.equal(element.childNodes.length, 0);
+    assert.equal(element.content.childNodes.length, 2);
+  });
+
 });
 
 suite('non-distributed elements', function() {
