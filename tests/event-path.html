@@ -12,6 +12,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <head>
   <meta charset="utf-8">
   <script src="../../webcomponents-platform/webcomponents-platform.js"></script>
+  <script src="../../es6-promise/es6-promise.auto.min.js"></script>
   <script src="../../template/template.js"></script>
   <script>
     ShadyDOM = {force: true, flush(){}};
@@ -76,6 +77,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       customElements.define(name, Klass);
     }
 
+    function ensureDocumentHasFocus() {
+      window.top && window.top.focus();
+      window.focus();
+    }
   </script>
 
   <template id="x-event-scoped">
@@ -217,16 +222,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     }, {
       focusHandler(e) {
         this.events.push({type: e.type, target: e.target, relatedTarget: e.relatedTarget});
-      },
-      focus(node) {
-        // use MouseEvent instead of FocusEvent so we can skip patching the FocusEvent constructor
-        let blur = new MouseEvent('blur', {composed: true, relatedTarget: node});
-        if (this.lastFocus) {
-          this.lastFocus.dispatchEvent(blur);
-        }
-        let focus = new MouseEvent('focus', {composed: true, relatedTarget: this.lastFocus});
-        node.dispatchEvent(focus);
-        this.lastFocus = node;
       }
     })
   </script>
@@ -408,113 +403,157 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     });
 
     test('composed focus and blur events retarget up tree', function() {
-    var el = createEnabledElement('x-focus');
-    el.fireComposed();
-    assert.equal(el.events.length, 2);
-    assert.equal(el.events[0], el.child);
-    assert.equal(el.events[1], el);
-    el.parentNode.removeChild(el);
-  });
+      var el = createEnabledElement('x-focus');
+      el.fireComposed();
+      assert.equal(el.events.length, 2);
+      assert.equal(el.events[0], el.child);
+      assert.equal(el.events[1], el);
+      el.parentNode.removeChild(el);
+    });
 
-  test('scoped focus and blur events do not retarget', function() {
-    var e = new Event('focus');
-    if (e.isTrusted !== false) {
-      // skip browser if we cannot distinguish
-      // native focus events from user created ones
-      this.skip();
-    }
-    var el = createEnabledElement('x-focus');
-    el.fireScoped();
-    assert.equal(el.events.length, 1);
-    assert.equal(el.events[0], el.child);
-    el.parentNode.removeChild(el);
-  });
+    test('scoped focus and blur events do not retarget', function() {
+      var e = new Event('focus');
+      if (e.isTrusted !== false) {
+        // skip browser if we cannot distinguish
+        // native focus events from user created ones
+        this.skip();
+      }
+      var el = createEnabledElement('x-focus');
+      el.fireScoped();
+      assert.equal(el.events.length, 1);
+      assert.equal(el.events[0], el.child);
+      el.parentNode.removeChild(el);
+    });
 
-  test('focus and blur are nested', function() {
-    var el = createEnabledElement('x-nested-focus');
-    el.focus(el.child);
-    el.focus(el);
-    assert.equal(el.events.length, 3);
-    var filtered = el.events.map(ev => ({type: ev.type, target: ev.target}));
-    assert.deepEqual(filtered, [
-      {type: 'focus', target: el.child},
-      {type: 'focus', target: el},
-      {type: 'blur', target: el.child},
-    ]);
-    el.parentNode.removeChild(el);
-  });
+    test('focusing a shadow nested node does not blur the parent', function(done) {
+      ensureDocumentHasFocus();
+      // skip test if the document is unfocused (firefox won't send focus events)
+      // or in IE (IE doesn't have relatedTarget on focus events)
+      if (!document.hasFocus() || navigator.userAgent.match(/Trident/)) {
+        this.skip();
+      }
+      var el = createEnabledElement('x-nested-focus');
+      el.focus();
+      el.child.focus();
+      setTimeout(function() {
+        var filtered = el.events.map(ev => ({type: ev.type, target: ev.target}));
+        assert.deepEqual(filtered, [
+          {type: 'focus', target: el},
+          {type: 'focus', target: el.child}
+        ]);
+        el.parentNode.removeChild(el);
+        done();
+      });
+    });
 
-  test('focus and blur events have relatedTarget', function() {
-    var el = createEnabledElement('x-nested-focus');
-    el.focus(el.child);
-    assert.equal(el.events.length, 2);
-    assert.deepEqual(el.events, [
-      {type: 'focus', target: el.child, relatedTarget: null},
-      {type: 'focus', target: el, relatedTarget: null},
-    ]);
-    el.focus(el);
-    assert.equal(el.events.length, 3);
-    assert.deepEqual(el.events, [
-      {type: 'focus', target: el.child, relatedTarget: null},
-      {type: 'focus', target: el, relatedTarget: null},
-      {type: 'blur', target: el.child, relatedTarget: el}
-    ]);
-    el.parentNode.removeChild(el);
-  })
+    test('focus and blur events have relatedTarget', function() {
+      ensureDocumentHasFocus();
+      // skip test if the document is unfocused (firefox won't send focus events)
+      // or in IE (IE doesn't have relatedTarget on focus events)
+      if (!document.hasFocus() || navigator.userAgent.match(/Trident/)) {
+        this.skip();
+      }
+      var el = createEnabledElement('x-nested-focus');
+      let wait = function() {
+        return new Promise((resolve) => {
+          setTimeout(resolve);
+        });
+      }
+      return Promise.resolve().then(function() {
+        el.child.focus();
+        return wait();
+      }).then(function() {
+        assert.deepEqual(el.events, [
+          {type: 'focus', target: el.child, relatedTarget: null},
+          {type: 'focus', target: el, relatedTarget: null},
+        ]);
+      }).then(function(){
+        el.focus();
+        return wait();
+      }).then(function() {
+        assert.deepEqual(el.events, [
+          {type: 'focus', target: el.child, relatedTarget: null},
+          {type: 'focus', target: el, relatedTarget: null},
+          {type: 'blur', target: el.child, relatedTarget: el}
+        ]);
+      }).then(function() {
+        el.blur();
+        return wait();
+      }).then(function() {
+        assert.deepEqual(el.events, [
+          {type: 'focus', target: el.child, relatedTarget: null},
+          {type: 'focus', target: el, relatedTarget: null},
+          {type: 'blur', target: el.child, relatedTarget: el},
+          {type: 'blur', target: el, relatedTarget: null}
+        ]);
+      }).then(function() {
+        el.parentNode.removeChild(el);
+      });
+    });
 
-  test('composed relatedTarget retargets', function() {
-    var container = stampNodes('#relatedtarget');
-    var a = container.children[0];
-    var b = container.children[1];
-    var ev = new MouseEvent('foo', {bubbles: true, composed: true, relatedTarget: b.child});
-    a.child.dispatchEvent(ev);
-    assert.property(a, 'childEvent');
-    assert.deepEqual(a.childEvent, {target: a.child, relatedTarget: b});
-    assert.property(a, 'event');
-    assert.deepEqual(a.event, {target: a, relatedTarget: b});
-    container.parentNode.removeChild(container);
-  });
+    test('composed relatedTarget retargets', function() {
+      var container = stampNodes('#relatedtarget');
+      var a = container.children[0];
+      var b = container.children[1];
+      var ev = new MouseEvent('foo', {bubbles: true, composed: true, relatedTarget: b.child});
+      a.child.dispatchEvent(ev);
+      assert.property(a, 'childEvent');
+      assert.deepEqual(a.childEvent, {target: a.child, relatedTarget: b});
+      assert.property(a, 'event');
+      assert.deepEqual(a.event, {target: a, relatedTarget: b});
+      container.parentNode.removeChild(container);
+    });
 
-  test('events do not fire if relatedtarget and target are the same node after retargeting', function() {
-    var container = stampNodes('#relatedtarget');
-    var a = container.children[0];
-    var ev = new MouseEvent('foo', {bubbles: true, composed: true, relatedTarget: a.child2});
-    a.child.dispatchEvent(ev);
-    assert.property(a, 'childEvent');
-    assert.deepEqual(a.childEvent, {target: a.child, relatedTarget: a.child2});
-    assert.notProperty(a, 'event');
-    container.parentNode.removeChild(container);
-  });
+    test('events do not fire if relatedtarget and target are the same node after retargeting', function() {
+      var container = stampNodes('#relatedtarget');
+      var a = container.children[0];
+      var ev = new MouseEvent('foo', {bubbles: true, composed: true, relatedTarget: a.child2});
+      a.child.dispatchEvent(ev);
+      assert.property(a, 'childEvent');
+      assert.deepEqual(a.childEvent, {target: a.child, relatedTarget: a.child2});
+      assert.notProperty(a, 'event');
+      container.parentNode.removeChild(container);
+    });
 
-  test('capturing event listeners fire correctly for focus and blur', function() {
-    var el = createEnabledElement('x-focus');
-    var timeStamp;
-    el.addEventListener('focus', function(e) {
-      timeStamp = e.timeStamp;
-    }, true);
-    el.fireComposed();
-    assert.ok(timeStamp);
-    assert.equal(el.events.length, 2);
-    assert.equal(el.events[0], el.child);
-    assert.equal(el.events[1], el);
-    el.parentNode.removeChild(el);
-  });
+    test('events fire if relatedtarget and target are the same node without retargeting', function() {
+      var container = stampNodes('#relatedtarget');
+      var a = container.children[0];
+      var ev = new MouseEvent('foo', {bubbles: true, composed: true, relatedTarget: a});
+      a.dispatchEvent(ev);
+      assert.property(a, 'event');
+      assert.deepEqual(a.event, {target: a, relatedTarget: a});
+      container.parentNode.removeChild(container);
+    });
 
-  test('.focus() and .blur() work as expected', function() {
-    // NOTE: IE 11 fails to work for some reason in Saucelabs when running with WCT
-    // Passes when running locally with WCT on the same Saucelabs VMs :/
-    if (navigator.userAgent.match(/Trident/)) {
-      this.skip();
-    }
-    var el = createEnabledElement('x-nested-focus');
-    el.child.focus();
-    assert.equal(document._activeElement, el);
-    assert.equal(el.shadowRoot.activeElement, el.child);
-    el.blur();
-    assert.equal(el.shadowRoot.activeElement, null);
-    assert.notEqual(document._activeElement, el);
-    el.parentNode.removeChild(el);
-  });
+    test('capturing event listeners fire correctly for focus and blur', function() {
+      var el = createEnabledElement('x-focus');
+      var timeStamp;
+      el.addEventListener('focus', function(e) {
+        timeStamp = e.timeStamp;
+      }, true);
+      el.fireComposed();
+      assert.ok(timeStamp);
+      assert.equal(el.events.length, 2);
+      assert.equal(el.events[0], el.child);
+      assert.equal(el.events[1], el);
+      el.parentNode.removeChild(el);
+    });
+
+    test('.focus() and .blur() work as expected', function() {
+      // NOTE: IE 11 fails to work for some reason in Saucelabs when running with WCT
+      // Passes when running locally with WCT on the same Saucelabs VMs :/
+      if (navigator.userAgent.match(/Trident/)) {
+        this.skip();
+      }
+      var el = createEnabledElement('x-nested-focus');
+      el.child.focus();
+      assert.equal(document._activeElement, el);
+      assert.equal(el.shadowRoot.activeElement, el.child);
+      el.blur();
+      assert.equal(el.shadowRoot.activeElement, null);
+      assert.notEqual(document._activeElement, el);
+      el.parentNode.removeChild(el);
+    });
 
     suite('composedPath', function() {
       test('does not confuse anchor with shadowroot', function() {
@@ -575,7 +614,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         top.parentNode.removeChild(top);
       });
     });
-
   });
   </script>
 </body>

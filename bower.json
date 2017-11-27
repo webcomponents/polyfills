@@ -29,6 +29,7 @@
     "template": "webcomponents/template#^1",
     "custom-elements": "webcomponents/custom-elements#^1",
     "webcomponents-platform": "webcomponents/webcomponents-platform#^1",
-    "shadycss": "webcomponents/shadycss#^1"
+    "shadycss": "webcomponents/shadycss#^1",
+    "es6-promise": "^4.1.1"
   }
 }
