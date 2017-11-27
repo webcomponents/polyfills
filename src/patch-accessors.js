@@ -24,7 +24,6 @@ const nativeInnerHTMLDesc = /** @type {ObjectPropertyDescriptor} */(
   Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'innerHTML'));
 
 const inertDoc = document.implementation.createHTMLDocument('inert');
-const htmlContainer = inertDoc.createElement('div');
 
 const nativeActiveElementDescriptor =
   /** @type {ObjectPropertyDescriptor} */(
@@ -332,7 +331,7 @@ let InsideAccessors = {
      * @this {HTMLElement}
      */
     get() {
-      let content = this.localName === 'template' ?
+      const content = this.localName === 'template' ?
         /** @type {HTMLTemplateElement} */(this).content : this;
       if (utils.isTrackingLogicalChildNodes(this)) {
         return getInnerHTML(content);
@@ -344,9 +343,14 @@ let InsideAccessors = {
      * @this {HTMLElement}
      */
     set(text) {
-      let content = this.localName === 'template' ?
+      const content = this.localName === 'template' ?
         /** @type {HTMLTemplateElement} */(this).content : this;
       clearNode(content);
+      let containerName = this.localName;
+      if (!containerName || containerName === 'template') {
+        containerName = 'div';
+      }
+      const htmlContainer = inertDoc.createElement(containerName);
       if (nativeInnerHTMLDesc && nativeInnerHTMLDesc.set) {
         nativeInnerHTMLDesc.set.call(htmlContainer, text);
       } else {

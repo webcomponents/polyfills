@@ -40,7 +40,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <body>
 
   <script>
-    window.defineTestElement = function(name) {
+    window.defineTestElement = function(name, connected) {
       var template = document.querySelector('#' + name);
       // es5 compat class
       function Klass() {
@@ -62,7 +62,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         if (!this._initialized) {
           this._initialized = true;
           this.attachShadow({mode: 'open'});
-          this.shadowRoot.appendChild(document.importNode(template.content, true));
+          if (connected) {
+            connected.call(this);
+          }
+          if (template) {
+            this.shadowRoot.appendChild(document.importNode(template.content, true));
+          }
           var idEls = this.shadowRoot.querySelectorAll('[id]');
           this.$ = {};
           for (var i=0; i < idEls.length; i++) {
@@ -157,6 +162,20 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 <x-compose-lazy-no-dist><span>Child</span></x-compose-lazy-no-dist>
 
+<script>
+  defineTestElement('inner-html', function() {
+    this.attachShadow({mode: 'open'});
+    this.shadowRoot.innerHTML = '[<slot></slot>]';
+  });
+
+  defineTestElement('use-inner-html', function() {
+    this.attachShadow({mode: 'open'});
+    this.shadowRoot.innerHTML = '<inner-html>I</inner-html>[<slot></slot>]';
+  });
+</script>
+
+<use-inner-html>A</use-inner-html>
+
 
 <script>
 
@@ -165,7 +184,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     return frag;
   }
 
-  suite('appendChild & removeChild of <slot>', function() {
+  suite('shadowRoots containing and mutations <slot>', function() {
 
     test('append div to distributing element', function() {
       var dist = document.createElement('x-dist');
@@ -1286,6 +1305,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       ShadyDOM.flush();
       assert.equal(t.parentNode, x);
 
+    });
+
+    test('shadowRoot set via innerHTML that contains a <slot> and a custom element that also sets shadowRoot content via innerHTML', function() {
+      var el = document.querySelector('use-inner-html');
+      assert.equal(ShadyDOM.nativeTree.textContent(el), '[I][A]');
     });
 
   });
