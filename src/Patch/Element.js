@@ -22,8 +22,6 @@ export default function(internals) {
         this.__CE_shadowRoot = shadowRoot;
         return shadowRoot;
       });
-  } else {
-    console.warn('Custom Elements: `Element#attachShadow` was not patched.');
   }
 
 
@@ -70,9 +68,6 @@ export default function(internals) {
     patch_innerHTML(HTMLElement.prototype, Native.HTMLElement_innerHTML);
   } else {
 
-    /** @type {HTMLDivElement} */
-    const rawDiv = Native.Document_createElement.call(document, 'div');
-
     internals.addPatch(function(element) {
       patch_innerHTML(element, {
         enumerable: true,
@@ -90,15 +85,21 @@ export default function(internals) {
           // NOTE: re-route to `content` for `template` elements.
           // We need to do this because `template.appendChild` does not
           // route into `template.content`.
+          const isTemplate = (this.localName === 'template');
           /** @type {!Node} */
-          const content = this.localName === 'template' ? (/** @type {!HTMLTemplateElement} */ (this)).content : this;
-          rawDiv.innerHTML = assignedValue;
+          const content = isTemplate ? (/** @type {!HTMLTemplateElement} */
+            (this)).content : this;
+          /** @type {!Node} */
+          const rawElement = Native.Document_createElement.call(document,
+            this.localName);
+          rawElement.innerHTML = assignedValue;
 
           while (content.childNodes.length > 0) {
             Native.Node_removeChild.call(content, content.childNodes[0]);
           }
-          while (rawDiv.childNodes.length > 0) {
-            Native.Node_appendChild.call(content, rawDiv.childNodes[0]);
+          const container = isTemplate ? rawElement.content : rawElement;
+          while (container.childNodes.length > 0) {
+            Native.Node_appendChild.call(content, container.childNodes[0]);
           }
         },
       });

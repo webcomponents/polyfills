@@ -11,9 +11,545 @@
 </head>
 <body>
 <script>
-  suite('ChildNode', function() {
-    test.skip('ChildNode');
+function generateLocalName() {
+  return 'test-element-' + Math.random().toString(32).substring(2);
+}
+
+function defineWithLocalName(localName) {
+  customElements.define(localName, class extends HTMLElement {
+    constructor() {
+      super();
+      this.constructed = true;
+      this.connectedCallbackCount = 0;
+      this.disconnectedCallbackCount = 0;
+    }
+
+    connectedCallback() {
+      this.connectedCallbackCount++;
+    }
+
+    disconnectedCallback() {
+      this.disconnectedCallbackCount++;
+    }
   });
+}
+
+suite('ChildNode', function() {
+  function beforeAfterSuite(methodName) {
+    suite(methodName, function() {
+      if (!(methodName in Element.prototype)) {
+        test.skip('Element#' + methodName + ' is not implemented by this browser.');
+        return;
+      }
+
+      let localName;
+      let constructor;
+      let element1;
+      let element2;
+      let connectedNode1;
+      let connectedNode2;
+      let disconnectedNode1;
+      let disconnectedNode2;
+      let documentFragment1;
+
+      setup(function() {
+        localName = generateLocalName();
+        defineWithLocalName(localName);
+
+        element1 = document.createElement(localName);
+        assert.equal(element1.connectedCallbackCount, 0);
+        assert.equal(element1.disconnectedCallbackCount, 0);
+
+        element2 = document.createElement(localName);
+        assert.equal(element2.connectedCallbackCount, 0);
+        assert.equal(element2.disconnectedCallbackCount, 0);
+
+        connectedNode1 = document.createElement('div');
+        document.body.appendChild(connectedNode1);
+        connectedNode2 = document.createElement('div');
+        document.body.appendChild(connectedNode2);
+
+        // Make sure the disconnected nodes have parents so that `before` and
+        // `after` have a place to put the given elements.
+        var disconnectedContainer1 = document.createElement('div');
+        disconnectedNode1 = document.createElement('div');
+        disconnectedContainer1.appendChild(disconnectedNode1);
+
+        var disconnectedContainer2 = document.createElement('div');
+        disconnectedNode2 = document.createElement('div');
+        disconnectedContainer2.appendChild(disconnectedNode2);
+
+        documentFragment1 = document.createDocumentFragment();
+      });
+
+      teardown(function() {
+        [
+          element1,
+          element2,
+          connectedNode1,
+          connectedNode2,
+          disconnectedNode1,
+          disconnectedNode2,
+        ].forEach(function(node) {
+          if (node.parentNode) {
+            node.parentNode.removeChild(node);
+          }
+        });
+      });
+
+      test('Moving nodes from a disconnected tree to a connected tree calls ' +
+        '`connectedCallback`.', function() {
+          disconnectedNode1.appendChild(element1);
+          disconnectedNode1.appendChild(element2);
+
+          assert.equal(element1.connectedCallbackCount, 0);
+          assert.equal(element1.disconnectedCallbackCount, 0);
+          assert.equal(element2.connectedCallbackCount, 0);
+          assert.equal(element2.disconnectedCallbackCount, 0);
+
+          connectedNode1[methodName](element1, element2);
+
+          assert.equal(element1.connectedCallbackCount, 1);
+          assert.equal(element1.disconnectedCallbackCount, 0);
+          assert.equal(element2.connectedCallbackCount, 1);
+          assert.equal(element2.disconnectedCallbackCount, 0);
+      });
+
+      test('Moving nodes from a connected tree to a connected tree calls ' +
+        '`disconnectedCallback` and `connectedCallback`.', function() {
+          connectedNode1.appendChild(element1);
+          connectedNode1.appendChild(element2);
+
+          assert.equal(element1.connectedCallbackCount, 1);
+          assert.equal(element1.disconnectedCallbackCount, 0);
+          assert.equal(element2.connectedCallbackCount, 1);
+          assert.equal(element2.disconnectedCallbackCount, 0);
+
+          connectedNode2[methodName](element1, element2);
+
+          assert.equal(element1.connectedCallbackCount, 2);
+          assert.equal(element1.disconnectedCallbackCount, 1);
+          assert.equal(element2.connectedCallbackCount, 2);
+          assert.equal(element2.disconnectedCallbackCount, 1);
+      });
+
+      test('Moving nodes from a connected tree to a disconnected tree calls ' +
+        '`disconnectedCallback`.', function() {
+          connectedNode1.appendChild(element1);
+          connectedNode1.appendChild(element2);
+
+          assert.equal(element1.connectedCallbackCount, 1);
+          assert.equal(element1.disconnectedCallbackCount, 0);
+          assert.equal(element2.connectedCallbackCount, 1);
+          assert.equal(element2.disconnectedCallbackCount, 0);
+
+          disconnectedNode1[methodName](element1, element2);
+
+          assert.equal(element1.connectedCallbackCount, 1);
+          assert.equal(element1.disconnectedCallbackCount, 1);
+          assert.equal(element2.connectedCallbackCount, 1);
+          assert.equal(element2.disconnectedCallbackCount, 1);
+      });
+
+      test('Moving nodes from a disconnected tree to a disconnected tree does ' +
+        'not call any callbacks.', function() {
+          disconnectedNode1.appendChild(element1);
+          disconnectedNode1.appendChild(element2);
+
+          assert.equal(element1.connectedCallbackCount, 0);
+          assert.equal(element1.disconnectedCallbackCount, 0);
+          assert.equal(element2.connectedCallbackCount, 0);
+          assert.equal(element2.disconnectedCallbackCount, 0);
+
+          disconnectedNode1[methodName](element1, element2);
+
+          assert.equal(element1.connectedCallbackCount, 0);
+          assert.equal(element1.disconnectedCallbackCount, 0);
+          assert.equal(element2.connectedCallbackCount, 0);
+          assert.equal(element2.disconnectedCallbackCount, 0);
+        });
+
+      test('Moving nodes from a DocumentFragment to a connected tree calls ' +
+        '`connectedCallback`.', function() {
+          documentFragment1.appendChild(element1);
+          documentFragment1.appendChild(element2);
+
+          assert.equal(element1.connectedCallbackCount, 0);
+          assert.equal(element1.disconnectedCallbackCount, 0);
+          assert.equal(element2.connectedCallbackCount, 0);
+          assert.equal(element2.disconnectedCallbackCount, 0);
+
+          connectedNode1[methodName](element1, element2);
+
+          assert.equal(element1.connectedCallbackCount, 1);
+          assert.equal(element1.disconnectedCallbackCount, 0);
+          assert.equal(element2.connectedCallbackCount, 1);
+          assert.equal(element2.disconnectedCallbackCount, 0);
+      });
+
+      test('Moving nodes from a DocumentFragment to a disconnected tree does ' +
+        'not call any callbacks.', function() {
+          documentFragment1.appendChild(element1);
+          documentFragment1.appendChild(element2);
+
+          assert.equal(element1.connectedCallbackCount, 0);
+          assert.equal(element1.disconnectedCallbackCount, 0);
+          assert.equal(element2.connectedCallbackCount, 0);
+          assert.equal(element2.disconnectedCallbackCount, 0);
+
+          disconnectedNode1[methodName](element1, element2);
+
+          assert.equal(element1.connectedCallbackCount, 0);
+          assert.equal(element1.disconnectedCallbackCount, 0);
+          assert.equal(element2.connectedCallbackCount, 0);
+          assert.equal(element2.disconnectedCallbackCount, 0);
+      });
+
+      test('Moving a DocumentFragment to a connected tree calls ' +
+        '`connectedCallback`.', function() {
+          documentFragment1.appendChild(element1);
+          documentFragment1.appendChild(element2);
+
+          assert.equal(element1.connectedCallbackCount, 0);
+          assert.equal(element1.disconnectedCallbackCount, 0);
+          assert.equal(element2.connectedCallbackCount, 0);
+          assert.equal(element2.disconnectedCallbackCount, 0);
+
+          connectedNode1[methodName](documentFragment1);
+
+          assert.equal(element1.connectedCallbackCount, 1);
+          assert.equal(element1.disconnectedCallbackCount, 0);
+          assert.equal(element2.connectedCallbackCount, 1);
+          assert.equal(element2.disconnectedCallbackCount, 0);
+      });
+
+      test('Moving a DocumentFragment to a disconnected tree does not call ' +
+        'any callbacks.', function() {
+          documentFragment1.appendChild(element1);
+          documentFragment1.appendChild(element2);
+
+          assert.equal(element1.connectedCallbackCount, 0);
+          assert.equal(element1.disconnectedCallbackCount, 0);
+          assert.equal(element2.connectedCallbackCount, 0);
+          assert.equal(element2.disconnectedCallbackCount, 0);
+
+          disconnectedNode1[methodName](documentFragment1);
+
+          assert.equal(element1.connectedCallbackCount, 0);
+          assert.equal(element1.disconnectedCallbackCount, 0);
+          assert.equal(element2.connectedCallbackCount, 0);
+          assert.equal(element2.disconnectedCallbackCount, 0);
+      });
+    });
+  }
+
+  beforeAfterSuite('before');
+  beforeAfterSuite('after');
+
+  suite('replaceWith', function() {
+    if (!('replaceWith' in Element.prototype)) {
+      test.skip('Element#replaceWith is not implemented by this browser.');
+      return;
+    }
+
+    let localName;
+    let constructor;
+    let element1;
+    let element2;
+    let connectedElement1;
+    let connectedElement2;
+    let disconnectedElement1;
+    let disconnectedElement2;
+    let documentFragment1;
+
+    setup(function() {
+      localName = generateLocalName();
+      defineWithLocalName(localName);
+
+      element1 = document.createElement(localName);
+      assert.equal(element1.connectedCallbackCount, 0);
+      assert.equal(element1.disconnectedCallbackCount, 0);
+
+      element2 = document.createElement(localName);
+      assert.equal(element2.connectedCallbackCount, 0);
+      assert.equal(element2.disconnectedCallbackCount, 0);
+
+      connectedElement1 = document.createElement(localName);
+      document.body.appendChild(connectedElement1);
+      assert.equal(connectedElement1.connectedCallbackCount, 1);
+      assert.equal(connectedElement1.disconnectedCallbackCount, 0);
+
+      connectedElement2 = document.createElement(localName);
+      document.body.appendChild(connectedElement2);
+      assert.equal(connectedElement2.connectedCallbackCount, 1);
+      assert.equal(connectedElement2.disconnectedCallbackCount, 0);
+
+      // Make sure the disconnected nodes have parents so that `replaceWith`
+      // has a place to put the given elements.
+      var disconnectedContainer1 = document.createElement('div');
+      disconnectedElement1 = document.createElement(localName);
+      disconnectedContainer1.appendChild(disconnectedElement1);
+
+      var disconnectedContainer2 = document.createElement('div');
+      disconnectedElement2 = document.createElement(localName);
+      disconnectedContainer2.appendChild(disconnectedElement2);
+
+      documentFragment1 = document.createDocumentFragment();
+    });
+
+    teardown(function() {
+      [
+        element1,
+        element2,
+        connectedElement1,
+        connectedElement2,
+        disconnectedElement1,
+        disconnectedElement2,
+      ].forEach(function(node) {
+        if (node.parentNode) {
+          node.parentNode.removeChild(node);
+        }
+      });
+    });
+
+    test('Moving nodes from a disconnected tree to a connected tree calls ' +
+      '`connectedCallback` of the inserted nodes.', function() {
+        disconnectedElement1.appendChild(element1);
+        disconnectedElement1.appendChild(element2);
+
+        assert.equal(connectedElement1.connectedCallbackCount, 1);
+        assert.equal(connectedElement1.disconnectedCallbackCount, 0);
+
+        assert.equal(element1.connectedCallbackCount, 0);
+        assert.equal(element1.disconnectedCallbackCount, 0);
+        assert.equal(element2.connectedCallbackCount, 0);
+        assert.equal(element2.disconnectedCallbackCount, 0);
+
+        connectedElement1.replaceWith(element1, element2);
+
+        assert.equal(connectedElement1.connectedCallbackCount, 1);
+        assert.equal(connectedElement1.disconnectedCallbackCount, 1);
+
+        assert.equal(element1.connectedCallbackCount, 1);
+        assert.equal(element1.disconnectedCallbackCount, 0);
+        assert.equal(element2.connectedCallbackCount, 1);
+        assert.equal(element2.disconnectedCallbackCount, 0);
+    });
+
+    test('Moving nodes from a connected tree to a connected tree calls ' +
+      '`disconnectedCallback` and `connectedCallback` of the inserted nodes.',
+      function() {
+        connectedElement1.appendChild(element1);
+        connectedElement1.appendChild(element2);
+
+        assert.equal(connectedElement2.connectedCallbackCount, 1);
+        assert.equal(connectedElement2.disconnectedCallbackCount, 0);
+
+        assert.equal(element1.connectedCallbackCount, 1);
+        assert.equal(element1.disconnectedCallbackCount, 0);
+        assert.equal(element2.connectedCallbackCount, 1);
+        assert.equal(element2.disconnectedCallbackCount, 0);
+
+        connectedElement2.replaceWith(element1, element2);
+
+        assert.equal(connectedElement2.connectedCallbackCount, 1);
+        assert.equal(connectedElement2.disconnectedCallbackCount, 1);
+
+        assert.equal(element1.connectedCallbackCount, 2);
+        assert.equal(element1.disconnectedCallbackCount, 1);
+        assert.equal(element2.connectedCallbackCount, 2);
+        assert.equal(element2.disconnectedCallbackCount, 1);
+    });
+
+    test('Moving nodes from a connected tree to a disconnected tree calls ' +
+      '`disconnectedCallback` of the inserted nodes.', function() {
+        connectedElement1.appendChild(element1);
+        connectedElement1.appendChild(element2);
+
+        assert.equal(disconnectedElement1.connectedCallbackCount, 0);
+        assert.equal(disconnectedElement1.disconnectedCallbackCount, 0);
+
+        assert.equal(element1.connectedCallbackCount, 1);
+        assert.equal(element1.disconnectedCallbackCount, 0);
+        assert.equal(element2.connectedCallbackCount, 1);
+        assert.equal(element2.disconnectedCallbackCount, 0);
+
+        disconnectedElement1.replaceWith(element1, element2);
+
+        assert.equal(disconnectedElement1.connectedCallbackCount, 0);
+        assert.equal(disconnectedElement1.disconnectedCallbackCount, 0);
+
+        assert.equal(element1.connectedCallbackCount, 1);
+        assert.equal(element1.disconnectedCallbackCount, 1);
+        assert.equal(element2.connectedCallbackCount, 1);
+        assert.equal(element2.disconnectedCallbackCount, 1);
+    });
+
+    test('Moving nodes from a disconnected tree to a disconnected tree does ' +
+      'not call any callbacks.', function() {
+        disconnectedElement1.appendChild(element1);
+        disconnectedElement1.appendChild(element2);
+
+        assert.equal(disconnectedElement1.connectedCallbackCount, 0);
+        assert.equal(disconnectedElement1.disconnectedCallbackCount, 0);
+
+        assert.equal(element1.connectedCallbackCount, 0);
+        assert.equal(element1.disconnectedCallbackCount, 0);
+        assert.equal(element2.connectedCallbackCount, 0);
+        assert.equal(element2.disconnectedCallbackCount, 0);
+
+        disconnectedElement1.replaceWith(element1, element2);
+
+        assert.equal(disconnectedElement1.connectedCallbackCount, 0);
+        assert.equal(disconnectedElement1.disconnectedCallbackCount, 0);
+
+        assert.equal(element1.connectedCallbackCount, 0);
+        assert.equal(element1.disconnectedCallbackCount, 0);
+        assert.equal(element2.connectedCallbackCount, 0);
+        assert.equal(element2.disconnectedCallbackCount, 0);
+      });
+
+    test('Moving nodes from a DocumentFragment to a connected tree calls ' +
+      '`connectedCallback` of the inserted nodes.', function() {
+        documentFragment1.appendChild(element1);
+        documentFragment1.appendChild(element2);
+
+        assert.equal(connectedElement1.connectedCallbackCount, 1);
+        assert.equal(connectedElement1.disconnectedCallbackCount, 0);
+
+        assert.equal(element1.connectedCallbackCount, 0);
+        assert.equal(element1.disconnectedCallbackCount, 0);
+        assert.equal(element2.connectedCallbackCount, 0);
+        assert.equal(element2.disconnectedCallbackCount, 0);
+
+        connectedElement1.replaceWith(element1, element2);
+
+        assert.equal(connectedElement1.connectedCallbackCount, 1);
+        assert.equal(connectedElement1.disconnectedCallbackCount, 1);
+
+        assert.equal(element1.connectedCallbackCount, 1);
+        assert.equal(element1.disconnectedCallbackCount, 0);
+        assert.equal(element2.connectedCallbackCount, 1);
+        assert.equal(element2.disconnectedCallbackCount, 0);
+    });
+
+    test('Moving nodes from a DocumentFragment to a disconnected tree does ' +
+      'not call any callbacks.', function() {
+        documentFragment1.appendChild(element1);
+        documentFragment1.appendChild(element2);
+
+        assert.equal(disconnectedElement1.connectedCallbackCount, 0);
+        assert.equal(disconnectedElement1.disconnectedCallbackCount, 0);
+
+        assert.equal(element1.connectedCallbackCount, 0);
+        assert.equal(element1.disconnectedCallbackCount, 0);
+        assert.equal(element2.connectedCallbackCount, 0);
+        assert.equal(element2.disconnectedCallbackCount, 0);
+
+        disconnectedElement1.replaceWith(element1, element2);
+
+        assert.equal(disconnectedElement1.connectedCallbackCount, 0);
+        assert.equal(disconnectedElement1.disconnectedCallbackCount, 0);
+
+        assert.equal(element1.connectedCallbackCount, 0);
+        assert.equal(element1.disconnectedCallbackCount, 0);
+        assert.equal(element2.connectedCallbackCount, 0);
+        assert.equal(element2.disconnectedCallbackCount, 0);
+    });
+
+    test('Moving a DocumentFragment to a connected tree calls ' +
+      '`connectedCallback` of the inserted nodes.', function() {
+        documentFragment1.appendChild(element1);
+        documentFragment1.appendChild(element2);
+
+        assert.equal(connectedElement1.connectedCallbackCount, 1);
+        assert.equal(connectedElement1.disconnectedCallbackCount, 0);
+
+        assert.equal(element1.connectedCallbackCount, 0);
+        assert.equal(element1.disconnectedCallbackCount, 0);
+        assert.equal(element2.connectedCallbackCount, 0);
+        assert.equal(element2.disconnectedCallbackCount, 0);
+
+        connectedElement1.replaceWith(documentFragment1);
+
+        assert.equal(connectedElement1.connectedCallbackCount, 1);
+        assert.equal(connectedElement1.disconnectedCallbackCount, 1);
+
+        assert.equal(element1.connectedCallbackCount, 1);
+        assert.equal(element1.disconnectedCallbackCount, 0);
+        assert.equal(element2.connectedCallbackCount, 1);
+        assert.equal(element2.disconnectedCallbackCount, 0);
+    });
+
+    test('Moving a DocumentFragment to a disconnected tree does ' +
+      'not call any callbacks.', function() {
+        documentFragment1.appendChild(element1);
+        documentFragment1.appendChild(element2);
+
+        assert.equal(disconnectedElement1.connectedCallbackCount, 0);
+        assert.equal(disconnectedElement1.disconnectedCallbackCount, 0);
+
+        assert.equal(element1.connectedCallbackCount, 0);
+        assert.equal(element1.disconnectedCallbackCount, 0);
+        assert.equal(element2.connectedCallbackCount, 0);
+        assert.equal(element2.disconnectedCallbackCount, 0);
+
+        disconnectedElement1.replaceWith(documentFragment1);
+
+        assert.equal(disconnectedElement1.connectedCallbackCount, 0);
+        assert.equal(disconnectedElement1.disconnectedCallbackCount, 0);
+
+        assert.equal(element1.connectedCallbackCount, 0);
+        assert.equal(element1.disconnectedCallbackCount, 0);
+        assert.equal(element2.connectedCallbackCount, 0);
+        assert.equal(element2.disconnectedCallbackCount, 0);
+    });
+  });
+
+  suite('remove', function() {
+    if (!('remove' in Element.prototype)) {
+      test.skip('Element#remove is not implemented by this browser.');
+      return;
+    }
+
+    let localName;
+    let constructor;
+    let connectedElement1;
+    let disconnectedElement1;
+
+    setup(function() {
+      localName = generateLocalName();
+      defineWithLocalName(localName);
+
+      connectedElement1 = document.createElement(localName);
+      document.body.appendChild(connectedElement1);
+
+      disconnectedElement1 = document.createElement(localName);
+      assert.equal(disconnectedElement1.connectedCallbackCount, 0);
+      assert.equal(disconnectedElement1.disconnectedCallbackCount, 0);
+    });
+
+    test('Removing a connected node calls `disconnectedCallback`.', function() {
+      assert.equal(connectedElement1.connectedCallbackCount, 1);
+      assert.equal(connectedElement1.disconnectedCallbackCount, 0);
+
+      connectedElement1.remove();
+
+      assert.equal(connectedElement1.connectedCallbackCount, 1);
+      assert.equal(connectedElement1.disconnectedCallbackCount, 1);
+    });
+
+    test('Removing a disconnected node does not call any callbacks.', function() {
+      assert.equal(disconnectedElement1.connectedCallbackCount, 0);
+      assert.equal(disconnectedElement1.disconnectedCallbackCount, 0);
+
+      disconnectedElement1.remove();
+
+      assert.equal(disconnectedElement1.connectedCallbackCount, 0);
+      assert.equal(disconnectedElement1.disconnectedCallbackCount, 0);
+    });
+  });
+});
 </script>
 </body>
 </head>
