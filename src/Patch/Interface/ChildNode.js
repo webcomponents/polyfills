@@ -23,6 +23,8 @@ export default function(internals, destination, builtIn) {
    */
   function beforeAfterPatch(builtInMethod) {
     return function(...nodes) {
+      internals.pushCEReactionsQueue();
+
       /**
        * A copy of `nodes`, with any DocumentFragment replaced by its children.
        * @type {!Array<!Node>}
@@ -65,6 +67,8 @@ export default function(internals, destination, builtIn) {
           }
         }
       }
+
+      internals.popCEReactionsQueue();
     };
   }
 
@@ -82,6 +86,8 @@ export default function(internals, destination, builtIn) {
        * @param {...(!Node|string)} nodes
        */
       function(...nodes) {
+        internals.pushCEReactionsQueue();
+
         /**
          * A copy of `nodes`, with any DocumentFragment replaced by its children.
          * @type {!Array<!Node>}
@@ -127,12 +133,16 @@ export default function(internals, destination, builtIn) {
             }
           }
         }
+
+        internals.popCEReactionsQueue();
       });
     }
 
   if (builtIn.remove !== undefined) {
     Utilities.setPropertyUnchecked(destination, 'remove',
       function() {
+        internals.pushCEReactionsQueue();
+
         const wasConnected = Utilities.isConnected(this);
 
         builtIn.remove.call(this);
@@ -140,6 +150,8 @@ export default function(internals, destination, builtIn) {
         if (wasConnected) {
           internals.disconnectTree(this);
         }
+
+        internals.popCEReactionsQueue();
       });
   }
 };

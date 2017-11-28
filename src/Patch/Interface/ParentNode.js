@@ -21,6 +21,8 @@ export default function(internals, destination, builtIn) {
    */
   function appendPrependPatch(builtInMethod) {
     return function(...nodes) {
+      internals.pushCEReactionsQueue();
+
       /**
        * A copy of `nodes`, with any DocumentFragment replaced by its children.
        * @type {!Array<!Node>}
@@ -63,6 +65,8 @@ export default function(internals, destination, builtIn) {
           }
         }
       }
+
+      internals.popCEReactionsQueue();
     };
   }
 
