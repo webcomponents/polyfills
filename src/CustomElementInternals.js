@@ -2,7 +2,7 @@ import {constructor as DocumentCtor, proxy as DocumentProxy} from './Environment
 import {proxy as ElementProxy} from './Environment/Element.js';
 import {proxy as EventTargetProxy} from './Environment/EventTarget.js';
 import {proxy as HTMLLinkElementProxy} from './Environment/HTMLLinkElement.js';
-import {constructor as NodeCtor} from './Environment/Node.js';
+import {constructor as NodeCtor, proxy as NodeProxy} from './Environment/Node.js';
 import * as Utilities from './Utilities.js';
 import CEState from './CustomElementState.js';
 
@@ -195,11 +195,14 @@ export default class CustomElementInternals {
           // HTML Imports polyfill.
           : (importNode instanceof NodeCtor ? importNode.readyState : undefined);
 
-        if (readyState === 'complete') {
+        if (importNode instanceof Node) {
           importNode.__CE_isImportDocument = true;
-
           // Connected links are associated with the registry.
           importNode.__CE_hasRegistry = true;
+        }
+
+        if (importNode && importNode.readyState === 'complete') {
+          importNode.__CE_documentLoadHandled = true;
         } else {
           // If this link's import root is not available, its contents can't be
           // walked. Wait for 'load' and walk it when it's ready.
@@ -208,11 +211,6 @@ export default class CustomElementInternals {
 
             if (importNode.__CE_documentLoadHandled) return;
             importNode.__CE_documentLoadHandled = true;
-
-            importNode.__CE_isImportDocument = true;
-
-            // Connected links are associated with the registry.
-            importNode.__CE_hasRegistry = true;
 
             // Clone the `visitedImports` set that was populated sync during
             // the `patchAndUpgradeTree` call that caused this 'load' handler to
@@ -252,7 +250,23 @@ export default class CustomElementInternals {
     const currentState = element.__CE_state;
     if (currentState !== undefined) return;
 
-    const localName = ElementProxy.localName(element)
+    // Prevent elements created in documents without a browsing context from
+    // upgrading.
+    //
+    // https://html.spec.whatwg.org/multipage/custom-elements.html#look-up-a-custom-element-definition
+    //   "If document does not have a browsing context, return null."
+    //
+    // https://html.spec.whatwg.org/multipage/window-object.html#dom-document-defaultview
+    //   "The defaultView IDL attribute of the Document interface, on getting,
+    //   must return this Document's browsing context's WindowProxy object, if
+    //   this Document has an associated browsing context, or null otherwise."
+    const ownerDocument = NodeProxy.ownerDocument(element);
+    if (
+      !DocumentProxy.defaultView(ownerDocument) &&
+      !(ownerDocument.__CE_isImportDocument && ownerDocument.__CE_hasRegistry)
+    ) return;
+
+    const localName = ElementProxy.localName(element);
     const definition = this.localNameToDefinition(localName);
     if (!definition) return;
 

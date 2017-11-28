@@ -91,8 +91,6 @@ export default function(internals) {
     // In this case, `innerHTML` has no exposed getter but still exists. Rather
     // than using the environment proxy, we have to get and set it directly.
 
-    const rawDiv = /** @type {HTMLDivElement} */ (DocumentProxy.createElement(document, 'div'));
-
     internals.addPatch(function(element) {
       patch_innerHTML(element, {
         enumerable: true,
@@ -111,18 +109,22 @@ export default function(internals) {
           // NOTE: re-route to `content` for `template` elements.
           // We need to do this because `template.appendChild` does not
           // route into `template.content`.
+          const localName = ElementProxy.localName(this);
+          const isTemplate = (localName === 'template');
           /** @type {!Node} */
           const content =
-            (ElementProxy.localName(this) === 'template')
+            isTemplate
             ? HTMLTemplateElementProxy.content(/** @type {!HTMLTemplateElement} */ (this))
             : this;
-          rawDiv.innerHTML = assignedValue;
+          const rawElement = DocumentProxy.createElement(document, localName);
+          rawElement.innerHTML = assignedValue;
 
           while (NodeProxy.childNodes(content).length > 0) {
             NodeProxy.removeChild(content, content.childNodes[0]);
           }
-          while (NodeProxy.childNodes(rawDiv).length > 0) {
-            NodeProxy.appendChild(content, rawDiv.childNodes[0]);
+          const container = isTemplate ? HTMLTemplateElementProxy.content(rawElement) : rawElement;
+          while (NodeProxy.childNodes(container).length > 0) {
+            NodeProxy.appendChild(content, container.childNodes[0]);
           }
         },
       });

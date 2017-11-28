@@ -11,6 +11,7 @@ export const descriptors = {
   importNode: getDescriptor(proto, 'importNode'),
   prepend: getDescriptor(proto, 'prepend'),
   readyState: getDescriptor(proto, 'readyState'),
+  defaultView: getDescriptor(proto, 'defaultView'),
 };
 
 /** @type {function(this: Document, !string): !HTMLElement} */
@@ -23,6 +24,8 @@ const createTextNodeMethod = method(descriptors.createTextNode);
 const importNodeMethod = method(descriptors.importNode);
 /** @type {function(this: Document): (!string|undefined)} */
 const readyStateGetter = getter(descriptors.readyState, function() { return this.readyState; });
+/** @type {function(this: Document): ?Window} */
+const defaultViewGetter = getter(descriptors.defaultView);
 
 /**
  * @type {{
@@ -31,6 +34,7 @@ const readyStateGetter = getter(descriptors.readyState, function() { return this
  *   createTextNode: function(!Document, !string): !Text,
  *   importNode: function(!Document, !Node, boolean=): !Node,
  *   readyState: function(!Document): (!string|undefined),
+ *   defaultView: function(!Document): ?Window,
  * }}
  */
 export const proxy = {
@@ -39,4 +43,5 @@ export const proxy = {
   createTextNode: (doc, localName) => createTextNodeMethod.call(doc, localName),
   importNode: (doc, node, deep) => importNodeMethod.call(doc, node, deep),
   readyState: doc => readyStateGetter.call(doc),
+  defaultView: doc => defaultViewGetter.call(doc),
 };

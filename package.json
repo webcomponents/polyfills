@@ -1,8 +1,16 @@
 {
   "name": "@webcomponents/custom-elements",
-  "version": "1.0.4",
+  "version": "1.0.6",
   "description": "HTML Custom Elements Polyfill",
   "main": "custom-elements.min.js",
+  "keywords": [
+    "custom-elements",
+    "customelements",
+    "web-components",
+    "webcomponents",
+    "polyfill",
+    "shim"
+  ],
   "directories": {
     "test": "tests"
   },
@@ -20,7 +28,7 @@
     "build": "gulp",
     "test": "wct"
   },
-  "homepage": "http://webcomponents.org",
+  "homepage": "https://webcomponents.org/polyfills",
   "devDependencies": {
     "@webcomponents/html-imports": "^1.0.0",
     "@webcomponents/template": "^1.0.0",

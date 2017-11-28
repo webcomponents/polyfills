@@ -1,0 +1,45 @@
+<!doctype html>
+<!--
+    @license
+    Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
+    This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+    The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+    The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+    Code distributed by Google as part of the polymer project is also
+    subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<html>
+  <head>
+    <title>Template polyfill integration</title>
+    <script>
+      (window.customElements = window.customElements || {}).forcePolyfill = true;
+      ShadyDOM = {force: true};
+    </script>
+    <script src="../../../webcomponents-platform/webcomponents-platform.js"></script>
+    <script src="../../../es6-promise/dist/es6-promise.auto.min.js"></script>
+    <script src="../../../template/template.js"></script>
+    <script src="../../../shadydom/shadydom.min.js"></script>
+    <script src="../../custom-elements.min.js"></script>
+    <script src="../../../web-component-tester/browser.js"></script>
+  </head>
+  <body>
+    <script>
+      suite('Template polyfill integration', function() {
+        test('defined custom elements do not upgrade when setting innerHTML of a template', function() {
+          let upgraded = false;
+
+          customElements.define('inside-template-content', class extends HTMLElement {
+            constructor() {
+              super();
+              upgraded = true;
+            }
+          });
+
+          const template = document.createElement('template');
+          template.innerHTML = '<inside-template-content></inside-template-content>';
+          assert(!upgraded, 'A defined element in the HTML string was upgraded.');
+        });
+      });
+    </script>
+  </body>
+</html>
