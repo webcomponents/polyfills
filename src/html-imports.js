@@ -697,7 +697,7 @@
     // Define 'import' read-only property.
     Object.defineProperty(HTMLLinkElement.prototype, 'import', {
       get() {
-        return /** @type {HTMLLinkElement} */ (this)['__import'];
+        return /** @type {HTMLLinkElement} */ (this)['__import'] || null;
       },
       configurable: true,
       enumerable: true

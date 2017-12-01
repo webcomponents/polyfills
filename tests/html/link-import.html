@@ -18,7 +18,9 @@
   <body>
     <script>
       test('HTMLLinkElement has import property defined', function() {
-        assert.isTrue('import' in document.createElement('link'));
+        var link = document.createElement('link');
+        assert.isTrue('import' in link);
+        assert.isNull(link.import);
       });
     </script>
   </body>
