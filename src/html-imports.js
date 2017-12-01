@@ -231,7 +231,7 @@
         // and fire the load/error event.
         const imp = this.documents[url];
         if (imp && imp['__loaded']) {
-          link.import = imp;
+          link['__import'] = imp;
           this.fireEventIfNeeded(link);
         }
         return;
@@ -377,14 +377,13 @@
         (doc.querySelectorAll(importSelector));
       forEach(n$, n => {
         const imp = this.documents[n.href];
-        n.import = /** @type {!Document} */ (imp);
+        n['__import'] = /** @type {!Document} */ (imp);
         if (imp && imp.nodeType === Node.DOCUMENT_FRAGMENT_NODE) {
           // We set the .import to be the link itself, and update its readyState.
           // Other links with the same href will point to this link.
           this.documents[n.href] = n;
           n.readyState = 'loading';
-          // Suppress Closure warning about incompatible subtype assignment.
-          ( /** @type {!HTMLElement} */ (n).import = n);
+          n['__import'] = n;
           this.flatten(imp);
           n.appendChild(imp);
         }
@@ -690,6 +689,15 @@
         // Polyfill it if not available.
         const base = /** @type {HTMLBaseElement} */ (document.querySelector('base'));
         return (base || window.location).href;
+      },
+      configurable: true,
+      enumerable: true
+    });
+
+    // Define 'import' read-only property.
+    Object.defineProperty(HTMLLinkElement.prototype, 'import', {
+      get() {
+        return /** @type {HTMLLinkElement} */ (this)['__import'];
       },
       configurable: true,
       enumerable: true
