@@ -23,8 +23,6 @@ const closureOptions = {
   assume_function_wrapper: true,
   new_type_inf: true,
   rewrite_polyfills: false,
-  new_type_inf: true,
-  module_resolution: 'NODE',
   dependency_mode: 'STRICT',
   entry_point: 'src/html-imports.js',
 };
