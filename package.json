@@ -29,10 +29,10 @@
   },
   "homepage": "https://webcomponents.org/polyfills",
   "devDependencies": {
-    "google-closure-compiler": "^20170910.0.0",
+    "google-closure-compiler": "^20171112.0.0",
     "gulp": "^3.8.8",
-    "gulp-sourcemaps": "^2.4.0",
-    "web-component-tester": "^6.0.0"
+    "gulp-sourcemaps": "^2.4.1",
+    "web-component-tester": "^6.4.1"
   },
   "publishConfig": {
     "access": "public"

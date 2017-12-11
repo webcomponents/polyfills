@@ -25,6 +25,6 @@
     "bower_components"
   ],
   "devDependencies": {
-    "web-component-tester": "^6.0.0"
+    "web-component-tester": "^6.4.1"
   }
 }

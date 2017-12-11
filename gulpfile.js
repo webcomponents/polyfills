@@ -10,26 +10,29 @@
 
 'use strict';
 
-const compilerPackage = require('google-closure-compiler');
 const gulp = require('gulp');
 const sourcemaps = require('gulp-sourcemaps');
-
-const closureCompiler = compilerPackage.gulp();
+const closure = require('google-closure-compiler').gulp();
+const closureOptions = {
+  compilation_level: 'ADVANCED',
+  warning_level: 'VERBOSE',
+  language_in: 'ES6_STRICT',
+  language_out: 'ES5_STRICT',
+  externs: ['externs/html-imports.js'],
+  js_output_file: 'html-imports.min.js',
+  assume_function_wrapper: true,
+  new_type_inf: true,
+  rewrite_polyfills: false,
+  dependency_mode: 'STRICT',
+  entry_point: 'src/html-imports.js',
+};
 
 gulp.task('default', () => {
-  return gulp.src('./src/html-imports.js', {base: './'})
-      .pipe(sourcemaps.init())
-      .pipe(closureCompiler({
-          compilation_level: 'ADVANCED',
-          warning_level: 'VERBOSE',
-          language_in: 'ECMASCRIPT6_STRICT',
-          language_out: 'ECMASCRIPT5_STRICT',
-          externs: ['externs/html-imports.js'],
-          js_output_file: 'html-imports.min.js',
-          assume_function_wrapper: true,
-          new_type_inf: true,
-          rewrite_polyfills: false,
-        }))
-      .pipe(sourcemaps.write('/'))
-      .pipe(gulp.dest('./'));
+  return gulp.src([
+      './src/html-imports.js'
+    ], {base: './', follow: true})
+    .pipe(sourcemaps.init())
+    .pipe(closure(closureOptions))
+    .pipe(sourcemaps.write('.'))
+    .pipe(gulp.dest('.'));
 });
