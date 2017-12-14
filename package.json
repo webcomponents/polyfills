@@ -40,10 +40,10 @@
     "google-closure-compiler": "^20170806.0.0",
     "gulp": "^3.8.8",
     "gulp-rename": "^1.2.2",
-    "gulp-rollup": "^2.13.0",
+    "gulp-rollup": "^2.15.0",
     "gulp-size": "^2.1.0",
     "gulp-sourcemaps": "^2.4.1",
-    "web-component-tester": "^6.4.0"
+    "web-component-tester": "^6.4.1"
   },
   "publishConfig": {
     "access": "public"

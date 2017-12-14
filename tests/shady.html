@@ -576,6 +576,14 @@ suite('Patch of addEventListener/removeEventListener', function() {
     assert.equal(obj.handleEvent.callCount, 2, 'listeners removed (callCount did not increase)');
   });
 
+  test('add listner with an object missing `handleEvent` function', function() {
+    var obj = {};
+    el1.addEventListener('foo', obj);
+    assert.doesNotThrow(function() {
+      el1.dispatchEvent(new Event('foo'))
+    });
+  });
+
 });
 
 function getEffectiveChildNodes(node) {

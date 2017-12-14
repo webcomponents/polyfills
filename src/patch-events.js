@@ -304,7 +304,8 @@ function getEventWrappers(eventLike) {
  * @this {Event}
  */
 export function addEventListener(type, fnOrObj, optionsOrCapture) {
-  if (!fnOrObj) {
+  const handlerType = typeof fnOrObj;
+  if (handlerType !== 'function' || handlerType !== 'object' || (handlerType === 'object' && !handlerType.handleEvent)) {
     return;
   }
 
@@ -371,9 +372,9 @@ export function addEventListener(type, fnOrObj, optionsOrCapture) {
       if (e.eventPhase !== Event.CAPTURING_PHASE && !e.bubbles && e.target !== target && !(target instanceof Window)) {
         return;
       }
-      let ret = (typeof fnOrObj === 'object' && fnOrObj.handleEvent) ?
-        fnOrObj.handleEvent(e) :
-        fnOrObj.call(target, e);
+      let ret = handlerType === 'function' ?
+        fnOrObj.call(target, e) :
+        (fnOrObj.handleEvent && fnOrObj.handleEvent(e));
       if (target !== this) {
         // replace the "correct" `currentTarget`
         if (lastCurrentTargetDesc) {
