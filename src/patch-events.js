@@ -305,7 +305,14 @@ function getEventWrappers(eventLike) {
  */
 export function addEventListener(type, fnOrObj, optionsOrCapture) {
   const handlerType = typeof fnOrObj;
-  if (handlerType !== 'function' || handlerType !== 'object' || (handlerType === 'object' && !handlerType.handleEvent)) {
+
+  // bail if `fnOrObj` is not a function, not an object
+  if (handlerType !== 'function' && handlerType !== 'object') {
+    return;
+  }
+
+  // bail if `fnOrObj` is an object without a `handleEvent` method
+  if (handlerType === 'object' && (!fnOrObj.handleEvent || typeof fnOrObj.handleEvent !== 'function')) {
     return;
   }
 
