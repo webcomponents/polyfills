@@ -1,0 +1,50 @@
+<!doctype html>
+<!--
+    @license
+    Copyright (c) 2017 The Polymer Project Authors. All rights reserved.
+    This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+    The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+    The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+    Code distributed by Google as part of the polymer project is also
+    subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<html>
+
+<head>
+  <title>loadImports</title>
+  <script>
+    WCT = {
+      waitFor: function(callback) {
+        callback();
+      }
+    };
+  </script>
+  <script src="../../html-imports.min.js"></script>
+  <script src="../../../web-component-tester/browser.js"></script>
+</head>
+
+<body>
+  <script>
+
+    test('loadImports defined', function() {
+      assert.isFunction(HTMLImports.loadImports, 'loadImports defined');
+    });
+
+    test('loadImports handles dynamically added imports', function(done) {
+      var link = document.createElement('link');
+      link.href = 'imports/load-a.html';
+      link.rel = 'import';
+      link.addEventListener('load', function(e) {
+        console.log('dynamic link loaded', e.target.href);
+      });
+      document.body.appendChild(link);
+      HTMLImports.loadImports(document.body);
+      HTMLImports.whenReady(function() {
+        assert.deepEqual(window.loaded, ['a', 'b', 'c', 'd']);
+        done();
+      });
+    });
+  </script>
+</body>
+
+</html>

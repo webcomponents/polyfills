@@ -638,6 +638,18 @@
     return doc;
   }
 
+  let importer = null;
+  /**
+   * Ensures imports contained in the element are imported.
+   * Use this to handle dynamic imports attached to body.
+   * @param {!(HTMLDocument|Element)} element
+   */
+  const loadImports = (doc) => {
+    if (importer) {
+      importer.loadImports(doc);
+    }
+  };
+  
   const newCustomEvent = (type, params) => {
     if (typeof window.CustomEvent === 'function') {
       return new CustomEvent(type, params);
@@ -703,7 +715,9 @@
       enumerable: true
     });
 
-    whenDocumentReady(() => new Importer());
+    whenDocumentReady(() => {
+      importer = new Importer()
+    });
   }
 
   /**
@@ -727,5 +741,6 @@
   scope.useNative = useNative;
   scope.whenReady = whenReady;
   scope.importForElement = importForElement;
+  scope.loadImports = loadImports;
 
 })(window.HTMLImports = (window.HTMLImports || {}));
