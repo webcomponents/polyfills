@@ -41,7 +41,9 @@ If you require document isolation, use [`html-imports#v0`](https://github.com/we
 
 ### Dynamic imports
 
-The polyfill supports dynamically added imports by observing mutations in `<head>` and within other imports; it won't capture imports appended in `<body>`.
+The polyfill supports dynamically added imports by observing mutations in `<head>` and within other imports; it won't detect imports appended in `<body>`.
+
+If you require to append imports in `<body>`, notify the polyfill of these additions using the method `HTMLImports.loadImports(document.body)`.
 
 ### Imported stylesheets in IE/Edge
 
