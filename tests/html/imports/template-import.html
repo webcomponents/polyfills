@@ -9,6 +9,17 @@
 -->
 <template>
   <script>
-    window.executedTemplateScript = true;
+    if (!window.executedTemplateScript) {
+      window.executedTemplateScript = 0;
+    }
+    window.executedTemplateScript++;
   </script>
+  <template>
+    <script>
+      if (!window.executedNestedTemplateScript) {
+        window.executedNestedTemplateScript = 0;
+      }
+      window.executedNestedTemplateScript++;
+    </script>
+  </template>
 </template>
