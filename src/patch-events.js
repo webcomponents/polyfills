@@ -304,6 +304,10 @@ function getEventWrappers(eventLike) {
  * @this {Event}
  */
 export function addEventListener(type, fnOrObj, optionsOrCapture) {
+  if (!fnOrObj) {
+    return;
+  }
+
   const handlerType = typeof fnOrObj;
 
   // bail if `fnOrObj` is not a function, not an object

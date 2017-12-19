@@ -592,6 +592,12 @@ suite('Patch of addEventListener/removeEventListener', function() {
     });
   });
 
+  test('add null listener', function() {
+    assert.doesNotThrow(function() {
+      el1.addEventListener('baz', null);
+    });
+  });
+
 });
 
 function getEffectiveChildNodes(node) {
