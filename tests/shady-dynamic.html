@@ -1192,6 +1192,20 @@ suite('Accessors', function() {
     assert.equal(ShadyDOM.nativeTree.childNodes(fragment).length, 0, 'textContent setter on document fragment is incorrect');
   });
 
+  test('setting textContent to null should set it to the empty string', function() {
+    var testElement = document.createElement('x-project');
+    testElement.textContent = null;
+    ShadyDOM.flush();
+    assert.equal(testElement.textContent, '', 'text content should be set to empty string in case of setting it to null');
+  });
+
+  test('setting textContent to undefined should set it to the empty string', function() {
+    var testElement = document.createElement('x-project');
+    testElement.textContent = undefined;
+    ShadyDOM.flush();
+    assert.equal(testElement.textContent, '', 'text content should be set to empty string in case of setting it to undefined');
+  });
+
   test('textContent on document fragment', function() {
     var documentFragment = document.createDocumentFragment();
     var b = document.createElement('b')
