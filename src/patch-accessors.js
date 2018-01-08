@@ -249,6 +249,9 @@ let InsideAccessors = {
      * @param {string} text
      */
     set(text) {
+      if (typeof text === 'undefined' || text === null) {
+        text = ''
+      }
       switch (this.nodeType) {
         case Node.ELEMENT_NODE:
         case Node.DOCUMENT_FRAGMENT_NODE:
