@@ -292,3 +292,34 @@ export function gatherStyleText(element) {
   }
   return styleTextParts.join('').trim();
 }
+
+// Split a selector separated by commas into an array in a smart way
+export function splitSelectorList(selector) {
+  let parts = [];
+  let part = '';
+  for (let i = 0; i >= 0 && i < selector.length; i++) {
+    // A selector with parentheses will be one complete part
+    if (selector[i] === '(') {
+      // find the matching paren
+      let end = findMatchingParen(selector, i);
+      // push the paren block into the part
+      part += selector.slice(i, end + 1);
+      // move the index to after the paren block
+      i = end;
+    } else if (selector[i] === ',') {
+      parts.push(part);
+      part = '';
+    } else {
+      part += selector[i];
+    }
+  }
+  // catch any pieces after the last comma
+  if (part) {
+    parts.push(part);
+  }
+  // if there were no commas, just push the whole selector as a "part"
+  if (parts.length === 0) {
+    parts.push(selector);
+  }
+  return parts;
+}

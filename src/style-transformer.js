@@ -170,7 +170,7 @@ class StyleTransformer {
    * @param {string=} hostScope
    */
   _transformRuleCss(rule, transformer, scope, hostScope) {
-    let p$ = rule['selector'].split(COMPLEX_SELECTOR_SEP);
+    let p$ = StyleUtil.splitSelectorList(rule['selector']);
     // we want to skip transformation of rules that appear in keyframes,
     // because they are keyframe selectors, not element selectors.
     if (!StyleUtil.isKeyframesSelector(rule)) {
