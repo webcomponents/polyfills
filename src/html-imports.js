@@ -51,7 +51,8 @@
    * @return {!NodeList<!Element>}
    */
   const QSA = (node, selector) => {
-    // IE 11 throws a SyntaxError if a node with no children is queried with a selector containing the `:not([type])` syntax.
+    // IE 11 throws a SyntaxError if a node with no children is queried with
+    // a selector containing the `:not([type])` syntax.
     if (!node.childNodes.length) {
       return emptyNodeList;
     }
