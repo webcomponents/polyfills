@@ -1,6 +1,7 @@
 language: node_js
 node_js: 6
 dist: trusty
+sudo: required
 addons:
   firefox: latest
   apt:
