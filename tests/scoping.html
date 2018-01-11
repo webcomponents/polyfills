@@ -385,6 +385,29 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <unscoped-apply-user></unscoped-apply-user>
 </template>
 
+<template id="scoped-keyframes">
+  <style>
+    :host {
+      --time: 1s;
+    }
+
+    div {
+      animation-name: slide-back;
+      animation-duration: var(--time);
+      animation-fill-mode: forwards;
+    }
+
+    @keyframes slide {}
+    @keyframes slide-back {
+      to {
+        transform: translateX(-100px);
+      }
+    }
+  </style>
+
+  <div id="target">Hello world</div>
+</template>
+
 <script>
 (function() {
   function assertComputed(element, value, property, pseudo) {
@@ -694,6 +717,18 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       xKeyframes.addEventListener('webkitAnimationEnd', onAnimationEnd);
       xKeyframes.setAttribute('animated', '');
       assertComputed(xKeyframes, '0px', 'left');
+    });
+
+    test('keyframe names are transformed correctly', function(done) {
+      makeElement('scoped-keyframes');
+      var e = document.createElement('scoped-keyframes');
+      document.body.appendChild(e);
+      flush();
+      setTimeout(function() {
+        var transform = getComputedStyle(e.shadowRoot.querySelector('#target')).getPropertyValue('transform');
+        assert.notEqual(transform, 'none');
+        done();
+      }, 1000);
     });
 
     test('attribute inclusive selector and general sibling selectors', function() {
