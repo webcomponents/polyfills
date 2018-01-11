@@ -388,19 +388,23 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <template id="scoped-keyframes">
   <style>
     :host {
-      --time: 1s;
+      --time: 0.1s;
     }
 
     div {
-      animation-name: slide-back;
       animation-duration: var(--time);
       animation-fill-mode: forwards;
+      border: 0px solid black;
     }
 
-    @keyframes slide {}
-    @keyframes slide-back {
+    :host([animate]) div {
+      animation-name: border-grow;
+    }
+
+    @keyframes border {}
+    @keyframes border-grow {
       to {
-        transform: translateX(-100px);
+        border-top-width: 10px;
       }
     }
   </style>
@@ -724,11 +728,18 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       var e = document.createElement('scoped-keyframes');
       document.body.appendChild(e);
       flush();
-      setTimeout(function() {
-        var transform = getComputedStyle(e.shadowRoot.querySelector('#target')).getPropertyValue('transform');
-        assert.notEqual(transform, 'none');
+      var target = e.shadowRoot.querySelector('#target');
+      var onAnimationEnd = function() {
+        assertComputed(target, '10px');
+        target.removeEventListener('animationend', onAnimationEnd);
+        target.removeEventListener('webkitAnimationEnd', onAnimationEnd);
+        document.body.removeChild(e);
         done();
-      }, 1000);
+      };
+      target.addEventListener('animationend', onAnimationEnd);
+      target.addEventListener('webkitAnimationEnd', onAnimationEnd);
+      e.setAttribute('animate', '');
+      assertComputed(target, '0px');
     });
 
     test('attribute inclusive selector and general sibling selectors', function() {
