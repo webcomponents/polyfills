@@ -10,7 +10,9 @@
 (scope => {
 
   /********************* base setup *********************/
-  const useNative = Boolean('import' in document.createElement('link'));
+  const link = document.createElement('link');
+  const useNative = Boolean('import' in link);
+  const emptyNodeList = link.querySelectorAll('*');
 
   // Polyfill `currentScript` for browsers without it.
   let currentScript = null;
@@ -41,6 +43,36 @@
     for (; i < length && i >= 0; i = i + increment) {
       callback(list[i], i);
     }
+  };
+
+  /**
+   * @param {!Node} node
+   * @param {!string} selector
+   * @return {!NodeList<!Element>}
+   */
+  const QSA = (node, selector) => {
+    // IE 11 throws a SyntaxError if a node with no children is queried with
+    // a selector containing the `:not([type])` syntax.
+    if (!node.childNodes.length) {
+      return emptyNodeList;
+    }
+    return node.querySelectorAll(selector);
+  };
+
+  /**
+   * @param {!DocumentFragment} fragment
+   */
+  const replaceScripts = (fragment) => {
+    forEach(QSA(fragment, 'template'), template => {
+      forEach(QSA(template.content, scriptsSelector), script => {
+        const clone = /** @type {!HTMLScriptElement} */
+          (document.createElement('script'));
+        forEach(script.attributes, attr => clone.setAttribute(attr.name, attr.value));
+        clone.textContent = script.textContent;
+        script.parentNode.replaceChild(clone, script);
+      });
+      replaceScripts(template.content);
+    });
   };
 
   /********************* path fixup *********************/
@@ -217,7 +249,7 @@
      */
     loadImports(doc) {
       const links = /** @type {!NodeList<!HTMLLinkElement>} */
-        (doc.querySelectorAll(importSelector));
+        (QSA(doc, importSelector));
       forEach(links, link => this.loadImport(link));
     }
 
@@ -287,19 +319,6 @@
         content = template.content;
         // Clone scripts inside templates since they won't execute when the
         // hosting template is cloned.
-        const replaceScripts = (content) => {
-          forEach(content.querySelectorAll('template'), template => {
-            forEach(template.content.querySelectorAll(scriptsSelector), script => {
-              const clone = /** @type {!HTMLScriptElement} */
-                (document.createElement('script'));
-              forEach(script.attributes, attr => clone.setAttribute(attr.name, attr.value));
-              clone.textContent = script.textContent;
-              script.parentNode.insertBefore(clone, script);
-              script.parentNode.removeChild(script);
-            });
-            replaceScripts(template.content);
-          });
-        };
         replaceScripts(content);
       } else {
         // <template> not supported, create fragment and move content into it.
@@ -317,7 +336,7 @@
       }
 
       const n$ = /** @type {!NodeList<!(HTMLLinkElement|HTMLScriptElement|HTMLStyleElement)>} */
-        (content.querySelectorAll(importDependenciesSelector));
+        (QSA(content, importDependenciesSelector));
       // For source map hints.
       let inlineScriptIndex = 0;
       forEach(n$, n => {
@@ -390,7 +409,7 @@
      */
     flatten(doc) {
       const n$ = /** @type {!NodeList<!HTMLLinkElement>} */
-        (doc.querySelectorAll(importSelector));
+        (QSA(doc, importSelector));
       forEach(n$, n => {
         const imp = this.documents[n.href];
         n['__import'] = /** @type {!Document} */ (imp);
@@ -412,7 +431,7 @@
      * @param {!function()} callback
      */
     runScripts(callback) {
-      const s$ = document.querySelectorAll(pendingScriptsSelector);
+      const s$ = QSA(document, pendingScriptsSelector);
       const l = s$.length;
       const cloneScript = i => {
         if (i < l) {
@@ -446,7 +465,7 @@
      */
     waitForStyles(callback) {
       const s$ = /** @type {!NodeList<!(HTMLLinkElement|HTMLStyleElement)>} */
-        (document.querySelectorAll(pendingStylesSelector));
+        (QSA(document, pendingStylesSelector));
       let pending = s$.length;
       if (!pending) {
         callback();
@@ -496,7 +515,7 @@
      */
     fireEvents() {
       const n$ = /** @type {!NodeList<!HTMLLinkElement>} */
-        (document.querySelectorAll(importSelector));
+        (QSA(document, importSelector));
       // Inverse order to have events firing bottom-up.
       forEach(n$, n => this.fireEventIfNeeded(n), true);
     }
@@ -615,7 +634,7 @@
    */
   const whenImportsReady = callback => {
     let imports = /** @type {!NodeList<!HTMLLinkElement>} */
-      (document.querySelectorAll(rootImportSelector));
+      (QSA(document, rootImportSelector));
     let pending = imports.length;
     if (!pending) {
       callback();
@@ -665,7 +684,7 @@
       importer.loadImports(doc);
     }
   };
-  
+
   const newCustomEvent = (type, params) => {
     if (typeof window.CustomEvent === 'function') {
       return new CustomEvent(type, params);
@@ -681,7 +700,7 @@
     // available in the document by this time should already have failed
     // or have .import defined.
     const imps = /** @type {!NodeList<!HTMLLinkElement>} */
-      (document.querySelectorAll(importSelector));
+      (QSA(document, importSelector));
     forEach(imps, imp => {
       if (!imp.import || imp.import.readyState !== 'loading') {
         imp['__loaded'] = true;
