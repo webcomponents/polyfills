@@ -71,35 +71,6 @@ export default function(internals) {
       return result;
     });
 
-  function patch_body(destination, baseDescriptor) {
-    Object.defineProperty(destination, 'body', {
-      get: baseDescriptor.get,
-      set: /** @this {Document} */ function(body) {
-        const replacedBody = baseDescriptor.get.call(this);
-        const bodyWasConnected = Utilities.isConnected(body);
-
-        baseDescriptor.set.call(this, body);
-
-        if (body === replacedBody) {
-          return;
-        }
-
-        if (bodyWasConnected) {
-          internals.disconnectTree(body);
-        }
-
-        internals.disconnectTree(replacedBody);
-        internals.connectTree(body);
-      }
-    });
-  }
-
-  if (Native.Document_body && Native.Document_body.get) {
-    patch_body(Document.prototype, Native.Document_body);
-  } else if (Native.HTMLDocument_body && Native.HTMLDocument_body.get) {
-    patch_body(HTMLDocument.prototype, Native.HTMLDocument_body);
-  }
-
   PatchParentNode(internals, Document.prototype, {
     prepend: Native.Document_prepend,
     append: Native.Document_append,
