@@ -385,6 +385,45 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <unscoped-apply-user></unscoped-apply-user>
 </template>
 
+<template id="scoped-keyframes">
+  <style>
+    :host {
+      --time: 0.1s;
+    }
+
+    div {
+      /* prefix for older chrome and safari */
+      -webkit-animation-duration: var(--time);
+      animation-duration: var(--time);
+      -webkit-animation-fill-mode: forwards;
+      animation-fill-mode: forwards;
+      border: 0px solid black;
+    }
+
+    :host([animate]) div {
+      /* prefix for older chrome and safari */
+      -webkit-animation-name: border-grow;
+      animation-name: border-grow;
+    }
+
+    /* prefix for older chrome and safari */
+    @-webkit-keyframes border {}
+    @-webkit-keyframes border-grow {
+      to {
+        border-top-width: 10px;
+      }
+    }
+    @keyframes border {}
+    @keyframes border-grow {
+      to {
+        border-top-width: 10px;
+      }
+    }
+  </style>
+
+  <div id="target">Hello world</div>
+</template>
+
 <script>
 (function() {
   function assertComputed(element, value, property, pseudo) {
@@ -694,6 +733,25 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       xKeyframes.addEventListener('webkitAnimationEnd', onAnimationEnd);
       xKeyframes.setAttribute('animated', '');
       assertComputed(xKeyframes, '0px', 'left');
+    });
+
+    test('keyframe names are transformed correctly', function(done) {
+      makeElement('scoped-keyframes');
+      var e = document.createElement('scoped-keyframes');
+      document.body.appendChild(e);
+      flush();
+      var target = e.shadowRoot.querySelector('#target');
+      var onAnimationEnd = function() {
+        assertComputed(target, '10px');
+        target.removeEventListener('animationend', onAnimationEnd);
+        target.removeEventListener('webkitAnimationEnd', onAnimationEnd);
+        document.body.removeChild(e);
+        done();
+      };
+      target.addEventListener('animationend', onAnimationEnd);
+      target.addEventListener('webkitAnimationEnd', onAnimationEnd);
+      e.setAttribute('animate', '');
+      assertComputed(target, '0px');
     });
 
     test('attribute inclusive selector and general sibling selectors', function() {
