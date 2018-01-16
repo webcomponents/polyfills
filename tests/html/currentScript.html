@@ -10,7 +10,7 @@
 -->
 <html>
   <head>
-    <title>_currentScript Test</title>
+    <title>currentScript Test</title>
     <script src="../../html-imports.min.js"></script>
     <script>WCT = {waitFor: function(cb){cb()}};</script>
     <script src="../../../web-component-tester/browser.js"></script>
@@ -21,7 +21,7 @@
     <script>
       var cs = document.currentScript;
       test('currentScript', function(done) {
-        chai.assert.equal(cs.parentNode, document.body, '_currentScript set in main document');
+        chai.assert.equal(cs.parentNode, document.body, 'currentScript set in main document');
         // In native HTMLImports the event 'HTMLImportsLoaded' might have already
         // been fired by this time, so use HTMLImports.whenReady.
         HTMLImports.whenReady(function() {

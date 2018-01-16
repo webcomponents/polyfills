@@ -11,6 +11,6 @@
 <script>
   chai.assert.ok(document.currentScript);
   var d = document.currentScript.ownerDocument.querySelector('div');
-  chai.assert.equal(d.innerHTML, 'me', '_currentScript can locate element in import')
+  chai.assert.equal(d.innerHTML, 'me', 'currentScript can locate element in import')
 </script>
 <script src="current-script.js"></script>
