@@ -15,17 +15,22 @@ export default function(internals) {
      * @return {!Element}
      */
     function(localName) {
+      internals.pushCEReactionsQueue();
+
       // Only create custom elements if this document is associated with the registry.
       if (this.__CE_hasRegistry) {
         const definition = internals.localNameToDefinition(localName);
         if (definition) {
-          return new (definition.constructor)();
+          const element = new (definition.constructor)();
+          internals.popCEReactionsQueue();
+          return element;
         }
       }
 
       const result = /** @type {!Element} */
         (Native.Document_createElement.call(this, localName));
       internals.patch(result);
+      internals.popCEReactionsQueue();
       return result;
     });
 
@@ -61,17 +66,22 @@ export default function(internals) {
      * @return {!Element}
      */
     function(namespace, localName) {
+      internals.pushCEReactionsQueue();
+
       // Only create custom elements if this document is associated with the registry.
       if (this.__CE_hasRegistry && (namespace === null || namespace === NS_HTML)) {
         const definition = internals.localNameToDefinition(localName);
         if (definition) {
-          return new (definition.constructor)();
+          const element = new (definition.constructor)();
+          internals.popCEReactionsQueue();
+          return element;
         }
       }
 
       const result = /** @type {!Element} */
         (Native.Document_createElementNS.call(this, namespace, localName));
       internals.patch(result);
+      internals.popCEReactionsQueue();
       return result;
     });
 
