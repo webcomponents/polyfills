@@ -29,7 +29,7 @@
   "devDependencies": {
     "web-component-tester": "^6.0.0",
     "webcomponents-platform": "webcomponents/webcomponents-platform#^1.0.0",
-    "es6-promise": "stefanpenner/es6-promise#^4.0.0",
+    "es6-promise": "stefanpenner/es6-promise#4.1.1",
     "html-imports": "webcomponents/html-imports#^1.0.0",
     "template": "webcomponents/template#^1.2.0",
     "shadydom": "webcomponents/shadydom#^1.0.6"
