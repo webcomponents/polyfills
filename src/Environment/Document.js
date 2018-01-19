@@ -25,7 +25,7 @@ const importNodeMethod = method(descriptors.importNode);
 /** @type {function(this: Document): (!string|undefined)} */
 const readyStateGetter = getter(descriptors.readyState, function() { return this.readyState; });
 /** @type {function(this: Document): ?Window} */
-const defaultViewGetter = getter(descriptors.defaultView);
+const defaultViewGetter = getter(descriptors.defaultView, function() { return this.defaultView; });
 
 /**
  * @type {{
