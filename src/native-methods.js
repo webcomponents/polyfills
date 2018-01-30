@@ -21,5 +21,17 @@ export let windowAddEventListener = Window.prototype.addEventListener;
 export let windowRemoveEventListener = Window.prototype.removeEventListener;
 export let dispatchEvent = Element.prototype.dispatchEvent;
 export let querySelector = Element.prototype.querySelector;
-export let querySelectorAll = Element.prototype.querySelectorAll;
+export let elementQuerySelectorAll = Element.prototype.querySelectorAll;
+export let fragmentQuerySelectorAll = DocumentFragment.prototype.querySelectorAll;
+export let documentQuerySelectorAll = Document.prototype.querySelectorAll;
 export let contains = Node.prototype.contains || HTMLElement.prototype.contains;
+export let querySelectorAll = function(node, selector) {
+  switch (node.nodeType) {
+    case Node.ELEMENT_NODE:
+      return elementQuerySelectorAll.call(node, selector);
+    case Node.DOCUMENT_NODE:
+      return documentQuerySelectorAll.call(node, selector);
+    default:
+      return fragmentQuerySelectorAll.call(node, selector);
+  }
+};

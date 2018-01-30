@@ -12,46 +12,46 @@ import * as nativeTreeWalker from './native-tree-walker.js';
 import * as nativeTreeAccessors from './native-tree-accessors.js';
 import * as utils from './utils.js';
 
-const hasDescriptors = utils.settings.hasDescriptors;
+const useNativeAccessors = utils.settings.useNativeAccessors;
 
-export let parentNode = hasDescriptors ? nativeTreeAccessors.parentNode :
+export let parentNode = useNativeAccessors ? nativeTreeAccessors.parentNode :
   nativeTreeWalker.parentNode;
 
-export let firstChild = hasDescriptors ? nativeTreeAccessors.firstChild :
+export let firstChild = useNativeAccessors ? nativeTreeAccessors.firstChild :
 nativeTreeWalker.firstChild;
 
-export let lastChild = hasDescriptors ? nativeTreeAccessors.lastChild :
+export let lastChild = useNativeAccessors ? nativeTreeAccessors.lastChild :
 nativeTreeWalker.lastChild;
 
-export let previousSibling = hasDescriptors ? nativeTreeAccessors.previousSibling :
+export let previousSibling = useNativeAccessors ? nativeTreeAccessors.previousSibling :
 nativeTreeWalker.previousSibling;
 
-export let nextSibling = hasDescriptors ? nativeTreeAccessors.nextSibling :
+export let nextSibling = useNativeAccessors ? nativeTreeAccessors.nextSibling :
 nativeTreeWalker.nextSibling;
 
-export let childNodes = hasDescriptors ? nativeTreeAccessors.childNodes :
+export let childNodes = useNativeAccessors ? nativeTreeAccessors.childNodes :
 nativeTreeWalker.childNodes;
 
-export let parentElement = hasDescriptors ? nativeTreeAccessors.parentElement :
+export let parentElement = useNativeAccessors ? nativeTreeAccessors.parentElement :
 nativeTreeWalker.parentElement;
 
-export let firstElementChild = hasDescriptors ? nativeTreeAccessors.firstElementChild :
+export let firstElementChild = useNativeAccessors ? nativeTreeAccessors.firstElementChild :
 nativeTreeWalker.firstElementChild;
 
-export let lastElementChild = hasDescriptors ? nativeTreeAccessors.lastElementChild :
+export let lastElementChild = useNativeAccessors ? nativeTreeAccessors.lastElementChild :
 nativeTreeWalker.lastElementChild;
 
-export let previousElementSibling = hasDescriptors ? nativeTreeAccessors.previousElementSibling :
+export let previousElementSibling = useNativeAccessors ? nativeTreeAccessors.previousElementSibling :
 nativeTreeWalker.previousElementSibling;
 
-export let nextElementSibling = hasDescriptors ? nativeTreeAccessors.nextElementSibling :
+export let nextElementSibling = useNativeAccessors ? nativeTreeAccessors.nextElementSibling :
 nativeTreeWalker.nextElementSibling;
 
-export let children = hasDescriptors ? nativeTreeAccessors.children :
+export let children = useNativeAccessors ? nativeTreeAccessors.children :
 nativeTreeWalker.children;
 
-export let innerHTML = hasDescriptors ? nativeTreeAccessors.innerHTML :
+export let innerHTML = useNativeAccessors ? nativeTreeAccessors.innerHTML :
 nativeTreeWalker.innerHTML;
 
-export let textContent = hasDescriptors ? nativeTreeAccessors.textContent :
+export let textContent = useNativeAccessors ? nativeTreeAccessors.textContent :
 nativeTreeWalker.textContent;

@@ -48,14 +48,21 @@ export function insertBefore(parent, node, ref_node) {
   }
   // add to new parent
   let preventNativeInsert;
-  let ownerRoot = utils.ownerShadyRootForNode(parent);
-  // if a slot is added, must render containing root.
-  let slotsAdded = ownerRoot && findContainedSlots(node);
-  if (slotsAdded) {
-    ownerRoot._addSlots(slotsAdded);
+  let ownerRoot;
+  let slotsAdded;
+  if (!node['__noInsertionPoint']) {
+    ownerRoot = utils.ownerShadyRootForNode(parent);
+    slotsAdded = ownerRoot && findContainedSlots(node);
+    if (slotsAdded) {
+      ownerRoot._addSlots(slotsAdded);
+    }
   }
-  if (ownerRoot && (parent.localName === 'slot' || slotsAdded)) {
-    ownerRoot._asyncRender();
+  // if a slot is added, must render containing root.
+  if (parent.localName === 'slot' || slotsAdded) {
+    ownerRoot = ownerRoot || utils.ownerShadyRootForNode(parent);
+    if (ownerRoot) {
+      ownerRoot._asyncRender();
+    }
   }
   if (utils.isTrackingLogicalChildNodes(parent)) {
     logicalTree.recordInsertBefore(node, parent, ref_node);
@@ -88,16 +95,14 @@ export function insertBefore(parent, node, ref_node) {
 }
 
 function findContainedSlots(node) {
-  if (!node['__noInsertionPoint']) {
-    let slots;
-    if (node.localName === 'slot') {
-      slots = [node];
-    } else if (node.querySelectorAll) {
-      slots = node.querySelectorAll('slot');
-    }
-    if (slots && slots.length) {
-      return slots;
-    }
+  let slots;
+  if (node.localName === 'slot') {
+    slots = [node];
+  } else if (node.querySelectorAll) {
+    slots = node.querySelectorAll('slot');
+  }
+  if (slots && slots.length) {
+    return slots;
   }
 }
 

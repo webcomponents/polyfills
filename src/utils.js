@@ -17,6 +17,9 @@ let desc = Object.getOwnPropertyDescriptor(Node.prototype, 'firstChild');
 
 settings.hasDescriptors = Boolean(desc && desc.configurable && desc.get);
 settings.inUse = settings['force'] || !settings.hasNativeShadowDOM;
+if (settings.useNativeAccessors === undefined) {
+  settings.useNativeAccessors = settings.hasDescriptors;
+}
 
 export function isTrackingLogicalChildNodes(node) {
   const nodeData = shadyDataForNode(node);

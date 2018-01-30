@@ -25,6 +25,13 @@ const hasDescriptors = utils.settings.hasDescriptors;
 const inertDoc = document.implementation.createHTMLDocument('inert');
 const htmlContainer = inertDoc.createElement('div');
 
+const nativeIsConnectedAccessors =
+/** @type {ObjectPropertyDescriptor} */(
+  Object.getOwnPropertyDescriptor(Node.prototype, 'isConnected')
+);
+
+const nativeIsConnected = nativeIsConnectedAccessors && nativeIsConnectedAccessors.get;
+
 const nativeActiveElementDescriptor =
   /** @type {ObjectPropertyDescriptor} */(
     Object.getOwnPropertyDescriptor(Document.prototype, 'activeElement')
@@ -179,6 +186,43 @@ let OutsideAccessors = {
   }
 
 };
+
+const IsConnectedAccessor = {
+
+  isConnected: {
+    /**
+     * @this {Node}
+     */
+    get() {
+      if (nativeIsConnected) {
+        if (nativeIsConnected.call(this)) {
+          return this;
+        }
+      } else {
+        // Fast path for distributed nodes.
+        const ownerDocument = this.ownerDocument;
+        if (utils.hasDocumentContains) {
+          if (nativeContains.call(ownerDocument, this)) {
+            return true;
+          }
+        } else if (ownerDocument.documentElement &&
+          nativeContains.call(ownerDocument.documentElement, this)) {
+          return true;
+        }
+      }
+      let node = this;
+      while (node && !(node instanceof Document)) {
+        node = node.parentNode || (utils.isShadyRoot(node) ? /** @type {ShadowRoot} */(node).host : undefined);
+      }
+      return !!(node && node instanceof Document);
+    },
+    configurable: true
+  }
+};
+
+if (!nativeIsConnected) {
+  Object.assign(OutsideAccessors, IsConnectedAccessor);
+}
 
 let InsideAccessors = {
 
@@ -443,6 +487,7 @@ export function patchAccessors(proto) {
 export function patchShadowRootAccessors(proto) {
   patchAccessorGroup(proto, InsideAccessors, true);
   patchAccessorGroup(proto, ActiveElementAccessor, true);
+  patchAccessorGroup(proto, IsConnectedAccessor, true);
 }
 
 // ensure an element has patched "outside" accessors; no-op when not needed
