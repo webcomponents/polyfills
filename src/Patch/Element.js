@@ -229,6 +229,13 @@ export default function(internals) {
   }
 
 
+  /**
+   * Patches and upgrades all nodes which are siblings between `start`
+   * (inclusive) and `end` (exclusive). If `end` is `null`, then all siblings
+   * following `start` will be patched and upgraded.
+   * @param {!Node} start
+   * @param {?Node} end
+   */
   function upgradeNodesInRange(start, end) {
     const nodes = [];
     for (let node = start; node !== end; node = node.nextSibling) {
@@ -251,11 +258,12 @@ export default function(internals) {
       if (position === "beforebegin") {
         const marker = this.previousSibling;
         Native.Element_insertAdjacentHTML.call(this, position, text);
-        upgradeNodesInRange(marker || this.parentNode.firstChild, this);
+        upgradeNodesInRange(
+          /** @type {!Node} */ (marker || this.parentNode.firstChild), this);
       } else if (position === "afterbegin") {
         const marker = this.firstChild;
         Native.Element_insertAdjacentHTML.call(this, position, text);
-        upgradeNodesInRange(this.firstChild, marker);
+        upgradeNodesInRange(/** @type {!Node} */ (this.firstChild), marker);
       } else if (position === "beforeend") {
         const marker = this.lastChild;
         Native.Element_insertAdjacentHTML.call(this, position, text);
@@ -263,7 +271,7 @@ export default function(internals) {
       } else if (position === "afterend") {
         const marker = this.nextSibling;
         Native.Element_insertAdjacentHTML.call(this, position, text);
-        upgradeNodesInRange(this.nextSibling, marker);
+        upgradeNodesInRange(/** @type {!Node} */ (this.nextSibling), marker);
       } else {
         throw new SyntaxError(`The value provided (${String(position)}) is ` +
           "not one of 'beforebegin', 'afterbegin', 'beforeend', or 'afterend'.");
