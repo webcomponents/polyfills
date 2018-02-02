@@ -229,6 +229,16 @@ export default function(internals) {
   }
 
 
+  function upgradeNodesInRange(start, end) {
+    const nodes = [];
+    for (let node = start; node !== end; node = node.nextSibling) {
+      nodes.push(node);
+    }
+    for (let i = 0; i < nodes.length; i++) {
+      internals.patchAndUpgradeTree(nodes[i]);
+    }
+  }
+
   Utilities.setPropertyUnchecked(Element.prototype, 'insertAdjacentHTML',
     /**
      * @this {Element}
@@ -240,68 +250,20 @@ export default function(internals) {
 
       if (position === "beforebegin") {
         const marker = this.previousSibling;
-
         Native.Element_insertAdjacentHTML.call(this, position, text);
-
-        const newNodes = [];
-        for (
-          let node = this.previousSibling;
-          node !== marker;
-          node = node.previousSibling
-        ) {
-          newNodes.push(node);
-        }
-        while (newNodes.length > 0) {
-          internals.patchAndUpgradeTree(newNodes.pop());
-        }
+        upgradeNodesInRange(marker || this.parentNode.firstChild, this);
       } else if (position === "afterbegin") {
         const marker = this.firstChild;
-
         Native.Element_insertAdjacentHTML.call(this, position, text);
-
-        const newNodes = [];
-        for (
-          let node = marker ? marker.previousSibling : this.lastChild;
-          node !== null;
-          node = node.previousSibling
-        ) {
-          newNodes.push(node);
-        }
-        while (newNodes.length > 0) {
-          internals.patchAndUpgradeTree(newNodes.pop());
-        }
+        upgradeNodesInRange(this.firstChild, marker);
       } else if (position === "beforeend") {
         const marker = this.lastChild;
-
         Native.Element_insertAdjacentHTML.call(this, position, text);
-
-        const newNodes = [];
-        for (
-          let node = this.lastChild;
-          node !== marker;
-          node = node.previousSibling
-        ) {
-          newNodes.push(node);
-        }
-        while (newNodes.length > 0) {
-          internals.patchAndUpgradeTree(newNodes.pop());
-        }
+        upgradeNodesInRange(marker || this.firstChild, null);
       } else if (position === "afterend") {
         const marker = this.nextSibling;
-
         Native.Element_insertAdjacentHTML.call(this, position, text);
-
-        const newNodes = [];
-        for (
-          let node = marker ? marker.previousSibling : this.parentNode.lastChild;
-          node !== this;
-          node = node.previousSibling
-        ) {
-          newNodes.push(node);
-        }
-        while (newNodes.length > 0) {
-          internals.patchAndUpgradeTree(newNodes.pop());
-        }
+        upgradeNodesInRange(this.nextSibling, marker);
       } else {
         throw new SyntaxError(`The value provided (${String(position)}) is ` +
           "not one of 'beforebegin', 'afterbegin', 'beforeend', or 'afterend'.");
