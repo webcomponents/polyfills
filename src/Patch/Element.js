@@ -200,14 +200,14 @@ export default function(internals) {
     Utilities.setPropertyUnchecked(destination, 'insertAdjacentElement',
       /**
        * @this {Element}
-       * @param {string} where
+       * @param {string} position
        * @param {!Element} element
        * @return {?Element}
        */
-      function(where, element) {
+      function(position, element) {
         const wasConnected = Utilities.isConnected(element);
         const insertedElement = /** @type {!Element} */
-          (baseMethod.call(this, where, element));
+          (baseMethod.call(this, position, element));
 
         if (wasConnected) {
           internals.disconnectTree(element);
