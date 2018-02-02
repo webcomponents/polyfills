@@ -229,6 +229,86 @@ export default function(internals) {
   }
 
 
+  Utilities.setPropertyUnchecked(Element.prototype, 'insertAdjacentHTML',
+    /**
+     * @this {Element}
+     * @param {string} position
+     * @param {string} text
+     */
+    function(position, text) {
+      position = position.toLowerCase();
+
+      if (position === "beforebegin") {
+        const marker = this.previousSibling;
+
+        Native.Element_insertAdjacentHTML.call(this, position, text);
+
+        const newNodes = [];
+        for (
+          let node = this.previousSibling;
+          node !== marker;
+          node = node.previousSibling
+        ) {
+          newNodes.push(node);
+        }
+        while (newNodes.length > 0) {
+          internals.patchAndUpgradeTree(newNodes.pop());
+        }
+      } else if (position === "afterbegin") {
+        const marker = this.firstChild;
+
+        Native.Element_insertAdjacentHTML.call(this, position, text);
+
+        const newNodes = [];
+        for (
+          let node = marker ? marker.previousSibling : this.lastChild;
+          node !== null;
+          node = node.previousSibling
+        ) {
+          newNodes.push(node);
+        }
+        while (newNodes.length > 0) {
+          internals.patchAndUpgradeTree(newNodes.pop());
+        }
+      } else if (position === "beforeend") {
+        const marker = this.lastChild;
+
+        Native.Element_insertAdjacentHTML.call(this, position, text);
+
+        const newNodes = [];
+        for (
+          let node = this.lastChild;
+          node !== marker;
+          node = node.previousSibling
+        ) {
+          newNodes.push(node);
+        }
+        while (newNodes.length > 0) {
+          internals.patchAndUpgradeTree(newNodes.pop());
+        }
+      } else if (position === "afterend") {
+        const marker = this.nextSibling;
+
+        Native.Element_insertAdjacentHTML.call(this, position, text);
+
+        const newNodes = [];
+        for (
+          let node = marker ? marker.previousSibling : this.parentNode.lastChild;
+          node !== this;
+          node = node.previousSibling
+        ) {
+          newNodes.push(node);
+        }
+        while (newNodes.length > 0) {
+          internals.patchAndUpgradeTree(newNodes.pop());
+        }
+      } else {
+        throw new SyntaxError(`The value provided (${String(position)}) is ` +
+          "not one of 'beforebegin', 'afterbegin', 'beforeend', or 'afterend'.");
+      }
+    });
+
+
   PatchParentNode(internals, Element.prototype, {
     prepend: Native.Element_prepend,
     append: Native.Element_append,

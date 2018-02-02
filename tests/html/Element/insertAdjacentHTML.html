@@ -1,0 +1,192 @@
+<!doctype html>
+<html>
+<head>
+<title>Element#insertAdjacentHTML</title>
+<script>
+  (window.customElements = window.customElements || {}).forcePolyfill = true;
+</script>
+<script src="../../../../es6-promise/dist/es6-promise.auto.min.js"></script>
+<script src="../../../../web-component-tester/browser.js"></script>
+<script src="../../../custom-elements.min.js"></script>
+</head>
+<body>
+<script>
+function generateLocalName() {
+  return 'test-element-' + Math.random().toString(32).substring(2);
+}
+
+function defineWithLocalName(localName, observedAttributes) {
+  const customElementClass = class extends HTMLElement {
+    constructor() {
+      super();
+      this.constructed = true;
+      this.connectedCallbackCount = 0;
+      this.disconnectedCallbackCount = 0;
+    }
+
+    connectedCallback() {
+      this.connectedCallbackCount++;
+    }
+
+    disconnectedCallback() {
+      this.disconnectedCallbackCount++;
+    }
+  };
+
+  customElements.define(localName, customElementClass);
+
+  return customElementClass;
+}
+
+suite('Inserting HTML with defined custom elements into a disconnected ' +
+  'context element with a parent.', function() {
+    let disconnectedElement;
+    let localName;
+    let customElementClass;
+
+    setup(function() {
+      const parent = document.createElement('div');
+      disconnectedElement = document.createElement('div');
+      parent.appendChild(disconnectedElement);
+      localName = generateLocalName();
+      customElementClass = defineWithLocalName(localName);
+    });
+
+    test('beforebegin', function() {
+      disconnectedElement.insertAdjacentHTML('beforebegin', `<${localName}></${localName}>`);
+
+      const element = disconnectedElement.previousSibling;
+      assert(element instanceof customElementClass);
+      assert.equal(element.connectedCallbackCount, 0);
+      assert.equal(element.disconnectedCallbackCount, 0);
+    });
+
+    test('afterbegin', function() {
+      disconnectedElement.insertAdjacentHTML('afterbegin', `<${localName}></${localName}>`);
+
+      const element = disconnectedElement.firstChild;
+      assert(element instanceof customElementClass);
+      assert.equal(element.connectedCallbackCount, 0);
+      assert.equal(element.disconnectedCallbackCount, 0);
+    });
+
+    test('beforeend', function() {
+      disconnectedElement.insertAdjacentHTML('beforeend', `<${localName}></${localName}>`);
+
+      const element = disconnectedElement.lastChild;
+      assert(element instanceof customElementClass);
+      assert.equal(element.connectedCallbackCount, 0);
+      assert.equal(element.disconnectedCallbackCount, 0);
+    });
+
+    test('afterend', function() {
+      disconnectedElement.insertAdjacentHTML('afterend', `<${localName}></${localName}>`);
+
+      const element = disconnectedElement.nextSibling;
+      assert(element instanceof customElementClass);
+      assert.equal(element.connectedCallbackCount, 0);
+      assert.equal(element.disconnectedCallbackCount, 0);
+    });
+  });
+
+suite('Inserting HTML with defined custom elements into a disconnected ' +
+  'context element without a parent.', function() {
+    let disconnectedElement;
+    let localName;
+    let customElementClass;
+
+    setup(function() {
+      disconnectedElement = document.createElement('div');
+      localName = generateLocalName();
+      customElementClass = defineWithLocalName(localName);
+    });
+
+    test('Position "beforebegin" throws.', function() {
+      assert.throws(function() {
+        disconnectedElement.insertAdjacentHTML('beforebegin', `<${localName}></${localName}>`);
+      });
+    });
+
+    test('afterbegin', function() {
+      disconnectedElement.insertAdjacentHTML('afterbegin', `<${localName}></${localName}>`);
+
+      const element = disconnectedElement.firstChild;
+      assert(element instanceof customElementClass);
+      assert.equal(element.connectedCallbackCount, 0);
+      assert.equal(element.disconnectedCallbackCount, 0);
+    });
+
+    test('beforeend', function() {
+      disconnectedElement.insertAdjacentHTML('beforeend', `<${localName}></${localName}>`);
+
+      const element = disconnectedElement.lastChild;
+      assert(element instanceof customElementClass);
+      assert.equal(element.connectedCallbackCount, 0);
+      assert.equal(element.disconnectedCallbackCount, 0);
+    });
+
+    test('Position "afterend" throws.', function() {
+      assert.throws(function() {
+        disconnectedElement.insertAdjacentHTML('afterend', `<${localName}></${localName}>`);
+      });
+    });
+  });
+
+suite('Inserting HTML with defined custom elements into a connected context ' +
+  'element.', function() {
+    let connectedElement;
+    let localName;
+    let customElementClass;
+
+    setup(function() {
+      connectedElement = document.createElement('div');
+      document.body.appendChild(connectedElement);
+      localName = generateLocalName();
+      customElementClass = defineWithLocalName(localName);
+    });
+
+    teardown(function() {
+      if (connectedElement.parentNode) {
+        connectedElement.parentNode.removeChild(connectedElement);
+      }
+    });
+
+    test('beforebegin', function() {
+      connectedElement.insertAdjacentHTML('beforebegin', `<${localName}></${localName}>`);
+
+      const element = connectedElement.previousSibling;
+      assert(element instanceof customElementClass);
+      assert.equal(element.connectedCallbackCount, 1);
+      assert.equal(element.disconnectedCallbackCount, 0);
+    });
+
+    test('afterbegin', function() {
+      connectedElement.insertAdjacentHTML('afterbegin', `<${localName}></${localName}>`);
+
+      const element = connectedElement.firstChild;
+      assert(element instanceof customElementClass);
+      assert.equal(element.connectedCallbackCount, 1);
+      assert.equal(element.disconnectedCallbackCount, 0);
+    });
+
+    test('beforeend', function() {
+      connectedElement.insertAdjacentHTML('beforeend', `<${localName}></${localName}>`);
+
+      const element = connectedElement.lastChild;
+      assert(element instanceof customElementClass);
+      assert.equal(element.connectedCallbackCount, 1);
+      assert.equal(element.disconnectedCallbackCount, 0);
+    });
+
+    test('afterend', function() {
+      connectedElement.insertAdjacentHTML('afterend', `<${localName}></${localName}>`);
+
+      const element = connectedElement.nextSibling;
+      assert(element instanceof customElementClass);
+      assert.equal(element.connectedCallbackCount, 1);
+      assert.equal(element.disconnectedCallbackCount, 0);
+    });
+  });
+</script>
+</body>
+</html>

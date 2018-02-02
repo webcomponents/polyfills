@@ -21,6 +21,7 @@ export default {
   Element_setAttributeNS: window.Element.prototype.setAttributeNS,
   Element_removeAttributeNS: window.Element.prototype.removeAttributeNS,
   Element_insertAdjacentElement: window.Element.prototype['insertAdjacentElement'],
+  Element_insertAdjacentHTML: window.Element.prototype['insertAdjacentHTML'],
   Element_prepend: window.Element.prototype['prepend'],
   Element_append: window.Element.prototype['append'],
   Element_before: window.Element.prototype['before'],
