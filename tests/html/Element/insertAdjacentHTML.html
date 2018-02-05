@@ -49,6 +49,61 @@ function defineWithLocalName(localName, observedAttributes) {
   return customElementClass;
 }
 
+test('Calling on `this` with position "afterend" while upgrading during a ' +
+  'clone does not upgrade other children.', function() {
+    const log = [];
+
+    class LoggingElement extends HTMLElement {
+      constructor() {
+        super();
+        log.push(this.localName);
+      }
+    }
+
+    const ceInsertedName = generateLocalName();
+    const CEInserted = class extends LoggingElement {};
+    customElements.define(ceInsertedName, CEInserted);
+
+    const ce1Name = generateLocalName();
+    customElements.define(ce1Name, class extends LoggingElement {
+      constructor() {
+        super();
+        this.insertAdjacentHTML('afterend', `<${ceInsertedName}></${ceInsertedName}>`);
+      }
+    });
+
+    const ce2Name = generateLocalName();
+    customElements.define(ce2Name, class extends LoggingElement {});
+
+    const template = document.createElement('template');
+    template.innerHTML = `<div><${ce1Name}><${ce2Name}></${ce2Name}></${ce1Name}></div>`;
+
+    // Insert a clone of the template, so that the elements are contained in a
+    // document with a registry.
+
+    const div = template.content.querySelector('div').cloneNode(true);
+    document.body.appendChild(div);
+
+    // Remove the <ce-inserted> created by the initial upgrade, so that the DOM
+    // content looks like the HTML from the template.
+
+    const inserted = div.querySelector(ceInsertedName);
+    assert(inserted && inserted instanceof CEInserted);
+    div.removeChild(inserted);
+
+    // Clear the upgrade log and clone the div.
+
+    log.length = 0;
+    const clone = div.cloneNode(true);
+
+    // <ce-inserted> should have been upgraded before <ce-2>, even though it
+    // comes after <ce-2> in document order.
+
+    assert.deepEqual(log, [ce1Name, ceInsertedName, ce2Name]);
+
+    document.body.removeChild(div);
+  });
+
 suite('Inserting HTML with defined custom elements into a disconnected ' +
   'context element with a parent.', function() {
     let disconnectedElement;
