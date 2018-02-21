@@ -55,31 +55,18 @@
 
   var NativeHTMLElement = window.HTMLElement, newHTMLElement;
 
-  try {
-    // Try first with new.target support. Use "eval" in case it does not exists.
-    newHTMLElement = eval(`(function(_super) {
-      return function HTMLElement() {
-        return _super(this, new.target || this.constructor);
-      }
-    })`)(_super);
-  } catch (e) { // Failed on new.target ?
-    newHTMLElement = function HTMLElement() {
-      return _super(this, this.constructor);
-    };
-  }
+  newHTMLElement = function HTMLElement() {
+    // Tries to make a super call to the native HTMLElement with the first available solution.
+    if (typeof Reflect === 'object' && typeof Reflect.construct === 'function') {
+      return Reflect.construct(NativeHTMLElement, [], this.constructor);
+    } else {
+      return NativeHTMLElement.call(this);
+    }
+  };
 
   // Object.setPrototypeOf is surprisingly supported in IE 11
   Object.setPrototypeOf(newHTMLElement.prototype, NativeHTMLElement.prototype);
   Object.setPrototypeOf(newHTMLElement, NativeHTMLElement);
 
   window.HTMLElement = newHTMLElement;
-
-  // Tries to make a super call to the native HTMLElement with the first available solution.
-  function _super(_this, _target) {
-    if (typeof Reflect === 'object' && typeof Reflect.construct === 'function') {
-      return Reflect.construct(NativeHTMLElement, [], _target);
-    } else {
-      return NativeHTMLElement.call(_this);
-    }
-  }
 })();
