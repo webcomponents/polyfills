@@ -99,9 +99,30 @@ The `@apply` proposal has been abandoned in favor of the ::part/::theme [Shadow 
 
 ### Known Issues:
 
-* `@apply` mixins cannot be modified at runtime.
-* shorthand properties are not expanded and may conflict with more explicit properties where the last definition wins, e.g. `border: 2px solid black` and `border-color: orange`. For this reason, we recommend avoiding shorthand properties.
-* nested mixins are not supported.
+* Mixin properties cannot be modified at runtime.
+* Nested mixins are not supported.
+* Shorthand properties are not expanded and may conflict with more explicit properties. Whenever shorthand notations are used in conjunction with their expanded forms in `@apply`, depending in the order of usage of the mixins, properties can be overridden. This means that using both `background-color: green;` and `background: red;` in two separate CSS selectors
+ can result in `background-color: transparent` in the selector that `background: red;` is specified.
+ 
+   ```css
+   #nonexistent {
+     --my-mixin: {
+       background: red;
+     }
+   }
+   ```
+   with an element style definition of
+   ```css
+   :host {
+     display: block;
+     background-color: green;
+     @apply(--my-mixin);
+   }
+   ```
+   results in the background being `transparent`, as an empty `background` definition replaces
+   the `@apply` definition. 
+ 
+   For this reason, we recommend avoiding shorthand properties.
 
 ### Example:
 
