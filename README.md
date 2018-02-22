@@ -315,8 +315,10 @@ ShadyCSS.styleSubtree(el, {'--content-color' : 'red'});
 
 ### Selector scoping
 
-You must have a selector to the left of the `::slotted`
+You must have a selector for ascendants of the `<slot>` element when using the `::slotted`
 pseudo-element.
+
+You cannot use any selector for the `<slot>` element. Rules like `.foo .bar::slotted(*)` are not supported.
 
 ### Custom properties and `@apply`
 
