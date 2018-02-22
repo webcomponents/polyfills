@@ -97,6 +97,12 @@ This is done by transforming the block definition into a set of CSS Custom Prope
 
 The `@apply` proposal has been abandoned in favor of the ::part/::theme [Shadow Parts spec](https://tabatkins.github.io/specs/css-shadow-parts/). Therefore, the ApplyShim library is deprecated and provided only for backwards compatibility. Support going forward will be limited to critical bug fixes.
 
+### Known Issues:
+
+* `@apply` mixins cannot be modified at runtime.
+* shorthand properties are not expanded and may conflict with more explicit properties where the last definition wins, e.g. `border: 2px solid black` and `border-color: orange`. For this reason, we recommend avoiding shorthand properties.
+* nested mixins are not supported.
+
 ### Example:
 
 Here we define a block called `--mixin` at the document level, and apply that block to `my-element` somewhere in the page.
