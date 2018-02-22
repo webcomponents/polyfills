@@ -93,6 +93,10 @@ ApplyShim provides a shim for the `@apply` syntax proposed at https://tabatkins.
 
 This is done by transforming the block definition into a set of CSS Custom Properties, and replacing uses of `@apply` with consumption of those custom properties.
 
+### Status:
+
+The `@apply` proposal has been abandoned in favor of the ::part/::theme [Shadow Parts spec](https://tabatkins.github.io/specs/css-shadow-parts/). Therefore, the ApplyShim library is deprecated and provided only for backwards compatibility. Support going forward will be limited to critical bug fixes.
+
 ### Example:
 
 Here we define a block called `--mixin` at the document level, and apply that block to `my-element` somewhere in the page.
