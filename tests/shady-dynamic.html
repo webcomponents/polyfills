@@ -1200,7 +1200,7 @@ suite('Accessors', function() {
   });
 
   test('setting textContent to undefined should set it to the empty string', function() {
-    var testElement = document.createElement('x-project');
+    var testElement = createEnabledElement('x-project');
     testElement.textContent = undefined;
     ShadyDOM.flush();
     assert.equal(testElement.textContent, '', 'text content should be set to empty string in case of setting it to undefined');
