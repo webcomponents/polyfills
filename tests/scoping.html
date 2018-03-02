@@ -424,6 +424,31 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <div id="target">Hello world</div>
 </template>
 
+<template id="nested-templates">
+  <style>
+    [id] {
+      display: inline-block;
+    }
+  </style>
+  <div id="a"></div>
+  <template id="t1">
+    <div id="b">
+      <div id="c">
+        <template id="t2">
+          <div id="d"></div>
+        </template>
+      </div>
+    </div>
+  </template>
+  <svg>
+    <template id="t3">
+      <g id="g">
+        <circle id="circle"></circle>
+      </g>
+    </template>
+  </svg>
+</template>
+
 <script>
 (function() {
   function assertComputed(element, value, property, pseudo) {
@@ -542,6 +567,26 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       assertComputed(findNode('el.$.child.$.complex1'), '0px');
       assertComputed(findNode('el.$.child.$.complex2'), '0px');
       assertComputed(findNode('el.$.child.$.media'), '0px');
+    });
+
+    test('nested templates', function() {
+      makeElement('nested-templates');
+      var el = document.createElement('nested-templates');
+      document.body.appendChild(el);
+      // Append nested template content. Note the <template> in <svg> is not
+      // an HTML template with .content at this point; it is just an unknown
+      // SVGElement so we don't have to stamp it
+      var t1 = el.shadowRoot.querySelector('#t1');
+      el.shadowRoot.appendChild(t1.content.cloneNode(true));
+      var t2 = el.shadowRoot.querySelector('#t2');
+      el.shadowRoot.appendChild(t2.content.cloneNode(true));
+      // Everything should now have 'display: inline-block'
+      var els = el.shadowRoot.querySelectorAll('[id]');
+      assert.deepEqual(Array.from(els, e => e.id), ['a', 't1', 't3', 'g', 'circle', 'b', 'c', 't2', 'd']);
+      Array.from(els).forEach(e => {
+        assert.equal(getComputedStyle(e).display, 'inline-block');
+      });
+      document.body.removeChild(el);
     });
 
   });
