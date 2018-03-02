@@ -20,6 +20,7 @@ export let removeEventListener = Element.prototype.removeEventListener;
 export let windowAddEventListener = Window.prototype.addEventListener;
 export let windowRemoveEventListener = Window.prototype.removeEventListener;
 export let dispatchEvent = Element.prototype.dispatchEvent;
+export let getElementById = Document.prototype.getElementById;
 export let querySelector = Element.prototype.querySelector;
 export let querySelectorAll = Element.prototype.querySelectorAll;
 export let contains = Node.prototype.contains || HTMLElement.prototype.contains;
