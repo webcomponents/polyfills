@@ -727,7 +727,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   });
 
   test('childNodes.item(index)', function() {
-    var el = document.createElement('x-echo');
+    var el = createEnabledElement('x-echo');
     var d1 = document.createElement('div');
     var t1 = document.createTextNode('');
     el.appendChild(d1);
@@ -737,7 +737,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   });
 
   test('children.item(index)', function() {
-    var el = document.createElement('x-echo');
+    var el = createEnabledElement('x-echo');
     var d1 = document.createElement('div');
     var d2 = document.createElement('div');
     el.appendChild(d1);
@@ -1091,7 +1091,7 @@ suite('Accessors', function() {
   });
 
   test('element accessors (no distribute)', function() {
-    var parent = document.createElement('x-test-no-distribute');
+    var parent = createEnabledElement('x-test-no-distribute');
     var child = document.createElement('div');
     parent.appendChild(child);
     var before = document.createElement('div');
@@ -1107,7 +1107,7 @@ suite('Accessors', function() {
   });
 
   test('element accessors (distribute)', function() {
-    var parent = document.createElement('x-project');
+    var parent = createEnabledElement('x-project');
     var child = document.createElement('div');
     parent.appendChild(child);
     var before = document.createElement('div');
@@ -1123,7 +1123,7 @@ suite('Accessors', function() {
   });
 
   test('node accessors (empty logical tree)', function() {
-    var element = document.createElement('x-simple');
+    var element = createEnabledElement('x-simple');
     assert.equal(element.parentNode, null, 'parentNode incorrect');
     assert.equal(element.firstChild, null, 'firstChild incorrect');
     assert.equal(element.lastChild, null, 'lastChild incorrect');
@@ -1161,7 +1161,7 @@ suite('Accessors', function() {
   });
 
   test('textContent', function() {
-    var testElement = document.createElement('x-project');
+    var testElement = createEnabledElement('x-project');
     testElement.textContent = 'Hello World';
     assert.equal(testElement.textContent, 'Hello World', 'textContent getter incorrect');
     document.body.appendChild(testElement);
@@ -1193,14 +1193,14 @@ suite('Accessors', function() {
   });
 
   test('setting textContent to null should set it to the empty string', function() {
-    var testElement = document.createElement('x-project');
+    var testElement = createEnabledElement('x-project');
     testElement.textContent = null;
     ShadyDOM.flush();
     assert.equal(testElement.textContent, '', 'text content should be set to empty string in case of setting it to null');
   });
 
   test('setting textContent to undefined should set it to the empty string', function() {
-    var testElement = document.createElement('x-project');
+    var testElement = createEnabledElement('x-project');
     testElement.textContent = undefined;
     ShadyDOM.flush();
     assert.equal(testElement.textContent, '', 'text content should be set to empty string in case of setting it to undefined');
@@ -1227,7 +1227,7 @@ suite('Accessors', function() {
   });
 
   test('innerHTML', function() {
-    var testElement = document.createElement('x-project');
+    var testElement = createEnabledElement('x-project');
     testElement.innerHTML = '<div>Hello World</div><div>2</div><div>3</div>';
     var added = testElement.firstChild;
     assert.equal(added.textContent , 'Hello World', 'innerHTML setter incorrect');

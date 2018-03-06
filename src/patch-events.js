@@ -400,7 +400,9 @@ export function addEventListener(type, fnOrObj, optionsOrCapture) {
   };
   // Store the wrapper information.
   fnOrObj[eventWrappersName].push({
-    node: this,
+    // note: use target here which is either a shadowRoot
+    // (when the host element is proxy'ing the event) or this element
+    node: target,
     type: type,
     capture: capture,
     once: once,
