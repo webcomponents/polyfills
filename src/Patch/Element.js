@@ -229,54 +229,64 @@ export default function(internals) {
   }
 
 
-  /**
-   * Patches and upgrades all nodes which are siblings between `start`
-   * (inclusive) and `end` (exclusive). If `end` is `null`, then all siblings
-   * following `start` will be patched and upgraded.
-   * @param {!Node} start
-   * @param {?Node} end
-   */
-  function upgradeNodesInRange(start, end) {
-    const nodes = [];
-    for (let node = start; node !== end; node = node.nextSibling) {
-      nodes.push(node);
+  function patch_insertAdjacentHTML(destination, baseMethod) {
+    /**
+     * Patches and upgrades all nodes which are siblings between `start`
+     * (inclusive) and `end` (exclusive). If `end` is `null`, then all siblings
+     * following `start` will be patched and upgraded.
+     * @param {!Node} start
+     * @param {?Node} end
+     */
+    function upgradeNodesInRange(start, end) {
+      const nodes = [];
+      for (let node = start; node !== end; node = node.nextSibling) {
+        nodes.push(node);
+      }
+      for (let i = 0; i < nodes.length; i++) {
+        internals.patchAndUpgradeTree(nodes[i]);
+      }
     }
-    for (let i = 0; i < nodes.length; i++) {
-      internals.patchAndUpgradeTree(nodes[i]);
-    }
+
+    Utilities.setPropertyUnchecked(destination, 'insertAdjacentHTML',
+      /**
+       * @this {Element}
+       * @param {string} position
+       * @param {string} text
+       */
+      function(position, text) {
+        position = position.toLowerCase();
+
+        if (position === "beforebegin") {
+          const marker = this.previousSibling;
+          baseMethod.call(this, position, text);
+          upgradeNodesInRange(
+            /** @type {!Node} */ (marker || this.parentNode.firstChild), this);
+        } else if (position === "afterbegin") {
+          const marker = this.firstChild;
+          baseMethod.call(this, position, text);
+          upgradeNodesInRange(/** @type {!Node} */ (this.firstChild), marker);
+        } else if (position === "beforeend") {
+          const marker = this.lastChild;
+          baseMethod.call(this, position, text);
+          upgradeNodesInRange(marker || this.firstChild, null);
+        } else if (position === "afterend") {
+          const marker = this.nextSibling;
+          baseMethod.call(this, position, text);
+          upgradeNodesInRange(/** @type {!Node} */ (this.nextSibling), marker);
+        } else {
+          throw new SyntaxError(`The value provided (${String(position)}) is ` +
+            "not one of 'beforebegin', 'afterbegin', 'beforeend', or 'afterend'.");
+        }
+      });
   }
 
-  Utilities.setPropertyUnchecked(Element.prototype, 'insertAdjacentHTML',
-    /**
-     * @this {Element}
-     * @param {string} position
-     * @param {string} text
-     */
-    function(position, text) {
-      position = position.toLowerCase();
-
-      if (position === "beforebegin") {
-        const marker = this.previousSibling;
-        Native.Element_insertAdjacentHTML.call(this, position, text);
-        upgradeNodesInRange(
-          /** @type {!Node} */ (marker || this.parentNode.firstChild), this);
-      } else if (position === "afterbegin") {
-        const marker = this.firstChild;
-        Native.Element_insertAdjacentHTML.call(this, position, text);
-        upgradeNodesInRange(/** @type {!Node} */ (this.firstChild), marker);
-      } else if (position === "beforeend") {
-        const marker = this.lastChild;
-        Native.Element_insertAdjacentHTML.call(this, position, text);
-        upgradeNodesInRange(marker || this.firstChild, null);
-      } else if (position === "afterend") {
-        const marker = this.nextSibling;
-        Native.Element_insertAdjacentHTML.call(this, position, text);
-        upgradeNodesInRange(/** @type {!Node} */ (this.nextSibling), marker);
-      } else {
-        throw new SyntaxError(`The value provided (${String(position)}) is ` +
-          "not one of 'beforebegin', 'afterbegin', 'beforeend', or 'afterend'.");
-      }
-    });
+  if (Native.HTMLElement_insertAdjacentHTML) {
+    patch_insertAdjacentHTML(HTMLElement.prototype, Native.HTMLElement_insertAdjacentHTML);
+  } else if (Native.Element_insertAdjacentHTML) {
+    patch_insertAdjacentHTML(Element.prototype, Native.Element_insertAdjacentHTML);
+  } else {
+    console.warn('Custom Elements: `Element#insertAdjacentHTML` was not patched.');
+  }
 
 
   PatchParentNode(internals, Element.prototype, {

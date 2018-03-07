@@ -31,4 +31,5 @@ export default {
   HTMLElement: window.HTMLElement,
   HTMLElement_innerHTML: Object.getOwnPropertyDescriptor(window.HTMLElement.prototype, 'innerHTML'),
   HTMLElement_insertAdjacentElement: window.HTMLElement.prototype['insertAdjacentElement'],
+  HTMLElement_insertAdjacentHTML: window.HTMLElement.prototype['insertAdjacentHTML'],
 };
