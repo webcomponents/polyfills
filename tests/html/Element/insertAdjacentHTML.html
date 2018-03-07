@@ -226,21 +226,27 @@ suite('Inserting HTML with defined custom elements into a disconnected ' +
 
 suite('Inserting HTML with defined custom elements into a connected context ' +
   'element.', function() {
+    let connectedRoot;
     let connectedElement;
     let localName;
     let customElementClass;
 
     setup(function() {
+      connectedRoot = document.createElement('div');
+      document.body.appendChild(connectedRoot);
+
       connectedElement = document.createElement('div');
-      document.body.appendChild(connectedElement);
+      connectedRoot.appendChild(connectedElement);
+
       localName = generateLocalName();
       customElementClass = defineWithLocalName(localName);
     });
 
     teardown(function() {
-      if (connectedElement.parentNode) {
-        connectedElement.parentNode.removeChild(connectedElement);
+      while (connectedRoot.firstChild) {
+        connectedRoot.removeChild(connectedRoot.firstChild);
       }
+      document.body.removeChild(connectedRoot);
     });
 
     test('beforebegin', function() {
