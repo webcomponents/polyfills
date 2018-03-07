@@ -3,6 +3,17 @@
 <head>
 <title>Element#insertAdjacentHTML</title>
 <script>
+  // Capture these before loading the custom elements polyfill so that their
+  // behavior can be checked before running tests for `insertAdjacentHTML`.
+  window.NATIVE = {
+    createElement:
+        Document.prototype.createElement,
+    insertAdjacentHTML:
+        HTMLElement.prototype.insertAdjacentHTML ||
+        Element.prototype.insertAdjacentHTML,
+  };
+</script>
+<script>
   (window.customElements = window.customElements || {}).forcePolyfill = true;
 </script>
 <script src="../../../../es6-promise/dist/es6-promise.auto.min.js"></script>
@@ -101,7 +112,19 @@ suite('Inserting HTML with defined custom elements into a disconnected ' +
       customElementClass = defineWithLocalName(localName);
     });
 
-    test('Position "beforebegin" throws.', function() {
+    // Safari 9 and 10 (incorrectly) do not throw when calling
+    // `insertAdjacentHTML` of an orphan element with position 'beforebegin'.
+    const beforebeginErrorExpected = (() => {
+      const div = NATIVE.createElement.call(document, 'div');
+      try {
+        NATIVE.insertAdjacentHTML.call(div, 'beforebegin', '<input>');
+        return false;
+      } catch (e) {
+        return true;
+      }
+    })();
+
+    (beforebeginErrorExpected ? test : test.skip)('Position "beforebegin" throws.', function() {
       assert.throws(function() {
         disconnectedElement.insertAdjacentHTML('beforebegin', `<${localName}></${localName}>`);
       });
@@ -125,7 +148,21 @@ suite('Inserting HTML with defined custom elements into a disconnected ' +
       assert.equal(element.disconnectedCallbackCount, 0);
     });
 
-    test('Position "afterend" throws.', function() {
+    // Safari 9 and 10 (incorrectly) do not throw if you read `nextSibling` of
+    // an orphan element before trying to call its `insertAdjacentHTML` method
+    // with position 'afterend'.
+    const afterendErrorExpected = (() => {
+      const div = NATIVE.createElement.call(document, 'div');
+      try {
+        div.nextSibling; // This line may prevent the next from throwing!
+        NATIVE.insertAdjacentHTML.call(div, 'afterend', '<input>');
+        return false;
+      } catch (e) {
+        return true;
+      }
+    })();
+
+    (afterendErrorExpected ? test : test.skip)('Position "afterend" throws.', function() {
       assert.throws(function() {
         disconnectedElement.insertAdjacentHTML('afterend', `<${localName}></${localName}>`);
       });
