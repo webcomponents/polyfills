@@ -118,7 +118,7 @@ let fragmentMixin = {
   /**
    * @this {DocumentFragment}
    */
-  // TODO(sorvell): `fast` option relies on native querySelectorAll and
+  // TODO(sorvell): `useNative` option relies on native querySelectorAll and
   // misses distributed nodes, see
   // https://github.com/webcomponents/shadydom/pull/210#issuecomment-361435503
   querySelectorAll(selector, useNative) {
