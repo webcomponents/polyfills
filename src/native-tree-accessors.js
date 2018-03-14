@@ -75,7 +75,7 @@ export function nextSibling(node) {
 }
 
 export function childNodes(node) {
-  return nodeAccessors.childNodes.get.call(node);
+  return Array.prototype.slice.call(nodeAccessors.childNodes.get.call(node));
 }
 
 export function parentElement(node) {
@@ -99,14 +99,19 @@ export function textContent(node) {
 }
 
 export function children(node) {
+  let children;
   switch (node.nodeType) {
     case Node.DOCUMENT_FRAGMENT_NODE:
-      return fragmentAccessors.children.get.call(node);
+      children = fragmentAccessors.children.get.call(node);
+      break;
     case Node.DOCUMENT_NODE:
-      return documentAccessors.children.get.call(node);
+      children = documentAccessors.children.get.call(node);
+      break;
     default:
-      return nodeAccessors.children.get.call(node);
+      children = nodeAccessors.children.get.call(node);
+      break;
   }
+  return Array.prototype.slice.call(children);
 }
 
 export function firstElementChild(node) {

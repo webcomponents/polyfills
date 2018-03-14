@@ -256,18 +256,20 @@ export function getRootNode(node, options) { // eslint-disable-line no-unused-va
   if (root === undefined) {
     if (utils.isShadyRoot(node)) {
       root = node;
+      nodeData.ownerShadyRoot = root;
     } else {
       let parent = node.parentNode;
       root = parent ? getRootNode(parent) : node;
+      // memo-ize result for performance but only memo-ize
+      // result if node is in the document. This avoids a problem where a root
+      // can be cached while an element is inside a fragment.
+      // If this happens and we cache the result, the value can become stale
+      // because for perf we avoid processing the subtree of added fragments.
+      if (nativeMethods.contains.call(document.documentElement, node)) {
+        nodeData.ownerShadyRoot = root;
+      }
     }
-    // memo-ize result for performance but only memo-ize
-    // result if node is in the document. This avoids a problem where a root
-    // can be cached while an element is inside a fragment.
-    // If this happens and we cache the result, the value can become stale
-    // because for perf we avoid processing the subtree of added fragments.
-    if (nativeMethods.contains.call(document.documentElement, node)) {
-      nodeData.ownerShadyRoot = root;
-    }
+
   }
   return root;
 }

@@ -194,22 +194,26 @@ const IsConnectedAccessor = {
      * @this {Node}
      */
     get() {
-      if (nativeIsConnected) {
-        if (nativeIsConnected.call(this)) {
-          return this;
-        }
-      } else {
-        // Fast path for distributed nodes.
-        const ownerDocument = this.ownerDocument;
-        if (utils.hasDocumentContains) {
-          if (nativeContains.call(ownerDocument, this)) {
-            return true;
-          }
-        } else if (ownerDocument.documentElement &&
-          nativeContains.call(ownerDocument.documentElement, this)) {
+      if (utils.isShadyRoot(this)) {
+        return this.host.isConnected;
+      }
+      if (nativeIsConnected && nativeIsConnected.call(this)) {
+        return true;
+      }
+      if (this.nodeType == Node.DOCUMENT_FRAGMENT_NODE) {
+        return false;
+      }
+      // Fast path for distributed nodes.
+      const ownerDocument = this.ownerDocument;
+      if (utils.hasDocumentContains) {
+        if (nativeContains.call(ownerDocument, this)) {
           return true;
         }
+      } else if (ownerDocument.documentElement &&
+        nativeContains.call(ownerDocument.documentElement, this)) {
+        return true;
       }
+      // Slow path for non-distributed nodes.
       let node = this;
       while (node && !(node instanceof Document)) {
         node = node.parentNode || (utils.isShadyRoot(node) ? /** @type {ShadowRoot} */(node).host : undefined);
@@ -220,9 +224,7 @@ const IsConnectedAccessor = {
   }
 };
 
-if (!nativeIsConnected) {
-  Object.assign(OutsideAccessors, IsConnectedAccessor);
-}
+Object.assign(OutsideAccessors, IsConnectedAccessor);
 
 let InsideAccessors = {
 

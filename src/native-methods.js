@@ -10,6 +10,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 export let appendChild = Element.prototype.appendChild;
 export let insertBefore = Element.prototype.insertBefore;
+export let replaceChild = Element.prototype.replaceChild;
 export let removeChild = Element.prototype.removeChild;
 export let setAttribute = Element.prototype.setAttribute;
 export let removeAttribute = Element.prototype.removeAttribute;
@@ -20,11 +21,23 @@ export let removeEventListener = Element.prototype.removeEventListener;
 export let windowAddEventListener = Window.prototype.addEventListener;
 export let windowRemoveEventListener = Window.prototype.removeEventListener;
 export let dispatchEvent = Element.prototype.dispatchEvent;
-export let querySelector = Element.prototype.querySelector;
+export let contains = Node.prototype.contains || HTMLElement.prototype.contains;
+export let elementQuerySelector = Element.prototype.querySelector;
+export let fragmentQuerySelector = DocumentFragment.prototype.querySelector;
+export let documentQuerySelector = Document.prototype.querySelector;
+export let querySelector = function(node, selector) {
+  switch (node.nodeType) {
+    case Node.ELEMENT_NODE:
+      return elementQuerySelector.call(node, selector);
+    case Node.DOCUMENT_NODE:
+      return documentQuerySelector.call(node, selector);
+    default:
+      return fragmentQuerySelector.call(node, selector);
+  }
+};
 export let elementQuerySelectorAll = Element.prototype.querySelectorAll;
 export let fragmentQuerySelectorAll = DocumentFragment.prototype.querySelectorAll;
 export let documentQuerySelectorAll = Document.prototype.querySelectorAll;
-export let contains = Node.prototype.contains || HTMLElement.prototype.contains;
 export let querySelectorAll = function(node, selector) {
   switch (node.nodeType) {
     case Node.ELEMENT_NODE:
