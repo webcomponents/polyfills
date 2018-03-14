@@ -17,8 +17,12 @@ let desc = Object.getOwnPropertyDescriptor(Node.prototype, 'firstChild');
 
 settings.hasDescriptors = Boolean(desc && desc.configurable && desc.get);
 settings.inUse = settings['force'] || !settings.hasNativeShadowDOM;
+
+// Default to using native accessors (instead of treewalker) only for
+// IE/Edge where they are faster.
+const IS_IE = navigator.userAgent.match('Trident');
 if (settings.useNativeAccessors === undefined) {
-  settings.useNativeAccessors = settings.hasDescriptors;
+  settings.useNativeAccessors = settings.hasDescriptors && IS_IE;
 }
 
 export function isTrackingLogicalChildNodes(node) {
