@@ -192,12 +192,27 @@ let nonBubblingEventsToRetarget = {
 };
 
 
+/**
+ * Check if the event has been retargeted by comparing original `target`, and calculated `target`
+ * @param {Event} event
+ * @return {boolean} True if the original target and calculated target are the same
+ */
+function hasRetargeted(event) {
+  return event['__target'] !== event.target || event.__relatedTarget !== event.relatedTarget;
+}
+
+/**
+ *
+ * @param {Event} event
+ * @param {Node} node
+ * @param {string} phase
+ */
 function fireHandlers(event, node, phase) {
   let hs = node.__handlers && node.__handlers[event.type] &&
     node.__handlers[event.type][phase];
   if (hs) {
     for (let i = 0, fn; (fn = hs[i]); i++) {
-      if (event.target === event.relatedTarget) {
+      if (hasRetargeted(event) && event.target === event.relatedTarget) {
         return;
       }
       fn.call(node, event);
@@ -295,6 +310,18 @@ export function addEventListener(type, fnOrObj, optionsOrCapture) {
     return;
   }
 
+  const handlerType = typeof fnOrObj;
+
+  // bail if `fnOrObj` is not a function, not an object
+  if (handlerType !== 'function' && handlerType !== 'object') {
+    return;
+  }
+
+  // bail if `fnOrObj` is an object without a `handleEvent` method
+  if (handlerType === 'object' && (!fnOrObj.handleEvent || typeof fnOrObj.handleEvent !== 'function')) {
+    return;
+  }
+
   // The callback `fn` might be used for multiple nodes/events. Since we generate
   // a wrapper function, we need to keep track of it when we remove the listener.
   // It's more efficient to store the node/type/options information as Array in
@@ -328,6 +355,7 @@ export function addEventListener(type, fnOrObj, optionsOrCapture) {
 
   /**
    * @this {HTMLElement}
+   * @param {Event} e
    */
   const wrapperFn = function(e) {
     // Support `once` option.
@@ -347,19 +375,19 @@ export function addEventListener(type, fnOrObj, optionsOrCapture) {
     // 1. the event is not composed and the current node is not in the same root as the target
     // 2. when bubbling, if after retargeting, relatedTarget and target point to the same node
     if (e.composed || e.composedPath().indexOf(target) > -1) {
-      if (e.target === e.relatedTarget) {
+      if (hasRetargeted(e) && e.target === e.relatedTarget) {
         if (e.eventPhase === Event.BUBBLING_PHASE) {
           e.stopImmediatePropagation();
         }
         return;
       }
       // prevent non-bubbling events from triggering bubbling handlers on shadowroot, but only if not in capture phase
-      if (e.eventPhase !== Event.CAPTURING_PHASE && !e.bubbles && e.target !== target) {
+      if (e.eventPhase !== Event.CAPTURING_PHASE && !e.bubbles && e.target !== target && !(target instanceof Window)) {
         return;
       }
-      let ret = (typeof fnOrObj === 'object' && fnOrObj.handleEvent) ?
-        fnOrObj.handleEvent(e) :
-        fnOrObj.call(target, e);
+      let ret = handlerType === 'function' ?
+        fnOrObj.call(target, e) :
+        (fnOrObj.handleEvent && fnOrObj.handleEvent(e));
       if (target !== this) {
         // replace the "correct" `currentTarget`
         if (lastCurrentTargetDesc) {
@@ -374,7 +402,9 @@ export function addEventListener(type, fnOrObj, optionsOrCapture) {
   };
   // Store the wrapper information.
   fnOrObj[eventWrappersName].push({
-    node: this,
+    // note: use target here which is either a shadowRoot
+    // (when the host element is proxy'ing the event) or this element
+    node: target,
     type: type,
     capture: capture,
     once: once,

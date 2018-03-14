@@ -23,7 +23,6 @@ function clearNode(node) {
 
 const hasDescriptors = utils.settings.hasDescriptors;
 const inertDoc = document.implementation.createHTMLDocument('inert');
-const htmlContainer = inertDoc.createElement('div');
 
 const nativeIsConnectedAccessors =
 /** @type {ObjectPropertyDescriptor} */(
@@ -304,15 +303,18 @@ let InsideAccessors = {
      * @param {string} text
      */
     set(text) {
+      if (typeof text === 'undefined' || text === null) {
+        text = ''
+      }
       switch (this.nodeType) {
         case Node.ELEMENT_NODE:
         case Node.DOCUMENT_FRAGMENT_NODE:
-          clearNode(this);
-          // Document fragments must have no childnodes if setting a blank string
-          if (text.length > 0 || this.nodeType === Node.ELEMENT_NODE) {
-            if (hasDescriptors) {
-              nativeAccessors.textContent.set.call(this, text);
-            } else {
+          if (!utils.isTrackingLogicalChildNodes(this) && hasDescriptors) {
+            nativeAccessors.textContent.set.call(this, text);
+          } else {
+            clearNode(this);
+            // Document fragments must have no childnodes if setting a blank string
+            if (text.length > 0 || this.nodeType === Node.ELEMENT_NODE) {
               this.appendChild(document.createTextNode(text));
             }
           }
@@ -393,7 +395,7 @@ let InsideAccessors = {
      */
     get() {
       if (utils.isTrackingLogicalChildNodes(this)) {
-        let content = this.localName === 'template' ?
+        const content = this.localName === 'template' ?
         /** @type {HTMLTemplateElement} */(this).content : this;
         return getInnerHTML(content);
       } else {
@@ -404,9 +406,15 @@ let InsideAccessors = {
      * @this {HTMLElement}
      */
     set(text) {
-      let content = this.localName === 'template' ?
+      const content = this.localName === 'template' ?
         /** @type {HTMLTemplateElement} */(this).content : this;
       clearNode(content);
+      let containerName = this.localName;
+      // avoid creating a template so we don't have to pull nodes form `.content`
+      if (!containerName || containerName === 'template') {
+        containerName = 'div';
+      }
+      const htmlContainer = inertDoc.createElement(containerName);
       if (hasDescriptors) {
         nativeAccessors.innerHTML.set.call(htmlContainer, text);
       } else {
