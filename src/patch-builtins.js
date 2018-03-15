@@ -12,7 +12,7 @@ import * as utils from './utils.js';
 import {flush} from './flush.js';
 import {dispatchEvent, contains as nativeContains, querySelector, querySelectorAll} from './native-methods.js';
 import * as mutation from './logical-mutation.js';
-import {ActiveElementAccessor, ShadowRootAccessor, patchAccessors, patchShadowRootAccessors} from './patch-accessors.js';
+import {ActiveElementAccessor, ShadowRootAccessor, patchAccessors, patchShadowRootAccessors, IsConnectedAccessor} from './patch-accessors.js';
 import {addEventListener, removeEventListener} from './patch-events.js';
 import {attachShadow, ShadyRoot} from './attach-shadow.js';
 import {shadyDataForNode} from './shady-data.js';
@@ -88,6 +88,10 @@ let nodeMixin = {
   }
 
 };
+
+// NOTE: we can do this regardless of the browser supporting native accessors
+// since this is always "new" in that case.
+Object.defineProperties(nodeMixin, IsConnectedAccessor);
 
 // NOTE: For some reason 'Text' redefines 'assignedSlot'
 let textMixin = {
@@ -320,7 +324,6 @@ export function patchBuiltins() {
   // On older browsers (Chrome <= 4?, Safari 9), a per element patching
   // strategy is used for patching accessors.
   if (utils.settings.hasDescriptors) {
-    patchAccessors(ShadyRoot.prototype);
     patchAccessors(window.Node.prototype);
     patchAccessors(window.Text.prototype);
     patchAccessors(window.DocumentFragment.prototype);

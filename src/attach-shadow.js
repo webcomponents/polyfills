@@ -15,7 +15,6 @@ import {enqueue} from './flush.js';
 import {recordChildNodes, recordRootChildNodes} from './logical-tree.js';
 import {removeChild, insertBefore, dispatchEvent} from './native-methods.js';
 import {parentNode, childNodes} from './native-tree.js';
-import {patchShadowRootAccessors} from './patch-accessors.js';
 import {ensureShadyDataForNode, shadyDataForNode} from './shady-data.js';
 
 // Do not export this object. It must be passed as the first argument to the
@@ -59,9 +58,10 @@ export class ShadyRoot {
     this.host = host;
     this._mode = options && options.mode;
     const hostData = shadyDataForNode(host);
-    shadyDataForNode(this).parentNode = null;
     hostData.root = this;
     hostData.publicRoot = this._mode !== MODE_CLOSED ? this : null;
+    const data = shadyDataForNode(this);
+    data.parentNode = data.nextSibling = data.previousSibling = null;
     // state flags
     this._renderPending = false;
     this._hasRendered = false;
@@ -497,9 +497,6 @@ export class ShadyRoot {
     return Boolean(this._slotList && this._slotList.length);
   }
 }
-
-ShadyRoot.prototype.__proto__ = DocumentFragment.prototype;
-Object.defineProperty(ShadyRoot.prototype, 'nodeType', {value: Node.DOCUMENT_FRAGMENT_NODE, configurable: true});
 
 /**
   Implements a pared down version of ShadowDOM's scoping, which is easy to

@@ -129,22 +129,6 @@ let OutsideAccessors = {
     configurable: true
   },
 
-  className: {
-    /**
-     * @this {HTMLElement}
-     */
-    get() {
-      return this.getAttribute('class') || '';
-    },
-    /**
-     * @this {HTMLElement}
-     */
-    set(value) {
-      this.setAttribute('class', value);
-    },
-    configurable: true
-  },
-
   // fragment, element, document
   nextElementSibling: {
     /**
@@ -186,7 +170,25 @@ let OutsideAccessors = {
 
 };
 
-const IsConnectedAccessor = {
+export const ClassNameAccessor = {
+  className: {
+    /**
+     * @this {HTMLElement}
+     */
+    get() {
+      return this.getAttribute('class') || '';
+    },
+    /**
+     * @this {HTMLElement}
+     */
+    set(value) {
+      this.setAttribute('class', value);
+    },
+    configurable: true
+  }
+}
+
+export const IsConnectedAccessor = {
 
   isConnected: {
     /**
@@ -222,8 +224,6 @@ const IsConnectedAccessor = {
     configurable: true
   }
 };
-
-Object.assign(OutsideAccessors, IsConnectedAccessor);
 
 let InsideAccessors = {
 
@@ -489,15 +489,46 @@ function patchAccessorGroup(obj, descriptors, force) {
 // patch dom accessors on proto where they exist
 export function patchAccessors(proto) {
   patchAccessorGroup(proto, OutsideAccessors);
+  patchAccessorGroup(proto, ClassNameAccessor);
   patchAccessorGroup(proto, InsideAccessors);
   patchAccessorGroup(proto, ActiveElementAccessor);
 }
 
-// ensure element descriptors (IE/Edge don't have em)
 export function patchShadowRootAccessors(proto) {
+  proto.__proto__ = DocumentFragment.prototype;
+  // ensure element descriptors (IE/Edge don't have em)
+  patchAccessorGroup(proto, OutsideAccessors, true);
   patchAccessorGroup(proto, InsideAccessors, true);
   patchAccessorGroup(proto, ActiveElementAccessor, true);
   patchAccessorGroup(proto, IsConnectedAccessor, true);
+  // Ensure native properties are all safely wrapped since ShadowRoot is not an
+  // actual DocumentFragment instance.
+  Object.defineProperties(proto, {
+    nodeType: {
+      value: Node.DOCUMENT_FRAGMENT_NODE,
+      configurable: true
+    },
+    localName: {
+      value: undefined,
+      configurable: true
+    }
+  });
+  // defer properties to host
+  [
+    'nodeName',
+    'nodeValue',
+    'ownerDocument',
+    'namespaceURI',
+    'prefix',
+    'baseURI'
+  ].forEach((prop) => {
+    Object.defineProperty(proto, prop, {
+      get() {
+        return this.host[prop];
+      },
+      configurable: true
+    });
+  });
 }
 
 // ensure an element has patched "outside" accessors; no-op when not needed
@@ -507,6 +538,7 @@ export let patchOutsideElementAccessors = utils.settings.hasDescriptors ?
     if (!sd.__outsideAccessors) {
       sd.__outsideAccessors = true;
       patchAccessorGroup(element, OutsideAccessors, true);
+      patchAccessorGroup(element, ClassNameAccessor, true);
     }
   }
 

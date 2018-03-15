@@ -139,12 +139,24 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       let d2 = document.createElement('div');
       el.appendChild(d1);
       el.appendChild(d2);
-      assert.equal(ShadyDOM.nativeTree.firstElementChild(el), d1);
-      assert.equal(ShadyDOM.nativeTree.lastElementChild(el), d2);
       assert.equal(ShadyDOM.nativeTree.parentNode(d1), el);
       assert.equal(ShadyDOM.nativeTree.nextElementSibling(d1), d2);
       assert.equal(ShadyDOM.nativeTree.previousElementSibling(d2), d1);
-      assert.deepEqual(Array.from(ShadyDOM.nativeTree.children(el)), [d1, d2])
+    });
+
+    test('fragment element accessors', function() {
+      // IE does not have element accessors on DocumentFragment.
+      if (navigator.userAgent.match(/Trident/)) {
+        this.skip();
+      }
+      let el = document.createDocumentFragment();
+      let d1 = document.createElement('div');
+      let d2 = document.createElement('div');
+      el.appendChild(d1);
+      el.appendChild(d2);
+      assert.equal(ShadyDOM.nativeTree.firstElementChild(el), d1);
+      assert.equal(ShadyDOM.nativeTree.lastElementChild(el), d2);
+      assert.deepEqual(ShadyDOM.nativeTree.children(el), [d1, d2])
     });
 
     test('textConent', function() {
