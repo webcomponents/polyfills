@@ -14,8 +14,10 @@ import * as utils from './utils.js';
 import {enqueue} from './flush.js';
 import {recordChildNodes} from './logical-tree.js';
 import {removeChild, insertBefore, dispatchEvent} from './native-methods.js';
-import {parentNode, childNodes} from './native-tree.js';
+import {accessors} from './native-tree.js';
 import {ensureShadyDataForNode, shadyDataForNode} from './shady-data.js';
+
+const {parentNode, childNodes} = accessors;
 
 // Do not export this object. It must be passed as the first argument to the
 // ShadyRoot constructor in `attachShadow` to prevent the constructor from

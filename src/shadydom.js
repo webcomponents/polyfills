@@ -22,7 +22,7 @@ import * as utils from './utils.js';
 import {flush, enqueue} from './flush.js';
 import {observeChildren, unobserveChildren, filterMutations} from './observe-changes.js';
 import * as nativeMethods from './native-methods.js';
-import * as nativeTree from './native-tree.js';
+import {accessors as nativeTree} from './native-tree.js';
 import {patchBuiltins} from './patch-builtins.js';
 import {patchEvents} from './patch-events.js';
 import {ShadyRoot} from './attach-shadow.js';

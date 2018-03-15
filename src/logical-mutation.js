@@ -11,8 +11,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 import * as utils from './utils.js';
 import * as logicalTree from './logical-tree.js';
 import * as nativeMethods from './native-methods.js';
-import {parentNode} from './native-tree.js';
+import {accessors} from './native-tree.js';
 import {ensureShadyDataForNode, shadyDataForNode} from './shady-data.js';
+
+const {parentNode} = accessors;
 
 // Patched `insertBefore`. Note that all mutations that add nodes are routed
 // here. When a <slot> is added or a node is added to a host with a shadowRoot

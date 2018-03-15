@@ -10,7 +10,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 import * as utils from './utils.js';
 import {getInnerHTML} from './innerHTML.js';
-import * as nativeTree from './native-tree.js';
+import {accessors as nativeTree} from './native-tree.js';
 import {nodeAccessors as nativeAccessors} from './native-tree-accessors.js';
 import {contains as nativeContains} from './native-methods.js';
 import {ensureShadyDataForNode, shadyDataForNode} from './shady-data.js';
@@ -195,9 +195,6 @@ export const IsConnectedAccessor = {
      * @this {Node}
      */
     get() {
-      if (utils.isShadyRoot(this)) {
-        return this.host.isConnected;
-      }
       if (nativeIsConnected && nativeIsConnected.call(this)) {
         return true;
       }
@@ -500,7 +497,6 @@ export function patchShadowRootAccessors(proto) {
   patchAccessorGroup(proto, OutsideAccessors, true);
   patchAccessorGroup(proto, InsideAccessors, true);
   patchAccessorGroup(proto, ActiveElementAccessor, true);
-  patchAccessorGroup(proto, IsConnectedAccessor, true);
   // Ensure native properties are all safely wrapped since ShadowRoot is not an
   // actual DocumentFragment instance.
   Object.defineProperties(proto, {
@@ -520,7 +516,8 @@ export function patchShadowRootAccessors(proto) {
     'ownerDocument',
     'namespaceURI',
     'prefix',
-    'baseURI'
+    'baseURI',
+    'isConnected'
   ].forEach((prop) => {
     Object.defineProperty(proto, prop, {
       get() {

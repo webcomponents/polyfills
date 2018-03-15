@@ -12,46 +12,5 @@ import * as nativeTreeWalker from './native-tree-walker.js';
 import * as nativeTreeAccessors from './native-tree-accessors.js';
 import * as utils from './utils.js';
 
-const useNativeAccessors = utils.settings.useNativeAccessors;
-
-export let parentNode = useNativeAccessors ? nativeTreeAccessors.parentNode :
-  nativeTreeWalker.parentNode;
-
-export let firstChild = useNativeAccessors ? nativeTreeAccessors.firstChild :
-nativeTreeWalker.firstChild;
-
-export let lastChild = useNativeAccessors ? nativeTreeAccessors.lastChild :
-nativeTreeWalker.lastChild;
-
-export let previousSibling = useNativeAccessors ? nativeTreeAccessors.previousSibling :
-nativeTreeWalker.previousSibling;
-
-export let nextSibling = useNativeAccessors ? nativeTreeAccessors.nextSibling :
-nativeTreeWalker.nextSibling;
-
-export let childNodes = useNativeAccessors ? nativeTreeAccessors.childNodes :
-nativeTreeWalker.childNodes;
-
-export let parentElement = useNativeAccessors ? nativeTreeAccessors.parentElement :
-nativeTreeWalker.parentElement;
-
-export let firstElementChild = useNativeAccessors ? nativeTreeAccessors.firstElementChild :
-nativeTreeWalker.firstElementChild;
-
-export let lastElementChild = useNativeAccessors ? nativeTreeAccessors.lastElementChild :
-nativeTreeWalker.lastElementChild;
-
-export let previousElementSibling = useNativeAccessors ? nativeTreeAccessors.previousElementSibling :
-nativeTreeWalker.previousElementSibling;
-
-export let nextElementSibling = useNativeAccessors ? nativeTreeAccessors.nextElementSibling :
-nativeTreeWalker.nextElementSibling;
-
-export let children = useNativeAccessors ? nativeTreeAccessors.children :
-nativeTreeWalker.children;
-
-export let innerHTML = useNativeAccessors ? nativeTreeAccessors.innerHTML :
-nativeTreeWalker.innerHTML;
-
-export let textContent = useNativeAccessors ? nativeTreeAccessors.textContent :
-nativeTreeWalker.textContent;
+export const accessors = utils.settings.useNativeAccessors ?
+    nativeTreeAccessors : nativeTreeWalker;

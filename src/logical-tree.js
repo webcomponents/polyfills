@@ -9,8 +9,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 */
 
 import {patchInsideElementAccessors, patchOutsideElementAccessors} from './patch-accessors.js';
-import {firstChild, lastChild, childNodes} from './native-tree.js';
+import {accessors} from './native-tree.js';
 import {ensureShadyDataForNode, shadyDataForNode} from './shady-data.js';
+
+const {firstChild, lastChild, childNodes} = accessors;
 
 export function recordInsertBefore(node, container, ref_node) {
   patchInsideElementAccessors(container);
