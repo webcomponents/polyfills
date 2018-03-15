@@ -307,6 +307,12 @@ let InsideAccessors = {
         case Node.ELEMENT_NODE:
         case Node.DOCUMENT_FRAGMENT_NODE:
           if (!utils.isTrackingLogicalChildNodes(this) && hasDescriptors) {
+            // may be removing a nested slot but fast path if we know we are not.
+            const firstChild = this.firstChild;
+            if (firstChild != this.lastChild ||
+              (firstChild && firstChild.nodeType != Node.TEXT_NODE)) {
+              clearNode(this);
+            }
             nativeAccessors.textContent.set.call(this, text);
           } else {
             clearNode(this);

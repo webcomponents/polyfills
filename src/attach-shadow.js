@@ -488,7 +488,8 @@ export class ShadyRoot {
   }
 
   _removeFlattenedNodes(slot) {
-    let n$ = shadyDataForNode(slot).flattenedNodes;
+    const data = shadyDataForNode(slot);
+    let n$ = data.flattenedNodes;
     if (n$) {
       for (let i=0; i<n$.length; i++) {
         let node = n$[i];
@@ -498,6 +499,9 @@ export class ShadyRoot {
         }
       }
     }
+    data.flattenedNodes = [];
+    data.assignedNodes = [];
+    this._fireSlotChange(slot);
   }
 
   _hasInsertionPoint() {
