@@ -12,7 +12,7 @@ import * as mutation from './logical-mutation.js';
 import {calculateSplices} from './array-splice.js';
 import * as utils from './utils.js';
 import {enqueue} from './flush.js';
-import {recordChildNodes, recordRootChildNodes} from './logical-tree.js';
+import {recordChildNodes} from './logical-tree.js';
 import {removeChild, insertBefore, dispatchEvent} from './native-methods.js';
 import {parentNode, childNodes} from './native-tree.js';
 import {ensureShadyDataForNode, shadyDataForNode} from './shady-data.js';
@@ -49,26 +49,29 @@ export class ShadyRoot {
     // NOTE: set a fake local name so this element can be
     // distinguished from a DocumentFragment when patching.
     // FF doesn't allow this to be `localName`
-    this.__localName = SHADYROOT_NAME;
+    this._localName = SHADYROOT_NAME;
     const c$ = childNodes(host);
-    // logical dom setup
-    recordChildNodes(host, c$);
-    recordRootChildNodes(this);
     // root <=> host
     this.host = host;
     this._mode = options && options.mode;
+    // logical dom setup
+    recordChildNodes(host, c$);
     const hostData = shadyDataForNode(host);
     hostData.root = this;
     hostData.publicRoot = this._mode !== MODE_CLOSED ? this : null;
-    const data = shadyDataForNode(this);
-    data.parentNode = data.nextSibling = data.previousSibling = null;
+    // setup root
+    const rootData = ensureShadyDataForNode(this);
+    rootData.firstChild = rootData.lastChild =
+        rootData.parentNode = rootData.nextSibling =
+        rootData.previousSibling = null;
+    rootData.childNodes = [];
     // state flags
     this._renderPending = false;
     this._hasRendered = false;
     // marsalled lazily
     this._slotList = null;
     this._slotMap = null;
-    this.__pendingSlots = null;
+    this._pendingSlots = null;
     // fast path initial render: remove existing physical dom.
     for (let i=0, l=c$.length; i < l; i++) {
       removeChild.call(host, c$[i])
@@ -322,7 +325,7 @@ export class ShadyRoot {
 
   // Ensures that the rendered node list inside `container` is `children`.
   _updateChildNodes(container, children) {
-    let composed = Array.from(childNodes(container));
+    let composed = childNodes(container);
     let splices = calculateSplices(children, composed);
     // process removals
     for (let i=0, d=0, s; (i<splices.length) && (s=splices[i]); i++) {
@@ -334,6 +337,7 @@ export class ShadyRoot {
         if (parentNode(n) === container) {
           removeChild.call(container, n);
         }
+        // TODO(sorvell): avoid the need for splicing here.
         composed.splice(s.index + d, 1);
       }
       d -= s.addedCount;
@@ -350,20 +354,20 @@ export class ShadyRoot {
   }
 
   _ensureSlotData() {
-    this.__pendingSlots = this.__pendingSlots || [];
+    this._pendingSlots = this._pendingSlots || [];
     this._slotList = this._slotList || [];
     this._slotMap = this._slotMap || {};
   }
 
   _addSlots(slots) {
     this._ensureSlotData();
-    this.__pendingSlots.push(...slots);
+    this._pendingSlots.push(...slots);
   }
 
   _validateSlots() {
-    if (this.__pendingSlots && this.__pendingSlots.length) {
-      this._mapSlots(this.__pendingSlots);
-      this.__pendingSlots = [];
+    if (this._pendingSlots && this._pendingSlots.length) {
+      this._mapSlots(this._pendingSlots);
+      this._pendingSlots = [];
     }
   }
 
@@ -459,13 +463,15 @@ export class ShadyRoot {
   }
 
   _updateSlotName(slot) {
+    if (!this._slotList) {
+      return;
+    }
     const oldName = slot.__slotName;
     const name = this._nameForSlot(slot);
     if (name === oldName) {
       return;
     }
     // remove from existing tracking
-    this._slotMap = this._slotMap || {};
     let slots = this._slotMap[oldName];
     const i = slots.indexOf(slot);
     if (i >= 0) {

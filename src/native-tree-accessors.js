@@ -11,13 +11,11 @@ import * as utils from './utils.js';
 
 const hasDescriptors = utils.settings.hasDescriptors;
 
-function protoWithName(ctor, name) {
-  return ctor.prototype.hasOwnProperty(name) && ctor.prototype;
-}
-
+// Find descriptor on the "lowest" native prototype. Safe as these are not
+// overridden and we call these on nodes.
+const nativeProtos = [Node.prototype, Element.prototype, HTMLElement.prototype];
 function findNodeDescriptor(name) {
-  const proto = protoWithName(Node, name) || protoWithName(Element, name) ||
-    protoWithName(HTMLElement, name);
+  const proto = nativeProtos.find(p => p.hasOwnProperty(name));
   if (!proto) {
     throw Error(`Could not find descriptor for ${name}`);
   }

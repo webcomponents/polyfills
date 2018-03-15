@@ -31,7 +31,7 @@ export function isTrackingLogicalChildNodes(node) {
 }
 
 export function isShadyRoot(obj) {
-  return Boolean(obj.__localName === 'ShadyRoot');
+  return Boolean(obj._localName === 'ShadyRoot');
 }
 
 export function ownerShadyRootForNode(node) {
