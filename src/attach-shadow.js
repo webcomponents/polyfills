@@ -501,7 +501,6 @@ export class ShadyRoot {
     }
     data.flattenedNodes = [];
     data.assignedNodes = [];
-    this._fireSlotChange(slot);
   }
 
   _hasInsertionPoint() {
