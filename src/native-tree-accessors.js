@@ -7,6 +7,9 @@ The complete set of contributors may be found at http://polymer.github.io/CONTRI
 Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 */
+import * as utils from './utils.js';
+
+const hasDescriptors = utils.settings.hasDescriptors;
 
 function protoWithName(ctor, name) {
   return ctor.prototype.hasOwnProperty(name) && ctor.prototype;
@@ -21,7 +24,7 @@ function findNodeDescriptor(name) {
   return Object.getOwnPropertyDescriptor(proto, name);
 }
 
-export const nodeAccessors = {
+export const nodeAccessors = hasDescriptors ? {
   parentNode: findNodeDescriptor('parentNode'),
   firstChild: findNodeDescriptor('firstChild'),
   lastChild: findNodeDescriptor('lastChild'),
@@ -36,23 +39,25 @@ export const nodeAccessors = {
   firstElementChild: findNodeDescriptor('firstElementChild'),
   lastElementChild: findNodeDescriptor('lastElementChild'),
   children: findNodeDescriptor('children'),
-};
-export const fragmentAccessors = {
+} : {};
+
+export const fragmentAccessors = hasDescriptors ? {
   firstElementChild: Object.getOwnPropertyDescriptor(
     DocumentFragment.prototype, 'firstElementChild'),
   lastElementChild: Object.getOwnPropertyDescriptor(
     DocumentFragment.prototype, 'lastElementChild'),
   children: Object.getOwnPropertyDescriptor(
     DocumentFragment.prototype, 'children')
-};
-export const documentAccessors = {
+} : {};
+
+export const documentAccessors = hasDescriptors ? {
   firstElementChild: Object.getOwnPropertyDescriptor(
     Document.prototype, 'firstElementChild'),
   lastElementChild: Object.getOwnPropertyDescriptor(
     Document.prototype, 'lastElementChild'),
   children: Object.getOwnPropertyDescriptor(
     Document.prototype, 'children')
-};
+} : {};
 
 export function parentNode(node) {
   return nodeAccessors.parentNode.get.call(node);
