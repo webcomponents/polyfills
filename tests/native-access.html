@@ -213,8 +213,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       let srFirst = el.shadowRoot.firstChild;
       let srLast = el.shadowRoot.lastChild;
       let content = el.firstChild;
-      assert.equal(ShadyDOM.nativeMethods.querySelector(el, 'div'), srFirst);
-      let qsa = ShadyDOM.nativeMethods.querySelectorAll(el, '*');
+      assert.equal(ShadyDOM.nativeMethods.querySelector.call(el, 'div'), srFirst);
+      let qsa = ShadyDOM.nativeMethods.querySelectorAll.call(el, '*');
       qsa = Array.prototype.slice.call(qsa);
       assert.deepEqual(qsa,[srFirst, content, srLast]);
     });

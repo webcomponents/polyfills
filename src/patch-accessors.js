@@ -510,18 +510,29 @@ export function patchShadowRootAccessors(proto) {
       value: Node.DOCUMENT_FRAGMENT_NODE,
       configurable: true
     },
-    localName: {
-      value: undefined,
+    nodeName: {
+      value: '#document-fragment',
+      configurable: true
+    },
+    nodeValue: {
+      value: null,
       configurable: true
     }
   });
+  // make undefined
+  [
+    'localName',
+    'namespaceURI',
+    'prefix'
+  ].forEach((prop) => {
+    Object.defineProperty(proto, prop, {
+      value: undefined,
+      configurable: true
+    });
+  });
   // defer properties to host
   [
-    'nodeName',
-    'nodeValue',
     'ownerDocument',
-    'namespaceURI',
-    'prefix',
     'baseURI',
     'isConnected'
   ].forEach((prop) => {

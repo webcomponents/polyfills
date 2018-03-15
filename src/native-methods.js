@@ -25,26 +25,26 @@ export let contains = Node.prototype.contains || HTMLElement.prototype.contains;
 export let elementQuerySelector = Element.prototype.querySelector;
 export let fragmentQuerySelector = DocumentFragment.prototype.querySelector;
 export let documentQuerySelector = Document.prototype.querySelector;
-export let querySelector = function(node, selector) {
-  switch (node.nodeType) {
+export let querySelector = function(selector) {
+  switch (this.nodeType) {
     case Node.ELEMENT_NODE:
-      return elementQuerySelector.call(node, selector);
+      return elementQuerySelector.call(this, selector);
     case Node.DOCUMENT_NODE:
-      return documentQuerySelector.call(node, selector);
+      return documentQuerySelector.call(this, selector);
     default:
-      return fragmentQuerySelector.call(node, selector);
+      return fragmentQuerySelector.call(this, selector);
   }
 };
 export let elementQuerySelectorAll = Element.prototype.querySelectorAll;
 export let fragmentQuerySelectorAll = DocumentFragment.prototype.querySelectorAll;
 export let documentQuerySelectorAll = Document.prototype.querySelectorAll;
-export let querySelectorAll = function(node, selector) {
-  switch (node.nodeType) {
+export let querySelectorAll = function(selector) {
+  switch (this.nodeType) {
     case Node.ELEMENT_NODE:
-      return elementQuerySelectorAll.call(node, selector);
+      return elementQuerySelectorAll.call(this, selector);
     case Node.DOCUMENT_NODE:
-      return documentQuerySelectorAll.call(node, selector);
+      return documentQuerySelectorAll.call(this, selector);
     default:
-      return fragmentQuerySelectorAll.call(node, selector);
+      return fragmentQuerySelectorAll.call(this, selector);
   }
 };
