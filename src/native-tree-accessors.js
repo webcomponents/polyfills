@@ -14,8 +14,17 @@ const hasDescriptors = utils.settings.hasDescriptors;
 // Find descriptor on the "lowest" native prototype. Safe as these are not
 // overridden and we call these on nodes.
 const nativeProtos = [Node.prototype, Element.prototype, HTMLElement.prototype];
+// note, avoid Array.find for IE11 compat.
+function findNativeProtoWithDescriptor(name) {
+  for (let i=0; i < nativeProtos.length; i++) {
+    const proto = nativeProtos[i];
+    if (proto.hasOwnProperty(name)) {
+      return proto;
+    }
+  }
+}
 function findNodeDescriptor(name) {
-  const proto = nativeProtos.find(p => p.hasOwnProperty(name));
+  const proto = findNativeProtoWithDescriptor(name);
   if (!proto) {
     throw Error(`Could not find descriptor for ${name}`);
   }
