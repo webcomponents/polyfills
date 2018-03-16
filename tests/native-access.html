@@ -145,8 +145,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     });
 
     test('fragment element accessors', function() {
-      // IE does not have element accessors on DocumentFragment.
-      if (navigator.userAgent.match(/Trident/)) {
+      // IE/Edge does not have element accessors on DocumentFragment.
+      if (navigator.userAgent.match(/Trident|Edge/)) {
         this.skip();
       }
       let el = document.createDocumentFragment();

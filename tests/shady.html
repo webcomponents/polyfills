@@ -241,7 +241,14 @@ suite('Mutate light DOM', function() {
     assert.deepEqual(slot.assignedNodes(), [hostChild]);
     ShadyDOM.flush();
     assert.strictEqual(getComposedHTML(host), '<div><div><a>Hello</a><b>after</b></div></div>');
-    host.shadowRoot.childNodes[0].textContent = '';
+    const div = host.shadowRoot.childNodes[0];
+    // NOTE: older browsers without prototype accessors need patching
+    // to handle setting properties. This node is a child of a shadowRoot
+    // and therefore has patched "outside" accessors but "textContent" is
+    // only patched if the node has logical "inside" accessors (children)
+    // which in this case it does not. We workaround this by manually patching
+    // for the test.
+    ShadyDOM.patch(div).textContent = '';
     ShadyDOM.flush();
     assert.deepEqual(slot.assignedNodes(), []);
     assert.strictEqual(getComposedHTML(host), '<div></div>');
