@@ -213,6 +213,51 @@ suite('Mutate light DOM', function() {
     assert.strictEqual(getComposedHTML(host), '');
   });
 
+  test('removeAllChildNodes - mutate shadow nested', function() {
+    host.innerHTML = '<a>Hello</a>';
+    const hostChild = host.firstChild;
+    host.shadowRoot.innerHTML = '<div><slot></slot><b>after</b></div>';
+    const slot = host.shadowRoot.firstChild.firstChild;
+    assert.equal(slot.localName, 'slot');
+    assert.deepEqual(slot.assignedNodes(), [hostChild]);
+    ShadyDOM.flush();
+    assert.strictEqual(getComposedHTML(host), '<div><a>Hello</a><b>after</b></div>');
+    host.shadowRoot.childNodes[0].textContent = '';
+    ShadyDOM.flush();
+    assert.deepEqual(slot.assignedNodes(), []);
+    assert.strictEqual(getComposedHTML(host), '<div></div>');
+
+    host.shadowRoot.innerHTML = '';
+    ShadyDOM.flush();
+    assert.strictEqual(getComposedHTML(host), '');
+  });
+
+  test('removeAllChildNodes - mutate shadow deep nested', function() {
+    host.innerHTML = '<a>Hello</a>';
+    const hostChild = host.firstChild;
+    host.shadowRoot.innerHTML = '<div><div><slot></slot><b>after</b></div></div>';
+    const slot = host.shadowRoot.firstChild.firstChild.firstChild;
+    assert.equal(slot.localName, 'slot');
+    assert.deepEqual(slot.assignedNodes(), [hostChild]);
+    ShadyDOM.flush();
+    assert.strictEqual(getComposedHTML(host), '<div><div><a>Hello</a><b>after</b></div></div>');
+    const div = host.shadowRoot.childNodes[0];
+    // NOTE: older browsers without prototype accessors need patching
+    // to handle setting properties. This node is a child of a shadowRoot
+    // and therefore has patched "outside" accessors but "textContent" is
+    // only patched if the node has logical "inside" accessors (children)
+    // which in this case it does not. We workaround this by manually patching
+    // for the test.
+    ShadyDOM.patch(div).textContent = '';
+    ShadyDOM.flush();
+    assert.deepEqual(slot.assignedNodes(), []);
+    assert.strictEqual(getComposedHTML(host), '<div></div>');
+
+    host.shadowRoot.innerHTML = '';
+    ShadyDOM.flush();
+    assert.strictEqual(getComposedHTML(host), '');
+  });
+
   test('removeAllChildNodes - mutate shadow fallback', function() {
     host.innerHTML = '<a>Hello</a>';
 

@@ -10,6 +10,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 import * as utils from './utils.js';
 import * as nativeMethods from './native-methods.js';
+import {shadyDataForNode} from './shady-data.js';
 
 /*
 Make this name unique so it is unlikely to conflict with properties on objects passed to `addEventListener`
@@ -249,7 +250,8 @@ function retargetNonBubblingEvent(e) {
   let lastFiredRoot;
   for (let i = 0; i < path.length; i++) {
     node = path[i];
-    const root = node.__shady && node.__shady.root;
+    const nodeData = shadyDataForNode(node);
+    const root = nodeData && nodeData.root;
     if (i === 0 || (root && root === lastFiredRoot)) {
       fireHandlers(e, node, 'bubble');
       // don't bother with window, it doesn't have `getRootNode` and will be last in the path anyway

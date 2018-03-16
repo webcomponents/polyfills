@@ -7,6 +7,7 @@ The complete set of contributors may be found at http://polymer.github.io/CONTRI
 Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 */
+import {shadyDataForNode} from './shady-data.js';
 
 export let settings = window['ShadyDOM'] || {};
 
@@ -17,12 +18,21 @@ let desc = Object.getOwnPropertyDescriptor(Node.prototype, 'firstChild');
 settings.hasDescriptors = Boolean(desc && desc.configurable && desc.get);
 settings.inUse = settings['force'] || !settings.hasNativeShadowDOM;
 
+// Default to using native accessors (instead of treewalker) only for
+// IE/Edge where they are faster.
+const IS_IE = navigator.userAgent.match('Trident');
+const IS_EDGE = navigator.userAgent.match('Edge');
+if (settings.useNativeAccessors === undefined) {
+  settings.useNativeAccessors = settings.hasDescriptors && (IS_IE || IS_EDGE);
+}
+
 export function isTrackingLogicalChildNodes(node) {
-  return (node.__shady && node.__shady.firstChild !== undefined);
+  const nodeData = shadyDataForNode(node);
+  return (nodeData && nodeData.firstChild !== undefined);
 }
 
 export function isShadyRoot(obj) {
-  return Boolean(obj.__localName === 'ShadyRoot');
+  return Boolean(obj._localName === 'ShadyRoot');
 }
 
 export function ownerShadyRootForNode(node) {
