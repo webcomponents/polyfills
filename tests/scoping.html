@@ -708,6 +708,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
     test('keyframes change scope', function(done) {
       var xKeyframes = findNode('el.$.keyframes');
+      // Edge 16 does not support CSS Custom Properties in keyframes
+      if (window.ShadyCSS.nativeCss && navigator.userAgent.match(/Edge/)) {
+        this.skip();
+      }
       var onAnimationEnd = function() {
         xKeyframes.removeEventListener('animationend', onAnimationEnd);
         xKeyframes.removeEventListener('webkitAnimationEnd', onAnimationEnd);
