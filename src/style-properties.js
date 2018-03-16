@@ -332,8 +332,8 @@ class StyleProperties {
     }
     let selectorToMatch = hostScope;
     if (isHost) {
-      // need to transform :host under ShadowDOM because `:host` does not work with `matches`
-      if (nativeShadow && !rule.transformedSelector) {
+      // need to transform :host because `:host` does not work with `matches`
+      if (!rule.transformedSelector) {
         // transform :host into a matchable selector
         rule.transformedSelector =
         StyleTransformer._transformRuleCss(
