@@ -424,6 +424,20 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <div id="target">Hello world</div>
 </template>
 
+<template id="bad-mixin">
+  <style>
+    :host(.nomatch) {
+      --div-border: {
+        border: 2px solid black;
+      }
+    }
+    div {
+      @apply --div-border;
+    }
+  </style>
+  <div></div>
+</template>
+
 <script>
 (function() {
   function assertComputed(element, value, property, pseudo) {
@@ -866,6 +880,15 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       document.body.appendChild(e);
       flush();
       assertComputed(e.shadowRoot.querySelector('.foo'), 'rgb(255, 0, 0)', 'color');
+      document.body.removeChild(e);
+    });
+
+    test(':host() sets mixin definitions correctly', function() {
+      makeElement('bad-mixin');
+      var e = document.createElement('bad-mixin');
+      document.body.appendChild(e);
+      flush();
+      assertComputed(e.shadowRoot.querySelector('div'), '0px');
       document.body.removeChild(e);
     });
 
