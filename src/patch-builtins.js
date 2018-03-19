@@ -10,7 +10,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 import * as utils from './utils.js';
 import {flush} from './flush.js';
-import {dispatchEvent, contains as nativeContains, querySelector, querySelectorAll} from './native-methods.js';
+import {dispatchEvent, querySelectorAll} from './native-methods.js';
 import * as mutation from './logical-mutation.js';
 import {ActiveElementAccessor, ShadowRootAccessor, patchAccessors, patchShadowRootAccessors, IsConnectedAccessor} from './patch-accessors.js';
 import {addEventListener, removeEventListener} from './patch-events.js';

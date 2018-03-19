@@ -93,6 +93,7 @@ export function innerHTML(node) {
 }
 
 export function textContent(node) {
+  /* eslint-disable no-case-declarations */
   switch (node.nodeType) {
     case Node.ELEMENT_NODE:
     case Node.DOCUMENT_FRAGMENT_NODE:
@@ -108,4 +109,5 @@ export function textContent(node) {
     default:
       return node.nodeValue;
   }
+  /* eslint-enable */
 }

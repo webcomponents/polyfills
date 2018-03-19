@@ -12,7 +12,7 @@ import {patchInsideElementAccessors, patchOutsideElementAccessors} from './patch
 import {accessors} from './native-tree.js';
 import {ensureShadyDataForNode, shadyDataForNode} from './shady-data.js';
 
-const {firstChild, lastChild, childNodes} = accessors;
+const {childNodes} = accessors;
 
 export function recordInsertBefore(node, container, ref_node) {
   patchInsideElementAccessors(container);
