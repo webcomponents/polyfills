@@ -143,6 +143,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     :host {
       --mixin-important: {
         border: 2px solid black !important;
+        background-color: white;
       };
       --mixin: {
         border: 1px dotted orange;
@@ -290,16 +291,17 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       });
     });
     suite('!important', function() {
-      var style, ast; // eslint-disable-line no-unused-vars
+      var ast; // eslint-disable-line no-unused-vars
       suiteSetup(function() {
         var info = prep('important');
-        style = info.style;
         ast = info.ast;
       });
 
       test('!important is preserved and overrides other properties', function() {
         var application = ast.rules[1];
         assert.match(application.cssText, /^border:\s*var\(--mixin-important_-_border\)\s*!important/);
+        assert.notMatch(application.cssText, /background-color:\s*var\(--mixin-important_-_background-color\)\s*!important/);
+        assert.match(application.cssText, /border:\s*var\(--mixin_-_border,\s*var\(--mixin-important_-_border\)\)/);
       });
     });
   });

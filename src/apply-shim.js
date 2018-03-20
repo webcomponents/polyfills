@@ -313,10 +313,10 @@ class ApplyShim {
         f = fallbacks && fallbacks[p];
         parts = [p, ': var(', mixinName, MIXIN_VAR_SEP, p];
         if (f) {
-          parts.push(',', f);
+          parts.push(',', f.replace(IMPORTANT, ''));
         }
         parts.push(')');
-        if (!f && IMPORTANT.test(properties[p])) {
+        if (IMPORTANT.test(properties[p])) {
           parts.push('!important');
         }
         vars.push(parts.join(''));
