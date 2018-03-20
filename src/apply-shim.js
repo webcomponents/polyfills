@@ -78,7 +78,7 @@ import {StyleNode} from './css-parse.js'; // eslint-disable-line no-unused-vars
 
 const APPLY_NAME_CLEAN = /;\s*/m;
 const INITIAL_INHERIT = /^\s*(initial)|(inherit)\s*$/;
-const IMPORTANT = /!important/;
+const IMPORTANT = /\s*!important/;
 
 // separator used between mixin-name and mixin-property-name when producing properties
 // NOTE: plain '-' may cause collisions in user styles
@@ -317,7 +317,7 @@ class ApplyShim {
         }
         parts.push(')');
         if (IMPORTANT.test(properties[p])) {
-          parts.push('!important');
+          parts.push(' !important');
         }
         vars.push(parts.join(''));
       }
