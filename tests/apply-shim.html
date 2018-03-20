@@ -138,6 +138,22 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     </style>
     </custom-style>
   </template>
+  <template id="important">
+    <style>
+    :host {
+      --mixin-important: {
+        border: 2px solid black !important;
+      };
+      --mixin: {
+        border: 1px dotted orange;
+      };
+    }
+    div {
+      @apply --mixin-important;
+      @apply --mixin;
+    }
+    </style>
+  </template>
   <script>
   suite('Apply Shim', function() {
     function copy(name) {
@@ -271,6 +287,19 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         } else {
           assert.match(ast.rules[0].cssText, /border:\s*2px solid black/);
         }
+      });
+    });
+    suite('!important', function() {
+      var style, ast; // eslint-disable-line no-unused-vars
+      suiteSetup(function() {
+        var info = prep('important');
+        style = info.style;
+        ast = info.ast;
+      });
+
+      test('!important is preserved and overrides other properties', function() {
+        var application = ast.rules[1];
+        assert.match(application.cssText, /^border:\s*var\(--mixin-important_-_border\)\s*!important/);
       });
     });
   });
