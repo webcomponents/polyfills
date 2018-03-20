@@ -138,6 +138,26 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     </style>
     </custom-style>
   </template>
+  <template id="important">
+    <style>
+    :host {
+      --mixin-important: {
+        background-color: white;
+        border: 2px solid black !important;
+        color: white !important;
+      };
+      --mixin: {
+        background-color: red;
+        border: 1px dotted orange;
+        color: black !important;
+      };
+    }
+    div {
+      @apply --mixin-important;
+      @apply --mixin;
+    }
+    </style>
+  </template>
   <script>
   suite('Apply Shim', function() {
     function copy(name) {
@@ -271,6 +291,35 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         } else {
           assert.match(ast.rules[0].cssText, /border:\s*2px solid black/);
         }
+      });
+    });
+    suite('!important', function() {
+      var ast;
+      suiteSetup(function() {
+        var info = prep('important');
+        ast = info.ast;
+      });
+
+      test('!important in mixin correctly translates to !important in resulting custom property', function() {
+        var application = ast.rules[1];
+        assert.match(application.cssText, /border:\s*var\(--mixin-important_-_border\)\s*!important/);
+      });
+      test("Fallback of related property without !important is kept without !important in resulting custom property", function() {
+        var application = ast.rules[1];
+        assert.match(application.cssText, /border:\s*var\(--mixin_-_border,\s*var\(--mixin-important_-_border\)\)/);
+      });
+      test('Two mixins with both !important are treated in correct order while also preserving !important in resulting custom property', function () {
+        var application = ast.rules[1];
+        assert.match(application.cssText, /color:\s*var\(--mixin-important_-_color\)\s*!important/);
+        assert.match(application.cssText, /color:\s*var\(--mixin_-_color,\s*var\(--mixin-important_-_color\)\)\s*!important/);
+      })
+      test('Properties without !important in a mixin with !important are treated independently', function() {
+        var application = ast.rules[1];
+        assert.match(application.cssText, /background-color:\s*var\(--mixin_-_background-color,\s*var\(--mixin-important_-_background-color\)\)/);
+        assert.notMatch(application.cssText, /background-color:\s*var\(--mixin_-_background-color,\s*var\(--mixin-important_-_background-color\)\)\s*!important/);
+
+        assert.match(application.cssText, /background-color:\s*var\(--mixin-important_-_background-color\)/);
+        assert.notMatch(application.cssText, /background-color:\s*var\(--mixin-important_-_background-color\)\s*!important/);
       });
     });
   });
