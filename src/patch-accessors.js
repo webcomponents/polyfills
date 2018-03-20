@@ -484,7 +484,7 @@ function patchAccessorGroup(obj, descriptors, force) {
       (!objDesc && force)) {
       Object.defineProperty(obj, p, descriptors[p]);
     } else if (force) {
-      console.warn('Could not define', p, 'on', obj);
+      console.warn('Could not define', p, 'on', obj); // eslint-disable-line no-console
     }
   }
 }

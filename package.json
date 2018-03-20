@@ -27,7 +27,8 @@
   },
   "scripts": {
     "build": "gulp",
-    "test": "wct"
+    "test": "wct",
+    "lint": "eslint src"
   },
   "homepage": "https://webcomponents.org/polyfills",
   "devDependencies": {
@@ -35,8 +36,8 @@
     "@webcomponents/shadycss": "^1.1.1",
     "@webcomponents/template": "^1.2.2",
     "@webcomponents/webcomponents-platform": "^1.0.0",
-    "eslint": "^3.4.0",
-    "eslint-plugin-html": "^2.0.0",
+    "eslint": "^4.19.0",
+    "eslint-plugin-html": "^4.0.2",
     "google-closure-compiler": "^20170806.0.0",
     "gulp": "^3.8.8",
     "gulp-rename": "^1.2.2",
