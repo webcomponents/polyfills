@@ -427,7 +427,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <template id="nested-templates">
   <style>
     [id] {
-      display: inline-block;
+      opacity: 0.5;
     }
   </style>
   <div id="a"></div>
@@ -594,11 +594,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       el.shadowRoot.appendChild(t1.content.cloneNode(true));
       var t2 = el.shadowRoot.querySelector('#t2');
       el.shadowRoot.appendChild(t2.content.cloneNode(true));
-      // Everything should now have 'display: inline-block'
+      // Everything should now have 'opacity: 0.5'
       var els = el.shadowRoot.querySelectorAll('[id]');
       assert.deepEqual(Array.from(els, e => e.id), ['a', 't1', 't3', 'g', 'circle', 'b', 'c', 't2', 'd']);
       Array.from(els).forEach(e => {
-        assert.equal(getComputedStyle(e).display, 'inline-block');
+        assert.equal(getComputedStyle(e).opacity, '0.5');
       });
       document.body.removeChild(el);
     });
