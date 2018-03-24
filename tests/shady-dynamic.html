@@ -46,6 +46,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         const self = (window.Reflect && Reflect.construct)
           ? Reflect.construct(HTMLElement, [], this.constructor || Klass)
           : HTMLElement.call(this);
+        self._constructed = true;
         return self;
       }
 
@@ -227,8 +228,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <script>
   (function() {
     class InnerElement extends HTMLElement {
-      constructor() {
-        super();
+      connectedCallback() {
         const clone = document.importNode(innerTemplate.content, true);
         this.attachShadow({ mode: 'open' });
         this.shadowRoot.appendChild(clone);
@@ -237,8 +237,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     customElements.define('inner-element', InnerElement);
 
     class OuterElement extends HTMLElement {
-      constructor() {
-        super();
+      connectedCallback() {
         const clone = document.importNode(outerTemplate.content, true);
         this.attachShadow({ mode: 'open' });
         this.shadowRoot.appendChild(clone);

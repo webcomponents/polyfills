@@ -9,6 +9,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 */
 
 import * as utils from './utils.js';
+import {ensureShadyDataForNode} from './shady-data.js';
 
 class AsyncObserver {
 
@@ -61,12 +62,12 @@ class AsyncObserver {
 // removed nodes in the wrong scope and seeing non-distributing
 // subtree child mutations.
 export let observeChildren = function(node, callback) {
-  node.__shady = node.__shady || {};
-  if (!node.__shady.observer) {
-    node.__shady.observer = new AsyncObserver();
+  const sd = ensureShadyDataForNode(node);
+  if (!sd.observer) {
+    sd.observer = new AsyncObserver();
   }
-  node.__shady.observer.callbacks.add(callback);
-  let observer = node.__shady.observer;
+  sd.observer.callbacks.add(callback);
+  let observer = sd.observer;
   return {
     _callback: callback,
     _observer: observer,
@@ -82,7 +83,7 @@ export let unobserveChildren = function(handle) {
   if (observer) {
     observer.callbacks.delete(handle._callback);
     if (!observer.callbacks.size) {
-      handle._node.__shady.observer = null;
+      ensureShadyDataForNode(handle._node).observer = null;
     }
   }
 }

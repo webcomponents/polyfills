@@ -10,15 +10,17 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 import * as utils from './utils.js';
 import {flush} from './flush.js';
-import {dispatchEvent, contains as nativeContains} from './native-methods.js';
+import {dispatchEvent, querySelectorAll} from './native-methods.js';
 import * as mutation from './logical-mutation.js';
-import {ActiveElementAccessor, ShadowRootAccessor, patchAccessors} from './patch-accessors.js';
+import {ActiveElementAccessor, ShadowRootAccessor, patchAccessors, patchShadowRootAccessors, IsConnectedAccessor} from './patch-accessors.js';
 import {addEventListener, removeEventListener} from './patch-events.js';
 import {attachShadow, ShadyRoot} from './attach-shadow.js';
+import {shadyDataForNode} from './shady-data.js';
 
 function getAssignedSlot(node) {
   mutation.renderRootNode(node);
-  return node.__shady && node.__shady.assignedSlot || null;
+  const nodeData = shadyDataForNode(node);
+  return nodeData && nodeData.assignedSlot || null;
 }
 
 let windowMixin = {
@@ -80,32 +82,16 @@ let nodeMixin = {
   /**
    * @this {Node}
    */
-  get isConnected() {
-    // Fast path for distributed nodes.
-    const ownerDocument = this.ownerDocument;
-    if (utils.hasDocumentContains && nativeContains.call(ownerDocument, this)) {
-      return true;
-    }
-    if (ownerDocument.documentElement &&
-      nativeContains.call(ownerDocument.documentElement, this)) {
-      return true;
-    }
-    let node = this;
-    while (node && !(node instanceof Document)) {
-      node = node.parentNode || (node instanceof ShadyRoot ? /** @type {ShadowRoot} */(node).host : undefined);
-    }
-    return !!(node && node instanceof Document);
-  },
-
-  /**
-   * @this {Node}
-   */
   dispatchEvent(event) {
     flush();
     return dispatchEvent.call(this, event);
   }
 
 };
+
+// NOTE: we can do this regardless of the browser supporting native accessors
+// since this is always "new" in that case.
+Object.defineProperties(nodeMixin, IsConnectedAccessor);
 
 // NOTE: For some reason 'Text' redefines 'assignedSlot'
 let textMixin = {
@@ -136,7 +122,15 @@ let fragmentMixin = {
   /**
    * @this {DocumentFragment}
    */
-  querySelectorAll(selector) {
+  // TODO(sorvell): `useNative` option relies on native querySelectorAll and
+  // misses distributed nodes, see
+  // https://github.com/webcomponents/shadydom/pull/210#issuecomment-361435503
+  querySelectorAll(selector, useNative) {
+    if (useNative) {
+      const o = Array.prototype.slice.call(querySelectorAll(this, selector));
+      const root = this.getRootNode();
+      return o.filter(e => e.getRootNode() == root);
+    }
     return mutation.query(this, function(n) {
       return utils.matchesSelector(n, selector);
     });
@@ -152,9 +146,10 @@ let slotMixin = {
   assignedNodes(options) {
     if (this.localName === 'slot') {
       mutation.renderRootNode(this);
-      return this.__shady ?
-        ((options && options.flatten ? this.__shady.flattenedNodes :
-        this.__shady.assignedNodes) || []) :
+      const nodeData = shadyDataForNode(this);
+      return nodeData ?
+        ((options && options.flatten ? nodeData.flattenedNodes :
+          nodeData.assignedNodes) || []) :
         [];
     }
   }
@@ -242,7 +237,8 @@ let htmlElementMixin = utils.extendAll({
    * @this {HTMLElement}
    */
   blur() {
-    let root = this.__shady && this.__shady.root;
+    const nodeData = shadyDataForNode(this);
+    let root = nodeData && nodeData.root;
     let shadowActive = root && root.activeElement;
     if (shadowActive) {
       shadowActive.blur();
@@ -250,7 +246,38 @@ let htmlElementMixin = utils.extendAll({
       nativeBlur.call(this);
     }
   }
-})
+});
+
+const shadowRootMixin = {
+  addEventListener(type, fn, optionsOrCapture) {
+    if (typeof optionsOrCapture !== 'object') {
+      optionsOrCapture = {
+        capture: Boolean(optionsOrCapture)
+      }
+    }
+    optionsOrCapture.__shadyTarget = this;
+    this.host.addEventListener(type, fn, optionsOrCapture);
+  },
+
+  removeEventListener(type, fn, optionsOrCapture) {
+    if (typeof optionsOrCapture !== 'object') {
+      optionsOrCapture = {
+        capture: Boolean(optionsOrCapture)
+      }
+    }
+    optionsOrCapture.__shadyTarget = this;
+    this.host.removeEventListener(type, fn, optionsOrCapture);
+  },
+
+  getElementById(id) {
+    let result = mutation.query(this, function(n) {
+      return n.id == id;
+    }, function(n) {
+      return Boolean(n);
+    })[0];
+    return result || null;
+  }
+}
 
 function patchBuiltin(proto, obj) {
   let n$ = Object.getOwnPropertyNames(obj);
@@ -268,7 +295,6 @@ function patchBuiltin(proto, obj) {
   }
 }
 
-
 // Apply patches to builtins (e.g. Element.prototype). Some of these patches
 // can be done unconditionally (mostly methods like
 // `Element.prototype.appendChild`) and some can only be done when the browser
@@ -281,6 +307,7 @@ export function patchBuiltins() {
     (window['customElements'] && window['customElements']['nativeHTMLElement']) ||
     HTMLElement;
   // These patches can always be done, for all supported browsers.
+  patchBuiltin(ShadyRoot.prototype, shadowRootMixin);
   patchBuiltin(window.Node.prototype, nodeMixin);
   patchBuiltin(window.Window.prototype, windowMixin);
   patchBuiltin(window.Text.prototype, textMixin);
@@ -307,4 +334,5 @@ export function patchBuiltins() {
       patchAccessors(window.HTMLSlotElement.prototype);
     }
   }
+  patchShadowRootAccessors(ShadyRoot.prototype);
 }

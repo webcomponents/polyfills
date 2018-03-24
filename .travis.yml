@@ -6,6 +6,7 @@ addons:
   firefox: latest
   chrome: stable
 before_script:
+- npm run lint
 - npm install -g bower
 - bower install
 script:

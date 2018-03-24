@@ -22,8 +22,9 @@ import * as utils from './utils.js';
 import {flush, enqueue} from './flush.js';
 import {observeChildren, unobserveChildren, filterMutations} from './observe-changes.js';
 import * as nativeMethods from './native-methods.js';
-import * as nativeTree from './native-tree.js';
+import {accessors as nativeTree} from './native-tree.js';
 import {patchBuiltins} from './patch-builtins.js';
+import {patchInsideElementAccessors, patchOutsideElementAccessors} from './patch-accessors.js';
 import {patchEvents} from './patch-events.js';
 import {ShadyRoot} from './attach-shadow.js';
 
@@ -31,8 +32,18 @@ if (utils.settings.inUse) {
   let ShadyDOM = {
     // TODO(sorvell): remove when Polymer does not depend on this.
     'inUse': utils.settings.inUse,
-    // TODO(sorvell): remove when Polymer does not depend on this
-    'patch': (node) => node,
+    // NOTE: old browsers without prototype accessors (very old Chrome
+    // and Safari) need manually patched accessors to properly set
+    // `innerHTML` and `textContent` when an element is:
+    // (1) inside a shadowRoot
+    // (2) does not have special (slot) children itself
+    // (3) and setting the property needs to provoke distribution (because
+    // a nested slot is added/removed)
+    'patch': (node) => {
+      patchInsideElementAccessors(node);
+      patchOutsideElementAccessors(node);
+      return node;
+    },
     'isShadyRoot': utils.isShadyRoot,
     'enqueue': enqueue,
     'flush': flush,
