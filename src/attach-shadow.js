@@ -29,6 +29,8 @@ const SHADYROOT_NAME = 'ShadyRoot';
 
 const MODE_CLOSED = 'closed';
 
+let isRendering = false;
+
 function ancestorList(node) {
   let ancestors = [];
   do {
@@ -74,8 +76,9 @@ export class ShadyRoot {
     this._slotMap = null;
     this._pendingSlots = null;
     // fast path initial render: remove existing physical dom.
-    for (let i=0, l=c$.length; i < l; i++) {
-      removeChild.call(host, c$[i])
+    if (c$.length) {
+      this.__initialChildren = c$;
+      this._asyncRender();
     }
   }
 
@@ -124,12 +127,26 @@ export class ShadyRoot {
 
   // NOTE: avoid renaming to ease testability.
   ['_renderRoot']() {
+    // track rendering state.
+    const wasRendering = isRendering;
+    isRendering = true;
     this._renderPending = false;
+    // remove initial children at first render.
+    if (this.__initialChildren) {
+      for (let i=0, l=this.__initialChildren.length; i < l; i++) {
+        const child = this.__initialChildren[i];
+        if (parentNode(child) == this.host) {
+          removeChild.call(this.host, child);
+        }
+      }
+      this.__initialChildren = null;
+    }
     if (this._slotList) {
       this._distribute();
       this._compose();
     }
     this._hasRendered = true;
+    isRendering = wasRendering;
   }
 
   _distribute() {
@@ -520,4 +537,48 @@ export function attachShadow(host, options) {
     throw 'Not enough arguments.'
   }
   return new ShadyRoot(ShadyRootConstructionToken, host, options);
+}
+
+/* Mitigate connect/disconnect spam by wrapping custom element classes.
+  * Disconnection: allowed if the element is not currently being rendered
+  by Shady DOM.
+  * Connection: allowed if (1) the element has not yet been connected (note
+  that this may happen during Shady DOM distribution.) or (2) the element
+  has processed an allowed disconnection.
+*/
+if (window['customElements']) {
+
+  const ManageConnect = (base) => {
+    // avoid trying to wrap ES5 elements.
+    if (base.toString().match('function')) {
+      return base;
+    } else {
+      const wrappedConstructor = class extends base {
+        connectedCallback() {
+          if (!this.__isConnected) {
+            this.__isConnected = true;
+            if (super.connectedCallback) {
+              super.connectedCallback();
+            }
+          }
+        }
+
+        disconnectedCallback() {
+          if (!isRendering) {
+            this.__isConnected = false;
+            if (super.disconnectedCallback) {
+              super.disconnectedCallback();
+            }
+          }
+        }
+      }
+      return wrappedConstructor;
+    }
+  }
+
+  const define = window['customElements']['define'];
+  window['customElements']['define'] = function(name, constructor) {
+    return define.call(window['customElements'], name, ManageConnect(constructor));
+  }
+
 }
