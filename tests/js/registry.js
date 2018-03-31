@@ -176,7 +176,10 @@ suite('CustomElementsRegistry', function() {
       assert.isTrue(el2 instanceof Element2, 'element 2 must now be upgraded');
     });
 
-    test('Two elements as shadow-including descendants (and not descendants) of the upgraded node', function() {
+    // Tests should be skipped in browsers that don't have native Shadow DOM
+    const testFn = Element.prototype.attachShadow ? test : test.skip;
+
+    testFn('Two elements as shadow-including descendants (and not descendants) of the upgraded node', function() {
       const el1 = document.createElement('element-d-1');
       const el2 = document.createElement('element-d-2');
 
