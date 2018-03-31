@@ -34,26 +34,6 @@ function defineWithLocalName(localName) {
   });
 }
 
-suite('Setting `textContent`.', function() {
-  let localName;
-
-  setup(function() {
-    localName = generateLocalName();
-  });
-
-  test('setting textContent to null should set it to the empty string', function() {
-    element = document.createElement(localName);
-    element.textContent = null;
-    assert.equal(element.textContent, '');
-  });
-
-  test('setting textContent to undefined should set it to the empty string', function() {
-    element = document.createElement(localName);
-    element.textContent = undefined;
-    assert.equal(element.textContent, '');
-  });
-});
-
 suite('Custom element descendants of the context element are disconnected when setting `textContent`.', function() {
   let localName1;
   let localName2;
