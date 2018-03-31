@@ -24,9 +24,8 @@ export default function(internals) {
       });
   }
 
-
-  function patch_innerHTML(destination, baseDescriptor) {
-    Object.defineProperty(destination, 'innerHTML', {
+  function patch_HTMLsetter(property, destination, baseDescriptor, patchCallback) {
+    Object.defineProperty(destination, property, {
       enumerable: baseDescriptor.enumerable,
       configurable: true,
       get: baseDescriptor.get,
@@ -49,6 +48,10 @@ export default function(internals) {
           });
         }
 
+        // Memoize parentNode here before calling the baseDescriptor
+        // In the case of `outerHTML`, this would already be disconnected
+        const parentNode = this.parentNode;
+
         baseDescriptor.set.call(this, htmlString);
 
         if (removedElements) {
@@ -63,12 +66,18 @@ export default function(internals) {
         // Only create custom elements if this element's owner document is
         // associated with the registry.
         if (!this.ownerDocument.__CE_hasRegistry) {
-          internals.patchTree(this);
+          patchCallback(this, parentNode, internals.patchTree);
         } else {
-          internals.patchAndUpgradeTree(this);
+          patchCallback(this, parentNode, internals.patchAndUpgradeTree);
         }
         return htmlString;
       },
+    });
+  }
+
+  function patch_innerHTML(destination, baseDescriptor) {
+    patch_HTMLsetter('innerHTML', destination, baseDescriptor, (node, parentNode, patchFunction) => {
+      patchFunction.call(internals, node);
     });
   }
 
@@ -111,6 +120,50 @@ export default function(internals) {
           while (container.childNodes.length > 0) {
             Native.Node_appendChild.call(content, container.childNodes[0]);
           }
+        },
+      });
+    });
+  }
+
+  function patch_outerHTML(destination, baseDescriptor) {
+    patch_HTMLsetter('outerHTML', destination, baseDescriptor, (node, parentNode, patchFunction) => {
+      patchFunction.call(internals, parentNode);
+    });
+  }
+
+  if (Native.Element_outerHTML && Native.Element_outerHTML.get) {
+    patch_outerHTML(Element.prototype, Native.Element_outerHTML);
+  } else if (Native.HTMLElement_outerHTML && Native.HTMLElement_outerHTML.get) {
+    patch_outerHTML(HTMLElement.prototype, Native.HTMLElement_outerHTML);
+  } else {
+
+    internals.addPatch(function(element) {
+      patch_outerHTML(element, {
+        enumerable: true,
+        configurable: true,
+        // Implements getting `outerHTML` by performing an unpatched `cloneNode`
+        // of the element and returning the resulting element's `outerHTML`.
+        // TODO: Is this too expensive?
+        get: /** @this {Element} */ function() {
+          return Native.Node_cloneNode.call(this, true).outerHTML;
+        },
+        set: /** @this {Element} */ function(assignedValue) {
+          const wasConnected = Utilities.isConnected(element);
+
+          const container = Native.Document_createElement.call(document, 'div');
+          container.innerHTML = assignedValue;
+
+          while (container.childNodes.length > 0) {
+            Native.Node_insertBefore.call(this.parentNode, container.childNodes[0], this);
+          }
+
+          Native.Node_removeChild.call(this.parentNode, this);
+
+          if (wasConnected) {
+            internals.disconnectTree(element);
+          }
+
+          return assignedValue;
         },
       });
     });

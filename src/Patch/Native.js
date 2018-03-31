@@ -14,6 +14,7 @@ export default {
   Node_textContent: Object.getOwnPropertyDescriptor(window.Node.prototype, 'textContent'),
   Element_attachShadow: window.Element.prototype['attachShadow'],
   Element_innerHTML: Object.getOwnPropertyDescriptor(window.Element.prototype, 'innerHTML'),
+  Element_outerHTML: Object.getOwnPropertyDescriptor(window.Element.prototype, 'outerHTML'),
   Element_getAttribute: window.Element.prototype.getAttribute,
   Element_setAttribute: window.Element.prototype.setAttribute,
   Element_removeAttribute: window.Element.prototype.removeAttribute,
@@ -30,6 +31,7 @@ export default {
   Element_remove: window.Element.prototype['remove'],
   HTMLElement: window.HTMLElement,
   HTMLElement_innerHTML: Object.getOwnPropertyDescriptor(window.HTMLElement.prototype, 'innerHTML'),
+  HTMLElement_outerHTML: Object.getOwnPropertyDescriptor(window.HTMLElement.prototype, 'outerHTML'),
   HTMLElement_insertAdjacentElement: window.HTMLElement.prototype['insertAdjacentElement'],
   HTMLElement_insertAdjacentHTML: window.HTMLElement.prototype['insertAdjacentHTML'],
 };
