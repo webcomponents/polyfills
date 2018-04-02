@@ -30,6 +30,7 @@ const SHADYROOT_NAME = 'ShadyRoot';
 const MODE_CLOSED = 'closed';
 
 let isRendering = false;
+let rootRendered;
 
 function ancestorList(node) {
   let ancestors = [];
@@ -131,22 +132,28 @@ export class ShadyRoot {
     const wasRendering = isRendering;
     isRendering = true;
     this._renderPending = false;
-    // remove initial children at first render.
+    if (this._slotList) {
+      this._distribute();
+    }
+    // always remove any initial children if they are undistributed
     if (this.__initialChildren) {
       for (let i=0, l=this.__initialChildren.length; i < l; i++) {
         const child = this.__initialChildren[i];
-        if (parentNode(child) == this.host) {
+        const data = shadyDataForNode(child);
+        if (parentNode(child) == this.host && !data.assignedSlot) {
           removeChild.call(this.host, child);
         }
       }
       this.__initialChildren = null;
     }
     if (this._slotList) {
-      this._distribute();
       this._compose();
     }
     this._hasRendered = true;
     isRendering = wasRendering;
+    if (rootRendered) {
+      rootRendered();
+    }
   }
 
   _distribute() {
@@ -539,41 +546,69 @@ export function attachShadow(host, options) {
   return new ShadyRoot(ShadyRootConstructionToken, host, options);
 }
 
-/* Mitigate connect/disconnect spam by wrapping custom element classes.
-  * Disconnection: allowed if the element is not currently being rendered
-  by Shady DOM.
-  * Connection: allowed if (1) the element has not yet been connected (note
-  that this may happen during Shady DOM distribution.) or (2) the element
-  has processed an allowed disconnection.
-*/
+// Mitigate connect/disconnect spam by wrapping custom element classes.
 if (window['customElements']) {
 
-  const ManageConnect = (base) => {
-    // avoid trying to wrap ES5 elements.
-    if (base.toString().match('function')) {
-      return base;
-    } else {
-      const wrappedConstructor = class extends base {
-        connectedCallback() {
-          if (!this.__isConnected) {
-            this.__isConnected = true;
-            if (super.connectedCallback) {
-              super.connectedCallback();
-            }
-          }
-        }
+  // process connect/disconnect after roots have rendered to avoid
+  // issues with reaction stack.
+  const connectMap = new Map();
+  rootRendered = function() {
+    // allow elements to connect
+    const entries = connectMap.entries();
+    while (connectMap.size) {
+      const [e, value] = entries.next().value;
+      connectMap.delete(e);
+      if (value) {
+        e.connectedCallback();
+      } else {
+        e.disconnectedCallback();
+      }
+    }
+  }
 
-        disconnectedCallback() {
-          if (!isRendering) {
-            this.__isConnected = false;
-            if (super.disconnectedCallback) {
-              super.disconnectedCallback();
-            }
+  /*
+   * (1) elements can only be connected/disconnected if they are in the expected
+   * state.
+   * (2) never run connect/disconnect during rendering to avoid reaction stack issues.
+   */
+  const ManageConnect = (base) => {
+    const connected = base.prototype.connectedCallback;
+    const disconnected = base.prototype.disconnectedCallback;
+    if (connected) {
+      base.prototype.connectedCallback = function() {
+        // if rendering defer connected
+        // otherwise connect only if we haven't already
+        if (isRendering) {
+          connectMap.set(this, true);
+        } else if (!this.__isConnected) {
+          if (connected) {
+            connected.call(this);
           }
+          this.__isConnected = true;
         }
       }
-      return wrappedConstructor;
     }
+
+    if (connected || disconnected) {
+      base.prototype.disconnectedCallback = function() {
+        // if rendering, cancel a pending connection and queue disconnect,
+        // otherwise disconnect only if a connection has been allowed
+        if (isRendering) {
+          // rendering should disconnect only if the element is
+          // actually not connected.
+          if (!this.isConnected) {
+            connectMap.set(this, false);
+          }
+        } else if (this.__isConnected) {
+          if (disconnected) {
+            disconnected.call(this);
+          }
+          this.__isConnected = false;
+        }
+      }
+    }
+
+    return base;
   }
 
   const define = window['customElements']['define'];
