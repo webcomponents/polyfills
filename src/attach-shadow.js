@@ -551,13 +551,12 @@ if (window['customElements']) {
 
   // process connect/disconnect after roots have rendered to avoid
   // issues with reaction stack.
-  const connectMap = new Map();
+  let connectMap = new Map();
   rootRendered = function() {
     // allow elements to connect
-    const entries = connectMap.entries();
-    while (connectMap.size) {
-      const [e, value] = entries.next().value;
-      connectMap.delete(e);
+    const map = connectMap;
+    connectMap = new Map();
+    for (const [e, value] of map) {
       if (value) {
         e.connectedCallback();
       } else {
@@ -574,22 +573,23 @@ if (window['customElements']) {
   const ManageConnect = (base) => {
     const connected = base.prototype.connectedCallback;
     const disconnected = base.prototype.disconnectedCallback;
-    if (connected) {
+    let counter = 0;
+    const connectFlag = `__isConnected${counter++}`;
+    if (connected || disconnected) {
+
       base.prototype.connectedCallback = function() {
         // if rendering defer connected
         // otherwise connect only if we haven't already
         if (isRendering) {
           connectMap.set(this, true);
-        } else if (!this.__isConnected) {
+        } else if (!this[connectFlag]) {
+          this[connectFlag] = true;
           if (connected) {
             connected.call(this);
           }
-          this.__isConnected = true;
         }
       }
-    }
 
-    if (connected || disconnected) {
       base.prototype.disconnectedCallback = function() {
         // if rendering, cancel a pending connection and queue disconnect,
         // otherwise disconnect only if a connection has been allowed
@@ -599,11 +599,11 @@ if (window['customElements']) {
           if (!this.isConnected) {
             connectMap.set(this, false);
           }
-        } else if (this.__isConnected) {
+        } else if (this[connectFlag]) {
+          this[connectFlag] = false;
           if (disconnected) {
             disconnected.call(this);
           }
-          this.__isConnected = false;
         }
       }
     }
