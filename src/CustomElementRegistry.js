@@ -132,11 +132,7 @@ export default class CustomElementRegistry {
   }
 
   upgrade(element) {
-    this._internals.patchAndUpgradeTree(element, {
-      upgrade: innerElement => {
-        this._internals.upgradeElementWithDefinition(innerElement);
-      }
-    });
+    this._internals.patchAndUpgradeTree(element);
   }
 
   _flush() {

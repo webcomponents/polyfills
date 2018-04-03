@@ -164,12 +164,14 @@
         assert.isFalse(el5 instanceof Element5, 'element 5 must not yet be upgraded despite upgrading the template');
 
         customElements.upgrade(template.content);
-
-        assert.isTrue(el1 instanceof Element1, 'element 1 must now be upgraded');
-        assert.isTrue(el2 instanceof Element2, 'element 2 must now be upgraded');
-        assert.isTrue(el3 instanceof Element3, 'element 3 must now be upgraded');
-        assert.isTrue(el4 instanceof Element4, 'element 4 must now be upgraded');
-        assert.isTrue(el5 instanceof Element5, 'element 5 must now be upgraded');
+        // Template contents owner documents don't have a browsing context, so
+        // https://html.spec.whatwg.org/multipage/custom-elements.html#look-up-a-custom-element-definition does not find any
+        // custom element definition.
+        assert.isFalse(el1 instanceof Element1, 'element 1 must still not be upgraded after upgrading the template contents');
+        assert.isFalse(el2 instanceof Element2, 'element 2 must still not be upgraded after upgrading the template contents');
+        assert.isFalse(el3 instanceof Element3, 'element 3 must still not be upgraded after upgrading the template contents');
+        assert.isFalse(el4 instanceof Element4, 'element 4 must still not be upgraded after upgrading the template contents');
+        assert.isFalse(el5 instanceof Element5, 'element 5 must still not be upgraded after upgrading the template contents');
       });
     });
     </script>

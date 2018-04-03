@@ -255,13 +255,6 @@ export default class CustomElementInternals {
       !(ownerDocument.__CE_isImportDocument && ownerDocument.__CE_hasRegistry)
     ) return;
 
-    this.upgradeElementWithDefinition(element);
-  }
-
-  /**
-   * @param {!Element} element
-   */
-  upgradeElementWithDefinition(element) {
     const definition = this.localNameToDefinition(element.localName);
     if (!definition) return;
 
