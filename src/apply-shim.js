@@ -409,7 +409,7 @@ class ApplyShim {
     if (!valueMixin) {
       return matchText;
     }
-    let mixinAsProperties = this._consumeCssProperties(valueMixin);
+    let mixinAsProperties = this._consumeCssProperties('' + valueMixin);
     let prefix = matchText.slice(0, matchText.indexOf('--'));
     let mixinValues = this._cssTextToMap(mixinAsProperties);
     let combinedProps = mixinValues;
