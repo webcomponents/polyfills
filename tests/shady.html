@@ -503,12 +503,14 @@ suite('Add.shadowRoot to element with childNodes', function() {
   });
 
   var supportsToJSON = (function() {
-    var object = {
-      toJSON: function() {
-        return 'object';
-      }
+    try {
+      // Chrome 41 can't stringify any element, so in that we case we have
+      // no other option than to skip the test
+      JSON.stringify(document.createElement('div'));
+      return true;
+    } catch (e) {
+      return false;
     }
-    return JSON.stringify(object) === '"object"';
   })();
 
   test('does not create circular references when calling JSON.stringify(shadowRoot)', function() {
