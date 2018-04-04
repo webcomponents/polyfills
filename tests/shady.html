@@ -502,7 +502,19 @@ suite('Add.shadowRoot to element with childNodes', function() {
     assert.equal(getComposedHTML(el), '<div></div>');
   });
 
+  var supportsToJSON = (function() {
+    var object = {
+      toJSON: function() {
+        return 'object';
+      }
+    }
+    return JSON.stringify(object) === '"object"';
+  })();
+
   test('does not create circular references when calling JSON.stringify(shadowRoot)', function() {
+    if (!supportsToJSON) {
+      this.skip();
+    }
     var div = document.createElement("div");
     var span = document.createElement("span");
     span.innerText = 'Hello';
