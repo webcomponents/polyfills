@@ -138,6 +138,7 @@ if (!window.ShadyCSS || !window.ShadyCSS.ScopingShim) {
   const applyShimInterface = new ApplyShimInterface();
   let CustomStyleInterface = window.ShadyCSS && window.ShadyCSS.CustomStyleInterface;
 
+  /** @suppress {duplicate} */
   window.ShadyCSS = {
     /**
      * @param {!HTMLTemplateElement} template
