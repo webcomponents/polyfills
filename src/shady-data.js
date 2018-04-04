@@ -43,6 +43,10 @@ export class ShadyData {
     this.__outsideAccessors = false;
     this.__insideAccessors = false;
   }
+
+  toJSON() {
+    return {};
+  }
 }
 
 export function ensureShadyDataForNode(node) {
