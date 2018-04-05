@@ -48,6 +48,15 @@ export default function(internals) {
     }
 
     HTMLElement.prototype = Native.HTMLElement.prototype;
+    // Safari 9 has `writable: false` on the propertyDescriptor
+    // Make it writable so that TypeScript can patch up the
+    // constructor in the ES5 compiled code.
+    Object.defineProperty(HTMLElement.prototype, 'constructor', {
+      writable: true,
+      configurable: true,
+      enumerable: false,
+      value: HTMLElement
+    });
 
     return HTMLElement;
   })();
