@@ -1,0 +1,179 @@
+<!doctype html>
+<!--
+    @license
+    Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
+    This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+    The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+    The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+    Code distributed by Google as part of the polymer project is also
+    subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<html>
+  <head>
+    <title>CustomElementsRegistry.upgrade</title>
+    <script>
+      (window.customElements = window.customElements || {}).forcePolyfill = true;
+      ShadyDOM = {force: true};
+    </script>
+    <script src="../../../webcomponents-platform/webcomponents-platform.js"></script>
+    <script src="../../../es6-promise/dist/es6-promise.auto.min.js"></script>
+    <script src="../../../template/template.js"></script>
+    <script src="../../../shadydom/shadydom.min.js"></script>
+    <script src="../../custom-elements.min.js"></script>
+    <script src="../../../web-component-tester/browser.js"></script>
+  </head>
+  <body>
+    <script>
+    // Tests taken from the web-platform-test project:
+    // https://github.com/w3c/web-platform-tests/blob/c642338c23cc660223a73948b9fdd1bc9cda13ed/custom-elements/custom-element-registry/upgrade.html
+    suite('CustomElementsRegistry.upgrade', function() {
+      test('Upgrading an element directly (example from the spec)', function() {
+        const el = document.createElement('spider-man');
+
+        class SpiderMan extends HTMLElement {}
+        customElements.define('spider-man', SpiderMan);
+
+        assert.isFalse(el instanceof SpiderMan, 'The element must not yet be upgraded');
+
+        customElements.upgrade(el);
+        assert.isTrue(el instanceof SpiderMan, 'The element must now be upgraded');
+      });
+
+      test('Two elements as children of the upgraded node', function() {
+        const el1 = document.createElement('element-a-1');
+        const el2 = document.createElement('element-a-2');
+        const container = document.createElement('div');
+        container.appendChild(el1);
+        container.appendChild(el2);
+
+        class Element1 extends HTMLElement {}
+        class Element2 extends HTMLElement {}
+        customElements.define('element-a-1', Element1);
+        customElements.define('element-a-2', Element2);
+
+        assert.isFalse(el1 instanceof Element1, 'element 1 must not yet be upgraded');
+        assert.isFalse(el2 instanceof Element2, 'element 2 must not yet be upgraded');
+
+        customElements.upgrade(container);
+        assert.isTrue(el1 instanceof Element1, 'element 1 must now be upgraded');
+        assert.isTrue(el2 instanceof Element2, 'element 2 must now be upgraded');
+      });
+
+      test('Two elements as descendants of the upgraded node', function() {
+        const el1 = document.createElement('element-b-1');
+        const el2 = document.createElement('element-b-2');
+        const container = document.createElement('div');
+        const subContainer = document.createElement('span');
+        const subSubContainer = document.createElement('span');
+        container.appendChild(subContainer);
+        subContainer.appendChild(el1);
+        subContainer.appendChild(subSubContainer);
+        subSubContainer.appendChild(el2);
+
+        class Element1 extends HTMLElement {}
+        class Element2 extends HTMLElement {}
+        customElements.define('element-b-1', Element1);
+        customElements.define('element-b-2', Element2);
+
+        assert.isFalse(el1 instanceof Element1, 'element 1 must not yet be upgraded');
+        assert.isFalse(el2 instanceof Element2, 'element 2 must not yet be upgraded');
+
+        customElements.upgrade(container);
+        assert.isTrue(el1 instanceof Element1, 'element 1 must now be upgraded');
+        assert.isTrue(el2 instanceof Element2, 'element 2 must now be upgraded');
+      });
+
+      // Tests should be skipped in browsers that don't have native Shadow DOM
+      const testFn = Element.prototype.attachShadow ? test : test.skip;
+
+      testFn('Two elements as shadow-including descendants (and not descendants) of the upgraded node', function() {
+        const el1 = document.createElement('element-d-1');
+        const el2 = document.createElement('element-d-2');
+
+        const container = document.createElement('div');
+        const subContainer = document.createElement('span');
+        subContainer.attachShadow({ mode: 'open' });
+        const subSubContainer = document.createElement('span');
+        subSubContainer.attachShadow({ mode: 'open' });
+
+        container.appendChild(subContainer);
+        subContainer.shadowRoot.appendChild(el1);
+        subContainer.shadowRoot.appendChild(subSubContainer);
+        subSubContainer.shadowRoot.appendChild(el2);
+
+        class Element1 extends HTMLElement {}
+        class Element2 extends HTMLElement {}
+        customElements.define('element-d-1', Element1);
+        customElements.define('element-d-2', Element2);
+
+        assert.isFalse(el1 instanceof Element1, 'element 1 must not yet be upgraded');
+        assert.isFalse(el2 instanceof Element2, 'element 2 must not yet be upgraded');
+
+        customElements.upgrade(container);
+        assert.isTrue(el1 instanceof Element1, 'element 1 must now be upgraded');
+        assert.isTrue(el2 instanceof Element2, 'element 2 must now be upgraded');
+      });
+
+      test('Elements inside a template contents DocumentFragment node', function() {
+        const template = document.createElement('template');
+        template.innerHTML = `
+          <div>
+            <element-c-1></element-c-1>
+            <element-c-2>
+              <element-c-3></element-c-3>
+              <span>
+                <element-c-4></element-c-4>
+              </span>
+            </element-c-2>
+          </div>
+          <element-c-5></element-c-5>
+        `;
+
+        // This code feels repetitive but I tried to make it use loops and it became harder to see the correctness.
+
+        const el1 = template.content.querySelector('element-c-1');
+        const el2 = template.content.querySelector('element-c-2');
+        const el3 = template.content.querySelector('element-c-3');
+        const el4 = template.content.querySelector('element-c-4');
+        const el5 = template.content.querySelector('element-c-5');
+
+        class Element1 extends HTMLElement {}
+        class Element2 extends HTMLElement {}
+        class Element3 extends HTMLElement {}
+        class Element4 extends HTMLElement {}
+        class Element5 extends HTMLElement {}
+
+        customElements.define('element-c-1', Element1);
+        customElements.define('element-c-2', Element2);
+        customElements.define('element-c-3', Element3);
+        customElements.define('element-c-4', Element4);
+        customElements.define('element-c-5', Element5);
+
+        assert.isFalse(el1 instanceof Element1, 'element 1 must not yet be upgraded');
+        assert.isFalse(el2 instanceof Element2, 'element 2 must not yet be upgraded');
+        assert.isFalse(el3 instanceof Element3, 'element 3 must not yet be upgraded');
+        assert.isFalse(el4 instanceof Element4, 'element 4 must not yet be upgraded');
+        assert.isFalse(el5 instanceof Element5, 'element 5 must not yet be upgraded');
+
+        customElements.upgrade(template);
+
+        assert.isFalse(el1 instanceof Element1, 'element 1 must not yet be upgraded despite upgrading the template');
+        assert.isFalse(el2 instanceof Element2, 'element 2 must not yet be upgraded despite upgrading the template');
+        assert.isFalse(el3 instanceof Element3, 'element 3 must not yet be upgraded despite upgrading the template');
+        assert.isFalse(el4 instanceof Element4, 'element 4 must not yet be upgraded despite upgrading the template');
+        assert.isFalse(el5 instanceof Element5, 'element 5 must not yet be upgraded despite upgrading the template');
+
+        customElements.upgrade(template.content);
+        // Template contents owner documents don't have a browsing context, so
+        // https://html.spec.whatwg.org/multipage/custom-elements.html#look-up-a-custom-element-definition does not find any
+        // custom element definition.
+        assert.isFalse(el1 instanceof Element1, 'element 1 must still not be upgraded after upgrading the template contents');
+        assert.isFalse(el2 instanceof Element2, 'element 2 must still not be upgraded after upgrading the template contents');
+        assert.isFalse(el3 instanceof Element3, 'element 3 must still not be upgraded after upgrading the template contents');
+        assert.isFalse(el4 instanceof Element4, 'element 4 must still not be upgraded after upgrading the template contents');
+        assert.isFalse(el5 instanceof Element5, 'element 5 must still not be upgraded after upgrading the template contents');
+      });
+    });
+    </script>
+  </body>
+</html>
