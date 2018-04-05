@@ -148,8 +148,6 @@ export default function(internals) {
           return Native.Node_cloneNode.call(this, true).outerHTML;
         },
         set: /** @this {Element} */ function(assignedValue) {
-          const wasConnected = Utilities.isConnected(element);
-
           const container = Native.Document_createElement.call(document, 'div');
           container.innerHTML = assignedValue;
 
@@ -158,10 +156,6 @@ export default function(internals) {
           }
 
           Native.Node_removeChild.call(this.parentNode, this);
-
-          if (wasConnected) {
-            internals.disconnectTree(element);
-          }
 
           return assignedValue;
         },
