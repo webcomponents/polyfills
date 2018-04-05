@@ -65,10 +65,10 @@ suite('Custom element descendants of the context element are disconnected when s
   });
 
   test('Disconnected context element', function() {
-    div.textContent = "";
+    div.textContent = "Replaced";
 
-    // `div` no longer has children.
-    assert.equal(div.childNodes.length, 0);
+    // `div` only has one childNode, the textNodes
+    assert.equal(div.childNodes.length, 1);
 
     // `div` was disconnected, no callbacks were called.
     assert.equal(element1.localName, localName1);
@@ -91,10 +91,10 @@ suite('Custom element descendants of the context element are disconnected when s
     assert.equal(element2.connectedCallbackCount, 1);
     assert.equal(element2.disconnectedCallbackCount, 0);
 
-    div.textContent = "";
+    div.textContent = "Replaced";
 
-    // `div` no longer has children.
-    assert.equal(div.childNodes.length, 0);
+    // `div` only has one childNode, the textNodes
+    assert.equal(div.childNodes.length, 1);
     // `element1` was disconnected.
     assert.equal(element1.connectedCallbackCount, 1);
     assert.equal(element1.disconnectedCallbackCount, 1);
