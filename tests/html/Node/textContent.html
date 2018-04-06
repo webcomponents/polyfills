@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
 <head>
-<title>Element#textContent</title>
+<title>Node#textContent</title>
 <script>
   (window.customElements = window.customElements || {}).forcePolyfill = true;
 </script>
@@ -69,13 +69,12 @@ suite('Custom element descendants of the context element are disconnected when s
 
     // `div` only has one childNode, the textNodes
     assert.equal(div.childNodes.length, 1);
+    assert.notEqual(element1.parentNode, div);
 
     // `div` was disconnected, no callbacks were called.
-    assert.equal(element1.localName, localName1);
     assert.equal(element1.connectedCallbackCount, 0);
     assert.equal(element1.disconnectedCallbackCount, 0);
 
-    assert.equal(element2.localName, localName2);
     assert.equal(element2.connectedCallbackCount, 0);
     assert.equal(element2.disconnectedCallbackCount, 0);
   });
@@ -95,6 +94,7 @@ suite('Custom element descendants of the context element are disconnected when s
 
     // `div` only has one childNode, the textNodes
     assert.equal(div.childNodes.length, 1);
+    assert.notEqual(element1.parentNode, div);
     // `element1` was disconnected.
     assert.equal(element1.connectedCallbackCount, 1);
     assert.equal(element1.disconnectedCallbackCount, 1);
