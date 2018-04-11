@@ -803,6 +803,19 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     assert.equal(ShadyDOM.nativeTree.children(b.firstElementChild).length, 4, 'deep copy has incorrect composed children');
   });
 
+  test('importNode template deep', function() {
+    var template = document.createElement('template');
+    template.innerHTML = '<x-clonate><span>1</span><span>2</span></x-clonate>';
+    document.body.appendChild(template);
+    ShadyDOM.flush();
+    var templateCopy = document.importNode(template, true);
+    document.body.appendChild(templateCopy);
+    ShadyDOM.flush();
+    assert.equal(templateCopy.content.childNodes.length, 1, 'deep copy has incorrect children');
+    var contentCopy = templateCopy.content.cloneNode(true);
+    assert.equal(contentCopy.firstChild.localName, 'x-clonate');
+  });
+
   test('flush reentrancy', function() {
     // Setup callbacks
     var order = [];
