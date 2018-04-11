@@ -1105,6 +1105,23 @@ suite('Accessors', function() {
     assert.equal(child.previousElementSibling, before, 'previousElementSibling incorrect');
   });
 
+  test('element.children includes references to elements with name attribute', function() {
+    const container = document.createElement('div');
+    const a = document.createElement('div');
+    a.setAttribute('name', 'a');
+    const b = document.createElement('div');
+    b.setAttribute('name', 'b');
+    const c = document.createElement('div');
+    c.setAttribute('name', 'c');
+    container.appendChild(a);
+    container.appendChild(b);
+    container.appendChild(c);
+    const children = container.children;
+    assert.equal(children.a, a);
+    assert.equal(children.b, b);
+    assert.equal(children.c, c);
+  });
+
   test('element accessors (distribute)', function() {
     var parent = createEnabledElement('x-project');
     var child = document.createElement('div');

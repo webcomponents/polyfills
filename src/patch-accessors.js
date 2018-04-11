@@ -386,6 +386,12 @@ let InsideAccessors = {
       children.item = function(index) {
         return children[index];
       }
+      for (const child of children) {
+        const name = child.getAttribute('name');
+        if (name) {
+          children[name] = child;
+        }
+      }
       return children;
     },
     configurable: true
