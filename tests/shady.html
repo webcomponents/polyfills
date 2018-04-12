@@ -463,6 +463,22 @@ suite('Mutate light DOM', function() {
     assert.deepEqual(child.querySelectorAll('div#sub'), [childLightSub]);
   });
 
+  test('querySelectorAll useNative (light dom)', function() {
+    host.innerHTML = '<div id="main"></div>';
+    var hostLightMain = getComposedChildAtIndex(host, 0);
+    host.shadowRoot.innerHTML = '<slot></slot><span id="main"></span>' +
+      '<div></div>';
+    var child = host.shadowRoot.lastElementChild;
+    child.attachShadow({mode: 'open'});
+    child.innerHTML = '<div id="sub"></div>';
+    var childLightSub = child.lastElementChild;
+    child.shadowRoot.innerHTML = '<slot></slot><span id="sub"></span>';
+    ShadyDOM.flush();
+    assert.deepEqual(host.querySelectorAll('div#main', true), [hostLightMain]);
+    assert.deepEqual(host.querySelectorAll('#sub', true), []);
+    assert.deepEqual(child.querySelectorAll('div#sub', true), [childLightSub]);
+  });
+
 });
 
 suite('Add.shadowRoot to element with childNodes', function() {
