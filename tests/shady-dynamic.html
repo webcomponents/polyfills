@@ -1110,9 +1110,10 @@ suite('Accessors', function() {
     const a = document.createElement('div');
     a.setAttribute('name', 'a');
     const b = document.createElement('div');
-    b.setAttribute('name', 'b');
+    b.setAttribute('id', 'b');
     const c = document.createElement('div');
-    c.setAttribute('name', 'c');
+    c.setAttribute('id', 'c');
+    c.setAttribute('name', 'ignoredname');
     container.appendChild(a);
     container.appendChild(b);
     container.appendChild(c);

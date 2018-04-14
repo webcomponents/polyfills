@@ -387,7 +387,8 @@ let InsideAccessors = {
         return children[index];
       }
       for (const child of children) {
-        const name = child.getAttribute('name');
+        const name = child.getAttribute('id') || child.getAttribute('name');
+
         if (name) {
           children[name] = child;
         }
