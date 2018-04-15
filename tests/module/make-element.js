@@ -23,7 +23,7 @@ window.makeElement = (name, connectedCallback) => {
       window.ShadyCSS && window.ShadyCSS.styleElement(this);
       if (template && !this.shadowRoot) {
         this.attachShadow({mode: 'open'});
-        this.shadowRoot.appendChild(document.importNode(template.content, true));
+        this.shadowRoot.appendChild(template.content.cloneNode(true));
       }
       if (connectedCallback) {
         connectedCallback.call(this);
