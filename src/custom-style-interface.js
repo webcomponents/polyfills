@@ -10,8 +10,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 'use strict';
 
-import documentWait from './document-wait.js';
-
 /**
  * @typedef {HTMLStyleElement | {getStyle: function():HTMLStyleElement}}
  */
@@ -25,6 +23,19 @@ let transformFn = null;
 
 /** @type {?function()} */
 let validateFn = null;
+
+/** @type {Promise<void>} */
+let documentReadyPromise = new Promise((resolve) => {
+  if (document.readyState === 'complete') {
+    resolve();
+  } else {
+    document.addEventListener('readystatechange', () => {
+      if (document.readyState === 'complete') {
+        resolve();
+      }
+    });
+  }
+});
 
 /**
 This interface is provided to add document-level <style> elements to ShadyCSS for processing.
@@ -54,7 +65,7 @@ export default class CustomStyleInterface {
       return;
     }
     this['enqueued'] = true;
-    documentWait(validateFn);
+    documentReadyPromise.then(() => {validateFn && validateFn()});
   }
   /**
    * @param {!HTMLStyleElement} style
