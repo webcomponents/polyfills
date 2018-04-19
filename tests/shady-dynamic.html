@@ -1160,6 +1160,9 @@ suite('Accessors', function() {
   });
 
   test('svg innerHTML', function() {
+    if (!('innerHTML' in SVGSVGElement.prototype)) {
+      this.skip();
+    }
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     svg.innerHTML = '<circle cx="50" cy="50" r="40" stroke="black" stroke-width="3" fill="red" />';
     const circle = svg.querySelector('circle');
