@@ -1159,6 +1159,13 @@ suite('Accessors', function() {
     assert.equal(template.innerHTML, '<div></div>');
   });
 
+  test('svg innerHTML', function() {
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.innerHTML = '<circle cx="50" cy="50" r="40" stroke="black" stroke-width="3" fill="red" />';
+    const circle = svg.querySelector('circle');
+    assert.isTrue(circle instanceof SVGCircleElement, `Expected ${circle} to be a circle, but was "${typeof circle}" instead`);
+  });
+
   test('textContent', function() {
     var testElement = createEnabledElement('x-project');
     testElement.textContent = 'Hello World';
