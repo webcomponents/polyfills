@@ -9,7 +9,7 @@ Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 -->
 <script>
-WCT = {waitFor: function (cb) {HTMLImports.whenReady(cb)}}
+WCT = {waitFor: function (cb) {addEventListener('load', cb)}}
 </script>
 <script src=".././test-flags.js"></script>
 <script src="../../../webcomponents-platform/webcomponents-platform.js"></script>
@@ -21,7 +21,7 @@ WCT = {waitFor: function (cb) {HTMLImports.whenReady(cb)}}
   if (customElements.polyfillWrapFlushCallback) {
     // delay definition of custom-style until after template polyfill loads
     customElements.polyfillWrapFlushCallback(function(cb) {
-      HTMLImports.whenReady(cb);
+      window.HTMLImports && HTMLImports.whenReady(cb);
     });
   }
   </script>
@@ -35,7 +35,7 @@ WCT = {waitFor: function (cb) {HTMLImports.whenReady(cb)}}
   <style>
     x-host {
       display: block;
-      @apply --late;
+      border: var(--late);
     }
   </style>
 </custom-style>
@@ -44,9 +44,7 @@ WCT = {waitFor: function (cb) {HTMLImports.whenReady(cb)}}
   <custom-style class="late-style">
     <style>
     html {
-      --late: {
-        border: 2px solid red;
-      };
+      --late: 2px solid red;
     }
     </style>
   </custom-style>
@@ -62,8 +60,8 @@ suite('custom-style only', function() {
   });
   test('late custom-style updates styling', function(done) {
     var lateTemplate = document.querySelector('template#late');
+    document.body.appendChild(document.importNode(lateTemplate.content, true));
     requestAnimationFrame(function() {
-      document.body.appendChild(document.importNode(lateTemplate.content, true));
       requestAnimationFrame(function() {
         assert.equal(getComputedStyle(host).borderTopWidth.trim(), '2px');
         done();
