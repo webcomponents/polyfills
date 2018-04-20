@@ -100,14 +100,8 @@ export default function(internals) {
           const content = isTemplate ? (/** @type {!HTMLTemplateElement} */
             (this)).content : this;
           /** @type {!Node} */
-          let rawElement;
-          if (this.namespaceURI === document.namespaceURI) {
-            rawElement = Native.Document_createElement.call(document,
-              this.localName);
-          } else {
-            rawElement = Native.Document_createElementNS.call(document,
+          const rawElement = Native.Document_createElementNS.call(document,
               this.namespaceURI, this.localName);
-          }
           rawElement.innerHTML = assignedValue;
 
           while (content.childNodes.length > 0) {
