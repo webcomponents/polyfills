@@ -4,6 +4,14 @@
 <title>Element#innerHTML</title>
 <script>
   (window.customElements = window.customElements || {}).forcePolyfill = true;
+  // Capture these before loading the custom elements polyfill so that their
+  // behavior can be checked before running tests for `svg.innerHTML`.
+  window.NATIVE = {
+   createElementNS:
+       Document.prototype.createElementNS,
+   innerHTML:
+       Object.getOwnPropertyDescriptor(window.Element.prototype, 'innerHTML').set
+  };
 </script>
 <script src="../../../../es6-promise/dist/es6-promise.auto.min.js"></script>
 <script src="../../../../web-component-tester/browser.js"></script>
@@ -165,14 +173,25 @@ suite('Custom element descendants of the context element are disconnected when s
   });
 
   const SVG_NAMESPACE = 'http://www.w3.org/2000/svg';
+  const circleText = '<circle cx="50" cy="50" r="40" stroke="black" stroke-width="3" fill="red" />';
+
+  const canSVGInnerHTML = (function() {
+    try {
+      // Edge 14 svg.innerHTML is broken even without the polyfill
+      const svg = NATIVE.createElementNS.call(document, SVG_NAMESPACE, 'svg');
+      NATIVE.innerHTML.call(svg, circleText);
+      return svg.querySelector('circle') instanceof SVGCircleElement;
+    } catch (e) {
+      return false;
+    }
+  })();
 
   test('svg innerHTML', function() {
-    // Edge 14 svg.innerHTML is broken even without the polyfill
-    if (!('innerHTML' in SVGSVGElement.prototype) || navigator.userAgent.match('Edge/14')) {
+    if (!canSVGInnerHTML) {
       this.skip();
     }
     const svg = document.createElementNS(SVG_NAMESPACE, 'svg');
-    svg.innerHTML = '<circle cx="50" cy="50" r="40" stroke="black" stroke-width="3" fill="red" />';
+    svg.innerHTML = circleText;
     const circle = svg.querySelector('circle');
     assert.isTrue(circle instanceof SVGCircleElement, `Expected ${circle} to be a circle, but was "${typeof circle}" instead`);
   });
