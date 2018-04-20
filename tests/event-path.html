@@ -428,8 +428,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     });
 
     test('onfocus property has correct eventTarget', function(done) {
-      let input = document.createElement('input');
-      document.body.appendChild(input);
+      let input = createEnabledElement('input');
       const callback = (event) => {
         assert.isTrue(event.currentTarget === input, 'CurrentTarget should be input, not window');
         document.body.removeChild(input);
@@ -442,8 +441,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     });
 
     test('onblur property has correct eventTarget', function(done) {
-      let input = document.createElement('input');
-      document.body.appendChild(input);
+      let input = createEnabledElement('input');
       const callback = (event) => {
         assert.isTrue(event.currentTarget === input, 'CurrentTarget should be input, not window');
         document.body.removeChild(input);

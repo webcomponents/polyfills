@@ -232,7 +232,7 @@ Object.defineProperties(documentMixin, {
 
 let nativeBlur = HTMLElement.prototype.blur;
 
-let htmlElementMixin = utils.extendAll({
+let htmlElementMixin = {
   /**
    * @this {HTMLElement}
    */
@@ -247,28 +247,43 @@ let htmlElementMixin = utils.extendAll({
     }
   },
 
+  /**
+   * @this {HTMLElement}
+   */
   set onfocus(fn) {
-    this.__onFocusCapturedFunction && this.removeEventListener('focus', this.__onFocusCapturedFunction);
-    this.addEventListener('focus', fn);
-    this.__onFocusCapturedFunction = fn;
+    this['__onFocusCapturedFunction'] && this.removeEventListener('focus', this['__onFocusCapturedFunction']);
+    this.addEventListener('focus', fn, {});
+    this['__onFocusCapturedFunction'] = fn;
   },
 
+  /**
+   * @this {HTMLElement}
+   */
   get onfocus() {
-    return this.__onFocusCapturedFunction;
+    return this['__onFocusCapturedFunction'];
   },
 
+  /**
+   * @this {HTMLElement}
+   */
   set onblur(fn) {
-    this.__onBlurCapturedFunction && this.removeEventListener('blur', this.__onBlurCapturedFunction);
-    this.addEventListener('blur', fn);
-    this.__onBlurCapturedFunction = fn;
+    this['__onBlurCapturedFunction'] && this.removeEventListener('blur', this['__onBlurCapturedFunction']);
+    this.addEventListener('blur', fn, {});
+    this['__onBlurCapturedFunction'] = fn;
   },
 
+  /**
+   * @this {HTMLElement}
+   */
   get onblur() {
-    return this.__onBlurCapturedFunction;
+    return this['__onBlurCapturedFunction'];
   }
-});
+};
 
 const shadowRootMixin = {
+  /**
+   * @this {ShadowRoot}
+   */
   addEventListener(type, fn, optionsOrCapture) {
     if (typeof optionsOrCapture !== 'object') {
       optionsOrCapture = {
@@ -279,6 +294,9 @@ const shadowRootMixin = {
     this.host.addEventListener(type, fn, optionsOrCapture);
   },
 
+  /**
+   * @this {ShadowRoot}
+   */
   removeEventListener(type, fn, optionsOrCapture) {
     if (typeof optionsOrCapture !== 'object') {
       optionsOrCapture = {
@@ -289,6 +307,9 @@ const shadowRootMixin = {
     this.host.removeEventListener(type, fn, optionsOrCapture);
   },
 
+  /**
+   * @this {ShadowRoot}
+   */
   getElementById(id) {
     let result = mutation.query(this, function(n) {
       return n.id == id;
