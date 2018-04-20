@@ -388,7 +388,7 @@ export function addEventListener(type, fnOrObj, optionsOrCapture) {
         }
         // if the bubbling event is dispatched on the node that has the shadowRoot
         // and our target is the shadowRoot, ignore this event
-        if (utils.isShadyRoot(target) && e.target.getRootNode() !== target) {
+        if (utils.isShadyRoot(target) && e.target === target.host) {
           return;
         }
       }
