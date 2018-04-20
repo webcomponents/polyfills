@@ -57,6 +57,8 @@ if (!window.ShadyCSS) {
     getComputedStyleValue(element, property) {
       return getComputedStyleValue(element, property);
     },
+
+    flushCustomStyles() {},
     nativeCss: nativeCssVariables,
     nativeShadow: nativeShadow
   }

@@ -3,6 +3,7 @@
  * styleSubtree: function(!HTMLElement, Object<string, string>=),
  * prepareTemplate: function(!HTMLTemplateElement, string, string=),
  * styleDocument: function(Object<string, string>=),
+ * flushCustomStyles: function(),
  * getComputedStyleValue: function(!Element, string): string,
  * ScopingShim: (Object|undefined),
  * ApplyShim: (Object|undefined),

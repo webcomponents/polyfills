@@ -179,6 +179,11 @@ if (!window.ShadyCSS || !window.ShadyCSS.ScopingShim) {
     getComputedStyleValue(element, property) {
       return getComputedStyleValue(element, property);
     },
+
+    flushCustomStyles() {
+      applyShimInterface.flushCustomStyles();
+    },
+
     nativeCss: nativeCssVariables,
     nativeShadow: nativeShadow
   };
