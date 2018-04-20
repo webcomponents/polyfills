@@ -245,6 +245,26 @@ let htmlElementMixin = utils.extendAll({
     } else {
       nativeBlur.call(this);
     }
+  },
+
+  set onfocus(fn) {
+    this.__onFocusCapturedFunction && this.removeEventListener('focus', this.__onFocusCapturedFunction);
+    this.addEventListener('focus', fn);
+    this.__onFocusCapturedFunction = fn;
+  },
+
+  get onfocus() {
+    return this.__onFocusCapturedFunction;
+  },
+
+  set onblur(fn) {
+    this.__onBlurCapturedFunction && this.removeEventListener('blur', this.__onBlurCapturedFunction);
+    this.addEventListener('blur', fn);
+    this.__onBlurCapturedFunction = fn;
+  },
+
+  get onblur() {
+    return this.__onBlurCapturedFunction;
   }
 });
 
