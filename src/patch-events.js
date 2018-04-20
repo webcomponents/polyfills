@@ -381,9 +381,16 @@ export function addEventListener(type, fnOrObj, optionsOrCapture) {
         }
         return;
       }
-      // prevent non-bubbling events from triggering bubbling handlers on shadowroot, but only if not in capture phase
-      if (e.eventPhase !== Event.CAPTURING_PHASE && !e.bubbles && e.target !== target && !(target instanceof Window)) {
-        return;
+      if (e.eventPhase !== Event.CAPTURING_PHASE && e.target !== target && !(target instanceof Window)) {
+        // prevent non-bubbling events from triggering bubbling handlers on shadowroot, but only if not in capture phase
+        if (!e.bubbles) {
+          return;
+        }
+        // if the bubbling event is dispatched on the node that has the shadowRoot
+        // and our target is the shadowRoot, ignore this event
+        if (utils.isShadyRoot(target) && e.target.getRootNode() !== target) {
+          return;
+        }
       }
       let ret = handlerType === 'function' ?
         fnOrObj.call(target, e) :
