@@ -49,6 +49,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     </style>
   </template>
   <x-foo></x-foo>
+  <!-- emulate apply-shim imported into a module context -->
   <script src="../apply-shim.min.js" defer></script>
   <script>
     addEventListener('DOMContentLoaded', () => {
@@ -65,7 +66,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           resolveFn();
         } else {
           window.addEventListener('DOMContentLoaded', () => {
-            resolveFn()
+            resolveFn();
           });
         }
         return promise;
