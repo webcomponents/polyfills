@@ -166,8 +166,9 @@ suite('Custom element descendants of the context element are disconnected when s
 
   const SVG_NAMESPACE = 'http://www.w3.org/2000/svg';
 
-  test.only('svg innerHTML', function() {
-    if (!('innerHTML' in SVGSVGElement.prototype)) {
+  test('svg innerHTML', function() {
+    // Edge 14 svg.innerHTML is broken even without the polyfill
+    if (!('innerHTML' in SVGSVGElement.prototype) || navigator.userAgent.match('Edge/14')) {
       this.skip();
     }
     const svg = document.createElementNS(SVG_NAMESPACE, 'svg');
