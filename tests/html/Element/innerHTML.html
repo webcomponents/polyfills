@@ -6,11 +6,12 @@
   (window.customElements = window.customElements || {}).forcePolyfill = true;
   // Capture these before loading the custom elements polyfill so that their
   // behavior can be checked before running tests for `svg.innerHTML`.
-  window.NATIVE = {
+  NATIVE = {
    createElementNS:
        Document.prototype.createElementNS,
    innerHTML:
-       Object.getOwnPropertyDescriptor(window.Element.prototype, 'innerHTML').set
+       (Object.getOwnPropertyDescriptor(window.Element.prototype, 'innerHTML') ||
+        Object.getOwnPropertyDescriptor(window.HTMLElement.prototype, 'innerHTML')).set
   };
 </script>
 <script src="../../../../es6-promise/dist/es6-promise.auto.min.js"></script>
