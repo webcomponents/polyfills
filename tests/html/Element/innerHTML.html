@@ -176,14 +176,10 @@ suite('Custom element descendants of the context element are disconnected when s
   const circleText = '<circle cx="50" cy="50" r="40" stroke="black" stroke-width="3" fill="red" />';
 
   const canSVGInnerHTML = (function() {
-    try {
-      // Edge 14 svg.innerHTML is broken even without the polyfill
-      const svg = NATIVE.createElementNS.call(document, SVG_NAMESPACE, 'svg');
-      NATIVE.innerHTML.call(svg, circleText);
-      return svg.querySelector('circle') instanceof SVGCircleElement;
-    } catch (e) {
-      return false;
-    }
+    // Edge 14 svg.innerHTML is broken even without the polyfill
+    const svg = NATIVE.createElementNS.call(document, SVG_NAMESPACE, 'svg');
+    NATIVE.innerHTML.call(svg, circleText);
+    return svg.querySelector('circle') instanceof SVGCircleElement;
   })();
 
   test('svg innerHTML', function() {
