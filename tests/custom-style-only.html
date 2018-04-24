@@ -16,8 +16,10 @@ WCT = { waitFor: function (cb) { window.addEventListener('HTMLImportsLoaded', cb
 <script src="../../es6-promise/dist/es6-promise.auto.min.js"></script>
 <script src="../../template/template.js"></script>
 <script src="../../html-imports/html-imports.min.js"></script>
+<script>
+  WCT = { waitFor: function (cb) { HTMLImports.whenReady(cb) } }
+</script>
 <script src="../../shadydom/shadydom.min.js"></script>
-<script>if (window.customElements) {customElements.forcePolyfill = true}</script>
 <script src="../../custom-elements/custom-elements.min.js"></script>
 <script src="../scoping-shim.min.js"></script>
 <script src="../apply-shim.min.js"></script>
