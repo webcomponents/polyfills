@@ -9,7 +9,7 @@ Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 -->
 <script>
-WCT = { waitFor: function (cb) { addEventListener('load', cb) } }
+WCT = { waitFor: function (cb) { window.addEventListener('HTMLImportsLoaded', cb) } }
 </script>
 <script src="./test-flags.js"></script>
 <script src="../../webcomponents-platform/webcomponents-platform.js"></script>
@@ -17,24 +17,24 @@ WCT = { waitFor: function (cb) { addEventListener('load', cb) } }
 <script src="../../template/template.js"></script>
 <script src="../../html-imports/html-imports.min.js"></script>
 <script src="../../shadydom/shadydom.min.js"></script>
+<script>if (window.customElements) {customElements.forcePolyfill = true}</script>
 <script src="../../custom-elements/custom-elements.min.js"></script>
 <script src="../scoping-shim.min.js"></script>
 <script src="../apply-shim.min.js"></script>
-  <script>
-  if (customElements.polyfillWrapFlushCallback) {
-    // delay definition of custom-style until after template polyfill loads
-    customElements.polyfillWrapFlushCallback(function(cb) {
-      HTMLImports.whenReady(cb);
-    });
-  }
-  </script>
+<script>
+if (window.customElements && customElements.polyfillWrapFlushCallback) {
+  // delay definition of custom-style until after template polyfill loads
+  customElements.polyfillWrapFlushCallback(function(cb) {
+    HTMLImports.whenReady(cb);
+  });
+}
+</script>
 <script src="../custom-style-interface.min.js"></script>
 <script src="module/generated/make-element.js"></script>
 <script src="module/generated/custom-style-element.js"></script>
 <script src="../../web-component-tester/browser.js"></script>
 
-
-<custom-style>
+<custom-style id="indoc">
   <style>
     x-host {
       display: block;
@@ -66,11 +66,12 @@ suite('custom-style only', function() {
   test('late custom-style updates styling', function(done) {
     var lateTemplate = document.querySelector('template#late');
     document.body.appendChild(document.importNode(lateTemplate.content, true));
-    // TODO(dfreedm): figure out why double rAF wasn't working in firefox
-    setTimeout(function() {
-      assert.equal(getComputedStyle(host).borderTopWidth.trim(), '2px');
-      done();
-    }, 100);
-  })
+    requestAnimationFrame(function(){
+      requestAnimationFrame(function(){
+        assert.equal(getComputedStyle(host).borderTopWidth.trim(), '2px');
+        done();
+      });
+    });
+  });
 })
 </script>
