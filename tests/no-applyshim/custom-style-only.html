@@ -26,14 +26,15 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     });
   }
 </script>
-<script src="../../custom-style-interface.min.js"></scßript>
+<script src="../../scoping-shim.min.js"></script>
+<script src="../../custom-style-interface.min.js"></script>
 <script src="../module/generated/make-element.js"></script>
 <script src="../module/generated/custom-style-element.js"></script>
 <script src="../../../web-component-tester/browser.js"></script>
 
 <custom-style>
   <style>
-    x-host {
+    #target {
       display: block;
       border: var(--late);
     }
@@ -50,17 +51,18 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   </custom-style>
 </template>
 
-<x-host></x-host>
+<div id="target"></div>
 
 <script>
 suite('custom-style only', function() {
-  var host = document.querySelector('x-host');
+  var host = document.querySelector('#target');
   test('custom-style by itself works as expected', function() {
     assert.equal(getComputedStyle(host).getPropertyValue('display').trim(), 'block');
   });
   test('late custom-style updates styling', function(done) {
     var lateTemplate = document.querySelector('template#late');
     document.body.appendChild(document.importNode(lateTemplate.content, true));
+    // two rAF to wait for after custom-style-interface's batching
     requestAnimationFrame(function() {
       requestAnimationFrame(function() {
         assert.equal(getComputedStyle(host).borderTopWidth.trim(), '2px');

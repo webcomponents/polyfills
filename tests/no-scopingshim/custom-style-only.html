@@ -34,7 +34,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 <custom-style>
   <style>
-    x-host {
+    #target {
       display: block;
       @apply --late;
     }
@@ -53,17 +53,18 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   </custom-style>
 </template>
 
-<x-host></x-host>
+<div id="target"></div>
 
 <script>
 suite('custom-style only', function() {
-  var host = document.querySelector('x-host');
+  var host = document.querySelector('#target');
   test('custom-style by itself works as expected', function() {
     assert.equal(getComputedStyle(host).getPropertyValue('display').trim(), 'block');
   });
   test('late custom-style updates styling', function(done) {
     var lateTemplate = document.querySelector('template#late');
     document.body.appendChild(document.importNode(lateTemplate.content, true));
+    // two rAF to wait for after custom-style-interface's batching
     requestAnimationFrame(function() {
       requestAnimationFrame(function() {
         assert.equal(getComputedStyle(host).borderTopWidth.trim(), '2px');
