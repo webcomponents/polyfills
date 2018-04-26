@@ -50,9 +50,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   </template>
   <x-foo></x-foo>
   <!-- emulate apply-shim imported into a module context -->
-  <script src="../apply-shim.min.js" defer></script>
+  <script id="applyScript" src="../apply-shim.min.js" defer></script>
   <script>
-    addEventListener('DOMContentLoaded', () => {
+    document.querySelector('#applyScript').addEventListener('load', () => {
       window.makeElement('x-foo');
     });
     suite('Deferred Apply Shim', function() {
