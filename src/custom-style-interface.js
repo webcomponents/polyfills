@@ -46,7 +46,11 @@ export default class CustomStyleInterface {
     this['customStyles'] = [];
     this['enqueued'] = false;
     // NOTE(dfreedm): use quotes here to prevent closure inlining to `function(){}`;
-    documentWait(() => {window['ShadyCSS']['flushCustomStyles']()})
+    documentWait(() => {
+      if (window['ShadyCSS']['flushCustomStyles']) {
+        window['ShadyCSS']['flushCustomStyles']();
+      }
+    })
   }
   /**
    * Queue a validation for new custom styles to batch style recalculations
