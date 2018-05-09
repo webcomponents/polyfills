@@ -53,6 +53,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <script id="applyScript" src="../apply-shim.min.js" defer></script>
   <script>
     document.querySelector('#applyScript').addEventListener('load', () => {
+      // IE 11 timing issue
+      if (window.HTMLTemplateElement.bootstrap) {
+        HTMLTemplateElement.bootstrap(document);
+      }
       window.makeElement('x-foo');
     });
     suite('Deferred Apply Shim', function() {
