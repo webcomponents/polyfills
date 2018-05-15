@@ -100,8 +100,8 @@ export default function(internals) {
           const content = isTemplate ? (/** @type {!HTMLTemplateElement} */
             (this)).content : this;
           /** @type {!Node} */
-          const rawElement = Native.Document_createElement.call(document,
-            this.localName);
+          const rawElement = Native.Document_createElementNS.call(document,
+              this.namespaceURI, this.localName);
           rawElement.innerHTML = assignedValue;
 
           while (content.childNodes.length > 0) {
