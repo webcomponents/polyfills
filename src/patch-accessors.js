@@ -417,12 +417,7 @@ let InsideAccessors = {
       if (!containerName || containerName === 'template') {
         containerName = 'div';
       }
-      let htmlContainer;
-      if (this.namespaceURI === inertDoc.namespaceURI) {
-        htmlContainer = inertDoc.createElement(containerName);
-      } else {
-        htmlContainer = inertDoc.createElementNS(this.namespaceURI, containerName);
-      }
+      const htmlContainer = inertDoc.createElementNS(this.namespaceURI, containerName);
       if (hasDescriptors) {
         nativeAccessors.innerHTML.set.call(htmlContainer, text);
       } else {
