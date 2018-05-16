@@ -18,6 +18,12 @@ https://github.com/webcomponents/shadydom/issues/173
 */
 const /** string */ eventWrappersName = `__eventWrappers${Date.now()}`;
 
+/** @type {?function(!Event): boolean} */
+const composedGetter = (() => {
+  const composedProp = Object.getOwnPropertyDescriptor(Event.prototype, 'composed');
+  return composedProp ? (ev) => composedProp.get.call(ev) : null;
+})();
+
 // https://github.com/w3c/webcomponents/issues/513#issuecomment-224183937
 let alwaysComposed = {
   'blur': true,
@@ -116,9 +122,14 @@ let eventMixin = {
    * @this {Event}
    */
   get composed() {
-    // isTrusted may not exist in this browser, so just check if isTrusted is explicitly false
-    if (this.isTrusted !== false && this.__composed === undefined) {
-      this.__composed = alwaysComposed[this.type];
+    if (this.__composed === undefined) {
+      // if there's an original `composed` getter on the Event prototype, use that
+      if (composedGetter) {
+        this.__composed = composedGetter(this);
+      // If the event is trusted, or `isTrusted` is not supported, check the list of always composed events
+      } else if (this.isTrusted !== false) {
+        this.__composed = alwaysComposed[this.type];
+      }
     }
     return this.__composed || false;
   },
