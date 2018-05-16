@@ -513,4 +513,22 @@ export function patchEvents() {
   window.CustomEvent = PatchedCustomEvent;
   window.MouseEvent = PatchedMouseEvent;
   activateFocusEventOverrides();
+
+  // Fix up `Element.prototype.click()` if `isTrusted` is supported, but `composed` isn't
+  if (!composedGetter && Object.getOwnPropertyDescriptor(Event.prototype, 'isTrusted')) {
+    /** @this {Element} */
+    const composedClickFn = function() {
+      const ev = new MouseEvent('click', {
+        bubbles: true,
+        cancelable: true,
+        composed: true
+      });
+      this.dispatchEvent(ev);
+    };
+    if (Element.prototype.click) {
+      Element.prototype.click = composedClickFn;
+    } else if (HTMLElement.prototype.click) {
+      HTMLElement.prototype.click = composedClickFn;
+    }
+  }
 }
