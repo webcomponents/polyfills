@@ -127,7 +127,7 @@ let fragmentMixin = {
   // https://github.com/webcomponents/shadydom/pull/210#issuecomment-361435503
   querySelectorAll(selector, useNative) {
     if (useNative) {
-      const o = Array.prototype.slice.call(querySelectorAll(this, selector));
+      const o = Array.prototype.slice.call(querySelectorAll.call(this, selector));
       const root = this.getRootNode();
       return o.filter(e => e.getRootNode() == root);
     }

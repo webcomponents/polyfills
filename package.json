@@ -1,6 +1,6 @@
 {
   "name": "@webcomponents/shadydom",
-  "version": "1.0.13",
+  "version": "1.0.14",
   "description": "Shadow DOM polyfill",
   "main": "shadydom.min.js",
   "keywords": [
