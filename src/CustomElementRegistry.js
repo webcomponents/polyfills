@@ -136,6 +136,12 @@ export default class CustomElementRegistry {
     this._internals.popCEReactionsQueue();
   }
 
+  upgrade(element) {
+    this._internals.pushCEReactionsQueue();
+    this._internals.patchAndUpgradeTree(element);
+    this._internals.popCEReactionsQueue();
+  }
+
   _flush() {
     // If no new definitions were defined, don't attempt to flush. This could
     // happen if a flush callback keeps the function it is given and calls it
@@ -261,6 +267,7 @@ export default class CustomElementRegistry {
 // Closure compiler exports.
 window['CustomElementRegistry'] = CustomElementRegistry;
 CustomElementRegistry.prototype['define'] = CustomElementRegistry.prototype.define;
+CustomElementRegistry.prototype['upgrade'] = CustomElementRegistry.prototype.upgrade;
 CustomElementRegistry.prototype['get'] = CustomElementRegistry.prototype.get;
 CustomElementRegistry.prototype['whenDefined'] = CustomElementRegistry.prototype.whenDefined;
 CustomElementRegistry.prototype['polyfillWrapFlushCallback'] = CustomElementRegistry.prototype.polyfillWrapFlushCallback;

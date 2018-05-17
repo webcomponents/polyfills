@@ -1,0 +1,291 @@
+<!doctype html>
+<html>
+<head>
+<title>Element#insertAdjacentHTML</title>
+<script>
+  // Capture these before loading the custom elements polyfill so that their
+  // behavior can be checked before running tests for `insertAdjacentHTML`.
+  window.NATIVE = {
+    createElement:
+        Document.prototype.createElement,
+    insertAdjacentHTML:
+        HTMLElement.prototype.insertAdjacentHTML ||
+        Element.prototype.insertAdjacentHTML,
+  };
+</script>
+<script>
+  (window.customElements = window.customElements || {}).forcePolyfill = true;
+</script>
+<script src="../../../../es6-promise/dist/es6-promise.auto.min.js"></script>
+<script src="../../../../template/template.js"></script>
+<script src="../../../../web-component-tester/browser.js"></script>
+<script src="../../../custom-elements.min.js"></script>
+</head>
+<body>
+<script>
+function generateLocalName() {
+  return 'test-element-' + Math.random().toString(32).substring(2);
+}
+
+function defineWithLocalName(localName, observedAttributes) {
+  const customElementClass = class extends HTMLElement {
+    constructor() {
+      super();
+      this.constructed = true;
+      this.connectedCallbackCount = 0;
+      this.disconnectedCallbackCount = 0;
+    }
+
+    connectedCallback() {
+      this.connectedCallbackCount++;
+    }
+
+    disconnectedCallback() {
+      this.disconnectedCallbackCount++;
+    }
+  };
+
+  customElements.define(localName, customElementClass);
+
+  return customElementClass;
+}
+
+test('Calling on `this` with position "afterend" while upgrading during a ' +
+  'clone does not upgrade other children.', function() {
+    const log = [];
+
+    class LoggingElement extends HTMLElement {
+      constructor() {
+        super();
+        log.push(this.localName);
+      }
+    }
+
+    const ceInsertedName = generateLocalName();
+    const CEInserted = class extends LoggingElement {};
+    customElements.define(ceInsertedName, CEInserted);
+
+    const ce1Name = generateLocalName();
+    customElements.define(ce1Name, class extends LoggingElement {
+      constructor() {
+        super();
+        this.insertAdjacentHTML('afterend', `<${ceInsertedName}></${ceInsertedName}>`);
+      }
+    });
+
+    const ce2Name = generateLocalName();
+    customElements.define(ce2Name, class extends LoggingElement {});
+
+    const template = document.createElement('template');
+    template.innerHTML = `<div><${ce1Name}><${ce2Name}></${ce2Name}></${ce1Name}></div>`;
+
+    // Insert a clone of the template, so that the elements are contained in a
+    // document with a registry.
+
+    const div = template.content.querySelector('div').cloneNode(true);
+    document.body.appendChild(div);
+
+    // Remove the <ce-inserted> created by the initial upgrade, so that the DOM
+    // content looks like the HTML from the template.
+
+    const inserted = div.querySelector(ceInsertedName);
+    assert(inserted && inserted instanceof CEInserted);
+    div.removeChild(inserted);
+
+    // Clear the upgrade log and clone the div.
+
+    log.length = 0;
+    const clone = div.cloneNode(true);
+
+    // <ce-inserted> should have been upgraded before <ce-2>, even though it
+    // comes after <ce-2> in document order.
+
+    assert.deepEqual(log, [ce1Name, ceInsertedName, ce2Name]);
+
+    document.body.removeChild(div);
+  });
+
+suite('Inserting HTML with defined custom elements into a disconnected ' +
+  'context element with a parent.', function() {
+    let disconnectedElement;
+    let localName;
+    let customElementClass;
+
+    setup(function() {
+      const parent = document.createElement('div');
+      disconnectedElement = document.createElement('div');
+      parent.appendChild(disconnectedElement);
+      localName = generateLocalName();
+      customElementClass = defineWithLocalName(localName);
+    });
+
+    test('beforebegin', function() {
+      disconnectedElement.insertAdjacentHTML('beforebegin', `<${localName}></${localName}>`);
+
+      const element = disconnectedElement.previousSibling;
+      assert(element instanceof customElementClass);
+      assert.equal(element.connectedCallbackCount, 0);
+      assert.equal(element.disconnectedCallbackCount, 0);
+    });
+
+    test('afterbegin', function() {
+      disconnectedElement.insertAdjacentHTML('afterbegin', `<${localName}></${localName}>`);
+
+      const element = disconnectedElement.firstChild;
+      assert(element instanceof customElementClass);
+      assert.equal(element.connectedCallbackCount, 0);
+      assert.equal(element.disconnectedCallbackCount, 0);
+    });
+
+    test('beforeend', function() {
+      disconnectedElement.insertAdjacentHTML('beforeend', `<${localName}></${localName}>`);
+
+      const element = disconnectedElement.lastChild;
+      assert(element instanceof customElementClass);
+      assert.equal(element.connectedCallbackCount, 0);
+      assert.equal(element.disconnectedCallbackCount, 0);
+    });
+
+    test('afterend', function() {
+      disconnectedElement.insertAdjacentHTML('afterend', `<${localName}></${localName}>`);
+
+      const element = disconnectedElement.nextSibling;
+      assert(element instanceof customElementClass);
+      assert.equal(element.connectedCallbackCount, 0);
+      assert.equal(element.disconnectedCallbackCount, 0);
+    });
+  });
+
+suite('Inserting HTML with defined custom elements into a disconnected ' +
+  'context element without a parent.', function() {
+    let disconnectedElement;
+    let localName;
+    let customElementClass;
+
+    setup(function() {
+      disconnectedElement = document.createElement('div');
+      localName = generateLocalName();
+      customElementClass = defineWithLocalName(localName);
+    });
+
+    // Safari 9 and 10 (incorrectly) do not throw when calling
+    // `insertAdjacentHTML` of an orphan element with position 'beforebegin'.
+    const beforebeginErrorExpected = (() => {
+      const div = NATIVE.createElement.call(document, 'div');
+      try {
+        NATIVE.insertAdjacentHTML.call(div, 'beforebegin', '<input>');
+        return false;
+      } catch (e) {
+        return true;
+      }
+    })();
+
+    (beforebeginErrorExpected ? test : test.skip)('Position "beforebegin" throws.', function() {
+      assert.throws(function() {
+        disconnectedElement.insertAdjacentHTML('beforebegin', `<${localName}></${localName}>`);
+      });
+    });
+
+    test('afterbegin', function() {
+      disconnectedElement.insertAdjacentHTML('afterbegin', `<${localName}></${localName}>`);
+
+      const element = disconnectedElement.firstChild;
+      assert(element instanceof customElementClass);
+      assert.equal(element.connectedCallbackCount, 0);
+      assert.equal(element.disconnectedCallbackCount, 0);
+    });
+
+    test('beforeend', function() {
+      disconnectedElement.insertAdjacentHTML('beforeend', `<${localName}></${localName}>`);
+
+      const element = disconnectedElement.lastChild;
+      assert(element instanceof customElementClass);
+      assert.equal(element.connectedCallbackCount, 0);
+      assert.equal(element.disconnectedCallbackCount, 0);
+    });
+
+    // Safari 9 and 10 (incorrectly) do not throw if you read `nextSibling` of
+    // an orphan element before trying to call its `insertAdjacentHTML` method
+    // with position 'afterend'.
+    const afterendErrorExpected = (() => {
+      const div = NATIVE.createElement.call(document, 'div');
+      try {
+        div.nextSibling; // This line may prevent the next from throwing!
+        NATIVE.insertAdjacentHTML.call(div, 'afterend', '<input>');
+        return false;
+      } catch (e) {
+        return true;
+      }
+    })();
+
+    (afterendErrorExpected ? test : test.skip)('Position "afterend" throws.', function() {
+      assert.throws(function() {
+        disconnectedElement.insertAdjacentHTML('afterend', `<${localName}></${localName}>`);
+      });
+    });
+  });
+
+suite('Inserting HTML with defined custom elements into a connected context ' +
+  'element.', function() {
+    let connectedRoot;
+    let connectedElement;
+    let localName;
+    let customElementClass;
+
+    setup(function() {
+      connectedRoot = document.createElement('div');
+      document.body.appendChild(connectedRoot);
+
+      connectedElement = document.createElement('div');
+      connectedRoot.appendChild(connectedElement);
+
+      localName = generateLocalName();
+      customElementClass = defineWithLocalName(localName);
+    });
+
+    teardown(function() {
+      while (connectedRoot.firstChild) {
+        connectedRoot.removeChild(connectedRoot.firstChild);
+      }
+      document.body.removeChild(connectedRoot);
+    });
+
+    test('beforebegin', function() {
+      connectedElement.insertAdjacentHTML('beforebegin', `<${localName}></${localName}>`);
+
+      const element = connectedElement.previousSibling;
+      assert(element instanceof customElementClass);
+      assert.equal(element.connectedCallbackCount, 1);
+      assert.equal(element.disconnectedCallbackCount, 0);
+    });
+
+    test('afterbegin', function() {
+      connectedElement.insertAdjacentHTML('afterbegin', `<${localName}></${localName}>`);
+
+      const element = connectedElement.firstChild;
+      assert(element instanceof customElementClass);
+      assert.equal(element.connectedCallbackCount, 1);
+      assert.equal(element.disconnectedCallbackCount, 0);
+    });
+
+    test('beforeend', function() {
+      connectedElement.insertAdjacentHTML('beforeend', `<${localName}></${localName}>`);
+
+      const element = connectedElement.lastChild;
+      assert(element instanceof customElementClass);
+      assert.equal(element.connectedCallbackCount, 1);
+      assert.equal(element.disconnectedCallbackCount, 0);
+    });
+
+    test('afterend', function() {
+      connectedElement.insertAdjacentHTML('afterend', `<${localName}></${localName}>`);
+
+      const element = connectedElement.nextSibling;
+      assert(element instanceof customElementClass);
+      assert.equal(element.connectedCallbackCount, 1);
+      assert.equal(element.disconnectedCallbackCount, 0);
+    });
+  });
+</script>
+</body>
+</html>

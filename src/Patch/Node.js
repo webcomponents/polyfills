@@ -190,8 +190,10 @@ export default function(internals) {
           return;
         }
 
-        for (let child = this.firstChild; child; child = child.nextSibling) {
-          internals.disconnectTree(child);
+        if (Utilities.isConnected(this)) {
+          for (let child = this.firstChild; child; child = child.nextSibling) {
+            internals.disconnectTree(child);
+          }
         }
 
         baseDescriptor.set.call(this, assignedValue);
