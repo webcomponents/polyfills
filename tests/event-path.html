@@ -361,6 +361,25 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       assert.isFalse(spy.called, 'Callback should not be called on shadowRoot');
     });
 
+    test('composed event on child lightdom does not reach shadowRoot', function() {
+      // Create a div element with a shadow root
+      const theDiv = document.createElement('div');
+      theDiv.attachShadow({mode: 'open'});
+      document.body.appendChild(theDiv);
+      const child = document.createElement('div');
+      theDiv.appendChild(child);
+
+      const spy = sinon.spy();
+
+      // Add event listener to the shadow root
+      theDiv.shadowRoot.addEventListener('composed', spy);
+
+      // Dispatch a comosed event to a child of the div element (not its shadow root)
+      child.dispatchEvent(new CustomEvent('composed', {bubbles: true, composed: true}));
+
+      assert.isFalse(spy.called, 'Callback should not be called on shadowRoot');
+    });
+
     test('document events retarget', function() {
       let el = createEnabledElement('x-event-scoped-document');
       el.fireComposed();

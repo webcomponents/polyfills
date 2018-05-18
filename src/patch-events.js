@@ -382,6 +382,12 @@ export function addEventListener(type, fnOrObj, optionsOrCapture) {
       lastCurrentTargetDesc = Object.getOwnPropertyDescriptor(e, 'currentTarget');
       Object.defineProperty(e, 'currentTarget', {get() { return target }, configurable: true});
     }
+    // Always check if a shadowRoot is in the current event path.
+    // If it is not, the event was generated on either the host of the shadowRoot
+    // or a children of the host.
+    if (utils.isShadyRoot(target) && e.composedPath().indexOf(target) == -1) {
+      return;
+    }
     // There are two critera that should stop events from firing on this node
     // 1. the event is not composed and the current node is not in the same root as the target
     // 2. when bubbling, if after retargeting, relatedTarget and target point to the same node
@@ -392,16 +398,9 @@ export function addEventListener(type, fnOrObj, optionsOrCapture) {
         }
         return;
       }
-      if (e.eventPhase !== Event.CAPTURING_PHASE && e.target !== target && !(target instanceof Window)) {
-        // prevent non-bubbling events from triggering bubbling handlers on shadowroot, but only if not in capture phase
-        if (!e.bubbles) {
-          return;
-        }
-        // if the bubbling event is dispatched on the node that has the shadowRoot
-        // and our target is the shadowRoot, ignore this event
-        if (utils.isShadyRoot(target) && e.target === target.host) {
-          return;
-        }
+      // prevent non-bubbling events from triggering bubbling handlers on shadowroot, but only if not in capture phase
+      if (e.eventPhase !== Event.CAPTURING_PHASE && !e.bubbles && e.target !== target && !(target instanceof Window)) {
+        return;
       }
       let ret = handlerType === 'function' ?
         fnOrObj.call(target, e) :
