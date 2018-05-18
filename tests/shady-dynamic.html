@@ -1145,7 +1145,7 @@ suite('Accessors', function() {
     container.appendChild(c);
     const children = container.children;
     // References by the name attribute do not work in Edge and IE11
-    if (window.NATIVE.children.get.call(container).a) {
+    if (window.NATIVE.children && window.NATIVE.children.get.call(container).a) {
       assert.equal(children.a, a);
     }
     assert.equal(children.b, b);
