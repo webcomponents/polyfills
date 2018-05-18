@@ -20,6 +20,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     }
     window.NATIVE = {
       children: Object.getOwnPropertyDescriptor(Element.prototype, 'children')
+             || Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'children')
     };
   </script>
   <script src="../shadydom.min.js"></script>
@@ -1145,7 +1146,7 @@ suite('Accessors', function() {
     container.appendChild(c);
     const children = container.children;
     // References by the name attribute do not work in Edge and IE11
-    if (!window.NATIVE.children || window.NATIVE.children.get.call(container).a) {
+    if (!window.NATIVE.children || !window.NATIVE.children.get || window.NATIVE.children.get.call(container).a) {
       assert.equal(children.a, a);
     }
     assert.equal(children.b, b);
