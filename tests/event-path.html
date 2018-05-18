@@ -17,6 +17,21 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <script>
     ShadyDOM = {force: true, flush(){}};
   </script>
+  <script>
+    /**
+     * Safari's Element.prototype.click may set `composed: false`, which is counter to the spec.
+     * https://bugs.webkit.org/show_bug.cgi?id=170211
+     */
+    window.brokenClickFn = (() => {
+      let brokenComposed = false;
+      const div = document.createElement('div');
+      div.addEventListener('click', (e) => {
+        brokenComposed = e.composed === false;
+      });
+      div.click();
+      return brokenComposed;
+    })();
+  </script>
   <script src="../shadydom.min.js"></script>
   <script src="../../custom-elements/custom-elements.min.js"></script>
   <script>
@@ -655,6 +670,24 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         pathCompare([bot, top], recv);
         top.parentNode.removeChild(top);
       });
+    });
+
+    test('click function is composed', function() {
+      if (window.brokenClickFn) {
+        this.skip();
+      }
+      let sawClick = false;
+      const top = document.createElement('div');
+      top.addEventListener('click', () => {
+        sawClick = true;
+      });
+      top.attachShadow({mode: 'open'});
+      const inner = document.createElement('div');
+      top.shadowRoot.appendChild(inner);
+      document.body.appendChild(top);
+      inner.click();
+      assert.equal(sawClick, true, 'host should see click from inner node');
+      top.parentNode.removeChild(top);
     });
   });
   </script>

@@ -32,7 +32,7 @@
   },
   "homepage": "https://webcomponents.org/polyfills",
   "devDependencies": {
-    "@webcomponents/custom-elements": "^1.0.8",
+    "@webcomponents/custom-elements": "^1.1.1",
     "@webcomponents/shadycss": "^1.1.1",
     "@webcomponents/template": "^1.2.2",
     "@webcomponents/webcomponents-platform": "^1.0.0",
