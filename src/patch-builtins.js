@@ -264,7 +264,8 @@ for (const property of Object.getOwnPropertyNames(Document.prototype)) {
       get() {
         const shadyData = shadyDataForNode(this);
         return shadyData && shadyData.__onCallbackListeners[property];
-      }
+      },
+      configurable: true
     });
   }
 }
