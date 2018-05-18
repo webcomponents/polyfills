@@ -778,6 +778,16 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     assert.equal(ShadyDOM.nativeTree.children(b.firstElementChild).length, 4, 'deep copy has incorrect composed children');
   });
 
+  test('cloneNode attribute', function() {
+    var div = document.createElement('div');
+    div.setAttribute('id', 'test');
+    document.body.appendChild(div);
+    ShadyDOM.flush();
+    var attr = div.getAttributeNode('id').cloneNode(true);
+    assert.equal(attr.name, 'id');
+    assert.equal(attr.value, 'test');
+  });
+
   test('importNode shallow', function() {
     var a = document.createElement('div');
     a.innerHTML = '<x-clonate><span>1</span><span>2</span></x-clonate>';
@@ -801,6 +811,19 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     ShadyDOM.flush();
     assert.equal(b.firstElementChild.childNodes.length, 2, 'deep copy has incorrect children');
     assert.equal(ShadyDOM.nativeTree.children(b.firstElementChild).length, 4, 'deep copy has incorrect composed children');
+  });
+
+  test('importNode template deep', function() {
+    var template = document.createElement('template');
+    template.innerHTML = '<x-clonate><span>1</span><span>2</span></x-clonate>';
+    document.body.appendChild(template);
+    ShadyDOM.flush();
+    var templateCopy = document.importNode(template, true);
+    document.body.appendChild(templateCopy);
+    ShadyDOM.flush();
+    assert.equal(templateCopy.content.childNodes.length, 1, 'deep copy has incorrect children');
+    var contentCopy = templateCopy.content.cloneNode(true);
+    assert.equal(contentCopy.firstChild.localName, 'x-clonate');
   });
 
   test('flush reentrancy', function() {
@@ -1157,6 +1180,18 @@ suite('Accessors', function() {
     assert.notOk(template.firstChild);
     assert.ok(template.content.firstChild);
     assert.equal(template.innerHTML, '<div></div>');
+  });
+
+  const SVG_NAMESPACE = 'http://www.w3.org/2000/svg';
+
+  test('svg innerHTML', function() {
+    if (!('innerHTML' in SVGSVGElement.prototype)) {
+      this.skip();
+    }
+    const svg = ShadyDOM.patch(document.createElementNS(SVG_NAMESPACE, 'svg'));
+    svg.innerHTML = '<circle cx="50" cy="50" r="40" stroke="black" stroke-width="3" fill="red" />';
+    const circle = svg.querySelector('circle');
+    assert.isTrue(circle instanceof SVGCircleElement, `Expected ${circle} to be a circle, but was "${typeof circle}" instead`);
   });
 
   test('textContent', function() {
