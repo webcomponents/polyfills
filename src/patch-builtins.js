@@ -15,7 +15,7 @@ import * as mutation from './logical-mutation.js';
 import {ActiveElementAccessor, ShadowRootAccessor, patchAccessors, patchShadowRootAccessors, IsConnectedAccessor} from './patch-accessors.js';
 import {addEventListener, removeEventListener} from './patch-events.js';
 import {attachShadow, ShadyRoot} from './attach-shadow.js';
-import {shadyDataForNode} from './shady-data.js';
+import {shadyDataForNode, ensureShadyDataForNode} from './shady-data.js';
 
 function getAssignedSlot(node) {
   mutation.renderRootNode(node);
@@ -245,40 +245,29 @@ let htmlElementMixin = {
     } else {
       nativeBlur.call(this);
     }
-  },
-
-  /**
-   * @this {HTMLElement}
-   */
-  set onfocus(fn) {
-    this['__onFocusCapturedFunction'] && this.removeEventListener('focus', this['__onFocusCapturedFunction']);
-    this.addEventListener('focus', fn, {});
-    this['__onFocusCapturedFunction'] = fn;
-  },
-
-  /**
-   * @this {HTMLElement}
-   */
-  get onfocus() {
-    return this['__onFocusCapturedFunction'];
-  },
-
-  /**
-   * @this {HTMLElement}
-   */
-  set onblur(fn) {
-    this['__onBlurCapturedFunction'] && this.removeEventListener('blur', this['__onBlurCapturedFunction']);
-    this.addEventListener('blur', fn, {});
-    this['__onBlurCapturedFunction'] = fn;
-  },
-
-  /**
-   * @this {HTMLElement}
-   */
-  get onblur() {
-    return this['__onBlurCapturedFunction'];
   }
 };
+
+for (const property of Object.getOwnPropertyNames(Document.prototype)) {
+  const split = property.split('on');
+
+  if (split[0] === '') {
+    Object.defineProperty(htmlElementMixin, property, {
+      /** @this {HTMLElement} */
+      set: function(fn) {
+        const shadyData = ensureShadyDataForNode(this);
+        shadyData.__onCallbackListeners[property] && this.removeEventListener(split[1], shadyData.__onCallbackListeners[property]);
+        this.addEventListener(split[1], fn, {});
+        shadyData.__onCallbackListeners[property] = fn;
+      },
+      /** @this {HTMLElement} */
+      get() {
+        const shadyData = shadyDataForNode(this);
+        return shadyData && shadyData.__onCallbackListeners[property];
+      }
+    });
+  }
+}
 
 const shadowRootMixin = {
   /**

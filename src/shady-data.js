@@ -42,6 +42,7 @@ export class ShadyData {
     this.childNodes = undefined;
     this.__outsideAccessors = false;
     this.__insideAccessors = false;
+    this.__onCallbackListeners = {};
   }
 
   toJSON() {
