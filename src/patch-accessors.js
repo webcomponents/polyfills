@@ -418,7 +418,7 @@ let InsideAccessors = {
         containerName = 'div';
       }
       let htmlContainer;
-      if (this.namespaceURI === inertDoc.namespaceURI) {
+      if (!this.namespaceURI || this.namespaceURI === inertDoc.namespaceURI) {
         htmlContainer = inertDoc.createElement(containerName);
       } else {
         htmlContainer = inertDoc.createElementNS(this.namespaceURI, containerName);
