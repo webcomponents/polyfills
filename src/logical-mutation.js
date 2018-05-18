@@ -363,7 +363,9 @@ export function cloneNode(node, deep) {
 // contain custom elements and are therefore not likely to contain shadowRoots
 // to cloned natively. This is a fairly significant performance win.
 export function importNode(node, deep) {
-  if (node.ownerDocument !== document) {
+  // A template element normally has no children with shadowRoots, so make
+  // sure we always make a deep copy to correctly construct the template.content
+  if (node.ownerDocument !== document || node.localName === 'template') {
     return nativeMethods.importNode.call(document, node, deep);
   }
   let n = nativeMethods.importNode.call(document, node, false);
