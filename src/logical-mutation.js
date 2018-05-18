@@ -343,7 +343,10 @@ export function cloneNode(node, deep) {
     return nativeMethods.cloneNode.call(node, deep);
   } else {
     let n = nativeMethods.cloneNode.call(node, false);
-    if (deep) {
+    // Attribute nodes historically had childNodes, but they have later
+    // been removed from the spec.
+    // Make sure we do not do a deep clone on them for old browsers (IE11)
+    if (deep && n.nodeType !== Node.ATTRIBUTE_NODE) {
       let c$ = node.childNodes;
       for (let i=0, nc; i < c$.length; i++) {
         nc = c$[i].cloneNode(true);
