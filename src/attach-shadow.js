@@ -38,10 +38,9 @@ function ancestorList(node) {
 }
 
 /**
- * @constructor
  * @extends {ShadowRoot}
  */
-export class ShadyRoot {
+class ShadyRoot {
 
   constructor(token, host, options) {
     if (token !== ShadyRootConstructionToken) {
@@ -71,6 +70,7 @@ export class ShadyRoot {
     this._hasRendered = false;
     // marsalled lazily
     this._slotList = null;
+    /** @type {Object<string, Array<HTMLSlotElement>>} */
     this._slotMap = null;
     this._pendingSlots = null;
     // fast path initial render: remove existing physical dom.
@@ -507,6 +507,8 @@ export class ShadyRoot {
     return Boolean(this._slotList && this._slotList.length);
   }
 }
+
+export {ShadyRoot};
 
 /**
   Implements a pared down version of ShadowDOM's scoping, which is easy to
