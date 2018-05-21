@@ -54,13 +54,10 @@ export class ShadyRoot {
     // distinguished from a DocumentFragment when patching.
     // FF doesn't allow this to be `localName`
     this._localName = SHADYROOT_NAME;
-    const c$ = childNodes(host);
     // root <=> host
     this.host = host;
     this._mode = options && options.mode;
-    // logical dom setup
-    recordChildNodes(host, c$);
-    const hostData = shadyDataForNode(host);
+    const hostData = ensureShadyDataForNode(host);
     hostData.root = this;
     hostData.publicRoot = this._mode !== MODE_CLOSED ? this : null;
     // setup root
@@ -76,11 +73,11 @@ export class ShadyRoot {
     this._slotList = null;
     this._slotMap = null;
     this._pendingSlots = null;
+    this._initialChildren = null;
     // fast path initial render: remove existing physical dom.
-    if (c$.length) {
-      this.__initialChildren = c$;
-      this._asyncRender();
-    }
+    recordChildNodes(host, childNodes(host));
+    this._createdWhileLoading = document.readyState === 'loading';
+    this._asyncRender();
   }
 
   // async render
@@ -132,22 +129,31 @@ export class ShadyRoot {
     const wasRendering = isRendering;
     isRendering = true;
     this._renderPending = false;
+    // If created while loading, then light children are potentially incorrect
+    // so we fix them here (note, this needs to be before distribution)
+    if (!this._hasRendered && this._createdWhileLoading) {
+      // reset logical tracking because this is incorrect when created while loading.
+      const nodeData = shadyDataForNode(this.host);
+      nodeData.firstChild = undefined;
+      const c$ = childNodes(this.host).filter((child) => {
+        return ensureShadyDataForNode(child).parentNode !== this;
+      });
+      recordChildNodes(this.host, c$);
+    }
     if (this._slotList) {
       this._distribute();
+      this._compose();
     }
-    // always remove any initial children if they are undistributed
-    if (this.__initialChildren) {
-      for (let i=0, l=this.__initialChildren.length; i < l; i++) {
-        const child = this.__initialChildren[i];
+    // on initial render remove any undistributed children.
+    if (!this._hasRendered) {
+      const c$ = this.host.childNodes;
+      for (let i=0, l=c$.length; i < l; i++) {
+        const child = c$[i];
         const data = shadyDataForNode(child);
-        if (parentNode(child) == this.host && !data.assignedSlot) {
+        if (parentNode(child) === this.host && !data.assignedSlot) {
           removeChild.call(this.host, child);
         }
       }
-      this.__initialChildren = null;
-    }
-    if (this._slotList) {
-      this._compose();
     }
     this._hasRendered = true;
     isRendering = wasRendering;
