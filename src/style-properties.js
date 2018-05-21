@@ -19,11 +19,16 @@ import StyleInfo from './style-info.js';
 
 // TODO: dedupe with shady
 /**
- * @const {function(string):boolean}
+ * @param {string} selector
+ * @return {boolean}
+ * @this {Element}
  */
-const matchesSelector = ((p) => p.matches || p.matchesSelector ||
-  p.mozMatchesSelector || p.msMatchesSelector ||
-p.oMatchesSelector || p.webkitMatchesSelector)(window.Element.prototype);
+const matchesSelector = function(selector) {
+  const method = this.matches || this.matchesSelector ||
+    this.mozMatchesSelector || this.msMatchesSelector ||
+    this.oMatchesSelector || this.webkitMatchesSelector;
+  return method && method.call(this, selector);
+};
 
 const IS_IE = navigator.userAgent.match('Trident');
 
@@ -327,8 +332,8 @@ class StyleProperties {
     }
     let selectorToMatch = hostScope;
     if (isHost) {
-      // need to transform :host under ShadowDOM because `:host` does not work with `matches`
-      if (nativeShadow && !rule.transformedSelector) {
+      // need to transform :host because `:host` does not work with `matches`
+      if (!rule.transformedSelector) {
         // transform :host into a matchable selector
         rule.transformedSelector =
         StyleTransformer._transformRuleCss(
@@ -448,7 +453,10 @@ class StyleProperties {
  * @param {string} scopeId
  */
   _scopeKeyframes(rule, scopeId) {
-    rule.keyframesNameRx = new RegExp(rule['keyframesName'], 'g');
+    // Animation names are of the form [\w-], so ensure that the name regex does not partially apply
+    // to similarly named keyframe names by checking for a word boundary at the beginning and
+    // a non-word boundary or `-` at the end.
+    rule.keyframesNameRx = new RegExp(`\\b${rule['keyframesName']}(?!\\B|-)`, 'g');
     rule.transformedKeyframesName = rule['keyframesName'] + '-' + scopeId;
     rule.transformedSelector = rule.transformedSelector || rule['selector'];
     rule['selector'] = rule.transformedSelector.replace(

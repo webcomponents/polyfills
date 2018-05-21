@@ -60,6 +60,10 @@ window.ShadyCSS = {
     scopingShim.styleDocument(properties);
   },
 
+  flushCustomStyles() {
+    scopingShim.flushCustomStyles();
+  },
+
   /**
    * @param {Element} element
    * @param {string} property

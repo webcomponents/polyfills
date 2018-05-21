@@ -21,7 +21,6 @@ import StyleCache from './style-cache.js';
 import {flush as watcherFlush} from './document-watcher.js';
 import templateMap from './template-map.js';
 import * as ApplyShimUtils from './apply-shim-utils.js';
-import documentWait from './document-wait.js';
 import {updateNativeProperties, detectMixin} from './common-utils.js';
 import {CustomStyleInterfaceInterface} from './custom-style-interface.js'; // eslint-disable-line no-unused-vars
 
@@ -41,9 +40,6 @@ export default class ScopingShim {
     this._applyShim = null;
     /** @type {?CustomStyleInterfaceInterface} */
     this._customStyleInterface = null;
-    documentWait(() => {
-      this._ensure();
-    });
   }
   flush() {
     watcherFlush();
@@ -106,7 +102,7 @@ export default class ScopingShim {
 
     let ownPropertyNames = [];
     if (!nativeCssVariables) {
-      ownPropertyNames = StyleProperties.decorateStyles(template['_styleAst'], info);
+      ownPropertyNames = StyleProperties.decorateStyles(template['_styleAst']);
     }
     if (!ownPropertyNames.length || nativeCssVariables) {
       let root = nativeShadow ? template.content : null;
@@ -385,7 +381,7 @@ export default class ScopingShim {
     if (nativeCssVariables) {
       style.textContent = StyleUtil.toCssText(ast);
     } else {
-      this._documentOwnerStyleInfo.styleRules.rules.push(ast);
+      this._documentOwnerStyleInfo.styleRules['rules'].push(ast);
     }
   }
   _revalidateApplyShim(style) {
