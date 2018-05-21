@@ -683,6 +683,16 @@ suite('Patch of addEventListener/removeEventListener', function() {
 
 });
 
+suite('Patch of innerHTML setter', function() {
+  test('support top-level table elements in template', function() {
+    const template = document.createElement('template');
+    template.innerHTML = '<tr><td></td></tr><tr><td></td></tr>';
+    assert.equal(template.content.childElementCount, 2, 'child elements exist');
+    assert.equal(template.content.firstElementChild.tagName, 'TR');
+    assert.equal(template.content.lastElementChild.tagName, 'TR');
+  });
+});
+
 function getEffectiveChildNodes(node) {
   var list = [];
   var c$ = node.childNodes;
