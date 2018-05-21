@@ -32,7 +32,7 @@ const styleCache = new StyleCache();
 export default class ScopingShim {
   constructor() {
     this._scopeCounter = {};
-    this._documentOwner = document.documentElement;
+    this._documentOwner = /** @type {!HTMLElement} */(document.documentElement);
     let ast = new StyleNode();
     ast['rules'] = [];
     this._documentOwnerStyleInfo = StyleInfo.set(this._documentOwner, new StyleInfo(ast));

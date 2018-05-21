@@ -104,7 +104,7 @@ suite('Style Transformer', function() {
     });
 
     test(':host() :-webkit-any()', function() {
-      assert.equal(ast.rules[3].selector, 'x-foo.bar .x-foo:-webkit-any(.foo,.bar).x-foo');
+      assert.equal(ast.rules[3].selector, 'x-foo.bar .x-foo:-webkit-any(.foo, .bar).x-foo');
     });
   });
 

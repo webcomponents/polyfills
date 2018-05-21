@@ -906,7 +906,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       flush();
       assertComputed(e.shadowRoot.querySelector('div'), 'rgb(123, 123, 123)', 'color');
       assertComputed(e.shadowRoot.querySelector('span'), 'rgb(123, 123, 123)', 'color');
-      // document.body.removeChild(e);
+      document.body.removeChild(e);
     });
 
     test(':host() sets mixin definitions correctly', function() {
