@@ -8,22 +8,32 @@
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
+/*
+Original TypeScript source code used in this test suite:
+
+class XTypescript extends HTMLElement {}
+class XTypescript2 extends HTMLElement {}
+
+ */
 suite('TypeScript ES5 Output', function() {
 
   customElements.enableFlush = true;
 
-  // Fails because the XTypescript constructor does not return the result of
-  // the super call. See: https://github.com/Microsoft/TypeScript/issues/7574
-  test.skip('TypeScript generated ES5 works via new()', function() {
-    var __extends = (this && this.__extends) || function (d, b) {
-        for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-    var XTypescript = (function (_super) {
+  test('TypeScript generated ES5 works via new()', function() {
+    var __extends = (this && this.__extends) || (function () {
+        var extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return function (d, b) {
+            extendStatics(d, b);
+            function __() { this.constructor = d; }
+            d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+        };
+    })();
+    var XTypescript = /** @class */ (function (_super) {
         __extends(XTypescript, _super);
         function XTypescript() {
-            _super.call(this);
+            return _super !== null && _super.apply(this, arguments) || this;
         }
         return XTypescript;
     }(HTMLElement));
@@ -38,16 +48,21 @@ suite('TypeScript ES5 Output', function() {
     assert.instanceOf(e, XTypescript);
   });
 
-  test.skip('TypeScript generated ES5 works via createElement', function() {
-    var __extends = (this && this.__extends) || function (d, b) {
-        for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-    var XTypescript2 = (function (_super) {
+  test('TypeScript generated ES5 works via createElement', function() {
+    var __extends = (this && this.__extends) || (function () {
+        var extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return function (d, b) {
+            extendStatics(d, b);
+            function __() { this.constructor = d; }
+            d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+        };
+    })();
+    var XTypescript2 = /** @class */ (function (_super) {
         __extends(XTypescript2, _super);
         function XTypescript2() {
-            _super.call(this);
+            return _super !== null && _super.apply(this, arguments) || this;
         }
         return XTypescript2;
     }(HTMLElement));
