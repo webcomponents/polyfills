@@ -557,11 +557,14 @@ if (window['customElements']) {
 
   // process connect/disconnect after roots have rendered to avoid
   // issues with reaction stack.
-  let connectMap = new Map();
+  let connectMap1 = new Map();
+  let connectMap2 = new Map();
+  let connectMap = connectMap1;
   rootRendered = function() {
     // allow elements to connect
     const map = connectMap;
-    connectMap = new Map();
+    connectMap = connectMap == connectMap1 ? connectMap2 : connectMap1;
+    connectMap.clear();
     for (const [e, value] of map) {
       if (value) {
         e.connectedCallback();
