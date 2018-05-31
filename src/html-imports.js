@@ -204,7 +204,7 @@
   const disabledLinkSelector = `link[rel=stylesheet][href][type=${importDisableType}]`;
 
   const scriptsSelector = `script:not([type]),script[type="application/javascript"],` +
-    `script[type="text/javascript"]`;
+    `script[type="text/javascript"],script[type="module"]`;
 
   const importDependenciesSelector = `${importSelector},${disabledLinkSelector},` +
     `style:not([type]),link[rel=stylesheet][href]:not([type]),` + scriptsSelector;
@@ -725,7 +725,7 @@
     // itself is used as the `import` document.
     /** @type {Object|undefined} */
     const native_baseURI = Object.getOwnPropertyDescriptor(Node.prototype, 'baseURI');
-    // NOTE: if not configurable (e.g. safari9), set it on the Element prototype. 
+    // NOTE: if not configurable (e.g. safari9), set it on the Element prototype.
     const klass = !native_baseURI || native_baseURI.configurable ? Node : Element;
     Object.defineProperty(klass.prototype, 'baseURI', {
       get() {
