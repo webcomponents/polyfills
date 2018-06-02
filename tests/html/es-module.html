@@ -22,13 +22,13 @@
     window.loadedModules = [];
   </script>
   <script src="../../../web-component-tester/browser.js"></script>
-  <link rel="import" href="imports/es-module-import-1.html">
+  <link rel="import" href="./imports/es-module-import-1.html">
 </head>
 
 <body>
 
   <script>
-    test('es module', function() {
+    test('es module', () => {
       assert.deepEqual(window.loadedModules, ['es-module-2', 'es-module-1', 'es-module-3']);
     });
   </script>

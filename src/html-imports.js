@@ -347,6 +347,9 @@
         n.setAttribute(importDependencyAttr, '');
         // Generate source map hints for inline scripts.
         if (n.localName === 'script' && !n.src && n.textContent) {
+          if(n.type === 'module') {
+            throw new Error('Inline module scripts are not supported in HTML Imports.');
+          }
           const num = inlineScriptIndex ? `-${inlineScriptIndex}` : '';
           const content = n.textContent + `\n//# sourceURL=${url}${num}.js\n`;
           // We use the src attribute so it triggers load/error events, and it's
