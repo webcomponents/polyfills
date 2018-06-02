@@ -133,7 +133,6 @@ export class ShadyRoot {
     // so we fix them here (note, this needs to be before distribution)
     if (!this._hasRendered && this._createdWhileLoading) {
       // reset logical tracking because this is incorrect when created while loading.
-      const nodeData = shadyDataForNode(this.host);
       const c$ = childNodes(this.host).filter((child) => {
         return ensureShadyDataForNode(child).parentNode !== this;
       });
