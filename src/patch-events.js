@@ -302,6 +302,8 @@ function getEventWrappers(eventLike) {
   return wrappers;
 }
 
+const excludeEventTypeRe = /^DOM/;
+
 /**
  * @this {Event}
  */
@@ -320,6 +322,13 @@ export function addEventListener(type, fnOrObj, optionsOrCapture) {
   // bail if `fnOrObj` is an object without a `handleEvent` method
   if (handlerType === 'object' && (!fnOrObj.handleEvent || typeof fnOrObj.handleEvent !== 'function')) {
     return;
+  }
+
+  const ael = this instanceof Window ? nativeMethods.windowAddEventListener :
+      nativeMethods.addEventListener;
+
+  if (type.match(excludeEventTypeRe)) {
+    return ael.call(this, type, fnOrObj, optionsOrCapture);
   }
 
   // The callback `fn` might be used for multiple nodes/events. Since we generate
@@ -418,8 +427,6 @@ export function addEventListener(type, fnOrObj, optionsOrCapture) {
       {'capture': [], 'bubble': []};
     this.__handlers[type][capture ? 'capture' : 'bubble'].push(wrapperFn);
   } else {
-    let ael = this instanceof Window ? nativeMethods.windowAddEventListener :
-      nativeMethods.addEventListener;
     ael.call(this, type, wrapperFn, optionsOrCapture);
   }
 }
@@ -431,7 +438,11 @@ export function removeEventListener(type, fnOrObj, optionsOrCapture) {
   if (!fnOrObj) {
     return;
   }
-
+  const rel = this instanceof Window ? nativeMethods.windowRemoveEventListener :
+    nativeMethods.removeEventListener;
+  if (type.match(excludeEventTypeRe)) {
+    return rel.call(this, type, fnOrObj, optionsOrCapture);
+  }
   // NOTE(valdrin) invoking external functions is costly, inline has better perf.
   let capture, once, passive;
   if (optionsOrCapture && typeof optionsOrCapture === 'object') {
@@ -457,8 +468,6 @@ export function removeEventListener(type, fnOrObj, optionsOrCapture) {
       }
     }
   }
-  let rel = this instanceof Window ? nativeMethods.windowRemoveEventListener :
-    nativeMethods.removeEventListener;
   rel.call(this, type, wrapperFn || fnOrObj, optionsOrCapture);
   if (wrapperFn && nonBubblingEventsToRetarget[type] &&
       this.__handlers && this.__handlers[type]) {

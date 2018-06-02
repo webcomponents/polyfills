@@ -134,11 +134,10 @@ export class ShadyRoot {
     if (!this._hasRendered && this._createdWhileLoading) {
       // reset logical tracking because this is incorrect when created while loading.
       const nodeData = shadyDataForNode(this.host);
-      nodeData.firstChild = undefined;
       const c$ = childNodes(this.host).filter((child) => {
         return ensureShadyDataForNode(child).parentNode !== this;
       });
-      recordChildNodes(this.host, c$);
+      recordChildNodes(this.host, c$, true);
     }
     if (this._slotList) {
       this._distribute();
@@ -557,13 +556,10 @@ if (window['customElements']) {
 
   // process connect/disconnect after roots have rendered to avoid
   // issues with reaction stack.
-  let connectMap1 = new Map();
-  let connectMap2 = new Map();
-  let connectMap = connectMap1;
+  let connectMap = new Map();
   rootRendered = function() {
     // allow elements to connect
-    const map = connectMap;
-    connectMap = connectMap == connectMap1 ? connectMap2 : connectMap1;
+    const map = Array.from(connectMap);
     connectMap.clear();
     for (const [e, value] of map) {
       if (value) {
@@ -605,6 +601,7 @@ if (window['customElements']) {
         if (isRendering) {
           // rendering should disconnect only if the element is
           // actually not connected.
+          // NOTE: supposed to be `isConnected` here.
           if (!this.isConnected) {
             connectMap.set(this, false);
           }
