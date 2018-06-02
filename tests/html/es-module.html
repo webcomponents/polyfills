@@ -27,10 +27,14 @@
 
 <body>
 
-  <script>
-    test('es module', () => {
-      assert.deepEqual(window.loadedModules, ['es-module-2', 'es-module-1', 'es-module-3']);
-    });
+  <script type="module">
+    // Polymer build transpiles modules to AMD on browsers without es module and import.meta.url
+    // support. We should not execute this test in that case.
+    if (!window.define) {
+      test('es module', () => {
+        assert.deepEqual(window.loadedModules, ['es-module-2', 'es-module-1', 'es-module-3']);
+      });
+    }
   </script>
 </body>
 

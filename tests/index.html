@@ -23,7 +23,7 @@
 </script>
 <script src="../../web-component-tester/browser.js"></script>
 <script>
-  const suites = [
+  WCT.loadSuites([
     'html/HTMLImportsLoaded-native.html',
     'html/HTMLImports-lazy.html',
     'html/link-import.html',
@@ -50,13 +50,7 @@
     'html/import-for-element.html',
     'html/ready-state.html',
     'html/resolve-path.html',
-    'html/load-imports.html'
-  ];
-
-  // Only run this test on browsers that supports es modules natively
-  if ('noModule' in document.createElement('script')) {
-    suites.push('html/es-module.html')
-  }
-
-  WCT.loadSuites(suites);
+    'html/load-imports.html',
+    'html/es-module.html'
+  ]);
 </script>
