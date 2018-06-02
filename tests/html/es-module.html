@@ -15,7 +15,7 @@
   <script src="../../src/html-imports.js"></script>
   <script>
     WCT = {
-      waitFor: function(callback) {
+      waitFor: function (callback) {
         HTMLImports.whenReady(callback);
       }
     };
@@ -27,14 +27,14 @@
 
 <body>
 
-  <script type="module">
+  <script>
     // Polymer build transpiles modules to AMD on browsers without es module and import.meta.url
     // support. We should not execute this test in that case.
-    if (!window.define) {
-      test('es module', () => {
+    test('es modules', () => {
+      if (!window.define) {
         assert.deepEqual(window.loadedModules, ['es-module-2', 'es-module-1', 'es-module-3']);
-      });
-    }
+      }
+    });
   </script>
 </body>
 
