@@ -18,6 +18,12 @@ https://github.com/webcomponents/shadydom/issues/173
 */
 const /** string */ eventWrappersName = `__eventWrappers${Date.now()}`;
 
+/** @type {?function(!Event): boolean} */
+const composedGetter = (() => {
+  const composedProp = Object.getOwnPropertyDescriptor(Event.prototype, 'composed');
+  return composedProp ? (ev) => composedProp.get.call(ev) : null;
+})();
+
 // https://github.com/w3c/webcomponents/issues/513#issuecomment-224183937
 let alwaysComposed = {
   'blur': true,
@@ -116,9 +122,14 @@ let eventMixin = {
    * @this {Event}
    */
   get composed() {
-    // isTrusted may not exist in this browser, so just check if isTrusted is explicitly false
-    if (this.isTrusted !== false && this.__composed === undefined) {
-      this.__composed = alwaysComposed[this.type];
+    if (this.__composed === undefined) {
+      // if there's an original `composed` getter on the Event prototype, use that
+      if (composedGetter) {
+        this.__composed = composedGetter(this);
+      // If the event is trusted, or `isTrusted` is not supported, check the list of always composed events
+      } else if (this.isTrusted !== false) {
+        this.__composed = alwaysComposed[this.type];
+      }
     }
     return this.__composed || false;
   },
@@ -380,6 +391,12 @@ export function addEventListener(type, fnOrObj, optionsOrCapture) {
       lastCurrentTargetDesc = Object.getOwnPropertyDescriptor(e, 'currentTarget');
       Object.defineProperty(e, 'currentTarget', {get() { return target }, configurable: true});
     }
+    // Always check if a shadowRoot is in the current event path.
+    // If it is not, the event was generated on either the host of the shadowRoot
+    // or a children of the host.
+    if (utils.isShadyRoot(target) && e.composedPath().indexOf(target) == -1) {
+      return;
+    }
     // There are two critera that should stop events from firing on this node
     // 1. the event is not composed and the current node is not in the same root as the target
     // 2. when bubbling, if after retargeting, relatedTarget and target point to the same node
@@ -511,4 +528,22 @@ export function patchEvents() {
   window.CustomEvent = PatchedCustomEvent;
   window.MouseEvent = PatchedMouseEvent;
   activateFocusEventOverrides();
+
+  // Fix up `Element.prototype.click()` if `isTrusted` is supported, but `composed` isn't
+  if (!composedGetter && Object.getOwnPropertyDescriptor(Event.prototype, 'isTrusted')) {
+    /** @this {Element} */
+    const composedClickFn = function() {
+      const ev = new MouseEvent('click', {
+        bubbles: true,
+        cancelable: true,
+        composed: true
+      });
+      this.dispatchEvent(ev);
+    };
+    if (Element.prototype.click) {
+      Element.prototype.click = composedClickFn;
+    } else if (HTMLElement.prototype.click) {
+      HTMLElement.prototype.click = composedClickFn;
+    }
+  }
 }
