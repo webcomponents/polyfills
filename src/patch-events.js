@@ -25,7 +25,7 @@ const composedGetter = (() => {
 })();
 
 // https://github.com/w3c/webcomponents/issues/513#issuecomment-224183937
-let alwaysComposed = {
+const alwaysComposed = {
   'blur': true,
   'focus': true,
   'focusin': true,
@@ -73,6 +73,18 @@ let alwaysComposed = {
   'DOMFocusOut': true,
   'keypress': true
 };
+
+const unpatchedEvents = {
+  'DOMAttrModified': true,
+  'DOMAttributeNameChanged': true,
+  'DOMCharacterDataModified': true,
+  'DOMElementNameChanged': true,
+  'DOMNodeInserted': true,
+  'DOMNodeInsertedIntoDocument': true,
+  'DOMNodeRemoved': true,
+  'DOMNodeRemovedFromDocument': true,
+  'DOMSubtreeModified': true
+}
 
 function pathComposer(startNode, composed) {
   let composedPath = [];
@@ -313,8 +325,6 @@ function getEventWrappers(eventLike) {
   return wrappers;
 }
 
-const excludeEventTypeRe = /^DOM/;
-
 /**
  * @this {Event}
  */
@@ -338,7 +348,7 @@ export function addEventListener(type, fnOrObj, optionsOrCapture) {
   const ael = this instanceof Window ? nativeMethods.windowAddEventListener :
       nativeMethods.addEventListener;
 
-  if (type.match(excludeEventTypeRe)) {
+  if (unpatchedEvents[type]) {
     return ael.call(this, type, fnOrObj, optionsOrCapture);
   }
 
@@ -457,7 +467,7 @@ export function removeEventListener(type, fnOrObj, optionsOrCapture) {
   }
   const rel = this instanceof Window ? nativeMethods.windowRemoveEventListener :
     nativeMethods.removeEventListener;
-  if (type.match(excludeEventTypeRe)) {
+  if (unpatchedEvents[type]) {
     return rel.call(this, type, fnOrObj, optionsOrCapture);
   }
   // NOTE(valdrin) invoking external functions is costly, inline has better perf.
