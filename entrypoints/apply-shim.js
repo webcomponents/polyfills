@@ -151,7 +151,7 @@ if (!window.ShadyCSS || !window.ShadyCSS.ScopingShim) {
      * @param {string} elementName
      * @param {string=} elementExtends
      */
-    prepareTemplateStyles(template, elementName, elementExtends) { // eslint-disable-line no-unused-vars
+    prepareTemplateStyles(template, elementName, elementExtends) {
       this.prepareTemplate(template, elementName, elementExtends);
     },
 

@@ -75,6 +75,12 @@ export default class ScopingShim {
     this.prepareTemplateDom(template, elementName);
     this.prepareTemplateStyles(template, elementName, typeExtension);
   }
+  /**
+   * Prepare styling for the given element type
+   * @param {HTMLTemplateElement} template
+   * @param {string} elementName
+   * @param {string=} typeExtension
+   */
   prepareTemplateStyles(template, elementName, typeExtension) {
     if (template._prepared) {
       return;
@@ -113,6 +119,11 @@ export default class ScopingShim {
     }
     template._ownPropertyNames = ownPropertyNames;
   }
+  /**
+   * Prepare template for the given element type
+   * @param {HTMLTemplateElement} template
+   * @param {string} elementName
+   */
   prepareTemplateDom(template, elementName) {
     if (!nativeShadow && !template._domPrepared) {
       template._domPrepared = true;
