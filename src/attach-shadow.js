@@ -80,7 +80,7 @@ export class ShadyRoot {
       // ensure host is patched if created while loading.
       patchInsideElementAccessors(host);
     } else {
-      recordChildNodes(host, childNodes(host));
+      recordChildNodes(host);
     }
     this._asyncRender();
   }
@@ -141,7 +141,7 @@ export class ShadyRoot {
       const c$ = childNodes(this.host).filter((child) => {
         return ensureShadyDataForNode(child).parentNode !== this;
       });
-      recordChildNodes(this.host, c$, true);
+      recordChildNodes(this.host, c$);
     }
     if (this._slotList) {
       this._distribute();
