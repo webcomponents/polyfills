@@ -15,6 +15,7 @@ import {recordChildNodes} from './logical-tree.js';
 import {removeChild, insertBefore, dispatchEvent} from './native-methods.js';
 import {accessors} from './native-tree.js';
 import {ensureShadyDataForNode, shadyDataForNode} from './shady-data.js';
+import {patchInsideElementAccessors} from './patch-accessors.js';
 
 const {parentNode, childNodes} = accessors;
 
@@ -75,7 +76,10 @@ export class ShadyRoot {
     this._pendingSlots = null;
     this._initialChildren = null;
     this._createdWhileLoading = document.readyState === 'loading';
-    if (!this._createdWhileLoading) {
+    if (this._createdWhileLoading) {
+      // ensure host is patched if created while loading.
+      patchInsideElementAccessors(host);
+    } else {
       recordChildNodes(host, childNodes(host));
     }
     this._asyncRender();
