@@ -74,9 +74,10 @@ export class ShadyRoot {
     this._slotMap = null;
     this._pendingSlots = null;
     this._initialChildren = null;
-    // fast path initial render: remove existing physical dom.
-    recordChildNodes(host, childNodes(host));
     this._createdWhileLoading = document.readyState === 'loading';
+    if (!this._createdWhileLoading) {
+      recordChildNodes(host, childNodes(host));
+    }
     this._asyncRender();
   }
 
@@ -131,7 +132,7 @@ export class ShadyRoot {
     this._renderPending = false;
     // If created while loading, then light children are potentially incorrect
     // so we fix them here (note, this needs to be before distribution)
-    if (!this._hasRendered && this._createdWhileLoading) {
+    if (this._createdWhileLoading &&!this._hasRendered) {
       // reset logical tracking because this is incorrect when created while loading.
       const c$ = childNodes(this.host).filter((child) => {
         return ensureShadyDataForNode(child).parentNode !== this;

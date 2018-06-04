@@ -17,9 +17,7 @@ export function enqueue(callback) {
   if (!scheduled) {
     scheduled = true;
     if (document.readyState === 'loading') {
-      document.addEventListener('readystatechange', () => {
-        utils.microtask(flush);
-      }, {once: true});
+      document.addEventListener('readystatechange', flush, {once: true});
     } else {
       utils.microtask(flush);
     }
