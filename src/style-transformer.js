@@ -61,7 +61,9 @@ class StyleTransformer {
       this.element(node, selector, shouldRemoveScope);
     }
     let c$ = (node.localName === 'template') ?
-      (node.content || node._content).childNodes :
+      // In case the template is in svg context, fall back to the node
+      // since it won't be an HTMLTemplateElement with a .content property
+      (node.content || node._content || node).childNodes :
       node.children || node.childNodes;
     if (c$) {
       for (let i=0; i<c$.length; i++) {
