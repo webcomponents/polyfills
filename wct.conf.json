@@ -4,7 +4,12 @@
     "local": {
       "browserOptions": {
         "chrome": [
-          "no-sandbox"
+          "no-sandbox",
+          "disable-gpu",
+          "headless"
+        ],
+        "firefox": [
+          "-headless"
         ]
       }
     }
