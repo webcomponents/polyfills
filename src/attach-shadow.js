@@ -136,7 +136,7 @@ class ShadyRoot {
     this._renderPending = false;
     // If created while loading, then light children are potentially incorrect
     // so we fix them here (note, this needs to be before distribution)
-    if (this._createdWhileLoading &&!this._hasRendered) {
+    if (this._createdWhileLoading && !this._hasRendered) {
       // reset logical tracking because this is incorrect when created while loading.
       const c$ = childNodes(this.host).filter((child) => {
         return ensureShadyDataForNode(child).parentNode !== this;
@@ -605,9 +605,11 @@ if (window['customElements']) {
         // if rendering, cancel a pending connection and queue disconnect,
         // otherwise disconnect only if a connection has been allowed
         if (isRendering) {
-          // rendering should disconnect only if the element is
-          // actually not connected.
-          // NOTE: supposed to be `isConnected` here.
+          // This is necessary only because calling removeChild
+          // on a node that requires distribution leaves it in the DOM tree
+          // until distribution.
+          // NOTE: remember this is checking the patched isConnected to determine
+          // if the node is in the logical tree.
           if (!this.isConnected) {
             connectMap.set(this, false);
           }
