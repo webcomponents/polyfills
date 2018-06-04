@@ -35,6 +35,14 @@ window.ShadyCSS = {
     scopingShim.prepareTemplate(template, elementName, elementExtends)
   },
 
+  prepareTemplateDom(template, elementName) {
+    scopingShim.prepareTemplateDom(template, elementName);
+  },
+
+  prepareTemplateStyles(template, elementName, elementExtends) {
+    scopingShim.flushCustomStyles();
+    scopingShim.prepareTemplateStyles(template, elementName, elementExtends)
+  },
   /**
    * @param {!HTMLElement} element
    * @param {Object=} properties

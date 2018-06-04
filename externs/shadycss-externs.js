@@ -2,6 +2,8 @@
  * styleElement: function(!HTMLElement),
  * styleSubtree: function(!HTMLElement, Object<string, string>=),
  * prepareTemplate: function(!HTMLTemplateElement, string, string=),
+ * prepareTemplateStyles: function(!HTMLTemplateElement, string, string=),
+ * prepareTemplateDom: function(!HTMLTemplateElement, string),
  * styleDocument: function(Object<string, string>=),
  * flushCustomStyles: function(),
  * getComputedStyleValue: function(!Element, string): string,

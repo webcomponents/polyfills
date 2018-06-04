@@ -72,6 +72,16 @@ export default class ScopingShim {
    * @param {string=} typeExtension
    */
   prepareTemplate(template, elementName, typeExtension) {
+    this.prepareTemplateDom(template, elementName);
+    this.prepareTemplateStyles(template, elementName, typeExtension);
+  }
+  /**
+   * Prepare styling for the given element type
+   * @param {HTMLTemplateElement} template
+   * @param {string} elementName
+   * @param {string=} typeExtension
+   */
+  prepareTemplateStyles(template, elementName, typeExtension) {
     if (template._prepared) {
       return;
     }
@@ -86,9 +96,6 @@ export default class ScopingShim {
       extends: typeExtension,
       __cssBuild: cssBuild,
     };
-    if (!nativeShadow) {
-      StyleTransformer.dom(template.content, elementName);
-    }
     // check if the styling has mixin definitions or uses
     this._ensure();
     let hasMixins = detectMixin(cssText)
@@ -111,6 +118,17 @@ export default class ScopingShim {
       template._style = style;
     }
     template._ownPropertyNames = ownPropertyNames;
+  }
+  /**
+   * Prepare template for the given element type
+   * @param {HTMLTemplateElement} template
+   * @param {string} elementName
+   */
+  prepareTemplateDom(template, elementName) {
+    if (!nativeShadow && !template._domPrepared) {
+      template._domPrepared = true;
+      StyleTransformer.dom(template.content, elementName);
+    }
   }
   _generateStaticStyle(info, rules, shadowroot, placeholder) {
     let cssText = StyleTransformer.elementStyles(info, rules);
