@@ -25,7 +25,7 @@ const composedGetter = (() => {
 })();
 
 // https://github.com/w3c/webcomponents/issues/513#issuecomment-224183937
-let alwaysComposed = {
+const alwaysComposed = {
   'blur': true,
   'focus': true,
   'focusin': true,
@@ -73,6 +73,18 @@ let alwaysComposed = {
   'DOMFocusOut': true,
   'keypress': true
 };
+
+const unpatchedEvents = {
+  'DOMAttrModified': true,
+  'DOMAttributeNameChanged': true,
+  'DOMCharacterDataModified': true,
+  'DOMElementNameChanged': true,
+  'DOMNodeInserted': true,
+  'DOMNodeInsertedIntoDocument': true,
+  'DOMNodeRemoved': true,
+  'DOMNodeRemovedFromDocument': true,
+  'DOMSubtreeModified': true
+}
 
 function pathComposer(startNode, composed) {
   let composedPath = [];
@@ -333,6 +345,13 @@ export function addEventListener(type, fnOrObj, optionsOrCapture) {
     return;
   }
 
+  const ael = this instanceof Window ? nativeMethods.windowAddEventListener :
+      nativeMethods.addEventListener;
+
+  if (unpatchedEvents[type]) {
+    return ael.call(this, type, fnOrObj, optionsOrCapture);
+  }
+
   // The callback `fn` might be used for multiple nodes/events. Since we generate
   // a wrapper function, we need to keep track of it when we remove the listener.
   // It's more efficient to store the node/type/options information as Array in
@@ -435,8 +454,6 @@ export function addEventListener(type, fnOrObj, optionsOrCapture) {
       {'capture': [], 'bubble': []};
     this.__handlers[type][capture ? 'capture' : 'bubble'].push(wrapperFn);
   } else {
-    let ael = this instanceof Window ? nativeMethods.windowAddEventListener :
-      nativeMethods.addEventListener;
     ael.call(this, type, wrapperFn, optionsOrCapture);
   }
 }
@@ -448,7 +465,11 @@ export function removeEventListener(type, fnOrObj, optionsOrCapture) {
   if (!fnOrObj) {
     return;
   }
-
+  const rel = this instanceof Window ? nativeMethods.windowRemoveEventListener :
+    nativeMethods.removeEventListener;
+  if (unpatchedEvents[type]) {
+    return rel.call(this, type, fnOrObj, optionsOrCapture);
+  }
   // NOTE(valdrin) invoking external functions is costly, inline has better perf.
   let capture, once, passive;
   if (optionsOrCapture && typeof optionsOrCapture === 'object') {
@@ -474,8 +495,6 @@ export function removeEventListener(type, fnOrObj, optionsOrCapture) {
       }
     }
   }
-  let rel = this instanceof Window ? nativeMethods.windowRemoveEventListener :
-    nativeMethods.removeEventListener;
   rel.call(this, type, wrapperFn || fnOrObj, optionsOrCapture);
   if (wrapperFn && nonBubblingEventsToRetarget[type] &&
       this.__handlers && this.__handlers[type]) {
