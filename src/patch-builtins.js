@@ -249,15 +249,14 @@ let htmlElementMixin = {
 };
 
 for (const property of Object.getOwnPropertyNames(Document.prototype)) {
-  const split = property.split('on');
-
-  if (split[0] === '') {
+  if (property.startsWith('on')) {
     Object.defineProperty(htmlElementMixin, property, {
       /** @this {HTMLElement} */
       set: function(fn) {
         const shadyData = ensureShadyDataForNode(this);
-        shadyData.__onCallbackListeners[property] && this.removeEventListener(split[1], shadyData.__onCallbackListeners[property]);
-        this.addEventListener(split[1], fn, {});
+        const eventName = property.substring(2);
+        shadyData.__onCallbackListeners[property] && this.removeEventListener(eventName, shadyData.__onCallbackListeners[property]);
+        this.addEventListener(eventName, fn, {});
         shadyData.__onCallbackListeners[property] = fn;
       },
       /** @this {HTMLElement} */
