@@ -15,7 +15,7 @@ import * as mutation from './logical-mutation.js';
 import {ActiveElementAccessor, ShadowRootAccessor, patchAccessors, patchShadowRootAccessors, IsConnectedAccessor} from './patch-accessors.js';
 import {addEventListener, removeEventListener} from './patch-events.js';
 import {attachShadow, ShadyRoot} from './attach-shadow.js';
-import {shadyDataForNode} from './shady-data.js';
+import {shadyDataForNode, ensureShadyDataForNode} from './shady-data.js';
 
 function getAssignedSlot(node) {
   mutation.renderRootNode(node);
@@ -232,7 +232,7 @@ Object.defineProperties(documentMixin, {
 
 let nativeBlur = HTMLElement.prototype.blur;
 
-let htmlElementMixin = utils.extendAll({
+let htmlElementMixin = {
   /**
    * @this {HTMLElement}
    */
@@ -246,9 +246,33 @@ let htmlElementMixin = utils.extendAll({
       nativeBlur.call(this);
     }
   }
-});
+};
+
+for (const property of Object.getOwnPropertyNames(Document.prototype)) {
+  if (property.substring(0,2) === 'on') {
+    Object.defineProperty(htmlElementMixin, property, {
+      /** @this {HTMLElement} */
+      set: function(fn) {
+        const shadyData = ensureShadyDataForNode(this);
+        const eventName = property.substring(2);
+        shadyData.__onCallbackListeners[property] && this.removeEventListener(eventName, shadyData.__onCallbackListeners[property]);
+        this.addEventListener(eventName, fn, {});
+        shadyData.__onCallbackListeners[property] = fn;
+      },
+      /** @this {HTMLElement} */
+      get() {
+        const shadyData = shadyDataForNode(this);
+        return shadyData && shadyData.__onCallbackListeners[property];
+      },
+      configurable: true
+    });
+  }
+}
 
 const shadowRootMixin = {
+  /**
+   * @this {ShadowRoot}
+   */
   addEventListener(type, fn, optionsOrCapture) {
     if (typeof optionsOrCapture !== 'object') {
       optionsOrCapture = {
@@ -259,6 +283,9 @@ const shadowRootMixin = {
     this.host.addEventListener(type, fn, optionsOrCapture);
   },
 
+  /**
+   * @this {ShadowRoot}
+   */
   removeEventListener(type, fn, optionsOrCapture) {
     if (typeof optionsOrCapture !== 'object') {
       optionsOrCapture = {
@@ -269,6 +296,9 @@ const shadowRootMixin = {
     this.host.removeEventListener(type, fn, optionsOrCapture);
   },
 
+  /**
+   * @this {ShadowRoot}
+   */
   getElementById(id) {
     let result = mutation.query(this, function(n) {
       return n.id == id;

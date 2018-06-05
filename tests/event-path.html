@@ -478,6 +478,46 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       el.parentNode.removeChild(el);
     });
 
+    const hasOnListenersOnPrototype = (function() {
+      let nativeHTMLElement =
+        (window['customElements'] && window['customElements']['nativeHTMLElement']) ||
+        HTMLElement;
+      // Chrome 41 has no listener attributes on the HTMLElement
+      return Object.getOwnPropertyDescriptor(nativeHTMLElement.prototype, 'onblur');
+    })();
+
+    test('onfocus property has correct eventTarget', function(done) {
+      if (!hasOnListenersOnPrototype) {
+        this.skip();
+      }
+      let input = createEnabledElement('input');
+      const callback = (event) => {
+        assert.isTrue(event.currentTarget === input, 'CurrentTarget should be input, not window');
+        document.body.removeChild(input);
+        done();
+      };
+      input.onfocus = callback;
+      assert.equal(input.onfocus, callback);
+      let ev = new Event('focus', {composed: true});
+      input.dispatchEvent(ev);
+    });
+
+    test('onblur property has correct eventTarget', function(done) {
+      if (!hasOnListenersOnPrototype) {
+        this.skip();
+      }
+      let input = createEnabledElement('input');
+      const callback = (event) => {
+        assert.isTrue(event.currentTarget === input, 'CurrentTarget should be input, not window');
+        document.body.removeChild(input);
+        done();
+      };
+      input.onblur = callback;
+      assert.equal(input.onblur, callback);
+      let ev = new Event('blur', {composed: true});
+      input.dispatchEvent(ev);
+    });
+
     test('scoped focus and blur events do not retarget', function() {
       let e = new Event('focus');
       if (e.isTrusted !== false) {
