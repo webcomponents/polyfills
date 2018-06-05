@@ -128,3 +128,17 @@ export function contains(container, node) {
   }
   return false;
 }
+
+export function createPolyfilledHTMLCollection(nodes) {
+  for (const node of nodes) {
+    const name = node.getAttribute('id') || node.getAttribute('name');
+
+    if (name) {
+      nodes[name] = node;
+    }
+  }
+  nodes.item = function(index) {
+    return nodes[index];
+  }
+  return nodes;
+}
