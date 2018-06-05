@@ -16,7 +16,11 @@ let scheduled;
 export function enqueue(callback) {
   if (!scheduled) {
     scheduled = true;
-    utils.microtask(flush);
+    if (document.readyState === 'loading') {
+      document.addEventListener('readystatechange', flush, {once: true});
+    } else {
+      utils.microtask(flush);
+    }
   }
   flushList.push(callback);
 }

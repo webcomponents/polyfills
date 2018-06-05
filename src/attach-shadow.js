@@ -15,6 +15,7 @@ import {recordChildNodes} from './logical-tree.js';
 import {removeChild, insertBefore, dispatchEvent} from './native-methods.js';
 import {accessors} from './native-tree.js';
 import {ensureShadyDataForNode, shadyDataForNode} from './shady-data.js';
+import {patchInsideElementAccessors} from './patch-accessors.js';
 
 const {parentNode, childNodes} = accessors;
 
@@ -29,6 +30,9 @@ const SHADYROOT_NAME = 'ShadyRoot';
 
 const MODE_CLOSED = 'closed';
 
+let isRendering = false;
+let rootRendered;
+
 function ancestorList(node) {
   let ancestors = [];
   do {
@@ -38,10 +42,9 @@ function ancestorList(node) {
 }
 
 /**
- * @constructor
  * @extends {ShadowRoot}
  */
-export class ShadyRoot {
+class ShadyRoot {
 
   constructor(token, host, options) {
     if (token !== ShadyRootConstructionToken) {
@@ -51,13 +54,10 @@ export class ShadyRoot {
     // distinguished from a DocumentFragment when patching.
     // FF doesn't allow this to be `localName`
     this._localName = SHADYROOT_NAME;
-    const c$ = childNodes(host);
     // root <=> host
     this.host = host;
     this._mode = options && options.mode;
-    // logical dom setup
-    recordChildNodes(host, c$);
-    const hostData = shadyDataForNode(host);
+    const hostData = ensureShadyDataForNode(host);
     hostData.root = this;
     hostData.publicRoot = this._mode !== MODE_CLOSED ? this : null;
     // setup root
@@ -71,12 +71,18 @@ export class ShadyRoot {
     this._hasRendered = false;
     // marsalled lazily
     this._slotList = null;
+    /** @type {Object<string, Array<HTMLSlotElement>>} */
     this._slotMap = null;
     this._pendingSlots = null;
-    // fast path initial render: remove existing physical dom.
-    for (let i=0, l=c$.length; i < l; i++) {
-      removeChild.call(host, c$[i])
+    this._initialChildren = null;
+    this._createdWhileLoading = document.readyState === 'loading';
+    if (this._createdWhileLoading) {
+      // ensure host is patched if created while loading.
+      patchInsideElementAccessors(host);
+    } else {
+      recordChildNodes(host);
     }
+    this._asyncRender();
   }
 
   // async render
@@ -124,12 +130,39 @@ export class ShadyRoot {
 
   // NOTE: avoid renaming to ease testability.
   ['_renderRoot']() {
+    // track rendering state.
+    const wasRendering = isRendering;
+    isRendering = true;
     this._renderPending = false;
+    // If created while loading, then light children are potentially incorrect
+    // so we fix them here (note, this needs to be before distribution)
+    if (this._createdWhileLoading && !this._hasRendered) {
+      // reset logical tracking because this is incorrect when created while loading.
+      const c$ = childNodes(this.host).filter((child) => {
+        return ensureShadyDataForNode(child).parentNode !== this;
+      });
+      recordChildNodes(this.host, c$);
+    }
     if (this._slotList) {
       this._distribute();
       this._compose();
     }
+    // on initial render remove any undistributed children.
+    if (!this._hasRendered) {
+      const c$ = this.host.childNodes;
+      for (let i=0, l=c$.length; i < l; i++) {
+        const child = c$[i];
+        const data = shadyDataForNode(child);
+        if (parentNode(child) === this.host && !data.assignedSlot) {
+          removeChild.call(this.host, child);
+        }
+      }
+    }
     this._hasRendered = true;
+    isRendering = wasRendering;
+    if (rootRendered) {
+      rootRendered();
+    }
   }
 
   _distribute() {
@@ -508,6 +541,8 @@ export class ShadyRoot {
   }
 }
 
+export {ShadyRoot};
+
 /**
   Implements a pared down version of ShadowDOM's scoping, which is easy to
   polyfill across browsers.
@@ -520,4 +555,79 @@ export function attachShadow(host, options) {
     throw 'Not enough arguments.'
   }
   return new ShadyRoot(ShadyRootConstructionToken, host, options);
+}
+
+// Mitigate connect/disconnect spam by wrapping custom element classes.
+if (window['customElements']) {
+
+  // process connect/disconnect after roots have rendered to avoid
+  // issues with reaction stack.
+  let connectMap = new Map();
+  rootRendered = function() {
+    // allow elements to connect
+    const map = Array.from(connectMap);
+    connectMap.clear();
+    for (const [e, value] of map) {
+      if (value) {
+        e.connectedCallback();
+      } else {
+        e.disconnectedCallback();
+      }
+    }
+  }
+
+  /*
+   * (1) elements can only be connected/disconnected if they are in the expected
+   * state.
+   * (2) never run connect/disconnect during rendering to avoid reaction stack issues.
+   */
+  const ManageConnect = (base) => {
+    const connected = base.prototype.connectedCallback;
+    const disconnected = base.prototype.disconnectedCallback;
+    let counter = 0;
+    const connectFlag = `__isConnected${counter++}`;
+    if (connected || disconnected) {
+
+      base.prototype.connectedCallback = function() {
+        // if rendering defer connected
+        // otherwise connect only if we haven't already
+        if (isRendering) {
+          connectMap.set(this, true);
+        } else if (!this[connectFlag]) {
+          this[connectFlag] = true;
+          if (connected) {
+            connected.call(this);
+          }
+        }
+      }
+
+      base.prototype.disconnectedCallback = function() {
+        // if rendering, cancel a pending connection and queue disconnect,
+        // otherwise disconnect only if a connection has been allowed
+        if (isRendering) {
+          // This is necessary only because calling removeChild
+          // on a node that requires distribution leaves it in the DOM tree
+          // until distribution.
+          // NOTE: remember this is checking the patched isConnected to determine
+          // if the node is in the logical tree.
+          if (!this.isConnected) {
+            connectMap.set(this, false);
+          }
+        } else if (this[connectFlag]) {
+          this[connectFlag] = false;
+          if (disconnected) {
+            disconnected.call(this);
+          }
+        }
+      }
+    }
+
+    return base;
+  }
+
+  const define = window['customElements']['define'];
+  window['customElements']['define'] = function(name, constructor) {
+    return define.call(window['customElements'], name, ManageConnect(constructor));
+  }
+
 }

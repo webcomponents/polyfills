@@ -24,7 +24,14 @@
     'event-path.html',
     'active-element.html',
     'native-access.html',
-    'slot-scenarios.html'
+    'slot-scenarios.html',
+    'attach-while-loading.html'
   ];
+
+  // test only under native custom elements.
+  if (window.customElements) {
+    suites.push('connect-disconnect.html');
+  }
+
   WCT.loadSuites(suites);
 </script>

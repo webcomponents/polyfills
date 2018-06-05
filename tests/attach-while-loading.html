@@ -1,0 +1,112 @@
+<!doctype html>
+<!--
+@license
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="../../webcomponents-platform/webcomponents-platform.js"></script>
+  <script>
+    ShadyDOM = {force: true};
+  </script>
+  <script src="../shadydom.min.js"></script>
+
+  <script src="../../web-component-tester/browser.js"></script>
+</head>
+<body>
+  <div id="host1">
+    <script>
+      host1.attachShadow({mode: 'open'});
+      host1.shadowRoot.innerHTML = '<div>shadow</div>';
+    </script>
+    <div>light</div>
+  </div>
+
+  <div id="host2">
+    <script>
+      host2.attachShadow({mode: 'open'});
+      // NOTE: If shadowRoot content ends in a textNode and the next
+      // parser generated node contains text, this will be merged
+      // and rendering will be incorrect. This is currently unsupported.
+      host2.shadowRoot.innerHTML = '<div><slot name="a"></slot></div>';
+    </script>
+    <div slot="a">light</div>
+  </div>
+
+  <script>
+    if (window.customElements) {
+      customElements.define('x-h1', class extends HTMLElement {
+        connectedCallback() {
+          this.attachShadow({mode: 'open'});
+          this.shadowRoot.innerHTML = '<div>shadow</div>';
+        }
+      })
+    }
+  </script>
+  <x-h1 id="host3">
+    <div>light</div>
+  </x-h1>
+
+  <script>
+      if (window.customElements) {
+        customElements.define('x-h2', class extends HTMLElement {
+          connectedCallback() {
+            this.attachShadow({mode: 'open'});
+            this.shadowRoot.innerHTML = '<div><slot name="a"></slot></div>';
+          }
+        })
+      }
+    </script>
+    <x-h2 id="host4">
+        <div slot="a">light</div>
+    </x-h2>
+
+  <script>
+
+  suite('ShadowRoots created during loading', function() {
+
+    test('render shadowRoot', function() {
+      var host = document.querySelector('#host1');
+      assert.strictEqual(getComposedHTML(host), '<div>shadow</div>');
+    });
+
+    test('render slotted content', function() {
+      var host = document.querySelector('#host2');
+      assert.strictEqual(getComposedHTML(host), '<div><div slot="a">light</div></div>');
+    });
+
+  });
+
+  suite('Native Custom Elements that create shadowRoots during loading', function() {
+
+    test('render shadowRoot', function() {
+      if (!window.customElements) {
+        this.skip();
+      }
+      var host = document.querySelector('#host3');
+      assert.strictEqual(getComposedHTML(host), '<div>shadow</div>');
+    });
+
+    test('render slotted content', function() {
+      if (!window.customElements) {
+        this.skip();
+      }
+      var host = document.querySelector('#host4');
+      assert.strictEqual(getComposedHTML(host), '<div><div slot="a">light</div></div>');
+    });
+
+  });
+
+    function getComposedHTML(node) {
+      return ShadyDOM.nativeTree.innerHTML(node);
+    }
+
+  </script>
+</body>
+</html>

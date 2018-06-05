@@ -26,12 +26,12 @@ export let getElementById = Document.prototype.getElementById;
 export let elementQuerySelector = Element.prototype.querySelector;
 export let fragmentQuerySelector = DocumentFragment.prototype.querySelector;
 export let documentQuerySelector = Document.prototype.querySelector;
-export let querySelector = function(selector) {
+export let querySelector = /** @this {Element|Document|DocumentFragment} */ function(selector) {
   switch (this.nodeType) {
     case Node.ELEMENT_NODE:
-      return elementQuerySelector.call(this, selector);
+      return elementQuerySelector.call(/** @type {Element} */ (this), selector);
     case Node.DOCUMENT_NODE:
-      return documentQuerySelector.call(this, selector);
+      return documentQuerySelector.call(/** @type {Document} */ (this), selector);
     default:
       return fragmentQuerySelector.call(this, selector);
   }
@@ -39,12 +39,12 @@ export let querySelector = function(selector) {
 export let elementQuerySelectorAll = Element.prototype.querySelectorAll;
 export let fragmentQuerySelectorAll = DocumentFragment.prototype.querySelectorAll;
 export let documentQuerySelectorAll = Document.prototype.querySelectorAll;
-export let querySelectorAll = function(selector) {
+export let querySelectorAll = /** @this {Element|Document|DocumentFragment} */ function(selector) {
   switch (this.nodeType) {
     case Node.ELEMENT_NODE:
-      return elementQuerySelectorAll.call(this, selector);
+      return elementQuerySelectorAll.call(/** @type {Element} */ (this), selector);
     case Node.DOCUMENT_NODE:
-      return documentQuerySelectorAll.call(this, selector);
+      return documentQuerySelectorAll.call(/** @type {Document} */ (this), selector);
     default:
       return fragmentQuerySelectorAll.call(this, selector);
   }
