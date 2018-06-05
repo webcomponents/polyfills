@@ -98,9 +98,15 @@ export function recordRemoveChild(node, container) {
   }
 }
 
-export let recordChildNodes = function(node, nodes) {
+/**
+ * @param  {!Node} node
+ * @param  {Array<Node>=} nodes
+ */
+function recordChildNodes(node, nodes) {
   const nodeData = ensureShadyDataForNode(node);
   if (nodeData.firstChild === undefined) {
+    // remove caching of childNodes
+    nodeData.childNodes = null;
     const c$ = nodes || childNodes(node);
     nodeData.firstChild = c$[0] || null;
     nodeData.lastChild = c$[c$.length-1] || null;
@@ -115,3 +121,5 @@ export let recordChildNodes = function(node, nodes) {
     }
   }
 }
+
+export {recordChildNodes}

@@ -375,18 +375,12 @@ let InsideAccessors = {
      * @this {HTMLElement}
      */
     get() {
-      let children;
-      if (utils.isTrackingLogicalChildNodes(this)) {
-        children = Array.prototype.filter.call(this.childNodes, function(n) {
-          return (n.nodeType === Node.ELEMENT_NODE);
-        });
-      } else {
-        children = nativeTree.children(this);
+      if (!utils.isTrackingLogicalChildNodes(this)) {
+        return nativeTree.children(this);
       }
-      children.item = function(index) {
-        return children[index];
-      }
-      return children;
+      return utils.createPolyfilledHTMLCollection(Array.prototype.filter.call(this.childNodes, function(n) {
+        return (n.nodeType === Node.ELEMENT_NODE);
+      }));
     },
     configurable: true
   },

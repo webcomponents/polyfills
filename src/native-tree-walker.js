@@ -9,6 +9,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 */
 
 import {getInnerHTML} from './innerHTML.js';
+import * as utils from './utils.js';
 
 let nodeWalker = document.createTreeWalker(document, NodeFilter.SHOW_ALL,
   null, false);
@@ -85,7 +86,7 @@ export function children(node) {
     nodes.push(n);
     n = elementWalker.nextSibling();
   }
-  return nodes;
+  return utils.createPolyfilledHTMLCollection(nodes);
 }
 
 export function innerHTML(node) {

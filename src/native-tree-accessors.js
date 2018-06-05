@@ -111,19 +111,14 @@ export function textContent(node) {
 }
 
 export function children(node) {
-  let children;
   switch (node.nodeType) {
     case Node.DOCUMENT_FRAGMENT_NODE:
-      children = fragmentAccessors.children.get.call(node);
-      break;
+      return fragmentAccessors.children.get.call(node);
     case Node.DOCUMENT_NODE:
-      children = documentAccessors.children.get.call(node);
-      break;
+      return documentAccessors.children.get.call(node);
     default:
-      children = nodeAccessors.children.get.call(node);
-      break;
+      return nodeAccessors.children.get.call(node);
   }
-  return Array.prototype.slice.call(children);
 }
 
 export function firstElementChild(node) {

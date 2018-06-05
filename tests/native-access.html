@@ -156,7 +156,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       el.appendChild(d2);
       assert.equal(ShadyDOM.nativeTree.firstElementChild(el), d1);
       assert.equal(ShadyDOM.nativeTree.lastElementChild(el), d2);
-      assert.deepEqual(ShadyDOM.nativeTree.children(el), [d1, d2])
+      assert.deepEqual(Array.from(ShadyDOM.nativeTree.children(el)), [d1, d2])
     });
 
     test('textConent', function() {
