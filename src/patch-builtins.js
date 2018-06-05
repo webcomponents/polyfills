@@ -249,7 +249,7 @@ let htmlElementMixin = {
 };
 
 for (const property of Object.getOwnPropertyNames(Document.prototype)) {
-  if (property.startsWith('on')) {
+  if (property.substring(0,2) === 'on') {
     Object.defineProperty(htmlElementMixin, property, {
       /** @this {HTMLElement} */
       set: function(fn) {
