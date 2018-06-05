@@ -105,6 +105,8 @@ export function recordRemoveChild(node, container) {
 function recordChildNodes(node, nodes) {
   const nodeData = ensureShadyDataForNode(node);
   if (nodeData.firstChild === undefined) {
+    // remove caching of childNodes
+    nodeData.childNodes = null;
     const c$ = nodes || childNodes(node);
     nodeData.firstChild = c$[0] || null;
     nodeData.lastChild = c$[c$.length-1] || null;
