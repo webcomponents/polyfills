@@ -1,0 +1,59 @@
+<!doctype html>
+<!--
+    @license
+    Copyright (c) 2018 The Polymer Project Authors. All rights reserved.
+    This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+    The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+    The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+    Code distributed by Google as part of the polymer project is also
+    subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<html>
+
+<head>
+  <title>HTML Imports es module</title>
+  <script src="../../src/html-imports.js"></script>
+  <script>
+    WCT = {
+      waitFor: function (callback) {
+        HTMLImports.whenReady(callback);
+      }
+    };
+    window.loadedModules = [];
+  </script>
+  <script src="../../../web-component-tester/browser.js"></script>
+  <link rel="import" href="./imports/es-module-import-1.html">
+</head>
+
+<body>
+
+  <script>
+    // Polymer build transpiles modules to AMD on browsers without es module and import.meta.url
+    // support. We should not execute this test in that case.
+    test('es modules', () => {
+      if (!window.define) {
+        assert.deepEqual(window.loadedModules, ['es-module-2', 'es-module-1', 'es-module-3']);
+      }
+    });
+
+    test('inline module', (done) => {
+      // This test should be executed only on browsers that support native modules but not HTML Imports
+      if (!window.define && !HTMLImports.useNative) {
+        const link = document.createElement('link');
+        link.setAttribute('rel', 'import');
+        link.setAttribute('href', './imports/es-module-inline.html');
+
+        // Catch error thrown by polyfill
+        window.onerror = () => {
+          done();
+        }
+
+        document.head.appendChild(link);
+      } else {
+        done();
+      }
+    });
+  </script>
+</body>
+
+</html>
