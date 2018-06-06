@@ -11,11 +11,10 @@ addons:
     - google-chrome-stable
 before_script:
 - export PATH=$PWD/node_modules/.bin:$PATH
-- npm run bower-install
 script:
 - npm run build
-- xvfb-run wct
-- if [ "${TRAVIS_PULL_REQUEST}" = "false" ]; then wct -s 'windows 10/microsoftedge@14'
+- xvfb-run wct --npm
+- if [ "${TRAVIS_PULL_REQUEST}" = "false" ]; then wct --npm -s 'windows 10/microsoftedge@14'
   -s 'windows 8.1/internet explorer@11' -s 'os x 10.11/safari@10' -s 'os x 10.11/safari@9';
   fi
 env:
