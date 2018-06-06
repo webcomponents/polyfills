@@ -7,9 +7,6 @@
           "no-sandbox",
           "disable-gpu",
           "headless"
-        ],
-        "firefox": [
-          "-headless"
         ]
       }
     }
