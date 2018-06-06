@@ -27,7 +27,7 @@
   },
   "scripts": {
     "build": "gulp",
-    "test": "wct",
+    "test": "wct --npm",
     "lint": "eslint src"
   },
   "homepage": "https://webcomponents.org/polyfills",
@@ -44,7 +44,8 @@
     "gulp-rollup": "^2.16.2",
     "gulp-size": "^3.0.0",
     "gulp-sourcemaps": "^2.6.4",
-    "web-component-tester": "^6.6.0"
+    "web-component-tester": "^6.6.0",
+    "wct-browser-legacy": "^1.0.1"
   },
   "publishConfig": {
     "access": "public"

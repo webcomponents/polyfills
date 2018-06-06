@@ -29,7 +29,6 @@ the `ShadyDOM = {force: true}` in a script prior to loading the polyfill.
 For building and testing, first run
 ```
 npm install
-bower install
 npm run build
 ```
 
