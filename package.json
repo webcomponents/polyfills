@@ -31,6 +31,7 @@
   "devDependencies": {
     "@webcomponents/html-imports": "^1.0.0",
     "@webcomponents/template": "^1.0.0",
+    "@webcomponents/shadydom": "^1.0.0",
     "@webcomponents/webcomponents-platform": "^1.0.0",
     "es6-promise": "4.1.1",
     "google-closure-compiler": "^20170409.0.0",
