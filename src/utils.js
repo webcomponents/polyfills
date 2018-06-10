@@ -130,15 +130,27 @@ export function contains(container, node) {
 }
 
 export function createPolyfilledHTMLCollection(nodes) {
+  let lengthNode;
+
   for (const node of nodes) {
     const name = node.getAttribute('id') || node.getAttribute('name');
 
     if (name) {
-      nodes[name] = node;
+      if (name === 'length') {
+        lengthNode = node;
+      } else {
+        nodes[name] = node;
+      }
     }
   }
   nodes.item = function(index) {
     return nodes[index];
   }
+  nodes.namedItem = function(name) {
+    if (name === 'length') {
+      return lengthNode;
+    }
+    return nodes[name];
+  };
   return nodes;
 }

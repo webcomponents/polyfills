@@ -1141,9 +1141,12 @@ suite('Accessors', function() {
     const c = document.createElement('div');
     c.setAttribute('id', 'c');
     c.setAttribute('name', 'ignoredname');
+    const d = document.createElement('div');
+    d.setAttribute('id', 'length');
     container.appendChild(a);
     container.appendChild(b);
     container.appendChild(c);
+    container.appendChild(d);
     const children = container.children;
     // References by the name attribute do not work in Edge and IE11
     if (!window.NATIVE.children || !window.NATIVE.children.get || window.NATIVE.children.get.call(container).a) {
@@ -1151,6 +1154,7 @@ suite('Accessors', function() {
     }
     assert.equal(children.b, b);
     assert.equal(children.c, c);
+    assert.equal(children.namedItem('length'), d);
   });
 
   test('element accessors (distribute)', function() {
