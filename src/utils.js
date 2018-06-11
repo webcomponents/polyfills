@@ -138,6 +138,7 @@ function isValidHTMLCollectionName(name) {
 }
 
 export function createPolyfilledHTMLCollection(nodes) {
+  // Note: loop in reverse so that the first named item matches the named property
   for (let l = nodes.length - 1; l >= 0; l--) {
     const node = nodes[l];
     const name = getNodeHTMLCollectionName(node);

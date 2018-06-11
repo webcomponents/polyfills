@@ -1166,7 +1166,11 @@ suite('Accessors', function() {
     assert.equal(children.namedItem('length'), lengthId);
     assert.equal(children.namedItem('2'), numericId);
     assert.equal(children[2], c);
-    assert.equal(children.duplicate, firstDuplicate);
+    // NOTE: IE is weird and returns a list if there are duplicates, something
+    // no other browser does.
+    if (!navigator.userAgent.match(/Trident/)) {
+      assert.equal(children.duplicate, firstDuplicate);
+    }
   });
 
   test('element accessors (distribute)', function() {
