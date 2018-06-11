@@ -28,7 +28,7 @@
   "scripts": {
     "build": "gulp",
     "lint": "eslint src test entrypoints",
-    "test": "npm run lint && gulp test-modules && wct"
+    "test": "npm run lint && gulp test-modules && wct --npm"
   },
   "homepage": "https://webcomponents.org/polyfills",
   "devDependencies": {
