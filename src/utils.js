@@ -129,28 +129,40 @@ export function contains(container, node) {
   return false;
 }
 
+function getNodeHTMLCollectionName(node) {
+  return node.getAttribute('id') || node.getAttribute('name');
+}
+
+function isValidHTMLCollectionName(name) {
+  return name !== 'length' && isNaN(name);
+}
+
 export function createPolyfilledHTMLCollection(nodes) {
-  let lengthNode;
+  for (let l = nodes.length - 1; l >= 0; l--) {
+    const node = nodes[l];
+    const name = getNodeHTMLCollectionName(node);
 
-  for (const node of nodes) {
-    const name = node.getAttribute('id') || node.getAttribute('name');
-
-    if (name) {
-      if (name === 'length') {
-        lengthNode = node;
-      } else {
-        nodes[name] = node;
-      }
+    if (name && isValidHTMLCollectionName(name)) {
+      nodes[name] = node;
     }
   }
   nodes.item = function(index) {
     return nodes[index];
   }
   nodes.namedItem = function(name) {
-    if (name === 'length') {
-      return lengthNode;
+    if (isValidHTMLCollectionName(name) && nodes[name]) {
+      return nodes[name];
     }
-    return nodes[name];
+
+    for (const node of nodes) {
+      const nodeName = getNodeHTMLCollectionName(node);
+
+      if (nodeName == name) {
+        return node;
+      }
+    }
+
+    return null;
   };
   return nodes;
 }

@@ -1132,7 +1132,7 @@ suite('Accessors', function() {
     assert.equal(child.previousElementSibling, before, 'previousElementSibling incorrect');
   });
 
-  test('element.children includes references to elements with name attribute', function() {
+  test.only('element.children includes references to elements with name attribute', function() {
     const container = document.createElement('div');
     const a = document.createElement('div');
     a.setAttribute('name', 'a');
@@ -1141,12 +1141,21 @@ suite('Accessors', function() {
     const c = document.createElement('div');
     c.setAttribute('id', 'c');
     c.setAttribute('name', 'ignoredname');
-    const d = document.createElement('div');
-    d.setAttribute('id', 'length');
+    const lengthId = document.createElement('div');
+    lengthId.setAttribute('id', 'length');
+    const numericId = document.createElement('div');
+    numericId.setAttribute('id', '2');
+    const firstDuplicate = document.createElement('div');
+    firstDuplicate.setAttribute('id', 'duplicate');
+    const secondDuplicate = document.createElement('div');
+    secondDuplicate.setAttribute('id', 'duplicate');
     container.appendChild(a);
     container.appendChild(b);
     container.appendChild(c);
-    container.appendChild(d);
+    container.appendChild(lengthId);
+    container.appendChild(numericId);
+    container.appendChild(firstDuplicate);
+    container.appendChild(secondDuplicate);
     const children = container.children;
     // References by the name attribute do not work in Edge and IE11
     if (!window.NATIVE.children || !window.NATIVE.children.get || window.NATIVE.children.get.call(container).a) {
@@ -1154,7 +1163,10 @@ suite('Accessors', function() {
     }
     assert.equal(children.b, b);
     assert.equal(children.c, c);
-    assert.equal(children.namedItem('length'), d);
+    assert.equal(children.namedItem('length'), lengthId);
+    assert.equal(children.namedItem('2'), numericId);
+    assert.equal(children[2], c);
+    assert.equal(children.duplicate, firstDuplicate);
   });
 
   test('element accessors (distribute)', function() {
