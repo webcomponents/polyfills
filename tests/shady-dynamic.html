@@ -1132,7 +1132,7 @@ suite('Accessors', function() {
     assert.equal(child.previousElementSibling, before, 'previousElementSibling incorrect');
   });
 
-  test.only('element.children includes references to elements with name attribute', function() {
+  test('element.children includes references to elements with name attribute', function() {
     const container = document.createElement('div');
     const a = document.createElement('div');
     a.setAttribute('name', 'a');
