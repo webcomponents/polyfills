@@ -15,7 +15,6 @@ import {recordChildNodes} from './logical-tree.js';
 import {removeChild, insertBefore, dispatchEvent} from './native-methods.js';
 import {accessors} from './native-tree.js';
 import {ensureShadyDataForNode, shadyDataForNode} from './shady-data.js';
-import {patchInsideElementAccessors} from './patch-accessors.js';
 
 const {parentNode, childNodes} = accessors;
 
@@ -30,7 +29,7 @@ const SHADYROOT_NAME = 'ShadyRoot';
 
 const MODE_CLOSED = 'closed';
 
-let isRendering = false;
+let isRendering = utils.settings.deferNativeCustomElementsConnection && document.readyState === 'loading';
 let rootRendered;
 
 function ancestorList(node) {
@@ -57,6 +56,7 @@ class ShadyRoot {
     // root <=> host
     this.host = host;
     this._mode = options && options.mode;
+    recordChildNodes(host);
     const hostData = ensureShadyDataForNode(host);
     hostData.root = this;
     hostData.publicRoot = this._mode !== MODE_CLOSED ? this : null;
@@ -75,13 +75,6 @@ class ShadyRoot {
     this._slotMap = null;
     this._pendingSlots = null;
     this._initialChildren = null;
-    this._createdWhileLoading = document.readyState === 'loading';
-    if (this._createdWhileLoading) {
-      // ensure host is patched if created while loading.
-      patchInsideElementAccessors(host);
-    } else {
-      recordChildNodes(host);
-    }
     this._asyncRender();
   }
 
@@ -134,15 +127,6 @@ class ShadyRoot {
     const wasRendering = isRendering;
     isRendering = true;
     this._renderPending = false;
-    // If created while loading, then light children are potentially incorrect
-    // so we fix them here (note, this needs to be before distribution)
-    if (this._createdWhileLoading && !this._hasRendered) {
-      // reset logical tracking because this is incorrect when created while loading.
-      const c$ = childNodes(this.host).filter((child) => {
-        return ensureShadyDataForNode(child).parentNode !== this;
-      });
-      recordChildNodes(this.host, c$);
-    }
     if (this._slotList) {
       this._distribute();
       this._compose();
@@ -153,7 +137,8 @@ class ShadyRoot {
       for (let i=0, l=c$.length; i < l; i++) {
         const child = c$[i];
         const data = shadyDataForNode(child);
-        if (parentNode(child) === this.host && !data.assignedSlot) {
+        if (parentNode(child) === this.host &&
+            (child.localName === 'slot' || !data.assignedSlot)) {
           removeChild.call(this.host, child);
         }
       }
@@ -574,6 +559,13 @@ if (window['customElements']) {
         e.disconnectedCallback();
       }
     }
+  }
+
+  if (utils.settings.deferNativeCustomElementsConnection && document.readyState === 'loading') {
+    document.addEventListener('readystatechange', () => {
+      isRendering = false;
+      rootRendered();
+    }, {once: true});
   }
 
   /*
