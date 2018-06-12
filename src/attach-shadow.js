@@ -543,7 +543,7 @@ export function attachShadow(host, options) {
 }
 
 // Mitigate connect/disconnect spam by wrapping custom element classes.
-if (window['customElements']) {
+if (window['customElements'] && utils.settings.inUse) {
 
   // process connect/disconnect after roots have rendered to avoid
   // issues with reaction stack.
@@ -575,9 +575,7 @@ if (window['customElements']) {
    * state.
    * (2) never run connect/disconnect during rendering to avoid reaction stack issues.
    */
-  const ManageConnect = (base) => {
-    const connected = base.prototype.connectedCallback;
-    const disconnected = base.prototype.disconnectedCallback;
+  const ManageConnect = (base, connected, disconnected) => {
     let counter = 0;
     const connectFlag = `__isConnected${counter++}`;
     if (connected || disconnected) {
@@ -621,7 +619,15 @@ if (window['customElements']) {
 
   const define = window['customElements']['define'];
   window['customElements']['define'] = function(name, constructor) {
-    return define.call(window['customElements'], name, ManageConnect(constructor));
+    const connected = constructor.prototype.connectedCallback;
+    const disconnected = constructor.prototype.disconnectedCallback;
+    define.call(window['customElements'], name,
+        ManageConnect(constructor, connected, disconnected));
+    // unpatch connected/disconnected on class; custom elements tears this off
+    // so the patch is maintained, but if the user calls these methods for
+    // e.g. testing, they will be as expected.
+    constructor.prototype.connectedCallback = connected;
+    constructor.prototype.disconnectedCallback = disconnected;
   }
 
 }

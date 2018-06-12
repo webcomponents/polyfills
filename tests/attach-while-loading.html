@@ -33,7 +33,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         return template;
       };
 
-      const defineTestElement = (name, template) => {
+      const defineTestElement = (name, template, connected) => {
         customElements.define(name, class extends HTMLElement {
           connectedCallback() {
             if (!this._initialized) {
@@ -42,6 +42,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 this.attachShadow({mode: 'open'});
                 this.shadowRoot.appendChild(document.importNode(template.content, true));
               }
+            }
+            if (connected) {
+              connected.call(this);
             }
           }
         });
@@ -59,6 +62,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       defineTestElement('x-outer2', html`<x-inner2><slot></slot></x-inner2>`);
       defineTestElement('x-compose-slot2', html`<x-outer2>test</x-outer2>`);
 
+
+      defineTestElement('x-test-connected', '', function() {
+        if (!this.connectCount) {
+          this.connectCount = 0;
+        }
+        this.connectCount++;
+      });
     }
   </script>
 
@@ -85,24 +95,32 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     });
 
     test('render shadowRoot', function() {
-      var host = document.querySelector('#host1');
+      const host = document.querySelector('#host1');
       assert.strictEqual(getComposedHTML(host), '<div>shadow</div>');
     });
 
     test('render slotted content', function() {
-      var host = document.querySelector('#host2');
+      const host = document.querySelector('#host2');
       assert.strictEqual(getComposedHTML(host), '<div><div slot="a">light</div></div>');
     });
 
     test('render re-distributed slotted content non-slot children', function() {
-      var host = document.querySelector('#host3');
+      const host = document.querySelector('#host3');
       assert.strictEqual(getComposedHTML(host), '<x-outer1><x-inner1><div>test</div></x-inner1></x-outer1>');
     });
 
     test('render re-distributed slotted content with slot children', function() {
-      var host = document.querySelector('#host4');
+      const host = document.querySelector('#host4');
       assert.strictEqual(getComposedHTML(host), '<x-outer2><x-inner2>test</x-inner2></x-outer2>');
     });
+
+    test('user connected callback called when calling imperatively', function() {
+      const el = document.createElement('x-test-connected');
+      document.body.appendChild(el);
+      assert.equal(el.connectCount, 1);
+      el.connectedCallback();
+      assert.equal(el.connectCount, 2);
+    })
 
   });
 
