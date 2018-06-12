@@ -2,8 +2,8 @@ function create_window_in_test(t, srcdoc) {
   let p = new Promise((resolve) => {
     let f = document.createElement('iframe');
     srcdoc = srcdoc || '';
-    // srcdoc = `<script src="../../../../../../dist/CustomElementsV1.min.js"></script>\n` +
-    srcdoc = `<script src="../../../../../../src/CustomElements/v1/CustomElements.js"></script>\n` +
+    // srcdoc = `<script src="../../../node_modules/../../dist/CustomElementsV1.min.js"></script>\n` +
+    srcdoc = `<script src="../../../node_modules/../../src/CustomElements/v1/CustomElements.js"></script>\n` +
              `<script>customElements.enableFlush = true;</script>\n` + srcdoc;
     f.srcdoc = srcdoc;
     f.onload = (event) => {
