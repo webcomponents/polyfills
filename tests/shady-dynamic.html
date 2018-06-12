@@ -1141,9 +1141,21 @@ suite('Accessors', function() {
     const c = document.createElement('div');
     c.setAttribute('id', 'c');
     c.setAttribute('name', 'ignoredname');
+    const lengthId = document.createElement('div');
+    lengthId.setAttribute('id', 'length');
+    const numericId = document.createElement('div');
+    numericId.setAttribute('id', '2');
+    const firstDuplicate = document.createElement('div');
+    firstDuplicate.setAttribute('id', 'duplicate');
+    const secondDuplicate = document.createElement('div');
+    secondDuplicate.setAttribute('id', 'duplicate');
     container.appendChild(a);
     container.appendChild(b);
     container.appendChild(c);
+    container.appendChild(lengthId);
+    container.appendChild(numericId);
+    container.appendChild(firstDuplicate);
+    container.appendChild(secondDuplicate);
     const children = container.children;
     // References by the name attribute do not work in Edge and IE11
     if (!window.NATIVE.children || !window.NATIVE.children.get || window.NATIVE.children.get.call(container).a) {
@@ -1151,6 +1163,14 @@ suite('Accessors', function() {
     }
     assert.equal(children.b, b);
     assert.equal(children.c, c);
+    assert.equal(children.namedItem('length'), lengthId);
+    assert.equal(children.namedItem('2'), numericId);
+    assert.equal(children[2], c);
+    // NOTE: IE is weird and returns a list if there are duplicates, something
+    // no other browser does.
+    if (!navigator.userAgent.match(/Trident/)) {
+      assert.equal(children.duplicate, firstDuplicate);
+    }
   });
 
   test('element accessors (distribute)', function() {
