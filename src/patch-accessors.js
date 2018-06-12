@@ -406,11 +406,7 @@ let InsideAccessors = {
       const content = this.localName === 'template' ?
         /** @type {HTMLTemplateElement} */(this).content : this;
       clearNode(content);
-      let containerName = this.localName;
-      // avoid creating a template so we don't have to pull nodes form `.content`
-      if (!containerName || containerName === 'template') {
-        containerName = 'div';
-      }
+      const containerName = this.localName || 'div';
       let htmlContainer;
       if (!this.namespaceURI || this.namespaceURI === inertDoc.namespaceURI) {
         htmlContainer = inertDoc.createElement(containerName);
@@ -422,8 +418,10 @@ let InsideAccessors = {
       } else {
         htmlContainer.innerHTML = text;
       }
-      while (htmlContainer.firstChild) {
-        content.appendChild(htmlContainer.firstChild);
+      const newContent = this.localName === 'template' ?
+        /** @type {HTMLTemplateElement} */(htmlContainer).content : htmlContainer;
+      while (newContent.firstChild) {
+        content.appendChild(newContent.firstChild);
       }
     },
     configurable: true

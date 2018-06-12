@@ -12,6 +12,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <head>
   <meta charset="utf-8">
   <script src="../node_modules/@webcomponents/webcomponents-platform/webcomponents-platform.js"></script>
+  <script src="../node_modules/@webcomponents/template/template.js"></script>
   <script>
     ShadyDOM = {force: true};
   </script>
@@ -681,6 +682,16 @@ suite('Patch of addEventListener/removeEventListener', function() {
     });
   });
 
+});
+
+suite('Patch of innerHTML setter', function() {
+  test('support top-level table elements in template', function() {
+    const template = document.createElement('template');
+    template.innerHTML = '<tr><td></td></tr><tr><td></td></tr>';
+    assert.equal(template.content.childNodes.length, 2);
+    assert.equal(template.content.childNodes[0].tagName, 'TR');
+    assert.equal(template.content.childNodes[1].tagName, 'TR');
+  });
 });
 
 function getEffectiveChildNodes(node) {
