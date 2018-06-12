@@ -58,7 +58,7 @@ if (utils.settings.inUse) {
     // shadowRoots to be defined while the document is loading. Elements
     // customized as they are created by the parser will successfully
     // render with this flag on.
-    'deferNativeCustomElementsConnection': false
+    'deferNativeCustomElementsConnection': utils.settings['deferNativeCustomElementsConnection']
   };
 
   window['ShadyDOM'] = ShadyDOM;
