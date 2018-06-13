@@ -13,93 +13,114 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <meta charset="utf-8">
   <script src="../../webcomponents-platform/webcomponents-platform.js"></script>
   <script>
-    ShadyDOM = {force: true};
+    ShadyDOM = {
+      force: true,
+      deferConnectionCallbacks: true
+    };
   </script>
   <script src="../shadydom.min.js"></script>
 
   <script src="../../web-component-tester/browser.js"></script>
 </head>
 <body>
-  <div id="host1">
-    <script>
-      host1.attachShadow({mode: 'open'});
-      host1.shadowRoot.innerHTML = '<div>shadow</div>';
-    </script>
-    <div>light</div>
-  </div>
-
-  <div id="host2">
-    <script>
-      host2.attachShadow({mode: 'open'});
-      // NOTE: If shadowRoot content ends in a textNode and the next
-      // parser generated node contains text, this will be merged
-      // and rendering will be incorrect. This is currently unsupported.
-      host2.shadowRoot.innerHTML = '<div><slot name="a"></slot></div>';
-    </script>
-    <div slot="a">light</div>
-  </div>
-
   <script>
     if (window.customElements) {
-      customElements.define('x-h1', class extends HTMLElement {
-        connectedCallback() {
-          this.attachShadow({mode: 'open'});
-          this.shadowRoot.innerHTML = '<div>shadow</div>';
+
+      const html = function html(strings, ...values) {
+        const template = document.createElement('template');
+        template.innerHTML = values.reduce((acc, v, idx) =>
+            acc + v + strings[idx + 1], strings[0]);
+        return template;
+      };
+
+      const defineTestElement = (name, template, connected) => {
+        customElements.define(name, class extends HTMLElement {
+          connectedCallback() {
+            if (!this._initialized) {
+              this._initialized = true;
+              if (template) {
+                this.attachShadow({mode: 'open'});
+                this.shadowRoot.appendChild(document.importNode(template.content, true));
+              }
+            }
+            if (connected) {
+              connected.call(this);
+            }
+          }
+        });
+      };
+
+      defineTestElement('x-h1', html`<div>shadow</div>`);
+
+      defineTestElement('x-h2', html`<div><slot name="a"></slot></div>`);
+
+      defineTestElement('x-inner1', html`<div><slot></slot></div>`);
+      defineTestElement('x-outer1', html`<x-inner1><slot></slot></x-inner1>`);
+      defineTestElement('x-compose-slot1', html`<x-outer1>test</x-outer1>`);
+
+      defineTestElement('x-inner2', html`<slot></slot>`);
+      defineTestElement('x-outer2', html`<x-inner2><slot></slot></x-inner2>`);
+      defineTestElement('x-compose-slot2', html`<x-outer2>test</x-outer2>`);
+
+
+      defineTestElement('x-test-connected', '', function() {
+        if (!this.connectCount) {
+          this.connectCount = 0;
         }
-      })
+        this.connectCount++;
+      });
     }
   </script>
-  <x-h1 id="host3">
+
+  <x-h1 id="host1">
     <div>light</div>
   </x-h1>
 
-  <script>
-      if (window.customElements) {
-        customElements.define('x-h2', class extends HTMLElement {
-          connectedCallback() {
-            this.attachShadow({mode: 'open'});
-            this.shadowRoot.innerHTML = '<div><slot name="a"></slot></div>';
-          }
-        })
-      }
-    </script>
-    <x-h2 id="host4">
-        <div slot="a">light</div>
-    </x-h2>
+  <x-h2 id="host2">
+      <div slot="a">light</div>
+  </x-h2>
+
+  <x-compose-slot1 id="host3"></x-compose-slot1>
+
+  <x-compose-slot2 id="host4"></x-compose-slot2>
 
   <script>
-
-  suite('ShadowRoots created during loading', function() {
-
-    test('render shadowRoot', function() {
-      var host = document.querySelector('#host1');
-      assert.strictEqual(getComposedHTML(host), '<div>shadow</div>');
-    });
-
-    test('render slotted content', function() {
-      var host = document.querySelector('#host2');
-      assert.strictEqual(getComposedHTML(host), '<div><div slot="a">light</div></div>');
-    });
-
-  });
 
   suite('Native Custom Elements that create shadowRoots during loading', function() {
 
-    test('render shadowRoot', function() {
+    setup(function() {
       if (!window.customElements) {
         this.skip();
       }
-      var host = document.querySelector('#host3');
+    });
+
+    test('render shadowRoot', function() {
+      const host = document.querySelector('#host1');
       assert.strictEqual(getComposedHTML(host), '<div>shadow</div>');
     });
 
     test('render slotted content', function() {
-      if (!window.customElements) {
-        this.skip();
-      }
-      var host = document.querySelector('#host4');
+      const host = document.querySelector('#host2');
       assert.strictEqual(getComposedHTML(host), '<div><div slot="a">light</div></div>');
     });
+
+    test('render re-distributed slotted content non-slot children', function() {
+      const host = document.querySelector('#host3');
+      assert.strictEqual(getComposedHTML(host), '<x-outer1><x-inner1><div>test</div></x-inner1></x-outer1>');
+    });
+
+    test('render re-distributed slotted content with slot children', function() {
+      const host = document.querySelector('#host4');
+      assert.strictEqual(getComposedHTML(host), '<x-outer2><x-inner2>test</x-inner2></x-outer2>');
+    });
+
+    test('user connected callback called when calling imperatively', function() {
+      const el = document.createElement('x-test-connected');
+      document.body.appendChild(el);
+      assert.equal(el.connectCount, 1);
+      el.connectedCallback();
+      assert.equal(el.connectCount, 2);
+    })
 
   });
 
