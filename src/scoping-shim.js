@@ -234,7 +234,8 @@ export default class ScopingShim {
       Object.assign(styleInfo.overrideStyleProperties, overrideProps);
     }
     if (!nativeCssVariables) {
-     this._updateProperties(host, styleInfo);
+      this.flush();
+      this._updateProperties(host, styleInfo);
       if (styleInfo.ownStylePropertyNames && styleInfo.ownStylePropertyNames.length) {
         this._applyStyleProperties(host, styleInfo);
       }
