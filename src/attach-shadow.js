@@ -618,16 +618,21 @@ if (window['customElements'] && utils.settings.inUse) {
   }
 
   const define = window['customElements']['define'];
-  window['customElements']['define'] = function(name, constructor) {
-    const connected = constructor.prototype.connectedCallback;
-    const disconnected = constructor.prototype.disconnectedCallback;
-    define.call(window['customElements'], name,
-        ManageConnect(constructor, connected, disconnected));
-    // unpatch connected/disconnected on class; custom elements tears this off
-    // so the patch is maintained, but if the user calls these methods for
-    // e.g. testing, they will be as expected.
-    constructor.prototype.connectedCallback = connected;
-    constructor.prototype.disconnectedCallback = disconnected;
-  }
+  // NOTE: Instead of patching customElements.define,
+  // re-define on the CustomElementRegistry.prototype.define
+  // for Safari 10 compatibility (it's flakey otherwise).
+  Object.defineProperty(window['CustomElementRegistry'].prototype, 'define', {
+    value: function(name, constructor) {
+      const connected = constructor.prototype.connectedCallback;
+      const disconnected = constructor.prototype.disconnectedCallback;
+      define.call(window['customElements'], name,
+          ManageConnect(constructor, connected, disconnected));
+      // unpatch connected/disconnected on class; custom elements tears this off
+      // so the patch is maintained, but if the user calls these methods for
+      // e.g. testing, they will be as expected.
+      constructor.prototype.connectedCallback = connected;
+      constructor.prototype.disconnectedCallback = disconnected;
+    }
+  });
 
 }
