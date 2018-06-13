@@ -554,9 +554,9 @@ if (window['customElements'] && utils.settings.inUse) {
     connectMap.clear();
     for (const [e, value] of map) {
       if (value) {
-        e.connectedCallback();
+        e.__shadydom_connectedCallback();
       } else {
-        e.disconnectedCallback();
+        e.__shadydom_disconnectedCallback();
       }
     }
   }
@@ -580,7 +580,7 @@ if (window['customElements'] && utils.settings.inUse) {
     const connectFlag = `__isConnected${counter++}`;
     if (connected || disconnected) {
 
-      base.prototype.connectedCallback = function() {
+      base.prototype.connectedCallback = base.prototype.__shadydom_connectedCallback = function() {
         // if rendering defer connected
         // otherwise connect only if we haven't already
         if (isRendering) {
@@ -593,7 +593,7 @@ if (window['customElements'] && utils.settings.inUse) {
         }
       }
 
-      base.prototype.disconnectedCallback = function() {
+      base.prototype.disconnectedCallback = base.prototype.__shadydom_disconnectedCallback = function() {
         // if rendering, cancel a pending connection and queue disconnect,
         // otherwise disconnect only if a connection has been allowed
         if (isRendering) {
