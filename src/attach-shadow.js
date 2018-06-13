@@ -29,7 +29,7 @@ const SHADYROOT_NAME = 'ShadyRoot';
 
 const MODE_CLOSED = 'closed';
 
-let isRendering = utils.settings['deferNativeCustomElementsConnection'] && document.readyState === 'loading';
+let isRendering = utils.settings['deferConnectionCallbacks'] && document.readyState === 'loading';
 let rootRendered;
 
 function ancestorList(node) {
@@ -561,7 +561,7 @@ if (window['customElements'] && utils.settings.inUse) {
     }
   }
 
-  // Document is in loading state and flag is set (deferNativeCustomElementsConnection)
+  // Document is in loading state and flag is set (deferConnectionCallbacks)
   // so process connection stack when `readystatechange` fires.
   if (isRendering) {
     document.addEventListener('readystatechange', () => {
