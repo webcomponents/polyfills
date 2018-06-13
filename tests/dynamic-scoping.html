@@ -93,6 +93,35 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
   <x-dynamic></x-dynamic>
 
+  <template id="out-of-band">
+    <style>
+      div {
+        color: var(--foo);
+      }
+    </style>
+    <div>oob shadowed</div>
+  </template>
+
+  <template id="oob-parent">
+    <style>
+      out-of-band {
+        --foo: rgb(0, 0, 255);
+      }
+    </style>
+    <out-of-band></out-of-band>
+  </template>
+
+  <template id="oob-other-parent">
+    <style>
+      out-of-band {
+        --foo: rgb(255, 0, 0);
+      }
+    </style>
+  </template>
+
+  <oob-parent></oob-parent>
+  <oob-other-parent></oob-other-parent>
+
   <script>
     suite('Dynamic Scoping', () => {
       function stamp(parent, host) {
@@ -133,6 +162,20 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           })
         });
       });
+      test('moving a custom element between scopes recalculates correctly', function(done) {
+        makeElement('out-of-band');
+        makeElement('oob-parent');
+        makeElement('oob-other-parent');
+        let parent = document.querySelector('oob-parent');
+        let newParent = document.querySelector('oob-other-parent');
+        let oob = parent.shadowRoot.querySelector('out-of-band');
+        let shadowDiv = oob.shadowRoot.querySelector('div');
+        newParent.shadowRoot.appendChild(oob);
+        requestAnimationFrame(() => {
+          assert.equal(getComputedStyle(shadowDiv).getPropertyValue('color').trim(), 'rgb(255, 0, 0)');
+          done();
+        });
+      })
     });
   </script>
 </body>
