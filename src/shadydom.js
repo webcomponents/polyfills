@@ -52,7 +52,13 @@ if (utils.settings.inUse) {
     'observeChildren': observeChildren,
     'unobserveChildren': unobserveChildren,
     'nativeMethods': nativeMethods,
-    'nativeTree': nativeTree
+    'nativeTree': nativeTree,
+    // Set to true to defer native custom elements connection until the
+    // document has fully parsed. This enables custom elements that create
+    // shadowRoots to be defined while the document is loading. Elements
+    // customized as they are created by the parser will successfully
+    // render with this flag on.
+    'deferConnectionCallbacks': utils.settings['deferConnectionCallbacks']
   };
 
   window['ShadyDOM'] = ShadyDOM;

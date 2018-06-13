@@ -15,7 +15,6 @@ import {recordChildNodes} from './logical-tree.js';
 import {removeChild, insertBefore, dispatchEvent} from './native-methods.js';
 import {accessors} from './native-tree.js';
 import {ensureShadyDataForNode, shadyDataForNode} from './shady-data.js';
-import {patchInsideElementAccessors} from './patch-accessors.js';
 
 const {parentNode, childNodes} = accessors;
 
@@ -30,7 +29,7 @@ const SHADYROOT_NAME = 'ShadyRoot';
 
 const MODE_CLOSED = 'closed';
 
-let isRendering = false;
+let isRendering = utils.settings['deferConnectionCallbacks'] && document.readyState === 'loading';
 let rootRendered;
 
 function ancestorList(node) {
@@ -57,6 +56,7 @@ class ShadyRoot {
     // root <=> host
     this.host = host;
     this._mode = options && options.mode;
+    recordChildNodes(host);
     const hostData = ensureShadyDataForNode(host);
     hostData.root = this;
     hostData.publicRoot = this._mode !== MODE_CLOSED ? this : null;
@@ -75,13 +75,6 @@ class ShadyRoot {
     this._slotMap = null;
     this._pendingSlots = null;
     this._initialChildren = null;
-    this._createdWhileLoading = document.readyState === 'loading';
-    if (this._createdWhileLoading) {
-      // ensure host is patched if created while loading.
-      patchInsideElementAccessors(host);
-    } else {
-      recordChildNodes(host);
-    }
     this._asyncRender();
   }
 
@@ -134,15 +127,6 @@ class ShadyRoot {
     const wasRendering = isRendering;
     isRendering = true;
     this._renderPending = false;
-    // If created while loading, then light children are potentially incorrect
-    // so we fix them here (note, this needs to be before distribution)
-    if (this._createdWhileLoading && !this._hasRendered) {
-      // reset logical tracking because this is incorrect when created while loading.
-      const c$ = childNodes(this.host).filter((child) => {
-        return ensureShadyDataForNode(child).parentNode !== this;
-      });
-      recordChildNodes(this.host, c$);
-    }
     if (this._slotList) {
       this._distribute();
       this._compose();
@@ -153,7 +137,8 @@ class ShadyRoot {
       for (let i=0, l=c$.length; i < l; i++) {
         const child = c$[i];
         const data = shadyDataForNode(child);
-        if (parentNode(child) === this.host && !data.assignedSlot) {
+        if (parentNode(child) === this.host &&
+            (child.localName === 'slot' || !data.assignedSlot)) {
           removeChild.call(this.host, child);
         }
       }
@@ -558,7 +543,7 @@ export function attachShadow(host, options) {
 }
 
 // Mitigate connect/disconnect spam by wrapping custom element classes.
-if (window['customElements']) {
+if (window['customElements'] && utils.settings.inUse) {
 
   // process connect/disconnect after roots have rendered to avoid
   // issues with reaction stack.
@@ -569,11 +554,20 @@ if (window['customElements']) {
     connectMap.clear();
     for (const [e, value] of map) {
       if (value) {
-        e.connectedCallback();
+        e.__shadydom_connectedCallback();
       } else {
-        e.disconnectedCallback();
+        e.__shadydom_disconnectedCallback();
       }
     }
+  }
+
+  // Document is in loading state and flag is set (deferConnectionCallbacks)
+  // so process connection stack when `readystatechange` fires.
+  if (isRendering) {
+    document.addEventListener('readystatechange', () => {
+      isRendering = false;
+      rootRendered();
+    }, {once: true});
   }
 
   /*
@@ -581,14 +575,12 @@ if (window['customElements']) {
    * state.
    * (2) never run connect/disconnect during rendering to avoid reaction stack issues.
    */
-  const ManageConnect = (base) => {
-    const connected = base.prototype.connectedCallback;
-    const disconnected = base.prototype.disconnectedCallback;
+  const ManageConnect = (base, connected, disconnected) => {
     let counter = 0;
     const connectFlag = `__isConnected${counter++}`;
     if (connected || disconnected) {
 
-      base.prototype.connectedCallback = function() {
+      base.prototype.connectedCallback = base.prototype.__shadydom_connectedCallback = function() {
         // if rendering defer connected
         // otherwise connect only if we haven't already
         if (isRendering) {
@@ -601,7 +593,7 @@ if (window['customElements']) {
         }
       }
 
-      base.prototype.disconnectedCallback = function() {
+      base.prototype.disconnectedCallback = base.prototype.__shadydom_disconnectedCallback = function() {
         // if rendering, cancel a pending connection and queue disconnect,
         // otherwise disconnect only if a connection has been allowed
         if (isRendering) {
@@ -626,8 +618,21 @@ if (window['customElements']) {
   }
 
   const define = window['customElements']['define'];
-  window['customElements']['define'] = function(name, constructor) {
-    return define.call(window['customElements'], name, ManageConnect(constructor));
-  }
+  // NOTE: Instead of patching customElements.define,
+  // re-define on the CustomElementRegistry.prototype.define
+  // for Safari 10 compatibility (it's flakey otherwise).
+  Object.defineProperty(window['CustomElementRegistry'].prototype, 'define', {
+    value: function(name, constructor) {
+      const connected = constructor.prototype.connectedCallback;
+      const disconnected = constructor.prototype.disconnectedCallback;
+      define.call(window['customElements'], name,
+          ManageConnect(constructor, connected, disconnected));
+      // unpatch connected/disconnected on class; custom elements tears this off
+      // so the patch is maintained, but if the user calls these methods for
+      // e.g. testing, they will be as expected.
+      constructor.prototype.connectedCallback = connected;
+      constructor.prototype.disconnectedCallback = disconnected;
+    }
+  });
 
 }
