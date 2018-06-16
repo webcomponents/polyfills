@@ -28,8 +28,16 @@
   "scripts": {
     "build": "gulp",
     "lint": "eslint src test entrypoints",
-    "test": "npm run lint && gulp test-modules && wct --npm"
+    "test": "npm run lint && gulp test-modules && wct",
+    "prepack": "npm run build"
   },
+  "files": [
+    "apply-shim.html",
+    "apply-shim.min.js*",
+    "custom-style-interface.html",
+    "custom-style-interface.min.js*",
+    "scoping-shim.min.js*"
+  ],
   "homepage": "https://webcomponents.org/polyfills",
   "devDependencies": {
     "@webcomponents/custom-elements": "^1.1.2",
