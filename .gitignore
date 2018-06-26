@@ -1,2 +1,5 @@
 node_modules/
 tests/module/generated
+scoping-shim.min.js*
+apply-shim.min.js*
+custom-style-interface.min.js*
