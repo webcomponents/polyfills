@@ -12,7 +12,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <head>
   <meta charset="utf-8">
   <script src="../node_modules/@webcomponents/webcomponents-platform/webcomponents-platform.js"></script>
-  <script src="../../es6-promise/es6-promise.auto.min.js"></script>
+  <script src="../node_modules/es6-promise/es6-promise.auto.min.js"></script>
   <script src="../node_modules/@webcomponents/template/template.js"></script>
   <script>
     ShadyDOM = {force: true, flush(){}};
@@ -738,6 +738,20 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       inner.click();
       assert.equal(sawClick, true, 'host should see click from inner node');
       top.parentNode.removeChild(top);
+    });
+
+    test('delayed target does not throw', function(done) {
+      const button = document.createElement('button');
+      button.addEventListener('click', (e) => {
+        setTimeout(() => {
+          assert.equal(e.target, button);
+          assert.isNotOk(e.currentTarget);
+          done();
+        });
+      });
+      document.body.appendChild(button);
+      button.click();
+      document.body.removeChild(button);
     });
   });
   </script>

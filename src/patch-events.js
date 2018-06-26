@@ -160,7 +160,7 @@ let eventMixin = {
    * @this {Event}
    */
   get target() {
-    return retarget(this.currentTarget, this.composedPath());
+    return retarget(this.currentTarget || this['__previousCurrentTarget'], this.composedPath());
   },
 
   // http://w3c.github.io/webcomponents/spec/shadow/#event-relatedtarget-retargeting
@@ -401,6 +401,7 @@ export function addEventListener(type, fnOrObj, optionsOrCapture) {
       lastCurrentTargetDesc = Object.getOwnPropertyDescriptor(e, 'currentTarget');
       Object.defineProperty(e, 'currentTarget', {get() { return target }, configurable: true});
     }
+    e['__previousCurrentTarget'] = e['currentTarget'];
     // Always check if a shadowRoot is in the current event path.
     // If it is not, the event was generated on either the host of the shadowRoot
     // or a children of the host.
