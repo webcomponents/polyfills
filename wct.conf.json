@@ -1,10 +1,16 @@
 {
   "suites": ["tests/runner.html"],
+  "npm": true,
   "plugins": {
     "local": {
       "browserOptions": {
         "chrome": [
+          "headless",
+          "disable-gpu",
           "no-sandbox"
+        ],
+        "firefox": [
+          "-headless"
         ]
       }
     }
