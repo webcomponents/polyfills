@@ -29,7 +29,9 @@
     "prepack": "npm run build"
   },
   "files": [
-    "custom-elements.min.js*"
+    "custom-elements.min.js*",
+    "src/",
+    "externs/"
   ],
   "homepage": "https://webcomponents.org/polyfills",
   "devDependencies": {
