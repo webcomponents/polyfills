@@ -36,8 +36,8 @@
   "homepage": "https://webcomponents.org/polyfills",
   "devDependencies": {
     "@webcomponents/html-imports": "^1.0.0",
-    "@webcomponents/template": "^1.0.0",
     "@webcomponents/shadydom": "^1.0.0",
+    "@webcomponents/template": "^1.0.0",
     "@webcomponents/webcomponents-platform": "^1.0.0",
     "es6-promise": "4.1.1",
     "google-closure-compiler": "^20170409.0.0",
@@ -45,8 +45,8 @@
     "gulp-sourcemaps": "^1.6.0",
     "rollup-stream": "^1.14.0",
     "vinyl-source-stream": "^1.1.0",
-    "web-component-tester": "^6.6.0",
-    "wct-browser-legacy": "^1.0.1"
+    "wct-browser-legacy": "^1.0.1",
+    "web-component-tester": "^6.7.1"
   },
   "publishConfig": {
     "access": "public"
