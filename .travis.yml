@@ -1,5 +1,5 @@
 language: node_js
-node_js: 6
+node_js: 'stable'
 dist: trusty
 sudo: required
 addons:
@@ -11,10 +11,10 @@ addons:
     - google-chrome-stable
 before_script:
 - export PATH=$PWD/node_modules/.bin:$PATH
-script:
 - npm run build
-- xvfb-run wct --npm
-- if [ "${TRAVIS_PULL_REQUEST}" = "false" ]; then wct --npm -s 'windows 10/microsoftedge@14'
+script:
+- xvfb-run wct
+- if [ "${TRAVIS_PULL_REQUEST}" = "false" ]; then wct -s 'windows 10/microsoftedge@14'
   -s 'windows 8.1/internet explorer@11' -s 'os x 10.11/safari@10' -s 'os x 10.11/safari@9';
   fi
 env:
