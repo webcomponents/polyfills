@@ -16,102 +16,299 @@
 
 <script>
 
-  suite('Native Shim', () => {
+suite('Native Shim', () => {
 
-    // Do nothing if the browser does not natively support custom elements.
-    if (!window.customElements) {
-      test.skip('The native shim does not apply to this browser.', () => {});
-      return;
+  // Do nothing if the browser does not natively support custom elements.
+  if (!window.customElements) {
+    test.skip('The native shim does not apply to this browser.', () => {});
+    return;
+  }
+
+  test('works with createElement()', () => {
+    function ES5Element1() {
+      return HTMLElement.apply(this);
     }
+    ES5Element1.prototype = Object.create(HTMLElement.prototype);
+    ES5Element1.prototype.constructor = ES5Element1;
 
-    test('works with createElement()', () => {
-      function ES5Element1() {
-        return HTMLElement.apply(this);
-      }
-      ES5Element1.prototype = Object.create(HTMLElement.prototype);
-      ES5Element1.prototype.constructor = ES5Element1;
+    customElements.define('es5-element-1', ES5Element1);
 
-      customElements.define('es5-element-1', ES5Element1);
+    const el = document.createElement('es5-element-1');
+    assert.instanceOf(el, ES5Element1);
+    assert.instanceOf(el, HTMLElement);
+    assert.equal(el.tagName, 'ES5-ELEMENT-1');
+  });
 
-      const el = document.createElement('es5-element-1');
-      assert.instanceOf(el, ES5Element1);
-      assert.instanceOf(el, HTMLElement);
-      assert.equal(el.tagName, 'ES5-ELEMENT-1');
-    });
+  test('works with user-called constructors', () => {
+    function ES5Element2() {
+      return HTMLElement.apply(this);
+    }
+    ES5Element2.prototype = Object.create(HTMLElement.prototype);
+    ES5Element2.prototype.constructor = ES5Element2;
 
-    test('works with user-called constructors', () => {
-      function ES5Element2() {
-        return HTMLElement.apply(this);
-      }
-      ES5Element2.prototype = Object.create(HTMLElement.prototype);
-      ES5Element2.prototype.constructor = ES5Element2;
+    customElements.define('es5-element-2', ES5Element2);
 
-      customElements.define('es5-element-2', ES5Element2);
+    const el = new ES5Element2();
+    assert.instanceOf(el, ES5Element2);
+    assert.instanceOf(el, HTMLElement);
+    assert.equal(el.tagName, 'ES5-ELEMENT-2');
+  });
 
-      const el = new ES5Element2();
-      assert.instanceOf(el, ES5Element2);
-      assert.instanceOf(el, HTMLElement);
-      assert.equal(el.tagName, 'ES5-ELEMENT-2');
-    });
+  test('works with parser created elements', () => {
+    function ES5Element3() {
+      return HTMLElement.apply(this);
+    }
+    ES5Element3.prototype = Object.create(HTMLElement.prototype);
+    ES5Element3.prototype.constructor = ES5Element3;
 
-    test('works with parser created elements', () => {
-      function ES5Element3() {
-        return HTMLElement.apply(this);
-      }
-      ES5Element3.prototype = Object.create(HTMLElement.prototype);
-      ES5Element3.prototype.constructor = ES5Element3;
+    customElements.define('es5-element-3', ES5Element3);
 
-      customElements.define('es5-element-3', ES5Element3);
+    const container = document.createElement('div');
+    container.innerHTML = '<es5-element-3></es5-element-3>';
+    const el = container.querySelector('es5-element-3');
+    assert.instanceOf(el, ES5Element3);
+    assert.instanceOf(el, HTMLElement);
+    assert.equal(el.tagName, 'ES5-ELEMENT-3');
+  });
 
-      const container = document.createElement('div');
-      container.innerHTML = '<es5-element-3></es5-element-3>';
-      const el = container.querySelector('es5-element-3');
-      assert.instanceOf(el, ES5Element3);
-      assert.instanceOf(el, HTMLElement);
-      assert.equal(el.tagName, 'ES5-ELEMENT-3');
-    });
+  test('reactions', () => {
+    function ES5Element4() {
+      return HTMLElement.apply(this);
+    }
+    ES5Element4.prototype = Object.create(HTMLElement.prototype);
+    ES5Element4.prototype.constructor = ES5Element4;
+    ES5Element4.observedAttributes = ['test'];
+    ES5Element4.prototype.connectedCallback = function() {
+      this.connectedCalled = true;
+    };
+    ES5Element4.prototype.disconnectedCallback = function() {
+      this.disconnectedCalled = true;
+    };
+    ES5Element4.prototype.attributeChangedCallback = function(name, oldValue, newValue) {
+      this.attributeChangedCalled = `${name}, ${oldValue}, ${newValue}`;
+    };
+    ES5Element4.prototype.adoptedCallback = function() {
+      this.adoptedCalled = true;
+    };
 
-    test('reactions', () => {
-      function ES5Element4() {
-        return HTMLElement.apply(this);
-      }
-      ES5Element4.prototype = Object.create(HTMLElement.prototype);
-      ES5Element4.prototype.constructor = ES5Element4;
-      ES5Element4.observedAttributes = ['test'];
-      ES5Element4.prototype.connectedCallback = function() {
-        this.connectedCalled = true;
-      };
-      ES5Element4.prototype.disconnectedCallback = function() {
-        this.disconnectedCalled = true;
-      };
-      ES5Element4.prototype.attributeChangedCallback = function(name, oldValue, newValue) {
-        this.attributeChangedCalled = `${name}, ${oldValue}, ${newValue}`;
-      };
-      ES5Element4.prototype.adoptedCallback = function() {
-        this.adoptedCalled = true;
-      };
+    customElements.define('es5-element-4', ES5Element4);
 
-      customElements.define('es5-element-4', ES5Element4);
+    const container = document.createElement('div');
+    document.body.appendChild(container);
 
-      const container = document.createElement('div');
-      document.body.appendChild(container);
+    const el = new ES5Element4();
 
-      const el = new ES5Element4();
+    container.appendChild(el);
+    assert(el.connectedCalled);
 
-      container.appendChild(el);
-      assert(el.connectedCalled);
+    container.removeChild(el);
+    assert(el.disconnectedCalled);
 
-      container.removeChild(el);
-      assert(el.disconnectedCalled);
+    el.setAttribute('test', 'good');
+    assert.equal(el.attributeChangedCalled, 'test, null, good');
 
-      el.setAttribute('test', 'good');
-      assert.equal(el.attributeChangedCalled, 'test, null, good');
-
-      const doc = document.implementation.createHTMLDocument();
-      doc.adoptNode(el);
-      assert(el.adoptedCalled);
-
-    });
+    const doc = document.implementation.createHTMLDocument();
+    doc.adoptNode(el);
+    assert(el.adoptedCalled);
 
   });
+
+});
+
+suite('Native Shim with ES5 + Reflect API super call (can be expected from transpilers)', () => {
+
+  // Do nothing if the browser does not natively support custom elements.
+  if (!window.customElements) {
+    test.skip('The native shim does not apply to this browser.', () => {});
+    return;
+  }
+  // Do nothing if the browser does not support Reflect API.
+  if (typeof Reflect !== 'object' || typeof Reflect.construct !== 'function') {
+    test.skip('This test suite does not apply to this browser (Reflect API missing).', () => {});
+    return;
+  }
+
+  test('works with createElement()', () => {
+    function ES5ReflectReflect1() {
+      return Reflect.construct(HTMLElement, [], this.constructor);
+    }
+    ES5ReflectReflect1.prototype = Object.create(HTMLElement.prototype);
+    ES5ReflectReflect1.prototype.constructor = ES5ReflectReflect1;
+
+    customElements.define('es5-reflect-element-1', ES5ReflectReflect1);
+
+    const el = document.createElement('es5-reflect-element-1');
+    assert.instanceOf(el, ES5ReflectReflect1);
+    assert.instanceOf(el, HTMLElement);
+    assert.equal(el.tagName, 'ES5-REFLECT-ELEMENT-1');
+  });
+
+  test('works with user-called constructors', () => {
+    function ES5ReflectReflect2() {
+      return Reflect.construct(HTMLElement, [], this.constructor);
+    }
+    ES5ReflectReflect2.prototype = Object.create(HTMLElement.prototype);
+    ES5ReflectReflect2.prototype.constructor = ES5ReflectReflect2;
+
+    customElements.define('es5-reflect-element-2', ES5ReflectReflect2);
+
+    const el = new ES5ReflectReflect2();
+    assert.instanceOf(el, ES5ReflectReflect2);
+    assert.instanceOf(el, HTMLElement);
+    assert.equal(el.tagName, 'ES5-REFLECT-ELEMENT-2');
+  });
+
+  test('works with parser created elements', () => {
+    function ES5ReflectReflect3() {
+      return Reflect.construct(HTMLElement, [], this.constructor);
+    }
+    ES5ReflectReflect3.prototype = Object.create(HTMLElement.prototype);
+    ES5ReflectReflect3.prototype.constructor = ES5ReflectReflect3;
+
+    customElements.define('es5-reflect-element-3', ES5ReflectReflect3);
+
+    const container = document.createElement('div');
+    container.innerHTML = '<es5-reflect-element-3></es5-reflect-element-3>';
+    const el = container.querySelector('es5-reflect-element-3');
+    assert.instanceOf(el, ES5ReflectReflect3);
+    assert.instanceOf(el, HTMLElement);
+    assert.equal(el.tagName, 'ES5-REFLECT-ELEMENT-3');
+  });
+
+  test('reactions', () => {
+    function ES5ReflectElement4() {
+      return Reflect.construct(HTMLElement, [], this.constructor);
+    }
+    ES5ReflectElement4.prototype = Object.create(HTMLElement.prototype);
+    ES5ReflectElement4.prototype.constructor = ES5ReflectElement4;
+    ES5ReflectElement4.observedAttributes = ['test'];
+    ES5ReflectElement4.prototype.connectedCallback = function() {
+      this.connectedCalled = true;
+    };
+    ES5ReflectElement4.prototype.disconnectedCallback = function() {
+      this.disconnectedCalled = true;
+    };
+    ES5ReflectElement4.prototype.attributeChangedCallback = function(name, oldValue, newValue) {
+      this.attributeChangedCalled = `${name}, ${oldValue}, ${newValue}`;
+    };
+    ES5ReflectElement4.prototype.adoptedCallback = function() {
+      this.adoptedCalled = true;
+    };
+
+    customElements.define('es5-reflect-element-4', ES5ReflectElement4);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+
+    const el = new ES5ReflectElement4();
+
+    container.appendChild(el);
+    assert(el.connectedCalled);
+
+    container.removeChild(el);
+    assert(el.disconnectedCalled);
+
+    el.setAttribute('test', 'good');
+    assert.equal(el.attributeChangedCalled, 'test, null, good');
+
+    const doc = document.implementation.createHTMLDocument();
+    doc.adoptNode(el);
+    assert(el.adoptedCalled);
+
+  });
+});
+
+suite('Native Shim with ES6 classes', () => {
+
+  // Do nothing if the browser does not natively support custom elements.
+  if (!window.customElements) {
+    test.skip('The native shim does not apply to this browser.', () => {});
+    return;
+  }
+
+  function createHTMLElementSubclassNamed(name) {
+    return eval('(function() { class ' + name + ' extends HTMLElement { constructor() { super(); }}; return ' + name + '; })')();
+  }
+
+  try {
+    createHTMLElementSubclassNamed('ES6Element0');
+  } catch (e) {
+    test.skip('This test suite does not apply to this browser (ES6 classes not supported).', () => {});
+    return;
+  }
+
+  test('works with createElement()', () => {
+    var ES6Element1 = createHTMLElementSubclassNamed('ES6Element1');
+
+    customElements.define('es6-element-1', ES6Element1);
+
+    const el = document.createElement('es6-element-1');
+    assert.instanceOf(el, ES6Element1);
+    assert.instanceOf(el, HTMLElement);
+    assert.equal(el.tagName, 'ES6-ELEMENT-1');
+  });
+
+  test('works with user-called constructors', () => {
+    var ES6Element2 = createHTMLElementSubclassNamed('ES6Element2');
+
+    customElements.define('es6-element-2', ES6Element2);
+
+    const el = new ES6Element2();
+    assert.instanceOf(el, ES6Element2);
+    assert.instanceOf(el, HTMLElement);
+    assert.equal(el.tagName, 'ES6-ELEMENT-2');
+  });
+
+  test('works with parser created elements', () => {
+    ES6Element3 = createHTMLElementSubclassNamed('ES6Element3');
+
+    customElements.define('es6-element-3', ES6Element3);
+
+    const container = document.createElement('div');
+    container.innerHTML = '<es6-element-3></es6-element-3>';
+    const el = container.querySelector('es6-element-3');
+    assert.instanceOf(el, ES6Element3);
+    assert.instanceOf(el, HTMLElement);
+    assert.equal(el.tagName, 'ES6-ELEMENT-3');
+  });
+
+  test('reactions', () => {
+    ES6Element4 = createHTMLElementSubclassNamed('ES6Element4');
+    ES6Element4.observedAttributes = ['test'];
+    ES6Element4.prototype.connectedCallback = function() {
+      this.connectedCalled = true;
+    };
+    ES6Element4.prototype.disconnectedCallback = function() {
+      this.disconnectedCalled = true;
+    };
+    ES6Element4.prototype.attributeChangedCallback = function(name, oldValue, newValue) {
+      this.attributeChangedCalled = `${name}, ${oldValue}, ${newValue}`;
+    };
+    ES6Element4.prototype.adoptedCallback = function() {
+      this.adoptedCalled = true;
+    };
+
+    customElements.define('es6-element-4', ES6Element4);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+
+    const el = new ES6Element4();
+
+    container.appendChild(el);
+    assert(el.connectedCalled);
+
+    container.removeChild(el);
+    assert(el.disconnectedCalled);
+
+    el.setAttribute('test', 'good');
+    assert.equal(el.attributeChangedCalled, 'test, null, good');
+
+    const doc = document.implementation.createHTMLDocument();
+    doc.adoptNode(el);
+    assert(el.adoptedCalled);
+
+  });
+
+});
 </script>
