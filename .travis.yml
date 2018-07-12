@@ -1,5 +1,5 @@
 language: node_js
-node_js: 6
+node_js: 'stable'
 dist: trusty
 sudo: required
 addons:
@@ -11,9 +11,8 @@ addons:
     - google-chrome-stable
 before_script:
 - export PATH=$PWD/node_modules/.bin:$PATH
-- npm run bower-install
-script:
 - npm run build
+script:
 - xvfb-run wct
 - if [ "${TRAVIS_PULL_REQUEST}" = "false" ]; then wct -s 'windows 10/microsoftedge@14'
   -s 'windows 8.1/internet explorer@11' -s 'os x 10.11/safari@10' -s 'os x 10.11/safari@9';
