@@ -8,16 +8,13 @@
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
- /**
+/**
  * This shim allows elements written in, or compiled to, ES5 to work on native
  * implementations of Custom Elements v1. It sets new.target to the value of
  * this.constructor so that the native HTMLElement constructor can access the
  * current under-construction element's definition.
- *
- * Because `new.target` is a syntax error in VMs that don't support it, this
- * shim must only be loaded in browsers that do.
  */
-(() => {
+(function() {
   if (window.Reflect === undefined) {
     // No Reflect, no classes, no need for shim
     return;
@@ -26,8 +23,6 @@
   window.HTMLElement = function() {
     return Reflect.construct(BuiltInHTMLElement, [], this.constructor);
   }
-  HTMLElement.prototype = Object.create(BuiltInHTMLElement.prototype, {
-    constructor: {value: HTMLElement, configurable: true, writable: true},
-  });
+  Object.setPrototypeOf(HTMLElement.prototype, BuiltInHTMLElement.prototype);
   Object.setPrototypeOf(HTMLElement, BuiltInHTMLElement);
 })();
