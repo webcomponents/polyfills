@@ -25,6 +25,7 @@
   },
   "scripts": {
     "build": "gulp",
+    "debug": "rollup -c",
     "test": "wct",
     "prepack": "npm run build"
   },
@@ -43,8 +44,7 @@
     "google-closure-compiler": "^20170409.0.0",
     "gulp": "^4.0.0",
     "gulp-sourcemaps": "^1.6.0",
-    "rollup-stream": "^1.14.0",
-    "vinyl-source-stream": "^1.1.0",
+    "rollup": "^0.62.0",
     "wct-browser-legacy": "^1.0.1",
     "web-component-tester": "^6.7.1"
   },
