@@ -1,6 +1,4 @@
-const config = {
+export default {
   input: 'src/custom-elements.js',
-  output: { exports: 'named', file: 'custom-elements.min.js', format: 'iife', name: 'CustomElements', sourcemap: true }
+  output: { file: 'custom-elements.min.js', format: 'iife', sourcemap: true }
 };
-
-export default config;
