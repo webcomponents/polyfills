@@ -16,13 +16,14 @@
  */
 (function() {
   if (window.Reflect === undefined) {
-    // No Reflect, no classes, no need for shim
+    // No Reflect, no classes, no need for shim because native custom elements
+    // require ES2015 classes or Reflect.
     return;
   }
   const BuiltInHTMLElement = HTMLElement;
   window.HTMLElement = function() {
     return Reflect.construct(BuiltInHTMLElement, [], this.constructor);
-  }
+  };
   Object.setPrototypeOf(HTMLElement.prototype, BuiltInHTMLElement.prototype);
   Object.setPrototypeOf(HTMLElement, BuiltInHTMLElement);
 })();
