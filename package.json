@@ -28,10 +28,10 @@
   "scripts": {
     "build": "gulp",
     "test": "npm run lint && npm run build && wct",
+    "debug": "rollup -c",
     "lint": "eslint src",
     "regen-package-lock": "rm -rf node_modules package-lock.json; npm install",
-    "prepack": "npm run build",
-    "debug": "gulp debug"
+    "prepack": "npm run build"
   },
   "files": [
     "shadydom.min.js*",
@@ -50,11 +50,10 @@
     "eslint-plugin-html": "^4.0.5",
     "google-closure-compiler": "^20180506.0.0",
     "gulp": "^4.0.0",
-    "gulp-rename": "^1.2.3",
-    "gulp-rollup": "^2.16.2",
     "gulp-size": "^3.0.0",
     "gulp-sourcemaps": "^2.6.4",
     "promise-polyfill": "^8.0.0",
+    "rollup": "^0.62.0",
     "wct-browser-legacy": "^1.0.1",
     "web-component-tester": "^6.7.1"
   },
