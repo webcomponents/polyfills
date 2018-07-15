@@ -1,6 +1,4 @@
-const config = {
+export default {
   input: 'src/shadydom.js',
-  output: { file: 'shadydom.min.js', format: 'iife', name: 'shadydom', sourcemap: true }
+  output: { file: 'shadydom.min.js', format: 'iife', sourcemap: true }
 };
-
-export default config;
