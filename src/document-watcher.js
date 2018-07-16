@@ -72,12 +72,19 @@ function handler(mxns) {
           continue;
         }
         newScope = getIsExtends(host).is;
+        // rescope current node and subtree if necessary
+        if (newScope !== currentScope) {
+          if (currentScope) {
+            StyleTransformer.dom(n, currentScope, true);
+          }
+          StyleTransformer.dom(n, newScope);
+        }
         // make sure all the subtree elements are scoped correctly
         let unscopedNodes = window['ShadyDOM']['nativeMethods']['querySelectorAll'].call(
           n, `:not(.${StyleTransformer.SCOPE_NAME})`);
         for (let j = 0; j < unscopedNodes.length; j++) {
           // it's possible, during large batch inserts, that nodes that aren't
-          // scoped within the current scope were added. 
+          // scoped within the current scope were added.
           // To make sure that any unscoped nodes that were inserted in the current batch are correctly styled,
           // query all unscoped nodes and force their style-scope to be applied.
           // This could happen if a sub-element appended an unscoped node in its shadowroot and this function
@@ -86,20 +93,13 @@ function handler(mxns) {
           // Here unscoped node should have the style-scope element, not parent-element.
           const unscopedNode = unscopedNodes[j];
           const rootForUnscopedNode = unscopedNode.getRootNode();
-          const hostForUnscopedNode = rootForUnscopedNode .host;
+          const hostForUnscopedNode = rootForUnscopedNode.host;
           if (!hostForUnscopedNode) {
             continue;
           }
           const scopeForPreviouslyUnscopedNode = getIsExtends(hostForUnscopedNode).is;
           StyleTransformer.element(unscopedNode, scopeForPreviouslyUnscopedNode);
         }
-        if (newScope === currentScope) {
-          continue;
-        }
-        if (currentScope) {
-          StyleTransformer.dom(n, currentScope, true);
-        }
-        StyleTransformer.dom(n, newScope);
       }
     }
   }
