@@ -188,7 +188,23 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             window.ShadyDOM.flush();
           }
         });
-      })
+      });
+
+      test('slots can be modified before rendering', function() {
+        const host = document.createElement('div');
+        const child = document.createElement('span');
+        child.textContent = 'Hello!';
+        child.setAttribute('slot', 'foo');
+        host.appendChild(child);
+        host.attachShadow({mode: 'open'});
+        const slot = document.createElement('slot');
+        host.shadowRoot.appendChild(slot);
+        assert.doesNotThrow(() => {
+          slot.setAttribute('name', 'foo');
+        });
+        window.ShadyDOM.flush();
+        assert.equal(child.assignedSlot, slot, 'child should be assigned to slot');
+      });
     })
   </script>
 </body>

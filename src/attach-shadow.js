@@ -485,6 +485,8 @@ class ShadyRoot {
     if (!this._slotList) {
       return;
     }
+    // make sure slotMap is initialized with this slot
+    this._validateSlots();
     const oldName = slot.__slotName;
     const name = this._nameForSlot(slot);
     if (name === oldName) {
