@@ -245,7 +245,7 @@ suite('Native Shim with ES6 classes', () => {
   });
 
   test('works with createElement()', () => {
-    var ES6Element1 = createHTMLElementSubclassNamed('ES6Element1');
+    const ES6Element1 = createHTMLElementSubclassNamed('ES6Element1');
 
     customElements.define('es6-element-1', ES6Element1);
 
@@ -256,7 +256,7 @@ suite('Native Shim with ES6 classes', () => {
   });
 
   test('works with user-called constructors', () => {
-    var ES6Element2 = createHTMLElementSubclassNamed('ES6Element2');
+    const ES6Element2 = createHTMLElementSubclassNamed('ES6Element2');
 
     customElements.define('es6-element-2', ES6Element2);
 
@@ -267,7 +267,7 @@ suite('Native Shim with ES6 classes', () => {
   });
 
   test('works with parser created elements', () => {
-    ES6Element3 = createHTMLElementSubclassNamed('ES6Element3');
+    const ES6Element3 = createHTMLElementSubclassNamed('ES6Element3');
 
     customElements.define('es6-element-3', ES6Element3);
 
@@ -280,7 +280,7 @@ suite('Native Shim with ES6 classes', () => {
   });
 
   test('reactions', () => {
-    ES6Element4 = createHTMLElementSubclassNamed('ES6Element4');
+    const ES6Element4 = createHTMLElementSubclassNamed('ES6Element4');
     ES6Element4.observedAttributes = ['test'];
     ES6Element4.prototype.connectedCallback = function() {
       this.connectedCalled = true;
