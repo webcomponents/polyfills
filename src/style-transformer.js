@@ -43,34 +43,42 @@ class StyleTransformer {
   /**
    * Given a node and scope name, add a scoping class to each node
    * in the tree. This facilitates transforming css into scoped rules.
-   * @param {?} node
-   * @param {?} scope
-   * @param {?=} shouldRemoveScope
+   * @param {!Node} node
+   * @param {string} scope
+   * @param {boolean=} shouldRemoveScope
    */
   dom(node, scope, shouldRemoveScope) {
     // one time optimization to skip scoping...
     if (node['__styleScoped']) {
       node['__styleScoped'] = null;
     } else {
-      this._transformDom(node, scope || '', shouldRemoveScope);
+      const fn = (node) => {
+        this.element(node, scope || '', shouldRemoveScope);
+      };
+      this._transformDom(node, fn);
     }
   }
 
-  _transformDom(node, selector, shouldRemoveScope) {
-    if (node.nodeType === Node.ELEMENT_NODE) {
-      this.element(node, selector, shouldRemoveScope);
+  /**
+   * @param {!Node} startNode
+   * @param {!function(node)} transformer
+   */
+  _transformDom(startNode, transformer) {
+    if (startNode.nodeType === Node.ELEMENT_NODE) {
+      transformer(startNode)
     }
-    let c$ = (node.localName === 'template') ?
+    let c$ = (startNode.localName === 'template') ?
       // In case the template is in svg context, fall back to the node
       // since it won't be an HTMLTemplateElement with a .content property
-      (node.content || node._content || node).childNodes :
-      node.children || node.childNodes;
+      (startNode.content || startNode._content || startNode).childNodes :
+      startNode.children || startNode.childNodes;
     if (c$) {
       for (let i=0; i<c$.length; i++) {
-        this._transformDom(c$[i], selector, shouldRemoveScope);
+        this._transformDom(c$[i], transformer);
       }
     }
   }
+
   /**
    * @param {?} element
    * @param {?} scope
@@ -102,6 +110,25 @@ class StyleTransformer {
           StyleUtil.setElementClassRaw(element, newValue);
         }
       }
+    }
+  }
+
+  /**
+   * Given a node, replace the scoping class to each subnode in the tree.
+   * @param {!Node} node
+   * @param {string} oldScope
+   * @param {string} newScope
+   */
+  domReplaceScope(node, oldScope, newScope) {
+    // one time optimization to skip scoping...
+    if (node['__styleScoped']) {
+      node['__styleScoped'] = null;
+    } else {
+      const fn = (node) => {
+        this.element(node, oldScope, true);
+        this.element(node, newScope);
+      };
+      this._transformDom(node, fn);
     }
   }
 

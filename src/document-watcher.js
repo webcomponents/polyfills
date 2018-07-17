@@ -74,10 +74,7 @@ function handler(mxns) {
         newScope = getIsExtends(host).is;
         // rescope current node and subtree if necessary
         if (newScope !== currentScope) {
-          if (currentScope) {
-            StyleTransformer.dom(n, currentScope, true);
-          }
-          StyleTransformer.dom(n, newScope);
+          StyleTransformer.domReplaceScope(n, currentScope, newScope);
         }
         // make sure all the subtree elements are scoped correctly
         let unscopedNodes = window['ShadyDOM']['nativeMethods']['querySelectorAll'].call(
