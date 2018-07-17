@@ -36,7 +36,10 @@
     "apply-shim.min.js*",
     "custom-style-interface.html",
     "custom-style-interface.min.js*",
-    "scoping-shim.min.js*"
+    "scoping-shim.min.js*",
+    "entrypointes/**/*.js",
+    "src/**/*.js",
+    "externs/**/*.js"
   ],
   "homepage": "https://webcomponents.org/polyfills",
   "devDependencies": {
