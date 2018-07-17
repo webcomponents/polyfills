@@ -46,6 +46,7 @@ class StyleTransformer {
    * @param {!Node} node
    * @param {string} scope
    * @param {boolean=} shouldRemoveScope
+   * @deprecated
    */
   dom(node, scope, shouldRemoveScope) {
     // one time optimization to skip scoping...
@@ -54,6 +55,23 @@ class StyleTransformer {
     } else {
       const fn = (node) => {
         this.element(node, scope || '', shouldRemoveScope);
+      };
+      this._transformDom(node, fn);
+    }
+  }
+
+  /**
+   * Given a node and scope name, add a scoping class to each node in the tree.
+   * @param {!Node} node
+   * @param {string} scope
+   */
+  domAddScope(node, scope) {
+    // one time optimization to skip scoping...
+    if (node['__styleScoped']) {
+      node['__styleScoped'] = null;
+    } else {
+      const fn = (node) => {
+        this.element(node, scope || '');
       };
       this._transformDom(node, fn);
     }
@@ -127,6 +145,22 @@ class StyleTransformer {
       const fn = (node) => {
         this.element(node, oldScope, true);
         this.element(node, newScope);
+      };
+      this._transformDom(node, fn);
+    }
+  }
+  /**
+   * Given a node, remove the scoping class to each subnode in the tree.
+   * @param {!Node} node
+   * @param {string} oldScope
+   */
+  domRemoveScope(node, oldScope) {
+    // one time optimization to skip scoping...
+    if (node['__styleScoped']) {
+      node['__styleScoped'] = null;
+    } else {
+      const fn = (node) => {
+        this.element(node, oldScope, true);
       };
       this._transformDom(node, fn);
     }

@@ -63,7 +63,7 @@ function handler(mxns) {
       let currentScope = getCurrentScope(n);
       // node was scoped, but now is in document
       if (currentScope && root === n.ownerDocument) {
-        StyleTransformer.dom(n, currentScope, true);
+        StyleTransformer.domRemoveScope(n, currentScope);
       } else if (root.nodeType === Node.DOCUMENT_FRAGMENT_NODE) {
         let newScope;
         let host = /** @type {ShadowRoot} */(root).host;
