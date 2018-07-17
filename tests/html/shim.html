@@ -129,48 +129,48 @@ suite('Native Shim with ES5 + Reflect API super call (can be expected from trans
   }
 
   test('works with createElement()', () => {
-    function ES5ReflectReflect1() {
+    function ES5ReflectElement1() {
       return Reflect.construct(HTMLElement, [], this.constructor);
     }
-    ES5ReflectReflect1.prototype = Object.create(HTMLElement.prototype);
-    ES5ReflectReflect1.prototype.constructor = ES5ReflectReflect1;
+    ES5ReflectElement1.prototype = Object.create(HTMLElement.prototype);
+    ES5ReflectElement1.prototype.constructor = ES5ReflectElement1;
 
-    customElements.define('es5-reflect-element-1', ES5ReflectReflect1);
+    customElements.define('es5-reflect-element-1', ES5ReflectElement1);
 
     const el = document.createElement('es5-reflect-element-1');
-    assert.instanceOf(el, ES5ReflectReflect1);
+    assert.instanceOf(el, ES5ReflectElement1);
     assert.instanceOf(el, HTMLElement);
     assert.equal(el.tagName, 'ES5-REFLECT-ELEMENT-1');
   });
 
   test('works with user-called constructors', () => {
-    function ES5ReflectReflect2() {
+    function ES5ReflectElement2() {
       return Reflect.construct(HTMLElement, [], this.constructor);
     }
-    ES5ReflectReflect2.prototype = Object.create(HTMLElement.prototype);
-    ES5ReflectReflect2.prototype.constructor = ES5ReflectReflect2;
+    ES5ReflectElement2.prototype = Object.create(HTMLElement.prototype);
+    ES5ReflectElement2.prototype.constructor = ES5ReflectElement2;
 
-    customElements.define('es5-reflect-element-2', ES5ReflectReflect2);
+    customElements.define('es5-reflect-element-2', ES5ReflectElement2);
 
-    const el = new ES5ReflectReflect2();
-    assert.instanceOf(el, ES5ReflectReflect2);
+    const el = new ES5ReflectElement2();
+    assert.instanceOf(el, ES5ReflectElement2);
     assert.instanceOf(el, HTMLElement);
     assert.equal(el.tagName, 'ES5-REFLECT-ELEMENT-2');
   });
 
   test('works with parser created elements', () => {
-    function ES5ReflectReflect3() {
+    function ES5ReflectElement3() {
       return Reflect.construct(HTMLElement, [], this.constructor);
     }
-    ES5ReflectReflect3.prototype = Object.create(HTMLElement.prototype);
-    ES5ReflectReflect3.prototype.constructor = ES5ReflectReflect3;
+    ES5ReflectElement3.prototype = Object.create(HTMLElement.prototype);
+    ES5ReflectElement3.prototype.constructor = ES5ReflectElement3;
 
-    customElements.define('es5-reflect-element-3', ES5ReflectReflect3);
+    customElements.define('es5-reflect-element-3', ES5ReflectElement3);
 
     const container = document.createElement('div');
     container.innerHTML = '<es5-reflect-element-3></es5-reflect-element-3>';
     const el = container.querySelector('es5-reflect-element-3');
-    assert.instanceOf(el, ES5ReflectReflect3);
+    assert.instanceOf(el, ES5ReflectElement3);
     assert.instanceOf(el, HTMLElement);
     assert.equal(el.tagName, 'ES5-REFLECT-ELEMENT-3');
   });
