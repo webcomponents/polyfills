@@ -160,7 +160,7 @@ class StyleTransformer {
       node['__styleScoped'] = null;
     } else {
       const fn = (node) => {
-        this.element(node, oldScope, true);
+        this.element(node, oldScope || '', true);
       };
       this._transformDom(node, fn);
     }
