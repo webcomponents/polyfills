@@ -79,7 +79,7 @@ class StyleTransformer {
 
   /**
    * @param {!Node} startNode
-   * @param {!function(node)} transformer
+   * @param {!function(!Node)} transformer
    */
   _transformDom(startNode, transformer) {
     if (startNode.nodeType === Node.ELEMENT_NODE) {

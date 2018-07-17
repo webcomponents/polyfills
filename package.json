@@ -28,8 +28,8 @@
   "scripts": {
     "build": "gulp",
     "lint": "eslint src test entrypoints",
-    "test": "npm run lint && gulp test-modules && wct",
-    "prepack": "npm run build"
+    "test": "npm run lint && gulp && wct",
+    "prepack": "gulp closure"
   },
   "files": [
     "apply-shim.html",
