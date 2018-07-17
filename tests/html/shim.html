@@ -10,7 +10,6 @@
 -->
 <title>Custom Elements Tests</title>
 <meta charset="utf-8">
-<script src="../../node_modules/es6-promise/dist/es6-promise.auto.min.js"></script>
 <script src="../../src/native-shim.js"></script>
 <script src="../../node_modules/wct-browser-legacy/browser.js"></script>
 
@@ -225,28 +224,16 @@ suite('Native Shim with ES5 + Reflect API super call (can be expected from trans
 
 suite('Native Shim with ES6 classes', () => {
 
-  function createHTMLElementSubclassNamed(name) {
-    return eval('(function() { class ' + name + ' extends HTMLElement { constructor() { super(); }}; return ' + name + '; })')();
-  }
-
   suiteSetup(function() {
     // Do nothing if the browser does not natively support custom elements.
     if (!window.customElements) {
       this.skip();
       return;
     }
-
-    try {
-      createHTMLElementSubclassNamed('ES6Element0');
-    } catch (e) {
-      this.skip();
-      return;
-    }
   });
 
   test('works with createElement()', () => {
-    const ES6Element1 = createHTMLElementSubclassNamed('ES6Element1');
-
+    class ES6Element1 extends HTMLElement {}
     customElements.define('es6-element-1', ES6Element1);
 
     const el = document.createElement('es6-element-1');
@@ -256,8 +243,7 @@ suite('Native Shim with ES6 classes', () => {
   });
 
   test('works with user-called constructors', () => {
-    const ES6Element2 = createHTMLElementSubclassNamed('ES6Element2');
-
+    class ES6Element2 extends HTMLElement {}
     customElements.define('es6-element-2', ES6Element2);
 
     const el = new ES6Element2();
@@ -267,8 +253,7 @@ suite('Native Shim with ES6 classes', () => {
   });
 
   test('works with parser created elements', () => {
-    const ES6Element3 = createHTMLElementSubclassNamed('ES6Element3');
-
+    class ES6Element3 extends HTMLElement {}
     customElements.define('es6-element-3', ES6Element3);
 
     const container = document.createElement('div');
@@ -280,20 +265,25 @@ suite('Native Shim with ES6 classes', () => {
   });
 
   test('reactions', () => {
-    const ES6Element4 = createHTMLElementSubclassNamed('ES6Element4');
-    ES6Element4.observedAttributes = ['test'];
-    ES6Element4.prototype.connectedCallback = function() {
-      this.connectedCalled = true;
-    };
-    ES6Element4.prototype.disconnectedCallback = function() {
-      this.disconnectedCalled = true;
-    };
-    ES6Element4.prototype.attributeChangedCallback = function(name, oldValue, newValue) {
-      this.attributeChangedCalled = `${name}, ${oldValue}, ${newValue}`;
-    };
-    ES6Element4.prototype.adoptedCallback = function() {
-      this.adoptedCalled = true;
-    };
+    class ES6Element4 extends HTMLElement {
+      static get observedAttributes() { return ['test']; }
+
+      connectedCallback() {
+        this.connectedCalled = true;
+      }
+
+      disconnectedCallback() {
+        this.disconnectedCalled = true;
+      }
+
+      attributeChangedCallback(name, oldValue, newValue) {
+        this.attributeChangedCalled = `${name}, ${oldValue}, ${newValue}`;
+      }
+
+      adoptedCallback() {
+        this.adoptedCalled = true;
+      }
+    }
 
     customElements.define('es6-element-4', ES6Element4);
 
