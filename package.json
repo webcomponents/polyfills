@@ -37,7 +37,7 @@
     "custom-style-interface.html",
     "custom-style-interface.min.js*",
     "scoping-shim.min.js*",
-    "entrypointes/**/*.js",
+    "entrypoints/**/*.js",
     "src/**/*.js",
     "externs/**/*.js"
   ],
