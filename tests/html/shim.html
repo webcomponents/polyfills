@@ -18,11 +18,13 @@
 
 suite('Native Shim', () => {
 
-  // Do nothing if the browser does not natively support custom elements.
-  if (!window.customElements) {
-    test.skip('The native shim does not apply to this browser.', () => {});
-    return;
-  }
+  suiteSetup(function() {
+    // Do nothing if the browser does not natively support custom elements.
+    if (!window.customElements) {
+      this.skip();
+      return;
+    }
+  });
 
   test('works with createElement()', () => {
     function ES5Element1() {
@@ -117,16 +119,19 @@ suite('Native Shim', () => {
 
 suite('Native Shim with ES5 + Reflect API super call (can be expected from transpilers)', () => {
 
-  // Do nothing if the browser does not natively support custom elements.
-  if (!window.customElements) {
-    test.skip('The native shim does not apply to this browser.', () => {});
-    return;
-  }
-  // Do nothing if the browser does not support Reflect API.
-  if (typeof Reflect !== 'object' || typeof Reflect.construct !== 'function') {
-    test.skip('This test suite does not apply to this browser (Reflect API missing).', () => {});
-    return;
-  }
+  suiteSetup(function() {
+    // Do nothing if the browser does not natively support custom elements.
+    if (!window.customElements) {
+      this.skip();
+      return;
+    }
+
+    // Do nothing if the browser does not support Reflect API.
+    if (typeof Reflect !== 'object' || typeof Reflect.construct !== 'function') {
+      this.skip();
+      return;
+    }
+  });
 
   test('works with createElement()', () => {
     function ES5ReflectElement1() {
@@ -220,22 +225,24 @@ suite('Native Shim with ES5 + Reflect API super call (can be expected from trans
 
 suite('Native Shim with ES6 classes', () => {
 
-  // Do nothing if the browser does not natively support custom elements.
-  if (!window.customElements) {
-    test.skip('The native shim does not apply to this browser.', () => {});
-    return;
-  }
-
   function createHTMLElementSubclassNamed(name) {
     return eval('(function() { class ' + name + ' extends HTMLElement { constructor() { super(); }}; return ' + name + '; })')();
   }
 
-  try {
-    createHTMLElementSubclassNamed('ES6Element0');
-  } catch (e) {
-    test.skip('This test suite does not apply to this browser (ES6 classes not supported).', () => {});
-    return;
-  }
+  suiteSetup(function() {
+    // Do nothing if the browser does not natively support custom elements.
+    if (!window.customElements) {
+      this.skip();
+      return;
+    }
+
+    try {
+      createHTMLElementSubclassNamed('ES6Element0');
+    } catch (e) {
+      this.skip();
+      return;
+    }
+  });
 
   test('works with createElement()', () => {
     var ES6Element1 = createHTMLElementSubclassNamed('ES6Element1');
