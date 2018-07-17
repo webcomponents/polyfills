@@ -33,7 +33,11 @@
     "prepack": "npm run build"
   },
   "files": [
-    "shadydom.min.js*"
+    "shadydom.min.js*",
+    "src/**/*.js",
+    "externs/**/*.js",
+    "LICENSE.md",
+    "README.md"
   ],
   "homepage": "https://webcomponents.org/polyfills",
   "devDependencies": {
