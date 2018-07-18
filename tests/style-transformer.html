@@ -73,6 +73,14 @@ WCT = {waitFor: function (cb) {HTMLImports.whenReady(cb)}}
   </style>
 </template>
 
+<template id="shared-style">
+  <style>
+    html, :host {
+      color: gray;
+    }
+  </style>
+</template>
+
 <script>
 function processTemplate(templateName, elementName) {
   var template = document.querySelector('template#' + templateName);
@@ -163,5 +171,25 @@ suite('Style Transformer', function() {
     });
   });
 
+  suite('shared style (light or shadow dom) transforms', function() {
+    let rule;
+
+    setup(function() {
+      let template = document.querySelector('template#shared-style');
+      let style = template.content.querySelector('style').cloneNode(true);
+      let ast = window.ShadyCSS.ScopingShim.getStyleAst(style);
+      rule = ast.rules[0];
+    });
+
+    test('native ShadowDOM', function() {
+      window.StyleTransformer.normalizeRootSelector(rule);
+      assert.equal(rule.selector, 'html, :host');
+    });
+
+    test('ShadyDOM', function() {
+      window.StyleTransformer.documentRule(rule);
+      assert.equal(rule.selector, 'html:not(.style-scope)');
+    });
+  });
 });
 </script>

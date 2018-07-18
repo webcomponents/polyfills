@@ -293,7 +293,11 @@ export function gatherStyleText(element) {
   return styleTextParts.join('').trim();
 }
 
-// Split a selector separated by commas into an array in a smart way
+/**
+ * Split a selector separated by commas into an array in a smart way
+ * @param {string} selector
+ * @return {!Array<string>}
+ */
 export function splitSelectorList(selector) {
   let parts = [];
   let part = '';

@@ -255,7 +255,7 @@ class StyleTransformer {
         p$[i] = transformer.call(this, p, scope, hostScope);
       }
     }
-    return p$.join(COMPLEX_SELECTOR_SEP);
+    return p$.filter((part) => Boolean(part)).join(COMPLEX_SELECTOR_SEP);
   }
 
   /**
@@ -396,9 +396,14 @@ class StyleTransformer {
  * @param {string} selector
  */
   _transformDocumentSelector(selector) {
-    return selector.match(SLOTTED) ?
-      this._transformComplexSelector(selector, SCOPE_DOC_SELECTOR) :
-      this._transformSimpleSelector(selector.trim(), SCOPE_DOC_SELECTOR);
+    if (selector.match(HOST)) {
+      // remove ':host' type selectors in document rules
+      return '';
+    } else if (selector.match(SLOTTED)) {
+      return this._transformComplexSelector(selector, SCOPE_DOC_SELECTOR)
+    } else {
+      return this._transformSimpleSelector(selector.trim(), SCOPE_DOC_SELECTOR);
+    }
   }
 }
 
