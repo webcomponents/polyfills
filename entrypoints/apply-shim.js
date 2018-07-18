@@ -143,8 +143,23 @@ if (!window.ShadyCSS || !window.ShadyCSS.ScopingShim) {
      */
     prepareTemplate(template, elementName, elementExtends) { // eslint-disable-line no-unused-vars
       applyShimInterface.flushCustomStyles();
-      applyShimInterface.prepareTemplate(template, elementName)
+      applyShimInterface.prepareTemplate(template, elementName);
     },
+
+    /**
+     * @param {!HTMLTemplateElement} template
+     * @param {string} elementName
+     * @param {string=} elementExtends
+     */
+    prepareTemplateStyles(template, elementName, elementExtends) {
+      this.prepareTemplate(template, elementName, elementExtends);
+    },
+
+    /**
+     * @param {HTMLTemplateElement} template
+     * @param {string} elementName
+     */
+    prepareTemplateDom(template, elementName) {}, // eslint-disable-line no-unused-vars
 
     /**
      * @param {!HTMLElement} element

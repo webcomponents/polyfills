@@ -17,13 +17,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     WCT = {waitFor: function (cb) {HTMLImports.whenReady(cb)}}
   </script>
   <script src="./test-flags.js"></script>
-  <script src="../../web-component-tester/browser.js"></script>
-  <script src="../../webcomponents-platform/webcomponents-platform.js"></script>
-  <script src="../../es6-promise/dist/es6-promise.auto.min.js"></script>
-  <script src="../../template/template.js"></script>
-  <script src="../../html-imports/html-imports.min.js"></script>
-  <script src="../../shadydom/shadydom.min.js"></script>
-  <script src="../../custom-elements/custom-elements.min.js"></script>
+  <script src="../node_modules/wct-browser-legacy/browser.js"></script>
+  <script src="../node_modules/@webcomponents/webcomponents-platform/webcomponents-platform.js"></script>
+  <script src="../node_modules/es6-promise/dist/es6-promise.auto.min.js"></script>
+  <script src="../node_modules/@webcomponents/template/template.js"></script>
+  <script src="../node_modules/@webcomponents/html-imports/html-imports.min.js"></script>
+  <script src="../node_modules/@webcomponents/shadydom/shadydom.min.js"></script>
+  <script src="../node_modules/@webcomponents/custom-elements/custom-elements.min.js"></script>
   <script src="../scoping-shim.min.js"></script>
   <script src="../apply-shim.min.js"></script>
   <script src="../custom-style-interface.min.js"></script>
@@ -32,7 +32,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <body>
 
   <style>
-    x-container, x-sample {
+    x-container, x-sample, x-sample-dynamic,  x-container-dynamic {
       display: block;
       padding: 10px;
       margin: 10px;
@@ -93,6 +93,63 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
   <x-dynamic></x-dynamic>
 
+  <template id="out-of-band">
+    <style>
+      div {
+        color: var(--foo);
+      }
+    </style>
+    <div>oob shadowed</div>
+  </template>
+
+  <template id="oob-parent">
+    <style>
+      out-of-band {
+        --foo: rgb(0, 0, 255);
+      }
+    </style>
+    <out-of-band></out-of-band>
+  </template>
+
+  <template id="oob-other-parent">
+    <style>
+      out-of-band {
+        --foo: rgb(255, 0, 0);
+      }
+    </style>
+  </template>
+
+  <oob-parent></oob-parent>
+  <oob-other-parent></oob-other-parent>
+
+  <template id="x-sample-dynamic">
+    <style>
+      .target {
+        background-color: rgb(255, 0, 0);
+      }
+    </style>
+    <h2></h2>
+    <p>here .target elements are red</p>
+    <div class="target">I'm red</div>
+    <template id="renderer">
+      <div class="target"></div>
+    </template>
+  </template>
+
+  <template id="x-container-dynamic">
+    <style>
+      .target {
+        background-color: rgb(123, 123, 123);
+      }
+    </style>
+    <h1>x-container</h1>
+    <p>here .target elements are gray</p>
+    <div class="target">I'm gray</div>
+    <slot></slot>
+  </template>
+
+  <x-container-dynamic></x-container-dynamic>
+
   <script>
     suite('Dynamic Scoping', () => {
       function stamp(parent, host) {
@@ -131,6 +188,58 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             assert.equal(getComputedStyle(span).backgroundColor, 'rgb(123, 123, 123)');
             done();
           })
+        });
+      });
+      test('moving a custom element between scopes recalculates correctly', function(done) {
+        makeElement('out-of-band');
+        makeElement('oob-parent');
+        makeElement('oob-other-parent');
+        let parent = document.querySelector('oob-parent');
+        let newParent = document.querySelector('oob-other-parent');
+        let oob = parent.shadowRoot.querySelector('out-of-band');
+        let shadowDiv = oob.shadowRoot.querySelector('div');
+        newParent.shadowRoot.appendChild(oob);
+        requestAnimationFrame(() => {
+          assert.equal(getComputedStyle(shadowDiv).getPropertyValue('color').trim(), 'rgb(255, 0, 0)');
+          done();
+        });
+      })
+      function makeDynamicElement(name, connectedCallback) {
+        let template = document.querySelector(`template#${name}`);
+        if (template && window.ShadyCSS) {
+          window.ShadyCSS.prepareTemplate(template, name);
+        }
+        window.customElements.define(name, class extends window.HTMLElement {
+          constructor() {
+            super();
+            if (template && !this.shadowRoot) {
+              this.attachShadow({mode: 'open'});
+              this.shadowRoot.appendChild(document.importNode(template.content, true));
+            }
+          }
+          connectedCallback() {
+            window.ShadyCSS && window.ShadyCSS.styleElement(this);
+            if (connectedCallback) {
+              connectedCallback.call(this);
+            }
+          }
+        });
+      }
+      test('Nested DOM is scoped correctly when created dynamically inside a dynamic container', (done) => {
+        makeDynamicElement('x-container-dynamic');
+        makeDynamicElement('x-sample-dynamic');
+        const dynamicDiv = document.createElement('div');
+        dynamicDiv.classList.add('target');
+        dynamicDiv.innerText = 'I was created dynamically';
+        const dynamicSample = document.createElement('x-sample-dynamic');
+        const dynamicContainer = document.createElement('x-container-dynamic');
+        dynamicSample.shadowRoot.appendChild(dynamicDiv);
+        dynamicContainer.shadowRoot.appendChild(dynamicSample);
+        document.querySelector('x-container-dynamic').shadowRoot.appendChild(dynamicContainer);
+        requestAnimationFrame(() => {
+          dynamicSample.shadowRoot.querySelectorAll('div.target').forEach((target) => 
+            assert.equal(getComputedStyle(target).backgroundColor,'rgb(255, 0, 0)'));
+          done();
         });
       });
     });
