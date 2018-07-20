@@ -189,7 +189,7 @@ export function getCssBuildType(element) {
  * @param {number} start
  * @return {number}
  */
-function findMatchingParen(text, start) {
+export function findMatchingParen(text, start) {
   let level = 0;
   for (let i=start, l=text.length; i < l; i++) {
     if (text[i] === '(') {
@@ -299,13 +299,13 @@ export function gatherStyleText(element) {
  * @return {!Array<string>}
  */
 export function splitSelectorList(selector) {
-  let parts = [];
+  const parts = [];
   let part = '';
   for (let i = 0; i >= 0 && i < selector.length; i++) {
     // A selector with parentheses will be one complete part
     if (selector[i] === '(') {
       // find the matching paren
-      let end = findMatchingParen(selector, i);
+      const end = findMatchingParen(selector, i);
       // push the paren block into the part
       part += selector.slice(i, end + 1);
       // move the index to after the paren block

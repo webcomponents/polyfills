@@ -273,6 +273,40 @@ class StyleTransformer {
     });
   }
 
+  /**
+   * Preserve `:matches()` selectors by replacing them with MATCHES_REPLACMENT
+   * and returning an array of `:matches()` selectors.
+   * Use `_replacesMatchesPseudo` to replace the `:matches()` parts
+   *
+   * @param {string} selector
+   * @return {{selector: string, matches: !Array<string>}}
+   */
+  _preserveMatchesPseudo(selector) {
+    /** @type {!Array<string>} */
+    const matches = [];
+    let match;
+    while ((match = selector.match(MATCHES))) {
+      const start = match.index;
+      const end = StyleUtil.findMatchingParen(selector, start);
+      const part = selector.slice(start, end + 1);
+      selector = selector.replace(part, MATCHES_REPLACEMENT);
+      matches.push(part);
+    }
+    return {selector, matches};
+  }
+
+  /**
+   * Replace MATCHES_REPLACMENT character with the given set of `:matches()`
+   * selectors.
+   *
+   * @param {string} selector
+   * @param {!Array<string>} matches
+   * @return {string}
+   */
+  _replaceMatchesPseudo(selector, matches) {
+    return selector.replace(MATCHES_REPLACEMENT, () => matches.pop());
+  }
+
 /**
  * @param {string} selector
  * @param {string} scope
@@ -287,6 +321,16 @@ class StyleTransformer {
       selector = selector.replace(NTH, (m, type, inner) => `:${type}(${inner.replace(/\s/g, '')})`)
       selector = this._twiddleNthPlus(selector);
     }
+    // Preserve selectors like `:-webkit-any` so that SIMPLE_SELECTOR_SEP does
+    // not get confused by spaces inside the pseudo selector
+    const isMatches = MATCHES.test(selector);
+    /** @type {!Array<string>} */
+    let matches;
+    if (isMatches) {
+      let ret = this._preserveMatchesPseudo(selector);
+      selector = ret.selector;
+      matches = ret.matches;
+    }
     selector = selector.replace(SLOTTED_START, `${HOST} $1`);
     selector = selector.replace(SIMPLE_SELECTOR_SEP, (m, c, s) => {
       if (!stop) {
@@ -297,6 +341,10 @@ class StyleTransformer {
       }
       return c + s;
     });
+    // replace `:matches()` selectors
+    if (isMatches) {
+      selector = this._replaceMatchesPseudo(selector, matches);
+    }
     if (isNth) {
       selector = this._twiddleNthPlus(selector);
     }
@@ -427,5 +475,7 @@ let CSS_CLASS_PREFIX = '.';
 let PSEUDO_PREFIX = ':';
 let CLASS = 'class';
 let SELECTOR_NO_MATCH = 'should_not_match';
+const MATCHES = /:(?:matches|any|-(?:webkit|moz)-any)/;
+const MATCHES_REPLACEMENT = '\u{1234}';
 
 export default new StyleTransformer()

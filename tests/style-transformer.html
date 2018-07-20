@@ -112,7 +112,7 @@ suite('Style Transformer', function() {
     });
 
     test(':host() :-webkit-any()', function() {
-      assert.equal(ast.rules[3].selector, 'x-foo.bar .x-foo:-webkit-any(.foo, .bar).x-foo');
+      assert.equal(ast.rules[3].selector, 'x-foo.bar :-webkit-any(.foo, .bar).x-foo');
     });
   });
 
@@ -175,9 +175,9 @@ suite('Style Transformer', function() {
     let rule;
 
     setup(function() {
-      let template = document.querySelector('template#shared-style');
-      let style = template.content.querySelector('style').cloneNode(true);
-      let ast = window.ShadyCSS.ScopingShim.getStyleAst(style);
+      const template = document.querySelector('template#shared-style');
+      const style = template.content.querySelector('style').cloneNode(true);
+      const ast = window.ShadyCSS.ScopingShim.getStyleAst(style);
       rule = ast.rules[0];
     });
 
