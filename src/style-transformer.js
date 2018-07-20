@@ -327,9 +327,7 @@ class StyleTransformer {
     /** @type {!Array<string>} */
     let matches;
     if (isMatches) {
-      let ret = this._preserveMatchesPseudo(selector);
-      selector = ret.selector;
-      matches = ret.matches;
+      ({selector, matches} = this._preserveMatchesPseudo(selector));
     }
     selector = selector.replace(SLOTTED_START, `${HOST} $1`);
     selector = selector.replace(SIMPLE_SELECTOR_SEP, (m, c, s) => {
