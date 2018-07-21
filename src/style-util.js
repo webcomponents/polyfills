@@ -321,9 +321,5 @@ export function splitSelectorList(selector) {
   if (part) {
     parts.push(part);
   }
-  // if there were no commas, just push the whole selector as a "part"
-  if (parts.length === 0) {
-    parts.push(selector);
-  }
   return parts;
 }
