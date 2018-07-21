@@ -1321,7 +1321,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       var t = document.createElement('template');
       t.innerHTML = '<x-simple></x-simple>';
       var clone = t.content.cloneNode(true).firstChild;
-      var host = document.createElement('x-dist-simple');
+      var host = document.createElement('x-dist');
       document.body.appendChild(host);
       ShadyDOM.flush();
       host.appendChild(clone);

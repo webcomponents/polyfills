@@ -49,7 +49,7 @@ export function insertBefore(parent, node, ref_node) {
     removeChild(node.parentNode, node);
   }
   // add to new parent
-  let preventNativeInsert;
+  let allowNativeInsert = true;
   let ownerRoot;
   let slotsAdded;
   if (!node['__noInsertionPoint']) {
@@ -73,14 +73,14 @@ export function insertBefore(parent, node, ref_node) {
     const parentData = shadyDataForNode(parent);
     if (hasShadowRootWithSlot(parent)) {
       parentData.root._asyncRender();
-      preventNativeInsert = true;
+      allowNativeInsert = false;
     // when inserting into a host with shadowRoot with NO slot, do nothing
     // as the node should not be added to composed dome anywhere.
     } else if (parentData.root) {
-      preventNativeInsert = true;
+      allowNativeInsert = false;
     }
   }
-  if (!preventNativeInsert) {
+  if (allowNativeInsert) {
     // if adding to a shadyRoot, add to host instead
     let container = utils.isShadyRoot(parent) ?
       /** @type {ShadowRoot} */(parent).host : parent;
