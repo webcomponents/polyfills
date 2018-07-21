@@ -81,6 +81,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     }
   </script>
 
+  <template id="x-simple">simple</template>
+  <script>
+    defineTestElement('x-simple');
+  </script>
+
   <template id="x-dist">x-dist<span id="distWrapper"><slot id="content"></slot></span></template>
   <script>
     defineTestElement('x-dist');
@@ -1310,6 +1315,19 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     test('shadowRoot set via innerHTML that contains a <slot> and a custom element that also sets shadowRoot content via innerHTML', function() {
       var el = document.querySelector('use-inner-html');
       assert.equal(ShadyDOM.nativeTree.textContent(el), '[I][A]');
+    });
+
+    test('elements created in inert documents correctly upgrade when added to shadow hosts with shadowRoots containing slots', function() {
+      var t = document.createElement('template');
+      t.innerHTML = '<x-simple></x-simple>';
+      var clone = t.content.cloneNode(true).firstChild;
+      var host = document.createElement('x-dist');
+      document.body.appendChild(host);
+      ShadyDOM.flush();
+      host.appendChild(clone);
+      assert.equal(clone._initialized, true);
+      assert.equal(ShadyDOM.nativeTree.textContent(clone), 'simple');
+      document.body.removeChild(host);
     });
 
   });
