@@ -91,6 +91,12 @@ export function insertBefore(parent, node, ref_node) {
     } else {
       nativeMethods.appendChild.call(container, node);
     }
+  // Since ownerDocument is not patched, it can be incorrect afer this call
+  // if the node is physically appended via distribution. This can result
+  // in the custom elements polyfill not upgrading the node if it's in an inert doc.
+  // We correct this by calling `adoptNode`.
+  } else if (node.ownerDocument !== parent.ownerDocument) {
+    parent.ownerDocument.adoptNode(node);
   }
   scheduleObserver(parent, node);
   return node;
