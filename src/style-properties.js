@@ -481,7 +481,7 @@ class StyleProperties {
     rule.transformedSelector = rule.transformedSelector || rule['selector'];
     let selector = rule.transformedSelector;
     let scope = '.' + scopeId;
-    let parts = selector.split(',');
+    let parts = StyleUtil.splitSelectorList(selector);
     for (let i=0, l=parts.length, p; (i<l) && (p=parts[i]); i++) {
       parts[i] = p.match(hostRx) ?
         p.replace(hostSelector, scope) :

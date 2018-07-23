@@ -385,6 +385,19 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <unscoped-apply-user></unscoped-apply-user>
 </template>
 
+<template id="any-selector">
+  <style>
+    :-webkit-any(div, span) {
+      color: rgb(123, 123, 123);
+    }
+    :-moz-any(div, span) {
+      color: rgb(123, 123, 123);
+    }
+  </style>
+  <div>a</div>
+  <span>b</span>
+</template>
+
 <template id="scoped-keyframes">
   <style>
     :host {
@@ -925,6 +938,19 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       document.body.appendChild(e);
       flush();
       assertComputed(e.shadowRoot.querySelector('.foo'), 'rgb(255, 0, 0)', 'color');
+      document.body.removeChild(e);
+    });
+
+    test(':-webkit-any and :-moz-any selectors are supported', function() {
+      if (navigator.userAgent.match(/Trident|Edge/)) {
+        this.skip();
+      }
+      makeElement('any-selector');
+      var e = document.createElement('any-selector');
+      document.body.appendChild(e);
+      flush();
+      assertComputed(e.shadowRoot.querySelector('div'), 'rgb(123, 123, 123)', 'color');
+      assertComputed(e.shadowRoot.querySelector('span'), 'rgb(123, 123, 123)', 'color');
       document.body.removeChild(e);
     });
 

@@ -247,7 +247,7 @@ class StyleTransformer {
    * @param {string=} hostScope
    */
   _transformRuleCss(rule, transformer, scope, hostScope) {
-    let p$ = rule['selector'].split(COMPLEX_SELECTOR_SEP);
+    let p$ = StyleUtil.splitSelectorList(rule['selector']);
     // we want to skip transformation of rules that appear in keyframes,
     // because they are keyframe selectors, not element selectors.
     if (!StyleUtil.isKeyframesSelector(rule)) {
@@ -255,7 +255,7 @@ class StyleTransformer {
         p$[i] = transformer.call(this, p, scope, hostScope);
       }
     }
-    return p$.join(COMPLEX_SELECTOR_SEP);
+    return p$.filter((part) => Boolean(part)).join(COMPLEX_SELECTOR_SEP);
   }
 
   /**
@@ -273,6 +273,44 @@ class StyleTransformer {
     });
   }
 
+  /**
+   * Preserve `:matches()` selectors by replacing them with MATCHES_REPLACMENT
+   * and returning an array of `:matches()` selectors.
+   * Use `_replacesMatchesPseudo` to replace the `:matches()` parts
+   *
+   * @param {string} selector
+   * @return {{selector: string, matches: !Array<string>}}
+   */
+  _preserveMatchesPseudo(selector) {
+    /** @type {!Array<string>} */
+    const matches = [];
+    let match;
+    while ((match = selector.match(MATCHES))) {
+      const start = match.index;
+      const end = StyleUtil.findMatchingParen(selector, start);
+      if (end === -1) {
+        throw new Error(`${match.input} selector missing ')'`)
+      }
+      const part = selector.slice(start, end + 1);
+      selector = selector.replace(part, MATCHES_REPLACEMENT);
+      matches.push(part);
+    }
+    return {selector, matches};
+  }
+
+  /**
+   * Replace MATCHES_REPLACMENT character with the given set of `:matches()`
+   * selectors.
+   *
+   * @param {string} selector
+   * @param {!Array<string>} matches
+   * @return {string}
+   */
+  _replaceMatchesPseudo(selector, matches) {
+    const parts = selector.split(MATCHES_REPLACEMENT);
+    return matches.reduce((acc, cur, idx) => acc + cur + parts[idx + 1], parts[0]);
+  }
+
 /**
  * @param {string} selector
  * @param {string} scope
@@ -287,6 +325,14 @@ class StyleTransformer {
       selector = selector.replace(NTH, (m, type, inner) => `:${type}(${inner.replace(/\s/g, '')})`)
       selector = this._twiddleNthPlus(selector);
     }
+    // Preserve selectors like `:-webkit-any` so that SIMPLE_SELECTOR_SEP does
+    // not get confused by spaces inside the pseudo selector
+    const isMatches = MATCHES.test(selector);
+    /** @type {!Array<string>} */
+    let matches;
+    if (isMatches) {
+      ({selector, matches} = this._preserveMatchesPseudo(selector));
+    }
     selector = selector.replace(SLOTTED_START, `${HOST} $1`);
     selector = selector.replace(SIMPLE_SELECTOR_SEP, (m, c, s) => {
       if (!stop) {
@@ -297,6 +343,10 @@ class StyleTransformer {
       }
       return c + s;
     });
+    // replace `:matches()` selectors
+    if (isMatches) {
+      selector = this._replaceMatchesPseudo(selector, matches);
+    }
     if (isNth) {
       selector = this._twiddleNthPlus(selector);
     }
@@ -396,9 +446,14 @@ class StyleTransformer {
  * @param {string} selector
  */
   _transformDocumentSelector(selector) {
-    return selector.match(SLOTTED) ?
-      this._transformComplexSelector(selector, SCOPE_DOC_SELECTOR) :
-      this._transformSimpleSelector(selector.trim(), SCOPE_DOC_SELECTOR);
+    if (selector.match(HOST)) {
+      // remove ':host' type selectors in document rules
+      return '';
+    } else if (selector.match(SLOTTED)) {
+      return this._transformComplexSelector(selector, SCOPE_DOC_SELECTOR)
+    } else {
+      return this._transformSimpleSelector(selector.trim(), SCOPE_DOC_SELECTOR);
+    }
   }
 }
 
@@ -422,5 +477,7 @@ let CSS_CLASS_PREFIX = '.';
 let PSEUDO_PREFIX = ':';
 let CLASS = 'class';
 let SELECTOR_NO_MATCH = 'should_not_match';
+const MATCHES = /:(?:matches|any|-(?:webkit|moz)-any)/;
+const MATCHES_REPLACEMENT = '\u{e000}';
 
 export default new StyleTransformer()

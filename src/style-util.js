@@ -189,7 +189,7 @@ export function getCssBuildType(element) {
  * @param {number} start
  * @return {number}
  */
-function findMatchingParen(text, start) {
+export function findMatchingParen(text, start) {
   let level = 0;
   for (let i=start, l=text.length; i < l; i++) {
     if (text[i] === '(') {
@@ -291,4 +291,35 @@ export function gatherStyleText(element) {
     }
   }
   return styleTextParts.join('').trim();
+}
+
+/**
+ * Split a selector separated by commas into an array in a smart way
+ * @param {string} selector
+ * @return {!Array<string>}
+ */
+export function splitSelectorList(selector) {
+  const parts = [];
+  let part = '';
+  for (let i = 0; i >= 0 && i < selector.length; i++) {
+    // A selector with parentheses will be one complete part
+    if (selector[i] === '(') {
+      // find the matching paren
+      const end = findMatchingParen(selector, i);
+      // push the paren block into the part
+      part += selector.slice(i, end + 1);
+      // move the index to after the paren block
+      i = end;
+    } else if (selector[i] === ',') {
+      parts.push(part);
+      part = '';
+    } else {
+      part += selector[i];
+    }
+  }
+  // catch any pieces after the last comma
+  if (part) {
+    parts.push(part);
+  }
+  return parts;
 }
