@@ -37,6 +37,9 @@ WCT = {waitFor: function (cb) {HTMLImports.whenReady(cb)}}
   :host(.bar) :-webkit-any(.foo, .bar) {
     color: purple;
   };
+  :-webkit-any([baz], [zot="foo"]) :matches(foo, bar) > :-moz-any(:not(:defined), :unresolved) {
+    color: rgb(123, 123, 123);
+  }
   </style>
 </template>
 
@@ -114,6 +117,10 @@ suite('Style Transformer', function() {
     test(':host() :-webkit-any()', function() {
       assert.equal(ast.rules[3].selector, 'x-foo.bar :-webkit-any(.foo, .bar).x-foo');
     });
+
+    test('lots of :matches()', function() {
+      assert.equal(ast.rules[4].selector, ':-webkit-any([baz], [zot="foo"]).x-foo :matches(foo, bar).x-foo > :-moz-any(:not(:defined), :unresolved).x-foo');
+    })
   });
 
   suite('::slotted transforms', function() {

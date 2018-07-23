@@ -288,6 +288,9 @@ class StyleTransformer {
     while ((match = selector.match(MATCHES))) {
       const start = match.index;
       const end = StyleUtil.findMatchingParen(selector, start);
+      if (end === -1) {
+        throw new Error(`${match.input} selector missing ')'`)
+      }
       const part = selector.slice(start, end + 1);
       selector = selector.replace(part, MATCHES_REPLACEMENT);
       matches.push(part);
@@ -304,7 +307,8 @@ class StyleTransformer {
    * @return {string}
    */
   _replaceMatchesPseudo(selector, matches) {
-    return selector.replace(MATCHES_REPLACEMENT, () => matches.pop());
+    const parts = selector.split(MATCHES_REPLACEMENT);
+    return matches.reduce((acc, cur, idx) => acc + cur + parts[idx + 1], parts[0]);
   }
 
 /**
@@ -474,6 +478,6 @@ let PSEUDO_PREFIX = ':';
 let CLASS = 'class';
 let SELECTOR_NO_MATCH = 'should_not_match';
 const MATCHES = /:(?:matches|any|-(?:webkit|moz)-any)/;
-const MATCHES_REPLACEMENT = '\u{1234}';
+const MATCHES_REPLACEMENT = '\u{e000}';
 
 export default new StyleTransformer()
