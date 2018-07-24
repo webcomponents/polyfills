@@ -15,7 +15,7 @@ import {nativeShadow, nativeCssVariables} from './style-settings.js';
 import StyleTransformer from './style-transformer.js';
 import * as StyleUtil from './style-util.js';
 import StyleProperties from './style-properties.js';
-import placeholderMap from './style-placeholder.js';
+import {addStylePlaceholder, getStylePlaceholder} from './style-placeholder.js';
 import StyleInfo from './style-info.js';
 import StyleCache from './style-cache.js';
 import {flush as watcherFlush} from './document-watcher.js';
@@ -85,6 +85,9 @@ export default class ScopingShim {
     if (template._prepared) {
       return;
     }
+    if (!nativeShadow) {
+      addStylePlaceholder(elementName);
+    }
     template._prepared = true;
     template.name = elementName;
     template.extends = typeExtension;
@@ -113,7 +116,7 @@ export default class ScopingShim {
     }
     if (!ownPropertyNames.length || nativeCssVariables) {
       let root = nativeShadow ? template.content : null;
-      let placeholder = placeholderMap[elementName];
+      let placeholder = getStylePlaceholder(elementName);
       let style = this._generateStaticStyle(info, template['_styleAst'], root, placeholder);
       template._style = style;
     }
@@ -138,7 +141,7 @@ export default class ScopingShim {
   }
   _prepareHost(host) {
     let {is, typeExtension} = StyleUtil.getIsExtends(host);
-    let placeholder = placeholderMap[is];
+    let placeholder = getStylePlaceholder(is)
     let template = templateMap[is];
     let ast;
     let ownStylePropertyNames;
@@ -148,16 +151,19 @@ export default class ScopingShim {
       ownStylePropertyNames = template._ownPropertyNames;
       cssBuild = template._cssBuild;
     }
-    return StyleInfo.set(host,
-      new StyleInfo(
-        ast,
-        placeholder,
-        ownStylePropertyNames,
-        is,
-        typeExtension,
-        cssBuild
-      )
+    const styleInfo = new StyleInfo(
+      ast,
+      placeholder,
+      ownStylePropertyNames,
+      is,
+      typeExtension,
+      cssBuild
     );
+    // only set the style info after this element has registered its template
+    if (template) {
+      StyleInfo.set(host, styleInfo);
+    }
+    return styleInfo;
   }
   _ensureApplyShim() {
     if (this._applyShim) {
