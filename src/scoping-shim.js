@@ -15,7 +15,7 @@ import {nativeShadow, nativeCssVariables} from './style-settings.js';
 import StyleTransformer from './style-transformer.js';
 import * as StyleUtil from './style-util.js';
 import StyleProperties from './style-properties.js';
-import {addStylePlaceholder, getStylePlaceholder} from './style-placeholder.js';
+import {ensureStylePlaceholder, getStylePlaceholder} from './style-placeholder.js';
 import StyleInfo from './style-info.js';
 import StyleCache from './style-cache.js';
 import {flush as watcherFlush} from './document-watcher.js';
@@ -85,8 +85,9 @@ export default class ScopingShim {
     if (template._prepared) {
       return;
     }
+    // style placeholders are only used when ShadyDOM is active
     if (!nativeShadow) {
-      addStylePlaceholder(elementName);
+      ensureStylePlaceholder(elementName);
     }
     template._prepared = true;
     template.name = elementName;

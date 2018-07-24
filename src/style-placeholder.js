@@ -27,7 +27,7 @@ export function getStylePlaceholder(elementName) {
 /**
  * @param {string} elementName
  */
-export function addStylePlaceholder(elementName) {
+export function ensureStylePlaceholder(elementName) {
   if (!placeholderMap[elementName]) {
     placeholderMap[elementName] = applyStylePlaceHolder(elementName);
   }
@@ -48,7 +48,7 @@ if (ce && !nativeShadow) {
    * @param {{extends: string}=} options
    */
   const wrappedDefine = (name, clazz, options) => {
-    addStylePlaceholder(name);
+    ensureStylePlaceholder(name);
     origDefine.call(/** @type {!CustomElementRegistry} */(ce), name, clazz, options);
   };
   ce['define'] = wrappedDefine;
