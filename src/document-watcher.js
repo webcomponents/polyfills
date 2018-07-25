@@ -83,7 +83,7 @@ export function ensureCorrectScope(element) {
 /**
  * @param {!HTMLElement} element
  */
-function ensureCorrectSubtreeScoping(element) {
+export function ensureCorrectSubtreeScoping(element) {
   // find unscoped subtree nodes
   const unscopedNodes = window['ShadyDOM']['nativeMethods']['querySelectorAll'].call(
     element, `:not(.${StyleTransformer.SCOPE_NAME})`);
@@ -142,6 +142,7 @@ function handler(mxns) {
 if (!nativeShadow) {
   let observer = new MutationObserver(handler);
   let start = (node) => {
+    ensureCorrectSubtreeScoping(document);
     observer.observe(node, {childList: true, subtree: true});
   }
   let nativeCustomElements = (window['customElements'] &&
