@@ -44,6 +44,68 @@ function getCurrentScope(element) {
 }
 
 /**
+ * @param {!HTMLElement} element
+ */
+function getOwnerScope(element) {
+  const ownerRoot = element.getRootNode();
+  if (!ownerRoot || ownerRoot === element.ownerDocument) {
+    return '';
+  }
+  const host = /** @type {!ShadowRoot} */(ownerRoot).host;
+  if (!host) {
+    // this may actually be a document fragment
+    return '';
+  }
+  return getIsExtends(host).is;
+}
+
+/**
+ * @param {!HTMLElement} element
+ */
+export function ensureCorrectScope(element) {
+  const currentScope = getCurrentScope(element);
+  const ownerRoot = element.getRootNode();
+  if (!ownerRoot) {
+    return;
+  }
+  if (currentScope && ownerRoot === element.ownerDocument) {
+    // node was scoped, but now is in document
+    StyleTransformer.domRemoveScope(element, currentScope);
+  } else if (ownerRoot.nodeType === Node.DOCUMENT_FRAGMENT_NODE) {
+    const ownerScope = getOwnerScope(element);
+    if (ownerScope !== currentScope) {
+      // node was scoped, but not by its current owner
+      StyleTransformer.domReplaceScope(element, currentScope, ownerScope);
+    }
+  }
+}
+
+/**
+ * @param {!HTMLElement} element
+ */
+function ensureCorrectSubtreeScoping(element) {
+  // find unscoped subtree nodes
+  const unscopedNodes = window['ShadyDOM']['nativeMethods']['querySelectorAll'].call(
+    element, `:not(.${StyleTransformer.SCOPE_NAME})`);
+
+  for (let j = 0; j < unscopedNodes.length; j++) {
+    // it's possible, during large batch inserts, that nodes that aren't
+    // scoped within the current scope were added.
+    // To make sure that any unscoped nodes that were inserted in the current batch are correctly styled,
+    // query all unscoped nodes and force their style-scope to be applied.
+    // This could happen if a sub-element appended an unscoped node in its shadowroot and this function
+    // runs on a parent element of the host of that unscoped node:
+    // parent-element -> element -> unscoped node
+    // Here unscoped node should have the style-scope element, not parent-element.
+    const unscopedNode = unscopedNodes[j];
+    const scopeForPreviouslyUnscopedNode = getOwnerScope(unscopedNode);
+    if (scopeForPreviouslyUnscopedNode) {
+      StyleTransformer.element(unscopedNode, scopeForPreviouslyUnscopedNode);
+    }
+  }
+}
+
+/**
  * @param {Array<MutationRecord|null>|null} mxns
  */
 function handler(mxns) {
@@ -65,38 +127,13 @@ function handler(mxns) {
       if (currentScope && root === n.ownerDocument) {
         StyleTransformer.domRemoveScope(n, currentScope);
       } else if (root.nodeType === Node.DOCUMENT_FRAGMENT_NODE) {
-        let newScope;
-        let host = /** @type {ShadowRoot} */(root).host;
-        // element may no longer be in a shadowroot
-        if (!host) {
-          continue;
-        }
-        newScope = getIsExtends(host).is;
+        const newScope = getOwnerScope(n);
         // rescope current node and subtree if necessary
         if (newScope !== currentScope) {
           StyleTransformer.domReplaceScope(n, currentScope, newScope);
         }
         // make sure all the subtree elements are scoped correctly
-        let unscopedNodes = window['ShadyDOM']['nativeMethods']['querySelectorAll'].call(
-          n, `:not(.${StyleTransformer.SCOPE_NAME})`);
-        for (let j = 0; j < unscopedNodes.length; j++) {
-          // it's possible, during large batch inserts, that nodes that aren't
-          // scoped within the current scope were added.
-          // To make sure that any unscoped nodes that were inserted in the current batch are correctly styled,
-          // query all unscoped nodes and force their style-scope to be applied.
-          // This could happen if a sub-element appended an unscoped node in its shadowroot and this function
-          // runs on a parent element of the host of that unscoped node:
-          // parent-element -> element -> unscoped node
-          // Here unscoped node should have the style-scope element, not parent-element.
-          const unscopedNode = unscopedNodes[j];
-          const rootForUnscopedNode = unscopedNode.getRootNode();
-          const hostForUnscopedNode = rootForUnscopedNode.host;
-          if (!hostForUnscopedNode) {
-            continue;
-          }
-          const scopeForPreviouslyUnscopedNode = getIsExtends(hostForUnscopedNode).is;
-          StyleTransformer.element(unscopedNode, scopeForPreviouslyUnscopedNode);
-        }
+        ensureCorrectSubtreeScoping(n);
       }
     }
   }

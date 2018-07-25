@@ -18,7 +18,7 @@ import StyleProperties from './style-properties.js';
 import {ensureStylePlaceholder, getStylePlaceholder} from './style-placeholder.js';
 import StyleInfo from './style-info.js';
 import StyleCache from './style-cache.js';
-import {flush as watcherFlush} from './document-watcher.js';
+import {flush as watcherFlush, ensureCorrectScope} from './document-watcher.js';
 import templateMap from './template-map.js';
 import * as ApplyShimUtils from './apply-shim-utils.js';
 import {updateNativeProperties, detectMixin} from './common-utils.js';
@@ -467,6 +467,12 @@ export default class ScopingShim {
   _styleInfoForNode(node) {
     return StyleInfo.get(node);
   }
+  /**
+   * @param {!Element} element
+   */
+  ensureCorrectScope(element) {
+    ensureCorrectScope(element);
+  }
 }
 
 /* exports */
@@ -482,6 +488,7 @@ ScopingShim.prototype['transformCustomStyleForDocument'] = ScopingShim.prototype
 ScopingShim.prototype['getStyleAst'] = ScopingShim.prototype.getStyleAst;
 ScopingShim.prototype['styleAstToString'] = ScopingShim.prototype.styleAstToString;
 ScopingShim.prototype['flushCustomStyles'] = ScopingShim.prototype.flushCustomStyles;
+ScopingShim.prototype['ensureCorrectScope'] = ScopingShim.prototype.ensureCorrectScope;
 Object.defineProperties(ScopingShim.prototype, {
   'nativeShadow': {
     get() {
