@@ -30,6 +30,7 @@
   window.HTMLElement = function() {
     return Reflect.construct(BuiltInHTMLElement, [], this.constructor);
   };
-  Object.setPrototypeOf(HTMLElement.prototype, BuiltInHTMLElement.prototype);
+  HTMLElement.prototype = BuiltInHTMLElement.prototype;
+  HTMLElement.prototype.constructor = HTMLElement;
   Object.setPrototypeOf(HTMLElement, BuiltInHTMLElement);
 })();
