@@ -175,7 +175,7 @@ let eventMixin = {
       this.__relatedTargetComposedPath = pathComposer(this.__relatedTarget, true);
     }
     // find the deepest node in relatedTarget composed path that is in the same root with the currentTarget
-    return retarget(this.currentTarget, this.__relatedTargetComposedPath);
+    return retarget(this.currentTarget || this['__previousCurrentTarget'], this.__relatedTargetComposedPath);
   },
   /**
    * @this {Event}
