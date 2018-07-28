@@ -753,6 +753,19 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       button.click();
       document.body.removeChild(button);
     });
+
+    test('delayed relatedTarget does not throw', function(done) {
+      const div = document.createElement('div');
+      div.addEventListener('mouseover', (e) => {
+        setTimeout(() => {
+          assert.equal(e.relatedTarget, document);
+          assert.isNotOk(e.currentTarget);
+          done();
+        });
+      });
+      document.body.appendChild(div);
+      div.dispatchEvent(new MouseEvent('mouseover', {bubbles: true, cancelable: true, relatedTarget: document}));
+    });
   });
   </script>
 </body>
