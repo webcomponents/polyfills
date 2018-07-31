@@ -1,3 +1,5 @@
+/** @externs */
+
 /** @typedef {{
  * styleElement: function(!HTMLElement),
  * styleSubtree: function(!HTMLElement, Object<string, string>=),
