@@ -18,7 +18,7 @@ import StyleProperties from './style-properties.js';
 import {ensureStylePlaceholder, getStylePlaceholder} from './style-placeholder.js';
 import StyleInfo from './style-info.js';
 import StyleCache from './style-cache.js';
-import {flush as watcherFlush, ensureCorrectScope, getOwnerScope, getCurrentScope} from './document-watcher.js';
+import {flush as watcherFlush, getOwnerScope, getCurrentScope} from './document-watcher.js';
 import templateMap from './template-map.js';
 import * as ApplyShimUtils from './apply-shim-utils.js';
 import {updateNativeProperties, detectMixin} from './common-utils.js';
