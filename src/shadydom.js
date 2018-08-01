@@ -58,7 +58,10 @@ if (utils.settings.inUse) {
     // shadowRoots to be defined while the document is loading. Elements
     // customized as they are created by the parser will successfully
     // render with this flag on.
-    'deferConnectionCallbacks': utils.settings['deferConnectionCallbacks']
+    'deferConnectionCallbacks': utils.settings['deferConnectionCallbacks'],
+    // Integration point with ShadyCSS to disable styling MutationObserver,
+    // as ShadyDOM will now handle dynamic scoping.
+    'handlesDynamicScoping': true
   };
 
   window['ShadyDOM'] = ShadyDOM;

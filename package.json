@@ -30,7 +30,8 @@
     "test": "wct",
     "lint": "eslint src",
     "regen-package-lock": "rm -rf node_modules package-lock.json; npm install",
-    "prepack": "npm run build"
+    "prepack": "npm run build",
+    "debug": "gulp debug"
   },
   "files": [
     "shadydom.min.js*",

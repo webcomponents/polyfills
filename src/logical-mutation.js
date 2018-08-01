@@ -22,7 +22,7 @@ const {parentNode} = accessors;
 // is called on the relevant shadowRoot. In all other cases, a standard dom
 // `insert` can be made, but the location and ref_node may need to be changed.
 /**
- * @param {Node} parent
+ * @param {!Node} parent
  * @param {Node} node
  * @param {Node=} ref_node
  */
@@ -42,26 +42,34 @@ export function insertBefore(parent, node, ref_node) {
   if (ref_node === node) {
     return node;
   }
+  /** @type {!Array<!HTMLSlotElement>} */
+  let slotsAdded = [];
+  /** @type {function(!Node, !Node): void} */
+  let scopingFn = addShadyScoping;
+  let ownerRoot = utils.ownerShadyRootForNode(parent);
   // remove from existing location
   if (node.parentNode) {
     // NOTE: avoid node.removeChild as this *can* trigger another patched
     // method (e.g. custom elements) and we want only the shady method to run.
-    removeChild(node.parentNode, node);
+    // Also, skip unscoping the nodes if moving into a new ShadyRoot, as we will rescope them in this insertion.
+    removeChild(node.parentNode, node, Boolean(ownerRoot));
+    scopingFn = replaceShadyScoping;
   }
   // add to new parent
   let allowNativeInsert = true;
-  let ownerRoot;
-  let slotsAdded;
-  if (!node['__noInsertionPoint']) {
-    ownerRoot = utils.ownerShadyRootForNode(parent);
-    slotsAdded = ownerRoot && findContainedSlots(node);
-    if (slotsAdded) {
-      ownerRoot._addSlots(slotsAdded);
-    }
+  if (ownerRoot && (!node['__noInsertionPoint'] || !currentScopeIsCorrect(node, parent))) {
+    treeVisitor(node, (node) => {
+      if (node.localName === 'slot') {
+        slotsAdded.push(/** @type {!HTMLSlotElement} */(node));
+      }
+      scopingFn(node, parent);
+    });
+  }
+  if (ownerRoot && slotsAdded.length) {
+    ownerRoot._addSlots(slotsAdded);
   }
   // if a slot is added, must render containing root.
-  if (parent.localName === 'slot' || slotsAdded) {
-    ownerRoot = ownerRoot || utils.ownerShadyRootForNode(parent);
+  if (parent.localName === 'slot' || slotsAdded.length) {
     if (ownerRoot) {
       ownerRoot._asyncRender();
     }
@@ -102,26 +110,15 @@ export function insertBefore(parent, node, ref_node) {
   return node;
 }
 
-function findContainedSlots(node) {
-  let slots;
-  if (node.localName === 'slot') {
-    slots = [node];
-  } else if (node.querySelectorAll) {
-    slots = node.querySelectorAll('slot');
-  }
-  if (slots && slots.length) {
-    return slots;
-  }
-}
-
 /**
  * Patched `removeChild`. Note that all dom "removals" are routed here.
  * Removes the given `node` from the element's `children`.
  * This method also performs dom composition.
  * @param {Node} parent
  * @param {Node} node
+ * @param {boolean=} skipUnscoping
 */
-export function removeChild(parent, node) {
+export function removeChild(parent, node, skipUnscoping = false) {
   if (node.parentNode !== parent) {
     throw Error('The node to be removed is not a child of this node: ' +
       node);
@@ -137,6 +134,9 @@ export function removeChild(parent, node) {
       preventNativeRemove = true;
     }
   }
+  if (!skipUnscoping) {
+    treeVisitor(node, removeShadyScoping);
+  }
   removeOwnerShadyRoot(node);
   // if removing slot, must render containing root
   if (ownerRoot) {
@@ -150,7 +150,7 @@ export function removeChild(parent, node) {
     }
   }
   if (!preventNativeRemove) {
-    // if removing from a shadyRoot, remove form host instead
+    // if removing from a shadyRoot, remove from host instead
     let container = utils.isShadyRoot(parent) ?
       /** @type {ShadowRoot} */(parent).host :
       parent;
@@ -327,10 +327,15 @@ export function renderRootNode(element) {
 
 let scopingShim = null;
 
-export function setAttribute(node, attr, value) {
+function getScopingShim() {
   if (!scopingShim) {
     scopingShim = window['ShadyCSS'] && window['ShadyCSS']['ScopingShim'];
   }
+  return scopingShim || null;
+}
+
+export function setAttribute(node, attr, value) {
+  const scopingShim = getScopingShim();
   if (scopingShim && attr === 'class') {
     scopingShim['setElementClass'](node, value);
   } else {
@@ -383,4 +388,101 @@ export function importNode(node, deep) {
     }
   }
   return n;
+}
+
+/**
+ * @param {!Node} node
+ * @param {!Node} newParent
+ */
+function addShadyScoping(node, newParent) {
+  const scopingShim = getScopingShim();
+  if (!scopingShim) {
+    return;
+  }
+  if (node.nodeType !== Node.ELEMENT_NODE) {
+    return;
+  }
+  const currentScope = scopingShim['currentScopeForNode'](node);
+  if (!currentScope) {
+    const scope = scopingShim['scopeForNode'](newParent);
+    scopingShim['scopeNode'](node, scope);
+  }
+}
+
+/**
+ * @param {!Node} node
+ */
+function removeShadyScoping(node) {
+  const scopingShim = getScopingShim();
+  if (!scopingShim) {
+    return;
+  }
+  if (node.nodeType !== Node.ELEMENT_NODE) {
+    return;
+  }
+  const currentScope = scopingShim['currentScopeForNode'](node);
+  if (currentScope) {
+    scopingShim['unscopeNode'](node, currentScope);
+  }
+}
+
+/**
+ * @param {!Node} node
+ * @param {!Node} newParent
+ */
+function replaceShadyScoping(node, newParent) {
+  const scopingShim = getScopingShim();
+  if (!scopingShim) {
+    return;
+  }
+  if (!currentScopeIsCorrect(node, newParent)) {
+    removeShadyScoping(node);
+    addShadyScoping(node, newParent);
+  }
+}
+
+/**
+ * @param {!Node} node
+ * @param {!Node} newParent
+ * @return {boolean}
+ */
+function currentScopeIsCorrect(node, newParent) {
+  const scopingShim = getScopingShim();
+  if (!scopingShim) {
+    return true;
+  }
+  if (node.nodeType === Node.DOCUMENT_FRAGMENT_NODE) {
+    // NOTE: as an optimization, only check that all the top-level children
+    // have the correct scope.
+    let correctScope = true;
+    for (let idx = 0; correctScope && (idx < node.childNodes.length); idx++) {
+      correctScope = correctScope &&
+        currentScopeIsCorrect(node.childNodes[idx], newParent);
+    }
+    return correctScope;
+  }
+  if (node.nodeType !== Node.ELEMENT_NODE) {
+    return true;
+  }
+  const currentScope = scopingShim['currentScopeForNode'](node);
+  const parentScope = scopingShim['scopeForNode'](newParent);
+  return currentScope === parentScope;
+}
+
+/**
+ * Walk over a node's tree and apply visitorFn to each element node
+ *
+ * @param {Node} node
+ * @param {function(!Node):void} visitorFn
+ */
+function treeVisitor(node, visitorFn) {
+  if (!node) {
+    return;
+  }
+  if (node.nodeType === Node.ELEMENT_NODE) {
+    visitorFn(node);
+  }
+  for (let idx = 0; idx < node.childNodes.length; idx++) {
+    treeVisitor(node.childNodes[idx], visitorFn);
+  }
 }
