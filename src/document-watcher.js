@@ -143,7 +143,6 @@ function handler(mxns) {
 if (!nativeShadow && !(window['ShadyDOM'] && window['ShadyDOM']['handlesDynamicScoping'])) {
   let observer = new MutationObserver(handler);
   let start = (node) => {
-    ensureCorrectSubtreeScoping(document);
     observer.observe(node, {childList: true, subtree: true});
   }
   let nativeCustomElements = (window['customElements'] &&

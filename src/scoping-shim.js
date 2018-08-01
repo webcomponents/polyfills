@@ -468,12 +468,6 @@ export default class ScopingShim {
     return StyleInfo.get(node);
   }
   /**
-   * @param {!Element} element
-   */
-  ensureCorrectScope(element) {
-    ensureCorrectScope(element);
-  }
-  /**
    * @param {!Element} node
    * @param {string} scope
    */
@@ -516,7 +510,6 @@ ScopingShim.prototype['transformCustomStyleForDocument'] = ScopingShim.prototype
 ScopingShim.prototype['getStyleAst'] = ScopingShim.prototype.getStyleAst;
 ScopingShim.prototype['styleAstToString'] = ScopingShim.prototype.styleAstToString;
 ScopingShim.prototype['flushCustomStyles'] = ScopingShim.prototype.flushCustomStyles;
-ScopingShim.prototype['ensureCorrectScope'] = ScopingShim.prototype.ensureCorrectScope;
 ScopingShim.prototype['scopeNode'] = ScopingShim.prototype.scopeNode;
 ScopingShim.prototype['unscopeNode'] = ScopingShim.prototype.unscopeNode;
 ScopingShim.prototype['scopeForNode'] = ScopingShim.prototype.scopeForNode;
