@@ -18,7 +18,7 @@ import StyleProperties from './style-properties.js';
 import {ensureStylePlaceholder, getStylePlaceholder} from './style-placeholder.js';
 import StyleInfo from './style-info.js';
 import StyleCache from './style-cache.js';
-import {flush as watcherFlush, ensureCorrectScope} from './document-watcher.js';
+import {flush as watcherFlush, ensureCorrectScope, getOwnerScope, getCurrentScope} from './document-watcher.js';
 import templateMap from './template-map.js';
 import * as ApplyShimUtils from './apply-shim-utils.js';
 import {updateNativeProperties, detectMixin} from './common-utils.js';
@@ -473,6 +473,34 @@ export default class ScopingShim {
   ensureCorrectScope(element) {
     ensureCorrectScope(element);
   }
+  /**
+   * @param {!Element} node
+   * @param {string} scope
+   */
+  scopeNode(node, scope) {
+    StyleTransformer.element(node, scope);
+  }
+  /**
+   * @param {!Element} node
+   * @param {string} scope
+   */
+  unscopeNode(node, scope) {
+    StyleTransformer.element(node, scope, true);
+  }
+  /**
+   * @param {!Node} node
+   * @return {string}
+   */
+  scopeForNode(node) {
+    return getOwnerScope(node);
+  }
+  /**
+   * @param {!Element} node
+   * @return {string}
+   */
+  currentScopeForNode(node) {
+    return getCurrentScope(node);
+  }
 }
 
 /* exports */
@@ -489,6 +517,10 @@ ScopingShim.prototype['getStyleAst'] = ScopingShim.prototype.getStyleAst;
 ScopingShim.prototype['styleAstToString'] = ScopingShim.prototype.styleAstToString;
 ScopingShim.prototype['flushCustomStyles'] = ScopingShim.prototype.flushCustomStyles;
 ScopingShim.prototype['ensureCorrectScope'] = ScopingShim.prototype.ensureCorrectScope;
+ScopingShim.prototype['scopeNode'] = ScopingShim.prototype.scopeNode;
+ScopingShim.prototype['unscopeNode'] = ScopingShim.prototype.unscopeNode;
+ScopingShim.prototype['scopeForNode'] = ScopingShim.prototype.scopeForNode;
+ScopingShim.prototype['currentScopeForNode'] = ScopingShim.prototype.currentScopeForNode;
 Object.defineProperties(ScopingShim.prototype, {
   'nativeShadow': {
     get() {

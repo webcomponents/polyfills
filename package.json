@@ -27,7 +27,7 @@
   },
   "scripts": {
     "build": "gulp",
-    "build:debug": "gulp debug",
+    "debug": "gulp debug",
     "lint": "eslint src test entrypoints",
     "test": "npm run lint && gulp && wct",
     "prepack": "gulp closure"

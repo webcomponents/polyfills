@@ -17,7 +17,7 @@ import {getIsExtends} from './style-util.js';
 export let flush = function() {};
 
 /**
- * @param {HTMLElement} element
+ * @param {!Element} element
  * @return {!Array<string>}
  */
 function getClasses(element) {
@@ -31,10 +31,10 @@ function getClasses(element) {
 }
 
 /**
- * @param {HTMLElement} element
+ * @param {!Element} element
  * @return {string}
  */
-function getCurrentScope(element) {
+export function getCurrentScope(element) {
   let classes = getClasses(element);
   let idx = classes.indexOf(StyleTransformer.SCOPE_NAME);
   if (idx > -1) {
@@ -44,11 +44,11 @@ function getCurrentScope(element) {
 }
 
 /**
- * @param {!HTMLElement} element
+ * @param {!Node} node
  */
-function getOwnerScope(element) {
-  const ownerRoot = element.getRootNode();
-  if (!ownerRoot || ownerRoot === element.ownerDocument) {
+export function getOwnerScope(node) {
+  const ownerRoot = node.getRootNode();
+  if (!ownerRoot || ownerRoot === node.ownerDocument) {
     return '';
   }
   const host = /** @type {!ShadowRoot} */(ownerRoot).host;
@@ -60,7 +60,7 @@ function getOwnerScope(element) {
 }
 
 /**
- * @param {!HTMLElement} element
+ * @param {!Element} element
  */
 export function ensureCorrectScope(element) {
   const currentScope = getCurrentScope(element);
@@ -81,7 +81,7 @@ export function ensureCorrectScope(element) {
 }
 
 /**
- * @param {!HTMLElement} element
+ * @param {!HTMLElement|!HTMLDocument} element
  */
 export function ensureCorrectSubtreeScoping(element) {
   // find unscoped subtree nodes
@@ -139,7 +139,8 @@ function handler(mxns) {
   }
 }
 
-if (!nativeShadow) {
+// if native Shadow DOM is being used, or ShadyDOM handles dynamic scoiping, do not activate the MutationObserver
+if (!nativeShadow && !(window['ShadyDOM'] && window['ShadyDOM']['handlesDynamicScoping'])) {
   let observer = new MutationObserver(handler);
   let start = (node) => {
     ensureCorrectSubtreeScoping(document);
