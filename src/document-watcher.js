@@ -71,7 +71,7 @@ export function ensureCorrectScope(element) {
   if (currentScope && ownerRoot === element.ownerDocument) {
     // node was scoped, but now is in document
     StyleTransformer.domRemoveScope(element, currentScope);
-  } else if (ownerRoot.nodeType instanceof ShadowRoot) {
+  } else if (ownerRoot instanceof ShadowRoot) {
     const ownerScope = getOwnerScope(element);
     if (ownerScope !== currentScope) {
       // node was scoped, but not by its current owner
@@ -126,7 +126,7 @@ function handler(mxns) {
       // node was scoped, but now is in document
       if (currentScope && root === n.ownerDocument) {
         StyleTransformer.domRemoveScope(n, currentScope);
-      } else if (root.nodeType instanceof ShadowRoot) {
+      } else if (root instanceof ShadowRoot) {
         const newScope = getOwnerScope(n);
         // rescope current node and subtree if necessary
         if (newScope !== currentScope) {
