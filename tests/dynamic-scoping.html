@@ -28,21 +28,24 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <script src="../apply-shim.min.js"></script>
   <script src="../custom-style-interface.min.js"></script>
   <script src="module/generated/make-element.js"></script>
+  <script src="module/generated/custom-style-element.js"></script>
 </head>
 <body>
 
-  <style>
-    x-container, x-sample, x-sample-dynamic,  x-container-dynamic {
-      display: block;
-      padding: 10px;
-      margin: 10px;
-      border: 1px solid black;
-    }
+  <custom-style>
+    <style>
+      x-container, x-sample, x-sample-dynamic, x-container-dynamic {
+        display: block;
+        padding: 10px;
+        margin: 10px;
+        border: 1px solid black;
+      }
 
-    .target {
-      background-color: rgb(0, 255, 0);
-    }
-  </style>
+      .target {
+        background-color: rgb(0, 255, 0);
+      }
+    </style>
+  </custom-style>
 
   <template id="x-sample">
     <style>
