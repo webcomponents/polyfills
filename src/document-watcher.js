@@ -48,7 +48,7 @@ export function getCurrentScope(element) {
  */
 export function getOwnerScope(node) {
   const ownerRoot = node.getRootNode();
-  if (!ownerRoot || ownerRoot === node.ownerDocument) {
+  if (ownerRoot === node || ownerRoot === node.ownerDocument) {
     return '';
   }
   const host = /** @type {!ShadowRoot} */(ownerRoot).host;
@@ -65,13 +65,13 @@ export function getOwnerScope(node) {
 export function ensureCorrectScope(element) {
   const currentScope = getCurrentScope(element);
   const ownerRoot = element.getRootNode();
-  if (!ownerRoot) {
+  if (ownerRoot === element) {
     return;
   }
   if (currentScope && ownerRoot === element.ownerDocument) {
     // node was scoped, but now is in document
     StyleTransformer.domRemoveScope(element, currentScope);
-  } else if (ownerRoot.nodeType === Node.DOCUMENT_FRAGMENT_NODE) {
+  } else if (ownerRoot.nodeType instanceof ShadowRoot) {
     const ownerScope = getOwnerScope(element);
     if (ownerScope !== currentScope) {
       // node was scoped, but not by its current owner
@@ -126,7 +126,7 @@ function handler(mxns) {
       // node was scoped, but now is in document
       if (currentScope && root === n.ownerDocument) {
         StyleTransformer.domRemoveScope(n, currentScope);
-      } else if (root.nodeType === Node.DOCUMENT_FRAGMENT_NODE) {
+      } else if (root.nodeType instanceof ShadowRoot) {
         const newScope = getOwnerScope(n);
         // rescope current node and subtree if necessary
         if (newScope !== currentScope) {
