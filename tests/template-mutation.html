@@ -1,0 +1,66 @@
+<!doctype html>
+<!--
+@license
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <script>window.WCT = {waitFor(cb){ cb() }};</script>
+  <script src="../node_modules/@webcomponents/webcomponents-platform/webcomponents-platform.js"></script>
+  <script src="../node_modules/@webcomponents/template/template.js"></script>
+  <script>
+    ShadyDOM = { force: true };
+  </script>
+  <script src="../shadydom.min.js"></script>
+
+  <script src="../node_modules/wct-browser-legacy/browser.js"></script>
+</head>
+
+<body>
+  <template id="target">
+    <slot>Hi!</slot>
+  </template>
+  <script>
+    function observe() {
+      const observer = new MutationObserver(() => {});
+      const nodes = window.ShadyDOM.nativeMethods.querySelectorAll.call(document.body, '*');
+      for (let idx = 0, node; idx < nodes.length; idx++) {
+        node = nodes[idx];
+        node.getRootNode();
+        node.classList.add('style-scope', 'seen');
+      }
+      observer.observe(document.body, {childList: true, subtree: true});
+    }
+    requestAnimationFrame(function () {
+      if (document.readyState === 'loading') {
+        let listener = function () {
+          observe();
+          document.removeEventListener('readystatechange', listener);
+        }
+        document.addEventListener('readystatechange', listener);
+      } else {
+        observe();
+      }
+    });
+  </script>
+  <script>
+    suite('Template + ShadyDOM', function() {
+      test('Removal of node', function(done) {
+        setTimeout(() => {
+          const target = document.querySelector('#target');
+          const node = target.content.querySelector('*');
+          document.body.appendChild(node);
+          done();
+        }, 1000);
+      });
+    });
+  </script>
+</body>
+</html>
