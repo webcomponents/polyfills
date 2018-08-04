@@ -68,12 +68,13 @@ export function insertBefore(parent, node, ref_node) {
   }
   // add to new parent
   let allowNativeInsert = true;
-  if (ownerRoot && (!node['__noInsertionPoint'] || !currentScopeIsCorrect(node, newScopeName))) {
+  const needsScoping = !currentScopeIsCorrect(node, newScopeName);
+  if (ownerRoot && (!node['__noInsertionPoint'] || needsScoping)) {
     treeVisitor(node, (node) => {
       if (node.localName === 'slot') {
         slotsAdded.push(/** @type {!HTMLSlotElement} */(node));
       }
-      if (!currentScopeIsCorrect(node, newScopeName)) {
+      if (needsScoping) {
         scopingFn(node, newScopeName);
       }
     });
@@ -147,7 +148,9 @@ export function removeChild(parent, node, skipUnscoping = false) {
       preventNativeRemove = true;
     }
   }
-  if (!skipUnscoping && ownerRoot) {
+  // unscope a node leaving a ShadowRoot if ShadyCSS is present, and this node
+  // is not going to be rescoped in `insertBefore`
+  if (getScopingShim() && !skipUnscoping && ownerRoot) {
     const oldScopeName = currentScopeForNode(node);
     treeVisitor(node, (node) => {
       removeShadyScoping(node, oldScopeName);
@@ -411,9 +414,6 @@ export function importNode(node, deep) {
  * @param {string} newScopeName
  */
 function addShadyScoping(node, newScopeName) {
-  if (node.nodeType !== Node.ELEMENT_NODE) {
-    return;
-  }
   const scopingShim = getScopingShim();
   if (!scopingShim) {
     return;
@@ -426,9 +426,6 @@ function addShadyScoping(node, newScopeName) {
  * @param {string} currentScopeName
  */
 function removeShadyScoping(node, currentScopeName) {
-  if (node.nodeType !== Node.ELEMENT_NODE) {
-    return;
-  }
   const scopingShim = getScopingShim();
   if (!scopingShim) {
     return;
@@ -442,9 +439,6 @@ function removeShadyScoping(node, currentScopeName) {
  * @param {string} oldScopeName
  */
 function replaceShadyScoping(node, newScopeName, oldScopeName) {
-  if (node.nodeType !== Node.ELEMENT_NODE) {
-    return;
-  }
   const scopingShim = getScopingShim();
   if (!scopingShim) {
     return;
