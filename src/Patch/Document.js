@@ -19,7 +19,7 @@ export default function(internals) {
       if (this.__CE_hasRegistry) {
         const definition = internals.localNameToDefinition(localName);
         if (definition) {
-          return new (definition.constructor)();
+          return new (definition.constructorFunction)();
         }
       }
 
@@ -61,7 +61,7 @@ export default function(internals) {
       if (this.__CE_hasRegistry && (namespace === null || namespace === NS_HTML)) {
         const definition = internals.localNameToDefinition(localName);
         if (definition) {
-          return new (definition.constructor)();
+          return new (definition.constructorFunction)();
         }
       }
 

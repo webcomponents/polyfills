@@ -260,7 +260,7 @@ export default class CustomElementInternals {
 
     definition.constructionStack.push(element);
 
-    const constructor = definition.constructor;
+    const constructor = definition.constructorFunction;
     try {
       try {
         let result = new (constructor)();

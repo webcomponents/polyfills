@@ -212,7 +212,7 @@ export default class CustomElementRegistry {
   get(localName) {
     const definition = this._internals.localNameToDefinition(localName);
     if (definition) {
-      return definition.constructor;
+      return definition.constructorFunction;
     }
 
     return undefined;
