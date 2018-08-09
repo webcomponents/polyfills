@@ -323,3 +323,25 @@ export function splitSelectorList(selector) {
   }
   return parts;
 }
+
+/**
+ * @param {!HTMLTemplateElement} template
+ * @return {boolean}
+ */
+export function templateHasBuiltCss(template) {
+  if (template._isBuilt === undefined) {
+    template._isBuilt = template.hasAttribute('css-build');
+  }
+  return template._isBuilt;
+}
+
+/**
+ * @param {!Node} node
+ * @return {boolean}
+ */
+export function isTemplateWithBuiltCss(node) {
+  if (node.nodeType === Node.ELEMENT_NODE && node.localName === 'template') {
+    return templateHasBuiltCss(/** @type {!HTMLTemplateElement} */(node));
+  }
+  return false;
+}

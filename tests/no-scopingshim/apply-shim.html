@@ -129,6 +129,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     </style>
     </custom-style>
   </template>
+
+  <template id="css-build" css-build="shadow">
+    <style>:host{@apply --fake;}</style>
+  </template>
+
   <script>
   suite('Apply Shim', function() {
     function copy(name) {
@@ -259,6 +264,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         var ast = window.StyleUtil.rulesForStyle(style);
         assert.match(ast.rules[0].cssText, /border:\s*var\(--my-mixin_-_border\)/);
       });
+    });
+
+    test('templates with "css-build" will not be processed by ApplyShim', function() {
+      makeElement('css-build');
+      const template = document.querySelector('template#css-build');
+      assert.equal(template._styleAst, undefined);
+      const style = template.content.querySelector('style');
+      assert.equal(style.textContent.trim(), ':host{@apply --fake;}');
     });
   });
   </script>

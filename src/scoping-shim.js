@@ -102,7 +102,7 @@ export default class ScopingShim {
     };
     // check if the styling has mixin definitions or uses
     this._ensure();
-    let hasMixins = detectMixin(cssText)
+    let hasMixins = !StyleUtil.templateHasBuiltCss(template) && detectMixin(cssText);
     let ast = parse(cssText);
     // only run the applyshim transforms if there is a mixin involved
     if (hasMixins && nativeCssVariables && this._applyShim) {
@@ -253,6 +253,10 @@ export default class ScopingShim {
       let template = templateMap[is];
       // bail early if there is no shadowroot for this element
       if (!template && !this._isRootOwner(host)) {
+        return;
+      }
+      // bail early if the template was built with polymer-css-build
+      if (template && StyleUtil.templateHasBuiltCss(template)) {
         return;
       }
       if (template && template._style && !ApplyShimUtils.templateIsValid(template)) {

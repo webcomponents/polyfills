@@ -153,6 +153,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
   <x-container-dynamic></x-container-dynamic>
 
+  <template id="css-build" css-build="shady">
+    <style>:host{@apply --fake;}</style>
+    <div class="style-scope css-build"></div>
+  </template>
+
   <script>
     suite('Dynamic Scoping', () => {
       function stamp(parent, host) {
@@ -252,6 +257,15 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             assert.equal(getComputedStyle(target).backgroundColor,'rgb(255, 0, 0)'));
           done();
         });
+      });
+
+      test('templates marked with "css-build" will be left alone', function() {
+        const template = document.querySelector('template#css-build');
+        const div = template.content.querySelector('div');
+        const divClasses = Array.from(div.classList);
+        assert.includeMembers(divClasses, ['style-scope', 'css-build']);
+        const style = template.content.querySelector('style');
+        assert.equal(style.textContent.trim(), ':host{@apply --fake;}');
       });
     });
   </script>
