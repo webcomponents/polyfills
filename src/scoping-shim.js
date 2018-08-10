@@ -57,13 +57,6 @@ export default class ScopingShim {
   _gatherStyles(template) {
     return StyleUtil.gatherStyleText(template.content);
   }
-  _getCssBuild(template) {
-    let style = template.content.querySelector('style');
-    if (!style) {
-      return '';
-    }
-    return style.getAttribute('css-build') || '';
-  }
   /**
    * Prepare the styling and template for the given element type
    *
@@ -93,12 +86,11 @@ export default class ScopingShim {
     template.name = elementName;
     template.extends = typeExtension;
     templateMap[elementName] = template;
-    let cssBuild = this._getCssBuild(template);
+    let cssBuild = StyleUtil.getCssBuild(template);
     let cssText = this._gatherStyles(template);
     let info = {
       is: elementName,
       extends: typeExtension,
-      __cssBuild: cssBuild,
     };
     // check if the styling has mixin definitions or uses
     this._ensure();
@@ -109,7 +101,6 @@ export default class ScopingShim {
       this._applyShim['transformRules'](ast, elementName);
     }
     template['_styleAst'] = ast;
-    template._cssBuild = cssBuild;
 
     let ownPropertyNames = [];
     if (!nativeCssVariables) {
@@ -118,7 +109,7 @@ export default class ScopingShim {
     if (!ownPropertyNames.length || nativeCssVariables) {
       let root = nativeShadow ? template.content : null;
       let placeholder = getStylePlaceholder(elementName);
-      let style = this._generateStaticStyle(info, template['_styleAst'], root, placeholder);
+      let style = this._generateStaticStyle(info, template['_styleAst'], root, placeholder, cssBuild);
       template._style = style;
     }
     template._ownPropertyNames = ownPropertyNames;
@@ -134,8 +125,15 @@ export default class ScopingShim {
       StyleTransformer.domAddScope(template.content, elementName);
     }
   }
-  _generateStaticStyle(info, rules, shadowroot, placeholder) {
-    let cssText = StyleTransformer.elementStyles(info, rules);
+  /**
+   * @param {!StyleInfo} info
+   * @param {!StyleNode} rules
+   * @param {DocumentFragment} shadowroot
+   * @param {Node} placeholder
+   * @param {string} cssBuild
+   */
+  _generateStaticStyle(info, rules, shadowroot, placeholder, cssBuild) {
+    let cssText = StyleTransformer.elementStyles(info, rules, cssBuild);
     if (cssText.length) {
       return StyleUtil.applyCss(cssText, info.is, shadowroot, placeholder);
     }
@@ -150,7 +148,7 @@ export default class ScopingShim {
     if (template) {
       ast = template['_styleAst'];
       ownStylePropertyNames = template._ownPropertyNames;
-      cssBuild = template._cssBuild;
+      cssBuild = StyleUtil.getCssBuild(template);
     }
     const styleInfo = new StyleInfo(
       ast,
@@ -316,7 +314,7 @@ export default class ScopingShim {
     let ownerStyleInfo = StyleInfo.get(owner);
     let ownerProperties = ownerStyleInfo.styleProperties;
     let props = Object.create(ownerProperties || null);
-    let hostAndRootProps = StyleProperties.hostAndRootPropertiesForScope(host, styleInfo.styleRules);
+    let hostAndRootProps = StyleProperties.hostAndRootPropertiesForScope(host, styleInfo.styleRules, styleInfo.cssBuild);
     let propertyData = StyleProperties.propertyDataFromStyles(ownerStyleInfo.styleRules, host);
     let propertiesMatchingHost = propertyData.properties
     Object.assign(

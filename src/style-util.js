@@ -324,15 +324,25 @@ export function splitSelectorList(selector) {
   return parts;
 }
 
+const CSS_BUILD_ATTR = 'css-build';
+
+/**
+ * @param {!HTMLTemplateElement} template
+ * @return {string}
+ */
+export function getCssBuild(template) {
+  if (template.__cssBuild === undefined) {
+    template.__cssBuild = template.getAttribute(CSS_BUILD_ATTR);
+  }
+  return template.__cssBuild || '';
+}
+
 /**
  * @param {!HTMLTemplateElement} template
  * @return {boolean}
  */
 export function templateHasBuiltCss(template) {
-  if (template._isBuilt === undefined) {
-    template._isBuilt = template.hasAttribute('css-build');
-  }
-  return template._isBuilt;
+  return getCssBuild(template) !== '';
 }
 
 /**
@@ -342,6 +352,26 @@ export function templateHasBuiltCss(template) {
 export function isTemplateWithBuiltCss(node) {
   if (node.nodeType === Node.ELEMENT_NODE && node.localName === 'template') {
     return templateHasBuiltCss(/** @type {!HTMLTemplateElement} */(node));
+  }
+  return false;
+}
+
+/**
+ * @param {!HTMLTemplateElement} template
+ * @return {boolean}
+ */
+export function templateHasTargetedBuild(template) {
+  if (!nativeCssVariables) {
+    return false;
+  }
+  if (templateHasBuiltCss(template)) {
+    const cssBuildType = getCssBuild(template);
+    if (cssBuildType === 'shadow') {
+      return nativeShadow;
+    }
+    if (cssBuildType === 'shady') {
+      return !nativeShadow;
+    }
   }
   return false;
 }

@@ -269,15 +269,15 @@ class StyleProperties {
    * @param {Element} element
    */
   propertyDataFromStyles(rules, element) {
-    let props = {}, self = this;
+    let props = {};
     // generates a unique key for these matches
     let o = [];
     // note: active rules excludes non-matching @media rules
-    StyleUtil.forEachRule(rules, function(rule) {
+    StyleUtil.forEachRule(rules, (rule) => {
       // TODO(sorvell): we could trim the set of rules at declaration
       // time to only include ones that have properties
       if (!rule.propertyInfo) {
-        self.decorateRule(rule);
+        this.decorateRule(rule);
       }
       // match element against transformedSelector: selector may contain
       // unwanted uniquification and parsedSelector does not directly match
@@ -285,7 +285,7 @@ class StyleProperties {
       let selectorToMatch = rule.transformedSelector || rule['parsedSelector'];
       if (element && rule.propertyInfo.properties && selectorToMatch) {
         if (matchesSelector.call(element, selectorToMatch)) {
-          self.collectProperties(rule, props);
+          this.collectProperties(rule, props);
           // produce numeric key for these matches for lookup
           addToBitMask(rule.index, o);
         }
@@ -297,7 +297,7 @@ class StyleProperties {
   /**
    * @param {Element} scope
    * @param {StyleNode} rule
-   * @param {string|undefined} cssBuild
+   * @param {string} cssBuild
    * @param {function(Object)} callback
    */
   whenHostOrRootRule(scope, rule, cssBuild, callback) {
@@ -354,21 +354,21 @@ class StyleProperties {
 /**
  * @param {Element} scope
  * @param {StyleNode} rules
+ * @param {string} cssBuild
  * @return {Object}
  */
-  hostAndRootPropertiesForScope(scope, rules) {
-    let hostProps = {}, rootProps = {}, self = this;
+  hostAndRootPropertiesForScope(scope, rules, cssBuild) {
+    let hostProps = {}, rootProps = {};
     // note: active rules excludes non-matching @media rules
-    let cssBuild = rules && rules['__cssBuild'];
-    StyleUtil.forEachRule(rules, function(rule) {
+    StyleUtil.forEachRule(rules, (rule) => {
       // if scope is StyleDefaults, use _element for matchesSelector
-      self.whenHostOrRootRule(scope, rule, cssBuild, function(info) {
+      this.whenHostOrRootRule(scope, rule, cssBuild, function(info) {
         let element = scope._element || scope;
         if (matchesSelector.call(element, info.selector)) {
           if (info.isHost) {
-            self.collectProperties(rule, hostProps);
+            this.collectProperties(rule, hostProps);
           } else {
-            self.collectProperties(rule, rootProps);
+            this.collectProperties(rule, rootProps);
           }
         }
       });
