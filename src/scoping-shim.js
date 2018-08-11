@@ -94,7 +94,7 @@ export default class ScopingShim {
     };
     // check if the styling has mixin definitions or uses
     this._ensure();
-    let hasMixins = !StyleUtil.templateHasBuiltCss(template) && detectMixin(cssText);
+    let hasMixins = !StyleUtil.elementHasBuiltCss(template) && detectMixin(cssText);
     let ast = parse(cssText);
     // only run the applyshim transforms if there is a mixin involved
     if (hasMixins && nativeCssVariables && this._applyShim) {
@@ -126,7 +126,7 @@ export default class ScopingShim {
     }
   }
   /**
-   * @param {!StyleInfo} info
+   * @param {!{is: string, extends: (string|undefined)}} info
    * @param {!StyleNode} rules
    * @param {DocumentFragment} shadowroot
    * @param {Node} placeholder
@@ -254,7 +254,7 @@ export default class ScopingShim {
         return;
       }
       // bail early if the template was built with polymer-css-build
-      if (template && StyleUtil.templateHasBuiltCss(template)) {
+      if (template && StyleUtil.elementHasBuiltCss(template)) {
         return;
       }
       if (template && template._style && !ApplyShimUtils.templateIsValid(template)) {
@@ -395,13 +395,17 @@ export default class ScopingShim {
   }
   transformCustomStyleForDocument(style) {
     let ast = StyleUtil.rulesForStyle(style);
+    const cssBuild = StyleUtil.getCssBuild(style);
+    if (cssBuild !== this._documentOwnerStyleInfo.cssBuild) {
+      this._documentOwnerStyleInfo.cssBuild = cssBuild;
+    }
     StyleUtil.forEachRule(ast, (rule) => {
       if (nativeShadow) {
         StyleTransformer.normalizeRootSelector(rule);
       } else {
         StyleTransformer.documentRule(rule);
       }
-      if (nativeCssVariables) {
+      if (nativeCssVariables && cssBuild === '') {
         this._ensure();
         this._applyShim && this._applyShim['transformRule'](rule);
       }

@@ -12,7 +12,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 import ApplyShim from '../src/apply-shim.js';
 import templateMap from '../src/template-map.js';
-import {getIsExtends, toCssText, templateHasBuiltCss} from '../src/style-util.js';
+import {getIsExtends, toCssText, elementHasBuiltCss} from '../src/style-util.js';
 import * as ApplyShimUtils from '../src/apply-shim-utils.js';
 import {getComputedStyleValue, updateNativeProperties} from '../src/common-utils.js';
 import {CustomStyleInterfaceInterface} from '../src/custom-style-interface.js'; // eslint-disable-line no-unused-vars
@@ -51,7 +51,7 @@ class ApplyShimInterface {
    */
   prepareTemplate(template, elementName) {
     this.ensure();
-    if (templateHasBuiltCss(template)) {
+    if (elementHasBuiltCss(template)) {
       return;
     }
     templateMap[elementName] = template;
@@ -106,7 +106,7 @@ class ApplyShimInterface {
     this.ensure();
     let {is} = getIsExtends(element);
     let template = templateMap[is];
-    if (template && templateHasBuiltCss(template)) {
+    if (template && elementHasBuiltCss(template)) {
       return;
     }
     if (template && !ApplyShimUtils.templateIsValid(template)) {

@@ -12,7 +12,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 import {nativeShadow} from './style-settings.js';
 import StyleTransformer from './style-transformer.js';
-import {getIsExtends, isTemplateWithBuiltCss} from './style-util.js';
+import {getIsExtends, isNodeWithBuiltCss} from './style-util.js';
 
 export let flush = function() {};
 
@@ -124,7 +124,7 @@ function handler(mxns) {
       let root = n.getRootNode();
       let currentScope = getCurrentScope(n);
       // node was scoped, but now is in document
-      if (currentScope && root === n.ownerDocument && !isTemplateWithBuiltCss(n)) {
+      if (currentScope && root === n.ownerDocument && !isNodeWithBuiltCss(n)) {
         StyleTransformer.domRemoveScope(n, currentScope);
       } else if (root instanceof ShadowRoot) {
         const newScope = getOwnerScope(n);

@@ -175,14 +175,6 @@ export function isTargetedBuild(buildType) {
 }
 
 /**
- * @param {Element} element
- * @return {?string}
- */
-export function getCssBuildType(element) {
-  return element.getAttribute('css-build');
-}
-
-/**
  * Walk from text[start] matching parens and
  * returns position of the outer end paren
  * @param {string} text
@@ -327,45 +319,45 @@ export function splitSelectorList(selector) {
 const CSS_BUILD_ATTR = 'css-build';
 
 /**
- * @param {!HTMLTemplateElement} template
+ * @param {!HTMLElement} element
  * @return {string}
  */
-export function getCssBuild(template) {
-  if (template.__cssBuild === undefined) {
-    template.__cssBuild = template.getAttribute(CSS_BUILD_ATTR);
+export function getCssBuild(element) {
+  if (element.__cssBuild === undefined) {
+    element.__cssBuild = element.getAttribute(CSS_BUILD_ATTR);
   }
-  return template.__cssBuild || '';
+  return element.__cssBuild || '';
 }
 
 /**
- * @param {!HTMLTemplateElement} template
+ * @param {!HTMLElement} element
  * @return {boolean}
  */
-export function templateHasBuiltCss(template) {
-  return getCssBuild(template) !== '';
+export function elementHasBuiltCss(element) {
+  return getCssBuild(element) !== '';
 }
 
 /**
  * @param {!Node} node
  * @return {boolean}
  */
-export function isTemplateWithBuiltCss(node) {
-  if (node.nodeType === Node.ELEMENT_NODE && node.localName === 'template') {
-    return templateHasBuiltCss(/** @type {!HTMLTemplateElement} */(node));
+export function isNodeWithBuiltCss(node) {
+  if (node.nodeType === Node.ELEMENT_NODE) {
+    return elementHasBuiltCss(/** @type {!HTMLElement} */(node));
   }
   return false;
 }
 
 /**
- * @param {!HTMLTemplateElement} template
+ * @param {!HTMLElement} element
  * @return {boolean}
  */
-export function templateHasTargetedBuild(template) {
+export function elementHasTargetedBuild(element) {
   if (!nativeCssVariables) {
     return false;
   }
-  if (templateHasBuiltCss(template)) {
-    const cssBuildType = getCssBuild(template);
+  if (elementHasBuiltCss(element)) {
+    const cssBuildType = getCssBuild(element);
     if (cssBuildType === 'shadow') {
       return nativeShadow;
     }

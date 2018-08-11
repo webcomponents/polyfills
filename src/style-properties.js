@@ -362,7 +362,7 @@ class StyleProperties {
     // note: active rules excludes non-matching @media rules
     StyleUtil.forEachRule(rules, (rule) => {
       // if scope is StyleDefaults, use _element for matchesSelector
-      this.whenHostOrRootRule(scope, rule, cssBuild, function(info) {
+      this.whenHostOrRootRule(scope, rule, cssBuild, (info) => {
         let element = scope._element || scope;
         if (matchesSelector.call(element, info.selector)) {
           if (info.isHost) {
@@ -391,7 +391,7 @@ class StyleProperties {
       hostSelector;
     let hostRx = new RegExp(RX.HOST_PREFIX + rxHostSelector +
       RX.HOST_SUFFIX);
-    let rules = StyleInfo.get(element).styleRules;
+    let {styleRules: rules, cssBuild} = StyleInfo.get(element);
     let keyframeTransforms =
       this._elementKeyframeTransforms(element, rules, scopeSelector);
     return StyleTransformer.elementStyles(element, rules, function(rule) {
@@ -404,7 +404,7 @@ class StyleProperties {
         self.applyKeyframeTransforms(rule, keyframeTransforms);
         self._scopeSelector(rule, hostRx, hostSelector, scopeSelector);
       }
-    });
+    }, cssBuild);
   }
 
   /**
