@@ -319,8 +319,10 @@ export function splitSelectorList(selector) {
 const CSS_BUILD_ATTR = 'css-build';
 
 /**
+ * Return the polymer-css-build "build type" applied to this element
+ *
  * @param {!HTMLElement} element
- * @return {string}
+ * @return {string} Can be "", "shady", or "shadow"
  */
 export function getCssBuild(element) {
   if (element.__cssBuild === undefined) {
@@ -330,40 +332,20 @@ export function getCssBuild(element) {
 }
 
 /**
+ * Check if the given element, either a <template> or <style>, has been processed
+ * by polymer-css-build.
+ *
+ * If so, then we can make a number of optimizations:
+ * - polymer-css-build will decompose mixins into individual CSS Custom Properties,
+ * so the ApplyShim can be skipped entirely.
+ * - Under native ShadowDOM, the style text can just be copied into each instance
+ * without modification
+ * - If the build is "shady" and ShadyDOM is in use, the styling does not need
+ * scoping beyond the shimming of CSS Custom Properties
+ *
  * @param {!HTMLElement} element
  * @return {boolean}
  */
 export function elementHasBuiltCss(element) {
   return getCssBuild(element) !== '';
-}
-
-/**
- * @param {!Node} node
- * @return {boolean}
- */
-export function isNodeWithBuiltCss(node) {
-  if (node.nodeType === Node.ELEMENT_NODE) {
-    return elementHasBuiltCss(/** @type {!HTMLElement} */(node));
-  }
-  return false;
-}
-
-/**
- * @param {!HTMLElement} element
- * @return {boolean}
- */
-export function elementHasTargetedBuild(element) {
-  if (!nativeCssVariables) {
-    return false;
-  }
-  if (elementHasBuiltCss(element)) {
-    const cssBuildType = getCssBuild(element);
-    if (cssBuildType === 'shadow') {
-      return nativeShadow;
-    }
-    if (cssBuildType === 'shady') {
-      return !nativeShadow;
-    }
-  }
-  return false;
 }

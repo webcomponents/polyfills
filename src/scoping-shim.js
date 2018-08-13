@@ -224,7 +224,6 @@ export default class ScopingShim {
    * @param {Object=} overrideProps
    */
   styleElement(host, overrideProps) {
-    let {is} = StyleUtil.getIsExtends(host);
     let styleInfo = StyleInfo.get(host);
     if (!styleInfo) {
       styleInfo = this._prepareHost(host);
@@ -239,42 +238,57 @@ export default class ScopingShim {
       Object.assign(styleInfo.overrideStyleProperties, overrideProps);
     }
     if (!nativeCssVariables) {
-      this.flush();
-      this._updateProperties(host, styleInfo);
-      if (styleInfo.ownStylePropertyNames && styleInfo.ownStylePropertyNames.length) {
-        this._applyStyleProperties(host, styleInfo);
-      }
+      this.styleElementShimVariables(host, styleInfo);
     } else {
-      if (styleInfo.overrideStyleProperties) {
-        updateNativeProperties(host, styleInfo.overrideStyleProperties);
+      this.styleElementNativeVariables(host, styleInfo);
+    }
+  }
+  /**
+   * @param {!HTMLElement} host
+   * @param {!StyleInfo} styleInfo
+   */
+  styleElementShimVariables(host, styleInfo) {
+    this.flush();
+    this._updateProperties(host, styleInfo);
+    if (styleInfo.ownStylePropertyNames && styleInfo.ownStylePropertyNames.length) {
+      this._applyStyleProperties(host, styleInfo);
+    }
+  }
+  /**
+   * @param {!HTMLElement} host
+   * @param {!StyleInfo} styleInfo
+   */
+  styleElementNativeVariables(host, styleInfo) {
+    const { is } = StyleUtil.getIsExtends(host);
+    if (styleInfo.overrideStyleProperties) {
+      updateNativeProperties(host, styleInfo.overrideStyleProperties);
+    }
+    const template = templateMap[is];
+    // bail early if there is no shadowroot for this element
+    if (!template && !this._isRootOwner(host)) {
+      return;
+    }
+    // bail early if the template was built with polymer-css-build
+    if (template && StyleUtil.elementHasBuiltCss(template)) {
+      return;
+    }
+    if (template && template._style && !ApplyShimUtils.templateIsValid(template)) {
+      // update template
+      if (!ApplyShimUtils.templateIsValidating(template)) {
+        this._ensure();
+        this._applyShim && this._applyShim['transformRules'](template['_styleAst'], is);
+        template._style.textContent = StyleTransformer.elementStyles(host, styleInfo.styleRules);
+        ApplyShimUtils.startValidatingTemplate(template);
       }
-      let template = templateMap[is];
-      // bail early if there is no shadowroot for this element
-      if (!template && !this._isRootOwner(host)) {
-        return;
-      }
-      // bail early if the template was built with polymer-css-build
-      if (template && StyleUtil.elementHasBuiltCss(template)) {
-        return;
-      }
-      if (template && template._style && !ApplyShimUtils.templateIsValid(template)) {
-        // update template
-        if (!ApplyShimUtils.templateIsValidating(template)) {
-          this._ensure();
-          this._applyShim && this._applyShim['transformRules'](template['_styleAst'], is);
-          template._style.textContent = StyleTransformer.elementStyles(host, styleInfo.styleRules);
-          ApplyShimUtils.startValidatingTemplate(template);
+      // update instance if native shadowdom
+      if (nativeShadow) {
+        let root = host.shadowRoot;
+        if (root) {
+          let style = root.querySelector('style');
+          style.textContent = StyleTransformer.elementStyles(host, styleInfo.styleRules);
         }
-        // update instance if native shadowdom
-        if (nativeShadow) {
-          let root = host.shadowRoot;
-          if (root) {
-            let style = root.querySelector('style');
-            style.textContent = StyleTransformer.elementStyles(host, styleInfo.styleRules);
-          }
-        }
-        styleInfo.styleRules = template['_styleAst'];
       }
+      styleInfo.styleRules = template['_styleAst'];
     }
   }
   _styleOwnerForNode(node) {

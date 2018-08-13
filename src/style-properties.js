@@ -323,10 +323,6 @@ class StyleProperties {
       // :host -> x-foo for elements, but sub-rules have .x-foo in them
       isHost = !isRoot && parsedSelector.indexOf(hostScope) === 0;
     }
-    if (cssBuild === 'shadow') {
-      isRoot = parsedSelector === ':host > *' || parsedSelector === 'html';
-      isHost = isHost && !isRoot;
-    }
     if (!isRoot && !isHost) {
       return;
     }
