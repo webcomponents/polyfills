@@ -326,7 +326,11 @@ const CSS_BUILD_ATTR = 'css-build';
  */
 export function getCssBuild(element) {
   if (element.__cssBuild === undefined) {
-    element.__cssBuild = element.getAttribute(CSS_BUILD_ATTR);
+    const buildComment = getBuildComment(element);
+    if (buildComment) {
+      element.removeChild(element.firstChild);
+    }
+    element.__cssBuild = element.getAttribute(CSS_BUILD_ATTR) || buildComment;
   }
   return element.__cssBuild || '';
 }
@@ -348,4 +352,22 @@ export function getCssBuild(element) {
  */
 export function elementHasBuiltCss(element) {
   return getCssBuild(element) !== '';
+}
+
+/**
+ * For templates made with tagged template literals, polymer-css-build will
+ * insert a comment of the form `<!--css-build:shadow-->`
+ *
+ * @param {!HTMLElement} element
+ * @return {string}
+ */
+export function getBuildComment(element) {
+  const buildComment = element.firstChild;
+  if (buildComment instanceof Comment) {
+    const commentParts = buildComment.textContent.trim().split(':');
+    if (commentParts[0] === CSS_BUILD_ATTR) {
+      return commentParts[1];
+    }
+  }
+  return '';
 }
