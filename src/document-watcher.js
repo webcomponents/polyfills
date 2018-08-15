@@ -12,7 +12,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 import {nativeShadow} from './style-settings.js';
 import StyleTransformer from './style-transformer.js';
-import {getIsExtends} from './style-util.js';
+import {getIsExtends, elementHasBuiltCss} from './style-util.js';
 
 export let flush = function() {};
 
@@ -106,6 +106,17 @@ export function ensureCorrectSubtreeScoping(element) {
 }
 
 /**
+ * @param {HTMLElement} el
+ * @return {boolean}
+ */
+function isElementWithBuiltCss(el) {
+  if (el.localName === 'style' || el.localName === 'template') {
+    return elementHasBuiltCss(el);
+  }
+  return false;
+}
+
+/**
  * @param {Array<MutationRecord|null>|null} mxns
  */
 function handler(mxns) {
@@ -124,7 +135,9 @@ function handler(mxns) {
       let root = n.getRootNode();
       let currentScope = getCurrentScope(n);
       // node was scoped, but now is in document
-      if (currentScope && root === n.ownerDocument) {
+      // If this element has built css, we must not remove scoping as this node
+      // will be used as a template or style without re - applying scoping as an optimization
+      if (currentScope && root === n.ownerDocument && !isElementWithBuiltCss(n)) {
         StyleTransformer.domRemoveScope(n, currentScope);
       } else if (root instanceof ShadowRoot) {
         const newScope = getOwnerScope(n);

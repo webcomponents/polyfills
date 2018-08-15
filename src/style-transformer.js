@@ -49,15 +49,10 @@ class StyleTransformer {
    * @deprecated
    */
   dom(node, scope, shouldRemoveScope) {
-    // one time optimization to skip scoping...
-    if (node['__styleScoped']) {
-      node['__styleScoped'] = null;
-    } else {
-      const fn = (node) => {
-        this.element(node, scope || '', shouldRemoveScope);
-      };
-      this._transformDom(node, fn);
-    }
+    const fn = (node) => {
+      this.element(node, scope || '', shouldRemoveScope);
+    };
+    this._transformDom(node, fn);
   }
 
   /**
@@ -66,15 +61,10 @@ class StyleTransformer {
    * @param {string} scope
    */
   domAddScope(node, scope) {
-    // one time optimization to skip scoping...
-    if (node['__styleScoped']) {
-      node['__styleScoped'] = null;
-    } else {
-      const fn = (node) => {
-        this.element(node, scope || '');
-      };
-      this._transformDom(node, fn);
-    }
+    const fn = (node) => {
+      this.element(node, scope || '');
+    };
+    this._transformDom(node, fn);
   }
 
   /**
@@ -138,16 +128,11 @@ class StyleTransformer {
    * @param {string} newScope
    */
   domReplaceScope(node, oldScope, newScope) {
-    // one time optimization to skip scoping...
-    if (node['__styleScoped']) {
-      node['__styleScoped'] = null;
-    } else {
-      const fn = (node) => {
-        this.element(node, oldScope, true);
-        this.element(node, newScope);
-      };
-      this._transformDom(node, fn);
-    }
+    const fn = (node) => {
+      this.element(node, oldScope, true);
+      this.element(node, newScope);
+    };
+    this._transformDom(node, fn);
   }
   /**
    * Given a node, remove the scoping class to each subnode in the tree.
@@ -155,24 +140,19 @@ class StyleTransformer {
    * @param {string} oldScope
    */
   domRemoveScope(node, oldScope) {
-    // one time optimization to skip scoping...
-    if (node['__styleScoped']) {
-      node['__styleScoped'] = null;
-    } else {
-      const fn = (node) => {
-        this.element(node, oldScope || '', true);
-      };
-      this._transformDom(node, fn);
-    }
+    const fn = (node) => {
+      this.element(node, oldScope || '', true);
+    };
+    this._transformDom(node, fn);
   }
 
   /**
    * @param {?} element
    * @param {?} styleRules
    * @param {?=} callback
+   * @param {string=} cssBuild
    */
-  elementStyles(element, styleRules, callback) {
-    let cssBuildType = element['__cssBuild'];
+  elementStyles(element, styleRules, callback, cssBuild = '') {
     // no need to shim selectors if settings.useNativeShadow, also
     // a shady css build will already have transformed selectors
     // NOTE: This method may be called as part of static or property shimming.
@@ -180,7 +160,7 @@ class StyleTransformer {
     // but when the property shim is used it is called and should opt out of
     // static shimming work when a proper build exists.
     let cssText = '';
-    if (nativeShadow || cssBuildType === 'shady') {
+    if (nativeShadow || cssBuild === 'shady') {
       cssText = StyleUtil.toCssText(styleRules, callback);
     } else {
       let {is, typeExtension} = StyleUtil.getIsExtends(element);

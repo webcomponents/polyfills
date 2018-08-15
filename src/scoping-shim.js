@@ -57,17 +57,10 @@ export default class ScopingShim {
   _gatherStyles(template) {
     return StyleUtil.gatherStyleText(template.content);
   }
-  _getCssBuild(template) {
-    let style = template.content.querySelector('style');
-    if (!style) {
-      return '';
-    }
-    return style.getAttribute('css-build') || '';
-  }
   /**
    * Prepare the styling and template for the given element type
    *
-   * @param {HTMLTemplateElement} template
+   * @param {!HTMLTemplateElement} template
    * @param {string} elementName
    * @param {string=} typeExtension
    */
@@ -77,7 +70,7 @@ export default class ScopingShim {
   }
   /**
    * Prepare styling for the given element type
-   * @param {HTMLTemplateElement} template
+   * @param {!HTMLTemplateElement} template
    * @param {string} elementName
    * @param {string=} typeExtension
    */
@@ -93,23 +86,21 @@ export default class ScopingShim {
     template.name = elementName;
     template.extends = typeExtension;
     templateMap[elementName] = template;
-    let cssBuild = this._getCssBuild(template);
+    let cssBuild = StyleUtil.getCssBuild(template);
     let cssText = this._gatherStyles(template);
     let info = {
       is: elementName,
       extends: typeExtension,
-      __cssBuild: cssBuild,
     };
     // check if the styling has mixin definitions or uses
     this._ensure();
-    let hasMixins = detectMixin(cssText)
+    let hasMixins = !StyleUtil.elementHasBuiltCss(template) && detectMixin(cssText);
     let ast = parse(cssText);
     // only run the applyshim transforms if there is a mixin involved
     if (hasMixins && nativeCssVariables && this._applyShim) {
       this._applyShim['transformRules'](ast, elementName);
     }
     template['_styleAst'] = ast;
-    template._cssBuild = cssBuild;
 
     let ownPropertyNames = [];
     if (!nativeCssVariables) {
@@ -118,24 +109,32 @@ export default class ScopingShim {
     if (!ownPropertyNames.length || nativeCssVariables) {
       let root = nativeShadow ? template.content : null;
       let placeholder = getStylePlaceholder(elementName);
-      let style = this._generateStaticStyle(info, template['_styleAst'], root, placeholder);
+      let style = this._generateStaticStyle(info, template['_styleAst'], root, placeholder, cssBuild);
       template._style = style;
     }
     template._ownPropertyNames = ownPropertyNames;
   }
   /**
    * Prepare template for the given element type
-   * @param {HTMLTemplateElement} template
+   * @param {!HTMLTemplateElement} template
    * @param {string} elementName
    */
   prepareTemplateDom(template, elementName) {
-    if (!nativeShadow && !template._domPrepared) {
+    const cssBuild = StyleUtil.getCssBuild(template);
+    if (!nativeShadow && cssBuild !== 'shady' && !template._domPrepared) {
       template._domPrepared = true;
       StyleTransformer.domAddScope(template.content, elementName);
     }
   }
-  _generateStaticStyle(info, rules, shadowroot, placeholder) {
-    let cssText = StyleTransformer.elementStyles(info, rules);
+  /**
+   * @param {!{is: string, extends: (string|undefined)}} info
+   * @param {!StyleNode} rules
+   * @param {DocumentFragment} shadowroot
+   * @param {Node} placeholder
+   * @param {string} cssBuild
+   */
+  _generateStaticStyle(info, rules, shadowroot, placeholder, cssBuild) {
+    let cssText = StyleTransformer.elementStyles(info, rules, null, cssBuild);
     if (cssText.length) {
       return StyleUtil.applyCss(cssText, info.is, shadowroot, placeholder);
     }
@@ -150,7 +149,7 @@ export default class ScopingShim {
     if (template) {
       ast = template['_styleAst'];
       ownStylePropertyNames = template._ownPropertyNames;
-      cssBuild = template._cssBuild;
+      cssBuild = StyleUtil.getCssBuild(template);
     }
     const styleInfo = new StyleInfo(
       ast,
@@ -226,7 +225,6 @@ export default class ScopingShim {
    * @param {Object=} overrideProps
    */
   styleElement(host, overrideProps) {
-    let {is} = StyleUtil.getIsExtends(host);
     let styleInfo = StyleInfo.get(host);
     if (!styleInfo) {
       styleInfo = this._prepareHost(host);
@@ -241,38 +239,57 @@ export default class ScopingShim {
       Object.assign(styleInfo.overrideStyleProperties, overrideProps);
     }
     if (!nativeCssVariables) {
-      this.flush();
-      this._updateProperties(host, styleInfo);
-      if (styleInfo.ownStylePropertyNames && styleInfo.ownStylePropertyNames.length) {
-        this._applyStyleProperties(host, styleInfo);
-      }
+      this.styleElementShimVariables(host, styleInfo);
     } else {
-      if (styleInfo.overrideStyleProperties) {
-        updateNativeProperties(host, styleInfo.overrideStyleProperties);
+      this.styleElementNativeVariables(host, styleInfo);
+    }
+  }
+  /**
+   * @param {!HTMLElement} host
+   * @param {!StyleInfo} styleInfo
+   */
+  styleElementShimVariables(host, styleInfo) {
+    this.flush();
+    this._updateProperties(host, styleInfo);
+    if (styleInfo.ownStylePropertyNames && styleInfo.ownStylePropertyNames.length) {
+      this._applyStyleProperties(host, styleInfo);
+    }
+  }
+  /**
+   * @param {!HTMLElement} host
+   * @param {!StyleInfo} styleInfo
+   */
+  styleElementNativeVariables(host, styleInfo) {
+    const { is } = StyleUtil.getIsExtends(host);
+    if (styleInfo.overrideStyleProperties) {
+      updateNativeProperties(host, styleInfo.overrideStyleProperties);
+    }
+    const template = templateMap[is];
+    // bail early if there is no shadowroot for this element
+    if (!template && !this._isRootOwner(host)) {
+      return;
+    }
+    // bail early if the template was built with polymer-css-build
+    if (template && StyleUtil.elementHasBuiltCss(template)) {
+      return;
+    }
+    if (template && template._style && !ApplyShimUtils.templateIsValid(template)) {
+      // update template
+      if (!ApplyShimUtils.templateIsValidating(template)) {
+        this._ensure();
+        this._applyShim && this._applyShim['transformRules'](template['_styleAst'], is);
+        template._style.textContent = StyleTransformer.elementStyles(host, styleInfo.styleRules);
+        ApplyShimUtils.startValidatingTemplate(template);
       }
-      let template = templateMap[is];
-      // bail early if there is no shadowroot for this element
-      if (!template && !this._isRootOwner(host)) {
-        return;
-      }
-      if (template && template._style && !ApplyShimUtils.templateIsValid(template)) {
-        // update template
-        if (!ApplyShimUtils.templateIsValidating(template)) {
-          this._ensure();
-          this._applyShim && this._applyShim['transformRules'](template['_styleAst'], is);
-          template._style.textContent = StyleTransformer.elementStyles(host, styleInfo.styleRules);
-          ApplyShimUtils.startValidatingTemplate(template);
+      // update instance if native shadowdom
+      if (nativeShadow) {
+        let root = host.shadowRoot;
+        if (root) {
+          let style = root.querySelector('style');
+          style.textContent = StyleTransformer.elementStyles(host, styleInfo.styleRules);
         }
-        // update instance if native shadowdom
-        if (nativeShadow) {
-          let root = host.shadowRoot;
-          if (root) {
-            let style = root.querySelector('style');
-            style.textContent = StyleTransformer.elementStyles(host, styleInfo.styleRules);
-          }
-        }
-        styleInfo.styleRules = template['_styleAst'];
       }
+      styleInfo.styleRules = template['_styleAst'];
     }
   }
   _styleOwnerForNode(node) {
@@ -312,7 +329,7 @@ export default class ScopingShim {
     let ownerStyleInfo = StyleInfo.get(owner);
     let ownerProperties = ownerStyleInfo.styleProperties;
     let props = Object.create(ownerProperties || null);
-    let hostAndRootProps = StyleProperties.hostAndRootPropertiesForScope(host, styleInfo.styleRules);
+    let hostAndRootProps = StyleProperties.hostAndRootPropertiesForScope(host, styleInfo.styleRules, styleInfo.cssBuild);
     let propertyData = StyleProperties.propertyDataFromStyles(ownerStyleInfo.styleRules, host);
     let propertiesMatchingHost = propertyData.properties
     Object.assign(
@@ -393,13 +410,17 @@ export default class ScopingShim {
   }
   transformCustomStyleForDocument(style) {
     let ast = StyleUtil.rulesForStyle(style);
+    const cssBuild = StyleUtil.getCssBuild(style);
+    if (cssBuild !== this._documentOwnerStyleInfo.cssBuild) {
+      this._documentOwnerStyleInfo.cssBuild = cssBuild;
+    }
     StyleUtil.forEachRule(ast, (rule) => {
       if (nativeShadow) {
         StyleTransformer.normalizeRootSelector(rule);
       } else {
         StyleTransformer.documentRule(rule);
       }
-      if (nativeCssVariables) {
+      if (nativeCssVariables && cssBuild === '') {
         this._ensure();
         this._applyShim && this._applyShim['transformRule'](rule);
       }
