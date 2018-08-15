@@ -19,20 +19,20 @@ const customStyleInterface = new CustomStyleInterface();
 if (!window.ShadyCSS) {
   window.ShadyCSS = {
     /**
-     * @param {HTMLTemplateElement} template
+     * @param {!HTMLTemplateElement} template
      * @param {string} elementName
      * @param {string=} elementExtends
      */
     prepareTemplate(template, elementName, elementExtends) {}, // eslint-disable-line no-unused-vars
 
     /**
-     * @param {HTMLTemplateElement} template
+     * @param {!HTMLTemplateElement} template
      * @param {string} elementName
      */
     prepareTemplateDom(template, elementName) {}, // eslint-disable-line no-unused-vars
 
     /**
-     * @param {HTMLTemplateElement} template
+     * @param {!HTMLTemplateElement} template
      * @param {string} elementName
      * @param {string=} elementExtends
      */

@@ -162,7 +162,7 @@ if (!window.ShadyCSS || !window.ShadyCSS.ScopingShim) {
     },
 
     /**
-     * @param {HTMLTemplateElement} template
+     * @param {!HTMLTemplateElement} template
      * @param {string} elementName
      */
     prepareTemplateDom(template, elementName) {}, // eslint-disable-line no-unused-vars

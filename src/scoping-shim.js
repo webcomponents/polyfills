@@ -60,7 +60,7 @@ export default class ScopingShim {
   /**
    * Prepare the styling and template for the given element type
    *
-   * @param {HTMLTemplateElement} template
+   * @param {!HTMLTemplateElement} template
    * @param {string} elementName
    * @param {string=} typeExtension
    */
@@ -70,7 +70,7 @@ export default class ScopingShim {
   }
   /**
    * Prepare styling for the given element type
-   * @param {HTMLTemplateElement} template
+   * @param {!HTMLTemplateElement} template
    * @param {string} elementName
    * @param {string=} typeExtension
    */
@@ -116,11 +116,12 @@ export default class ScopingShim {
   }
   /**
    * Prepare template for the given element type
-   * @param {HTMLTemplateElement} template
+   * @param {!HTMLTemplateElement} template
    * @param {string} elementName
    */
   prepareTemplateDom(template, elementName) {
-    if (!nativeShadow && !template._domPrepared) {
+    const cssBuild = StyleUtil.getCssBuild(template);
+    if (!nativeShadow && cssBuild !== 'shady' && !template._domPrepared) {
       template._domPrepared = true;
       StyleTransformer.domAddScope(template.content, elementName);
     }
@@ -133,7 +134,7 @@ export default class ScopingShim {
    * @param {string} cssBuild
    */
   _generateStaticStyle(info, rules, shadowroot, placeholder, cssBuild) {
-    let cssText = StyleTransformer.elementStyles(info, rules, cssBuild);
+    let cssText = StyleTransformer.elementStyles(info, rules, null, cssBuild);
     if (cssText.length) {
       return StyleUtil.applyCss(cssText, info.is, shadowroot, placeholder);
     }
