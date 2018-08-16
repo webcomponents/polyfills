@@ -478,6 +478,33 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       el.parentNode.removeChild(el);
     });
 
+    test('focusin and focusout events patched to be always composed', function() {
+      const theDiv = document.createElement('div');
+      theDiv.attachShadow({mode: 'open'});
+
+      const theInput = document.createElement('input');
+      theDiv.shadowRoot.appendChild(theInput);
+      document.body.appendChild(theDiv);
+
+      const dispatchMockEvent = function(type, target) {
+        // do not set composed to force patching needed for Firefox 61
+        const e = new CustomEvent(type);
+        target.dispatchEvent(e);
+      };
+
+      const focusinSpy = sinon.spy();
+      const focusoutSpy = sinon.spy();
+
+      theInput.addEventListener('focusin', focusinSpy);
+      theInput.addEventListener('focusout', focusoutSpy);
+
+      dispatchMockEvent('focusin', theInput);
+      dispatchMockEvent('focusout', theInput);
+
+      assert.isTrue(focusinSpy.firstCall.args[0].composed, 'focusin event should be always composed');
+      assert.isTrue(focusoutSpy.firstCall.args[0].composed, 'focusout event should be always composed');
+    });
+
     const hasOnListenersOnPrototype = (function() {
       let nativeHTMLElement =
         (window['customElements'] && window['customElements']['nativeHTMLElement']) ||

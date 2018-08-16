@@ -137,7 +137,8 @@ let eventMixin = {
     if (this.__composed === undefined) {
       // if there's an original `composed` getter on the Event prototype, use that
       if (composedGetter) {
-        this.__composed = composedGetter(this);
+        // TODO(web-padawan): see https://github.com/webcomponents/shadydom/issues/275
+        this.__composed = this.type === 'focusin' || this.type === 'focusout' || composedGetter(this);
       // If the event is trusted, or `isTrusted` is not supported, check the list of always composed events
       } else if (this.isTrusted !== false) {
         this.__composed = alwaysComposed[this.type];
