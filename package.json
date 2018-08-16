@@ -27,10 +27,11 @@
   },
   "scripts": {
     "build": "gulp",
-    "test": "wct",
+    "test": "npm run lint && npm run build && wct",
     "lint": "eslint src",
     "regen-package-lock": "rm -rf node_modules package-lock.json; npm install",
-    "prepack": "npm run build"
+    "prepack": "npm run build",
+    "debug": "gulp debug"
   },
   "files": [
     "shadydom.min.js*",
@@ -42,7 +43,7 @@
   "homepage": "https://webcomponents.org/polyfills",
   "devDependencies": {
     "@webcomponents/custom-elements": "^1.1.3",
-    "@webcomponents/shadycss": "^1.3.5",
+    "@webcomponents/shadycss": "^1.5.0",
     "@webcomponents/template": "^1.3.1",
     "@webcomponents/webcomponents-platform": "^1.0.0",
     "eslint": "^4.19.1",
@@ -53,6 +54,7 @@
     "gulp-rollup": "^2.16.2",
     "gulp-size": "^3.0.0",
     "gulp-sourcemaps": "^2.6.4",
+    "promise-polyfill": "^8.0.0",
     "wct-browser-legacy": "^1.0.1",
     "web-component-tester": "^6.7.1"
   },
