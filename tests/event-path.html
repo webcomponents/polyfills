@@ -478,27 +478,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       el.parentNode.removeChild(el);
     });
 
-    const isFirefox = window.navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
-    (isFirefox ? test : test.skip)('focusin and focusout events patched to be always composed', function() {
-      ensureDocumentHasFocus();
-
-      const nativeFocus = HTMLElement.prototype.focus;
-      // When running in background or headless, no native events are dispatched. Let’s fake them.
-      HTMLElement.prototype.focus = function() {
-        const dispatchMockEvent = function(type, bubbles, target, relatedTarget) {
-          // do not set composed to pick up incorrect native value in Firefox 61
-          const e = new CustomEvent(type, {bubbles});
-          e.relatedTarget = relatedTarget;
-          target.dispatchEvent(e);
-        };
-        let activeElement = document.activeElement;
-        dispatchMockEvent('focusout', true, activeElement, this);
-        dispatchMockEvent('focusin', true, this, activeElement);
-        nativeFocus.apply(this, arguments);
-        dispatchMockEvent('blur', false, activeElement, this);
-        dispatchMockEvent('focus', false, this, activeElement);
-      };
-
+    test('focusin and focusout events patched to be always composed', function() {
       const theDiv = document.createElement('div');
       theDiv.attachShadow({mode: 'open'});
 
@@ -506,13 +486,23 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       theDiv.shadowRoot.appendChild(theInput);
       document.body.appendChild(theDiv);
 
-      const spy = sinon.spy();
-      theDiv.addEventListener('focusin', spy);
-      theInput.focus();
+      const dispatchMockEvent = function(type, target) {
+        // do not set composed to force patching needed for Firefox 61
+        const e = new CustomEvent(type);
+        target.dispatchEvent(e);
+      };
 
-      HTMLElement.prototype.focus = nativeFocus;
+      const focusinSpy = sinon.spy();
+      const focusoutSpy = sinon.spy();
 
-      assert.isTrue(spy.called, 'focusin and focusout events should be composed in Firefox 61');
+      theInput.addEventListener('focusin', focusinSpy);
+      theInput.addEventListener('focusout', focusoutSpy);
+
+      dispatchMockEvent('focusin', theInput);
+      dispatchMockEvent('focusout', theInput);
+
+      assert.isTrue(focusinSpy.firstCall.args[0].composed, 'focusin event should be always composed');
+      assert.isTrue(focusoutSpy.firstCall.args[0].composed, 'focusout event should be always composed');
     });
 
     const hasOnListenersOnPrototype = (function() {
