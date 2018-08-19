@@ -479,6 +479,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     });
 
     test('focusin and focusout events patched to be always composed', function() {
+      // this test only makes sense for browsers having native "composed" getter,
+      // with the others (IE and Edge) the case is not reproducible, so skip.
+      if (Object.getOwnPropertyDescriptor(Event.prototype, 'composed') === undefined) {
+        this.skip();
+      }
       const theDiv = document.createElement('div');
       theDiv.attachShadow({mode: 'open'});
 
