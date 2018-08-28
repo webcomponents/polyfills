@@ -268,9 +268,13 @@ class ApplyShim {
       topRule = topRule['parent'];
     }
     const fallbacks = {};
-    // stop when we hit the given rule
-    for (let idx = 0; idx < topRule['rules'].indexOf(startRule); idx++) {
-      const r = topRule['rules'][idx];
+    let seenStartRule = false;
+    forEachRule(topRule, (r) => {
+      // stop when we hit the input rule
+      seenStartRule = seenStartRule || r === startRule;
+      if (seenStartRule) {
+        return;
+      }
       // NOTE: Only matching selectors are "safe" for this fallback processing
       // It would be prohibitive to run `matchesSelector()` on each selector,
       // so we cheat and only check if the same selector string is used, which
@@ -278,7 +282,7 @@ class ApplyShim {
       if (r['selector'] === startRule['selector']) {
         Object.assign(fallbacks, this._cssTextToMap(r['parsedCssText']));
       }
-    }
+    });
     return fallbacks;
   }
   /**
