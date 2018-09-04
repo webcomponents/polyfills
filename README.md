@@ -272,7 +272,7 @@ The following example uses ShadyCSS and ShadyDOM to define a custom element.
     }
   }
 
-  window.customElements.define('my-element', MyElement);
+  customElements.define('my-element', MyElement);
 </script>
 ```
 
