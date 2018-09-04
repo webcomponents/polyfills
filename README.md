@@ -258,10 +258,12 @@ The following example uses ShadyCSS and ShadyDOM to define a custom element.
   </div>
 </template>
 <script>
-  ShadyCSS.prepareTemplate(myElementTemplate, 'my-element');
+  // Use polyfill only in browsers that lack native Shadow DOM.
+  window.ShadyCSS && ShadyCSS.prepareTemplate(myElementTemplate, 'my-element');
+
   class MyElement extends HTMLElement {
     connectedCallback() {
-      ShadyCSS.styleElement(this);
+      window.ShadyCSS && ShadyCSS.styleElement(this);
       if (!this.shadowRoot) {
         this.attachShadow({mode: 'open'});
         this.shadowRoot.appendChild(
@@ -304,10 +306,11 @@ element name to `prepareTemplate` as a third argument.
   </div>
 </template>
 <script>
-  ShadyCSS.prepareTemplate(myElementTemplate, 'my-element', 'div');
+  window.ShadyCSS && ShadyCSS.prepareTemplate(myElementTemplate, 'my-element', 'div');
+
   class MyElement extends HTMLDivElement {
     connectedCallback() {
-      ShadyCSS.styleElement(this);
+      window.ShadyCSS && ShadyCSS.styleElement(this);
       if (!this.shadowRoot) {
         this.attachShadow({mode: 'open'});
         this.shadowRoot.appendChild(
