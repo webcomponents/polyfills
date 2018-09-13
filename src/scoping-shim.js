@@ -286,7 +286,9 @@ export default class ScopingShim {
         let root = host.shadowRoot;
         if (root) {
           let style = root.querySelector('style');
-          style.textContent = StyleTransformer.elementStyles(host, styleInfo.styleRules);
+          if (style) {
+            style.textContent = StyleTransformer.elementStyles(host, styleInfo.styleRules);
+          }
         }
       }
       styleInfo.styleRules = template['_styleAst'];
