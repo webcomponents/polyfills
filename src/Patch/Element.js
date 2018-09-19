@@ -24,7 +24,7 @@ export default function(internals) {
       });
   }
 
-  function patch_HTMLsetter(property, destination, baseDescriptor, patchCallback) {
+  function patch_HTMLsetter(destination, property, baseDescriptor, patchCallback) {
     Object.defineProperty(destination, property, {
       enumerable: baseDescriptor.enumerable,
       configurable: true,
@@ -76,7 +76,7 @@ export default function(internals) {
   }
 
   function patch_innerHTML(destination, baseDescriptor) {
-    patch_HTMLsetter('innerHTML', destination, baseDescriptor, (node, parentNode, patchFunction) => {
+    patch_HTMLsetter(destination, 'innerHTML', baseDescriptor, (node, parentNode, patchFunction) => {
       patchFunction.call(internals, node);
     });
   }
@@ -126,7 +126,7 @@ export default function(internals) {
   }
 
   function patch_outerHTML(destination, baseDescriptor) {
-    patch_HTMLsetter('outerHTML', destination, baseDescriptor, (node, parentNode, patchFunction) => {
+    patch_HTMLsetter(destination, 'outerHTML', baseDescriptor, (node, parentNode, patchFunction) => {
       patchFunction.call(internals, parentNode);
     });
   }
