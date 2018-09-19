@@ -155,6 +155,7 @@ suite('Siblings of the element are not incorrectly upgraded when setting `outerH
 
     div.outerHTML = `<div></div>`;
 
+    assert.isFalse(container.firstChild instanceof CEInserted);
     assert.isFalse(container.lastChild instanceof CEInserted);
 
     document.body.removeChild(container);
