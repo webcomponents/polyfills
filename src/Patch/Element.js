@@ -133,7 +133,7 @@ export default function(internals) {
       if (previousSibling === null && nextSibling === null) {
         patchFunction.call(internals, parentNode);
       } else {
-        let sibling = previousSibling === null && previousSibling.nextSibling || parentNode.firstChild;
+        let sibling = previousSibling && previousSibling.nextSibling || parentNode.firstChild;
 
         while (sibling !== null && sibling !== nextSibling) {
           patchFunction.call(internals, sibling);
