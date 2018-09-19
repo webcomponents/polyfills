@@ -48,9 +48,12 @@ export default function(internals) {
           });
         }
 
-        // Memoize parentNode here before calling the baseDescriptor
-        // In the case of `outerHTML`, this would already be disconnected
+        // Memoize properties here before calling the baseDescriptor
+        // In the case of `outerHTML`, this node would already be disconnected
+        // and the properties therefore no longer exist
         const parentNode = this.parentNode;
+        const previousSibling = this.previousSibling;
+        const nextSibling = this.nextSibling;
 
         baseDescriptor.set.call(this, htmlString);
 
@@ -66,9 +69,9 @@ export default function(internals) {
         // Only create custom elements if this element's owner document is
         // associated with the registry.
         if (!this.ownerDocument.__CE_hasRegistry) {
-          patchCallback(this, parentNode, internals.patchTree);
+          patchCallback(this, internals.patchTree, {parentNode, previousSibling, nextSibling});
         } else {
-          patchCallback(this, parentNode, internals.patchAndUpgradeTree);
+          patchCallback(this, internals.patchAndUpgradeTree, {parentNode, previousSibling, nextSibling});
         }
         return htmlString;
       },
@@ -76,7 +79,7 @@ export default function(internals) {
   }
 
   function patch_innerHTML(destination, baseDescriptor) {
-    patch_HTMLsetter(destination, 'innerHTML', baseDescriptor, (node, parentNode, patchFunction) => {
+    patch_HTMLsetter(destination, 'innerHTML', baseDescriptor, (node, patchFunction) => {
       patchFunction.call(internals, node);
     });
   }
@@ -126,8 +129,17 @@ export default function(internals) {
   }
 
   function patch_outerHTML(destination, baseDescriptor) {
-    patch_HTMLsetter(destination, 'outerHTML', baseDescriptor, (node, parentNode, patchFunction) => {
-      patchFunction.call(internals, parentNode);
+    patch_HTMLsetter(destination, 'outerHTML', baseDescriptor, (node, patchFunction, {parentNode, previousSibling, nextSibling}) => {
+      if (previousSibling === null && nextSibling === null) {
+        patchFunction.call(internals, parentNode);
+      } else {
+        let sibling = previousSibling && previousSibling.nextSibling || parentNode.firstChild;
+
+        while (sibling !== null && sibling !== nextSibling) {
+          patchFunction.call(internals, sibling);
+          sibling = sibling.nextSibling;
+        }
+      }
     });
   }
 

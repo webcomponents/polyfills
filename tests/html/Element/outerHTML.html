@@ -4,6 +4,16 @@
 <title>Element#outerHTML</title>
 <script>
   (window.customElements = window.customElements || {}).forcePolyfill = true;
+  // Capture these before loading the custom elements polyfill so that their
+  // behavior can be checked before running tests for `outerHTML`.
+  window.NATIVE = {
+    createElement:
+        Document.prototype.createElement,
+    appendChild:
+        Node.prototype.appendChild,
+    insertBefore:
+        Node.prototype.insertBefore,
+  };
 </script>
 <script src="../../../node_modules/es6-promise/dist/es6-promise.auto.min.js"></script>
 <script src="../../../node_modules/@webcomponents/template/template.js"></script>
@@ -90,6 +100,62 @@ suite('Custom elements in the assigned string are created when setting `outerHTM
     assert.equal(container.childNodes[0].childNodes[0].connectedCallbackCount, 1);
     assert.equal(container.childNodes[0].childNodes[0].disconnectedCallbackCount, 0);
     assert.equal(container.childNodes[0].childNodes[0].childNodes.length, 0);
+
+    document.body.removeChild(container);
+  });
+
+});
+
+suite('Siblings of the element are not incorrectly upgraded when setting `outerHTML`', function() {
+
+  let customName;
+  let CEInserted;
+
+  setup(function() {
+    customName = generateLocalName();
+    CEInserted = class extends HTMLElement {};
+    customElements.define(customName, CEInserted);
+  });
+
+  test('Does not upgrade previous sibling', function() {
+    const container = document.createElement('div');
+    const div = document.createElement('div');
+    container.appendChild(div);
+    document.body.appendChild(container);
+    window.NATIVE.insertBefore.call(container, window.NATIVE.createElement.call(document, customName), div);
+
+    div.outerHTML = `<div></div>`;
+
+    assert.isFalse(container.firstChild instanceof CEInserted);
+
+    document.body.removeChild(container);
+  });
+
+  test('Does not upgrade next sibling', function() {
+    const container = document.createElement('div');
+    const div = document.createElement('div');
+    container.appendChild(div);
+    document.body.appendChild(container);
+    window.NATIVE.appendChild.call(container, window.NATIVE.createElement.call(document, customName));
+
+    div.outerHTML = `<div></div>`;
+
+    assert.isFalse(container.lastChild instanceof CEInserted);
+
+    document.body.removeChild(container);
+  });
+
+  test('Does not upgrade previous and next sibling', function() {
+    const container = document.createElement('div');
+    const div = document.createElement('div');
+    container.appendChild(div);
+    document.body.appendChild(container);
+    window.NATIVE.appendChild.call(container, window.NATIVE.createElement.call(document, customName));
+    window.NATIVE.insertBefore.call(container, window.NATIVE.createElement.call(document, customName), div);
+
+    div.outerHTML = `<div></div>`;
+
+    assert.isFalse(container.lastChild instanceof CEInserted);
 
     document.body.removeChild(container);
   });
