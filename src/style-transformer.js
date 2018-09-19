@@ -365,9 +365,25 @@ class StyleTransformer {
   }
 
   _transformSimpleSelector(selector, scope) {
-    let p$ = selector.split(PSEUDO_PREFIX);
-    p$[0] += scope;
-    return p$.join(PSEUDO_PREFIX);
+    const attributes = selector.split(/(\[.+?\])/);
+
+    const output = [];
+    for (let i = 0; i < attributes.length; i++) {
+      // Do not attempt to transform any attribute selector content
+      if ((i % 2) === 1) {
+        output.push(attributes[i]);
+      } else {
+        const part = attributes[i];
+
+        if (!(part === '' && i === attributes.length - 1)) {
+          let p$ = part.split(PSEUDO_PREFIX);
+          p$[0] += scope;
+          output.push(p$.join(PSEUDO_PREFIX));
+        }
+      }
+    }
+
+    return output.join('');
   }
 
   // :host(...) -> scopeName...
