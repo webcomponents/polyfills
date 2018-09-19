@@ -521,6 +521,7 @@ export default class ScopingShim {
 }
 
 /* exports */
+/* eslint-disable no-self-assign */
 ScopingShim.prototype['flush'] = ScopingShim.prototype.flush;
 ScopingShim.prototype['prepareTemplate'] = ScopingShim.prototype.prepareTemplate;
 ScopingShim.prototype['styleElement'] = ScopingShim.prototype.styleElement;
@@ -537,6 +538,7 @@ ScopingShim.prototype['scopeNode'] = ScopingShim.prototype.scopeNode;
 ScopingShim.prototype['unscopeNode'] = ScopingShim.prototype.unscopeNode;
 ScopingShim.prototype['scopeForNode'] = ScopingShim.prototype.scopeForNode;
 ScopingShim.prototype['currentScopeForNode'] = ScopingShim.prototype.currentScopeForNode;
+/* eslint-enable no-self-assign */
 Object.defineProperties(ScopingShim.prototype, {
   'nativeShadow': {
     get() {
