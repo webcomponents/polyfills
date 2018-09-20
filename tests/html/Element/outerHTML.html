@@ -9,6 +9,8 @@
   window.NATIVE = {
     createElement:
         Document.prototype.createElement,
+    createElementNS:
+        Document.prototype.createElementNS,
     appendChild:
         Node.prototype.appendChild,
     insertBefore:
@@ -113,7 +115,25 @@ suite('Corner cases', function() {
     assert.throws(() => div.outerHTML = `<div></div>`);
   });
 
+  const canOuterHTMLSVGElements = (function() {
+    const svg = window.NATIVE.createElementNS.call(document, 'http://www.w3.org/2000/svg', 'svg');
+    const circle = window.NATIVE.createElementNS.call(document, 'http://www.w3.org/2000/svg', 'circle');
+    svg.appendChild(circle);
+    document.body.appendChild(svg);
+
+    try {
+      circle.outerHTML = `<g></g>`;
+      return true;
+    } catch (e) {
+      return false;
+    }
+  })();
+
   test('Creates SVG elements in correct namespace', function() {
+    // Safari 10 can not `outerHTML` with regular SVG elements, so disregard this test.
+    if (!canOuterHTMLSVGElements) {
+      this.skip();
+    }
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
     svg.appendChild(circle);
