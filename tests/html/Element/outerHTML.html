@@ -123,7 +123,7 @@ suite('Corner cases', function() {
 
     try {
       circle.outerHTML = `<g></g>`;
-      return true;
+      return svg.firstChild instanceof SVGGElement;
     } catch (e) {
       return false;
     }
@@ -131,6 +131,7 @@ suite('Corner cases', function() {
 
   test('Creates SVG elements in correct namespace', function() {
     // Safari 10 can not `outerHTML` with regular SVG elements, so disregard this test.
+    // Edge 14 does not crash, but creates `HTMLUnknownElement`s instead.
     if (!canOuterHTMLSVGElements) {
       this.skip();
     }
