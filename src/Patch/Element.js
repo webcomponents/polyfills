@@ -130,6 +130,9 @@ export default function(internals) {
 
   function patch_outerHTML(destination, baseDescriptor) {
     patch_HTMLsetter(destination, 'outerHTML', baseDescriptor, (node, patchFunction, {parentNode, previousSibling, nextSibling}) => {
+      if (parentNode === null) {
+        throw new Error(`Failed to set the 'outerHTML' property on 'Element': This element has no parent node.`);
+      }
       if (previousSibling === null && nextSibling === null) {
         patchFunction.call(internals, parentNode);
       } else {
@@ -160,7 +163,8 @@ export default function(internals) {
           return Native.Node_cloneNode.call(this, true).outerHTML;
         },
         set: /** @this {Element} */ function(assignedValue) {
-          const container = Native.Document_createElement.call(document, 'div');
+          const container = Native.Document_createElementNS.call(document,
+            this.parentNode.namespaceURI || this.namespaceURI, this.parentNode.localName || this.localName);
           container.innerHTML = assignedValue;
 
           while (container.childNodes.length > 0) {
