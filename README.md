@@ -365,7 +365,7 @@ Since ShadyCSS removes all `<slot>` elements, you cannot select them directly or
   .foo .bar::slotted(*) {}
 </style>
 <span class="foo">
-  <slot class="bar></slot>
+  <slot class="bar"></slot>
 </span>
 ``` 
 
