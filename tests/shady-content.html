@@ -40,13 +40,16 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <body>
 
   <script>
-    window.defineTestElement = function(name, connected) {
+    window.defineTestElement = function(name, connected, shadowRootInConstrutor) {
       var template = document.querySelector('#' + name);
       // es5 compat class
       function Klass() {
         const self = (window.Reflect && Reflect.construct)
           ? Reflect.construct(HTMLElement, [], this.constructor || Klass)
           : HTMLElement.call(this);
+        if (shadowRootInConstrutor) {
+          self.attachShadow({mode: 'open'});
+        }
         return self;
       }
 
@@ -61,7 +64,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       Klass.prototype.connectedCallback = function() {
         if (!this._initialized) {
           this._initialized = true;
-          this.attachShadow({mode: 'open'});
+          if (!shadowRootInConstrutor) {
+            this.attachShadow({mode: 'open'});
+          }
           if (connected) {
             connected.call(this);
           }
@@ -79,11 +84,18 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
       customElements.define(name, Klass);
     }
+
+    defineTestElement('x-ctor', null, true);
   </script>
 
   <template id="x-simple">simple</template>
   <script>
     defineTestElement('x-simple');
+  </script>
+
+  <template id="x-host-simple"><x-simple><slot></slot></x-simple></template>
+  <script>
+    defineTestElement('x-host-simple');
   </script>
 
   <template id="x-dist">x-dist<span id="distWrapper"><slot id="content"></slot></span></template>
@@ -189,7 +201,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     return frag;
   }
 
-  suite('shadowRoots containing and mutations <slot>', function() {
+  suite(`shadowRoots containing and mutating <slot>'s`, function() {
 
     test('append div to distributing element', function() {
       var dist = document.createElement('x-dist');
@@ -1309,7 +1321,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       x.appendChild(t);
       ShadyDOM.flush();
       assert.equal(t.parentNode, x);
-
     });
 
     test('shadowRoot set via innerHTML that contains a <slot> and a custom element that also sets shadowRoot content via innerHTML', function() {
@@ -1328,6 +1339,25 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       assert.equal(clone._initialized, true);
       assert.equal(ShadyDOM.nativeTree.textContent(clone), 'simple');
       document.body.removeChild(host);
+    });
+
+    test('creating redistribution tree asynchronously (simulated) in elements with constructor created shadowRoots', function() {
+      // render an element with a shadowRoot
+      var x = document.createElement('x-ctor');
+      var t = document.createTextNode('hi');
+      x.appendChild(t);
+      document.body.appendChild(x);
+      ShadyDOM.flush();
+      // later attach an element that makes a shadowRoot in its constructor and a slot
+      var inner = document.createElement('x-ctor');
+      inner.appendChild(document.createElement('slot'));
+      x.shadowRoot.appendChild(inner);
+      ShadyDOM.flush();
+      // later attach a slot to that element...
+      inner.shadowRoot.appendChild(document.createElement('slot'));
+      ShadyDOM.flush();
+      // check rendering
+      assert.deepEqual(getComposedChildNodes(inner), [t]);
     });
 
   });
