@@ -280,7 +280,7 @@ class ApplyShim {
       // so we cheat and only check if the same selector string is used, which
       // guarantees things like specificity matching
       if (r['selector'] === startRule['selector']) {
-        Object.assign(fallbacks, this._cssTextToMap(r['parsedCssText']));
+        Object.assign(fallbacks, this._cssTextToMap(r['parsedCssText'], false));
       }
     });
     return fallbacks;
@@ -307,7 +307,7 @@ class ApplyShim {
       let textBeforeApply = text.slice(0, applyPos);
       let textAfterApply = text.slice(afterApplyPos);
       let defaults = rule ? this._fallbacksFromPreviousRules(rule) : {};
-      Object.assign(defaults, this._cssTextToMap(textBeforeApply));
+      Object.assign(defaults, this._cssTextToMap(textBeforeApply, false));
       let replacement = this._atApplyToCssProperties(mixinName, defaults);
       // use regex match position to replace mixin, keep linear processing time
       text = `${textBeforeApply}${replacement}${textAfterApply}`;
@@ -386,9 +386,10 @@ class ApplyShim {
    * "parse" a mixin definition into a map of properties and values
    * cssTextToMap('border: 2px solid black') -> ('border', '2px solid black')
    * @param {string} text
+   * @param {boolean=} replaceInitialOrInherit
    * @return {!Object<string, string>}
    */
-  _cssTextToMap(text) {
+  _cssTextToMap(text, replaceInitialOrInherit = true) {
     let props = text.split(';');
     let property, value;
     let out = {};
@@ -400,7 +401,10 @@ class ApplyShim {
         if (sp.length > 1) {
           property = sp[0].trim();
           // some properties may have ':' in the value, like data urls
-          value = this._replaceInitialOrInherit(property, sp.slice(1).join(':'));
+          value = sp.slice(1).join(':');
+          if (replaceInitialOrInherit) {
+            value = this._replaceInitialOrInherit(property, value);
+          }
           out[property] = value;
         }
       }
