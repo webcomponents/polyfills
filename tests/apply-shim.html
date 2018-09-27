@@ -68,6 +68,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       border: inherit;
       @apply --mixin;
     }
+    span {
+      border: initial;
+      @apply --mixin;
+    }
     </style>
   </template>
 
@@ -212,6 +216,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       test('inherit and initial default values are preserved', function() {
         var application = ast.rules[2];
         assert.match(application.cssText, /border:\s*var\(--mixin_-_border,\s*inherit\)/);
+        application = ast.rules[3];
+        assert.match(application.cssText, /border:\s*var\(--mixin_-_border,\s*initial\)/);
       });
     });
 

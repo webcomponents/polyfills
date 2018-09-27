@@ -280,7 +280,7 @@ class ApplyShim {
       // so we cheat and only check if the same selector string is used, which
       // guarantees things like specificity matching
       if (r['selector'] === startRule['selector']) {
-        Object.assign(fallbacks, this._cssTextToMap(r['parsedCssText'], false));
+        Object.assign(fallbacks, this._cssTextToMap(r['parsedCssText']));
       }
     });
     return fallbacks;
@@ -307,7 +307,7 @@ class ApplyShim {
       let textBeforeApply = text.slice(0, applyPos);
       let textAfterApply = text.slice(afterApplyPos);
       let defaults = rule ? this._fallbacksFromPreviousRules(rule) : {};
-      Object.assign(defaults, this._cssTextToMap(textBeforeApply, false));
+      Object.assign(defaults, this._cssTextToMap(textBeforeApply));
       let replacement = this._atApplyToCssProperties(mixinName, defaults);
       // use regex match position to replace mixin, keep linear processing time
       text = `${textBeforeApply}${replacement}${textAfterApply}`;
@@ -389,7 +389,7 @@ class ApplyShim {
    * @param {boolean=} replaceInitialOrInherit
    * @return {!Object<string, string>}
    */
-  _cssTextToMap(text, replaceInitialOrInherit = true) {
+  _cssTextToMap(text, replaceInitialOrInherit = false) {
     let props = text.split(';');
     let property, value;
     let out = {};
@@ -449,7 +449,10 @@ class ApplyShim {
     }
     let mixinAsProperties = this._consumeCssProperties('' + valueMixin, rule);
     let prefix = matchText.slice(0, matchText.indexOf('--'));
-    let mixinValues = this._cssTextToMap(mixinAsProperties);
+    // `initial` and `inherit` as properties in a map should be replaced because
+    // these keywords are eagerly evaluated when the mixin becomes CSS Custom Properties,
+    // and would set the variable value, rather than carry the keyword to the `var()` usage.
+    let mixinValues = this._cssTextToMap(mixinAsProperties, true);
     let combinedProps = mixinValues;
     let mixinEntry = this._map.get(propertyName);
     let oldProps = mixinEntry && mixinEntry.properties;
