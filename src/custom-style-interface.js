@@ -113,9 +113,11 @@ export default class CustomStyleInterface {
   }
 }
 
+/* eslint-disable no-self-assign */
 CustomStyleInterface.prototype['addCustomStyle'] = CustomStyleInterface.prototype.addCustomStyle;
 CustomStyleInterface.prototype['getStyleForCustomStyle'] = CustomStyleInterface.prototype.getStyleForCustomStyle;
 CustomStyleInterface.prototype['processStyles'] = CustomStyleInterface.prototype.processStyles;
+/* eslint-enable no-self-assign */
 
 Object.defineProperties(CustomStyleInterface.prototype, {
   'transformCallback': {

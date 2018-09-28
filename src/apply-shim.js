@@ -502,6 +502,7 @@ class ApplyShim {
 }
 
 /* exports */
+/* eslint-disable no-self-assign */
 ApplyShim.prototype['detectMixin'] = ApplyShim.prototype.detectMixin;
 ApplyShim.prototype['transformStyle'] = ApplyShim.prototype.transformStyle;
 ApplyShim.prototype['transformCustomStyle'] = ApplyShim.prototype.transformCustomStyle;
@@ -509,6 +510,7 @@ ApplyShim.prototype['transformRules'] = ApplyShim.prototype.transformRules;
 ApplyShim.prototype['transformRule'] = ApplyShim.prototype.transformRule;
 ApplyShim.prototype['transformTemplate'] = ApplyShim.prototype.transformTemplate;
 ApplyShim.prototype['_separator'] = MIXIN_VAR_SEP;
+/* eslint-enable no-self-assign */
 Object.defineProperty(ApplyShim.prototype, 'invalidCallback', {
   /** @return {?function(string)} */
   get() {
