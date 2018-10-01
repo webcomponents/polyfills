@@ -173,7 +173,7 @@ class ShadyRoot {
       }
       const slotParentData = shadyDataForNode(slot.parentNode);
       const slotParentRoot = slotParentData && slotParentData.root;
-      if (slotParentRoot && slotParentRoot._hasInsertionPoint()) {
+      if (slotParentRoot && (slotParentRoot._hasInsertionPoint() || slotParentRoot._renderPending)) {
         slotParentRoot['_renderRoot']();
       }
       this._addAssignedToFlattenedNodes(slotData.flattenedNodes,
