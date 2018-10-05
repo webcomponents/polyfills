@@ -48,7 +48,14 @@ export function insertBefore(parent, node, ref_node) {
   let scopingFn = addShadyScoping;
   let ownerRoot = utils.ownerShadyRootForNode(parent);
   /** @type {string} */
-  const newScopeName = ownerRoot ? ownerRoot.host.localName : '';
+  let newScopeName;
+  if (ownerRoot) {
+    // get scope name from new ShadyRoot host
+    newScopeName = ownerRoot.host.localName;
+  } else {
+    // borrow parent's scope name
+    newScopeName = currentScopeForNode(parent);
+  }
   // remove from existing location
   if (node.parentNode) {
     // NOTE: avoid node.removeChild as this *can* trigger another patched
@@ -69,14 +76,23 @@ export function insertBefore(parent, node, ref_node) {
   // add to new parent
   let allowNativeInsert = true;
   const needsScoping = !currentScopeIsCorrect(node, newScopeName);
-  if (ownerRoot && (!node['__noInsertionPoint'] || needsScoping)) {
+  if (ownerRoot) {
+    // in a shadowroot, only tree walk if new insertion points may have been added, or scoping is needed
+    if (!node['__noInsertionPoint'] || needsScoping) {
+      treeVisitor(node, (node) => {
+        if (node.localName === 'slot') {
+          slotsAdded.push(/** @type {!HTMLSlotElement} */(node));
+        }
+        if (needsScoping) {
+          scopingFn(node, newScopeName);
+        }
+      });
+    }
+  } else if (needsScoping) {
+    // in a document or disconnected tree, replace scoping if necessary
+    const oldScopeName = currentScopeForNode(node);
     treeVisitor(node, (node) => {
-      if (node.localName === 'slot') {
-        slotsAdded.push(/** @type {!HTMLSlotElement} */(node));
-      }
-      if (needsScoping) {
-        scopingFn(node, newScopeName);
-      }
+      replaceShadyScoping(node, newScopeName, oldScopeName);
     });
   }
   if (slotsAdded.length) {

@@ -48,6 +48,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     </a>
     <api-element></api-element>
   </template>
+  <template id="clone-element">
+    <div>
+      <span></span>
+    </div>
+  </template>
   <div id="arena"></div>
   <script>
     class Base extends HTMLElement {
@@ -208,7 +213,34 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           const child = document.createElement('span');
           el.appendChild(child);
           assert.equal(csfn(child), '');
-        })
+        });
+
+        test('appending a disconnected, scoped node to document unscopes correctly', function() {
+          const el = document.createElement('api-element');
+          arena.appendChild(el);
+          const clone = el.shadowRoot.querySelector('div').cloneNode(true);
+          assert.equal(csfn(clone), 'api-element');
+          arena.appendChild(clone);
+          assert.equal(csfn(clone), '');
+        });
+
+        test('appending a cloned, scoped node to document unscopes correctly', function() {
+          customElements.define('clone-element', class extends Base {});
+          const el = document.createElement('clone-element');
+          arena.appendChild(el);
+          const clone = el.shadowRoot.querySelector('div').cloneNode(true);
+          const span = clone.querySelector('span');
+          assert.equal(csfn(span), 'clone-element');
+          arena.appendChild(span);
+          assert.equal(csfn(span), '');
+        });
+
+        test('appending a unscoped node into a disconnected shadowroot scopes correctly', function() {
+          const el = document.createElement('naive-element');
+          const span = document.createElement('span');
+          el.shadowRoot.appendChild(span);
+          assert.equal(csfn(span), 'naive-element');
+        });
       });
 
       suite('remove', function() {
