@@ -22,3 +22,6 @@ Window.prototype.__handlers;
  * @type {Object}
  */
 Node.prototype.__handlers;
+
+/** @type {Object} */
+Node.prototype.__shady;
