@@ -325,21 +325,21 @@ const CSS_BUILD_ATTR = 'css-build';
  * @return {string} Can be "", "shady", or "shadow"
  */
 export function getCssBuild(element) {
-  if (element.__cssBuild === undefined) {
+  if (element['__cssBuild'] === undefined) {
     // try attribute first, as it is the common case
     const attrValue = element.getAttribute(CSS_BUILD_ATTR);
     if (attrValue) {
-      element.__cssBuild = attrValue;
+      element['__cssBuild'] = attrValue;
     } else {
       const buildComment = getBuildComment(element);
       if (buildComment !== '') {
         // remove build comment so it is not needlessly copied into every element instance
         removeBuildComment(element);
       }
-      element.__cssBuild = buildComment;
+      element['__cssBuild'] = buildComment;
     }
   }
-  return element.__cssBuild || '';
+  return element['__cssBuild'] || '';
 }
 
 /**
