@@ -1,4 +1,5 @@
 /**
+ * @externs
  * @license
  * Copyright (c) 2017 The Polymer Project Authors. All rights reserved.
  * This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
@@ -8,7 +9,6 @@
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  *
  * @fileoverview The API provided by the webcomponents polyfills.
- * @externs
  */
 
 var HTMLImports = {};
