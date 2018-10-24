@@ -151,20 +151,23 @@ class StyleTransformer {
    * @param {?} styleRules
    * @param {?=} callback
    * @param {string=} cssBuild
+   * @param {string=} cssText
+   * @return {string}
    */
-  elementStyles(element, styleRules, callback, cssBuild = '') {
+  elementStyles(element, styleRules, callback, cssBuild = '', cssText = '') {
     // no need to shim selectors if settings.useNativeShadow, also
     // a shady css build will already have transformed selectors
     // NOTE: This method may be called as part of static or property shimming.
     // When there is a targeted build it will not be called for static shimming,
     // but when the property shim is used it is called and should opt out of
     // static shimming work when a proper build exists.
-    let cssText = '';
-    if (nativeShadow || cssBuild === 'shady') {
-      cssText = StyleUtil.toCssText(styleRules, callback);
-    } else {
-      let {is, typeExtension} = StyleUtil.getIsExtends(element);
-      cssText = this.css(styleRules, is, typeExtension, callback) + '\n\n';
+    if (cssText === '') {
+      if (nativeShadow || cssBuild === 'shady') {
+        cssText = StyleUtil.toCssText(styleRules, callback);
+      } else {
+        let {is, typeExtension} = StyleUtil.getIsExtends(element);
+        cssText = this.css(styleRules, is, typeExtension, callback) + '\n\n';
+      }
     }
     return cssText.trim();
   }

@@ -380,6 +380,20 @@ export function getBuildComment(element) {
 }
 
 /**
+ * Check if the css build status is optimal, and do no unneeded work.
+ *
+ * @param {string=} cssBuild CSS build status
+ * @return {boolean} css build is optimal or not
+ */
+export function isOptimalCssBuild(cssBuild = '') {
+  // CSS custom property shim always requires work
+  if (cssBuild === '' || !nativeCssVariables) {
+    return false;
+  }
+  return nativeShadow ? cssBuild === 'shadow' : cssBuild === 'shady';
+}
+
+/**
  * @param {!HTMLElement} element
  */
 function removeBuildComment(element) {
