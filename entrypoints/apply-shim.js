@@ -16,7 +16,7 @@ import {getIsExtends, toCssText, elementHasBuiltCss} from '../src/style-util.js'
 import * as ApplyShimUtils from '../src/apply-shim-utils.js';
 import {getComputedStyleValue, updateNativeProperties} from '../src/common-utils.js';
 import {CustomStyleInterfaceInterface} from '../src/custom-style-interface.js'; // eslint-disable-line no-unused-vars
-import {nativeCssVariables, nativeShadow} from '../src/style-settings.js';
+import {nativeCssVariables, nativeShadow, cssBuild} from '../src/style-settings.js';
 
 /** @const {ApplyShim} */
 const applyShim = new ApplyShim();
@@ -206,7 +206,8 @@ if (!window.ShadyCSS || !window.ShadyCSS.ScopingShim) {
     },
 
     nativeCss: nativeCssVariables,
-    nativeShadow: nativeShadow
+    nativeShadow: nativeShadow,
+    cssBuild: cssBuild
   };
 
   if (CustomStyleInterface) {
