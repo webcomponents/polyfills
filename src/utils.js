@@ -42,6 +42,12 @@ export function ownerShadyRootForNode(node) {
   }
 }
 
+export function hasShadowRootWithSlot(node) {
+  const nodeData = shadyDataForNode(node);
+  let root = nodeData && nodeData.root;
+  return (root && root._hasInsertionPoint());
+}
+
 let p = Element.prototype;
 let matches = p.matches || p.matchesSelector ||
   p.mozMatchesSelector || p.msMatchesSelector ||
@@ -166,4 +172,13 @@ export function createPolyfilledHTMLCollection(nodes) {
     return null;
   };
   return nodes;
+}
+
+let scopingShim = null;
+
+export function getScopingShim() {
+  if (!scopingShim) {
+    scopingShim = window['ShadyCSS'] && window['ShadyCSS']['ScopingShim'];
+  }
+  return scopingShim || null;
 }

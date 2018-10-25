@@ -12,9 +12,10 @@ import * as utils from './utils.js';
 import * as logicalTree from './logical-tree.js';
 import * as nativeMethods from './native-methods.js';
 import {accessors as nativeAccessors} from './native-tree.js';
-import {ensureShadyDataForNode, shadyDataForNode} from './shady-data.js';
-import {ElementAccessors as accessors} from './patch-accessors.js';
-import {getScopingShim, currentScopeForNode, currentScopeIsCorrect, addShadyScoping, removeShadyScoping, replaceShadyScoping, treeVisitor} from './style-scoping.js';
+import {getRootNode} from './methods-get-root-node.js';
+import {shadyDataForNode} from './shady-data.js';
+import {ElementAccessors as accessors} from './accessors.js';
+import {currentScopeForNode, currentScopeIsCorrect, addShadyScoping, removeShadyScoping, replaceShadyScoping, treeVisitor} from './style-scoping.js';
 
 const {parentNode: nativeParentNode} = nativeAccessors;
 
@@ -120,7 +121,7 @@ export function insertBefore(parent, node, ref_node) {
     // when inserting into a host with a shadowRoot with slot, use
     // `shadowRoot._asyncRender()` via `attach-shadow` module
     const parentData = shadyDataForNode(parent);
-    if (hasShadowRootWithSlot(parent)) {
+    if (utils.hasShadowRootWithSlot(parent)) {
       parentData.root._asyncRender();
       allowNativeInsert = false;
     // when inserting into a host with shadowRoot with NO slot, do nothing
@@ -173,14 +174,14 @@ export function removeChild(parent, node, skipUnscoping = false) {
   const parentData = shadyDataForNode(parent);
   if (utils.isTrackingLogicalChildNodes(parent)) {
     logicalTree.recordRemoveChild(node, parent);
-    if (hasShadowRootWithSlot(parent)) {
+    if (utils.hasShadowRootWithSlot(parent)) {
       parentData.root._asyncRender();
       preventNativeRemove = true;
     }
   }
   // unscope a node leaving a ShadowRoot if ShadyCSS is present, and this node
   // is not going to be rescoped in `insertBefore`
-  if (getScopingShim() && !skipUnscoping && ownerRoot) {
+  if (utils.getScopingShim() && !skipUnscoping && ownerRoot) {
     const oldScopeName = currentScopeForNode(node);
     treeVisitor(node, (node) => {
       removeShadyScoping(node, oldScopeName);
@@ -253,34 +254,6 @@ function firstComposedNode(node) {
   return composed;
 }
 
-function hasShadowRootWithSlot(node) {
-  const nodeData = shadyDataForNode(node);
-  let root = nodeData && nodeData.root;
-  return (root && root._hasInsertionPoint());
-}
-
-/**
- * Should be called whenever an attribute changes. If the `slot` attribute
- * changes, provokes rendering if necessary. If a `<slot>` element's `name`
- * attribute changes, updates the root's slot map and renders.
- * @param {Node} node
- * @param {string} name
- */
-function distributeAttributeChange(node, name) {
-  if (name === 'slot') {
-    const parent = accessors.parentNode.get.call(node);
-    if (hasShadowRootWithSlot(parent)) {
-      shadyDataForNode(parent).root._asyncRender();
-    }
-  } else if (node.localName === 'slot' && name === 'name') {
-    let root = utils.ownerShadyRootForNode(node);
-    if (root) {
-      root._updateSlotName(node);
-      root._asyncRender();
-    }
-  }
-}
-
 /**
  * @param {Node} node
  * @param {Node=} addedNode
@@ -298,138 +271,4 @@ function scheduleObserver(node, addedNode, removedNode) {
     }
     observer.schedule();
   }
-}
-
-/**
- * @param {Node} node
- * @param {Object=} options
- */
-export function getRootNode(node, options) { // eslint-disable-line no-unused-vars
-  if (!node || !node.nodeType) {
-    return;
-  }
-  const nodeData = ensureShadyDataForNode(node);
-  let root = nodeData.ownerShadyRoot;
-  if (root === undefined) {
-    if (utils.isShadyRoot(node)) {
-      root = node;
-      nodeData.ownerShadyRoot = root;
-    } else {
-      let parent = accessors.parentNode.get.call(node);
-      root = parent ? getRootNode(parent) : node;
-      // memo-ize result for performance but only memo-ize
-      // result if node is in the document. This avoids a problem where a root
-      // can be cached while an element is inside a fragment.
-      // If this happens and we cache the result, the value can become stale
-      // because for perf we avoid processing the subtree of added fragments.
-      if (nativeMethods.contains.call(document.documentElement, node)) {
-        nodeData.ownerShadyRoot = root;
-      }
-    }
-
-  }
-  return root;
-}
-
-// NOTE: `query` is used primarily for ShadyDOM's querySelector impl,
-// but it's also generally useful to recurse through the element tree
-// and is used by Polymer's styling system.
-/**
- * @param {Node} node
- * @param {Function} matcher
- * @param {Function=} halter
- */
-export function query(node, matcher, halter) {
-  let list = [];
-  queryElements(accessors.childNodes.get.call(node), matcher,
-    halter, list);
-  return list;
-}
-
-function queryElements(elements, matcher, halter, list) {
-  for (let i=0, l=elements.length, c; (i<l) && (c=elements[i]); i++) {
-    if (c.nodeType === Node.ELEMENT_NODE &&
-        queryElement(c, matcher, halter, list)) {
-      return true;
-    }
-  }
-}
-
-function queryElement(node, matcher, halter, list) {
-  let result = matcher(node);
-  if (result) {
-    list.push(node);
-  }
-  if (halter && halter(result)) {
-    return result;
-  }
-  queryElements(accessors.childNodes.get.call(node), matcher,
-    halter, list);
-}
-
-export function renderRootNode(element) {
-  var root = getRootNode(element);
-  if (utils.isShadyRoot(root)) {
-    root._render();
-  }
-}
-
-export function setAttribute(node, attr, value) {
-  if (node.ownerDocument !== doc) {
-    nativeMethods.setAttribute.call(node, attr, value);
-  } else {
-    const scopingShim = getScopingShim();
-    if (scopingShim && attr === 'class') {
-      scopingShim['setElementClass'](node, value);
-    } else {
-      nativeMethods.setAttribute.call(node, attr, value);
-      distributeAttributeChange(node, attr);
-    }
-  }
-}
-
-export function removeAttribute(node, attr) {
-  nativeMethods.removeAttribute.call(node, attr);
-  distributeAttributeChange(node, attr);
-}
-
-export function cloneNode(node, deep) {
-  if (node.localName == 'template') {
-    return nativeMethods.cloneNode.call(node, deep);
-  } else {
-    let n = nativeMethods.cloneNode.call(node, false);
-    // Attribute nodes historically had childNodes, but they have later
-    // been removed from the spec.
-    // Make sure we do not do a deep clone on them for old browsers (IE11)
-    if (deep && n.nodeType !== Node.ATTRIBUTE_NODE) {
-      let c$ = accessors.childNodes.get.call(node);
-      for (let i=0, nc; i < c$.length; i++) {
-        nc = c$[i].cloneNode(true);
-        n.appendChild(nc);
-      }
-    }
-    return n;
-  }
-}
-
-// note: Though not technically correct, we fast path `importNode`
-// when called on a node not owned by the main document.
-// This allows, for example, elements that cannot
-// contain custom elements and are therefore not likely to contain shadowRoots
-// to cloned natively. This is a fairly significant performance win.
-export function importNode(node, deep) {
-  // A template element normally has no children with shadowRoots, so make
-  // sure we always make a deep copy to correctly construct the template.content
-  if (node.ownerDocument !== document || node.localName === 'template') {
-    return nativeMethods.importNode.call(document, node, deep);
-  }
-  let n = nativeMethods.importNode.call(document, node, false);
-  if (deep) {
-    let c$ = accessors.childNodes.get.call(node);
-    for (let i=0, nc; i < c$.length; i++) {
-      nc = importNode(c$[i], true);
-      n.appendChild(nc);
-    }
-  }
-  return n;
 }

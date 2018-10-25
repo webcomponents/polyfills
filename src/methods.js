@@ -10,17 +10,145 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 import * as utils from './utils.js';
 import {flush} from './flush.js';
-import {dispatchEvent, querySelectorAll} from './native-methods.js';
-import * as mutation from './logical-mutation.js';
-import {ActiveElementAccessor, ShadowRootAccessor, IsConnectedAccessor} from './patch-accessors.js';
+import * as nativeMethods from './native-methods.js';
+import {insertBefore, removeChild} from './methods-mutation.js';
+import {getRootNode} from './methods-get-root-node.js';
+import {ElementAccessors as accessors, ActiveElementAccessor, ShadowRootAccessor, IsConnectedAccessor} from './accessors.js';
 import {addEventListener, removeEventListener} from './patch-events.js';
 import {attachShadow} from './attach-shadow.js';
 import {shadyDataForNode, ensureShadyDataForNode} from './shady-data.js';
 
+const doc = window.document;
+
 function getAssignedSlot(node) {
-  mutation.renderRootNode(node);
+  renderRootNode(node);
   const nodeData = shadyDataForNode(node);
   return nodeData && nodeData.assignedSlot || null;
+}
+
+/**
+ * Should be called whenever an attribute changes. If the `slot` attribute
+ * changes, provokes rendering if necessary. If a `<slot>` element's `name`
+ * attribute changes, updates the root's slot map and renders.
+ * @param {Node} node
+ * @param {string} name
+ */
+function distributeAttributeChange(node, name) {
+  if (name === 'slot') {
+    const parent = accessors.parentNode.get.call(node);
+    if (utils.hasShadowRootWithSlot(parent)) {
+      shadyDataForNode(parent).root._asyncRender();
+    }
+  } else if (node.localName === 'slot' && name === 'name') {
+    let root = utils.ownerShadyRootForNode(node);
+    if (root) {
+      root._updateSlotName(node);
+      root._asyncRender();
+    }
+  }
+}
+
+// NOTE: `query` is used primarily for ShadyDOM's querySelector impl,
+// but it's also generally useful to recurse through the element tree
+// and is used by Polymer's styling system.
+/**
+ * @param {Node} node
+ * @param {Function} matcher
+ * @param {Function=} halter
+ */
+export function query(node, matcher, halter) {
+  let list = [];
+  queryElements(accessors.childNodes.get.call(node), matcher,
+    halter, list);
+  return list;
+}
+
+function queryElements(elements, matcher, halter, list) {
+  for (let i=0, l=elements.length, c; (i<l) && (c=elements[i]); i++) {
+    if (c.nodeType === Node.ELEMENT_NODE &&
+        queryElement(c, matcher, halter, list)) {
+      return true;
+    }
+  }
+}
+
+function queryElement(node, matcher, halter, list) {
+  let result = matcher(node);
+  if (result) {
+    list.push(node);
+  }
+  if (halter && halter(result)) {
+    return result;
+  }
+  queryElements(accessors.childNodes.get.call(node), matcher,
+    halter, list);
+}
+
+export function renderRootNode(element) {
+  var root = getRootNode(element);
+  if (utils.isShadyRoot(root)) {
+    root._render();
+  }
+}
+
+export function setAttribute(node, attr, value) {
+  if (node.ownerDocument !== doc) {
+    nativeMethods.setAttribute.call(node, attr, value);
+  } else {
+    const scopingShim = utils.getScopingShim();
+    if (scopingShim && attr === 'class') {
+      scopingShim['setElementClass'](node, value);
+    } else {
+      nativeMethods.setAttribute.call(node, attr, value);
+      distributeAttributeChange(node, attr);
+    }
+  }
+}
+
+export function removeAttribute(node, attr) {
+  nativeMethods.removeAttribute.call(node, attr);
+  distributeAttributeChange(node, attr);
+}
+
+export function cloneNode(node, deep) {
+  if (node.localName == 'template') {
+    return nativeMethods.cloneNode.call(node, deep);
+  } else {
+    let n = nativeMethods.cloneNode.call(node, false);
+    // Attribute nodes historically had childNodes, but they have later
+    // been removed from the spec.
+    // Make sure we do not do a deep clone on them for old browsers (IE11)
+    if (deep && n.nodeType !== Node.ATTRIBUTE_NODE) {
+      let c$ = accessors.childNodes.get.call(node);
+      for (let i=0, nc; i < c$.length; i++) {
+        nc = c$[i].cloneNode(true);
+        n.appendChild(nc);
+      }
+    }
+    return n;
+  }
+}
+
+// note: Though not technically correct, we fast path `importNode`
+// when called on a node not owned by the main document.
+// This allows, for example, elements that cannot
+// contain custom elements and are therefore not likely to contain shadowRoots
+// to cloned natively. This is a fairly significant performance win.
+export function importNode(node, deep) {
+  // A template element normally has no children with shadowRoots, so make
+  // sure we always make a deep copy to correctly construct the template.content
+  if (node.ownerDocument !== document || node.localName === 'template') {
+    return nativeMethods.importNode.call(document, node, deep);
+  }
+  let n = nativeMethods.importNode.call(document, node, false);
+  if (deep) {
+    let c$ = accessors.childNodes.get.call(node);
+    for (let i=0, nc; i < c$.length; i++) {
+      nc = importNode(c$[i], true);
+      n.appendChild(nc);
+    }
+  }
+  return n;
 }
 
 export const windowMixin = {
@@ -41,23 +169,23 @@ export const nodeMixin = {
   removeEventListener: removeEventListener,
 
   appendChild(node) {
-    return mutation.insertBefore(this, node);
+    return insertBefore(this, node);
   },
 
   insertBefore(node, ref_node) {
-    return mutation.insertBefore(this, node, ref_node);
+    return insertBefore(this, node, ref_node);
   },
 
   removeChild(node) {
-    return mutation.removeChild(this, node);
+    return removeChild(this, node);
   },
 
   /**
    * @this {Node}
    */
   replaceChild(node, ref_node) {
-    mutation.insertBefore(this, node, ref_node);
-    mutation.removeChild(this, ref_node);
+    insertBefore(this, node, ref_node);
+    removeChild(this, ref_node);
     return node;
   },
 
@@ -65,14 +193,14 @@ export const nodeMixin = {
    * @this {Node}
    */
   cloneNode(deep) {
-    return mutation.cloneNode(this, deep);
+    return cloneNode(this, deep);
   },
 
   /**
    * @this {Node}
    */
   getRootNode(options) {
-    return mutation.getRootNode(this, options);
+    return getRootNode(this, options);
   },
 
   contains(node) {
@@ -84,7 +212,7 @@ export const nodeMixin = {
    */
   dispatchEvent(event) {
     flush();
-    return dispatchEvent.call(this, event);
+    return nativeMethods.dispatchEvent.call(this, event);
   }
 
 };
@@ -111,7 +239,7 @@ export const queryMixin = {
    */
   querySelector(selector) {
     // match selector and halt on first result.
-    let result = mutation.query(this, function(n) {
+    let result = query(this, function(n) {
       return utils.matchesSelector(n, selector);
     }, function(n) {
       return Boolean(n);
@@ -127,11 +255,11 @@ export const queryMixin = {
   // https://github.com/webcomponents/shadydom/pull/210#issuecomment-361435503
   querySelectorAll(selector, useNative) {
     if (useNative) {
-      const o = Array.prototype.slice.call(querySelectorAll.call(this, selector));
-      const root = this.getRootNode();
+      const o = Array.prototype.slice.call(nativeMethods.querySelectorAll.call(this, selector));
+      const root = getRootNode(this);
       return o.filter(e => e.getRootNode() == root);
     }
-    return mutation.query(this, function(n) {
+    return query(this, function(n) {
       return utils.matchesSelector(n, selector);
     });
   }
@@ -145,7 +273,7 @@ export const slotMixin = {
    */
   assignedNodes(options) {
     if (this.localName === 'slot') {
-      mutation.renderRootNode(this);
+      renderRootNode(this);
       const nodeData = shadyDataForNode(this);
       return nodeData ?
         ((options && options.flatten ? nodeData.flattenedNodes :
@@ -162,14 +290,14 @@ export const elementMixin = utils.extendAll({
    * @this {HTMLElement}
    */
   setAttribute(name, value) {
-    mutation.setAttribute(this, name, value);
+    setAttribute(this, name, value);
   },
 
   /**
    * @this {HTMLElement}
    */
   removeAttribute(name) {
-    mutation.removeAttribute(this, name);
+    removeAttribute(this, name);
   },
 
   /**
@@ -190,7 +318,7 @@ export const elementMixin = utils.extendAll({
    * @this {HTMLElement}
    */
   set slot(value) {
-    mutation.setAttribute(this, 'slot', value);
+    setAttribute(this, 'slot', value);
   },
 
   /**
@@ -209,14 +337,14 @@ export const documentMixin = utils.extendAll({
    * @this {Document}
    */
   importNode(node, deep) {
-    return mutation.importNode(node, deep);
+    return importNode(node, deep);
   },
 
   /**
    * @this {Document}
    */
   getElementById(id) {
-    let result = mutation.query(this, function(n) {
+    let result = query(this, function(n) {
       return n.id == id;
     }, function(n) {
       return Boolean(n);
@@ -300,7 +428,7 @@ export const shadowRootMixin = {
    * @this {ShadowRoot}
    */
   getElementById(id) {
-    let result = mutation.query(this, function(n) {
+    let result = query(this, function(n) {
       return n.id == id;
     }, function(n) {
       return Boolean(n);

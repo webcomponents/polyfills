@@ -8,16 +8,8 @@ Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 */
 
-import {ElementAccessors as accessors} from './patch-accessors.js';
-
-let scopingShim = null;
-
-export function getScopingShim() {
-  if (!scopingShim) {
-    scopingShim = window['ShadyCSS'] && window['ShadyCSS']['ScopingShim'];
-  }
-  return scopingShim || null;
-}
+import {ElementAccessors as accessors} from './accessors.js';
+import {getScopingShim} from './utils.js';
 
 /**
  * @param {!Node} node

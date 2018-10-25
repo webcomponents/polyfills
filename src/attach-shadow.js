@@ -15,7 +15,8 @@ import {recordChildNodes} from './logical-tree.js';
 import {removeChild, insertBefore, dispatchEvent} from './native-methods.js';
 import {accessors as nativeAccessors} from './native-tree.js';
 import {ensureShadyDataForNode, shadyDataForNode} from './shady-data.js';
-import {ElementAccessors as accessors} from './patch-accessors.js';
+import {ElementAccessors as accessors} from './accessors.js';
+import {getRootNode} from './methods-get-root-node.js';
 
 const {parentNode, childNodes} = nativeAccessors;
 
@@ -103,7 +104,7 @@ class ShadyRoot {
   // Returns the shadyRoot `this.host` if `this.host`
   // has children that require distribution.
   _rendererForHost() {
-    let root = this.host.getRootNode();
+    let root = getRootNode(this.host);
     if (utils.isShadyRoot(root)) {
       let c$ = accessors.childNodes.get.call(this.host);
       for (let i=0, c; i < c$.length; i++) {
