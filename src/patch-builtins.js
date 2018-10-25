@@ -204,7 +204,7 @@ let elementMixin = utils.extendAll({
 
 Object.defineProperties(elementMixin, ShadowRootAccessor);
 
-let documentMixin = utils.extendAll({
+let documentMixin = {
   /**
    * @this {Document}
    */
@@ -224,7 +224,7 @@ let documentMixin = utils.extendAll({
     return result || null;
   }
 
-});
+};
 
 Object.defineProperties(documentMixin, {
   '_activeElement': ActiveElementAccessor.activeElement
@@ -341,7 +341,6 @@ export function patchBuiltins() {
   patchBuiltin(window.Node.prototype, nodeMixin);
   patchBuiltin(window.Window.prototype, windowMixin);
   patchBuiltin(window.Text.prototype, textMixin);
-  patchBuiltin(window.DocumentFragment.prototype);
   patchBuiltin(window.Element.prototype, elementMixin);
   patchBuiltin(window.Document.prototype, documentMixin);
   if (window.HTMLSlotElement) {
