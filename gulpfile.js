@@ -18,6 +18,8 @@ let compilerPackage = require('google-closure-compiler');
 let sourcemaps = require('gulp-sourcemaps');
 let closureCompiler = compilerPackage.gulp();
 const size = require('gulp-size');
+const rename = require('gulp-rename');
+const rollup = require('gulp-rollup');
 
 gulp.task('default', () => {
   return gulp.src('./src/*.js', {base: '.'})
@@ -36,4 +38,25 @@ gulp.task('default', () => {
     .pipe(size({showFiles: true, showTotal: false, gzip: true}))
     .pipe(sourcemaps.write('.'))
     .pipe(gulp.dest('./'))
+});
+
+gulp.task('debug', () => {
+
+  const entry = `./src/shadydom.js`;
+  const fileName = 'shadydom.min';
+
+  const options = {
+    input: entry,
+    output: {
+      format: 'iife',
+      name: 'shadydom'
+    },
+    allowRealFiles: true,
+    rollup: require('rollup')
+  };
+
+  return gulp.src(entry)
+  .pipe(rollup(options))
+  .pipe(rename(`${fileName}.js`))
+  .pipe(gulp.dest('.'))
 });
