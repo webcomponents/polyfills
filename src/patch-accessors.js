@@ -84,7 +84,7 @@ function activeElementForNode(node) {
   }
 }
 
-let OutsideAccessors = {
+export const OutsideAccessors = {
 
   parentElement: {
     /** @this {Node} */
@@ -222,7 +222,7 @@ export const IsConnectedAccessor = {
   }
 };
 
-let InsideAccessors = {
+export const InsideAccessors = {
 
   childNodes: {
     /**
@@ -445,6 +445,9 @@ export let ShadowRootAccessor = {
     configurable: true
   }
 };
+
+export const ElementAccessors = {};
+utils.extendAll(ElementAccessors, InsideAccessors, OutsideAccessors, ClassNameAccessor, IsConnectedAccessor, ShadowRootAccessor);
 
 // Note: Can be patched on document prototype on browsers with builtin accessors.
 // Must be patched separately on simulated ShadowRoot.

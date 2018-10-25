@@ -23,7 +23,7 @@ function getAssignedSlot(node) {
   return nodeData && nodeData.assignedSlot || null;
 }
 
-let windowMixin = {
+export const windowMixin = {
 
   // NOTE: ensure these methods are bound to `window` so that `this` is correct
   // when called directly from global context without a receiver; e.g.
@@ -34,7 +34,7 @@ let windowMixin = {
 
 };
 
-let nodeMixin = {
+export const nodeMixin = {
 
   addEventListener: addEventListener,
 
@@ -94,7 +94,7 @@ let nodeMixin = {
 Object.defineProperties(nodeMixin, IsConnectedAccessor);
 
 // NOTE: For some reason 'Text' redefines 'assignedSlot'
-let textMixin = {
+export const textMixin = {
   /**
    * @this {Text}
    */
@@ -103,7 +103,7 @@ let textMixin = {
   }
 };
 
-let fragmentMixin = {
+export const queryMixin = {
 
   // TODO(sorvell): consider doing native QSA and filtering results.
   /**
@@ -138,7 +138,7 @@ let fragmentMixin = {
 
 };
 
-let slotMixin = {
+export const slotMixin = {
 
   /**
    * @this {HTMLSlotElement}
@@ -156,7 +156,7 @@ let slotMixin = {
 
 };
 
-let elementMixin = utils.extendAll({
+export const elementMixin = utils.extendAll({
 
   /**
    * @this {HTMLElement}
@@ -200,11 +200,11 @@ let elementMixin = utils.extendAll({
     return getAssignedSlot(this);
   }
 
-}, fragmentMixin, slotMixin);
+}, queryMixin, slotMixin);
 
 Object.defineProperties(elementMixin, ShadowRootAccessor);
 
-let documentMixin = utils.extendAll({
+export const documentMixin = utils.extendAll({
   /**
    * @this {Document}
    */
@@ -224,7 +224,7 @@ let documentMixin = utils.extendAll({
     return result || null;
   }
 
-}, fragmentMixin);
+}, queryMixin);
 
 Object.defineProperties(documentMixin, {
   '_activeElement': ActiveElementAccessor.activeElement
@@ -325,6 +325,10 @@ function patchBuiltin(proto, obj) {
   }
 }
 
+const nativeHTMLElement =
+    (window['customElements'] && window['customElements']['nativeHTMLElement']) ||
+    HTMLElement;
+
 // Apply patches to builtins (e.g. Element.prototype). Some of these patches
 // can be done unconditionally (mostly methods like
 // `Element.prototype.appendChild`) and some can only be done when the browser
@@ -333,15 +337,17 @@ function patchBuiltin(proto, obj) {
 // elements are individually patched when needed (see e.g.
 // `patchInside/OutsideElementAccessors` in `patch-accessors.js`).
 export function patchBuiltins() {
-  let nativeHTMLElement =
-    (window['customElements'] && window['customElements']['nativeHTMLElement']) ||
-    HTMLElement;
+  if (utils.settings.noPatch) {
+    patchBuiltin(ShadyRoot.prototype, shadowRootMixin);
+    patchShadowRootAccessors(ShadyRoot.prototype);
+    return;
+  }
   // These patches can always be done, for all supported browsers.
   patchBuiltin(ShadyRoot.prototype, shadowRootMixin);
   patchBuiltin(window.Node.prototype, nodeMixin);
   patchBuiltin(window.Window.prototype, windowMixin);
   patchBuiltin(window.Text.prototype, textMixin);
-  patchBuiltin(window.DocumentFragment.prototype, fragmentMixin);
+  patchBuiltin(window.DocumentFragment.prototype, queryMixin);
   patchBuiltin(window.Element.prototype, elementMixin);
   patchBuiltin(window.Document.prototype, documentMixin);
   if (window.HTMLSlotElement) {

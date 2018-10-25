@@ -13,10 +13,11 @@ import * as utils from './utils.js';
 import {enqueue} from './flush.js';
 import {recordChildNodes} from './logical-tree.js';
 import {removeChild, insertBefore, dispatchEvent} from './native-methods.js';
-import {accessors} from './native-tree.js';
+import {accessors as nativeAccessors} from './native-tree.js';
 import {ensureShadyDataForNode, shadyDataForNode} from './shady-data.js';
+import {ElementAccessors as accessors} from './patch-accessors.js';
 
-const {parentNode, childNodes} = accessors;
+const {parentNode, childNodes} = nativeAccessors;
 
 // Do not export this object. It must be passed as the first argument to the
 // ShadyRoot constructor in `attachShadow` to prevent the constructor from
@@ -36,7 +37,7 @@ function ancestorList(node) {
   let ancestors = [];
   do {
     ancestors.unshift(node);
-  } while ((node = node.parentNode));
+  } while ((node = accessors.parentNode.get.call(node)));
   return ancestors;
 }
 
@@ -104,7 +105,7 @@ class ShadyRoot {
   _rendererForHost() {
     let root = this.host.getRootNode();
     if (utils.isShadyRoot(root)) {
-      let c$ = this.host.childNodes;
+      let c$ = accessors.childNodes.get.call(this.host);
       for (let i=0, c; i < c$.length; i++) {
         c = c$[i];
         if (this._isInsertionPoint(c)) {
@@ -133,7 +134,7 @@ class ShadyRoot {
     }
     // on initial render remove any undistributed children.
     if (!this._hasRendered) {
-      const c$ = this.host.childNodes;
+      const c$ = accessors.childNodes.get.call(this.host);
       for (let i=0, l=c$.length; i < l; i++) {
         const child = c$[i];
         const data = shadyDataForNode(child);
@@ -158,7 +159,7 @@ class ShadyRoot {
       this._clearSlotAssignedNodes(slot);
     }
     // distribute host children.
-    for (let n=this.host.firstChild; n; n=n.nextSibling) {
+    for (let n=accessors.firstChild.get.call(this.host); n; n=accessors.nextSibling.get.call(n)) {
       this._distributeNodeToSlot(n);
     }
     // fallback content, slotchange, and dirty roots
@@ -167,11 +168,11 @@ class ShadyRoot {
       const slotData = shadyDataForNode(slot);
       // distribute fallback content
       if (!slotData.assignedNodes.length) {
-        for (let n=slot.firstChild; n; n=n.nextSibling) {
+        for (let n=accessors.firstChild.get.call(slot); n; n=accessors.nextSibling.get.call(n)) {
           this._distributeNodeToSlot(n, slot);
         }
       }
-      const slotParentData = shadyDataForNode(slot.parentNode);
+      const slotParentData = shadyDataForNode(accessors.parentNode.get.call(slot));
       const slotParentRoot = slotParentData && slotParentData.root;
       if (slotParentRoot && (slotParentRoot._hasInsertionPoint() || slotParentRoot._renderPending)) {
         slotParentRoot['_renderRoot']();
@@ -296,7 +297,7 @@ class ShadyRoot {
     const slots = this._slotList;
     let composeList = [];
     for (let i=0; i < slots.length; i++) {
-      const parent = slots[i].parentNode;
+      const parent = accessors.parentNode.get.call(slots[i]);
       /* compose node only if:
         (1) parent does not have a shadowRoot since shadowRoot has already
         composed into the host
@@ -319,7 +320,7 @@ class ShadyRoot {
   // Returns the list of nodes which should be rendered inside `node`.
   _composeNode(node) {
     let children = [];
-    let c$ = node.childNodes;
+    let c$ = accessors.childNodes.get.call(node);
     for (let i = 0; i < c$.length; i++) {
       let child = c$[i];
       // Note: if we see a slot here, the nodes are guaranteed to need to be
@@ -404,7 +405,7 @@ class ShadyRoot {
       // b. for insertion points (fallback)
       // c. for parents of insertion points
       recordChildNodes(slot);
-      recordChildNodes(slot.parentNode);
+      recordChildNodes(accessors.parentNode.get.call(slot));
       let name = this._nameForSlot(slot);
       if (this._slotMap[name]) {
         slotNamesToSort = slotNamesToSort || {};
@@ -443,7 +444,7 @@ class ShadyRoot {
         let nA = listA[i];
         let nB = listB[i];
         if (nA !== nB) {
-          let c$ = Array.from(nA.parentNode.childNodes);
+          let c$ = Array.from(accessors.childNodes.get.call(accessors.parentNode.get.call(nA)));
           return c$.indexOf(nA) - c$.indexOf(nB);
         }
       }
