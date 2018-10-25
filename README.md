@@ -18,7 +18,7 @@ The polyfill hosts the imported documents in the import link element. E.g.
 
 The polyfill fires the `HTMLImportsLoaded` event when imports are loaded, and exposes the `HTMLImports.whenReady` method. This api is necessary because unlike the native implementation, script elements do not force imports to resolve. Instead, users should wrap code in either an `HTMLImportsLoaded` handler or after load time in an `HTMLImports.whenReady(callback)` call.
 
-The polyfill provides the `HMTLImports.importForElement()` method which can be used to retrieve the `<link rel=import>` that imported an element.
+The polyfill provides the `HTMLImports.importForElement()` method which can be used to retrieve the `<link rel=import>` that imported an element.
 
 ## Caveats / Limitations
 
@@ -26,7 +26,7 @@ The polyfill provides the `HMTLImports.importForElement()` method which can be u
 
 The polyfill appends the imported contents to the `<link>` itself to leverage the native implementation of [Custom Elements](https://www.w3.org/TR/custom-elements), which expects scripts upgrading the `CustomElementRegistry` to be connected to the main document.
 
-As a consequence, `.ownerDocument` will be the main document, while `.parentNode` of the imported children will be the `<link rel=import>` itself. Consider using `HMTLImports.importForElement()` in these cases. e.g:
+As a consequence, `.ownerDocument` will be the main document, while `.parentNode` of the imported children will be the `<link rel=import>` itself. Consider using `HTMLImports.importForElement()` in these cases. e.g:
 
 ```javascript
 const ownerDoc = HTMLImports.importForElement(document.currentScript);
