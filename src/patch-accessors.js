@@ -8,28 +8,7 @@ Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 */
 
-import * as utils from './utils.js';
-import {OutsideAccessors, InsideAccessors, ClassNameAccessor, ActiveElementAccessor, ShadowRootAccessor} from './accessors.js';
-import {ensureShadyDataForNode} from './shady-data.js';
-
-// patch a group of descriptors on an object only if it exists or if the `force`
-// argument is true.
-/**
- * @param {!Object} obj
- * @param {!Object} descriptors
- * @param {boolean=} force
- */
-function patchAccessorGroup(obj, descriptors, force) {
-  for (let p in descriptors) {
-    let objDesc = Object.getOwnPropertyDescriptor(obj, p);
-    if ((objDesc && objDesc.configurable) ||
-      (!objDesc && force)) {
-      Object.defineProperty(obj, p, descriptors[p]);
-    } else if (force) {
-      console.warn('Could not define', p, 'on', obj); // eslint-disable-line no-console
-    }
-  }
-}
+import {OutsideAccessors, InsideAccessors, ClassNameAccessor, ActiveElementAccessor, patchAccessorGroup} from './patches.js';
 
 // patch dom accessors on proto where they exist
 export function patchAccessors(proto) {
@@ -86,24 +65,3 @@ export function patchShadowRootAccessors(proto) {
     });
   });
 }
-
-// ensure an element has patched "outside" accessors; no-op when not needed
-export let patchOutsideElementAccessors = utils.settings.hasDescriptors ?
-  function() {} : function(element) {
-    const sd = ensureShadyDataForNode(element);
-    if (!sd.__outsideAccessors) {
-      sd.__outsideAccessors = true;
-      patchAccessorGroup(element, OutsideAccessors, true);
-      patchAccessorGroup(element, ClassNameAccessor, true);
-    }
-  }
-
-// ensure an element has patched "inside" accessors; no-op when not needed
-export let patchInsideElementAccessors = utils.settings.hasDescriptors ?
-  function() {} : function(element) {
-    const sd = ensureShadyDataForNode(element);
-    if (!sd.__insideAccessors) {
-      patchAccessorGroup(element, InsideAccessors, true);
-      patchAccessorGroup(element, ShadowRootAccessor, true);
-    }
-  }

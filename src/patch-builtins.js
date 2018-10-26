@@ -9,9 +9,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 */
 
 import * as utils from './utils.js';
-import {shadowRootMixin, nodeMixin, windowMixin, textMixin, queryMixin, elementMixin, documentMixin, htmlElementMixin, slotMixin} from './methods.js';
+import {shadowRootMixin, nodeMixin, windowMixin, textMixin, queryMixin, elementMixin, documentMixin, htmlElementMixin, slotMixin} from './patches.js';
+import {patchAccessors, patchShadowRootAccessors} from './patch-accessors.js';
 import {ShadyRoot} from './attach-shadow.js';
-import {patchShadowRootAccessors, patchAccessors} from './patch-accessors.js';
 
 function patchBuiltin(proto, obj) {
   let n$ = Object.getOwnPropertyNames(obj);
@@ -41,9 +41,11 @@ const nativeHTMLElement =
 // elements are individually patched when needed (see e.g.
 // `patchInside/OutsideElementAccessors` in `patch-accessors.js`).
 export function patchBuiltins() {
-  if (utils.settings.noPatch) {
-    patchBuiltin(ShadyRoot.prototype, shadowRootMixin);
+  if (utils.settings['noPatch']) {
     patchShadowRootAccessors(ShadyRoot.prototype);
+    patchBuiltin(ShadyRoot.prototype, shadowRootMixin);
+    patchBuiltin(ShadyRoot.prototype, nodeMixin);
+    patchBuiltin(ShadyRoot.prototype, queryMixin);
     return;
   }
   // These patches can always be done, for all supported browsers.

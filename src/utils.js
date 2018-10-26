@@ -174,11 +174,7 @@ export function createPolyfilledHTMLCollection(nodes) {
   return nodes;
 }
 
-let scopingShim = null;
-
-export function getScopingShim() {
-  if (!scopingShim) {
-    scopingShim = window['ShadyCSS'] && window['ShadyCSS']['ScopingShim'];
-  }
-  return scopingShim || null;
+export let attachShadow;
+export function setAttachShadow(fn) {
+  attachShadow = fn;
 }

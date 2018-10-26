@@ -24,9 +24,10 @@ import {observeChildren, unobserveChildren, filterMutations} from './observe-cha
 import * as nativeMethods from './native-methods.js';
 import {accessors as nativeTree} from './native-tree.js';
 import {patchBuiltins} from './patch-builtins.js';
-import {patchInsideElementAccessors, patchOutsideElementAccessors} from './patch-accessors.js';
+import {patchInsideElementAccessors, patchOutsideElementAccessors} from './patches.js';
 import {patchEvents} from './patch-events.js';
 import {ShadyRoot} from './attach-shadow.js';
+import {wrap} from './wrapper.js';
 
 if (utils.settings.inUse) {
   let ShadyDOM = {
@@ -61,7 +62,8 @@ if (utils.settings.inUse) {
     'deferConnectionCallbacks': utils.settings['deferConnectionCallbacks'],
     // Integration point with ShadyCSS to disable styling MutationObserver,
     // as ShadyDOM will now handle dynamic scoping.
-    'handlesDynamicScoping': true
+    'handlesDynamicScoping': true,
+    'wrap': wrap
   };
 
   window['ShadyDOM'] = ShadyDOM;

@@ -11,12 +11,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 import {calculateSplices} from './array-splice.js';
 import * as utils from './utils.js';
 import {enqueue} from './flush.js';
-import {recordChildNodes} from './logical-tree.js';
 import {removeChild, insertBefore, dispatchEvent} from './native-methods.js';
 import {accessors as nativeAccessors} from './native-tree.js';
 import {ensureShadyDataForNode, shadyDataForNode} from './shady-data.js';
-import {ElementAccessors as accessors} from './accessors.js';
-import {getRootNode} from './methods-get-root-node.js';
+import {ElementAccessors as accessors, getRootNode, recordChildNodes} from './patches.js';
 
 const {parentNode, childNodes} = nativeAccessors;
 
@@ -76,7 +74,6 @@ class ShadyRoot {
     /** @type {Object<string, Array<HTMLSlotElement>>} */
     this._slotMap = null;
     this._pendingSlots = null;
-    this._initialChildren = null;
     this._asyncRender();
   }
 
@@ -135,9 +132,11 @@ class ShadyRoot {
     }
     // on initial render remove any undistributed children.
     if (!this._hasRendered) {
+      // TODO(sorvell): childNodes is wrong here
       const c$ = accessors.childNodes.get.call(this.host);
       for (let i=0, l=c$.length; i < l; i++) {
         const child = c$[i];
+      //for (let child=accessors.firstChild.get.call(this.host); child; child=accessors.nextSibling.get.call(child)) {
         const data = shadyDataForNode(child);
         if (parentNode(child) === this.host &&
             (child.localName === 'slot' || !data.assignedSlot)) {
@@ -545,6 +544,8 @@ export function attachShadow(host, options) {
   }
   return new ShadyRoot(ShadyRootConstructionToken, host, options);
 }
+
+utils.setAttachShadow(attachShadow);
 
 // Mitigate connect/disconnect spam by wrapping custom element classes.
 if (window['customElements'] && utils.settings.inUse) {
