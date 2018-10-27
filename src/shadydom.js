@@ -27,7 +27,7 @@ import {patchBuiltins} from './patch-builtins.js';
 import {patchInsideElementAccessors, patchOutsideElementAccessors} from './patches.js';
 import {patchEvents} from './patch-events.js';
 import {ShadyRoot} from './attach-shadow.js';
-import {wrap} from './wrapper.js';
+import {wrap, Wrapper} from './wrapper.js';
 
 if (utils.settings.inUse) {
   let ShadyDOM = {
@@ -63,7 +63,9 @@ if (utils.settings.inUse) {
     // Integration point with ShadyCSS to disable styling MutationObserver,
     // as ShadyDOM will now handle dynamic scoping.
     'handlesDynamicScoping': true,
-    'wrap': wrap
+    'wrap': wrap,
+    'Wrapper': Wrapper,
+    'noPatch': utils.settings.noPatch
   };
 
   window['ShadyDOM'] = ShadyDOM;

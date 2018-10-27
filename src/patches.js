@@ -1342,7 +1342,7 @@ export function recordInsertBefore(node, container, ref_node) {
   }
   // handle document fragments
   if (node.nodeType === Node.DOCUMENT_FRAGMENT_NODE) {
-    let c$ = node.childNodes;
+    let c$ = ElementAccessors.childNodes.get.call(node);
     for (let i=0; i < c$.length; i++) {
       linkNode(c$[i], container, ref_node);
     }
@@ -1364,7 +1364,7 @@ function linkNode(node, container, ref_node) {
   const ref_nodeData = ref_node ? ensureShadyDataForNode(ref_node) : null;
   // update ref_node.previousSibling <-> node
   nodeData.previousSibling = ref_node ? ref_nodeData.previousSibling :
-    container.lastChild;
+    ElementAccessors.lastChild.get.call(container);
   let psd = shadyDataForNode(nodeData.previousSibling);
   if (psd) {
     psd.nextSibling = node;

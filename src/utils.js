@@ -17,6 +17,7 @@ let desc = Object.getOwnPropertyDescriptor(Node.prototype, 'firstChild');
 
 settings.hasDescriptors = Boolean(desc && desc.configurable && desc.get);
 settings.inUse = settings['force'] || !settings.hasNativeShadowDOM;
+settings.noPatch = settings['noPatch'] || false;
 
 // Default to using native accessors (instead of treewalker) only for
 // IE/Edge where they are faster.
