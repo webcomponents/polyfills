@@ -80,7 +80,7 @@ export function insertBefore(parent, node, ref_node) {
   }
   // add to new parent
   let allowNativeInsert = true;
-  const needsScoping = !currentScopeIsCorrect(node, newScopeName);
+  const needsScoping = node['__noInsertionPoint'] === undefined && !currentScopeIsCorrect(node, newScopeName);
   if (ownerRoot) {
     // in a shadowroot, only tree walk if new insertion points may have been added, or scoping is needed
     if (!node['__noInsertionPoint'] || needsScoping) {
