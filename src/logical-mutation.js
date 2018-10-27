@@ -16,6 +16,8 @@ import {ensureShadyDataForNode, shadyDataForNode} from './shady-data.js';
 
 const {parentNode} = accessors;
 
+const doc = window.document;
+
 // Patched `insertBefore`. Note that all mutations that add nodes are routed
 // here. When a <slot> is added or a node is added to a host with a shadowRoot
 // with a slot, a standard dom `insert` call is aborted and `_asyncRender`
@@ -27,6 +29,9 @@ const {parentNode} = accessors;
  * @param {Node=} ref_node
  */
 export function insertBefore(parent, node, ref_node) {
+  if (parent.ownerDocument !== doc && node.ownerDocument !== doc) {
+    return nativeMethods.insertBefore.call(parent, node, ref_node);
+  }
   if (node === parent) {
     throw Error(`Failed to execute 'appendChild' on 'Node': The new child element contains the parent.`);
   }
@@ -149,6 +154,9 @@ export function insertBefore(parent, node, ref_node) {
  * @param {boolean=} skipUnscoping
 */
 export function removeChild(parent, node, skipUnscoping = false) {
+  if (parent.ownerDocument !== doc) {
+    return nativeMethods.removeChild.call(parent, node);
+  }
   if (node.parentNode !== parent) {
     throw Error('The node to be removed is not a child of this node: ' +
       node);
@@ -370,12 +378,16 @@ function getScopingShim() {
 }
 
 export function setAttribute(node, attr, value) {
-  const scopingShim = getScopingShim();
-  if (scopingShim && attr === 'class') {
-    scopingShim['setElementClass'](node, value);
-  } else {
+  if (node.ownerDocument !== doc) {
     nativeMethods.setAttribute.call(node, attr, value);
-    distributeAttributeChange(node, attr);
+  } else {
+    const scopingShim = getScopingShim();
+    if (scopingShim && attr === 'class') {
+      scopingShim['setElementClass'](node, value);
+    } else {
+      nativeMethods.setAttribute.call(node, attr, value);
+      distributeAttributeChange(node, attr);
+    }
   }
 }
 
