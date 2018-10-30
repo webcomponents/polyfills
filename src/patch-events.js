@@ -536,6 +536,9 @@ let PatchedCustomEvent = mixinComposedFlag(window.CustomEvent);
 let PatchedMouseEvent = mixinComposedFlag(window.MouseEvent);
 
 export function patchEvents() {
+  if (utils.settings['noPatch']) {
+    return;
+  }
   window.Event = PatchedEvent;
   window.CustomEvent = PatchedCustomEvent;
   window.MouseEvent = PatchedMouseEvent;
