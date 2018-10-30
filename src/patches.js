@@ -1137,7 +1137,7 @@ export const InsideAccessors = {
       if (utils.isTrackingLogicalChildNodes(this)) {
         const content = this.localName === 'template' ?
         /** @type {HTMLTemplateElement} */(this).content : this;
-        return getInnerHTML(content);
+        return getInnerHTML(content, (e) => InsideAccessors.childNodes.get.call(e));
       } else {
         return nativeAccessors.innerHTML(this);
       }
