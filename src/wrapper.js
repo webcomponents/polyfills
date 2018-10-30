@@ -9,6 +9,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 */
 
 import {ElementAccessors, nodeMixin, queryMixin, elementMixin, documentMixin, slotMixin} from './patches.js';
+import * as utils from './utils.js';
 
 const elementDescriptors = Object.getOwnPropertyDescriptors(elementMixin);
 
@@ -134,9 +135,12 @@ for (let prop in ElementAccessors) {
 
 const wrapperMap = new WeakMap();
 
-export function wrap(node) {
-  if (!wrapperMap.has(node)) {
-    wrapperMap.set(node, new Wrapper(node));
+export function wrap(obj) {
+  if (utils.isShadyRoot(obj) || obj instanceof Wrapper) {
+    return obj;
   }
-  return wrapperMap.get(node);
+  if (!wrapperMap.has(obj)) {
+    wrapperMap.set(obj, new Wrapper(obj));
+  }
+  return wrapperMap.get(obj);
 }
