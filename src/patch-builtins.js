@@ -138,6 +138,8 @@ let queryMixin = {
 
 };
 
+let fragmentMixin = {};
+
 let slotMixin = {
 
   /**
@@ -309,6 +311,13 @@ const shadowRootMixin = utils.extendAll({
   }
 }, queryMixin);
 
+// Patch querySelector/All on documents and fragments only if
+// flag is not set.
+if (!utils.settings['preferPerformance']) {
+  utils.extendAll(documentMixin, queryMixin);
+  utils.extendAll(fragmentMixin, queryMixin);
+}
+
 function patchBuiltin(proto, obj) {
   let n$ = Object.getOwnPropertyNames(obj);
   for (let i=0; i < n$.length; i++) {
@@ -342,6 +351,7 @@ export function patchBuiltins() {
   patchBuiltin(window.Window.prototype, windowMixin);
   patchBuiltin(window.Text.prototype, textMixin);
   patchBuiltin(window.Element.prototype, elementMixin);
+  patchBuiltin(window.DocumentFragment.prototype, fragmentMixin);
   patchBuiltin(window.Document.prototype, documentMixin);
   if (window.HTMLSlotElement) {
     patchBuiltin(window.HTMLSlotElement.prototype, slotMixin);

@@ -59,6 +59,15 @@ if (utils.settings.inUse) {
     // customized as they are created by the parser will successfully
     // render with this flag on.
     'deferConnectionCallbacks': utils.settings['deferConnectionCallbacks'],
+    // Set to true to speed up the polyfill slightly at the cost of correctness
+    // * does not patch querySelector/All on Document or DocumentFragment
+    // * does not wrap connected/disconnected callbacks to de-dup these
+    // when using native customElements
+    // * does not wait to process children of elements with shadowRoots
+    // meaning shadowRoots should not be created while an element is parsing
+    // (e.g. if a custom element that creates a shadowRoot is defined before
+    // a candidate element in the document below it.
+    'preferPerformance': utils.settings['preferPerformance'],
     // Integration point with ShadyCSS to disable styling MutationObserver,
     // as ShadyDOM will now handle dynamic scoping.
     'handlesDynamicScoping': true
