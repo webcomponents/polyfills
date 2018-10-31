@@ -63,7 +63,7 @@
     "vinyl-buffer": "^1.0.1",
     "vinyl-source-stream": "^2.0.0",
     "wct-browser-legacy": "^1.0.2",
-    "web-component-tester": "^6.8.0"
+    "web-component-tester": "^6.9.0"
   },
   "publishConfig": {
     "access": "public"
