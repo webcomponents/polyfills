@@ -718,7 +718,7 @@ export const documentMixin = utils.extendAll({
     return result || null;
   }
 
-}, queryMixin);
+});
 
 Object.defineProperties(documentMixin, {
   '_activeElement': ActiveElementAccessor.activeElement

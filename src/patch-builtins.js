@@ -53,9 +53,12 @@ export function patchBuiltins() {
   patchBuiltin(window.Node.prototype, nodeMixin);
   patchBuiltin(window.Window.prototype, windowMixin);
   patchBuiltin(window.Text.prototype, textMixin);
-  patchBuiltin(window.DocumentFragment.prototype, queryMixin);
   patchBuiltin(window.Element.prototype, elementMixin);
   patchBuiltin(window.Document.prototype, documentMixin);
+  if (!utils.settings['preferPerformance']) {
+    patchBuiltin(window.DocumentFragment.prototype, queryMixin);
+    patchBuiltin(window.Document.prototype, queryMixin);
+  }
   if (window.HTMLSlotElement) {
     patchBuiltin(window.HTMLSlotElement.prototype, slotMixin);
   }
