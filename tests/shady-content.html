@@ -751,14 +751,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       span.textContent = 'hi';
       el.appendChild(span);
       ShadyDOM.flush();
-      assert.equal(ShadyDOM.nativeTree.textContent(el), 'x-disthifallback1fallback2fallback3', 'composed textContent incorrect');
+      assert.equal(ShadyDOM.nativeAccessor(el, 'textContent'), 'x-disthifallback1fallback2fallback3', 'composed textContent incorrect');
       var origSlot = el.shadowRoot.querySelector('slot');
       origSlot.innerHTML = 'fallbackOrig';
       var s0 = document.createElement('slot');
       s0.innerHTML = 'fallback0';
       el.shadowRoot.insertBefore(s0, el.shadowRoot.firstChild);
       ShadyDOM.flush();
-      assert.equal(ShadyDOM.nativeTree.textContent(el), 'hix-distfallbackOrigfallback1fallback2fallback3', 'composed textContent incorrect');
+      assert.equal(ShadyDOM.nativeAccessor(el, 'textContent'), 'hix-distfallbackOrigfallback1fallback2fallback3', 'composed textContent incorrect');
       var s4 = document.createElement('slot');
       s4.innerHTML = 'fallback4';
       var s5 = document.createElement('slot');
@@ -771,17 +771,17 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       s6.innerHTML = 'fallback6';
       el.shadowRoot.appendChild(s6);
       ShadyDOM.flush();
-      assert.equal(ShadyDOM.nativeTree.textContent(el), 'hix-distfallbackOrigfallback1fallback4fallback5fallback2fallback3fallback6', 'composed textContent incorrect');
+      assert.equal(ShadyDOM.nativeAccessor(el, 'textContent'), 'hix-distfallbackOrigfallback1fallback4fallback5fallback2fallback3fallback6', 'composed textContent incorrect');
       el.shadowRoot.removeChild(slotContainer);
       ShadyDOM.flush();
-      assert.equal(ShadyDOM.nativeTree.textContent(el), 'hix-distfallbackOrigfallback1fallback2fallback3fallback6', 'composed textContent incorrect');
+      assert.equal(ShadyDOM.nativeAccessor(el, 'textContent'), 'hix-distfallbackOrigfallback1fallback2fallback3fallback6', 'composed textContent incorrect');
       el.shadowRoot.removeChild(s0);
       el.shadowRoot.removeChild(s1);
       el.shadowRoot.removeChild(s2);
       el.shadowRoot.removeChild(s3);
       origSlot.parentNode.removeChild(origSlot);
       ShadyDOM.flush();
-      assert.equal(ShadyDOM.nativeTree.textContent(el), 'x-disthi', 'composed textContent incorrect');
+      assert.equal(ShadyDOM.nativeAccessor(el, 'textContent'), 'x-disthi', 'composed textContent incorrect');
       document.body.removeChild(el);
     });
 
@@ -806,7 +806,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       span.textContent = 'hi';
       el.appendChild(span);
       ShadyDOM.flush();
-      assert.equal(ShadyDOM.nativeTree.textContent(el), 'x-disthifallback1fallback2fallback3', 'composed textContent incorrect');
+      assert.equal(ShadyDOM.nativeAccessor(el, 'textContent'), 'x-disthifallback1fallback2fallback3', 'composed textContent incorrect');
       var origSlot = el.shadowRoot.querySelector('slot');
       origSlot.innerHTML = 'fallbackOrig';
       var s0 = document.createElement('slot');
@@ -814,7 +814,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       s0.innerHTML = 'fallback0';
       el.shadowRoot.insertBefore(s0, el.shadowRoot.firstChild);
       ShadyDOM.flush();
-      assert.equal(ShadyDOM.nativeTree.textContent(el), 'fallback0x-disthifallback1fallback2fallback3', 'composed textContent incorrect');
+      assert.equal(ShadyDOM.nativeAccessor(el, 'textContent'), 'fallback0x-disthifallback1fallback2fallback3', 'composed textContent incorrect');
       var s4 = document.createElement('slot');
       s4.setAttribute('name', 'foo');
       s4.innerHTML = 'fallback4';
@@ -826,13 +826,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       slotContainer.appendChild(s5);
       el.shadowRoot.insertBefore(slotContainer, s2);
       ShadyDOM.flush();
-      assert.equal(ShadyDOM.nativeTree.textContent(el), 'fallback0x-disthifallback1fallback4fallback5fallback2fallback3', 'composed textContent incorrect');
+      assert.equal(ShadyDOM.nativeAccessor(el, 'textContent'), 'fallback0x-disthifallback1fallback4fallback5fallback2fallback3', 'composed textContent incorrect');
       el.shadowRoot.removeChild(slotContainer);
       ShadyDOM.flush();
-      assert.equal(ShadyDOM.nativeTree.textContent(el), 'fallback0x-disthifallback1fallback2fallback3', 'composed textContent incorrect');
+      assert.equal(ShadyDOM.nativeAccessor(el, 'textContent'), 'fallback0x-disthifallback1fallback2fallback3', 'composed textContent incorrect');
       span.slot = 'foo';
       ShadyDOM.flush();
-      assert.equal(ShadyDOM.nativeTree.textContent(el), 'hix-distfallbackOrigfallback1fallback2fallback3', 'composed textContent incorrect');
+      assert.equal(ShadyDOM.nativeAccessor(el, 'textContent'), 'hix-distfallbackOrigfallback1fallback2fallback3', 'composed textContent incorrect');
       document.body.removeChild(el);
     });
 
@@ -850,38 +850,38 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       ShadyDOM.flush();
       assert.deepEqual(el.$.f1.assignedNodes(), [foo]);
       assert.deepEqual(el.$.b1.assignedNodes(), [bar]);
-      assert.equal(ShadyDOM.nativeTree.textContent(el.$.c1), 'fooChildfoo2');
-      assert.equal(ShadyDOM.nativeTree.textContent(el.$.c2), 'barChildbar2');
+      assert.equal(ShadyDOM.nativeAccessor(el.$.c1, 'textContent'), 'fooChildfoo2');
+      assert.equal(ShadyDOM.nativeAccessor(el.$.c2, 'textContent'), 'barChildbar2');
       var slot = document.createElement('slot');
       slot.setAttribute('name', 'foo');
       slot.appendChild(document.createTextNode('test'));
       el.$.c1.appendChild(slot);
       ShadyDOM.flush();
-      assert.equal(ShadyDOM.nativeTree.textContent(el.$.c1), 'fooChildfoo2test');
+      assert.equal(ShadyDOM.nativeAccessor(el.$.c1, 'textContent'), 'fooChildfoo2test');
       slot.setAttribute('name', 'bar');
       ShadyDOM.flush();
-      assert.equal(ShadyDOM.nativeTree.textContent(el.$.c1), 'fooChildfoo2barChild');
-      assert.equal(ShadyDOM.nativeTree.textContent(el.$.c2), 'bar1bar2');
+      assert.equal(ShadyDOM.nativeAccessor(el.$.c1, 'textContent'), 'fooChildfoo2barChild');
+      assert.equal(ShadyDOM.nativeAccessor(el.$.c2, 'textContent'), 'bar1bar2');
       el.$.f1.setAttribute('name', 'bar');
       ShadyDOM.flush();
-      assert.equal(ShadyDOM.nativeTree.textContent(el.$.c1), 'barChildfooChildtest');
-      assert.equal(ShadyDOM.nativeTree.textContent(el.$.c2), 'bar1bar2');
+      assert.equal(ShadyDOM.nativeAccessor(el.$.c1, 'textContent'), 'barChildfooChildtest');
+      assert.equal(ShadyDOM.nativeAccessor(el.$.c2, 'textContent'), 'bar1bar2');
       el.$.f2.setAttribute('name', 'bar');
       ShadyDOM.flush();
-      assert.equal(ShadyDOM.nativeTree.textContent(el.$.c1), 'barChildfoo2test');
-      assert.equal(ShadyDOM.nativeTree.textContent(el.$.c2), 'bar1bar2');
+      assert.equal(ShadyDOM.nativeAccessor(el.$.c1, 'textContent'), 'barChildfoo2test');
+      assert.equal(ShadyDOM.nativeAccessor(el.$.c2, 'textContent'), 'bar1bar2');
       slot.setAttribute('name', 'foo');
       ShadyDOM.flush();
-      assert.equal(ShadyDOM.nativeTree.textContent(el.$.c1), 'barChildfoo2fooChild');
-      assert.equal(ShadyDOM.nativeTree.textContent(el.$.c2), 'bar1bar2');
+      assert.equal(ShadyDOM.nativeAccessor(el.$.c1, 'textContent'), 'barChildfoo2fooChild');
+      assert.equal(ShadyDOM.nativeAccessor(el.$.c2, 'textContent'), 'bar1bar2');
       el.$.f2.setAttribute('name', 'foo');
       ShadyDOM.flush();
-      assert.equal(ShadyDOM.nativeTree.textContent(el.$.c1), 'barChildfooChildtest');
-      assert.equal(ShadyDOM.nativeTree.textContent(el.$.c2), 'bar1bar2');
+      assert.equal(ShadyDOM.nativeAccessor(el.$.c1, 'textContent'), 'barChildfooChildtest');
+      assert.equal(ShadyDOM.nativeAccessor(el.$.c2, 'textContent'), 'bar1bar2');
       el.$.f1.setAttribute('name', 'foo');
       ShadyDOM.flush();
-      assert.equal(ShadyDOM.nativeTree.textContent(el.$.c1), 'fooChildfoo2test');
-      assert.equal(ShadyDOM.nativeTree.textContent(el.$.c2), 'barChildbar2');
+      assert.equal(ShadyDOM.nativeAccessor(el.$.c1, 'textContent'), 'fooChildfoo2test');
+      assert.equal(ShadyDOM.nativeAccessor(el.$.c2, 'textContent'), 'barChildbar2');
       document.body.removeChild(el);
     });
 
@@ -892,11 +892,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       var a = document.createElement('div');
       a.textContent = 'a';
       el.$.c1.appendChild(a);
-      assert.equal(ShadyDOM.nativeTree.textContent(el.$.c1), 'foo1foo2a');
+      assert.equal(ShadyDOM.nativeAccessor(el.$.c1, 'textContent'), 'foo1foo2a');
       el.$.c1.insertBefore(a, el.$.f2);
-      assert.equal(ShadyDOM.nativeTree.textContent(el.$.c1), 'foo1afoo2');
+      assert.equal(ShadyDOM.nativeAccessor(el.$.c1, 'textContent'), 'foo1afoo2');
       el.$.c1.insertBefore(a, el.$.f1);
-      assert.equal(ShadyDOM.nativeTree.textContent(el.$.c1), 'afoo1foo2');
+      assert.equal(ShadyDOM.nativeAccessor(el.$.c1, 'textContent'), 'afoo1foo2');
       var slot = document.createElement('slot');
       slot.setAttribute('name', 'foo');
       el.$.c1.insertBefore(slot, el.$.f2);
@@ -904,13 +904,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       slot2.setAttribute('name', 'foo');
       el.$.c1.insertBefore(slot2, el.$.f2);
       ShadyDOM.flush();
-      assert.equal(ShadyDOM.nativeTree.textContent(el.$.c1), 'afoo1foo2');
+      assert.equal(ShadyDOM.nativeAccessor(el.$.c1, 'textContent'), 'afoo1foo2');
       el.$.c1.insertBefore(a, slot2);
-      assert.equal(ShadyDOM.nativeTree.textContent(el.$.c1), 'foo1afoo2');
+      assert.equal(ShadyDOM.nativeAccessor(el.$.c1, 'textContent'), 'foo1afoo2');
       el.$.c1.insertBefore(a, slot);
-      assert.equal(ShadyDOM.nativeTree.textContent(el.$.c1), 'foo1afoo2');
+      assert.equal(ShadyDOM.nativeAccessor(el.$.c1, 'textContent'), 'foo1afoo2');
       el.$.c1.insertBefore(a, el.$.f1);
-      assert.equal(ShadyDOM.nativeTree.textContent(el.$.c1), 'afoo1foo2');
+      assert.equal(ShadyDOM.nativeAccessor(el.$.c1, 'textContent'), 'afoo1foo2');
     });
 
     test('composed children distributed', function() {
@@ -1325,7 +1325,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
     test('shadowRoot set via innerHTML that contains a <slot> and a custom element that also sets shadowRoot content via innerHTML', function() {
       var el = document.querySelector('use-inner-html');
-      assert.equal(ShadyDOM.nativeTree.textContent(el), '[I][A]');
+      assert.equal(ShadyDOM.nativeAccessor(el, 'textContent'), '[I][A]');
     });
 
     test('elements created in inert documents correctly upgrade when added to shadow hosts with shadowRoots containing slots', function() {
@@ -1337,7 +1337,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       ShadyDOM.flush();
       host.appendChild(clone);
       assert.equal(clone._initialized, true);
-      assert.equal(ShadyDOM.nativeTree.textContent(clone), 'simple');
+      assert.equal(ShadyDOM.nativeAccessor(clone, 'textContent'), 'simple');
       document.body.removeChild(host);
     });
 
@@ -1363,7 +1363,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   });
 
   function getComposedChildNodes(node) {
-    return ShadyDOM.nativeTree.childNodes(node);
+    return Array.from(ShadyDOM.nativeAccessor(node, 'childNodes'));
   }
 
 </script>

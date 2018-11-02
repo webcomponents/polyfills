@@ -10,13 +10,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 import {calculateSplices} from './array-splice.js';
 import * as utils from './utils.js';
+import './native-patches.js';
 import {enqueue} from './flush.js';
-import {removeChild, insertBefore, dispatchEvent} from './native-methods.js';
-import {accessors as nativeAccessors} from './native-tree.js';
 import {ensureShadyDataForNode, shadyDataForNode} from './shady-data.js';
 import {ElementAccessors as accessors, getRootNode, recordChildNodes} from './patches.js';
-
-const {parentNode, childNodes} = nativeAccessors;
 
 // Do not export this object. It must be passed as the first argument to the
 // ShadyRoot constructor in `attachShadow` to prevent the constructor from
@@ -40,6 +37,14 @@ function ancestorList(node) {
   return ancestors;
 }
 
+function capturedChildNodes(node) {
+  const nodes = [];
+  for (let n = node[utils.NATIVE_PREFIX + 'firstChild']; n; n = n[utils.NATIVE_PREFIX + 'nextSibling']) {
+    nodes.push(n);
+  }
+  return nodes;
+}
+
 /**
  * @extends {ShadowRoot}
  */
@@ -56,7 +61,7 @@ class ShadyRoot {
     // root <=> host
     this.host = host;
     this._mode = options && options.mode;
-    const c$ = childNodes(host);
+    const c$ = capturedChildNodes(host);
     recordChildNodes(host, c$);
     const hostData = ensureShadyDataForNode(host);
     hostData.root = this;
@@ -79,7 +84,7 @@ class ShadyRoot {
     // to record parsed children if flag is not set.
     if (utils.settings['preferPerformance']) {
       for (let i=0, l=c$.length; i < l; i++) {
-        removeChild.call(host, c$[i])
+        host[utils.NATIVE_PREFIX + 'removeChild'](c$[i]);
       }
     } else {
       this._asyncRender();
@@ -143,13 +148,13 @@ class ShadyRoot {
     // if optimization flag is not set.
     // on initial render remove any undistributed children.
     if (!utils.settings['preferPerformance'] && !this._hasRendered) {
-      const c$ = this.host.childNodes;
+      const c$ = accessors.childNodes.get.call(this.host);
       for (let i=0, l=c$.length; i < l; i++) {
         const child = c$[i];
         const data = shadyDataForNode(child);
-        if (parentNode(child) === this.host &&
+        if (child[utils.NATIVE_PREFIX + 'parentNode'] === this.host &&
             (child.localName === 'slot' || !data.assignedSlot)) {
-          removeChild.call(this.host, child);
+          this.host[utils.NATIVE_PREFIX + 'removeChild'](child);
         }
       }
     }
@@ -290,7 +295,7 @@ class ShadyRoot {
     // NOTE: cannot bubble correctly here so not setting bubbles: true
     // Safari tech preview does not bubble but chrome does
     // Spec says it bubbles (https://dom.spec.whatwg.org/#mutation-observers)
-    dispatchEvent.call(slot, new Event('slotchange'));
+    slot[utils.NATIVE_PREFIX + 'dispatchEvent'](new Event('slotchange'));
     const slotData = shadyDataForNode(slot);
     if (slotData.assignedSlot) {
       this._fireSlotChange(slotData.assignedSlot);
@@ -354,7 +359,7 @@ class ShadyRoot {
 
   // Ensures that the rendered node list inside `container` is `children`.
   _updateChildNodes(container, children) {
-    let composed = childNodes(container);
+    let composed = Array.prototype.slice.call(container[utils.NATIVE_PREFIX + 'childNodes']);
     let splices = calculateSplices(children, composed);
     // process removals
     for (let i=0, d=0, s; (i<splices.length) && (s=splices[i]); i++) {
@@ -363,8 +368,8 @@ class ShadyRoot {
         // to remove it; this can happen if we move a node and
         // then schedule its previous host for distribution resulting in
         // the node being removed here.
-        if (parentNode(n) === container) {
-          removeChild.call(container, n);
+        if (n[utils.NATIVE_PREFIX + 'parentNode'] === container) {
+          container[utils.NATIVE_PREFIX + 'removeChild'](n);
         }
         // TODO(sorvell): avoid the need for splicing here.
         composed.splice(s.index + d, 1);
@@ -376,7 +381,7 @@ class ShadyRoot {
       next = composed[s.index];
       for (let j=s.index, n; j < s.index + s.addedCount; j++) {
         n = children[j];
-        insertBefore.call(container, n, next);
+        container[utils.NATIVE_PREFIX + 'insertBefore'](n, next);
         composed.splice(j, 0, n);
       }
     }
@@ -522,9 +527,9 @@ class ShadyRoot {
     if (n$) {
       for (let i=0; i<n$.length; i++) {
         let node = n$[i];
-        let parent = parentNode(node);
+        let parent = node[utils.NATIVE_PREFIX + 'parentNode'];
         if (parent) {
-          removeChild.call(parent, node);
+          parent[utils.NATIVE_PREFIX + 'removeChild'](node);
         }
       }
     }
@@ -553,6 +558,8 @@ export function attachShadow(host, options) {
   }
   return new ShadyRoot(ShadyRootConstructionToken, host, options);
 }
+
+utils.setAttachShadow(attachShadow);
 
 // Mitigate connect/disconnect spam by wrapping custom element classes.
 if (window['customElements'] && utils.settings.inUse && !utils.settings['preferPerformance']) {

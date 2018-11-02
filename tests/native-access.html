@@ -109,28 +109,28 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       let srFirst = el.shadowRoot.firstChild;
       let srLast = el.shadowRoot.lastChild;
       let content = el.firstChild;
-      assert.equal(ShadyDOM.nativeTree.firstChild(el), srFirst);
-      assert.equal(ShadyDOM.nativeTree.lastChild(el), srLast);
-      assert.equal(ShadyDOM.nativeTree.parentNode(srFirst), el);
-      assert.equal(ShadyDOM.nativeTree.nextSibling(srFirst), content);
-      assert.equal(ShadyDOM.nativeTree.nextSibling(content), srLast);
-      assert.equal(ShadyDOM.nativeTree.previousSibling(srLast), content);
-      assert.equal(ShadyDOM.nativeTree.previousSibling(content), srFirst);
-      assert.deepEqual(Array.from(ShadyDOM.nativeTree.childNodes(el)), [srFirst, content, srLast])
+      assert.equal(ShadyDOM.nativeAccessor(el, 'firstChild'), srFirst);
+      assert.equal(ShadyDOM.nativeAccessor(el, 'lastChild'), srLast);
+      assert.equal(ShadyDOM.nativeAccessor(srFirst, 'parentNode'), el);
+      assert.equal(ShadyDOM.nativeAccessor(srFirst, 'nextSibling'), content);
+      assert.equal(ShadyDOM.nativeAccessor(content, 'nextSibling'), srLast);
+      assert.equal(ShadyDOM.nativeAccessor(srLast, 'previousSibling'), content);
+      assert.equal(ShadyDOM.nativeAccessor(content, 'previousSibling'), srFirst);
+      assert.deepEqual(Array.from(ShadyDOM.nativeAccessor(el, 'childNodes')), [srFirst, content, srLast])
     });
 
     test('element accessors', function() {
       let srFirst = el.shadowRoot.firstChild;
       let srLast = el.shadowRoot.lastChild;
       let content = el.firstChild;
-      assert.equal(ShadyDOM.nativeTree.firstElementChild(el), srFirst);
-      assert.equal(ShadyDOM.nativeTree.lastElementChild(el), srLast);
-      assert.equal(ShadyDOM.nativeTree.parentElement(srFirst), el);
-      assert.equal(ShadyDOM.nativeTree.nextElementSibling(srFirst), content);
-      assert.equal(ShadyDOM.nativeTree.nextElementSibling(content), srLast);
-      assert.equal(ShadyDOM.nativeTree.previousElementSibling(srLast), content);
-      assert.equal(ShadyDOM.nativeTree.previousElementSibling(content), srFirst);
-      assert.deepEqual(Array.from(ShadyDOM.nativeTree.children(el)), [srFirst, content, srLast])
+      assert.equal(ShadyDOM.nativeAccessor(el, 'firstElementChild'), srFirst);
+      assert.equal(ShadyDOM.nativeAccessor(el, 'lastElementChild'), srLast);
+      assert.equal(ShadyDOM.nativeAccessor(srFirst, 'parentElement'), el);
+      assert.equal(ShadyDOM.nativeAccessor(srFirst, 'nextElementSibling'), content);
+      assert.equal(ShadyDOM.nativeAccessor(content, 'nextElementSibling'), srLast);
+      assert.equal(ShadyDOM.nativeAccessor(srLast, 'previousElementSibling'), content);
+      assert.equal(ShadyDOM.nativeAccessor(content, 'previousElementSibling'), srFirst);
+      assert.deepEqual(Array.from(ShadyDOM.nativeAccessor(el, 'children')), [srFirst, content, srLast])
     });
 
     test('fragment accessors', function() {
@@ -139,9 +139,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       let d2 = document.createElement('div');
       el.appendChild(d1);
       el.appendChild(d2);
-      assert.equal(ShadyDOM.nativeTree.parentNode(d1), el);
-      assert.equal(ShadyDOM.nativeTree.nextElementSibling(d1), d2);
-      assert.equal(ShadyDOM.nativeTree.previousElementSibling(d2), d1);
+      assert.equal(ShadyDOM.nativeAccessor(d1, 'parentNode'), el);
+      assert.equal(ShadyDOM.nativeAccessor(d1, 'nextElementSibling'), d2);
+      assert.equal(ShadyDOM.nativeAccessor(d2, 'previousElementSibling'), d1);
     });
 
     test('fragment element accessors', function() {
@@ -154,17 +154,17 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       let d2 = document.createElement('div');
       el.appendChild(d1);
       el.appendChild(d2);
-      assert.equal(ShadyDOM.nativeTree.firstElementChild(el), d1);
-      assert.equal(ShadyDOM.nativeTree.lastElementChild(el), d2);
-      assert.deepEqual(Array.from(ShadyDOM.nativeTree.children(el)), [d1, d2])
+      assert.equal(ShadyDOM.nativeAccessor(el, 'firstElementChild'), d1);
+      assert.equal(ShadyDOM.nativeAccessor(el, 'lastElementChild'), d2);
+      assert.deepEqual(Array.from(ShadyDOM.nativeAccessor(el, 'children')), [d1, d2])
     });
 
     test('textConent', function() {
-      assert.equal(ShadyDOM.nativeTree.textContent(el), 'beforecontentafter');
+      assert.equal(ShadyDOM.nativeAccessor(el, 'textContent'), 'beforecontentafter');
     });
 
     test('innerHTML', function() {
-      assert.equal(ShadyDOM.nativeTree.innerHTML(el), '<div>before</div><div>content</div><div>after</div>');
+      assert.equal(ShadyDOM.nativeAccessor(el, 'innerHTML'), '<div>before</div><div>content</div><div>after</div>');
     });
 
   });
@@ -188,41 +188,41 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
     test('appendChild', function() {
       let d = document.createElement('div');
-      ShadyDOM.nativeMethods.appendChild.call(el, d);
-      assert.equal(ShadyDOM.nativeTree.lastChild(el), d);
+      ShadyDOM.nativeMethod(el, 'appendChild', d);
+      assert.equal(ShadyDOM.nativeAccessor(el, 'lastChild'), d);
     });
 
     test('insertBefore', function() {
       let d = document.createElement('div');
       let srFirst = el.shadowRoot.firstChild;
-      ShadyDOM.nativeMethods.insertBefore.call(el, d, srFirst);
-      assert.equal(ShadyDOM.nativeTree.firstChild(el), d);
+      ShadyDOM.nativeMethod(el, 'insertBefore', d, srFirst);
+      assert.equal(ShadyDOM.nativeAccessor(el, 'firstChild'), d);
     });
 
     test('removeChild', function() {
       let srFirst = el.shadowRoot.firstChild;
       let srLast = el.shadowRoot.lastChild;
       let content = el.firstChild;
-      ShadyDOM.nativeMethods.removeChild.call(el, srFirst);
-      ShadyDOM.nativeMethods.removeChild.call(el, content);
-      ShadyDOM.nativeMethods.removeChild.call(el, srLast);
-      assert.equal(ShadyDOM.nativeTree.childNodes(el).length, 0);
+      ShadyDOM.nativeMethod(el, 'removeChild', srFirst);
+      ShadyDOM.nativeMethod(el, 'removeChild', content);
+      ShadyDOM.nativeMethod(el, 'removeChild', srLast);
+      assert.equal(ShadyDOM.nativeAccessor(el, 'childNodes').length, 0);
     });
 
     test('querySelector/querySelectorAll', function() {
       let srFirst = el.shadowRoot.firstChild;
       let srLast = el.shadowRoot.lastChild;
       let content = el.firstChild;
-      assert.equal(ShadyDOM.nativeMethods.querySelector.call(el, 'div'), srFirst);
-      let qsa = ShadyDOM.nativeMethods.querySelectorAll.call(el, '*');
+      assert.equal(ShadyDOM.nativeMethod(el, 'querySelector', 'div'), srFirst);
+      let qsa = ShadyDOM.nativeMethod(el, 'querySelectorAll', '*');
       qsa = Array.prototype.slice.call(qsa);
       assert.deepEqual(qsa,[srFirst, content, srLast]);
     });
 
     test('contains', function() {
       let srFirst = el.shadowRoot.firstChild;
-      assert.isTrue(ShadyDOM.nativeMethods.contains.call(el, srFirst));
-      assert.isTrue(ShadyDOM.nativeMethods.contains.call(document.documentElement, srFirst));
+      assert.isTrue(ShadyDOM.nativeMethod(el, 'contains', srFirst));
+      assert.isTrue(ShadyDOM.nativeMethod(document.documentElement, 'contains', srFirst));
     });
 
   });

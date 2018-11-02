@@ -9,7 +9,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 */
 
 import * as utils from './utils.js';
-import * as nativeMethods from './native-methods.js';
 import {shadyDataForNode} from './shady-data.js';
 
 /*
@@ -346,11 +345,8 @@ export function addEventListener(type, fnOrObj, optionsOrCapture) {
     return;
   }
 
-  const ael = this instanceof Window ? nativeMethods.windowAddEventListener :
-      nativeMethods.addEventListener;
-
-  if (unpatchedEvents[type]) {
-    return ael.call(this, type, fnOrObj, optionsOrCapture);
+    if (unpatchedEvents[type]) {
+    return this[utils.NATIVE_PREFIX + 'addEventListener'](type, fnOrObj, optionsOrCapture);
   }
 
   // The callback `fn` might be used for multiple nodes/events. Since we generate
@@ -456,7 +452,7 @@ export function addEventListener(type, fnOrObj, optionsOrCapture) {
       {'capture': [], 'bubble': []};
     this.__handlers[type][capture ? 'capture' : 'bubble'].push(wrapperFn);
   } else {
-    ael.call(this, type, wrapperFn, optionsOrCapture);
+    this[utils.NATIVE_PREFIX + 'addEventListener'](type, wrapperFn, optionsOrCapture);
   }
 }
 
@@ -467,10 +463,8 @@ export function removeEventListener(type, fnOrObj, optionsOrCapture) {
   if (!fnOrObj) {
     return;
   }
-  const rel = this instanceof Window ? nativeMethods.windowRemoveEventListener :
-    nativeMethods.removeEventListener;
   if (unpatchedEvents[type]) {
-    return rel.call(this, type, fnOrObj, optionsOrCapture);
+    return this[utils.NATIVE_PREFIX + 'removeEventListener'](type, fnOrObj, optionsOrCapture);
   }
   // NOTE(valdrin) invoking external functions is costly, inline has better perf.
   let capture, once, passive;
@@ -497,7 +491,7 @@ export function removeEventListener(type, fnOrObj, optionsOrCapture) {
       }
     }
   }
-  rel.call(this, type, wrapperFn || fnOrObj, optionsOrCapture);
+  this[utils.NATIVE_PREFIX + 'removeEventListener'](type, wrapperFn || fnOrObj, optionsOrCapture);
   if (wrapperFn && nonBubblingEventsToRetarget[type] &&
       this.__handlers && this.__handlers[type]) {
     const arr = this.__handlers[type][capture ? 'capture' : 'bubble'];

@@ -22,6 +22,7 @@ settings.noPatch = settings['noPatch'] || false;
 // Default to using native accessors (instead of treewalker) only for
 // IE/Edge where they are faster.
 const IS_IE = navigator.userAgent.match('Trident');
+settings.IS_IE = IS_IE;
 const IS_EDGE = navigator.userAgent.match('Edge');
 if (settings.useNativeAccessors === undefined) {
   settings.useNativeAccessors = settings.hasDescriptors && (IS_IE || IS_EDGE);
@@ -174,6 +175,8 @@ export function createPolyfilledHTMLCollection(nodes) {
   };
   return nodes;
 }
+
+export const NATIVE_PREFIX = '__shady_native_';
 
 export let attachShadow;
 export function setAttachShadow(fn) {

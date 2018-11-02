@@ -21,8 +21,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 import * as utils from './utils.js';
 import {flush, enqueue} from './flush.js';
 import {observeChildren, unobserveChildren, filterMutations} from './observe-changes.js';
-import * as nativeMethods from './native-methods.js';
-import {accessors as nativeTree} from './native-tree.js';
+import './native-patches.js';
 import {patchBuiltins} from './patch-builtins.js';
 import {patchInsideElementAccessors, patchOutsideElementAccessors} from './patches.js';
 import {patchEvents} from './patch-events.js';
@@ -52,8 +51,6 @@ if (utils.settings.inUse) {
     'filterMutations': filterMutations,
     'observeChildren': observeChildren,
     'unobserveChildren': unobserveChildren,
-    'nativeMethods': nativeMethods,
-    'nativeTree': nativeTree,
     // Set to true to defer native custom elements connection until the
     // document has fully parsed. This enables custom elements that create
     // shadowRoots to be defined while the document is loading. Elements
@@ -74,7 +71,10 @@ if (utils.settings.inUse) {
     'handlesDynamicScoping': true,
     'wrap': wrap,
     'Wrapper': Wrapper,
-    'noPatch': utils.settings.noPatch
+    'noPatch': utils.settings.noPatch,
+    'nativeMethod': (node, name, ...args) =>
+        node[utils.NATIVE_PREFIX + name].apply(node, args),
+    'nativeAccessor': (node, name) => node[utils.NATIVE_PREFIX + name]
   };
 
   window['ShadyDOM'] = ShadyDOM;

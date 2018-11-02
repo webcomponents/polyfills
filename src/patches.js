@@ -11,9 +11,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 import * as utils from './utils.js';
 import {flush} from './flush.js';
 import {getInnerHTML} from './innerHTML.js';
-import * as nativeMethods from './native-methods.js';
-import {accessors as nativeAccessors} from './native-tree.js';
-import {nodeAccessors as nativeDescriptors} from './native-tree-accessors.js';
 import {addEventListener, removeEventListener} from './patch-events.js';
 import {shadyDataForNode, ensureShadyDataForNode} from './shady-data.js';
 
@@ -32,7 +29,7 @@ const doc = window.document;
 export function insertBefore(parent, node, ref_node) {
   // optimization: assume native insertBefore is ok if the nodes are not in the document.
   if (parent.ownerDocument !== doc && node.ownerDocument !== doc) {
-    nativeMethods.insertBefore.call(parent, node, ref_node);
+    parent[utils.NATIVE_PREFIX + 'insertBefore'](node, ref_node);
     return;
   }
   if (node === parent) {
@@ -42,7 +39,7 @@ export function insertBefore(parent, node, ref_node) {
     const refData = shadyDataForNode(ref_node);
     const p = refData && refData.parentNode;
     if ((p !== undefined && p !== parent) ||
-      (p === undefined && nativeAccessors.parentNode(ref_node) !== parent)) {
+      (p === undefined && ref_node[utils.NATIVE_PREFIX + 'parentNode'] !== parent)) {
       throw Error(`Failed to execute 'insertBefore' on 'Node': The node ` +
        `before which the new node is to be inserted is not a child of this node.`);
     }
@@ -135,9 +132,9 @@ export function insertBefore(parent, node, ref_node) {
     // if ref_node, get the ref_node that's actually in composed dom.
     if (ref_node) {
       ref_node = firstComposedNode(ref_node);
-      nativeMethods.insertBefore.call(container, node, ref_node);
+      container[utils.NATIVE_PREFIX + 'insertBefore'](node, ref_node);
     } else {
-      nativeMethods.appendChild.call(container, node);
+      container[utils.NATIVE_PREFIX + 'appendChild'](node);
     }
   // Since ownerDocument is not patched, it can be incorrect afer this call
   // if the node is physically appended via distribution. This can result
@@ -160,7 +157,7 @@ export function insertBefore(parent, node, ref_node) {
 */
 export function removeChild(parent, node, skipUnscoping = false) {
   if (parent.ownerDocument !== doc) {
-    return nativeMethods.removeChild.call(parent, node);
+    return parent[utils.NATIVE_PREFIX + 'removeChild'](node);
   }
   if (ElementAccessors.parentNode.get.call(node) !== parent) {
     throw Error('The node to be removed is not a child of this node: ' +
@@ -207,8 +204,8 @@ export function removeChild(parent, node, skipUnscoping = false) {
     // location (could be undistributed)
     // (2) if parent is a slot, element may not ben in composed dom
     if (!(parentData.root || node.localName === 'slot') ||
-      (container === nativeAccessors.parentNode(node))) {
-      nativeMethods.removeChild.call(container, node);
+      (container === node[utils.NATIVE_PREFIX + 'parentNode'])) {
+      container[utils.NATIVE_PREFIX + 'removeChild'](node);
     }
   }
   scheduleObserver(parent, null, node);
@@ -293,7 +290,7 @@ export function getRootNode(node, options) { // eslint-disable-line no-unused-va
       // can be cached while an element is inside a fragment.
       // If this happens and we cache the result, the value can become stale
       // because for perf we avoid processing the subtree of added fragments.
-      if (nativeMethods.contains.call(document.documentElement, node)) {
+      if (document.documentElement[utils.NATIVE_PREFIX + 'contains'](node)) {
         nodeData.ownerShadyRoot = root;
       }
     }
@@ -353,9 +350,9 @@ function renderRootNode(element) {
 
 export function cloneNode(node, deep) {
   if (node.localName == 'template') {
-    return nativeMethods.cloneNode.call(node, deep);
+    return node[utils.NATIVE_PREFIX + 'cloneNode'](deep);
   } else {
-    let n = nativeMethods.cloneNode.call(node, false);
+    let n = node[utils.NATIVE_PREFIX + 'cloneNode'](false);
     // Attribute nodes historically had childNodes, but they have later
     // been removed from the spec.
     // Make sure we do not do a deep clone on them for old browsers (IE11)
@@ -379,9 +376,9 @@ export function importNode(node, deep) {
   // A template element normally has no children with shadowRoots, so make
   // sure we always make a deep copy to correctly construct the template.content
   if (node.ownerDocument !== doc || node.localName === 'template') {
-    return nativeMethods.importNode.call(doc, node, deep);
+    return doc[utils.NATIVE_PREFIX + 'importNode'](node, deep);
   }
-  let n = nativeMethods.importNode.call(doc, node, false);
+  let n = doc[utils.NATIVE_PREFIX + 'importNode'](node, false);
   if (deep) {
     let c$ = ElementAccessors.childNodes.get.call(node);
     for (let i=0, nc; i < c$.length; i++) {
@@ -419,11 +416,11 @@ export const IsConnectedAccessor = {
       // Fast path for distributed nodes.
       const ownerDocument = this.ownerDocument;
       if (utils.hasDocumentContains) {
-        if (nativeMethods.contains.call(ownerDocument, this)) {
+        if (ownerDocument[utils.NATIVE_PREFIX + 'contains'](this)) {
           return true;
         }
       } else if (ownerDocument.documentElement &&
-        nativeMethods.contains.call(ownerDocument.documentElement, this)) {
+        ownerDocument.documentElement[utils.NATIVE_PREFIX + 'contains'](this)) {
         return true;
       }
       // Slow path for non-distributed nodes.
@@ -468,7 +465,7 @@ function activeElementForNode(node) {
     // element is not a descendant of the host (in the composed tree),
     // then it doesn't have an active element.
     if (node.host === active ||
-        !nativeMethods.contains.call(node.host, active)) {
+        !node.host[utils.NATIVE_PREFIX + 'contains'](active)) {
       return null;
     }
   }
@@ -561,7 +558,7 @@ export const nodeMixin = {
    */
   dispatchEvent(event) {
     flush();
-    return nativeMethods.dispatchEvent.call(this, event);
+    return this[utils.NATIVE_PREFIX + 'dispatchEvent'](event);
   }
 
 };
@@ -604,7 +601,7 @@ export const queryMixin = {
   // https://github.com/webcomponents/shadydom/pull/210#issuecomment-361435503
   querySelectorAll(selector, useNative) {
     if (useNative) {
-      const o = Array.prototype.slice.call(nativeMethods.querySelectorAll.call(this, selector));
+      const o = Array.prototype.slice.call(this[utils.NATIVE_PREFIX + 'querySelectorAll'](selector));
       const root = getRootNode(this);
       return o.filter(e => e.getRootNode() == root);
     }
@@ -827,20 +824,20 @@ function distributeAttributeChange(node, name) {
 
 export function setAttribute(node, attr, value) {
   if (node.ownerDocument !== doc) {
-    nativeMethods.setAttribute.call(node, attr, value);
+    node[utils.NATIVE_PREFIX + 'setAttribute'](attr, value);
   } else {
     const scopingShim = getScopingShim();
     if (scopingShim && attr === 'class') {
       scopingShim['setElementClass'](node, value);
     } else {
-      nativeMethods.setAttribute.call(node, attr, value);
+      node[utils.NATIVE_PREFIX + 'setAttribute'](attr, value);
       distributeAttributeChange(node, attr);
     }
   }
 }
 
 export function removeAttribute(node, attr) {
-  nativeMethods.removeAttribute.call(node, attr);
+  node[utils.NATIVE_PREFIX + 'removeAttribute'](attr);
   distributeAttributeChange(node, attr);
 }
 
@@ -871,7 +868,7 @@ export const OutsideAccessors = {
       if (l && l.nodeType !== Node.ELEMENT_NODE) {
         l = null;
       }
-      return l !== undefined ? l : nativeAccessors.parentElement(this);
+      return l !== undefined ? l : this[utils.NATIVE_PREFIX + 'parentElement'];
     },
     configurable: true
   },
@@ -881,7 +878,7 @@ export const OutsideAccessors = {
     get() {
       const nodeData = shadyDataForNode(this);
       const l = nodeData && nodeData.parentNode;
-      return l !== undefined ? l : nativeAccessors.parentNode(this);
+      return l !== undefined ? l : this[utils.NATIVE_PREFIX + 'parentNode'];
     },
     configurable: true
   },
@@ -891,7 +888,7 @@ export const OutsideAccessors = {
     get() {
       const nodeData = shadyDataForNode(this);
       const l = nodeData && nodeData.nextSibling;
-      return l !== undefined ? l : nativeAccessors.nextSibling(this);
+      return l !== undefined ? l : this[utils.NATIVE_PREFIX + 'nextSibling'];
     },
     configurable: true
   },
@@ -901,7 +898,7 @@ export const OutsideAccessors = {
     get() {
       const nodeData = shadyDataForNode(this);
       const l = nodeData && nodeData.previousSibling;
-      return l !== undefined ? l : nativeAccessors.previousSibling(this);
+      return l !== undefined ? l : this[utils.NATIVE_PREFIX + 'previousSibling'];
     },
     configurable: true
   },
@@ -920,7 +917,7 @@ export const OutsideAccessors = {
         }
         return n;
       } else {
-        return nativeAccessors.nextElementSibling(this);
+        return this[utils.NATIVE_PREFIX + 'nextElementSibling'];
       }
     },
     configurable: true
@@ -939,7 +936,7 @@ export const OutsideAccessors = {
         }
         return n;
       } else {
-        return nativeAccessors.previousElementSibling(this);
+        return this[utils.NATIVE_PREFIX + 'previousElementSibling'];
       }
     },
     configurable: true
@@ -983,7 +980,7 @@ export const InsideAccessors = {
         }
         childNodes = nodeData.childNodes;
       } else {
-        childNodes = nativeAccessors.childNodes(this);
+        childNodes = this[utils.NATIVE_PREFIX + 'childNodes'];
       }
       childNodes.item = function(index) {
         return childNodes[index];
@@ -1006,7 +1003,7 @@ export const InsideAccessors = {
     get() {
       const nodeData = shadyDataForNode(this);
       const l = nodeData && nodeData.firstChild;
-      return l !== undefined ? l : nativeAccessors.firstChild(this);
+      return l !== undefined ? l : this[utils.NATIVE_PREFIX + 'firstChild'];
     },
     configurable: true
   },
@@ -1016,7 +1013,7 @@ export const InsideAccessors = {
     get() {
       const nodeData = shadyDataForNode(this);
       const l = nodeData && nodeData.lastChild;
-      return l !== undefined ? l : nativeAccessors.lastChild(this);
+      return l !== undefined ? l : this[utils.NATIVE_PREFIX + 'lastChild'];
     },
     configurable: true
   },
@@ -1035,7 +1032,7 @@ export const InsideAccessors = {
         }
         return tc.join('');
       } else {
-        return nativeAccessors.textContent(this);
+        return this[utils.NATIVE_PREFIX + 'textContent'];
       }
     },
     /**
@@ -1056,7 +1053,7 @@ export const InsideAccessors = {
               (firstChild && firstChild.nodeType != Node.TEXT_NODE)) {
               clearNode(this);
             }
-            nativeDescriptors.textContent.set.call(this, text);
+            this[utils.NATIVE_PREFIX + 'textContent'] = text;
           } else {
             clearNode(this);
             // Document fragments must have no childnodes if setting a blank string
@@ -1088,7 +1085,7 @@ export const InsideAccessors = {
         }
         return n;
       } else {
-        return nativeAccessors.firstElementChild(this);
+        return this[utils.NATIVE_PREFIX + 'firstElementChild'];
       }
     },
     configurable: true
@@ -1107,7 +1104,7 @@ export const InsideAccessors = {
         }
         return n;
       } else {
-        return nativeAccessors.lastElementChild(this);
+        return this[utils.NATIVE_PREFIX + 'lastElementChild'];
       }
     },
     configurable: true
@@ -1119,7 +1116,7 @@ export const InsideAccessors = {
      */
     get() {
       if (!utils.isTrackingLogicalChildNodes(this)) {
-        return nativeAccessors.children(this);
+        return this[utils.NATIVE_PREFIX + 'children'];
       }
       return utils.createPolyfilledHTMLCollection(Array.prototype.filter.call(InsideAccessors.childNodes.get.call(this), function(n) {
         return (n.nodeType === Node.ELEMENT_NODE);
@@ -1139,7 +1136,7 @@ export const InsideAccessors = {
         /** @type {HTMLTemplateElement} */(this).content : this;
         return getInnerHTML(content, (e) => InsideAccessors.childNodes.get.call(e));
       } else {
-        return nativeAccessors.innerHTML(this);
+        return this[utils.NATIVE_PREFIX + 'innerHTML'];
       }
     },
     /**
@@ -1157,7 +1154,7 @@ export const InsideAccessors = {
         htmlContainer = inertDoc.createElementNS(this.namespaceURI, containerName);
       }
       if (hasDescriptors) {
-        nativeDescriptors.innerHTML.set.call(htmlContainer, text);
+        htmlContainer[utils.NATIVE_PREFIX + 'innerHTML'] = text;
       } else {
         htmlContainer.innerHTML = text;
       }
@@ -1427,7 +1424,7 @@ export function recordChildNodes(node, nodes) {
   if (nodeData.firstChild === undefined) {
     // remove caching of childNodes
     nodeData.childNodes = null;
-    const c$ = nodes || nativeAccessors.childNodes(node);
+    const c$ = nodes || node[utils.NATIVE_PREFIX + 'childNodes'];
     nodeData.firstChild = c$[0] || null;
     nodeData.lastChild = c$[c$.length-1] || null;
     patchInsideElementAccessors(node);
