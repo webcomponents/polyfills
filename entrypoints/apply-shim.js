@@ -158,7 +158,7 @@ if (!window.ShadyCSS || !window.ShadyCSS.ScopingShim) {
      * @param {string=} elementExtends
      */
     prepareTemplateStyles(template, elementName, elementExtends) {
-      this.prepareTemplate(template, elementName, elementExtends);
+      window.ShadyCSS.prepareTemplate(template, elementName, elementExtends);
     },
 
     /**
