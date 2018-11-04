@@ -37,6 +37,7 @@ export default class ScopingShim {
     ast['rules'] = [];
     this._documentOwnerStyleInfo = StyleInfo.set(this._documentOwner, new StyleInfo(ast));
     this._elementsHaveApplied = false;
+    /** @type {?Object} */
     this._applyShim = null;
     /** @type {?CustomStyleInterfaceInterface} */
     this._customStyleInterface = null;
@@ -169,7 +170,7 @@ export default class ScopingShim {
     if (this._applyShim) {
       return;
     } else if (window.ShadyCSS && window.ShadyCSS.ApplyShim) {
-      this._applyShim = window.ShadyCSS.ApplyShim;
+      this._applyShim = /** @type {!Object} */ (window.ShadyCSS.ApplyShim);
       this._applyShim['invalidCallback'] = ApplyShimUtils.invalidate;
     }
   }
@@ -374,7 +375,8 @@ export default class ScopingShim {
       this.styleElement(host, properties);
     }
     // process the shadowdom children of `host`
-    let shadowChildren = root && (root.children || root.childNodes);
+    let shadowChildren =
+        root && (/** @type {!ParentNode} */ (root).children || root.childNodes);
     if (shadowChildren) {
       for (let i = 0; i < shadowChildren.length; i++) {
         let c = /** @type {!HTMLElement} */(shadowChildren[i]);

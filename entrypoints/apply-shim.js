@@ -31,8 +31,10 @@ class ApplyShimInterface {
     if (this.customStyleInterface) {
       return;
     }
-    this.customStyleInterface = window.ShadyCSS.CustomStyleInterface;
-    if (this.customStyleInterface) {
+    if (window.ShadyCSS.CustomStyleInterface) {
+      this.customStyleInterface =
+          /** @type {!CustomStyleInterfaceInterface} */ (
+              window.ShadyCSS.CustomStyleInterface);
       this.customStyleInterface['transformCallback'] = (style) => {
         applyShim.transformCustomStyle(style);
       };
@@ -88,7 +90,9 @@ class ApplyShimInterface {
     }
     if (element.shadowRoot) {
       this.styleElement(element);
-      let shadowChildren = element.shadowRoot.children || element.shadowRoot.childNodes;
+      let shadowChildren =
+          /** @type {!ParentNode} */ (element.shadowRoot).children ||
+          element.shadowRoot.childNodes;
       for (let i = 0; i < shadowChildren.length; i++) {
         this.styleSubtree(/** @type {HTMLElement} */(shadowChildren[i]));
       }
