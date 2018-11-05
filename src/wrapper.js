@@ -8,10 +8,7 @@ Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 */
 
-import {ElementAccessors, nodeMixin, queryMixin, elementMixin, documentMixin, slotMixin} from './patches.js';
 import * as utils from './utils.js';
-
-const elementDescriptors = Object.getOwnPropertyDescriptors(elementMixin);
 
 export class Wrapper {
 
@@ -21,117 +18,141 @@ export class Wrapper {
 
   // node
   addEventListener(name, fn, options) {
-    return nodeMixin.addEventListener.call(this.node, name, fn, options);
+    return this.node[utils.SHADY_PREFIX + 'addEventListener'](name, fn, options);
   }
 
   removeEventListener(name, fn, options) {
-    return nodeMixin.removeEventListener.call(this.node, name, fn, options);
+    return this.node[utils.SHADY_PREFIX + 'removeEventListener'](name, fn, options);
   }
 
   appendChild(node) {
-    return nodeMixin.appendChild.call(this.node, node);
+    return this.node[utils.SHADY_PREFIX + 'appendChild'](node);
   }
 
   insertBefore(node, ref_node) {
-    return nodeMixin.insertBefore.call(this.node, node, ref_node);
+    return this.node[utils.SHADY_PREFIX + 'insertBefore'](node, ref_node);
   }
 
   removeChild(node) {
-    return nodeMixin.removeChild.call(this.node, node);
+    return this.node[utils.SHADY_PREFIX + 'removeChild'](node);
   }
 
   replaceChild(node, ref_node) {
-    return nodeMixin.replaceChild.call(this.node, node, ref_node);
+    return this.node[utils.SHADY_PREFIX + 'replaceChild'](node, ref_node);
   }
 
   cloneNode(deep) {
-    return nodeMixin.cloneNode.call(this.node, deep);
+    return this.node[utils.SHADY_PREFIX + 'cloneNode'](deep);
   }
 
   getRootNode(options) {
-    return nodeMixin.getRootNode.call(this.node, options);
+    return this.node[utils.SHADY_PREFIX + 'getRootNode'](options);
   }
 
   contains(node) {
-    return nodeMixin.contains.call(this.node, node);
+    return this.node[utils.SHADY_PREFIX + 'contains'](node);
   }
 
   dispatchEvent(event) {
-    return nodeMixin.dispatchEvent.call(this.node, event);
+    return this.node[utils.SHADY_PREFIX + 'dispatchEvent'](event);
   }
 
   // element
   setAttribute(name, value) {
-    elementMixin.setAttribute.call(this.node, name, value);
+    this.node[utils.SHADY_PREFIX + 'setAttribute'](name, value);
   }
 
   removeAttribute(name) {
-    elementMixin.removeAttribute.call(this.node, name);
+    this.node[utils.SHADY_PREFIX + 'removeAttribute'](name);
   }
 
   attachShadow(options) {
-    return elementMixin.attachShadow.call(this.node, options);
+    return this.node[utils.SHADY_PREFIX + 'attachShadow'](options);
   }
 
   get slot() {
-    return elementDescriptors.slot.get.call(this.node);
+    return this.node[utils.SHADY_PREFIX + 'slot'];
   }
 
   set slot(value) {
-    elementDescriptors.slot.set.call(this.node, value);
+    this.node[utils.SHADY_PREFIX + 'slot'] = value;
   }
 
   get assignedSlot() {
-    return elementDescriptors.assignedSlot.get.call(this.node);
+    return this.node[utils.SHADY_PREFIX + 'assignedSlot'];
   }
 
   // document
   importNode(node, deep) {
     if (this.node.nodeType === Node.DOCUMENT_NODE) {
-      return documentMixin.importNode.call(this.node, node, deep);
+      return this.node[utils.SHADY_PREFIX + 'importNode'](node, deep);
     }
   }
 
   getElementById(id) {
     if (this.node.nodeType === Node.DOCUMENT_NODE) {
-      return documentMixin.getElementById.call(this.node, id);
+      return this.node[utils.SHADY_PREFIX + 'getElementById'](id);
     }
   }
 
   // query
   querySelector(selector) {
-    return queryMixin.querySelector.call(this.node, selector);
+    return this.node[utils.SHADY_PREFIX + 'querySelector'](selector);
   }
 
   querySelectorAll(selector, useNative) {
-    return queryMixin.querySelectorAll.call(this.node, selector, useNative);
+    return this.node[utils.SHADY_PREFIX + 'querySelectorAll'](selector, useNative);
   }
 
   // slot
   assignedNodes(options) {
     if (this.node.localName === 'slot') {
-      return slotMixin.assignedNodes.call(this.node, options);
+      return this.node[utils.SHADY_PREFIX + 'assignedNodes'](options);
     }
   }
 
 }
 
 const proto = Wrapper.prototype;
-for (let prop in ElementAccessors) {
-  const source = ElementAccessors[prop];
-  const target = { configurable: true };
-  if (source.get) {
-    target.get = function() {
-      return source.get.call(this.node);
-    }
-  }
-  if (source.set) {
-    target.set = function(value) {
-      source.set.call(this.node, value);
-    }
-  }
-  Object.defineProperty(proto, prop, target);
-}
+const readAccessors = [
+  'parentNode',
+  'firstChild', 'lastChild',
+  'nextSibling', 'previousSibling',
+  'childNodes',
+  'parentElement',
+  'firstElementChild', 'lastElementChild',
+  'nextElementSibling', 'previousElementSibling',
+  'children',
+  //'activeElement',
+  'shadowRoot'
+];
+
+readAccessors.forEach(name => {
+  Object.defineProperty(proto, name, {
+    get() {
+      this.name[utils.SHADY_PREFIX + name];
+    },
+    configurable: true
+  });
+
+});
+
+const readWriteAccessors = [
+  'innerHTML', 'textContent'
+];
+
+readWriteAccessors.forEach(name => {
+  Object.defineProperty(proto, name, {
+    get() {
+      this.name[utils.SHADY_PREFIX + name];
+    },
+    set(value) {
+      this.name[utils.SHADY_PREFIX + name] = value;
+    },
+    configurable: true
+  });
+
+});
 
 const wrapperMap = new WeakMap();
 

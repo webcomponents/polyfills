@@ -8,15 +8,7 @@ Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 */
 
-import {OutsideAccessors, InsideAccessors, ClassNameAccessor, ActiveElementAccessor, patchAccessorGroup} from './patches.js';
-
-// patch dom accessors on proto where they exist
-export function patchAccessors(proto) {
-  patchAccessorGroup(proto, OutsideAccessors);
-  patchAccessorGroup(proto, ClassNameAccessor);
-  patchAccessorGroup(proto, InsideAccessors);
-  patchAccessorGroup(proto, ActiveElementAccessor);
-}
+import {OutsideAccessors, InsideAccessors, ActiveElementAccessor, patchAccessorGroup} from './patches.js';
 
 export function patchShadowRootAccessors(proto) {
   proto.__proto__ = DocumentFragment.prototype;

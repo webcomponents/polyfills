@@ -8,6 +8,7 @@ Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 */
 import * as utils from './utils.js';
+import {defineAccessors} from './utils.js';
 import {getInnerHTML} from './innerHTML.js';
 
 const hasDescriptors = utils.settings.hasDescriptors;
@@ -20,14 +21,6 @@ const copyAccessors = (proto, list = []) => {
     if (descriptor) {
       Object.defineProperty(proto, NATIVE_PREFIX + name, descriptor);
     }
-  }
-}
-
-const defineAccessors = (proto, descriptors) => {
-  for (let p in descriptors) {
-    const descriptor = descriptors[p];
-    descriptor.configurable = true;
-    Object.defineProperty(proto, NATIVE_PREFIX + p, descriptor);
   }
 }
 

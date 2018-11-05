@@ -9,8 +9,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 */
 
 import * as utils from './utils.js';
-import {shadowRootMixin, nodeMixin, windowMixin, textMixin, queryMixin, elementMixin, documentMixin, htmlElementMixin, slotMixin} from './patches.js';
-import {patchAccessors, patchShadowRootAccessors} from './patch-accessors.js';
+import {shadowRootMixin, nodeMixin, windowMixin, textMixin, queryMixin, elementMixin, documentMixin, htmlElementMixin, slotMixin, patchAccessors} from './patches.js';
+import {patchShadowRootAccessors} from './patch-accessors.js';
 import {ShadyRoot} from './attach-shadow.js';
 
 function patchBuiltin(proto, obj) {
@@ -28,10 +28,6 @@ function patchBuiltin(proto, obj) {
     }
   }
 }
-
-const nativeHTMLElement =
-    (window['customElements'] && window['customElements']['nativeHTMLElement']) ||
-    HTMLElement;
 
 // Apply patches to builtins (e.g. Element.prototype). Some of these patches
 // can be done unconditionally (mostly methods like
@@ -62,7 +58,7 @@ export function patchBuiltins() {
   if (window.HTMLSlotElement) {
     patchBuiltin(window.HTMLSlotElement.prototype, slotMixin);
   }
-  patchBuiltin(nativeHTMLElement.prototype, htmlElementMixin);
+  patchBuiltin(utils.NativeHTMLElement.prototype, htmlElementMixin);
   // These patches can *only* be done
   // on browsers that have proper property descriptors on builtin prototypes.
   // This includes: IE11, Edge, Chrome >= 4?; Safari >= 10, Firefox
@@ -73,7 +69,7 @@ export function patchBuiltins() {
     patchAccessors(window.Text.prototype);
     patchAccessors(window.DocumentFragment.prototype);
     patchAccessors(window.Element.prototype);
-    patchAccessors(nativeHTMLElement.prototype);
+    patchAccessors(utils.NativeHTMLElement.prototype);
     patchAccessors(window.Document.prototype);
     if (window.HTMLSlotElement) {
       patchAccessors(window.HTMLSlotElement.prototype);

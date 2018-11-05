@@ -177,6 +177,19 @@ export function createPolyfilledHTMLCollection(nodes) {
 }
 
 export const NATIVE_PREFIX = '__shady_native_';
+export const SHADY_PREFIX = '__shady_';
+
+export const defineAccessors = (proto, descriptors, prefix = NATIVE_PREFIX) => {
+  for (let p in descriptors) {
+    const descriptor = descriptors[p];
+    descriptor.configurable = true;
+    Object.defineProperty(proto, prefix + p, descriptor);
+  }
+}
+
+export const NativeHTMLElement =
+    (window['customElements'] && window['customElements']['nativeHTMLElement']) ||
+    HTMLElement;
 
 export let attachShadow;
 export function setAttachShadow(fn) {

@@ -9,6 +9,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 */
 
 import * as utils from './utils.js';
+import {defineAccessors} from './utils.js';
 import {flush} from './flush.js';
 import {getInnerHTML} from './innerHTML.js';
 import {addEventListener, removeEventListener} from './patch-events.js';
@@ -62,7 +63,7 @@ export function insertBefore(parent, node, ref_node) {
     newScopeName = currentScopeForNode(parent);
   }
   // remove from existing location
-  const parentNode = ElementAccessors.parentNode.get.call(node);
+  const parentNode = node[utils.SHADY_PREFIX + 'parentNode'];
   if (parentNode) {
     // NOTE: avoid node.removeChild as this *can* trigger another patched
     // method (e.g. custom elements) and we want only the shady method to run.
@@ -159,7 +160,7 @@ export function removeChild(parent, node, skipUnscoping = false) {
   if (parent.ownerDocument !== doc) {
     return parent[utils.NATIVE_PREFIX + 'removeChild'](node);
   }
-  if (ElementAccessors.parentNode.get.call(node) !== parent) {
+  if (node[utils.SHADY_PREFIX + 'parentNode'] !== parent) {
     throw Error('The node to be removed is not a child of this node: ' +
       node);
   }
@@ -215,7 +216,7 @@ export function removeChild(parent, node, skipUnscoping = false) {
 function removeOwnerShadyRoot(node) {
   // optimization: only reset the tree if node is actually in a root
   if (hasCachedOwnerRoot(node)) {
-    let c$ = ElementAccessors.childNodes.get.call(node);
+    let c$ = node[utils.SHADY_PREFIX + 'childNodes'];
     for (let i=0, l=c$.length, n; (i<l) && (n=c$[i]); i++) {
       removeOwnerShadyRoot(n);
     }
@@ -283,7 +284,7 @@ export function getRootNode(node, options) { // eslint-disable-line no-unused-va
       root = node;
       nodeData.ownerShadyRoot = root;
     } else {
-      let parent = ElementAccessors.parentNode.get.call(node);
+      let parent = node[utils.SHADY_PREFIX + 'parentNode'];
       root = parent ? getRootNode(parent) : node;
       // memo-ize result for performance but only memo-ize
       // result if node is in the document. This avoids a problem where a root
@@ -315,7 +316,7 @@ function getAssignedSlot(node) {
  */
 function query(node, matcher, halter) {
   let list = [];
-  queryElements(ElementAccessors.childNodes.get.call(node), matcher,
+  queryElements(node[utils.SHADY_PREFIX + 'childNodes'], matcher,
     halter, list);
   return list;
 }
@@ -337,12 +338,12 @@ function queryElement(node, matcher, halter, list) {
   if (halter && halter(result)) {
     return result;
   }
-  queryElements(ElementAccessors.childNodes.get.call(node), matcher,
+  queryElements(node[utils.SHADY_PREFIX + 'childNodes'], matcher,
     halter, list);
 }
 
 function renderRootNode(element) {
-  var root = getRootNode(element);
+  var root = element[utils.SHADY_PREFIX + 'getRootNode']();
   if (utils.isShadyRoot(root)) {
     root._render();
   }
@@ -357,7 +358,7 @@ export function cloneNode(node, deep) {
     // been removed from the spec.
     // Make sure we do not do a deep clone on them for old browsers (IE11)
     if (deep && n.nodeType !== Node.ATTRIBUTE_NODE) {
-      let c$ = ElementAccessors.childNodes.get.call(node);
+      let c$ = node[utils.SHADY_PREFIX + 'childNodes'];
       for (let i=0, nc; i < c$.length; i++) {
         nc = c$[i].cloneNode(true);
         n.appendChild(nc);
@@ -380,7 +381,7 @@ export function importNode(node, deep) {
   }
   let n = doc[utils.NATIVE_PREFIX + 'importNode'](node, false);
   if (deep) {
-    let c$ = ElementAccessors.childNodes.get.call(node);
+    let c$ = node[utils.SHADY_PREFIX + 'childNodes'];
     for (let i=0, nc; i < c$.length; i++) {
       nc = importNode(c$[i], true);
       n.appendChild(nc);
@@ -426,7 +427,7 @@ export const IsConnectedAccessor = {
       // Slow path for non-distributed nodes.
       let node = this;
       while (node && !(node instanceof Document)) {
-        node = OutsideAccessors.parentNode.get.call(node) || (utils.isShadyRoot(node) ? /** @type {ShadowRoot} */(node).host : undefined);
+        node = node[utils.SHADY_PREFIX + 'parentNode'] || (utils.isShadyRoot(node) ? /** @type {ShadowRoot} */(node).host : undefined);
       }
       return !!(node && node instanceof Document);
     },
@@ -434,14 +435,10 @@ export const IsConnectedAccessor = {
   }
 };
 
-const nativeActiveElementDescriptor =
-  /** @type {ObjectPropertyDescriptor} */(
-    Object.getOwnPropertyDescriptor(Document.prototype, 'activeElement')
-  );
 function getDocumentActiveElement() {
-  if (nativeActiveElementDescriptor && nativeActiveElementDescriptor.get) {
-    return nativeActiveElementDescriptor.get.call(document);
-  } else if (!utils.settings.hasDescriptors) {
+  if (utils.settings.hasDescriptors) {
+    return document[utils.NATIVE_PREFIX + 'activeElement'];
+  } else {
     return document.activeElement;
   }
 }
@@ -809,7 +806,7 @@ export const shadowRootMixin = {
  */
 function distributeAttributeChange(node, name) {
   if (name === 'slot') {
-    const parent = ElementAccessors.parentNode.get.call(node);
+    const parent = node[utils.SHADY_PREFIX + 'parentNode'];
     if (utils.hasShadowRootWithSlot(parent)) {
       shadyDataForNode(parent).root._asyncRender();
     }
@@ -843,8 +840,8 @@ export function removeAttribute(node, attr) {
 
 function clearNode(node) {
   let firstChild;
-  while ((firstChild = ElementAccessors.firstChild.get.call(node))) {
-    removeChild(node, firstChild);
+  while ((firstChild = node[utils.SHADY_PREFIX + 'firstChild'])) {
+    node[utils.SHADY_PREFIX + 'removeChild'](firstChild);
   }
 }
 
@@ -911,9 +908,9 @@ export const OutsideAccessors = {
     get() {
       const nodeData = shadyDataForNode(this);
       if (nodeData && nodeData.nextSibling !== undefined) {
-        let n = OutsideAccessors.nextSibling.get.call(this);
+        let n = this[utils.SHADY_PREFIX + 'nextSibling'];
         while (n && n.nodeType !== Node.ELEMENT_NODE) {
-          n = OutsideAccessors.nextSibling.get.call(n);
+          n = n[utils.SHADY_PREFIX + 'nextSibling'];
         }
         return n;
       } else {
@@ -930,9 +927,9 @@ export const OutsideAccessors = {
     get() {
       const nodeData = shadyDataForNode(this);
       if (nodeData && nodeData.previousSibling !== undefined) {
-        let n = OutsideAccessors.previousSibling.get.call(this);
+        let n = this[utils.SHADY_PREFIX + 'previousSibling'];
         while (n && n.nodeType !== Node.ELEMENT_NODE) {
-          n = OutsideAccessors.previousSibling.get.call(n);
+          n = n[utils.SHADY_PREFIX + 'previousSibling'];
         }
         return n;
       } else {
@@ -974,7 +971,7 @@ export const InsideAccessors = {
         const nodeData = shadyDataForNode(this);
         if (!nodeData.childNodes) {
           nodeData.childNodes = [];
-          for (let n=InsideAccessors.firstChild.get.call(this); n; n=OutsideAccessors.nextSibling.get.call(n)) {
+          for (let n=this[utils.SHADY_PREFIX + 'firstChild']; n; n=n[utils.SHADY_PREFIX + 'nextSibling']) {
             nodeData.childNodes.push(n);
           }
         }
@@ -993,7 +990,7 @@ export const InsideAccessors = {
   childElementCount: {
     /** @this {HTMLElement} */
     get() {
-      return InsideAccessors.children.get.call(this).length;
+      return this[utils.SHADY_PREFIX + 'children'].length;
     },
     configurable: true
   },
@@ -1025,9 +1022,9 @@ export const InsideAccessors = {
     get() {
       if (utils.isTrackingLogicalChildNodes(this)) {
         let tc = [];
-        for (let i = 0, cn = InsideAccessors.childNodes.get.call(this), c; (c = cn[i]); i++) {
+        for (let i = 0, cn = this[utils.SHADY_PREFIX + 'childNodes'], c; (c = cn[i]); i++) {
           if (c.nodeType !== Node.COMMENT_NODE) {
-            tc.push(InsideAccessors.textContent.get.call(c));
+            tc.push(c[utils.SHADY_PREFIX + 'textContent']);
           }
         }
         return tc.join('');
@@ -1048,8 +1045,8 @@ export const InsideAccessors = {
         case Node.DOCUMENT_FRAGMENT_NODE:
           if (!utils.isTrackingLogicalChildNodes(this) && hasDescriptors) {
             // may be removing a nested slot but fast path if we know we are not.
-            const firstChild = InsideAccessors.firstChild.get.call(this);
-            if (firstChild != InsideAccessors.lastChild.get.call(this) ||
+            const firstChild = this[utils.SHADY_PREFIX + 'firstChild'];
+            if (firstChild != this[utils.SHADY_PREFIX + 'lastChild'] ||
               (firstChild && firstChild.nodeType != Node.TEXT_NODE)) {
               clearNode(this);
             }
@@ -1079,9 +1076,9 @@ export const InsideAccessors = {
     get() {
       const nodeData = shadyDataForNode(this);
       if (nodeData && nodeData.firstChild !== undefined) {
-        let n = InsideAccessors.firstChild.get.call(this);
+        let n = this[utils.SHADY_PREFIX + 'firstChild'];
         while (n && n.nodeType !== Node.ELEMENT_NODE) {
-          n = OutsideAccessors.nextSibling.get.call(n);
+          n = n[utils.SHADY_PREFIX + 'nextSibling'];
         }
         return n;
       } else {
@@ -1098,9 +1095,9 @@ export const InsideAccessors = {
     get() {
       const nodeData = shadyDataForNode(this);
       if (nodeData && nodeData.lastChild !== undefined) {
-        let n = InsideAccessors.lastChild.get.call(this);
+        let n = this[utils.SHADY_PREFIX + 'lastChild'];
         while (n && n.nodeType !== Node.ELEMENT_NODE) {
-          n = OutsideAccessors.previousSibling.get.call(n);
+          n = n[utils.SHADY_PREFIX + 'previousSibling'];
         }
         return n;
       } else {
@@ -1118,7 +1115,7 @@ export const InsideAccessors = {
       if (!utils.isTrackingLogicalChildNodes(this)) {
         return this[utils.NATIVE_PREFIX + 'children'];
       }
-      return utils.createPolyfilledHTMLCollection(Array.prototype.filter.call(InsideAccessors.childNodes.get.call(this), function(n) {
+      return utils.createPolyfilledHTMLCollection(Array.prototype.filter.call(this[utils.SHADY_PREFIX + 'childNodes'], function(n) {
         return (n.nodeType === Node.ELEMENT_NODE);
       }));
     },
@@ -1134,7 +1131,7 @@ export const InsideAccessors = {
       if (utils.isTrackingLogicalChildNodes(this)) {
         const content = this.localName === 'template' ?
         /** @type {HTMLTemplateElement} */(this).content : this;
-        return getInnerHTML(content, (e) => InsideAccessors.childNodes.get.call(e));
+        return getInnerHTML(content, (e) => e[utils.SHADY_PREFIX + 'childNodes']);
       } else {
         return this[utils.NATIVE_PREFIX + 'innerHTML'];
       }
@@ -1161,7 +1158,7 @@ export const InsideAccessors = {
       const newContent = this.localName === 'template' ?
         /** @type {HTMLTemplateElement} */(htmlContainer).content : htmlContainer;
       let firstChild;
-      while ((firstChild = InsideAccessors.firstChild.get.call(newContent))) {
+      while ((firstChild = newContent[utils.SHADY_PREFIX + 'firstChild'])) {
         insertBefore(content, firstChild);
       }
     },
@@ -1169,9 +1166,6 @@ export const InsideAccessors = {
   }
 
 };
-
-export const ElementAccessors = {};
-utils.extendAll(ElementAccessors, InsideAccessors, OutsideAccessors, ClassNameAccessor, IsConnectedAccessor, ShadowRootAccessor);
 
 // TODO(sorvell): style scoping
 
@@ -1236,7 +1230,7 @@ export function currentScopeIsCorrect(node, newScopeName) {
     // NOTE: as an optimization, only check that all the top-level children
     // have the correct scope.
     let correctScope = true;
-    const childNodes = ElementAccessors.childNodes.get.call(node);
+    const childNodes = node[utils.SHADY_PREFIX + 'childNodes'];
     for (let idx = 0; correctScope && (idx < childNodes.length); idx++) {
       correctScope = correctScope &&
         currentScopeIsCorrect(childNodes[idx], newScopeName);
@@ -1279,7 +1273,7 @@ export function treeVisitor(node, visitorFn) {
   if (node.nodeType === Node.ELEMENT_NODE) {
     visitorFn(node);
   }
-  const childNodes = ElementAccessors.childNodes.get.call(node);
+  const childNodes = node[utils.SHADY_PREFIX + 'childNodes'];
   for (let idx = 0, n; idx < childNodes.length; idx++) {
     n = childNodes[idx];
     if (n.nodeType === Node.ELEMENT_NODE) {
@@ -1296,16 +1290,24 @@ export function treeVisitor(node, visitorFn) {
  * @param {!Object} descriptors
  * @param {boolean=} force
  */
-export function patchAccessorGroup(obj, descriptors, force) {
+export function patchAccessorGroup(obj, descriptors, force, prefix = '') {
   for (let p in descriptors) {
     let objDesc = Object.getOwnPropertyDescriptor(obj, p);
     if ((objDesc && objDesc.configurable) ||
       (!objDesc && force)) {
-      Object.defineProperty(obj, p, descriptors[p]);
+      Object.defineProperty(obj, prefix + p, descriptors[p]);
     } else if (force) {
       console.warn('Could not define', p, 'on', obj); // eslint-disable-line no-console
     }
   }
+}
+
+// patch dom accessors on proto where they exist
+export function patchAccessors(proto, force, prefix) {
+  patchAccessorGroup(proto, OutsideAccessors, force, prefix);
+  patchAccessorGroup(proto, ClassNameAccessor, force, prefix);
+  patchAccessorGroup(proto, InsideAccessors, force, prefix);
+  patchAccessorGroup(proto, ActiveElementAccessor, force, prefix);
 }
 
 // ensure an element has patched "outside" accessors; no-op when not needed
@@ -1339,7 +1341,7 @@ export function recordInsertBefore(node, container, ref_node) {
   }
   // handle document fragments
   if (node.nodeType === Node.DOCUMENT_FRAGMENT_NODE) {
-    let c$ = ElementAccessors.childNodes.get.call(node);
+    let c$ = node[utils.SHADY_PREFIX + 'childNodes'];
     for (let i=0; i < c$.length; i++) {
       linkNode(c$[i], container, ref_node);
     }
@@ -1361,7 +1363,7 @@ function linkNode(node, container, ref_node) {
   const ref_nodeData = ref_node ? ensureShadyDataForNode(ref_node) : null;
   // update ref_node.previousSibling <-> node
   nodeData.previousSibling = ref_node ? ref_nodeData.previousSibling :
-    ElementAccessors.lastChild.get.call(container);
+    container[utils.SHADY_PREFIX + 'lastChild'];
   let psd = shadyDataForNode(nodeData.previousSibling);
   if (psd) {
     psd.nextSibling = node;
@@ -1438,3 +1440,39 @@ export function recordChildNodes(node, nodes) {
     }
   }
 }
+
+// TODO(sorvell): refactor so this step is not needed;
+// also the patching should be more explicit
+// apply 'shady' patches
+// node
+defineAccessors(window.Node.prototype, Object.getOwnPropertyDescriptors(nodeMixin), utils.SHADY_PREFIX);
+patchAccessors(window.Node.prototype, false, utils.SHADY_PREFIX);
+
+// text
+defineAccessors(window.Text.prototype, Object.getOwnPropertyDescriptors(textMixin), utils.SHADY_PREFIX);
+patchAccessors(window.Text.prototype, false, utils.SHADY_PREFIX);
+
+// fragment
+defineAccessors(window.DocumentFragment.prototype, queryMixin, utils.SHADY_PREFIX);
+
+// element
+defineAccessors(window.Element.prototype, Object.getOwnPropertyDescriptors(elementMixin), utils.SHADY_PREFIX);
+patchAccessors(window.Element.prototype, false, utils.SHADY_PREFIX);
+
+// HTMLElement
+defineAccessors(utils.NativeHTMLElement.prototype, Object.getOwnPropertyDescriptors(htmlElementMixin), utils.SHADY_PREFIX);
+patchAccessors(utils.NativeHTMLElement.prototype, false, utils.SHADY_PREFIX);
+
+if (window.HTMLSlotElement) {
+  defineAccessors(window.HTMLSlotElement.prototype, Object.getOwnPropertyDescriptors(slotMixin), utils.SHADY_PREFIX);
+  patchAccessors(window.HTMLSlotElement.prototype, false, utils.SHADY_PREFIX);
+}
+
+// document
+defineAccessors(window.Document.prototype, Object.getOwnPropertyDescriptors(documentMixin), utils.SHADY_PREFIX);
+defineAccessors(window.Document.prototype, queryMixin, utils.SHADY_PREFIX);
+patchAccessors(window.Document.prototype, false, utils.SHADY_PREFIX);
+
+// window
+defineAccessors(window.Window.prototype, Object.getOwnPropertyDescriptors(windowMixin), utils.SHADY_PREFIX);
+patchAccessors(window.DocumentFragment.prototype, false, utils.SHADY_PREFIX);
