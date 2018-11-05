@@ -130,7 +130,7 @@ const readAccessors = [
 readAccessors.forEach(name => {
   Object.defineProperty(proto, name, {
     get() {
-      this.name[utils.SHADY_PREFIX + name];
+      return this.node[utils.SHADY_PREFIX + name];
     },
     configurable: true
   });
@@ -144,10 +144,10 @@ const readWriteAccessors = [
 readWriteAccessors.forEach(name => {
   Object.defineProperty(proto, name, {
     get() {
-      this.name[utils.SHADY_PREFIX + name];
+      return this.node[utils.SHADY_PREFIX + name];
     },
     set(value) {
-      this.name[utils.SHADY_PREFIX + name] = value;
+      this.node[utils.SHADY_PREFIX + name] = value;
     },
     configurable: true
   });
