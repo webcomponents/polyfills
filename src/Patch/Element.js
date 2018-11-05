@@ -87,7 +87,6 @@ export default function(internals) {
   } else if (Native.HTMLElement_innerHTML && Native.HTMLElement_innerHTML.get) {
     patch_innerHTML(HTMLElement.prototype, Native.HTMLElement_innerHTML);
   } else {
-
     internals.addPatch(function(element) {
       patch_innerHTML(element, {
         enumerable: true,
@@ -96,7 +95,9 @@ export default function(internals) {
         // of the element and returning the resulting element's `innerHTML`.
         // TODO: Is this too expensive?
         get: /** @this {Element} */ function() {
-          return Native.Node_cloneNode.call(this, true).innerHTML;
+          return /** @type {!Element} */ (
+                     Native.Node_cloneNode.call(this, true))
+              .innerHTML;
         },
         // Implements setting `innerHTML` by creating an unpatched element,
         // setting `innerHTML` of that element and replacing the target
@@ -109,7 +110,7 @@ export default function(internals) {
           /** @type {!Node} */
           const content = isTemplate ? (/** @type {!HTMLTemplateElement} */
             (this)).content : this;
-          /** @type {!Node} */
+          /** @type {!Element} */
           const rawElement = Native.Document_createElementNS.call(document,
               this.namespaceURI, this.localName);
           rawElement.innerHTML = assignedValue;
@@ -117,7 +118,9 @@ export default function(internals) {
           while (content.childNodes.length > 0) {
             Native.Node_removeChild.call(content, content.childNodes[0]);
           }
-          const container = isTemplate ? rawElement.content : rawElement;
+          const container = isTemplate ?
+              /** @type {!HTMLTemplateElement} */ (rawElement).content :
+              rawElement;
           while (container.childNodes.length > 0) {
             Native.Node_appendChild.call(content, container.childNodes[0]);
           }

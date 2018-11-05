@@ -30,7 +30,7 @@ export default function(internals, destination, builtIn) {
    * @return {!function(...(!Node|string))}
    */
   function appendPrependPatch(builtInMethod) {
-    return function(...nodes) {
+    return /** @this {!Node} */ function(...nodes) {
       /**
        * A copy of `nodes`, with any DocumentFragment replaced by its children.
        * @type {!Array<!Node>}
