@@ -31,6 +31,33 @@ let ShadyCSSOptions; //eslint-disable-line no-unused-vars
 /** @type {(ShadyCSSInterface | ShadyCSSOptions | undefined)} */
 window.ShadyCSS;
 
+/** @type {string|undefined} */
+Element.prototype.extends;
+
+/** @type {?Element|undefined} */
+Element.prototype._element;
+
+/** @type {string|undefined} */
+Element.prototype.__cssBuild;
+
+/** @type {boolean|undefined} */
+HTMLTemplateElement.prototype._validating;
+
+/** @type {boolean|undefined} */
+HTMLTemplateElement.prototype._prepared;
+
+/** @type {boolean|undefined} */
+HTMLTemplateElement.prototype._domPrepared;
+
+/** @type {?DocumentFragment|undefined} */
+HTMLTemplateElement.prototype._content;
+
+/** @type {?HTMLStyleElement|undefined} */
+HTMLTemplateElement.prototype._gatheredStyle;
+
+/** @type {?HTMLStyleElement|undefined} */
+HTMLTemplateElement.prototype._style;
+
 /**
  * @type {string | undefined}
  */

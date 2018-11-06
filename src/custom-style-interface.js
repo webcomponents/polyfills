@@ -161,4 +161,4 @@ Object.defineProperties(CustomStyleInterface.prototype, {
  * validateCallback: ?function()
  * }}
  */
-export let CustomStyleInterfaceInterface;
+export const CustomStyleInterfaceInterface = {};
