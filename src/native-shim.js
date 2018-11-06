@@ -27,8 +27,9 @@
     return;
   }
   const BuiltInHTMLElement = HTMLElement;
-  window.HTMLElement = function HTMLElement() {
-    return Reflect.construct(BuiltInHTMLElement, [], this.constructor);
+  window.HTMLElement = /** @this {!Object} */ function HTMLElement() {
+    return Reflect.construct(
+        BuiltInHTMLElement, [], /** @type {!Function} */ (this.constructor));
   };
   HTMLElement.prototype = BuiltInHTMLElement.prototype;
   HTMLElement.prototype.constructor = HTMLElement;

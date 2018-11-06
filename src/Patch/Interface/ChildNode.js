@@ -32,7 +32,7 @@ export default function(internals, destination, builtIn) {
    * @return {!function(...(!Node|string))}
    */
   function beforeAfterPatch(builtInMethod) {
-    return function(...nodes) {
+    return /** @this {!Node} */ function(...nodes) {
       /**
        * A copy of `nodes`, with any DocumentFragment replaced by its children.
        * @type {!Array<!Node>}
@@ -90,6 +90,7 @@ export default function(internals, destination, builtIn) {
     Utilities.setPropertyUnchecked(destination, 'replaceWith',
       /**
        * @param {...(!Node|string)} nodes
+       * @this {!Node}
        */
       function(...nodes) {
         /**
@@ -142,6 +143,7 @@ export default function(internals, destination, builtIn) {
 
   if (builtIn.remove !== undefined) {
     Utilities.setPropertyUnchecked(destination, 'remove',
+      /** @this {!Node} */
       function() {
         const wasConnected = Utilities.isConnected(this);
 

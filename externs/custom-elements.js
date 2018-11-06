@@ -57,6 +57,9 @@ Node.prototype.__CE_documentLoadHandled;
 /** @type {boolean|undefined} */
 Node.prototype.__CE_patched;
 
+/** @type {string} */
+Node.prototype.readyState;
+
 // Apply generally to Element.
 
 /** @type {!CustomElementState|undefined} */
