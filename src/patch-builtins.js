@@ -103,7 +103,7 @@ let textMixin = {
   }
 };
 
-let fragmentMixin = {
+let queryMixin = {
 
   // TODO(sorvell): consider doing native QSA and filtering results.
   /**
@@ -137,6 +137,8 @@ let fragmentMixin = {
   }
 
 };
+
+let fragmentMixin = {};
 
 let slotMixin = {
 
@@ -200,11 +202,11 @@ let elementMixin = utils.extendAll({
     return getAssignedSlot(this);
   }
 
-}, fragmentMixin, slotMixin);
+}, queryMixin, slotMixin);
 
 Object.defineProperties(elementMixin, ShadowRootAccessor);
 
-let documentMixin = utils.extendAll({
+let documentMixin = {
   /**
    * @this {Document}
    */
@@ -224,7 +226,7 @@ let documentMixin = utils.extendAll({
     return result || null;
   }
 
-}, fragmentMixin);
+};
 
 Object.defineProperties(documentMixin, {
   '_activeElement': ActiveElementAccessor.activeElement
@@ -269,7 +271,7 @@ for (const property of Object.getOwnPropertyNames(Document.prototype)) {
   }
 }
 
-const shadowRootMixin = {
+const shadowRootMixin = utils.extendAll({
   /**
    * @this {ShadowRoot}
    */
@@ -307,6 +309,13 @@ const shadowRootMixin = {
     })[0];
     return result || null;
   }
+}, queryMixin);
+
+// Patch querySelector/All on documents and fragments only if
+// flag is not set.
+if (!utils.settings['preferPerformance']) {
+  utils.extendAll(documentMixin, queryMixin);
+  utils.extendAll(fragmentMixin, queryMixin);
 }
 
 function patchBuiltin(proto, obj) {
@@ -341,8 +350,8 @@ export function patchBuiltins() {
   patchBuiltin(window.Node.prototype, nodeMixin);
   patchBuiltin(window.Window.prototype, windowMixin);
   patchBuiltin(window.Text.prototype, textMixin);
-  patchBuiltin(window.DocumentFragment.prototype, fragmentMixin);
   patchBuiltin(window.Element.prototype, elementMixin);
+  patchBuiltin(window.DocumentFragment.prototype, fragmentMixin);
   patchBuiltin(window.Document.prototype, documentMixin);
   if (window.HTMLSlotElement) {
     patchBuiltin(window.HTMLSlotElement.prototype, slotMixin);

@@ -56,7 +56,8 @@ class ShadyRoot {
     // root <=> host
     this.host = host;
     this._mode = options && options.mode;
-    recordChildNodes(host);
+    const c$ = childNodes(host);
+    recordChildNodes(host, c$);
     const hostData = ensureShadyDataForNode(host);
     hostData.root = this;
     hostData.publicRoot = this._mode !== MODE_CLOSED ? this : null;
@@ -74,8 +75,15 @@ class ShadyRoot {
     /** @type {Object<string, Array<HTMLSlotElement>>} */
     this._slotMap = null;
     this._pendingSlots = null;
-    this._initialChildren = null;
-    this._asyncRender();
+    // NOTE: optimization flag, only require an asynchronous render
+    // to record parsed children if flag is not set.
+    if (utils.settings['preferPerformance']) {
+      for (let i=0, l=c$.length; i < l; i++) {
+        removeChild.call(host, c$[i])
+      }
+    } else {
+      this._asyncRender();
+    }
   }
 
   // async render
@@ -131,8 +139,10 @@ class ShadyRoot {
       this._distribute();
       this._compose();
     }
+    // NOTE: optimization flag, only process parsed children
+    // if optimization flag is not set.
     // on initial render remove any undistributed children.
-    if (!this._hasRendered) {
+    if (!utils.settings['preferPerformance'] && !this._hasRendered) {
       const c$ = this.host.childNodes;
       for (let i=0, l=c$.length; i < l; i++) {
         const child = c$[i];
@@ -545,7 +555,7 @@ export function attachShadow(host, options) {
 }
 
 // Mitigate connect/disconnect spam by wrapping custom element classes.
-if (window['customElements'] && utils.settings.inUse) {
+if (window['customElements'] && utils.settings.inUse && !utils.settings['preferPerformance']) {
 
   // process connect/disconnect after roots have rendered to avoid
   // issues with reaction stack.

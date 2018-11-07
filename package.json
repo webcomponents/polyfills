@@ -55,7 +55,7 @@
     "promise-polyfill": "^8.0.0",
     "rollup": "^0.62.0",
     "wct-browser-legacy": "^1.0.1",
-    "web-component-tester": "^6.7.1"
+    "web-component-tester": "^6.9.0"
   },
   "publishConfig": {
     "access": "public"
