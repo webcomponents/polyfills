@@ -44,15 +44,15 @@
   ],
   "homepage": "https://webcomponents.org/polyfills",
   "devDependencies": {
-    "@webcomponents/custom-elements": "^1.2.0",
+    "@webcomponents/custom-elements": "^1.2.1",
     "@webcomponents/html-imports": "^1.2.0",
     "@webcomponents/shadydom": "1.1.2",
     "@webcomponents/template": "^1.4.0",
     "@webcomponents/webcomponents-platform": "^1.0.0",
     "del": "^3.0.0",
     "es6-promise": "^4.2.5",
-    "eslint": "^5.6.0",
-    "eslint-plugin-html": "^4.0.5",
+    "eslint": "^5.7.0",
+    "eslint-plugin-html": "^4.0.6",
     "google-closure-compiler": "^20180805.0.0",
     "gulp": "^4.0.0",
     "gulp-rename": "^1.4.0",
@@ -62,8 +62,8 @@
     "run-sequence": "^2.2.1",
     "vinyl-buffer": "^1.0.1",
     "vinyl-source-stream": "^2.0.0",
-    "wct-browser-legacy": "^1.0.1",
-    "web-component-tester": "^6.8.0"
+    "wct-browser-legacy": "^1.0.2",
+    "web-component-tester": "^6.9.0"
   },
   "publishConfig": {
     "access": "public"

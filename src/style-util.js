@@ -10,7 +10,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 'use strict';
 
-import {nativeShadow, nativeCssVariables} from './style-settings.js';
+import {nativeShadow, nativeCssVariables, cssBuild} from './style-settings.js';
 import {parse, stringify, types, StyleNode} from './css-parse.js'; // eslint-disable-line no-unused-vars
 import {MEDIA_MATCH} from './common-regex.js';
 import {processUnscopedStyle, isUnscopedStyle} from './unscoped-style-handler.js';
@@ -325,6 +325,9 @@ const CSS_BUILD_ATTR = 'css-build';
  * @return {string} Can be "", "shady", or "shadow"
  */
 export function getCssBuild(element) {
+  if (cssBuild !== undefined) {
+    return /** @type {string} */(cssBuild);
+  }
   if (element.__cssBuild === undefined) {
     // try attribute first, as it is the common case
     const attrValue = element.getAttribute(CSS_BUILD_ATTR);
@@ -379,6 +382,20 @@ export function getBuildComment(element) {
     }
   }
   return '';
+}
+
+/**
+ * Check if the css build status is optimal, and do no unneeded work.
+ *
+ * @param {string=} cssBuild CSS build status
+ * @return {boolean} css build is optimal or not
+ */
+export function isOptimalCssBuild(cssBuild = '') {
+  // CSS custom property shim always requires work
+  if (cssBuild === '' || !nativeCssVariables) {
+    return false;
+  }
+  return nativeShadow ? cssBuild === 'shadow' : cssBuild === 'shady';
 }
 
 /**

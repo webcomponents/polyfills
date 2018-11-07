@@ -18,29 +18,31 @@ export let flush = function() {};
 
 /**
  * @param {!Element} element
- * @return {!Array<string>}
+ * @return {string}
  */
 function getClasses(element) {
-  let classes = [];
-  if (element.classList) {
-    classes = Array.from(element.classList);
-  } else if (element instanceof window['SVGElement'] && element.hasAttribute('class')) {
-    classes = element.getAttribute('class').split(/\s+/);
+  if (element.classList && element.classList.value) {
+    return element.classList.value;
+  } else {
+    // NOTE: className is patched to remove scoping classes in ShadyDOM
+    // use getAttribute('class') instead, which is unpatched
+    return element.getAttribute('class') || '';
   }
-  return classes;
 }
+
+const scopeRegExp = new RegExp(`${StyleTransformer.SCOPE_NAME}\\s*([^\\s]*)`);
 
 /**
  * @param {!Element} element
  * @return {string}
  */
 export function getCurrentScope(element) {
-  let classes = getClasses(element);
-  let idx = classes.indexOf(StyleTransformer.SCOPE_NAME);
-  if (idx > -1) {
-    return classes[idx + 1];
+  const match = getClasses(element).match(scopeRegExp);
+  if (match) {
+    return match[1];
+  } else {
+    return '';
   }
-  return '';
 }
 
 /**
