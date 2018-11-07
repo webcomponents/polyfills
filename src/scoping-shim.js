@@ -136,12 +136,14 @@ export default class ScopingShim {
    * @param {Node} placeholder
    * @param {string} cssBuild
    * @param {string=} cssText
+   * @return {?HTMLStyleElement}
    */
   _generateStaticStyle(info, rules, shadowroot, placeholder, cssBuild, cssText) {
     cssText = StyleTransformer.elementStyles(info, rules, null, cssBuild, cssText);
     if (cssText.length) {
       return StyleUtil.applyCss(cssText, info.is, shadowroot, placeholder);
     }
+    return null;
   }
   _prepareHost(host) {
     let {is, typeExtension} = StyleUtil.getIsExtends(host);

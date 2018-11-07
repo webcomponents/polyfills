@@ -21,12 +21,12 @@ export let flush = function() {};
  * @return {string}
  */
 function getClasses(element) {
-  if (element.classList && element.classList.value !== undefined) {
+  if (element.classList && element.classList.value) {
     return element.classList.value;
-  } else if (element instanceof window['SVGElement']) {
-    return element.getAttribute('class') || '';
   } else {
-    return element.className;
+    // NOTE: className is patched to remove scoping classes in ShadyDOM
+    // use getAttribute('class') instead, which is unpatched
+    return element.getAttribute('class') || '';
   }
 }
 
