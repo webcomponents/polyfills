@@ -97,7 +97,7 @@ export default class ScopingShim {
     // check if the styling has mixin definitions or uses
     this._ensure();
     if (!optimalBuild) {
-      let hasMixins = !StyleUtil.elementHasBuiltCss(template) && detectMixin(cssText);
+      let hasMixins = cssBuild && detectMixin(cssText);
       let ast = parse(cssText);
       // only run the applyshim transforms if there is a mixin involved
       if (hasMixins && nativeCssVariables && this._applyShim) {
