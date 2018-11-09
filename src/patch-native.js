@@ -14,6 +14,9 @@ import {getInnerHTML} from './innerHTML.js';
 const hasDescriptors = utils.settings.hasDescriptors;
 export const NATIVE_PREFIX = utils.NATIVE_PREFIX;
 
+const defineNativeAccessors = (proto, descriptors) =>
+    defineAccessors(proto, descriptors, NATIVE_PREFIX);
+
 const copyAccessors = (proto, list = []) => {
   for (let i = 0; i < list.length; i++) {
     const name = list[i];
@@ -24,10 +27,10 @@ const copyAccessors = (proto, list = []) => {
   }
 }
 
-const nodeWalker = document.createTreeWalker(document, NodeFilter.SHOW_ALL,
+const nodeWalker = document.createTreeWalker(document, window.NodeFilter.SHOW_ALL,
   null, false);
 
-const elementWalker = document.createTreeWalker(document, NodeFilter.SHOW_ELEMENT,
+const elementWalker = document.createTreeWalker(document, window.NodeFilter.SHOW_ELEMENT,
   null, false);
 
 const inertDoc = document.implementation.createHTMLDocument('inert');
@@ -39,16 +42,30 @@ const clearNode = node => {
   }
 }
 
+const ParentNodeAccessors = [
+  'firstElementChild',
+  'lastElementChild',
+  'children',
+  'childElementCount',
+];
+
+const ParentNodeMethods = [
+  'querySelector',
+  'querySelectorAll'
+  // 'append', 'prepend'
+]
+
 // EventTarget
-copyAccessors(EventTarget.prototype, [
+copyAccessors(window.EventTarget.prototype, [
   'dispatchEvent',
   'addEventListener',
   'removeEventListener'
-])
+]);
+
 
 // Node
 if (hasDescriptors) {
-  copyAccessors(Node.prototype, [
+  copyAccessors(window.Node.prototype, [
     'parentNode',
     'firstChild',
     'lastChild',
@@ -59,7 +76,7 @@ if (hasDescriptors) {
     'textContent',
   ]);
 } else {
-  defineAccessors(Node.prototype, {
+  defineNativeAccessors(window.Node.prototype, {
     parentNode: {
       get() {
         nodeWalker.currentNode = this;
@@ -114,9 +131,9 @@ if (hasDescriptors) {
       get() {
         /* eslint-disable no-case-declarations */
         switch (this.nodeType) {
-          case Node.ELEMENT_NODE:
-          case Node.DOCUMENT_FRAGMENT_NODE:
-            let textWalker = document.createTreeWalker(this, NodeFilter.SHOW_TEXT,
+          case window.Node.ELEMENT_NODE:
+          case window.Node.DOCUMENT_FRAGMENT_NODE:
+            let textWalker = document.createTreeWalker(this, window.NodeFilter.SHOW_TEXT,
               null, false);
             let content = '', n;
             while ( (n = textWalker.nextNode()) ) {
@@ -135,11 +152,11 @@ if (hasDescriptors) {
           value = ''
         }
         switch (this.nodeType) {
-          case Node.ELEMENT_NODE:
-          case Node.DOCUMENT_FRAGMENT_NODE:
+          case window.Node.ELEMENT_NODE:
+          case window.Node.DOCUMENT_FRAGMENT_NODE:
             clearNode(this);
             // Document fragments must have no childnodes if setting a blank string
-            if (value.length > 0 || this.nodeType === Node.ELEMENT_NODE) {
+            if (value.length > 0 || this.nodeType === window.Node.ELEMENT_NODE) {
               this[NATIVE_PREFIX + 'insertBefore'](document.createTextNode(value));
             }
             break;
@@ -153,7 +170,7 @@ if (hasDescriptors) {
   });
 }
 
-copyAccessors(Node.prototype, [
+copyAccessors(window.Node.prototype, [
   'appendChild',
   'insertBefore',
   'removeChild',
@@ -162,7 +179,7 @@ copyAccessors(Node.prototype, [
   'contains'
 ]);
 
-const CommentWalkerDescriptors = {
+const ParentNodeWalkerDescriptors = {
   firstElementChild: {
     get() {
       elementWalker.currentNode = this;
@@ -186,28 +203,35 @@ const CommentWalkerDescriptors = {
       }
       return utils.createPolyfilledHTMLCollection(nodes);
     }
+  },
+  childElementCount: {
+    get() {
+      return this.children.length;
+    }
   }
 };
 
 // Element
 if (hasDescriptors) {
-  copyAccessors(Element.prototype, [
-    'firstElementChild',
-    'lastElementChild',
+  copyAccessors(window.Element.prototype, ParentNodeAccessors);
+
+  copyAccessors(window.Element.prototype, [
     'previousElementSibling',
     'nextElementSibling',
+    'innerHTML'
   ]);
 
   // NOTE, IE 11 is the only supported browser with
-  // children: on HTMLElement instead of Element
-  // innerHTML: on HTMLElement instead of Element
-  copyAccessors(utils.settings.IS_IE ? HTMLElement.prototype : Element.prototype, [
-    'children',
-    'innerHTML'
-  ]);
+  // children and innerHTML on HTMLElement instead of Element
+  if (utils.settings.IS_IE) {
+    copyAccessors(utils.NativeHTMLElement.prototype, [
+      'children',
+      'innerHTML'
+    ]);
+  }
 } else {
-  defineAccessors(Element.prototype, CommentWalkerDescriptors);
-  defineAccessors(Element.prototype, {
+  defineNativeAccessors(window.Element.prototype, ParentNodeWalkerDescriptors);
+  defineNativeAccessors(window.Element.prototype, {
     previousElementSibling: {
       get() {
         elementWalker.currentNode = this;
@@ -248,47 +272,36 @@ if (hasDescriptors) {
   });
 }
 
-copyAccessors(Element.prototype, [
+copyAccessors(window.Element.prototype, [
   'setAttribute',
-  'removeAttribute',
-  'querySelector',
-  'querySelectorAll'
+  'removeAttribute'
 ]);
+copyAccessors(window.Element.prototype, ParentNodeMethods);
 
 // DocumentFragment
 if (hasDescriptors) {
   // NOTE, IE 11 does not have on DocumentFragment
   // firstElementChild
   // lastElementChild
-  copyAccessors(DocumentFragment.prototype, [
-    'firstElementChild',
-    'lastElementChild',
-    'children'
-  ]);
+  copyAccessors(window.DocumentFragment.prototype, ParentNodeAccessors);
 } else {
-  defineAccessors(DocumentFragment.prototype, CommentWalkerDescriptors);
+  defineNativeAccessors(window.DocumentFragment.prototype, ParentNodeWalkerDescriptors);
 }
 
-copyAccessors(DocumentFragment.prototype, [
-  'querySelector',
-  'querySelectorAll'
-]);
+copyAccessors(window.DocumentFragment.prototype, ParentNodeMethods);
 
 // Document
 if (hasDescriptors) {
-  copyAccessors(Document.prototype, [
-    'firstElementChild',
-    'lastElementChild',
-    'children',
+  copyAccessors(window.DocumentFragment.prototype, ParentNodeAccessors);
+  copyAccessors(window.Document.prototype, [
     'activeElement'
   ]);
 } else {
-  defineAccessors(Document.prototype, CommentWalkerDescriptors);
+  defineNativeAccessors(window.Document.prototype, ParentNodeWalkerDescriptors);
 }
 
-copyAccessors(Document.prototype, [
+copyAccessors(window.Document.prototype, [
   'importNode',
-  'getElementById',
-  'querySelector',
-  'querySelectorAll'
+  'getElementById'
 ]);
+copyAccessors(window.Document.prototype, ParentNodeMethods);

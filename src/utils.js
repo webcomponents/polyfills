@@ -9,11 +9,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 */
 import {shadyDataForNode} from './shady-data.js';
 
-export let settings = window['ShadyDOM'] || {};
+export const settings = window['ShadyDOM'] || {};
 
 settings.hasNativeShadowDOM = Boolean(Element.prototype.attachShadow && Node.prototype.getRootNode);
 
-let desc = Object.getOwnPropertyDescriptor(Node.prototype, 'firstChild');
+const desc = Object.getOwnPropertyDescriptor(Node.prototype, 'firstChild');
 
 settings.hasDescriptors = Boolean(desc && desc.configurable && desc.get);
 settings.inUse = settings['force'] || !settings.hasNativeShadowDOM;
@@ -23,28 +23,30 @@ settings.noPatch = settings['noPatch'] || false;
 // IE/Edge where they are faster.
 const IS_IE = navigator.userAgent.match('Trident');
 settings.IS_IE = IS_IE;
+
 const IS_EDGE = navigator.userAgent.match('Edge');
+
 if (settings.useNativeAccessors === undefined) {
   settings.useNativeAccessors = settings.hasDescriptors && (IS_IE || IS_EDGE);
 }
 
-export function isTrackingLogicalChildNodes(node) {
+export const isTrackingLogicalChildNodes = (node) => {
   const nodeData = shadyDataForNode(node);
   return (nodeData && nodeData.firstChild !== undefined);
 }
 
-export function isShadyRoot(obj) {
+export const isShadyRoot = (obj) => {
   return Boolean(obj._localName === 'ShadyRoot');
 }
 
-export function ownerShadyRootForNode(node) {
-  let root = node.getRootNode();
+export const ownerShadyRootForNode = (node) => {
+  let root = node[SHADY_PREFIX + 'getRootNode']();
   if (isShadyRoot(root)) {
     return root;
   }
 }
 
-export function hasShadowRootWithSlot(node) {
+export const hasShadowRootWithSlot = (node) => {
   const nodeData = shadyDataForNode(node);
   let root = nodeData && nodeData.root;
   return (root && root._hasInsertionPoint());
@@ -55,18 +57,18 @@ let matches = p.matches || p.matchesSelector ||
   p.mozMatchesSelector || p.msMatchesSelector ||
   p.oMatchesSelector || p.webkitMatchesSelector;
 
-export function matchesSelector(element, selector) {
+export const matchesSelector = (element, selector) => {
   return matches.call(element, selector);
 }
 
-function copyOwnProperty(name, source, target) {
+const copyOwnProperty = (name, source, target) => {
   let pd = Object.getOwnPropertyDescriptor(source, name);
   if (pd) {
     Object.defineProperty(target, name, pd);
   }
 }
 
-export function extend(target, source) {
+export const extend = (target, source) => {
   if (target && source) {
     let n$ = Object.getOwnPropertyNames(source);
     for (let i=0, n; (i<n$.length) && (n=n$[i]); i++) {
@@ -76,21 +78,21 @@ export function extend(target, source) {
   return target || source;
 }
 
-export function extendAll(target, ...sources) {
+export const extendAll = (target, ...sources) => {
   for (let i=0; i < sources.length; i++) {
     extend(target, sources[i]);
   }
   return target;
 }
 
-export function mixin(target, source) {
+export const mixin = (target, source) => {
   for (var i in source) {
     target[i] = source[i];
   }
   return target;
 }
 
-export function patchPrototype(obj, mixin) {
+export const patchPrototype = (obj, mixin) => {
   let proto = Object.getPrototypeOf(obj);
   if (!proto.hasOwnProperty('__patchProto')) {
     let patchProto = Object.create(proto);
@@ -120,14 +122,14 @@ new MutationObserver(() => {
 }).observe(twiddle, {characterData: true});
 
 // use MutationObserver to get microtask async timing.
-export function microtask(callback) {
+export const microtask = (callback) => {
   queue.push(callback);
   twiddle.textContent = content++;
 }
 
 export const hasDocumentContains = Boolean(document.contains);
 
-export function contains(container, node) {
+export const contains = (container, node) => {
   while (node) {
     if (node == container) {
       return true;
@@ -137,15 +139,12 @@ export function contains(container, node) {
   return false;
 }
 
-function getNodeHTMLCollectionName(node) {
-  return node.getAttribute('id') || node.getAttribute('name');
-}
+const getNodeHTMLCollectionName = (node) =>
+    node.getAttribute('id') || node.getAttribute('name');
 
-function isValidHTMLCollectionName(name) {
-  return name !== 'length' && isNaN(name);
-}
+const isValidHTMLCollectionName = (name) => name !== 'length' && isNaN(name);
 
-export function createPolyfilledHTMLCollection(nodes) {
+export const createPolyfilledHTMLCollection = (nodes) => {
   // Note: loop in reverse so that the first named item matches the named property
   for (let l = nodes.length - 1; l >= 0; l--) {
     const node = nodes[l];
@@ -179,7 +178,7 @@ export function createPolyfilledHTMLCollection(nodes) {
 export const NATIVE_PREFIX = '__shady_native_';
 export const SHADY_PREFIX = '__shady_';
 
-export const defineAccessors = (proto, descriptors, prefix = NATIVE_PREFIX) => {
+export const defineAccessors = (proto, descriptors, prefix = '') => {
   for (let p in descriptors) {
     const descriptor = descriptors[p];
     descriptor.configurable = true;
@@ -187,11 +186,31 @@ export const defineAccessors = (proto, descriptors, prefix = NATIVE_PREFIX) => {
   }
 }
 
+// patch a group of accessors on an object only if it exists or if the `force`
+// argument is true.
+/**
+ * @param {!Object} obj
+ * @param {!Object} descriptors
+ * @param {boolean=} force
+ */
+export const patchAccessors = (proto, descriptors, force, prefix = '') => {
+  for (let p in descriptors) {
+    const oldDescriptor = Object.getOwnPropertyDescriptor(proto, p);
+    const newDescriptor = descriptors[p];
+    const name = prefix + p;
+    if (force || oldDescriptor) {
+      // NOTE: we prefer writing directly because some browsers
+      // have descriptors that are writable but not configurable (e.g.
+      // `appendChild` on older browsers)
+      if (newDescriptor.value) {
+        proto[name] = newDescriptor.value;
+      } else if (force || oldDescriptor.configurable) {
+        Object.defineProperty(proto, name, newDescriptor);
+      }
+    }
+  }
+}
+
 export const NativeHTMLElement =
     (window['customElements'] && window['customElements']['nativeHTMLElement']) ||
     HTMLElement;
-
-export let attachShadow;
-export function setAttachShadow(fn) {
-  attachShadow = fn;
-}

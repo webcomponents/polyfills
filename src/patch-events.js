@@ -93,7 +93,7 @@ function pathComposer(startNode, composed) {
     composedPath.push(current);
     if (current.assignedSlot) {
       current = current.assignedSlot;
-    } else if (current.nodeType === Node.DOCUMENT_FRAGMENT_NODE && current.host && (composed || current !== startRoot)) {
+    } else if (current.nodeType === window.Node.DOCUMENT_FRAGMENT_NODE && current.host && (composed || current !== startRoot)) {
       current = current.host;
     } else {
       current = current.parentNode;
@@ -181,14 +181,14 @@ let eventMixin = {
    * @this {Event}
    */
   stopPropagation() {
-    Event.prototype.stopPropagation.call(this);
+    window.Event.prototype.stopPropagation.call(this);
     this.__propagationStopped = true;
   },
   /**
    * @this {Event}
    */
   stopImmediatePropagation() {
-    Event.prototype.stopImmediatePropagation.call(this);
+    window.Event.prototype.stopImmediatePropagation.call(this);
     this.__immediatePropagationStopped = true;
     this.__propagationStopped = true;
   }
@@ -266,7 +266,7 @@ function retargetNonBubblingEvent(e) {
   }
 
   // set the event phase to `AT_TARGET` as in spec
-  Object.defineProperty(e, 'eventPhase', {get() { return Event.AT_TARGET }});
+  Object.defineProperty(e, 'eventPhase', {get() { return window.Event.AT_TARGET }});
 
   // the event only needs to be fired when owner roots change when iterating the event path
   // keep track of the last seen owner root
@@ -416,7 +416,7 @@ export function addEventListener(type, fnOrObj, optionsOrCapture) {
         return;
       }
       // prevent non-bubbling events from triggering bubbling handlers on shadowroot, but only if not in capture phase
-      if (e.eventPhase !== Event.CAPTURING_PHASE && !e.bubbles && e.target !== target && !(target instanceof Window)) {
+      if (e.eventPhase !== window.Event.CAPTURING_PHASE && !e.bubbles && e.target !== target && !(target instanceof Window)) {
         return;
       }
       let ret = handlerType === 'function' ?
@@ -539,7 +539,7 @@ export function patchEvents() {
   activateFocusEventOverrides();
 
   // Fix up `Element.prototype.click()` if `isTrusted` is supported, but `composed` isn't
-  if (!composedGetter && Object.getOwnPropertyDescriptor(Event.prototype, 'isTrusted')) {
+  if (!composedGetter && Object.getOwnPropertyDescriptor(window.Event.prototype, 'isTrusted')) {
     /** @this {Element} */
     const composedClickFn = function() {
       const ev = new MouseEvent('click', {
@@ -549,10 +549,10 @@ export function patchEvents() {
       });
       this.dispatchEvent(ev);
     };
-    if (Element.prototype.click) {
-      Element.prototype.click = composedClickFn;
-    } else if (HTMLElement.prototype.click) {
-      HTMLElement.prototype.click = composedClickFn;
+    if (window.Element.prototype.click) {
+      window.Element.prototype.click = composedClickFn;
+    } else if (window.HTMLElement.prototype.click) {
+      window.HTMLElement.prototype.click = composedClickFn;
     }
   }
 }

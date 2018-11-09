@@ -10,10 +10,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 import {calculateSplices} from './array-splice.js';
 import * as utils from './utils.js';
-import './native-patches.js';
+import './patch-native.js';
 import {enqueue} from './flush.js';
 import {ensureShadyDataForNode, shadyDataForNode} from './shady-data.js';
-import {recordChildNodes} from './patches.js';
+import {recordChildNodes} from './link-nodes.js';
+import {patchShadyRoot} from './patch-shadyRoot.js';
 
 // Do not export this object. It must be passed as the first argument to the
 // ShadyRoot constructor in `attachShadow` to prevent the constructor from
@@ -60,12 +61,12 @@ class ShadyRoot {
     this._localName = SHADYROOT_NAME;
     // root <=> host
     this.host = host;
-    this._mode = options && options.mode;
+    this.mode = options && options.mode;
     const c$ = capturedChildNodes(host);
     recordChildNodes(host, c$);
     const hostData = ensureShadyDataForNode(host);
     hostData.root = this;
-    hostData.publicRoot = this._mode !== MODE_CLOSED ? this : null;
+    hostData.publicRoot = this.mode !== MODE_CLOSED ? this : null;
     // setup root
     const rootData = ensureShadyDataForNode(this);
     rootData.firstChild = rootData.lastChild =
@@ -127,9 +128,9 @@ class ShadyRoot {
     }
   }
 
-  _render() {
+  _render(ifPending) {
     const root = this._getRenderRoot();
-    if (root) {
+    if (root && (!ifPending || root._renderPending)) {
       root['_renderRoot']();
     }
   }
@@ -543,13 +544,14 @@ class ShadyRoot {
   }
 }
 
+patchShadyRoot(ShadyRoot.prototype);
 export {ShadyRoot};
 
 /**
   Implements a pared down version of ShadowDOM's scoping, which is easy to
   polyfill across browsers.
 */
-export function attachShadow(host, options) {
+export const attachShadow = (host, options) => {
   if (!host) {
     throw 'Must provide a host.';
   }
@@ -558,8 +560,6 @@ export function attachShadow(host, options) {
   }
   return new ShadyRoot(ShadyRootConstructionToken, host, options);
 }
-
-utils.setAttachShadow(attachShadow);
 
 // Mitigate connect/disconnect spam by wrapping custom element classes.
 if (window['customElements'] && utils.settings.inUse && !utils.settings['preferPerformance']) {

@@ -21,12 +21,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 import * as utils from './utils.js';
 import {flush, enqueue} from './flush.js';
 import {observeChildren, unobserveChildren, filterMutations} from './observe-changes.js';
-import './native-patches.js';
-import {patchBuiltins} from './patch-builtins.js';
-import {patchInsideElementAccessors, patchOutsideElementAccessors} from './patches.js';
+import './patch-native.js';
+import {patchInsideElementAccessors, patchOutsideElementAccessors} from './patch-instances.js';
 import {patchEvents} from './patch-events.js';
 import {ShadyRoot} from './attach-shadow.js';
 import {wrap, Wrapper} from './wrapper.js';
+import {patchPrototypes} from './patch-prototypes.js';
 
 if (utils.settings.inUse) {
   let ShadyDOM = {
@@ -82,7 +82,7 @@ if (utils.settings.inUse) {
   // Apply patches to events...
   patchEvents();
   // Apply patches to builtins (e.g. Element.prototype) where applicable.
-  patchBuiltins();
+  patchPrototypes();
 
   window.ShadowRoot = ShadyRoot;
 }
