@@ -22,7 +22,7 @@ const rename = require('gulp-rename');
 const rollup = require('gulp-rollup');
 
 gulp.task('default', () => {
-  return gulp.src('./src/*.js', {base: '.'})
+  return gulp.src('./src/**/*.js', {base: '.'})
     .pipe(sourcemaps.init())
     .pipe(closureCompiler({
       compilation_level: 'ADVANCED',
