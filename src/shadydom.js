@@ -21,7 +21,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 import * as utils from './utils.js';
 import {flush, enqueue} from './flush.js';
 import {observeChildren, unobserveChildren, filterMutations} from './observe-changes.js';
-import './patch-native.js';
+import {patchNative} from './patch-native.js';
 import {patchInsideElementAccessors, patchOutsideElementAccessors} from './patch-instances.js';
 import {patchEvents} from './patch-events.js';
 import {ShadyRoot} from './attach-shadow.js';
@@ -79,6 +79,8 @@ if (utils.settings.inUse) {
 
   window['ShadyDOM'] = ShadyDOM;
 
+  // capture native patches
+  patchNative();
   // Apply patches to events...
   patchEvents();
   // Apply patches to builtins (e.g. Element.prototype) where applicable.

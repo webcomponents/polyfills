@@ -18,6 +18,7 @@ const desc = Object.getOwnPropertyDescriptor(Node.prototype, 'firstChild');
 settings.hasDescriptors = Boolean(desc && desc.configurable && desc.get);
 settings.inUse = settings['force'] || !settings.hasNativeShadowDOM;
 settings.noPatch = settings['noPatch'] || false;
+settings.preferPerformance = settings['preferPerformance'];
 
 // Default to using native accessors (instead of treewalker) only for
 // IE/Edge where they are faster.
@@ -134,7 +135,7 @@ export const contains = (container, node) => {
     if (node == container) {
       return true;
     }
-    node = node.parentNode;
+    node = node[SHADY_PREFIX + 'parentNode'];
   }
   return false;
 }

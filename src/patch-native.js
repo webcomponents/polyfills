@@ -53,255 +53,259 @@ const ParentNodeMethods = [
   'querySelector',
   'querySelectorAll'
   // 'append', 'prepend'
-]
+];
 
-// EventTarget
-copyAccessors(window.EventTarget.prototype, [
-  'dispatchEvent',
-  'addEventListener',
-  'removeEventListener'
-]);
+export const patchNative = () => {
 
-
-// Node
-if (hasDescriptors) {
-  copyAccessors(window.Node.prototype, [
-    'parentNode',
-    'firstChild',
-    'lastChild',
-    'previousSibling',
-    'nextSibling',
-    'childNodes',
-    'parentElement',
-    'textContent',
+  // EventTarget
+  copyAccessors(window.EventTarget.prototype, [
+    'dispatchEvent',
+    'addEventListener',
+    'removeEventListener'
   ]);
-} else {
-  defineNativeAccessors(window.Node.prototype, {
-    parentNode: {
-      get() {
-        nodeWalker.currentNode = this;
-        return nodeWalker.parentNode();
-      }
-    },
-    firstChild: {
-      get() {
-        nodeWalker.currentNode = this;
-        return nodeWalker.firstChild();
-      }
-    },
-    lastChild: {
-      get() {
-        nodeWalker.currentNode = this;
-        return nodeWalker.lastChild();
-      }
 
-    },
-    previousSibling: {
+
+  // Node
+  if (hasDescriptors) {
+    copyAccessors(window.Node.prototype, [
+      'parentNode',
+      'firstChild',
+      'lastChild',
+      'previousSibling',
+      'nextSibling',
+      'childNodes',
+      'parentElement',
+      'textContent',
+    ]);
+  } else {
+    defineNativeAccessors(window.Node.prototype, {
+      parentNode: {
+        get() {
+          nodeWalker.currentNode = this;
+          return nodeWalker.parentNode();
+        }
+      },
+      firstChild: {
+        get() {
+          nodeWalker.currentNode = this;
+          return nodeWalker.firstChild();
+        }
+      },
+      lastChild: {
+        get() {
+          nodeWalker.currentNode = this;
+          return nodeWalker.lastChild();
+        }
+
+      },
+      previousSibling: {
+        get() {
+          nodeWalker.currentNode = this;
+          return nodeWalker.previousSibling();
+        }
+      },
+      nextSibling: {
+        get() {
+          nodeWalker.currentNode = this;
+          return nodeWalker.nextSibling();
+        }
+      },
+      // TODO(sorvell): make this a NodeList or whatever
+      childNodes: {
+        get() {
+          const nodes = [];
+          nodeWalker.currentNode = this;
+          let n = nodeWalker.firstChild();
+          while (n) {
+            nodes.push(n);
+            n = nodeWalker.nextSibling();
+          }
+          return nodes;
+        }
+      },
+      parentElement: {
+        get() {
+          elementWalker.currentNode = this;
+          return elementWalker.parentNode();
+        }
+      },
+      textContent: {
+        get() {
+          /* eslint-disable no-case-declarations */
+          switch (this.nodeType) {
+            case window.Node.ELEMENT_NODE:
+            case window.Node.DOCUMENT_FRAGMENT_NODE:
+              let textWalker = document.createTreeWalker(this, window.NodeFilter.SHOW_TEXT,
+                null, false);
+              let content = '', n;
+              while ( (n = textWalker.nextNode()) ) {
+                // TODO(sorvell): can't use textContent since we patch it on Node.prototype!
+                // However, should probably patch it only on element.
+                content += n.nodeValue;
+              }
+              return content;
+            default:
+              return this.nodeValue;
+          }
+        },
+        // TODO(sorvell): do we ever need this setter?
+        set(value) {
+          if (typeof value === 'undefined' || value === null) {
+            value = ''
+          }
+          switch (this.nodeType) {
+            case window.Node.ELEMENT_NODE:
+            case window.Node.DOCUMENT_FRAGMENT_NODE:
+              clearNode(this);
+              // Document fragments must have no childnodes if setting a blank string
+              if (value.length > 0 || this.nodeType === window.Node.ELEMENT_NODE) {
+                this[NATIVE_PREFIX + 'insertBefore'](document.createTextNode(value));
+              }
+              break;
+            default:
+              // TODO(sorvell): can't do this if patch nodeValue.
+              this.nodeValue = value;
+              break;
+          }
+        }
+      }
+    });
+  }
+
+  copyAccessors(window.Node.prototype, [
+    'appendChild',
+    'insertBefore',
+    'removeChild',
+    'replaceChild',
+    'cloneNode',
+    'contains'
+  ]);
+
+  const ParentNodeWalkerDescriptors = {
+    firstElementChild: {
       get() {
-        nodeWalker.currentNode = this;
-        return nodeWalker.previousSibling();
+        elementWalker.currentNode = this;
+        return elementWalker.firstChild();
       }
     },
-    nextSibling: {
+    lastElementChild: {
       get() {
-        nodeWalker.currentNode = this;
-        return nodeWalker.nextSibling();
+        elementWalker.currentNode = this;
+        return elementWalker.lastChild();
       }
     },
-    // TODO(sorvell): make this a NodeList or whatever
-    childNodes: {
+    children: {
       get() {
-        const nodes = [];
-        nodeWalker.currentNode = this;
-        let n = nodeWalker.firstChild();
+        let nodes = [];
+        elementWalker.currentNode = this;
+        let n = elementWalker.firstChild();
         while (n) {
           nodes.push(n);
-          n = nodeWalker.nextSibling();
+          n = elementWalker.nextSibling();
         }
-        return nodes;
+        return utils.createPolyfilledHTMLCollection(nodes);
       }
     },
-    parentElement: {
+    childElementCount: {
       get() {
-        elementWalker.currentNode = this;
-        return elementWalker.parentNode();
-      }
-    },
-    textContent: {
-      get() {
-        /* eslint-disable no-case-declarations */
-        switch (this.nodeType) {
-          case window.Node.ELEMENT_NODE:
-          case window.Node.DOCUMENT_FRAGMENT_NODE:
-            let textWalker = document.createTreeWalker(this, window.NodeFilter.SHOW_TEXT,
-              null, false);
-            let content = '', n;
-            while ( (n = textWalker.nextNode()) ) {
-              // TODO(sorvell): can't use textContent since we patch it on Node.prototype!
-              // However, should probably patch it only on element.
-              content += n.nodeValue;
-            }
-            return content;
-          default:
-            return this.nodeValue;
-        }
-      },
-      // TODO(sorvell): do we ever need this setter?
-      set(value) {
-        if (typeof value === 'undefined' || value === null) {
-          value = ''
-        }
-        switch (this.nodeType) {
-          case window.Node.ELEMENT_NODE:
-          case window.Node.DOCUMENT_FRAGMENT_NODE:
-            clearNode(this);
-            // Document fragments must have no childnodes if setting a blank string
-            if (value.length > 0 || this.nodeType === window.Node.ELEMENT_NODE) {
-              this[NATIVE_PREFIX + 'insertBefore'](document.createTextNode(value));
-            }
-            break;
-          default:
-            // TODO(sorvell): can't do this if patch nodeValue.
-            this.nodeValue = value;
-            break;
-        }
+        return this.children.length;
       }
     }
-  });
-}
+  };
 
-copyAccessors(window.Node.prototype, [
-  'appendChild',
-  'insertBefore',
-  'removeChild',
-  'replaceChild',
-  'cloneNode',
-  'contains'
-]);
+  // Element
+  if (hasDescriptors) {
+    copyAccessors(window.Element.prototype, ParentNodeAccessors);
 
-const ParentNodeWalkerDescriptors = {
-  firstElementChild: {
-    get() {
-      elementWalker.currentNode = this;
-      return elementWalker.firstChild();
-    }
-  },
-  lastElementChild: {
-    get() {
-      elementWalker.currentNode = this;
-      return elementWalker.lastChild();
-    }
-  },
-  children: {
-    get() {
-      let nodes = [];
-      elementWalker.currentNode = this;
-      let n = elementWalker.firstChild();
-      while (n) {
-        nodes.push(n);
-        n = elementWalker.nextSibling();
-      }
-      return utils.createPolyfilledHTMLCollection(nodes);
-    }
-  },
-  childElementCount: {
-    get() {
-      return this.children.length;
-    }
-  }
-};
-
-// Element
-if (hasDescriptors) {
-  copyAccessors(window.Element.prototype, ParentNodeAccessors);
-
-  copyAccessors(window.Element.prototype, [
-    'previousElementSibling',
-    'nextElementSibling',
-    'innerHTML'
-  ]);
-
-  // NOTE, IE 11 is the only supported browser with
-  // children and innerHTML on HTMLElement instead of Element
-  if (utils.settings.IS_IE) {
-    copyAccessors(utils.NativeHTMLElement.prototype, [
-      'children',
+    copyAccessors(window.Element.prototype, [
+      'previousElementSibling',
+      'nextElementSibling',
       'innerHTML'
     ]);
-  }
-} else {
-  defineNativeAccessors(window.Element.prototype, ParentNodeWalkerDescriptors);
-  defineNativeAccessors(window.Element.prototype, {
-    previousElementSibling: {
-      get() {
-        elementWalker.currentNode = this;
-        return elementWalker.previousSibling();
-      }
-    },
-    nextElementSibling: {
-      get() {
-        elementWalker.currentNode = this;
-        return elementWalker.nextSibling();
-      }
-    },
-    innerHTML: {
-      get() {
-        return getInnerHTML(this, n => n[NATIVE_PREFIX + 'childNodes']);
-      },
-      // TODO(sorvell): do we ever need this setter?
-      set(value) {
-        const content = this.localName === 'template' ?
-        /** @type {HTMLTemplateElement} */(this).content : this;
-        clearNode(content);
-        const containerName = this.localName || 'div';
-        let htmlContainer;
-        if (!this.namespaceURI || this.namespaceURI === inertDoc.namespaceURI) {
-          htmlContainer = inertDoc.createElement(containerName);
-        } else {
-          htmlContainer = inertDoc.createElementNS(this.namespaceURI, containerName);
-        }
-        htmlContainer.innerHTML = value;
-        const newContent = this.localName === 'template' ?
-          /** @type {HTMLTemplateElement} */(htmlContainer).content : htmlContainer;
-        let firstChild;
-        while ((firstChild = newContent[NATIVE_PREFIX + 'firstChild'])) {
-          content[NATIVE_PREFIX + 'insertBefore'](firstChild);
-        }
-      }
+
+    // NOTE, IE 11 is the only supported browser with
+    // children and innerHTML on HTMLElement instead of Element
+    if (utils.settings.IS_IE) {
+      copyAccessors(utils.NativeHTMLElement.prototype, [
+        'children',
+        'innerHTML'
+      ]);
     }
-  });
-}
+  } else {
+    defineNativeAccessors(window.Element.prototype, ParentNodeWalkerDescriptors);
+    defineNativeAccessors(window.Element.prototype, {
+      previousElementSibling: {
+        get() {
+          elementWalker.currentNode = this;
+          return elementWalker.previousSibling();
+        }
+      },
+      nextElementSibling: {
+        get() {
+          elementWalker.currentNode = this;
+          return elementWalker.nextSibling();
+        }
+      },
+      innerHTML: {
+        get() {
+          return getInnerHTML(this, n => n[NATIVE_PREFIX + 'childNodes']);
+        },
+        // TODO(sorvell): do we ever need this setter?
+        set(value) {
+          const content = this.localName === 'template' ?
+          /** @type {HTMLTemplateElement} */(this).content : this;
+          clearNode(content);
+          const containerName = this.localName || 'div';
+          let htmlContainer;
+          if (!this.namespaceURI || this.namespaceURI === inertDoc.namespaceURI) {
+            htmlContainer = inertDoc.createElement(containerName);
+          } else {
+            htmlContainer = inertDoc.createElementNS(this.namespaceURI, containerName);
+          }
+          htmlContainer.innerHTML = value;
+          const newContent = this.localName === 'template' ?
+            /** @type {HTMLTemplateElement} */(htmlContainer).content : htmlContainer;
+          let firstChild;
+          while ((firstChild = newContent[NATIVE_PREFIX + 'firstChild'])) {
+            content[NATIVE_PREFIX + 'insertBefore'](firstChild);
+          }
+        }
+      }
+    });
+  }
 
-copyAccessors(window.Element.prototype, [
-  'setAttribute',
-  'removeAttribute'
-]);
-copyAccessors(window.Element.prototype, ParentNodeMethods);
-
-// DocumentFragment
-if (hasDescriptors) {
-  // NOTE, IE 11 does not have on DocumentFragment
-  // firstElementChild
-  // lastElementChild
-  copyAccessors(window.DocumentFragment.prototype, ParentNodeAccessors);
-} else {
-  defineNativeAccessors(window.DocumentFragment.prototype, ParentNodeWalkerDescriptors);
-}
-
-copyAccessors(window.DocumentFragment.prototype, ParentNodeMethods);
-
-// Document
-if (hasDescriptors) {
-  copyAccessors(window.DocumentFragment.prototype, ParentNodeAccessors);
-  copyAccessors(window.Document.prototype, [
-    'activeElement'
+  copyAccessors(window.Element.prototype, [
+    'setAttribute',
+    'removeAttribute'
   ]);
-} else {
-  defineNativeAccessors(window.Document.prototype, ParentNodeWalkerDescriptors);
-}
+  copyAccessors(window.Element.prototype, ParentNodeMethods);
 
-copyAccessors(window.Document.prototype, [
-  'importNode',
-  'getElementById'
-]);
-copyAccessors(window.Document.prototype, ParentNodeMethods);
+  // DocumentFragment
+  if (hasDescriptors) {
+    // NOTE, IE 11 does not have on DocumentFragment
+    // firstElementChild
+    // lastElementChild
+    copyAccessors(window.DocumentFragment.prototype, ParentNodeAccessors);
+  } else {
+    defineNativeAccessors(window.DocumentFragment.prototype, ParentNodeWalkerDescriptors);
+  }
+
+  copyAccessors(window.DocumentFragment.prototype, ParentNodeMethods);
+
+  // Document
+  if (hasDescriptors) {
+    copyAccessors(window.DocumentFragment.prototype, ParentNodeAccessors);
+    copyAccessors(window.Document.prototype, [
+      'activeElement'
+    ]);
+  } else {
+    defineNativeAccessors(window.Document.prototype, ParentNodeWalkerDescriptors);
+  }
+
+  copyAccessors(window.Document.prototype, [
+    'importNode',
+    'getElementById'
+  ]);
+  copyAccessors(window.Document.prototype, ParentNodeMethods);
+
+};

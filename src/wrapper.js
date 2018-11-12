@@ -122,7 +122,7 @@ const readAccessors = [
   'parentElement',
   'firstElementChild', 'lastElementChild',
   'nextElementSibling', 'previousElementSibling',
-  'children',
+  'children', 'childElementCount',
   //'activeElement',
   'shadowRoot'
 ];

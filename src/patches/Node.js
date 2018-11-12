@@ -460,8 +460,8 @@ export const Node = {
       if (deep && n.nodeType !== window.Node.ATTRIBUTE_NODE) {
         let c$ = this[utils.SHADY_PREFIX + 'childNodes'];
         for (let i=0, nc; i < c$.length; i++) {
-          nc = c$[i].cloneNode(true);
-          n.appendChild(nc);
+          nc = c$[i][utils.SHADY_PREFIX + 'cloneNode'](true);
+          n[utils.SHADY_PREFIX + 'appendChild'](nc);
         }
       }
       return n;
