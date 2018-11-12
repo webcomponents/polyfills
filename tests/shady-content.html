@@ -1360,6 +1360,26 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       assert.deepEqual(getComposedChildNodes(inner), [t]);
     });
 
+    test('dispatch order between shadow and host', function() {
+      // render an element with a shadowRoot
+      var x = document.createElement('x-simple');
+      var b = document.createElement('button');
+      document.body.appendChild(x);
+      ShadyDOM.flush();
+      x.shadowRoot.appendChild(b);
+      ShadyDOM.flush();
+      var order = [];
+      b.addEventListener('click', function () { order.push('button'); });
+      // adding listener to the host before the shadow should have no effect on the shadow
+      x.addEventListener('click', function (e) {
+        order.push('host');
+        e.stopImmediatePropagation(); // intentionally stopping the propagation on host
+      });
+      x.shadowRoot.addEventListener('click', function () { order.push('button'); });
+      b.click();
+      assert.deepEqual(order, ['button', 'shadow', 'host']);
+    });
+
   });
 
   function getComposedChildNodes(node) {
