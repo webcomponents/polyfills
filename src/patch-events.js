@@ -85,7 +85,7 @@ const unpatchedEvents = {
   'DOMSubtreeModified': true
 }
 
-function pathComposer(startNode, composed) {
+export function pathComposer(startNode, composed) {
   let composedPath = [];
   let current = startNode;
   let startRoot = startNode === window ? window : startNode.getRootNode();

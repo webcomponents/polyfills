@@ -23,7 +23,7 @@ import {flush, enqueue} from './flush.js';
 import {observeChildren, unobserveChildren, filterMutations} from './observe-changes.js';
 import {patchNative} from './patch-native.js';
 import {patchInsideElementAccessors, patchOutsideElementAccessors} from './patch-instances.js';
-import {patchEvents} from './patch-events.js';
+import {patchEvents, pathComposer} from './patch-events.js';
 import {ShadyRoot} from './attach-shadow.js';
 import {wrap, Wrapper} from './wrapper.js';
 import {patchPrototypes} from './patch-prototypes.js';
@@ -69,8 +69,9 @@ if (utils.settings.inUse) {
     // Integration point with ShadyCSS to disable styling MutationObserver,
     // as ShadyDOM will now handle dynamic scoping.
     'handlesDynamicScoping': true,
-    'wrap': wrap,
+    'wrap': utils.settings.noPatch ? wrap : (n) => n,
     'Wrapper': Wrapper,
+    'eventPathComposer': pathComposer,
     'noPatch': utils.settings.noPatch,
     'nativeMethod': (node, name, ...args) =>
         node[utils.NATIVE_PREFIX + name].apply(node, args),
