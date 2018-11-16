@@ -96,6 +96,10 @@ class ApplyShimInterface {
       for (let i = 0; i < shadowChildren.length; i++) {
         this.styleSubtree(/** @type {HTMLElement} */(shadowChildren[i]));
       }
+      let children = element.children;
+      for (let i = 0; i < children.length; i++) {
+        this.styleSubtree(/** @type {HTMLElement} */(children[i]));
+      }
     } else {
       let children = element.children || element.childNodes;
       for (let i = 0; i < children.length; i++) {
