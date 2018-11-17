@@ -18,17 +18,29 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     // TODO(sorvell): noPatching does not work with the custom elements polyfill.
     // IF the polyfill used `ShadyDOM.wrap` throughout, it could be made to work.
     if (window.customElements) {
-      customElements.forcePolyfill = true;
+      customElements.forcePolyfill = window.location.search.match('forceCustomElements');
     }
     window.NATIVE = {
       children: Object.getOwnPropertyDescriptor(Element.prototype, 'children')
              || Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'children')
     };
-  </script>
-  <script src="../node_modules/@webcomponents/custom-elements/custom-elements.min.js"></script>
-  <script src="../shadydom.min.js"></script>
 
-  <script>
+    const loadScript = (src) => {
+      document.write(`<script src="${src}">${'<'}/script>`);
+    }
+
+    const loadCE = () => loadScript('../node_modules/@webcomponents/custom-elements/custom-elements.min.js');
+    const loadSD = () => loadScript('../shadydom.min.js');
+
+    // script ordering must change based on patching.
+    if (ShadyDOM.noPatch) {
+      loadCE();
+      loadSD();
+    } else {
+      loadSD();
+      loadCE();
+    }
+
     // Ensure customElements are updated when document is ready.
     if (customElements.polyfillWrapFlushCallback) {
       customElements.polyfillWrapFlushCallback(function(cb) {
@@ -44,6 +56,48 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <script src="../node_modules/wct-browser-legacy/browser.js"></script>
 </head>
 <body>
+
+  <x-test></x-test>
+
+  <x-test-esc></x-test-esc>
+
+  <div class="accessors">
+    <x-test-no-distribute><div class="child"></div></x-test-no-distribute>
+    <x-project><div class="child"></div></x-project>
+  </div>
+
+  <x-test-no-distribute id="noDistribute">
+    <div class="bar">Bar</div>
+    <div class="foo">Foo</div>
+  </x-test-no-distribute>
+
+  <x-select-class1>
+    <div></div>
+  </x-select-class1>
+
+  <x-select-attr>
+    <x-attr></x-attr>
+  </x-select-attr>
+
+  <x-compose-select-attr></x-compose-select-attr>
+
+  <x-redistribute-a-b></x-redistribute-a-b>
+
+  <div id="container">
+    <x-echo></x-echo>
+    <span>1</span>
+    <span>2</span>
+  </div>
+
+  <x-deep-contains></x-deep-contains>
+
+  <x-wrapped></x-wrapped>
+
+  <x-outer>
+    <button>click me</button>
+  </x-outer>
+
+  <outer-element>hello</outer-element>
 
   <script>
     window.defineTestElement = function(name, connected) {
@@ -260,48 +314,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     <slot></slot>
   </div>
 </template>
-
-<x-test></x-test>
-
-<x-test-esc></x-test-esc>
-
-<div class="accessors">
-  <x-test-no-distribute><div class="child"></div></x-test-no-distribute>
-  <x-project><div class="child"></div></x-project>
-</div>
-
-<x-test-no-distribute id="noDistribute">
-  <div class="bar">Bar</div>
-  <div class="foo">Foo</div>
-</x-test-no-distribute>
-
-<x-select-class1>
-  <div></div>
-</x-select-class1>
-
-<x-select-attr>
-  <x-attr></x-attr>
-</x-select-attr>
-
-<x-compose-select-attr></x-compose-select-attr>
-
-<x-redistribute-a-b></x-redistribute-a-b>
-
-<div id="container">
-  <x-echo></x-echo>
-  <span>1</span>
-  <span>2</span>
-</div>
-
-<x-deep-contains></x-deep-contains>
-
-<x-ShadyDOM.wrapped></x-ShadyDOM.wrapped>
-
-<x-outer>
-  <button>click me</button>
-</x-outer>
-
-<outer-element>hello</outer-element>
 
 <script>
   defineTestElement('x-stamps-peer', function() {

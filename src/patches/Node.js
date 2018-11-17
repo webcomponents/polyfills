@@ -62,7 +62,7 @@ function firstComposedNode(node) {
     const nodeData = shadyDataForNode(node);
     const flattened = nodeData && nodeData.flattenedNodes;
     composed = flattened && flattened.length ? flattened[0] :
-      firstComposedNode(node.nextSibling);
+      firstComposedNode(node[utils.SHADY_PREFIX + 'nextSibling']);
   }
   return composed;
 }
