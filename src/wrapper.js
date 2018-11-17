@@ -57,6 +57,10 @@ export class Wrapper {
     return this.node[utils.SHADY_PREFIX + 'dispatchEvent'](event);
   }
 
+  get isConnected() {
+    return this.node[utils.SHADY_PREFIX + 'isConnected'];
+  }
+
   // element
   setAttribute(name, value) {
     this.node[utils.SHADY_PREFIX + 'setAttribute'](name, value);

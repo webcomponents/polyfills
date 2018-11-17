@@ -14,7 +14,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <script src="../node_modules/@webcomponents/webcomponents-platform/webcomponents-platform.js"></script>
   <script src="../node_modules/@webcomponents/template/template.js"></script>
   <script>
-    ShadyDOM = {force: true};
+    ShadyDOM = {force: true, noPatch: window.location.search.match('noPatch')};
   </script>
   <script src="../shadydom.min.js"></script>
 
@@ -31,49 +31,49 @@ function testRender(descr, hostInnerHtml, shadowRootHtml, expectedHtml) {
   test(descr, function() {
     // Create an instance of the test element.
     var host = document.createElement('div');
-    host.attachShadow({mode: 'open'});
+    ShadyDOM.wrap(host).attachShadow({mode: 'open'});
     // Populate the initial pool of light DOM children.
-    host.innerHTML = hostInnerHtml;
-    document.body.appendChild(host);
+    ShadyDOM.wrap(host).innerHTML = hostInnerHtml;
+    ShadyDOM.wrap(document.body).appendChild(host);
         // Pretend we're stamping the template contents.
     if (shadowRootHtml) {
-      host.shadowRoot.innerHTML = shadowRootHtml;
+      ShadyDOM.wrap(ShadyDOM.wrap(host).shadowRoot).innerHTML = shadowRootHtml;
     }
     // Invoke distribution and verify the resulting tree.
     ShadyDOM.flush();
     assert.strictEqual(getComposedHTML(host), expectedHtml);
-    document.body.removeChild(host);
+    ShadyDOM.wrap(document.body).removeChild(host);
   });
   test(descr + ' fragment', function() {
     // Create an instance of the test element.
     var host = document.createElement('div');
-    host.attachShadow({mode: 'open'});
+    ShadyDOM.wrap(host).attachShadow({mode: 'open'});
     // Populate the initial pool of light DOM children.
-    host.innerHTML = hostInnerHtml;
-    document.body.appendChild(host);
+    ShadyDOM.wrap(host).innerHTML = hostInnerHtml;
+    ShadyDOM.wrap(document.body).appendChild(host);
         // Pretend we're stamping the template contents.
     var div = document.createElement('div');
-    div.innerHTML = shadowRootHtml;
+    ShadyDOM.wrap(div).innerHTML = shadowRootHtml;
     var frag = document.createDocumentFragment();
-    while (div.firstChild) {
-      frag.appendChild(div.firstChild);
+    while (ShadyDOM.wrap(div).firstChild) {
+      ShadyDOM.wrap(frag).appendChild(ShadyDOM.wrap(div).firstChild);
     }
-    host.shadowRoot.appendChild(frag);
+    ShadyDOM.wrap(ShadyDOM.wrap(host).shadowRoot).appendChild(frag);
     // Invoke distribution and verify the resulting tree.
     ShadyDOM.flush();
     assert.strictEqual(getComposedHTML(host), expectedHtml);
-    document.body.removeChild(host);
+    ShadyDOM.wrap(document.body).removeChild(host);
   });
 }
 
 test('Node/Element accessors', function() {
   var div = document.createElement('div');
-  assert.isFalse(div.isConnected);
-  assert.equal(div.getRootNode(), div);
-  div.slot = 'slot';
-  assert.equal(div.slot, 'slot');
+  assert.isFalse(ShadyDOM.wrap(div).isConnected);
+  assert.equal(ShadyDOM.wrap(div).getRootNode(), div);
+  ShadyDOM.wrap(div).slot = 'slot';
+  assert.equal(ShadyDOM.wrap(div).slot, 'slot');
   assert.equal(div.getAttribute('slot'), 'slot');
-  assert.equal(div.assignedSlot, null);
+  assert.equal(ShadyDOM.wrap(div).assignedSlot, null);
 });
 
 testRender('Empty shadow', 'abc', '', '');
@@ -126,45 +126,45 @@ suite('render content', function() {
 
 test('Reproject', function() {
   var host = document.createElement('div');
-  host.attachShadow({mode: 'open'});
-  document.body.appendChild(host);
-    host.innerHTML = '<a></a>';
+  ShadyDOM.wrap(host).attachShadow({mode: 'open'});
+  ShadyDOM.wrap(document.body).appendChild(host);
+    ShadyDOM.wrap(host).innerHTML = '<a></a>';
   // pre-distirbution grab first composed node.
   var a = getComposedChildAtIndex(host, 0);
-  host.shadowRoot.innerHTML = '<div id="p"></div>';
-  host.shadowRoot.firstElementChild.attachShadow({mode: 'open'});
+  ShadyDOM.wrap(ShadyDOM.wrap(host).shadowRoot).innerHTML = '<div id="p"></div>';
+  ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(host).shadowRoot).firstElementChild).attachShadow({mode: 'open'});
   // force upgrade on polyfilled browsers
-  var p = host.shadowRoot.firstChild;
-    p.innerHTML = '<b slot="b"></b><slot slot="a"></slot>';
-  var b = p.firstChild;
-  var content = p.lastChild;
+  var p = ShadyDOM.wrap(ShadyDOM.wrap(host).shadowRoot).firstChild;
+    ShadyDOM.wrap(p).innerHTML = '<b slot="b"></b><slot slot="a"></slot>';
+  var b = ShadyDOM.wrap(p).firstChild;
+  var content = ShadyDOM.wrap(p).lastChild;
 
-  p.shadowRoot.innerHTML =
+  ShadyDOM.wrap(ShadyDOM.wrap(p).shadowRoot).innerHTML =
       'a: <slot name="a"></slot>b: <slot name="b"></slot>';
-  var textNodeA = p.shadowRoot.firstChild;
-  var contentA = p.shadowRoot.childNodes[1];
-  var textNodeB = p.shadowRoot.childNodes[2];
-  var contentB = p.shadowRoot.childNodes[3];
+  var textNodeA = ShadyDOM.wrap(ShadyDOM.wrap(p).shadowRoot).firstChild;
+  var contentA = ShadyDOM.wrap(ShadyDOM.wrap(p).shadowRoot).childNodes[1];
+  var textNodeB = ShadyDOM.wrap(ShadyDOM.wrap(p).shadowRoot).childNodes[2];
+  var contentB = ShadyDOM.wrap(ShadyDOM.wrap(p).shadowRoot).childNodes[3];
 
   function testRender() {
     ShadyDOM.flush();
     assert.strictEqual(getComposedHTML(host),
         '<div id="p">a: <a></a>b: <b slot="b"></b></div>');
 
-    assertArrayEqual(host.childNodes, [a]);
-    assert.strictEqual(a.parentNode, host);
-    assertArrayEqual(host.shadowRoot.childNodes, [p]);
-    assert.strictEqual(p.parentNode, host.shadowRoot);
-    assertArrayEqual(p.childNodes, [b, content]);
-    assert.strictEqual(b.parentNode, p);
-    assert.strictEqual(content.parentNode, p);
-    assertArrayEqual(p.shadowRoot.childNodes,
+    assertArrayEqual(ShadyDOM.wrap(host).childNodes, [a]);
+    assert.strictEqual(ShadyDOM.wrap(a).parentNode, host);
+    assertArrayEqual(ShadyDOM.wrap(ShadyDOM.wrap(host).shadowRoot).childNodes, [p]);
+    assert.strictEqual(ShadyDOM.wrap(p).parentNode, ShadyDOM.wrap(host).shadowRoot);
+    assertArrayEqual(ShadyDOM.wrap(p).childNodes, [b, content]);
+    assert.strictEqual(ShadyDOM.wrap(b).parentNode, p);
+    assert.strictEqual(ShadyDOM.wrap(content).parentNode, p);
+    assertArrayEqual(ShadyDOM.wrap(ShadyDOM.wrap(p).shadowRoot).childNodes,
         [textNodeA, contentA, textNodeB, contentB]);
   }
 
   testRender();
   testRender();
-  document.body.removeChild(host);
+  ShadyDOM.wrap(document.body).removeChild(host);
 });
 
 
@@ -173,76 +173,76 @@ suite('Mutate light DOM', function() {
 
   setup(function() {
     host = document.createElement('div');
-    host.attachShadow({mode: 'open'});
-    document.body.appendChild(host);
+    ShadyDOM.wrap(host).attachShadow({mode: 'open'});
+    ShadyDOM.wrap(document.body).appendChild(host);
   });
 
   teardown(function() {
-    document.body.removeChild(host);
+    ShadyDOM.wrap(document.body).removeChild(host);
   });
 
   test('removeAllChildNodes - mutate host', function() {
-    host.innerHTML = '<a>Hello</a>';
+    ShadyDOM.wrap(host).innerHTML = '<a>Hello</a>';
 
-    host.shadowRoot.innerHTML = '<slot>fallback</slot>';
+    ShadyDOM.wrap(ShadyDOM.wrap(host).shadowRoot).innerHTML = '<slot>fallback</slot>';
     ShadyDOM.flush();
     assert.strictEqual(getComposedHTML(host), '<a>Hello</a>');
 
-    host.firstChild.textContent = '';
+    ShadyDOM.wrap(ShadyDOM.wrap(host).firstChild).textContent = '';
     ShadyDOM.flush();
     assert.strictEqual(getComposedHTML(host), '<a></a>');
 
-    host.innerHTML = '';
+    ShadyDOM.wrap(host).innerHTML = '';
     ShadyDOM.flush();
     assert.strictEqual(getComposedHTML(host), 'fallback');
   });
 
 
   test('removeAllChildNodes - mutate shadow', function() {
-    host.innerHTML = '<a>Hello</a>';
+    ShadyDOM.wrap(host).innerHTML = '<a>Hello</a>';
 
-    host.shadowRoot.innerHTML = '<slot></slot><b>after</b>';
+    ShadyDOM.wrap(ShadyDOM.wrap(host).shadowRoot).innerHTML = '<slot></slot><b>after</b>';
     ShadyDOM.flush();
     assert.strictEqual(getComposedHTML(host), '<a>Hello</a><b>after</b>');
 
-    host.shadowRoot.childNodes[1].textContent = '';
+    ShadyDOM.wrap(ShadyDOM.wrap(host).shadowRoot).childNodes[1].textContent = '';
     ShadyDOM.flush();
     assert.strictEqual(getComposedHTML(host), '<a>Hello</a><b></b>');
 
-    host.shadowRoot.innerHTML = '';
+    ShadyDOM.wrap(ShadyDOM.wrap(host).shadowRoot).innerHTML = '';
     ShadyDOM.flush();
     assert.strictEqual(getComposedHTML(host), '');
   });
 
   test('removeAllChildNodes - mutate shadow nested', function() {
-    host.innerHTML = '<a>Hello</a>';
-    const hostChild = host.firstChild;
-    host.shadowRoot.innerHTML = '<div><slot></slot><b>after</b></div>';
-    const slot = host.shadowRoot.firstChild.firstChild;
+    ShadyDOM.wrap(host).innerHTML = '<a>Hello</a>';
+    const hostChild = ShadyDOM.wrap(host).firstChild;
+    ShadyDOM.wrap(ShadyDOM.wrap(host).shadowRoot).innerHTML = '<div><slot></slot><b>after</b></div>';
+    const slot = ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(host).shadowRoot).firstChild).firstChild;
     assert.equal(slot.localName, 'slot');
     assert.deepEqual(slot.assignedNodes(), [hostChild]);
     ShadyDOM.flush();
     assert.strictEqual(getComposedHTML(host), '<div><a>Hello</a><b>after</b></div>');
-    host.shadowRoot.childNodes[0].textContent = '';
+    ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(host).shadowRoot).childNodes[0]).textContent = '';
     ShadyDOM.flush();
     assert.deepEqual(slot.assignedNodes(), []);
     assert.strictEqual(getComposedHTML(host), '<div></div>');
 
-    host.shadowRoot.innerHTML = '';
+    ShadyDOM.wrap(ShadyDOM.wrap(host).shadowRoot).innerHTML = '';
     ShadyDOM.flush();
     assert.strictEqual(getComposedHTML(host), '');
   });
 
   test('removeAllChildNodes - mutate shadow deep nested', function() {
-    host.innerHTML = '<a>Hello</a>';
-    const hostChild = host.firstChild;
-    host.shadowRoot.innerHTML = '<div><div><slot></slot><b>after</b></div></div>';
-    const slot = host.shadowRoot.firstChild.firstChild.firstChild;
+    ShadyDOM.wrap(host).innerHTML = '<a>Hello</a>';
+    const hostChild = ShadyDOM.wrap(host).firstChild;
+    ShadyDOM.wrap(ShadyDOM.wrap(host).shadowRoot).innerHTML = '<div><div><slot></slot><b>after</b></div></div>';
+    const slot = ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(host).shadowRoot).firstChild).firstChild).firstChild;
     assert.equal(slot.localName, 'slot');
     assert.deepEqual(slot.assignedNodes(), [hostChild]);
     ShadyDOM.flush();
     assert.strictEqual(getComposedHTML(host), '<div><div><a>Hello</a><b>after</b></div></div>');
-    const div = host.shadowRoot.childNodes[0];
+    const div = ShadyDOM.wrap(ShadyDOM.wrap(host).shadowRoot).childNodes[0];
     // NOTE: older browsers without prototype accessors need patching
     // to handle setting properties. This node is a child of a shadowRoot
     // and therefore has patched "outside" accessors but "textContent" is
@@ -254,36 +254,36 @@ suite('Mutate light DOM', function() {
     assert.deepEqual(slot.assignedNodes(), []);
     assert.strictEqual(getComposedHTML(host), '<div></div>');
 
-    host.shadowRoot.innerHTML = '';
+    ShadyDOM.wrap(ShadyDOM.wrap(host).shadowRoot).innerHTML = '';
     ShadyDOM.flush();
     assert.strictEqual(getComposedHTML(host), '');
   });
 
   test('removeAllChildNodes - mutate shadow fallback', function() {
-    host.innerHTML = '<a>Hello</a>';
+    ShadyDOM.wrap(host).innerHTML = '<a>Hello</a>';
 
-    host.shadowRoot.innerHTML = '<slot name="xxx"><b>fallback</b></slot>';
-    var b = host.shadowRoot.firstChild.firstChild;
+    ShadyDOM.wrap(ShadyDOM.wrap(host).shadowRoot).innerHTML = '<slot name="xxx"><b>fallback</b></slot>';
+    var b = ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(host).shadowRoot).firstChild).firstChild;
     ShadyDOM.flush();
     assert.strictEqual(getComposedHTML(host), '<b>fallback</b>');
 
-    b.textContent = '';
+    ShadyDOM.wrap(b).textContent = '';
     ShadyDOM.flush();
     assert.strictEqual(getComposedHTML(host), '<b></b>');
 
-    host.shadowRoot.firstChild.innerHTML = '';
+    ShadyDOM.wrap(ShadyDOM.wrap(host).shadowRoot).firstChild.innerHTML = '';
     ShadyDOM.flush();
     assert.strictEqual(getComposedHTML(host), '');
 
-    host.shadowRoot.innerHTML = '';
+    ShadyDOM.wrap(ShadyDOM.wrap(host).shadowRoot).innerHTML = '';
     ShadyDOM.flush();
     assert.strictEqual(getComposedHTML(host), '');
   });
 
   test('removeChild - mutate host', function() {
-    host.innerHTML = '<a>Hello</a>';
+    ShadyDOM.wrap(host).innerHTML = '<a>Hello</a>';
 
-    host.shadowRoot.innerHTML = '<slot>fallback</slot>';
+    ShadyDOM.wrap(ShadyDOM.wrap(host).shadowRoot).innerHTML = '<slot>fallback</slot>';
     ShadyDOM.flush();
     assert.strictEqual(getComposedHTML(host), '<a>Hello</a>');
 
@@ -291,17 +291,17 @@ suite('Mutate light DOM', function() {
     ShadyDOM.flush();
     assert.strictEqual(getComposedHTML(host), '<a></a>');
 
-    host.innerHTML = '';
+    ShadyDOM.wrap(host).innerHTML = '';
     ShadyDOM.flush();
     assert.strictEqual(getComposedHTML(host), 'fallback');
   });
 
   test('removeChild - mutate host 2', function() {
-    host.innerHTML = '<a></a><b></b>';
+    ShadyDOM.wrap(host).innerHTML = '<a></a><b></b>';
     var a = getComposedChildAtIndex(host, 0);
     var b = getComposedChildAtIndex(host, 1);
 
-    host.shadowRoot.innerHTML = '<slot>fallback</slot>';
+    ShadyDOM.wrap(ShadyDOM.wrap(host).shadowRoot).innerHTML = '<slot>fallback</slot>';
     ShadyDOM.flush();
     assert.strictEqual(getComposedHTML(host), '<a></a><b></b>');
 
@@ -315,10 +315,10 @@ suite('Mutate light DOM', function() {
   });
 
   test('removeChild - mutate shadow', function() {
-    host.innerHTML = '<a>Hello</a>';
+    ShadyDOM.wrap(host).innerHTML = '<a>Hello</a>';
 
-    host.shadowRoot.innerHTML = '<slot></slot><b>after</b>';
-    var b = host.shadowRoot.lastChild;
+    ShadyDOM.wrap(ShadyDOM.wrap(host).shadowRoot).innerHTML = '<slot></slot><b>after</b>';
+    var b = ShadyDOM.wrap(ShadyDOM.wrap(host).shadowRoot).lastChild;
     ShadyDOM.flush();
     assert.strictEqual(getComposedHTML(host), '<a>Hello</a><b>after</b>');
 
@@ -326,37 +326,37 @@ suite('Mutate light DOM', function() {
     ShadyDOM.flush();
     assert.strictEqual(getComposedHTML(host), '<a>Hello</a><b></b>');
 
-    host.shadowRoot.removeChild(b);
+    ShadyDOM.wrap(ShadyDOM.wrap(host).shadowRoot).removeChild(b);
     ShadyDOM.flush();
     assert.strictEqual(getComposedHTML(host), '<a>Hello</a>');
 
-    host.shadowRoot.removeChild(host.shadowRoot.firstChild);
+    ShadyDOM.wrap(ShadyDOM.wrap(host).shadowRoot).removeChild(ShadyDOM.wrap(ShadyDOM.wrap(host).shadowRoot).firstChild);
     ShadyDOM.flush();
     assert.strictEqual(getComposedHTML(host), '');
   });
 
   test('setAttribute slot', function() {
-    host.innerHTML = '<a slot="a">Hello</a><b slot="b">World</b>';
+    ShadyDOM.wrap(host).innerHTML = '<a slot="a">Hello</a><b slot="b">World</b>';
 
 
-    host.shadowRoot.innerHTML = '<slot name="b">fallback b</slot>' +
+    ShadyDOM.wrap(ShadyDOM.wrap(host).shadowRoot).innerHTML = '<slot name="b">fallback b</slot>' +
                             '<slot name="a">fallback a</slot>';
     ShadyDOM.flush();
     assert.strictEqual(getComposedHTML(host), '<b slot="b">World</b><a slot="a">Hello</a>');
 
-    host.shadowRoot.firstChild.setAttribute('name', 'xxx');
+    ShadyDOM.wrap(ShadyDOM.wrap(host).shadowRoot).firstChild.setAttribute('name', 'xxx');
     ShadyDOM.flush();
     assert.strictEqual(getComposedHTML(host), 'fallback b<a slot="a">Hello</a>');
 
-    host.shadowRoot.firstChild.setAttribute('name', '');
-    host.shadowRoot.lastChild.setAttribute('name', '');
+    ShadyDOM.wrap(ShadyDOM.wrap(host).shadowRoot).firstChild.setAttribute('name', '');
+    ShadyDOM.wrap(ShadyDOM.wrap(host).shadowRoot).lastChild.setAttribute('name', '');
     ShadyDOM.flush();
     assert.strictEqual(getComposedHTML(host), 'fallback bfallback a');
   });
 
   test('appendChild - mutate host', function() {
-    host.innerHTML = '<a>Hello</a>';
-    host.shadowRoot.innerHTML = '<slot></slot>';
+    ShadyDOM.wrap(host).innerHTML = '<a>Hello</a>';
+    ShadyDOM.wrap(ShadyDOM.wrap(host).shadowRoot).innerHTML = '<slot></slot>';
     ShadyDOM.flush();
     assert.strictEqual(getComposedHTML(host), '<a>Hello</a>');
 
@@ -367,8 +367,8 @@ suite('Mutate light DOM', function() {
   });
 
   test('appendChild - mutate shadow', function() {
-    host.innerHTML = '<a>Hello</a>';
-    host.shadowRoot.innerHTML = '<slot></slot>';
+    ShadyDOM.wrap(host).innerHTML = '<a>Hello</a>';
+    ShadyDOM.wrap(ShadyDOM.wrap(host).shadowRoot).innerHTML = '<slot></slot>';
     ShadyDOM.flush();
     assert.strictEqual(getComposedHTML(host), '<a>Hello</a>');
 
@@ -379,9 +379,9 @@ suite('Mutate light DOM', function() {
   });
 
   test('insertBefore - mutate host', function() {
-    host.innerHTML = '<a>Hello</a>';
+    ShadyDOM.wrap(host).innerHTML = '<a>Hello</a>';
     var a = getComposedChildAtIndex(host, 0);
-    host.shadowRoot.innerHTML = '<slot></slot>';
+    ShadyDOM.wrap(ShadyDOM.wrap(host).shadowRoot).innerHTML = '<slot></slot>';
     ShadyDOM.flush();
     assert.strictEqual(getComposedHTML(host), '<a>Hello</a>');
 
@@ -392,11 +392,11 @@ suite('Mutate light DOM', function() {
   });
 
   test('insertBefore - mutate shadow', function() {
-    host.innerHTML = '<a>Hello</a>';
+    ShadyDOM.wrap(host).innerHTML = '<a>Hello</a>';
 
 
-    host.shadowRoot.innerHTML = '<slot></slot>';
-    var content = host.shadowRoot.firstChild;
+    ShadyDOM.wrap(ShadyDOM.wrap(host).shadowRoot).innerHTML = '<slot></slot>';
+    var content = ShadyDOM.wrap(ShadyDOM.wrap(host).shadowRoot).firstChild;
     ShadyDOM.flush();
     assert.strictEqual(getComposedHTML(host), '<a>Hello</a>');
 
@@ -407,8 +407,8 @@ suite('Mutate light DOM', function() {
   });
 
   test('replaceChild - mutate host', function() {
-    host.innerHTML = '<a>Hello</a>';
-    host.shadowRoot.innerHTML = '<slot></slot>';
+    ShadyDOM.wrap(host).innerHTML = '<a>Hello</a>';
+    ShadyDOM.wrap(ShadyDOM.wrap(host).shadowRoot).innerHTML = '<slot></slot>';
     ShadyDOM.flush();
     assert.strictEqual(getComposedHTML(host), '<a>Hello</a>');
     var b = document.createElement('b');
@@ -418,9 +418,9 @@ suite('Mutate light DOM', function() {
   });
 
   test('replaceChild - mutate shadow', function() {
-    host.innerHTML = '<a>Hello</a>';
-    host.shadowRoot.innerHTML = '<slot></slot>';
-    var content = host.shadowRoot.firstChild;
+    ShadyDOM.wrap(host).innerHTML = '<a>Hello</a>';
+    ShadyDOM.wrap(ShadyDOM.wrap(host).shadowRoot).innerHTML = '<slot></slot>';
+    var content = ShadyDOM.wrap(ShadyDOM.wrap(host).shadowRoot).firstChild;
     ShadyDOM.flush();
     assert.strictEqual(getComposedHTML(host), '<a>Hello</a>');
     var b = document.createElement('b');
@@ -430,8 +430,8 @@ suite('Mutate light DOM', function() {
   });
 
   test('querySelectorAll .shadowRoot)', function() {
-    host.innerHTML = '<div id="main"></div>';
-    host.shadowRoot.innerHTML = '<slot></slot><span id="main"></span>' +
+    ShadyDOM.wrap(host).innerHTML = '<div id="main"></div>';
+    ShadyDOM.wrap(ShadyDOM.wrap(host).shadowRoot).innerHTML = '<slot></slot><span id="main"></span>' +
       '<div></div>';
     host.shadowRoot.lastElementChild.attachShadow({mode: 'open'});
     // force upgrade on polyfilled browsers
@@ -449,9 +449,9 @@ suite('Mutate light DOM', function() {
   });
 
   test('querySelectorAll (light dom)', function() {
-    host.innerHTML = '<div id="main"></div>';
+    ShadyDOM.wrap(host).innerHTML = '<div id="main"></div>';
     var hostLightMain = getComposedChildAtIndex(host, 0);
-    host.shadowRoot.innerHTML = '<slot></slot><span id="main"></span>' +
+    ShadyDOM.wrap(ShadyDOM.wrap(host).shadowRoot).innerHTML = '<slot></slot><span id="main"></span>' +
       '<div></div>';
     var child = host.shadowRoot.lastElementChild;
     child.attachShadow({mode: 'open'});
@@ -465,9 +465,9 @@ suite('Mutate light DOM', function() {
   });
 
   test('querySelectorAll useNative (light dom)', function() {
-    host.innerHTML = '<div id="main"></div>';
+    ShadyDOM.wrap(host).innerHTML = '<div id="main"></div>';
     var hostLightMain = getComposedChildAtIndex(host, 0);
-    host.shadowRoot.innerHTML = '<slot></slot><span id="main"></span>' +
+    ShadyDOM.wrap(ShadyDOM.wrap(host).shadowRoot).innerHTML = '<slot></slot><span id="main"></span>' +
       '<div></div>';
     var child = host.shadowRoot.lastElementChild;
     child.attachShadow({mode: 'open'});
@@ -551,11 +551,11 @@ suite('Patch of addEventListener/removeEventListener', function() {
   setup(function() {
     el1 = document.createElement('button');
     el1.textContent = 'hi';
-    document.body.appendChild(el1);
+    ShadyDOM.wrap(document.body).appendChild(el1);
 
     el2 = document.createElement('button');
     el2.textContent = 'hi again';
-    document.body.appendChild(el2);
+    ShadyDOM.wrap(document.body).appendChild(el2);
 
     callback = sinon.stub();
   });
