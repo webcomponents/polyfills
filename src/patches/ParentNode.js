@@ -121,7 +121,7 @@ export const Query = {
     if (useNative) {
       const o = Array.prototype.slice.call(this[utils.NATIVE_PREFIX + 'querySelectorAll'](selector));
       const root = this[utils.SHADY_PREFIX + 'getRootNode']();
-      return o.filter(e => e.getRootNode() == root);
+      return o.filter(e => e[utils.SHADY_PREFIX + 'getRootNode']() == root);
     }
     return query(this, function(n) {
       return utils.matchesSelector(n, selector);

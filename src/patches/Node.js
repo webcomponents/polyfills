@@ -16,6 +16,8 @@ import {recordInsertBefore, recordRemoveChild} from '../link-nodes.js';
 
 const doc = window.document;
 
+const preferPerformance = utils.settings.preferPerformance;
+
 const nativeIsConnectedAccessors =
 /** @type {ObjectPropertyDescriptor} */(
   Object.getOwnPropertyDescriptor(window.Node.prototype, 'isConnected')
@@ -295,7 +297,7 @@ export const Node = {
     }
     // add to new parent
     let allowNativeInsert = true;
-    const needsScoping = node['__noInsertionPoint'] === undefined &&
+    const needsScoping = (!preferPerformance || node['__noInsertionPoint'] === undefined) &&
         !currentScopeIsCorrect(node, newScopeName);
     if (ownerRoot) {
       // in a shadowRoot, only tree walk if new insertion points may have been added, or scoping is needed
