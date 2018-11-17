@@ -18,6 +18,8 @@ const {parentNode} = accessors;
 
 const doc = window.document;
 
+const preferPerformance = utils.settings.preferPerformance;
+
 // Patched `insertBefore`. Note that all mutations that add nodes are routed
 // here. When a <slot> is added or a node is added to a host with a shadowRoot
 // with a slot, a standard dom `insert` call is aborted and `_asyncRender`
@@ -80,7 +82,8 @@ export function insertBefore(parent, node, ref_node) {
   }
   // add to new parent
   let allowNativeInsert = true;
-  const needsScoping = node['__noInsertionPoint'] === undefined && !currentScopeIsCorrect(node, newScopeName);
+  const needsScoping = (!preferPerformance || node['__noInsertionPoint'] === undefined)
+    && !currentScopeIsCorrect(node, newScopeName);
   if (ownerRoot) {
     // in a shadowroot, only tree walk if new insertion points may have been added, or scoping is needed
     if (!node['__noInsertionPoint'] || needsScoping) {
