@@ -14,11 +14,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <script src="../node_modules/@webcomponents/webcomponents-platform/webcomponents-platform.js"></script>
   <script src="../node_modules/promise-polyfill/dist/polyfill.js"></script>
   <script src="../node_modules/@webcomponents/template/template.js"></script>
-  <script>
-    ShadyDOM = { force: true };
-  </script>
-  <script src="../shadydom.min.js"></script>
-  <script src="../node_modules/@webcomponents/custom-elements/custom-elements.min.js"></script>
+  <script src="loader.js"></script>
   <script src="../node_modules/@webcomponents/shadycss/scoping-shim.min.js"></script>
   <script src="../node_modules/wct-browser-legacy/browser.js"></script>
 </head>
@@ -58,7 +54,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     class Base extends HTMLElement {
       constructor() {
         super();
-        this.__template = document.querySelector(`template#${this.localName}`);
+        this.__template = ShadyDOM.wrap(document).querySelector(`template#${this.localName}`);
       }
       connectedCallback() {
         if (this.__template) {
@@ -67,9 +63,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             this.__template.__prepared = true;
           }
           window.ShadyCSS.styleElement(this);
-          if (!this.shadowRoot) {
-            this.attachShadow({mode: 'open'});
-            this.shadowRoot.appendChild(this.__template.content.cloneNode(true));
+          if (!ShadyDOM.wrap(this).shadowRoot) {
+            ShadyDOM.wrap(this).attachShadow({mode: 'open'});
+            ShadyDOM.wrap(this).shadowRoot.appendChild(ShadyDOM.wrap(this.__template.content).cloneNode(true));
           }
         }
       }
@@ -79,7 +75,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     customElements.define('naive-element', class extends HTMLElement {
       constructor() {
         super();
-        this.attachShadow({mode: 'open'});
+        ShadyDOM.wrap(this).attachShadow({mode: 'open'});
       }
     });
 
@@ -91,7 +87,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         return window.ShadyCSS.ScopingShim.currentScopeForNode(node);
       };
 
-      const arena = document.querySelector('#arena');
+      const arena = ShadyDOM.wrap(document).querySelector('#arena');
 
 
       // set up spies on scoping APIs
@@ -116,48 +112,48 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       suite('append', function() {
         test('elements appended to the document are unscoped', function() {
           const el = document.createElement('div');
-          arena.appendChild(el);
+          ShadyDOM.wrap(arena).appendChild(el);
           assert.equal(csfn(el), '');
         });
 
         test('elements appended to a shadowRoot are scoped to that shadowroot', function () {
           const el = document.createElement('api-element');
-          arena.appendChild(el);
+          ShadyDOM.wrap(arena).appendChild(el);
           const newDiv = document.createElement('div');
-          el.shadowRoot.appendChild(newDiv);
+          ShadyDOM.wrap(ShadyDOM.wrap(el).shadowRoot).appendChild(newDiv);
           ShadyDOM.flush();
           assert.equal(csfn(newDiv), 'api-element');
         });
 
         test('elements moved from a shadowroot to document are unscoped', function() {
           const el = document.createElement('api-element');
-          arena.appendChild(el);
-          const inner = el.shadowRoot.querySelector('#internal');
-          arena.appendChild(inner);
+          ShadyDOM.wrap(arena).appendChild(el);
+          const inner = ShadyDOM.wrap(ShadyDOM.wrap(el).shadowRoot).querySelector('#internal');
+          ShadyDOM.wrap(arena).appendChild(inner);
           assert.equal(csfn(inner), '');
         });
 
         test('elements moving document to document do not do unnecessary work', function() {
           const owner1 = document.createElement('div');
           const inner = document.createElement('a');
-          owner1.appendChild(inner);
+          ShadyDOM.wrap(owner1).appendChild(inner);
           const owner2 = document.createElement('span');
-          arena.appendChild(owner1);
-          arena.appendChild(owner2);
+          ShadyDOM.wrap(arena).appendChild(owner1);
+          ShadyDOM.wrap(arena).appendChild(owner2);
           createSpies();
-          owner2.appendChild(inner);
+          ShadyDOM.wrap(owner2).appendChild(inner);
           assert(scopeSpy.notCalled, 'scoping function should not have been called');
           assert(unscopeSpy.notCalled, 'unscoping function should not have been called');
         });
 
         test('appending to a deep shadowroot gets the right scope', function () {
           const el = document.createElement('naive-element');
-          arena.appendChild(el);
+          ShadyDOM.wrap(arena).appendChild(el);
           const api = document.createElement('api-element');
-          el.shadowRoot.appendChild(api);
+          ShadyDOM.wrap(ShadyDOM.wrap(el).shadowRoot).appendChild(api);
           assert.equal(csfn(api), 'naive-element');
           const div = document.createElement('div');
-          api.shadowRoot.appendChild(div);
+          ShadyDOM.wrap(ShadyDOM.wrap(api).shadowRoot).appendChild(div);
           assert.equal(csfn(div), 'api-element');
         });
 
@@ -165,12 +161,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           const owner1 = document.createElement('naive-element');
           const owner2 = document.createElement('naive-element');
           const el = document.createElement('div');
-          arena.appendChild(owner1);
-          arena.appendChild(owner2);
-          owner1.shadowRoot.appendChild(el);
+          ShadyDOM.wrap(arena).appendChild(owner1);
+          ShadyDOM.wrap(arena).appendChild(owner2);
+          ShadyDOM.wrap(ShadyDOM.wrap(owner1).shadowRoot).appendChild(el);
           assert.equal(csfn(el), 'naive-element');
           createSpies();
-          owner2.shadowRoot.appendChild(el);
+          ShadyDOM.wrap(ShadyDOM.wrap(owner2).shadowRoot).appendChild(el);
           assert.equal(csfn(el), 'naive-element');
           assert(unscopeSpy.notCalled, 'unscopeNode should not have been called');
           assert(scopeSpy.notCalled, 'scopeNode should not have been called');
@@ -178,10 +174,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
         test('ShadyCSS prepareTemplate is not needed for bulk append', function() {
           const el = document.createElement('naive-element');
-          arena.appendChild(el);
-          const template = document.querySelector('template#complicated');
-          el.shadowRoot.appendChild(template.content.cloneNode(true));
-          const nodes = el.shadowRoot.querySelectorAll('*');
+          ShadyDOM.wrap(arena).appendChild(el);
+          const template = ShadyDOM.wrap(document).querySelector('template#complicated');
+          ShadyDOM.wrap(ShadyDOM.wrap(el).shadowRoot).appendChild(ShadyDOM.wrap(template.content).cloneNode(true));
+          const nodes = ShadyDOM.wrap(ShadyDOM.wrap(el).shadowRoot).querySelectorAll('*');
           for (const node of nodes) {
             assert.equal(csfn(node), 'naive-element');
           }
@@ -190,20 +186,20 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         test('appending to a document fragment does not scope', function() {
           const df = document.createDocumentFragment();
           const api = document.createElement('api-element');
-          df.appendChild(api);
+          ShadyDOM.wrap(df).appendChild(api);
           assert.equal(csfn(api), '');
         });
 
         test('appending a distributed node has the correct scope', function() {
           const span = document.createElement('span');
           const el = document.createElement('api-element');
-          arena.appendChild(el);
-          el.appendChild(span);
+          ShadyDOM.wrap(arena).appendChild(el);
+          ShadyDOM.wrap(el).appendChild(span);
           ShadyDOM.flush();
           assert.equal(csfn(span), '');
           const naive = document.createElement('naive-element');
-          arena.appendChild(naive);
-          naive.shadowRoot.appendChild(el);
+          ShadyDOM.wrap(arena).appendChild(naive);
+          ShadyDOM.wrap(ShadyDOM.wrap(naive).shadowRoot).appendChild(el);
           ShadyDOM.flush();
           assert.equal(csfn(span), 'naive-element');
         });
@@ -211,34 +207,34 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         test('appending a node to a disconnected light dom tree does not scope', function () {
           const el = document.createElement('div');
           const child = document.createElement('span');
-          el.appendChild(child);
+          ShadyDOM.wrap(el).appendChild(child);
           assert.equal(csfn(child), '');
         });
 
         test('appending a disconnected, scoped node to document unscopes correctly', function() {
           const el = document.createElement('api-element');
-          arena.appendChild(el);
-          const clone = el.shadowRoot.querySelector('div').cloneNode(true);
+          ShadyDOM.wrap(arena).appendChild(el);
+          const clone = ShadyDOM.wrap(ShadyDOM.wrap(el).shadowRoot).querySelector('div').cloneNode(true);
           assert.equal(csfn(clone), 'api-element');
-          arena.appendChild(clone);
+          ShadyDOM.wrap(arena).appendChild(clone);
           assert.equal(csfn(clone), '');
         });
 
         test('appending a cloned, scoped node to document unscopes correctly', function() {
           customElements.define('clone-element', class extends Base {});
           const el = document.createElement('clone-element');
-          arena.appendChild(el);
-          const clone = el.shadowRoot.querySelector('div').cloneNode(true);
-          const span = clone.querySelector('span');
+          ShadyDOM.wrap(arena).appendChild(el);
+          const clone = ShadyDOM.wrap(ShadyDOM.wrap(el).shadowRoot).querySelector('div').cloneNode(true);
+          const span = ShadyDOM.wrap(clone).querySelector('span');
           assert.equal(csfn(span), 'clone-element');
-          arena.appendChild(span);
+          ShadyDOM.wrap(arena).appendChild(span);
           assert.equal(csfn(span), '');
         });
 
         test('appending a unscoped node into a disconnected shadowroot scopes correctly', function() {
           const el = document.createElement('naive-element');
           const span = document.createElement('span');
-          el.shadowRoot.appendChild(span);
+          ShadyDOM.wrap(ShadyDOM.wrap(el).shadowRoot).appendChild(span);
           assert.equal(csfn(span), 'naive-element');
         });
       });
@@ -246,17 +242,17 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       suite('remove', function() {
         test('removing a shadowed node removes the scope', function() {
           const el = document.createElement('api-element');
-          arena.appendChild(el);
-          const inner = el.shadowRoot.querySelector('#internal');
-          el.shadowRoot.removeChild(inner);
+          ShadyDOM.wrap(arena).appendChild(el);
+          const inner = ShadyDOM.wrap(ShadyDOM.wrap(el).shadowRoot).querySelector('#internal');
+          ShadyDOM.wrap(ShadyDOM.wrap(el).shadowRoot).removeChild(inner);
           assert.equal(csfn(inner), '');
         });
 
         test('removing document scope node does not use scoping API', function() {
           const el = document.createElement('div');
-          arena.appendChild(el);
+          ShadyDOM.wrap(arena).appendChild(el);
           createSpies();
-          arena.removeChild(el);
+          ShadyDOM.wrap(arena).removeChild(el);
           assert(scopeSpy.notCalled, 'scopeNode should not be called');
           assert(unscopeSpy.notCalled, 'unscopeNode should not be called');
         });
