@@ -82,10 +82,10 @@ if (utils.settings.inUse) {
 
   // capture native patches
   patchNative();
-  // Apply patches to events...
-  patchEvents();
   // Apply patches to builtins (e.g. Element.prototype) where applicable.
   patchPrototypes();
+  // Apply patches to events...
+  patchEvents();
 
   window.ShadowRoot = ShadyRoot;
 }

@@ -9,7 +9,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 */
 
 import * as utils from './utils.js';
-import {shadyDataForNode} from './shady-data.js';
+import {shadyDataForNode, ensureShadyDataForNode} from './shady-data.js';
 
 /*
 Make this name unique so it is unlikely to conflict with properties on objects passed to `addEventListener`
@@ -88,15 +88,15 @@ const unpatchedEvents = {
 export function pathComposer(startNode, composed) {
   let composedPath = [];
   let current = startNode;
-  let startRoot = startNode === window ? window : startNode.getRootNode();
+  let startRoot = startNode === window ? window : startNode[utils.SHADY_PREFIX + 'getRootNode']();
   while (current) {
     composedPath.push(current);
-    if (current.assignedSlot) {
-      current = current.assignedSlot;
+    if (current[utils.SHADY_PREFIX + 'assignedSlot']) {
+      current = current[utils.SHADY_PREFIX + 'assignedSlot'];
     } else if (current.nodeType === window.Node.DOCUMENT_FRAGMENT_NODE && current.host && (composed || current !== startRoot)) {
       current = current.host;
     } else {
-      current = current.parentNode;
+      current = current[utils.SHADY_PREFIX + 'parentNode'];
     }
   }
   // event composedPath includes window when startNode's ownerRoot is document
@@ -116,7 +116,7 @@ function retarget(refNode, path) {
   let p$ = path;
   for (let i=0, ancestor, lastRoot, root, rootIdx; i < p$.length; i++) {
     ancestor = p$[i];
-    root = ancestor === window ? window : ancestor.getRootNode();
+    root = ancestor === window ? window : ancestor[utils.SHADY_PREFIX + 'getRootNode']();
     if (root !== lastRoot) {
       rootIdx = refNodePath.indexOf(root);
       lastRoot = root;
@@ -279,7 +279,7 @@ function retargetNonBubblingEvent(e) {
       fireHandlers(e, node, 'bubble');
       // don't bother with window, it doesn't have `getRootNode` and will be last in the path anyway
       if (node !== window) {
-        lastFiredRoot = node.getRootNode();
+        lastFiredRoot = node[utils.SHADY_PREFIX + 'getRootNode']();
       }
       if (e.__propagationStopped) {
         return;
@@ -387,7 +387,7 @@ export function addEventListener(type, fnOrObj, optionsOrCapture) {
   const wrapperFn = function(e) {
     // Support `once` option.
     if (once) {
-      this.removeEventListener(type, fnOrObj, optionsOrCapture);
+      this[utils.SHADY_PREFIX + 'removeEventListener'](type, fnOrObj, optionsOrCapture);
     }
     if (!e['__target']) {
       patchEvent(e);
@@ -504,7 +504,7 @@ export function removeEventListener(type, fnOrObj, optionsOrCapture) {
 
 function activateFocusEventOverrides() {
   for (let ev in nonBubblingEventsToRetarget) {
-    window.addEventListener(ev, function(e) {
+    window[utils.NATIVE_PREFIX + 'addEventListener'](ev, function(e) {
       if (!e['__target']) {
         patchEvent(e);
         retargetNonBubblingEvent(e);
@@ -530,13 +530,14 @@ let PatchedCustomEvent = mixinComposedFlag(window.CustomEvent);
 let PatchedMouseEvent = mixinComposedFlag(window.MouseEvent);
 
 export function patchEvents() {
-  if (utils.settings['noPatch']) {
-    return;
-  }
+  activateFocusEventOverrides();
   window.Event = PatchedEvent;
   window.CustomEvent = PatchedCustomEvent;
   window.MouseEvent = PatchedMouseEvent;
-  activateFocusEventOverrides();
+  if (utils.settings['noPatch']) {
+    return;
+  }
+
 
   // Fix up `Element.prototype.click()` if `isTrusted` is supported, but `composed` isn't
   if (!composedGetter && Object.getOwnPropertyDescriptor(window.Event.prototype, 'isTrusted')) {
@@ -547,7 +548,7 @@ export function patchEvents() {
         cancelable: true,
         composed: true
       });
-      this.dispatchEvent(ev);
+      this[utils.SHADY_PREFIX + 'dispatchEvent'](ev);
     };
     if (window.Element.prototype.click) {
       window.Element.prototype.click = composedClickFn;
@@ -556,3 +557,6 @@ export function patchEvents() {
     }
   }
 }
+
+export const eventPropertyNames = Object.getOwnPropertyNames(Document.prototype)
+    .filter(name => name.substring(0,2) === 'on');

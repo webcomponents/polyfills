@@ -280,6 +280,14 @@ export const patchNative = () => {
   ]);
   copyAccessors(window.Element.prototype, ParentNodeMethods);
 
+  // HTMLElement
+  if (hasDescriptors) {
+    copyAccessors(window.HTMLElement.prototype, [
+      'focus',
+      'blur'
+    ]);
+  }
+
   // DocumentFragment
   if (hasDescriptors) {
     // NOTE, IE 11 does not have on DocumentFragment

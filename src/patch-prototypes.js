@@ -56,13 +56,17 @@ export const patchPrototypes = () => {
   const descriptor = Object.getOwnPropertyDescriptor(DocumentOrShadowRoot, 'activeElement');
   Object.defineProperty(window.Document.prototype, '_activeElement', descriptor);
 
+  // force window since it does not have the accessors.
+  utils.patchAccessors(window.Window.prototype,
+      Object.getOwnPropertyDescriptors(Window), true, utils.SHADY_PREFIX);
+
   // only perform native patches if `noPatch` flag not set.
   if (!utils.settings.noPatch) {
     onPatchMap((proto, patch) =>
       utils.patchAccessors(proto, Object.getOwnPropertyDescriptors(patch)));
-    // force window since it does not have the accessors.
+
     utils.patchAccessors(window.Window.prototype,
-        Object.getOwnPropertyDescriptors(Window), true);
+      Object.getOwnPropertyDescriptors(Window), true);
 
     // TODO(sorvell): is this needed?
     // force HTMLElement since it does not have the accessors.

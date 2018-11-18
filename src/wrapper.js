@@ -9,6 +9,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 */
 
 import * as utils from './utils.js';
+import {eventPropertyNames} from './patch-events.js';
 
 export class Wrapper {
 
@@ -57,10 +58,6 @@ export class Wrapper {
     return this.node[utils.SHADY_PREFIX + 'dispatchEvent'](event);
   }
 
-  get isConnected() {
-    return this.node[utils.SHADY_PREFIX + 'isConnected'];
-  }
-
   // element
   setAttribute(name, value) {
     this.node[utils.SHADY_PREFIX + 'setAttribute'](name, value);
@@ -74,16 +71,19 @@ export class Wrapper {
     return this.node[utils.SHADY_PREFIX + 'attachShadow'](options);
   }
 
-  get slot() {
-    return this.node[utils.SHADY_PREFIX + 'slot'];
+  get activeElement() {
+    if (utils.isShadyRoot(this.node) || this.node.nodeType === Node.DOCUMENT_NODE) {
+      return this.node[utils.SHADY_PREFIX + 'activeElement'];
+    }
   }
 
-  set slot(value) {
-    this.node[utils.SHADY_PREFIX + 'slot'] = value;
+  // NOTE: not needed, just here for balance
+  focus() {
+    this.node[utils.NATIVE_PREFIX + 'focus']();
   }
 
-  get assignedSlot() {
-    return this.node[utils.SHADY_PREFIX + 'assignedSlot'];
+  blur() {
+    this.node[utils.SHADY_PREFIX + 'blur']();
   }
 
   // document
@@ -118,6 +118,7 @@ export class Wrapper {
 }
 
 const proto = Wrapper.prototype;
+
 const readAccessors = [
   'parentNode',
   'firstChild', 'lastChild',
@@ -128,7 +129,9 @@ const readAccessors = [
   'nextElementSibling', 'previousElementSibling',
   'children', 'childElementCount',
   //'activeElement',
-  'shadowRoot'
+  'shadowRoot',
+  'assignedSlot',
+  'isConnected'
 ];
 
 readAccessors.forEach(name => {
@@ -142,8 +145,8 @@ readAccessors.forEach(name => {
 });
 
 const readWriteAccessors = [
-  'innerHTML', 'textContent'
-];
+  'innerHTML', 'textContent', 'slot'
+].concat(eventPropertyNames);
 
 readWriteAccessors.forEach(name => {
   Object.defineProperty(proto, name, {

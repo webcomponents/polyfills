@@ -9,9 +9,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 */
 
 import * as utils from '../utils.js';
+import {eventPropertyNames} from '../patch-events.js';
 import {shadyDataForNode, ensureShadyDataForNode} from '../shady-data.js';
-
-const nativeBlur = window.HTMLElement.prototype.blur;
 
 export const HTMLElement = {
 
@@ -21,31 +20,30 @@ export const HTMLElement = {
     let root = nodeData && nodeData.root;
     let shadowActive = root && root.activeElement;
     if (shadowActive) {
-      shadowActive.blur();
+      shadowActive[utils.SHADY_PREFIX + 'blur']();
     } else {
-      nativeBlur.call(this);
+      this[utils.NATIVE_PREFIX + 'blur']();
     }
   }
 
 };
 
-for (const property of Object.getOwnPropertyNames(Document.prototype)) {
-  if (property.substring(0,2) === 'on') {
-    Object.defineProperty(HTMLElement, property, {
-      /** @this {HTMLElement} */
-      set: function(fn) {
-        const shadyData = ensureShadyDataForNode(this);
-        const eventName = property.substring(2);
-        shadyData.__onCallbackListeners[property] && this.removeEventListener(eventName, shadyData.__onCallbackListeners[property]);
-        this[utils.SHADY_PREFIX + 'addEventListener'](eventName, fn, {});
-        shadyData.__onCallbackListeners[property] = fn;
-      },
-      /** @this {HTMLElement} */
-      get() {
-        const shadyData = shadyDataForNode(this);
-        return shadyData && shadyData.__onCallbackListeners[property];
-      },
-      configurable: true
-    });
-  }
-}
+eventPropertyNames.forEach(property => {
+  Object.defineProperty(HTMLElement, property, {
+    /** @this {HTMLElement} */
+    set: function(fn) {
+      const shadyData = ensureShadyDataForNode(this);
+      const eventName = property.substring(2);
+      shadyData.__onCallbackListeners[property] && this.removeEventListener(eventName, shadyData.__onCallbackListeners[property]);
+      this[utils.SHADY_PREFIX + 'addEventListener'](eventName, fn, {});
+      shadyData.__onCallbackListeners[property] = fn;
+    },
+    /** @this {HTMLElement} */
+    get() {
+      const shadyData = shadyDataForNode(this);
+      return shadyData && shadyData.__onCallbackListeners[property];
+    },
+    configurable: true
+  });
+});
+
