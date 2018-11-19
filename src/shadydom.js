@@ -23,7 +23,7 @@ import {flush, enqueue} from './flush.js';
 import {observeChildren, unobserveChildren, filterMutations} from './observe-changes.js';
 import {patchNative} from './patch-native.js';
 import {patchInsideElementAccessors, patchOutsideElementAccessors} from './patch-instances.js';
-import {patchEvents, pathComposer} from './patch-events.js';
+import {patchEvents, composedPath} from './patch-events.js';
 import {ShadyRoot} from './attach-shadow.js';
 import {wrap, Wrapper} from './wrapper.js';
 import {patchPrototypes} from './patch-prototypes.js';
@@ -71,7 +71,7 @@ if (utils.settings.inUse) {
     'handlesDynamicScoping': true,
     'wrap': utils.settings.noPatch ? wrap : (n) => n,
     'Wrapper': Wrapper,
-    'composedPath': (e) => pathComposer(e.target, true),
+    'composedPath': composedPath,
     'noPatch': utils.settings.noPatch,
     'nativeMethod': (node, name, ...args) =>
         node[utils.NATIVE_PREFIX + name].apply(node, args),

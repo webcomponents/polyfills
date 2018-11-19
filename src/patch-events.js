@@ -85,7 +85,7 @@ const unpatchedEvents = {
   'DOMSubtreeModified': true
 }
 
-export function pathComposer(startNode, composed) {
+function pathComposer(startNode, composed) {
   let composedPath = [];
   let current = startNode;
   let startRoot = startNode === window ? window : startNode[utils.SHADY_PREFIX + 'getRootNode']();
@@ -104,6 +104,13 @@ export function pathComposer(startNode, composed) {
     composedPath.push(window);
   }
   return composedPath;
+}
+
+export const composedPath = (event) => {
+  if (!event.__composedPath) {
+    event.__composedPath = pathComposer(event.target, true);
+  }
+  return event.__composedPath;
 }
 
 function retarget(refNode, path) {
