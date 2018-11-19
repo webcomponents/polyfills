@@ -115,6 +115,12 @@ export class Wrapper {
     }
   }
 
+  get host() {
+    if (utils.isShadyRoot(this.node)) {
+      return this.node.host;
+    }
+  }
+
 }
 
 const proto = Wrapper.prototype;
