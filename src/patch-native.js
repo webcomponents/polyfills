@@ -276,6 +276,8 @@ export const patchNative = () => {
 
   copyAccessors(window.Element.prototype, [
     'setAttribute',
+    'getAttribute',
+    'hasAttribute',
     'removeAttribute'
   ]);
   copyAccessors(window.Element.prototype, ParentNodeMethods);

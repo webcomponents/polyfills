@@ -256,7 +256,39 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           assert(scopeSpy.notCalled, 'scopeNode should not be called');
           assert(unscopeSpy.notCalled, 'unscopeNode should not be called');
         });
-      })
+      });
+
+      suite('elements not owned by the main document', function() {
+        let el;
+        const template = document.createElement('template');
+        const doc = template.content.ownerDocument;
+        const scopeSelector = 'style-scope x-foo';
+
+        setup(function() {
+          el = doc.createElement('div');
+          el.className = scopeSelector;
+        });
+
+        test('setAttribute does not update a scoping class', function() {
+          ShadyDOM.wrap(el).setAttribute('class', el.getAttribute('class') + ' nug');
+          assert.equal(ShadyDOM.wrap(el).getAttribute('class'), scopeSelector + ' nug');
+        });
+
+        test('appendChild does not update a scoping class', function() {
+          const container = doc.createElement('div');
+          ShadyDOM.wrap(container).appendChild(el);
+          assert.equal(ShadyDOM.wrap(el).getAttribute('class'), scopeSelector);
+        });
+
+        test('removeChild does not update a scoping class', function() {
+          const container = doc.createElement('div');
+          const d = doc.createElement('div');
+          ShadyDOM.wrap(container).appendChild(d);
+          d.className = scopeSelector;
+          ShadyDOM.wrap(container).removeChild(d);
+          assert.equal(ShadyDOM.wrap(el).getAttribute('class'), scopeSelector);
+        });
+      });
     });
   </script>
 </body>

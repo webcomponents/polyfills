@@ -63,6 +63,16 @@ export class Wrapper {
     this.node[utils.SHADY_PREFIX + 'setAttribute'](name, value);
   }
 
+  // NOTE: not needed, just here for balance
+  getAttribute(name) {
+    return this.node[utils.NATIVE_PREFIX + 'getAttribute'](name);
+  }
+
+  // NOTE: not needed, just here for balance
+  hasAttribute(name) {
+    return this.node[utils.NATIVE_PREFIX + 'hasAttribute'](name);
+  }
+
   removeAttribute(name) {
     this.node[utils.SHADY_PREFIX + 'removeAttribute'](name);
   }
