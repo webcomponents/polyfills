@@ -841,24 +841,57 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     assert.sameMembers(order, [cb1, cbReentrant, cb2, cb3, cb4]);
   });
 
-  test('event.composedPath correctly calculated for elements with destination insertion points', function(done) {
-    var re = document.createElement('x-reproject');
+  test('event.composedPath correctly calculated for when slots are assigned to slots', function(done) {
+    let re = document.createElement('x-reproject');
     ShadyDOM.wrap(document.body).appendChild(re);
     ShadyDOM.flush();
-    var p = ShadyDOM.wrap(ShadyDOM.wrap(re).shadowRoot).querySelector('x-project');
-    var child = document.createElement('p');
+    let child = document.createElement('p');
     ShadyDOM.wrap(child).innerHTML = "hello";
     // child will be inserted into p after distributeContent is performed.
     ShadyDOM.wrap(re).appendChild(child);
     ShadyDOM.flush();
+    let s1 = ShadyDOM.wrap(child).assignedSlot;
+    let s2 = ShadyDOM.wrap(s1).assignedSlot;
+    let r1 = ShadyDOM.wrap(s2).getRootNode();
+    let h1 = ShadyDOM.wrap(r1).host;
+    let r2 = ShadyDOM.wrap(h1).getRootNode();
+    let h2 = ShadyDOM.wrap(r2).host;
+    const path = [child, s1, s2, r1, h1, r2, h2, document.body, document.documentElement, document, window];
     ShadyDOM.wrap(child).addEventListener('child-event', function(e){
-      var path = e.composedPath();
-      assert.isTrue(path.indexOf(p) !== -1, 'path contains p');
-      assert.isTrue(path.indexOf(re) !== -1, 'path contains re');
+      const composedPath = e.composedPath();
+      assert.deepEqual(composedPath, path);
       done();
     });
-    var evt = new CustomEvent('child-event');
+    let evt = new CustomEvent('child-event');
     ShadyDOM.wrap(child).dispatchEvent(evt);
+    ShadyDOM.wrap(document.body).removeChild(re);
+  });
+
+  test('ShadyDOM.composedPath correctly calculated', function(done) {
+    let re = document.createElement('x-reproject');
+    ShadyDOM.wrap(document.body).appendChild(re);
+    ShadyDOM.flush();
+    let child = document.createElement('p');
+    ShadyDOM.wrap(child).innerHTML = "hello";
+    // child will be inserted into p after distributeContent is performed.
+    ShadyDOM.wrap(re).appendChild(child);
+    ShadyDOM.flush();
+    let s1 = ShadyDOM.wrap(child).assignedSlot;
+    let s2 = ShadyDOM.wrap(s1).assignedSlot;
+    let r1 = ShadyDOM.wrap(s2).getRootNode();
+    let h1 = ShadyDOM.wrap(r1).host;
+    let r2 = ShadyDOM.wrap(h1).getRootNode();
+    let h2 = ShadyDOM.wrap(r2).host;
+    const path = [child, s1, s2, r1, h1, r2, h2, document.body, document.documentElement, document, window];
+    // specifically test without wrapping
+    child.addEventListener('child-event', function(e){
+      const composedPath = ShadyDOM.composedPath(e);
+      assert.deepEqual(composedPath, path);
+      done();
+    });
+    let evt = new CustomEvent('child-event');
+    // specifically test without wrapping
+    child.dispatchEvent(evt);
     ShadyDOM.wrap(document.body).removeChild(re);
   });
 

@@ -71,7 +71,7 @@ if (utils.settings.inUse) {
     'handlesDynamicScoping': true,
     'wrap': utils.settings.noPatch ? wrap : (n) => n,
     'Wrapper': Wrapper,
-    'eventPathComposer': pathComposer,
+    'composedPath': (e) => pathComposer(e.target, true),
     'noPatch': utils.settings.noPatch,
     'nativeMethod': (node, name, ...args) =>
         node[utils.NATIVE_PREFIX + name].apply(node, args),

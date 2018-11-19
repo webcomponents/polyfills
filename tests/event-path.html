@@ -284,6 +284,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       assert.equal(el.childEvents[0].target, el.scoped);
       ShadyDOM.wrap(ShadyDOM.wrap(el).parentNode).removeChild(el);
     });
+
     test('window events retarget', function() {
       let el = createEnabledElement('x-event-scoped-window');
       el.fireComposed();
