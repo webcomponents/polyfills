@@ -9,7 +9,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 */
 
 import * as utils from './utils.js';
-import {shadyDataForNode, ensureShadyDataForNode} from './shady-data.js';
+import {shadyDataForNode} from './shady-data.js';
 
 /*
 Make this name unique so it is unlikely to conflict with properties on objects passed to `addEventListener`

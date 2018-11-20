@@ -9,7 +9,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 */
 
 import * as utils from '../utils.js';
-import {DocumentOrShadowRoot} from './DocumentOrShadowRoot.js';
 
 const doc = window.document;
 

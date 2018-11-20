@@ -10,13 +10,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 import * as utils from '../utils.js';
 import {scopeClassAttribute} from '../style-scoping.js';
-import {getInnerHTML} from '../innerHTML.js';
 import {shadyDataForNode} from '../shady-data.js';
-import {clearNode} from './Node.js';
 import {attachShadow} from '../attach-shadow.js';
 
 const doc = window.document;
-const inertDoc = document.implementation.createHTMLDocument('inert');
 
 /**
  * Should be called whenever an attribute changes. If the `slot` attribute
