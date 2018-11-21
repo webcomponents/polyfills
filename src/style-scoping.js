@@ -67,7 +67,9 @@ export function replaceShadyScoping(node, newScopeName, oldScopeName) {
   if (!scopingShim) {
     return;
   }
-  removeShadyScoping(node, oldScopeName);
+  if (oldScopeName) {
+    removeShadyScoping(node, oldScopeName);
+  }
   addShadyScoping(node, newScopeName);
 }
 

@@ -9,7 +9,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 */
 
 import * as utils from '../utils.js';
-import {getScopingShim, addShadyScoping, removeShadyScoping, replaceShadyScoping,
+import {getScopingShim, removeShadyScoping, replaceShadyScoping,
   treeVisitor, currentScopeForNode, currentScopeIsCorrect } from '../style-scoping.js';
 import {shadyDataForNode, ensureShadyDataForNode} from '../shady-data.js';
 import {recordInsertBefore, recordRemoveChild} from '../link-nodes.js';
@@ -245,7 +245,7 @@ export const Node = {
     // optimization: assume native insertBefore is ok if the nodes are not in the document.
     if (this.ownerDocument !== doc && node.ownerDocument !== doc) {
       this[utils.NATIVE_PREFIX + 'insertBefore'](node, ref_node);
-      return;
+      return node;
     }
     if (node === this) {
       throw Error(`Failed to execute 'appendChild' on 'Node': The new child element contains the parent.`);
@@ -263,22 +263,27 @@ export const Node = {
       return node;
     }
     /** @type {!Array<!HTMLSlotElement>} */
-    let slotsAdded = [];
+    const slotsAdded = [];
     /** @type {function(!Node, string): void} */
-    let scopingFn = addShadyScoping;
-    let ownerRoot = utils.ownerShadyRootForNode(this);
+    const ownerRoot = utils.ownerShadyRootForNode(this);
     /** @type {string} */
-    let newScopeName;
-    if (ownerRoot) {
-      // get scope name from new ShadyRoot host
-      newScopeName = ownerRoot.host.localName;
-    } else {
-      // borrow parent's scope name
-      newScopeName = currentScopeForNode(this);
-    }
+    const newScopeName = ownerRoot ? ownerRoot.host.localName : currentScopeForNode(this);
+    /** @type {string} */
+    let oldScopeName;
     // remove from existing location
     const parentNode = node[utils.SHADY_PREFIX + 'parentNode'];
     if (parentNode) {
+      oldScopeName = currentScopeForNode(node);
+      parentNode[utils.SHADY_PREFIX + 'removeChild'](node,
+        Boolean(ownerRoot) || !utils.ownerShadyRootForNode(node));
+    }
+    // add to new parent
+    let allowNativeInsert = true;
+    const needsScoping = (!preferPerformance || node['__noInsertionPoint'] === undefined) &&
+        !currentScopeIsCorrect(node, newScopeName);
+    const needsSlotFinding = ownerRoot && !node['__noInsertionPoint'] &&
+        (!preferPerformance || node.nodeType === window.Node.DOCUMENT_FRAGMENT_NODE);
+    if (needsSlotFinding || needsScoping) {
       // NOTE: avoid node.removeChild as this *can* trigger another patched
       // method (e.g. custom elements) and we want only the shady method to run.
       // The following table describes what style scoping actions should happen as a result of this insertion.
@@ -288,41 +293,24 @@ export const Node = {
       // shadowRoot -> document: allow unscoping
       // document -> document: do nothing
       // The "same type of shadowRoot" and "document to document cases rely on `currentScopeIsCorrect` returning true
-      const oldScopeName = currentScopeForNode(node);
-      parentNode[utils.SHADY_PREFIX + 'removeChild'](node,
-        Boolean(ownerRoot) || !(node[utils.SHADY_PREFIX + 'getRootNode']() instanceof ShadowRoot));
-      scopingFn = (node, newScopeName) => {
-        replaceShadyScoping(node, newScopeName, oldScopeName);
-      };
-    }
-    // add to new parent
-    let allowNativeInsert = true;
-    const needsScoping = (!preferPerformance || node['__noInsertionPoint'] === undefined) &&
-        !currentScopeIsCorrect(node, newScopeName);
-    if (ownerRoot) {
-      // in a shadowRoot, only tree walk if new insertion points may have been added, or scoping is needed
-      if (!node['__noInsertionPoint'] || needsScoping) {
-        treeVisitor(node, (node) => {
-          if (node.localName === 'slot') {
-            slotsAdded.push(/** @type {!HTMLSlotElement} */(node));
-          }
-          if (needsScoping) {
-            scopingFn(node, newScopeName);
-          }
-        });
+      if (needsScoping) {
+        // in a document or disconnected tree, replace scoping if necessary
+        oldScopeName = oldScopeName || currentScopeForNode(node);
       }
-    } else if (needsScoping) {
-      // in a document or disconnected tree, replace scoping if necessary
-      const oldScopeName = currentScopeForNode(node);
       treeVisitor(node, (node) => {
-        replaceShadyScoping(node, newScopeName, oldScopeName);
+        if (needsSlotFinding && node.localName === 'slot') {
+          slotsAdded.push(/** @type {!HTMLSlotElement} */(node));
+        }
+        if (needsScoping) {
+          replaceShadyScoping(node, newScopeName, oldScopeName);
+        }
       });
-    }
-    if (slotsAdded.length) {
-      ownerRoot._addSlots(slotsAdded);
     }
     // if a slot is added, must render containing root.
     if (this.localName === 'slot' || slotsAdded.length) {
+      if (slotsAdded.length) {
+        ownerRoot._addSlots(slotsAdded);
+      }
       if (ownerRoot) {
         ownerRoot._asyncRender();
       }
