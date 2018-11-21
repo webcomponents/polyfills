@@ -32,26 +32,26 @@ export const ElementOrShadowRoot = {
    * @param {string} value
    */
   set innerHTML(value) {
-    const content = this.localName === 'template' ?
-      /** @type {HTMLTemplateElement} */(this).content : this;
-    clearNode(content);
-    const containerName = this.localName || 'div';
-    let htmlContainer;
-    if (!this.namespaceURI || this.namespaceURI === inertDoc.namespaceURI) {
-      htmlContainer = inertDoc.createElement(containerName);
+    if (this.localName === 'template') {
+      this[utils.NATIVE_PREFIX + 'innerHTML'] = value;
     } else {
-      htmlContainer = inertDoc.createElementNS(this.namespaceURI, containerName);
-    }
-    if (utils.settings.hasDescriptors) {
-      htmlContainer[utils.NATIVE_PREFIX + 'innerHTML'] = value;
-    } else {
-      htmlContainer.innerHTML = value;
-    }
-    const newContent = this.localName === 'template' ?
-      /** @type {HTMLTemplateElement} */(htmlContainer).content : htmlContainer;
-    let firstChild;
-    while ((firstChild = newContent[utils.SHADY_PREFIX + 'firstChild'])) {
-      content[utils.SHADY_PREFIX + 'insertBefore'](firstChild);
+      clearNode(this);
+      const containerName = this.localName || 'div';
+      let htmlContainer;
+      if (!this.namespaceURI || this.namespaceURI === inertDoc.namespaceURI) {
+        htmlContainer = inertDoc.createElement(containerName);
+      } else {
+        htmlContainer = inertDoc.createElementNS(this.namespaceURI, containerName);
+      }
+      if (utils.settings.hasDescriptors) {
+        htmlContainer[utils.NATIVE_PREFIX + 'innerHTML'] = value;
+      } else {
+        htmlContainer.innerHTML = value;
+      }
+      let firstChild;
+      while ((firstChild = htmlContainer[utils.SHADY_PREFIX + 'firstChild'])) {
+        this[utils.SHADY_PREFIX + 'insertBefore'](firstChild);
+      }
     }
   }
 

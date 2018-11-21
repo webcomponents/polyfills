@@ -22,13 +22,30 @@ import {DocumentOrShadowRoot} from './patches/DocumentOrShadowRoot.js';
 import {Document} from './patches/Document.js';
 import {Window} from './patches/Window.js';
 
+const IEHTMLElement = {};
+
+if (utils.settings.IS_IE) {
+  Object.defineProperty(IEHTMLElement, 'parentElement',
+    Object.getOwnPropertyDescriptor(Node, 'parentElement'));
+
+  Object.defineProperty(IEHTMLElement, 'contains',
+    Object.getOwnPropertyDescriptor(Node, 'contains'));
+
+  Object.defineProperty(IEHTMLElement, 'children',
+    Object.getOwnPropertyDescriptor(ParentNode, 'children'));
+
+  Object.defineProperty(IEHTMLElement, 'innerHTML',
+    Object.getOwnPropertyDescriptor(ElementOrShadowRoot, 'innerHTML'));
+
+}
+
 // setup patching
 const patchMap = {
   EventTarget: [EventTarget],
-  Node: [Node, !window.EventTarget ? EventTarget : undefined],
+  Node: [Node, !window.EventTarget ? EventTarget : null],
   Text: [Slotable],
-  Element: [Element, ParentNode, Slotable, ElementOrShadowRoot, !window.HTMLSlotElement ? Slot : undefined],
-  HTMLElement: [HTMLElement],
+  Element: [Element, ParentNode, Slotable, utils.settings.IS_IE ? null : ElementOrShadowRoot, !window.HTMLSlotElement ? Slot : null],
+  HTMLElement: [HTMLElement, utils.settings.IS_IE ? IEHTMLElement : null],
   HTMLSlotElement: [Slot],
   DocumentFragment: [ParentNodeDocumentOrFragment, DocumentOrFragment],
   Document: [Document, ParentNodeDocumentOrFragment, DocumentOrFragment, DocumentOrShadowRoot],

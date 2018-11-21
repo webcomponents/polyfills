@@ -293,9 +293,17 @@ export const patchNative = () => {
     copyAccessors(window.HTMLElement.prototype, [
       'focus',
       'blur',
-      // On IE this is on HTMLElement
-      'contains'
+      // On IE these are on HTMLElement
+      'contains',
+      'parentElement',
+      'children',
+      'innerHTML'
     ]);
+  }
+
+  // HTMLTemplateElement
+  if (window.HTMLTemplateElement) {
+    copyAccessors(window.HTMLTemplateElement.prototype, ['innerHTML']);
   }
 
   // DocumentFragment
