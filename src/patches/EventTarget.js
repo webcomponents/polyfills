@@ -20,8 +20,8 @@ export const EventTarget = {
     return this[utils.NATIVE_PREFIX + 'dispatchEvent'](event);
   },
 
-  addEventListener: addEventListener,
+  addEventListener,
 
-  removeEventListener: removeEventListener
+  removeEventListener
 
 };
