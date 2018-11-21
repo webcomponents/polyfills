@@ -17,20 +17,20 @@ import {ElementOrShadowRoot} from './patches/ElementOrShadowRoot.js';
 import {ShadowRoot} from './patches/ShadowRoot.js';
 
 const patchShadyAccessors = (proto, prefix) => {
-  utils.defineAccessors(proto,
-    Object.getOwnPropertyDescriptors(ShadowRoot), prefix);
-  utils.defineAccessors(proto,
-    Object.getOwnPropertyDescriptors(DocumentOrShadowRoot), prefix);
-  utils.defineAccessors(proto,
-    Object.getOwnPropertyDescriptors(ElementOrShadowRoot), prefix);
+  utils.patchAccessors(proto,
+    utils.getOwnPropertyDescriptors(ShadowRoot), true, prefix);
+  utils.patchAccessors(proto,
+    utils.getOwnPropertyDescriptors(DocumentOrShadowRoot), true, prefix);
+  utils.patchAccessors(proto,
+    utils.getOwnPropertyDescriptors(ElementOrShadowRoot), true, prefix);
   // we ensure ParentNode accessors since these do not exist in Edge/IE on DocumentFragments
-  utils.defineAccessors(proto,
-    Object.getOwnPropertyDescriptors(ParentNode), prefix, true);
+  utils.patchAccessors(proto,
+    utils.getOwnPropertyDescriptors(ParentNode), true, prefix);
   if (utils.settings.noPatch) {
-    utils.defineAccessors(proto,
-      Object.getOwnPropertyDescriptors(Node), prefix);
-    utils.defineAccessors(proto,
-      Object.getOwnPropertyDescriptors(DocumentOrFragment), prefix);
+    utils.patchAccessors(proto,
+      utils.getOwnPropertyDescriptors(Node), true, prefix);
+    utils.patchAccessors(proto,
+      utils.getOwnPropertyDescriptors(DocumentOrFragment), true, prefix);
   }
 }
 

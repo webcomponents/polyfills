@@ -292,7 +292,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       ShadyDOM.wrap(document.body).appendChild(noDist);
       // Append div to light dom
       var div = document.createElement('div');
-      div.slot = 'insert';
+      ShadyDOM.wrap(div).slot = 'insert';
       ShadyDOM.wrap(noDist).appendChild(div);
       ShadyDOM.flush();
       // Append slot to shady root
@@ -317,7 +317,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       ShadyDOM.wrap(ShadyDOM.wrap(noDist).shadowRoot).appendChild(slot);
       // Append div to light dom
       var div = document.createElement('div');
-      div.slot = 'insert';
+      ShadyDOM.wrap(div).slot = 'insert';
       ShadyDOM.wrap(noDist).appendChild(div);
       ShadyDOM.flush();
       assert.equal(ShadyDOM.wrap(div).assignedSlot, slot);
@@ -333,7 +333,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       ShadyDOM.wrap(document.body).appendChild(noDist);
       // Append div to light dom
       var div = document.createElement('div');
-      div.slot = 'insert';
+      ShadyDOM.wrap(div).slot = 'insert';
       ShadyDOM.wrap(noDist).appendChild(div);
       ShadyDOM.flush();
       assert.equal(ShadyDOM.wrap(div).assignedSlot, null);
@@ -359,7 +359,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(noDist).shadowRoot).querySelector('#static')).appendChild(slot);
       // Append div to light dom
       var div = document.createElement('div');
-      div.slot = 'insert';
+      ShadyDOM.wrap(div).slot = 'insert';
       ShadyDOM.wrap(noDist).appendChild(div);
       ShadyDOM.flush();
       assert.equal(ShadyDOM.wrap(div).assignedSlot, slot);
@@ -375,7 +375,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       ShadyDOM.wrap(document.body).appendChild(noDist);
       // Append div to light dom
       var div = document.createElement('div');
-      div.slot = 'insert';
+      ShadyDOM.wrap(div).slot = 'insert';
       ShadyDOM.wrap(noDist).appendChild(div);
       ShadyDOM.flush();
       assert.equal(ShadyDOM.wrap(div).assignedSlot, null);
@@ -405,7 +405,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       ShadyDOM.wrap(ShadyDOM.wrap(noDist).shadowRoot).appendChild(frag);
       // Append div to light dom
       var div = document.createElement('div');
-      div.slot = 'insert';
+      ShadyDOM.wrap(div).slot = 'insert';
       ShadyDOM.wrap(noDist).appendChild(div);
       ShadyDOM.flush();
       assert.equal(ShadyDOM.wrap(div).assignedSlot, slot);
@@ -421,7 +421,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       ShadyDOM.wrap(document.body).appendChild(noDist);
       // Append div to light dom
       var div = document.createElement('div');
-      div.slot = 'insert';
+      ShadyDOM.wrap(div).slot = 'insert';
       ShadyDOM.wrap(noDist).appendChild(div);
       ShadyDOM.flush();
       assert.equal(ShadyDOM.wrap(div).assignedSlot, null);
@@ -455,7 +455,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       ShadyDOM.wrap(ShadyDOM.wrap(noDist).shadowRoot).appendChild(frag);
       // Append div to light dom
       var div = document.createElement('div');
-      div.slot = 'insert';
+      ShadyDOM.wrap(div).slot = 'insert';
       ShadyDOM.wrap(noDist).appendChild(div);
       ShadyDOM.flush();
       assert.equal(ShadyDOM.wrap(div).assignedSlot, slot);
@@ -471,7 +471,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       ShadyDOM.wrap(document.body).appendChild(noDist);
       // Append div to light dom
       var div = document.createElement('div');
-      div.slot = 'insert';
+      ShadyDOM.wrap(div).slot = 'insert';
       ShadyDOM.wrap(noDist).appendChild(div);
       ShadyDOM.flush();
       assert.equal(ShadyDOM.wrap(div).assignedSlot, null);
@@ -506,7 +506,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(noDist).shadowRoot).querySelector('#static')).appendChild(frag);
       // Append div to light dom
       var div = document.createElement('div');
-      div.slot = 'insert';
+      ShadyDOM.wrap(div).slot = 'insert';
       ShadyDOM.wrap(noDist).appendChild(div);
       ShadyDOM.flush();
       assert.equal(ShadyDOM.wrap(div).assignedSlot, slot);
@@ -522,7 +522,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       ShadyDOM.wrap(document.body).appendChild(compose);
       // Append slot to light DOM of non-distributing element
       var div = document.createElement('div');
-      div.slot = 'insert';
+      ShadyDOM.wrap(div).slot = 'insert';
       ShadyDOM.wrap(compose).appendChild(div);
       ShadyDOM.flush();
       assert.equal(ShadyDOM.wrap(div).assignedSlot, null);
@@ -548,7 +548,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(compose).shadowRoot).querySelector('#noDist')).appendChild(slot);
       // Append div to light dom
       var div = document.createElement('div');
-      div.slot = 'insert';
+      ShadyDOM.wrap(div).slot = 'insert';
       ShadyDOM.wrap(compose).appendChild(div);
       ShadyDOM.flush();
       assert.equal(ShadyDOM.wrap(div).assignedSlot, slot);
@@ -564,7 +564,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       ShadyDOM.wrap(document.body).appendChild(compose);
       // Append div to light dom
       var div = document.createElement('div');
-      div.slot = 'insert';
+      ShadyDOM.wrap(div).slot = 'insert';
       ShadyDOM.wrap(compose).appendChild(div);
       ShadyDOM.flush();
       assert.equal(ShadyDOM.wrap(div).assignedSlot, null);
@@ -598,7 +598,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(compose).shadowRoot).querySelector('#noDist')).appendChild(frag);
       // Append div to light dom
       var div = document.createElement('div');
-      div.slot = 'insert';
+      ShadyDOM.wrap(div).slot = 'insert';
       ShadyDOM.wrap(compose).appendChild(div);
       ShadyDOM.flush();
       assert.equal(ShadyDOM.wrap(div).assignedSlot, slot);
@@ -614,7 +614,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       ShadyDOM.wrap(document.body).appendChild(compose);
       // Append slot to light DOM of non-distributing element
       var div = document.createElement('div');
-      div.slot = 'insert';
+      ShadyDOM.wrap(div).slot = 'insert';
       ShadyDOM.wrap(compose).appendChild(div);
       ShadyDOM.flush();
       assert.equal(ShadyDOM.wrap(div).assignedSlot, null);
@@ -640,7 +640,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(compose).shadowRoot).querySelector('#dist')).appendChild(slot);
       // Append slot to light DOM of non-distributing element
       var div = document.createElement('div');
-      div.slot = 'insert';
+      ShadyDOM.wrap(div).slot = 'insert';
       ShadyDOM.wrap(compose).appendChild(div);
       ShadyDOM.flush();
       assert.equal(ShadyDOM.wrap(div).assignedSlot, slot);
@@ -656,7 +656,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       ShadyDOM.wrap(document.body).appendChild(compose);
       // Append div to light dom
       var div = document.createElement('div');
-      div.slot = 'insert';
+      ShadyDOM.wrap(div).slot = 'insert';
       ShadyDOM.wrap(compose).appendChild(div);
       ShadyDOM.flush();
       assert.equal(ShadyDOM.wrap(div).assignedSlot, null);
@@ -690,7 +690,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(compose).shadowRoot).querySelector('#dist')).appendChild(frag);
       // Append div to light dom
       var div = document.createElement('div');
-      div.slot = 'insert';
+      ShadyDOM.wrap(div).slot = 'insert';
       ShadyDOM.wrap(compose).appendChild(div);
       ShadyDOM.flush();
       assert.equal(ShadyDOM.wrap(div).assignedSlot, slot);

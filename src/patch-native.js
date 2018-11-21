@@ -8,14 +8,14 @@ Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 */
 import * as utils from './utils.js';
-import {defineAccessors} from './utils.js';
+import {patchAccessors} from './utils.js';
 import {getInnerHTML} from './innerHTML.js';
 
 const hasDescriptors = utils.settings.hasDescriptors;
 export const NATIVE_PREFIX = utils.NATIVE_PREFIX;
 
 const defineNativeAccessors = (proto, descriptors) =>
-    defineAccessors(proto, descriptors, NATIVE_PREFIX);
+    patchAccessors(proto, descriptors, true, NATIVE_PREFIX);
 
 const copyAccessors = (proto, list = []) => {
   for (let i = 0; i < list.length; i++) {
@@ -58,11 +58,17 @@ const ParentNodeMethods = [
 export const patchNative = () => {
 
   // EventTarget
-  copyAccessors(window.EventTarget.prototype, [
+  const eventProps = [
     'dispatchEvent',
     'addEventListener',
     'removeEventListener'
-  ]);
+  ];
+  if (window.EventTarget) {
+    copyAccessors(window.EventTarget.prototype, eventProps);
+  } else {
+    copyAccessors(window.Node.prototype, eventProps);
+    copyAccessors(window.Window.prototype, eventProps);
+  }
 
 
   // Node
@@ -286,7 +292,9 @@ export const patchNative = () => {
   if (hasDescriptors) {
     copyAccessors(window.HTMLElement.prototype, [
       'focus',
-      'blur'
+      'blur',
+      // On IE this is on HTMLElement
+      'contains'
     ]);
   }
 

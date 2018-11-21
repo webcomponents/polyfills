@@ -179,13 +179,6 @@ export const createPolyfilledHTMLCollection = (nodes) => {
 export const NATIVE_PREFIX = '__shady_native_';
 export const SHADY_PREFIX = '__shady_';
 
-export const defineAccessors = (proto, descriptors, prefix = '') => {
-  for (let p in descriptors) {
-    const descriptor = descriptors[p];
-    descriptor.configurable = true;
-    Object.defineProperty(proto, prefix + p, descriptor);
-  }
-}
 
 // patch a group of accessors on an object only if it exists or if the `force`
 // argument is true.
@@ -198,6 +191,7 @@ export const patchAccessors = (proto, descriptors, force, prefix = '') => {
   for (let p in descriptors) {
     const oldDescriptor = Object.getOwnPropertyDescriptor(proto, p);
     const newDescriptor = descriptors[p];
+    newDescriptor.configurable = true;
     const name = prefix + p;
     if (force || oldDescriptor) {
       // NOTE: we prefer writing directly because some browsers
@@ -215,3 +209,12 @@ export const patchAccessors = (proto, descriptors, force, prefix = '') => {
 export const NativeHTMLElement =
     (window['customElements'] && window['customElements']['nativeHTMLElement']) ||
     HTMLElement;
+
+// note, this is not a perfect polyfill since it doesn't include symbols
+export const getOwnPropertyDescriptors = (obj) => {
+  const descriptors = {};
+  Object.getOwnPropertyNames(obj).forEach((name) => {
+    descriptors[name] = Object.getOwnPropertyDescriptor(obj, name);
+  });
+  return descriptors;
+};

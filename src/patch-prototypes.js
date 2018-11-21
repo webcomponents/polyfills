@@ -25,7 +25,7 @@ import {Window} from './patches/Window.js';
 // setup patching
 const patchMap = {
   EventTarget: [EventTarget],
-  Node: [Node],
+  Node: [Node, !window.EventTarget ? EventTarget : undefined],
   Text: [Slotable],
   Element: [Element, ParentNode, Slotable, ElementOrShadowRoot, !window.HTMLSlotElement ? Slot : undefined],
   HTMLElement: [HTMLElement],
@@ -49,28 +49,20 @@ const onPatchMap = (fn) => {
 export const patchPrototypes = () => {
   // perform shady patches
   onPatchMap((proto, patch) =>
-    utils.defineAccessors(proto,
-      Object.getOwnPropertyDescriptors(patch), utils.SHADY_PREFIX));
+    utils.patchAccessors(proto,
+      utils.getOwnPropertyDescriptors(patch), true, utils.SHADY_PREFIX));
 
-  // install `_activeElement` since cannot patch `activeElement` on some browsers
+  // install `_activeElement` for backwards compatibility
   const descriptor = Object.getOwnPropertyDescriptor(DocumentOrShadowRoot, 'activeElement');
   Object.defineProperty(window.Document.prototype, '_activeElement', descriptor);
 
   // force window since it does not have the accessors.
   utils.patchAccessors(window.Window.prototype,
-      Object.getOwnPropertyDescriptors(Window), true, utils.SHADY_PREFIX);
+      utils.getOwnPropertyDescriptors(Window), true, utils.SHADY_PREFIX);
 
   // only perform native patches if `noPatch` flag not set.
   if (!utils.settings.noPatch) {
     onPatchMap((proto, patch) =>
-      utils.patchAccessors(proto, Object.getOwnPropertyDescriptors(patch)));
-
-    utils.patchAccessors(window.Window.prototype,
-      Object.getOwnPropertyDescriptors(Window), true);
-
-    // TODO(sorvell): is this needed?
-    // force HTMLElement since it does not have the accessors.
-    // utils.patchAccessors(window.HTMLElement.prototype,
-    //     Object.getOwnPropertyDescriptors(HTMLElement), true);
+      utils.patchAccessors(proto, utils.getOwnPropertyDescriptors(patch), true));
   }
 };

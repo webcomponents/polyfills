@@ -13,22 +13,27 @@ const loadScript = (src) => {
 const loadCE = () => loadScript('../node_modules/@webcomponents/custom-elements/custom-elements.min.js');
 const loadSD = () => loadScript('../shadydom.min.js');
 
+// Ensure customElements are updated when document is ready.
+const writePolyfillFlushCallback = () => document.write(`<script>
+  if (customElements.polyfillWrapFlushCallback) {
+    customElements.polyfillWrapFlushCallback(function(cb) {
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', cb);
+      } else {
+        cb();
+      }
+    });
+  }</script>`);
+
 // script ordering must change based on patching.
 if (ShadyDOM.noPatch) {
   loadCE();
   loadSD();
+  writePolyfillFlushCallback();
 } else {
   loadSD();
   loadCE();
+  writePolyfillFlushCallback();
 }
 
-// Ensure customElements are updated when document is ready.
-if (customElements.polyfillWrapFlushCallback) {
-  customElements.polyfillWrapFlushCallback(function(cb) {
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', cb);
-    } else {
-      cb();
-    }
-  });
-}
+

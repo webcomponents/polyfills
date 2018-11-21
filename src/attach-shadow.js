@@ -232,7 +232,7 @@ class ShadyRoot {
     nodeData._prevAssignedSlot = null;
     let slot = forcedSlot;
     if (!slot) {
-      let name = node.slot || CATCHALL_NAME;
+      let name = node[utils.SHADY_PREFIX + 'slot'] || CATCHALL_NAME;
       const list = this._slotMap[name];
       slot = list && list[0];
     }

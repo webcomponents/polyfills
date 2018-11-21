@@ -133,6 +133,6 @@ export const Query = {
 // Create a custom `ParentNodeDocumentOrFragment` that optionally does not
 // mixin querySelector/All; this is a performance optimization.
 export const ParentNodeDocumentOrFragment = utils.settings.preferPerformance ?
-  Object.defineProperties({}, Object.getOwnPropertyDescriptors(ParentNode)) : ParentNode;
+  Object.defineProperties({}, utils.getOwnPropertyDescriptors(ParentNode)) : ParentNode;
 
 Object.assign(ParentNode, Query);
