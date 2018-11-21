@@ -131,41 +131,98 @@ export class Wrapper {
     }
   }
 
+  get parentNode() {
+    return this.node[utils.SHADY_PREFIX + 'parentNode'];
+  }
+
+  get firstChild() {
+    return this.node[utils.SHADY_PREFIX + 'firstChild'];
+  }
+
+  get lastChild() {
+    return this.node[utils.SHADY_PREFIX + 'lastChild'];
+  }
+
+  get nextSibling() {
+    return this.node[utils.SHADY_PREFIX + 'nextSibling'];
+  }
+
+  get previousSibling() {
+    return this.node[utils.SHADY_PREFIX + 'previousSibling'];
+  }
+
+  get childNodes() {
+    return this.node[utils.SHADY_PREFIX + 'childNodes'];
+  }
+
+  get parentElement() {
+    return this.node[utils.SHADY_PREFIX + 'parentElement'];
+  }
+
+  get firstElementChild() {
+    return this.node[utils.SHADY_PREFIX + 'firstElementChild'];
+  }
+
+  get lastElementChild() {
+    return this.node[utils.SHADY_PREFIX + 'lastElementChild'];
+  }
+
+  get nextElementSibling() {
+    return this.node[utils.SHADY_PREFIX + 'nextElementSibling'];
+  }
+
+  get previousElementSibling() {
+    return this.node[utils.SHADY_PREFIX + 'previousElementSibling'];
+  }
+
+  get children() {
+    return this.node[utils.SHADY_PREFIX + 'children'];
+  }
+
+  get childElementCount() {
+    return this.node[utils.SHADY_PREFIX + 'childElementCount'];
+  }
+
+  get shadowRoot() {
+    return this.node[utils.SHADY_PREFIX + 'shadowRoot'];
+  }
+
+  get assignedSlot() {
+    return this.node[utils.SHADY_PREFIX + 'assignedSlot'];
+  }
+
+  get isConnected() {
+    return this.node[utils.SHADY_PREFIX + 'isConnected'];
+  }
+
+  get innerHTML() {
+    return this.node[utils.SHADY_PREFIX + 'innerHTML'];
+  }
+
+  set innerHTML(value) {
+    this.node[utils.SHADY_PREFIX + 'innerHTML'] = value;
+  }
+
+  get textContent() {
+    return this.node[utils.SHADY_PREFIX + 'textContent'];
+  }
+
+  set textContent(value) {
+    this.node[utils.SHADY_PREFIX + 'textContent'] = value;
+  }
+
+  get slot() {
+    return this.node[utils.SHADY_PREFIX + 'slot'];
+  }
+
+  set slot(value) {
+    this.node[utils.SHADY_PREFIX + 'slot'] = value;
+  }
+
 }
 
-const proto = Wrapper.prototype;
-
-const readAccessors = [
-  'parentNode',
-  'firstChild', 'lastChild',
-  'nextSibling', 'previousSibling',
-  'childNodes',
-  'parentElement',
-  'firstElementChild', 'lastElementChild',
-  'nextElementSibling', 'previousElementSibling',
-  'children', 'childElementCount',
-  //'activeElement',
-  'shadowRoot',
-  'assignedSlot',
-  'isConnected'
-];
-
-readAccessors.forEach(name => {
-  Object.defineProperty(proto, name, {
-    get() {
-      return this.node[utils.SHADY_PREFIX + name];
-    },
-    configurable: true
-  });
-
-});
-
-const readWriteAccessors = [
-  'innerHTML', 'textContent', 'slot'
-].concat(eventPropertyNames);
-
-readWriteAccessors.forEach(name => {
-  Object.defineProperty(proto, name, {
+eventPropertyNames.forEach(name => {
+  Object.defineProperty(Wrapper.prototype, name, {
     get() {
       return this.node[utils.SHADY_PREFIX + name];
     },
