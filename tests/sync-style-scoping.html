@@ -13,6 +13,30 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <meta charset="utf-8">
   <script src="../node_modules/@webcomponents/webcomponents-platform/webcomponents-platform.js"></script>
   <script src="../node_modules/promise-polyfill/dist/polyfill.js"></script>
+  <script>
+    // TODO(sorvell): fix Promise to resolve at microtask time when polyfilled
+    if (Promise._immediateFn) {
+      const node = document.createTextNode('');
+      const twiddleNode = function twiddleNode() {
+        node.textContent = node.textContent.length > 0 ? '' : 'a';
+      };
+      /** @type {!Array<function():void>} */
+      const callbacks = [];
+      (new MutationObserver(() => {
+        const len = callbacks.length;
+        for (let i = 0; i < len; i++) {
+          callbacks[i]();
+        }
+        callbacks.splice(0, len);
+      }).observe(node, {characterData: true}));
+
+      // set _immediateFn to a MutationObserver for close-to-native timing
+      Promise._immediateFn = (fn) => {
+        callbacks.push(fn);
+        twiddleNode();
+      };
+    }
+  </script>
   <script src="../node_modules/@webcomponents/template/template.js"></script>
   <script src="loader.js"></script>
   <script src="../node_modules/@webcomponents/shadycss/scoping-shim.min.js"></script>
@@ -106,10 +130,16 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           unscopeSpy.restore();
           unscopeSpy = null;
         }
-        arena.innerHTML = '';
+        // NOTE: wrapping here is critical to avoid using native `innerHTML`
+        // setter which, on IE11, nukes the DOM subtree and can cause
+        // pending ShadyDOM renders to fail.
+        ShadyDOM.wrap(arena).innerHTML = '';
+        // Ensure clean rendering state between tests
+        ShadyDOM.flush();
       });
 
       suite('append', function() {
+
         test('elements appended to the document are unscoped', function() {
           const el = document.createElement('div');
           ShadyDOM.wrap(arena).appendChild(el);
@@ -177,10 +207,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           ShadyDOM.wrap(arena).appendChild(el);
           const template = ShadyDOM.wrap(document).querySelector('template#complicated');
           ShadyDOM.wrap(ShadyDOM.wrap(el).shadowRoot).appendChild(ShadyDOM.wrap(template.content).cloneNode(true));
-          const nodes = ShadyDOM.wrap(ShadyDOM.wrap(el).shadowRoot).querySelectorAll('*');
-          for (const node of nodes) {
-            assert.equal(csfn(node), 'naive-element');
-          }
+          const nodes = Array.from(ShadyDOM.wrap(ShadyDOM.wrap(el).shadowRoot).querySelectorAll('*'));
+          nodes.forEach((node) =>
+            assert.equal(csfn(node), 'naive-element'));
         });
 
         test('appending to a document fragment does not scope', function() {
@@ -240,6 +269,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       });
 
       suite('remove', function() {
+
         test('removing a shadowed node removes the scope', function() {
           const el = document.createElement('api-element');
           ShadyDOM.wrap(arena).appendChild(el);

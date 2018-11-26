@@ -569,9 +569,14 @@ if (window['customElements'] && utils.settings.inUse && !utils.settings['preferP
   let connectMap = new Map();
   rootRendered = function() {
     // allow elements to connect
-    const map = Array.from(connectMap);
+    // save map state (without needing polyfills on IE11)
+    const r = [];
+    connectMap.forEach((v, k) => {
+      r.push([k, v]);
+    });
     connectMap.clear();
-    for (const [e, value] of map) {
+    for (let i=0; i < r.length; i++) {
+      const e = r[i][0], value = r[i][1];
       if (value) {
         e.__shadydom_connectedCallback();
       } else {
