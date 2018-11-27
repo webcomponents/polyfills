@@ -203,7 +203,9 @@ export const patchAccessors = (proto, descriptors, force, prefix = '') => {
         // NOTE: this can throw if 'force' is used so catch the error.
         try {
           Object.defineProperty(proto, name, newDescriptor);
-        } catch(e) {}
+        } catch(e) {
+          // this error is harmless so we just trap it.
+        }
       }
     }
   }
