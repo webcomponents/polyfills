@@ -13,27 +13,16 @@ const loadScript = (src) => {
 const loadCE = () => loadScript('../node_modules/@webcomponents/custom-elements/custom-elements.min.js');
 const loadSD = () => loadScript('../shadydom.min.js');
 
-// Ensure customElements are updated when document is ready.
-const writePolyfillFlushCallback = () => document.write(`<script>
-  if (customElements.polyfillWrapFlushCallback) {
-    customElements.polyfillWrapFlushCallback(function(cb) {
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', cb);
-      } else {
-        cb();
-      }
-    });
-  }</script>`);
-
+// NOTE: Would be better to install the polyfillFlushCallback here, but
+// Chrome's debugger gets confused by writing an inline script and breaks
+// on the wrong line, so avoid doing this.
 // script ordering must change based on patching.
 if (ShadyDOM.noPatch) {
   loadCE();
   loadSD();
-  writePolyfillFlushCallback();
 } else {
   loadSD();
   loadCE();
-  writePolyfillFlushCallback();
 }
 
 

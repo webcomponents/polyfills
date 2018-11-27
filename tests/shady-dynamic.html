@@ -20,6 +20,16 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     };
   </script>
   <script src="loader.js"></script>
+  <script>
+  if (customElements.polyfillWrapFlushCallback) {
+    customElements.polyfillWrapFlushCallback(function(cb) {
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', cb);
+      } else {
+        cb();
+      }
+    });
+  }</script>
   <script src="../node_modules/wct-browser-legacy/browser.js"></script>
 </head>
 <body>
