@@ -154,7 +154,7 @@ export const patchNative = () => {
               return this.nodeValue;
           }
         },
-        // TODO(sorvell): do we ever need this setter?
+        // Needed on browsers that do not proper accessors (e.g. old versions of Chrome)
         set(value) {
           if (typeof value === 'undefined' || value === null) {
             value = ''
@@ -165,7 +165,8 @@ export const patchNative = () => {
               clearNode(this);
               // Document fragments must have no childnodes if setting a blank string
               if (value.length > 0 || this.nodeType === window.Node.ELEMENT_NODE) {
-                this[NATIVE_PREFIX + 'insertBefore'](document.createTextNode(value));
+                // Note: old Chrome versions require 2nd argument here
+                this[NATIVE_PREFIX + 'insertBefore'](document.createTextNode(value), undefined);
               }
               break;
             default:
@@ -256,7 +257,7 @@ export const patchNative = () => {
         get() {
           return getInnerHTML(this, n => n[NATIVE_PREFIX + 'childNodes']);
         },
-        // TODO(sorvell): do we ever need this setter?
+        // Needed on browsers that do not proper accessors (e.g. old versions of Chrome)
         set(value) {
           const content = this.localName === 'template' ?
           /** @type {HTMLTemplateElement} */(this).content : this;
@@ -273,7 +274,8 @@ export const patchNative = () => {
             /** @type {HTMLTemplateElement} */(htmlContainer).content : htmlContainer;
           let firstChild;
           while ((firstChild = newContent[NATIVE_PREFIX + 'firstChild'])) {
-            content[NATIVE_PREFIX + 'insertBefore'](firstChild);
+            // Note: old Chrome versions require 2nd argument here
+            content[NATIVE_PREFIX + 'insertBefore'](firstChild, undefined);
           }
         }
       }
