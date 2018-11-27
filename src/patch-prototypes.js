@@ -69,7 +69,8 @@ export const patchPrototypes = () => {
     utils.patchAccessors(proto,
       utils.getOwnPropertyDescriptors(patch), true, utils.SHADY_PREFIX));
 
-  // install `_activeElement` for backwards compatibility
+  // install `_activeElement` because some browsers (older Chrome/Safari) do not have
+  // a 'configurable' `activeElement` accesssor.
   const descriptor = Object.getOwnPropertyDescriptor(DocumentOrShadowRoot, 'activeElement');
   Object.defineProperty(window.Document.prototype, '_activeElement', descriptor);
 

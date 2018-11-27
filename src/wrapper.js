@@ -82,9 +82,17 @@ export class Wrapper {
   }
 
   get activeElement() {
-    if (utils.isShadyRoot(this.node) || this.node.nodeType === Node.DOCUMENT_NODE) {
-      return this.node[utils.SHADY_PREFIX + 'activeElement'];
+    if (utils.isShadyRoot(this.node) || this.node.nodeType === window.Node.DOCUMENT_NODE) {
+      const e = this.node[utils.SHADY_PREFIX + 'activeElement'];
+      return e;
     }
+  }
+
+  // Installed for compatibility with browsers (older Chrome/Safari) that do
+  // not have a configurable `activeElement` accessor. Enables noPatch and
+  // patch mode both to consistently use ShadyDOM.wrap(document)._activeElement.
+  get _activeElement() {
+    return this.activeElement;
   }
 
   // NOTE: not needed, just here for balance
@@ -98,13 +106,13 @@ export class Wrapper {
 
   // document
   importNode(node, deep) {
-    if (this.node.nodeType === Node.DOCUMENT_NODE) {
+    if (this.node.nodeType === window.Node.DOCUMENT_NODE) {
       return this.node[utils.SHADY_PREFIX + 'importNode'](node, deep);
     }
   }
 
   getElementById(id) {
-    if (this.node.nodeType === Node.DOCUMENT_NODE) {
+    if (this.node.nodeType === window.Node.DOCUMENT_NODE) {
       return this.node[utils.SHADY_PREFIX + 'getElementById'](id);
     }
   }

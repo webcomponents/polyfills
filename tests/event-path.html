@@ -669,11 +669,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       }
       let el = createEnabledElement('x-nested-focus');
       ShadyDOM.wrap(el.child).focus();
-      assert.equal(ShadyDOM.wrap(document).activeElement, el);
+      assert.equal(ShadyDOM.wrap(document)._activeElement, el);
       assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(el).shadowRoot).activeElement, el.child);
       ShadyDOM.wrap(el).blur();
       assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(el).shadowRoot).activeElement, null);
-      assert.notEqual(ShadyDOM.wrap(document).activeElement, el);
+      assert.notEqual(ShadyDOM.wrap(document)._activeElement, el);
       ShadyDOM.wrap(ShadyDOM.wrap(el).parentNode).removeChild(el);
     });
 
