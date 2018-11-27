@@ -11,7 +11,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 import * as utils from './utils.js';
 import {ensureShadyDataForNode} from './shady-data.js';
 
-const InsideDescriptors = utils.getOwnPropertyDescriptors({
+export const InsideDescriptors = utils.getOwnPropertyDescriptors({
 
   /** @this {Node} */
   get childNodes() {
@@ -75,7 +75,7 @@ const InsideDescriptors = utils.getOwnPropertyDescriptors({
 
 });
 
-const OutsideDescriptors = utils.getOwnPropertyDescriptors({
+export const OutsideDescriptors = utils.getOwnPropertyDescriptors({
 
   /** @this {Node} */
   get parentElement() {

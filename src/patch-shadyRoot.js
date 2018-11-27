@@ -10,6 +10,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 import * as utils from './utils.js';
 import {Node} from './patches/Node.js';
+import {OutsideDescriptors, InsideDescriptors} from './patch-instances.js';
 import {ParentNode} from './patches/ParentNode.js';
 import {DocumentOrFragment} from './patches/DocumentOrFragment.js';
 import {DocumentOrShadowRoot} from './patches/DocumentOrShadowRoot.js';
@@ -26,11 +27,18 @@ const patchShadyAccessors = (proto, prefix) => {
   // we ensure ParentNode accessors since these do not exist in Edge/IE on DocumentFragments
   utils.patchAccessors(proto,
     utils.getOwnPropertyDescriptors(ParentNode), true, prefix);
+  // Ensure `shadowRoot` has basic descriptors when we cannot rely
+  // on them coming from DocumentFragment.
+  // noPatching case: ensure all Node descriptors are on ShadowRoot
   if (utils.settings.noPatch) {
     utils.patchAccessors(proto,
       utils.getOwnPropertyDescriptors(Node), true, prefix);
     utils.patchAccessors(proto,
       utils.getOwnPropertyDescriptors(DocumentOrFragment), true, prefix);
+  // bad descriptors case: ensure only accessors are on ShadowRoot.
+  } else if (!utils.settings.hasDescriptors) {
+    utils.patchAccessors(proto, OutsideDescriptors, true);
+    utils.patchAccessors(proto, InsideDescriptors, true);
   }
 }
 
