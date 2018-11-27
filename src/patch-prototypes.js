@@ -79,6 +79,9 @@ export const patchPrototypes = () => {
 
   // only perform native patches if `noPatch` flag not set.
   if (!utils.settings.noPatch) {
+    // TODO(sorvell): what browsers need "force" here?
+    // if it's needed, then need to try/catch since it fails on older browsers.
+    // avoid "forcing" properties since this can error on some browsers.
     onPatchMap((proto, patch) =>
       utils.patchAccessors(proto, utils.getOwnPropertyDescriptors(patch), true));
   }

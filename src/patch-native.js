@@ -284,17 +284,23 @@ export const patchNative = () => {
     'setAttribute',
     'getAttribute',
     'hasAttribute',
-    'removeAttribute'
+    'removeAttribute',
+    // on older Safari, these are on Element.
+    'focus',
+    'blur',
   ]);
   copyAccessors(window.Element.prototype, ParentNodeMethods);
 
   // HTMLElement
+  copyAccessors(window.HTMLElement.prototype, [
+    'focus',
+    'blur',
+    // On IE these are on HTMLElement
+    'contains'
+  ]);
+
   if (hasDescriptors) {
     copyAccessors(window.HTMLElement.prototype, [
-      'focus',
-      'blur',
-      // On IE these are on HTMLElement
-      'contains',
       'parentElement',
       'children',
       'innerHTML'

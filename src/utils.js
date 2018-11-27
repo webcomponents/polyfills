@@ -200,7 +200,10 @@ export const patchAccessors = (proto, descriptors, force, prefix = '') => {
       if (newDescriptor.value) {
         proto[name] = newDescriptor.value;
       } else if (force || oldDescriptor.configurable) {
-        Object.defineProperty(proto, name, newDescriptor);
+        // NOTE: this can throw if 'force' is used so catch the error.
+        try {
+          Object.defineProperty(proto, name, newDescriptor);
+        } catch(e) {}
       }
     }
   }

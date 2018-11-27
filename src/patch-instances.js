@@ -119,6 +119,14 @@ const OutsideDescriptors = utils.getOwnPropertyDescriptors({
 
 });
 
+for (let prop in InsideDescriptors) {
+  InsideDescriptors[prop].enumerable = false;
+}
+
+for (let prop in OutsideDescriptors) {
+  OutsideDescriptors[prop].enumerable = false;
+}
+
 const noInstancePatching = utils.settings.hasDescriptors || utils.settings.noPatch;
 
 // ensure an element has patched "outside" accessors; no-op when not needed
