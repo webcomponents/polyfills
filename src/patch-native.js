@@ -102,8 +102,8 @@ export const addNativePrefixedProperties = () => {
     'addEventListener',
     'removeEventListener'
   ];
-  if (EventTarget) {
-    copyAccessors(EventTarget.prototype, eventProps);
+  if (window.EventTarget) {
+    copyAccessors(window.EventTarget.prototype, eventProps);
   } else {
     copyAccessors(Node.prototype, eventProps);
     copyAccessors(Window.prototype, eventProps);
