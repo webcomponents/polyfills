@@ -10,7 +10,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 import { query } from './ParentNode.js';
 
-export const DocumentOrFragment = {
+export const DocumentOrFragmentPatches = {
 
   /**
    * @this {Element}

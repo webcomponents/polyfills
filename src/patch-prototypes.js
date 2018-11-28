@@ -9,53 +9,55 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 */
 
 import * as utils from './utils.js';
-import {EventTarget} from './patches/EventTarget.js';
-import {Node} from './patches/Node.js';
-import {Slotable} from './patches/Slotable.js';
-import {ParentNode, ParentNodeDocumentOrFragment} from './patches/ParentNode.js';
-import {Element} from './patches/Element.js';
-import {ElementOrShadowRoot} from './patches/ElementOrShadowRoot.js';
-import {HTMLElement} from './patches/HTMLElement.js';
-import {Slot} from './patches/Slot.js';
-import {DocumentOrFragment} from './patches/DocumentOrFragment.js';
-import {DocumentOrShadowRoot} from './patches/DocumentOrShadowRoot.js';
-import {Document} from './patches/Document.js';
-import {Window} from './patches/Window.js';
+import {EventTargetPatches} from './patches/EventTarget.js';
+import {NodePatches} from './patches/Node.js';
+import {SlotablePatches} from './patches/Slotable.js';
+import {ParentNodePatches, ParentNodeDocumentOrFragmentPatches} from './patches/ParentNode.js';
+import {ElementPatches} from './patches/Element.js';
+import {ElementOrShadowRootPatches} from './patches/ElementOrShadowRoot.js';
+import {HTMLElementPatches} from './patches/HTMLElement.js';
+import {SlotPatches} from './patches/Slot.js';
+import {DocumentOrFragmentPatches} from './patches/DocumentOrFragment.js';
+import {DocumentOrShadowRootPatches} from './patches/DocumentOrShadowRoot.js';
+import {DocumentPatches} from './patches/Document.js';
+import {WindowPatches} from './patches/Window.js';
 
 // Some browsers (IE/Edge) have non-standard HTMLElement accessors.
 const NonStandardHTMLElement = {};
 
 if (Object.getOwnPropertyDescriptor(utils.NativeHTMLElement.prototype, 'parentElement')) {
   Object.defineProperty(NonStandardHTMLElement, 'parentElement',
-    Object.getOwnPropertyDescriptor(Node, 'parentElement'));
+    Object.getOwnPropertyDescriptor(NodePatches, 'parentElement'));
 }
 
 if (Object.getOwnPropertyDescriptor(utils.NativeHTMLElement.prototype, 'contains')) {
   Object.defineProperty(NonStandardHTMLElement, 'contains',
-    Object.getOwnPropertyDescriptor(Node, 'contains'));
+    Object.getOwnPropertyDescriptor(NodePatches, 'contains'));
 }
 
 if (Object.getOwnPropertyDescriptor(utils.NativeHTMLElement.prototype, 'children')) {
   Object.defineProperty(NonStandardHTMLElement, 'children',
-    Object.getOwnPropertyDescriptor(ParentNode, 'children'));
+    Object.getOwnPropertyDescriptor(ParentNodePatches, 'children'));
 }
 
 if (Object.getOwnPropertyDescriptor(utils.NativeHTMLElement.prototype, 'innerHTML')) {
   Object.defineProperty(NonStandardHTMLElement, 'innerHTML',
-    Object.getOwnPropertyDescriptor(ElementOrShadowRoot, 'innerHTML'));
+    Object.getOwnPropertyDescriptor(ElementOrShadowRootPatches, 'innerHTML'));
 }
 
 // setup patching
 const patchMap = {
-  EventTarget: [EventTarget],
-  Node: [Node, !window.EventTarget ? EventTarget : null],
-  Text: [Slotable],
-  Element: [Element, ParentNode, Slotable, utils.settings.IS_IE ? null : ElementOrShadowRoot, !window.HTMLSlotElement ? Slot : null],
-  HTMLElement: [HTMLElement, NonStandardHTMLElement],
-  HTMLSlotElement: [Slot],
-  DocumentFragment: [ParentNodeDocumentOrFragment, DocumentOrFragment],
-  Document: [Document, ParentNodeDocumentOrFragment, DocumentOrFragment, DocumentOrShadowRoot],
-  Window: [Window]
+  EventTarget: [EventTargetPatches],
+  Node: [NodePatches, !window.EventTarget ? EventTargetPatches : null],
+  Text: [SlotablePatches],
+  Element: [ElementPatches, ParentNodePatches, SlotablePatches,
+    utils.settings.IS_IE ? null : ElementOrShadowRootPatches,
+    !window.HTMLSlotElement ? SlotPatches : null],
+  HTMLElement: [HTMLElementPatches, NonStandardHTMLElement],
+  HTMLSlotElement: [SlotPatches],
+  DocumentFragment: [ParentNodeDocumentOrFragmentPatches, DocumentOrFragmentPatches],
+  Document: [DocumentPatches, ParentNodeDocumentOrFragmentPatches, DocumentOrFragmentPatches, DocumentOrShadowRootPatches],
+  Window: [WindowPatches]
 }
 
 const getPatchPrototype = (name) => (name === 'HTMLElement') ?
@@ -69,27 +71,24 @@ const onPatchMap = (fn) => {
   }
 }
 
-export const patchPrototypes = () => {
+export const addShadyPrefixedProperties = () => {
   // perform shady patches
   onPatchMap((proto, patch) =>
-    utils.patchAccessors(proto,
+    utils.patchProperties(proto,
       utils.getOwnPropertyDescriptors(patch), true, utils.SHADY_PREFIX));
 
   // install `_activeElement` because some browsers (older Chrome/Safari) do not have
   // a 'configurable' `activeElement` accesssor.
-  const descriptor = Object.getOwnPropertyDescriptor(DocumentOrShadowRoot, 'activeElement');
-  Object.defineProperty(window.Document.prototype, '_activeElement', descriptor);
+  const descriptor = Object.getOwnPropertyDescriptor(DocumentOrShadowRootPatches, 'activeElement');
+  Object.defineProperty(Document.prototype, '_activeElement', descriptor);
 
-  // force window since it does not have the accessors.
-  utils.patchAccessors(window.Window.prototype,
-      utils.getOwnPropertyDescriptors(Window), true, utils.SHADY_PREFIX);
+  // On Window, we're patching `addEventListener` which is a weird auto-bound
+  // property that is not directly on the Window prototype.
+  utils.patchProperties(Window.prototype,
+      utils.getOwnPropertyDescriptors(WindowPatches), true, utils.SHADY_PREFIX);
+};
 
-  // only perform native patches if `noPatch` flag not set.
-  if (!utils.settings.noPatch) {
-    // TODO(sorvell): what browsers need "force" here?
-    // if it's needed, then need to try/catch since it fails on older browsers.
-    // avoid "forcing" properties since this can error on some browsers.
-    onPatchMap((proto, patch) =>
-      utils.patchAccessors(proto, utils.getOwnPropertyDescriptors(patch), true));
-  }
+export const patchProperties = () => {
+  onPatchMap((proto, patch) =>
+    utils.patchProperties(proto, utils.getOwnPropertyDescriptors(patch), true));
 };

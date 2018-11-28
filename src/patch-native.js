@@ -8,7 +8,7 @@ Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 */
 import * as utils from './utils.js';
-import {patchAccessors} from './utils.js';
+import {patchProperties} from './utils.js';
 import {getInnerHTML} from './innerHTML.js';
 
 const hasDescriptors = utils.settings.hasDescriptors;
@@ -42,7 +42,7 @@ const installNativeMethod = (name, fn) => {
 
 
 const defineNativeAccessors = (proto, descriptors) => {
-  patchAccessors(proto, descriptors, true, NATIVE_PREFIX);
+  patchProperties(proto, descriptors, true, NATIVE_PREFIX);
   // make native accessors available to users
   for (let prop in descriptors) {
     installNativeAccessor(prop);
@@ -66,10 +66,10 @@ const copyAccessors = (proto, list = []) => {
   }
 }
 
-const nodeWalker = document.createTreeWalker(document, window.NodeFilter.SHOW_ALL,
+const nodeWalker = document.createTreeWalker(document, NodeFilter.SHOW_ALL,
   null, false);
 
-const elementWalker = document.createTreeWalker(document, window.NodeFilter.SHOW_ELEMENT,
+const elementWalker = document.createTreeWalker(document, NodeFilter.SHOW_ELEMENT,
   null, false);
 
 const inertDoc = document.implementation.createHTMLDocument('inert');
@@ -94,7 +94,7 @@ const ParentNodeMethods = [
   // 'append', 'prepend'
 ];
 
-export const patchNative = () => {
+export const addNativePrefixedProperties = () => {
 
   // EventTarget
   const eventProps = [
@@ -102,17 +102,17 @@ export const patchNative = () => {
     'addEventListener',
     'removeEventListener'
   ];
-  if (window.EventTarget) {
-    copyAccessors(window.EventTarget.prototype, eventProps);
+  if (EventTarget) {
+    copyAccessors(EventTarget.prototype, eventProps);
   } else {
-    copyAccessors(window.Node.prototype, eventProps);
-    copyAccessors(window.Window.prototype, eventProps);
+    copyAccessors(Node.prototype, eventProps);
+    copyAccessors(Window.prototype, eventProps);
   }
 
 
   // Node
   if (hasDescriptors) {
-    copyAccessors(window.Node.prototype, [
+    copyAccessors(Node.prototype, [
       'parentNode',
       'firstChild',
       'lastChild',
@@ -123,7 +123,7 @@ export const patchNative = () => {
       'textContent',
     ]);
   } else {
-    defineNativeAccessors(window.Node.prototype, {
+    defineNativeAccessors(Node.prototype, {
       parentNode: {
         get() {
           nodeWalker.currentNode = this;
@@ -178,9 +178,9 @@ export const patchNative = () => {
         get() {
           /* eslint-disable no-case-declarations */
           switch (this.nodeType) {
-            case window.Node.ELEMENT_NODE:
-            case window.Node.DOCUMENT_FRAGMENT_NODE:
-              let textWalker = document.createTreeWalker(this, window.NodeFilter.SHOW_TEXT,
+            case Node.ELEMENT_NODE:
+            case Node.DOCUMENT_FRAGMENT_NODE:
+              let textWalker = document.createTreeWalker(this, NodeFilter.SHOW_TEXT,
                 null, false);
               let content = '', n;
               while ( (n = textWalker.nextNode()) ) {
@@ -199,11 +199,11 @@ export const patchNative = () => {
             value = ''
           }
           switch (this.nodeType) {
-            case window.Node.ELEMENT_NODE:
-            case window.Node.DOCUMENT_FRAGMENT_NODE:
+            case Node.ELEMENT_NODE:
+            case Node.DOCUMENT_FRAGMENT_NODE:
               clearNode(this);
               // Document fragments must have no childnodes if setting a blank string
-              if (value.length > 0 || this.nodeType === window.Node.ELEMENT_NODE) {
+              if (value.length > 0 || this.nodeType === Node.ELEMENT_NODE) {
                 // Note: old Chrome versions require 2nd argument here
                 this[NATIVE_PREFIX + 'insertBefore'](document.createTextNode(value), undefined);
               }
@@ -218,7 +218,7 @@ export const patchNative = () => {
     });
   }
 
-  copyAccessors(window.Node.prototype, [
+  copyAccessors(Node.prototype, [
     'appendChild',
     'insertBefore',
     'removeChild',
@@ -261,9 +261,9 @@ export const patchNative = () => {
 
   // Element
   if (hasDescriptors) {
-    copyAccessors(window.Element.prototype, ParentNodeAccessors);
+    copyAccessors(Element.prototype, ParentNodeAccessors);
 
-    copyAccessors(window.Element.prototype, [
+    copyAccessors(Element.prototype, [
       'previousElementSibling',
       'nextElementSibling',
       'innerHTML'
@@ -281,8 +281,8 @@ export const patchNative = () => {
       ]);
     }
   } else {
-    defineNativeAccessors(window.Element.prototype, ParentNodeWalkerDescriptors);
-    defineNativeAccessors(window.Element.prototype, {
+    defineNativeAccessors(Element.prototype, ParentNodeWalkerDescriptors);
+    defineNativeAccessors(Element.prototype, {
       previousElementSibling: {
         get() {
           elementWalker.currentNode = this;
@@ -324,7 +324,7 @@ export const patchNative = () => {
     });
   }
 
-  copyAccessors(window.Element.prototype, [
+  copyAccessors(Element.prototype, [
     'setAttribute',
     'getAttribute',
     'hasAttribute',
@@ -333,10 +333,10 @@ export const patchNative = () => {
     'focus',
     'blur',
   ]);
-  copyAccessors(window.Element.prototype, ParentNodeMethods);
+  copyAccessors(Element.prototype, ParentNodeMethods);
 
   // HTMLElement
-  copyAccessors(window.HTMLElement.prototype, [
+  copyAccessors(HTMLElement.prototype, [
     'focus',
     'blur',
     // On IE these are on HTMLElement
@@ -344,7 +344,7 @@ export const patchNative = () => {
   ]);
 
   if (hasDescriptors) {
-    copyAccessors(window.HTMLElement.prototype, [
+    copyAccessors(HTMLElement.prototype, [
       'parentElement',
       'children',
       'innerHTML'
@@ -361,27 +361,27 @@ export const patchNative = () => {
     // NOTE, IE 11 does not have on DocumentFragment
     // firstElementChild
     // lastElementChild
-    copyAccessors(window.DocumentFragment.prototype, ParentNodeAccessors);
+    copyAccessors(DocumentFragment.prototype, ParentNodeAccessors);
   } else {
-    defineNativeAccessors(window.DocumentFragment.prototype, ParentNodeWalkerDescriptors);
+    defineNativeAccessors(DocumentFragment.prototype, ParentNodeWalkerDescriptors);
   }
 
-  copyAccessors(window.DocumentFragment.prototype, ParentNodeMethods);
+  copyAccessors(DocumentFragment.prototype, ParentNodeMethods);
 
   // Document
   if (hasDescriptors) {
-    copyAccessors(window.DocumentFragment.prototype, ParentNodeAccessors);
-    copyAccessors(window.Document.prototype, [
+    copyAccessors(DocumentFragment.prototype, ParentNodeAccessors);
+    copyAccessors(Document.prototype, [
       'activeElement'
     ]);
   } else {
-    defineNativeAccessors(window.Document.prototype, ParentNodeWalkerDescriptors);
+    defineNativeAccessors(Document.prototype, ParentNodeWalkerDescriptors);
   }
 
-  copyAccessors(window.Document.prototype, [
+  copyAccessors(Document.prototype, [
     'importNode',
     'getElementById'
   ]);
-  copyAccessors(window.Document.prototype, ParentNodeMethods);
+  copyAccessors(Document.prototype, ParentNodeMethods);
 
 };

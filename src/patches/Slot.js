@@ -11,7 +11,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 import {shadyDataForNode} from '../shady-data.js';
 import {renderRootNode} from './Slotable.js';
 
-export const Slot = {
+export const SlotPatches = {
 
   /**
    * @this {HTMLSlotElement}

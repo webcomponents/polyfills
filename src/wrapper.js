@@ -83,7 +83,7 @@ class Wrapper {
   }
 
   get activeElement() {
-    if (utils.isShadyRoot(this.node) || this.node.nodeType === window.Node.DOCUMENT_NODE) {
+    if (utils.isShadyRoot(this.node) || this.node.nodeType === Node.DOCUMENT_NODE) {
       const e = this.node[utils.SHADY_PREFIX + 'activeElement'];
       return e;
     }
@@ -107,13 +107,13 @@ class Wrapper {
 
   // document
   importNode(node, deep) {
-    if (this.node.nodeType === window.Node.DOCUMENT_NODE) {
+    if (this.node.nodeType === Node.DOCUMENT_NODE) {
       return this.node[utils.SHADY_PREFIX + 'importNode'](node, deep);
     }
   }
 
   getElementById(id) {
-    if (this.node.nodeType === window.Node.DOCUMENT_NODE) {
+    if (this.node.nodeType === Node.DOCUMENT_NODE) {
       return this.node[utils.SHADY_PREFIX + 'getElementById'](id);
     }
   }
@@ -251,8 +251,10 @@ export function wrap(obj) {
   if (utils.isShadyRoot(obj) || obj instanceof Wrapper) {
     return obj;
   }
-  if (!wrapperMap.has(obj)) {
-    wrapperMap.set(obj, new Wrapper(obj));
+  let wrapper = wrapperMap.get(obj)
+  if (!wrapper) {
+    wrapper = new Wrapper(obj);
+    wrapperMap.set(obj, wrapper);
   }
-  return wrapperMap.get(obj);
+  return wrapper;
 }

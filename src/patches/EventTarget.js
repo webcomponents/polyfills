@@ -12,7 +12,7 @@ import * as utils from '../utils.js';
 import {flush} from '../flush.js';
 import {addEventListener, removeEventListener} from '../patch-events.js';
 
-export const EventTarget = {
+export const EventTargetPatches = {
 
   /** @this {Node} */
   dispatchEvent(event) {

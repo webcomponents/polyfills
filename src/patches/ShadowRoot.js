@@ -10,7 +10,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 import * as utils from '../utils.js';
 
-export const ShadowRoot = {
+export const ShadowRootPatches = {
 
   /**
    * @this {ShadowRoot}

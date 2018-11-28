@@ -10,8 +10,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 import {addEventListener, removeEventListener} from '../patch-events.js';
 
-// TODO(sorvell) unsure if this is needed now that we patch EventTarget.
-export const Window = {
+export const WindowPatches = {
 
   // NOTE: ensure these methods are bound to `window` so that `this` is correct
   // when called directly from global context without a receiver; e.g.

@@ -12,7 +12,7 @@ import * as utils from '../utils.js';
 import {eventPropertyNames} from '../patch-events.js';
 import {shadyDataForNode, ensureShadyDataForNode} from '../shady-data.js';
 
-export const HTMLElement = {
+export const HTMLElementPatches = {
 
   /** @this {HTMLElement} */
   blur() {
@@ -29,7 +29,7 @@ export const HTMLElement = {
 };
 
 eventPropertyNames.forEach(property => {
-  Object.defineProperty(HTMLElement, property, {
+  Object.defineProperty(HTMLElementPatches, property, {
     /** @this {HTMLElement} */
     set: function(fn) {
       const shadyData = ensureShadyDataForNode(this);

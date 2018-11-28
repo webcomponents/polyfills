@@ -62,30 +62,6 @@ export const matchesSelector = (element, selector) => {
   return matches.call(element, selector);
 }
 
-const copyOwnProperty = (name, source, target) => {
-  let pd = Object.getOwnPropertyDescriptor(source, name);
-  if (pd) {
-    Object.defineProperty(target, name, pd);
-  }
-}
-
-export const extend = (target, source) => {
-  if (target && source) {
-    let n$ = Object.getOwnPropertyNames(source);
-    for (let i=0, n; (i<n$.length) && (n=n$[i]); i++) {
-      copyOwnProperty(n, source, target);
-    }
-  }
-  return target || source;
-}
-
-export const extendAll = (target, ...sources) => {
-  for (let i=0; i < sources.length; i++) {
-    extend(target, sources[i]);
-  }
-  return target;
-}
-
 export const mixin = (target, source) => {
   for (var i in source) {
     target[i] = source[i];
@@ -93,19 +69,8 @@ export const mixin = (target, source) => {
   return target;
 }
 
-export const patchPrototype = (obj, mixin) => {
-  let proto = Object.getPrototypeOf(obj);
-  if (!proto.hasOwnProperty('__patchProto')) {
-    let patchProto = Object.create(proto);
-    patchProto.__sourceProto = proto;
-    extend(patchProto, mixin);
-    proto['__patchProto'] = patchProto;
-  }
-  // old browsers don't have setPrototypeOf
-  obj.__proto__ = proto['__patchProto'];
-}
-
-
+// NOTE, prefer MutationObserver over Promise for microtask timing
+// for consistency x-platform.
 let twiddle = document.createTextNode('');
 let content = 0;
 let queue = [];
@@ -187,7 +152,7 @@ export const SHADY_PREFIX = '__shady_';
  * @param {!Object} descriptors
  * @param {boolean=} force
  */
-export const patchAccessors = (proto, descriptors, force, prefix = '') => {
+export const patchProperties = (proto, descriptors, force, prefix = '') => {
   for (let p in descriptors) {
     const oldDescriptor = Object.getOwnPropertyDescriptor(proto, p);
     const newDescriptor = descriptors[p];

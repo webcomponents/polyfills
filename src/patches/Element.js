@@ -37,7 +37,7 @@ function distributeAttributeChange(node, name) {
   }
 }
 
-export const Element = {
+export const ElementPatches = {
 
   /** @this {Element} */
   get previousElementSibling() {

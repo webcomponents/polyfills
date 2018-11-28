@@ -14,7 +14,7 @@ import {clearNode} from './Node.js';
 
 const inertDoc = document.implementation.createHTMLDocument('inert');
 
-export const ElementOrShadowRoot = {
+export const ElementOrShadowRootPatches = {
 
   /** @this {Element} */
   get innerHTML() {

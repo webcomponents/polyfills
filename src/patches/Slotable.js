@@ -19,7 +19,7 @@ export function renderRootNode(element) {
   }
 }
 
-export const Slotable = {
+export const SlotablePatches = {
 
   get assignedSlot() {
     renderRootNode(this);

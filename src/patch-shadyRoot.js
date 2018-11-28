@@ -9,36 +9,36 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 */
 
 import * as utils from './utils.js';
-import {Node} from './patches/Node.js';
+import {NodePatches} from './patches/Node.js';
 import {OutsideDescriptors, InsideDescriptors} from './patch-instances.js';
-import {ParentNode} from './patches/ParentNode.js';
-import {DocumentOrFragment} from './patches/DocumentOrFragment.js';
-import {DocumentOrShadowRoot} from './patches/DocumentOrShadowRoot.js';
-import {ElementOrShadowRoot} from './patches/ElementOrShadowRoot.js';
-import {ShadowRoot} from './patches/ShadowRoot.js';
+import {ParentNodePatches} from './patches/ParentNode.js';
+import {DocumentOrFragmentPatches} from './patches/DocumentOrFragment.js';
+import {DocumentOrShadowRootPatches} from './patches/DocumentOrShadowRoot.js';
+import {ElementOrShadowRootPatches} from './patches/ElementOrShadowRoot.js';
+import {ShadowRootPatches} from './patches/ShadowRoot.js';
 
 const patchShadyAccessors = (proto, prefix) => {
-  utils.patchAccessors(proto,
-    utils.getOwnPropertyDescriptors(ShadowRoot), true, prefix);
-  utils.patchAccessors(proto,
-    utils.getOwnPropertyDescriptors(DocumentOrShadowRoot), true, prefix);
-  utils.patchAccessors(proto,
-    utils.getOwnPropertyDescriptors(ElementOrShadowRoot), true, prefix);
+  utils.patchProperties(proto,
+    utils.getOwnPropertyDescriptors(ShadowRootPatches), true, prefix);
+  utils.patchProperties(proto,
+    utils.getOwnPropertyDescriptors(DocumentOrShadowRootPatches), true, prefix);
+  utils.patchProperties(proto,
+    utils.getOwnPropertyDescriptors(ElementOrShadowRootPatches), true, prefix);
   // we ensure ParentNode accessors since these do not exist in Edge/IE on DocumentFragments
-  utils.patchAccessors(proto,
-    utils.getOwnPropertyDescriptors(ParentNode), true, prefix);
+  utils.patchProperties(proto,
+    utils.getOwnPropertyDescriptors(ParentNodePatches), true, prefix);
   // Ensure `shadowRoot` has basic descriptors when we cannot rely
   // on them coming from DocumentFragment.
   // noPatching case: ensure all Node descriptors are on ShadowRoot
   if (utils.settings.noPatch) {
-    utils.patchAccessors(proto,
-      utils.getOwnPropertyDescriptors(Node), true, prefix);
-    utils.patchAccessors(proto,
-      utils.getOwnPropertyDescriptors(DocumentOrFragment), true, prefix);
+    utils.patchProperties(proto,
+      utils.getOwnPropertyDescriptors(NodePatches), true, prefix);
+    utils.patchProperties(proto,
+      utils.getOwnPropertyDescriptors(DocumentOrFragmentPatches), true, prefix);
   // bad descriptors case: ensure only accessors are on ShadowRoot.
   } else if (!utils.settings.hasDescriptors) {
-    utils.patchAccessors(proto, OutsideDescriptors, true);
-    utils.patchAccessors(proto, InsideDescriptors, true);
+    utils.patchProperties(proto, OutsideDescriptors, true);
+    utils.patchProperties(proto, InsideDescriptors, true);
   }
 }
 
@@ -53,7 +53,7 @@ export const patchShadyRoot = (proto) => {
   // actual DocumentFragment instance.
   Object.defineProperties(proto, {
     nodeType: {
-      value: window.Node.DOCUMENT_FRAGMENT_NODE,
+      value: Node.DOCUMENT_FRAGMENT_NODE,
       configurable: true
     },
     nodeName: {

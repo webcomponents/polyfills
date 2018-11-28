@@ -18,7 +18,7 @@ function getDocumentActiveElement() {
   }
 }
 
-export const DocumentOrShadowRoot = {
+export const DocumentOrShadowRootPatches = {
 
   /** @this {Document|ShadowRoot} */
   get activeElement() {

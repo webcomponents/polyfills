@@ -20,7 +20,7 @@ const preferPerformance = utils.settings.preferPerformance;
 
 const nativeIsConnectedAccessors =
 /** @type {ObjectPropertyDescriptor} */(
-  Object.getOwnPropertyDescriptor(window.Node.prototype, 'isConnected')
+  Object.getOwnPropertyDescriptor(Node.prototype, 'isConnected')
 );
 
 const nativeIsConnected = nativeIsConnectedAccessors && nativeIsConnectedAccessors.get;
@@ -88,7 +88,7 @@ function scheduleObserver(node, addedNode, removedNode) {
   }
 }
 
-export const Node = {
+export const NodePatches = {
 
   /** @this {Node} */
   get parentNode() {
@@ -150,7 +150,7 @@ export const Node = {
   get parentElement() {
     const nodeData = shadyDataForNode(this);
     let l = nodeData && nodeData.parentNode;
-    if (l && l.nodeType !== window.Node.ELEMENT_NODE) {
+    if (l && l.nodeType !== Node.ELEMENT_NODE) {
       l = null;
     }
     return l !== undefined ? l : this[utils.NATIVE_PREFIX + 'parentElement'];
@@ -161,7 +161,7 @@ export const Node = {
     if (nativeIsConnected && nativeIsConnected.call(this)) {
       return true;
     }
-    if (this.nodeType == window.Node.DOCUMENT_FRAGMENT_NODE) {
+    if (this.nodeType == Node.DOCUMENT_FRAGMENT_NODE) {
       return false;
     }
     // Fast path for distributed nodes.
@@ -187,7 +187,7 @@ export const Node = {
     if (utils.isTrackingLogicalChildNodes(this)) {
       let tc = [];
       for (let i = 0, cn = this[utils.SHADY_PREFIX + 'childNodes'], c; (c = cn[i]); i++) {
-        if (c.nodeType !== window.Node.COMMENT_NODE) {
+        if (c.nodeType !== Node.COMMENT_NODE) {
           tc.push(c[utils.SHADY_PREFIX + 'textContent']);
         }
       }
@@ -206,20 +206,20 @@ export const Node = {
       value = ''
     }
     switch (this.nodeType) {
-      case window.Node.ELEMENT_NODE:
-      case window.Node.DOCUMENT_FRAGMENT_NODE:
+      case Node.ELEMENT_NODE:
+      case Node.DOCUMENT_FRAGMENT_NODE:
         if (!utils.isTrackingLogicalChildNodes(this) && utils.settings.hasDescriptors) {
           // may be removing a nested slot but fast path if we know we are not.
           const firstChild = this[utils.SHADY_PREFIX + 'firstChild'];
           if (firstChild != this[utils.SHADY_PREFIX + 'lastChild'] ||
-            (firstChild && firstChild.nodeType != window.Node.TEXT_NODE)) {
+            (firstChild && firstChild.nodeType != Node.TEXT_NODE)) {
             clearNode(this);
           }
           this[utils.NATIVE_PREFIX + 'textContent'] = value;
         } else {
           clearNode(this);
           // Document fragments must have no childNodes if setting a blank string
-          if (value.length > 0 || this.nodeType === window.Node.ELEMENT_NODE) {
+          if (value.length > 0 || this.nodeType === Node.ELEMENT_NODE) {
             this[utils.SHADY_PREFIX + 'insertBefore'](document.createTextNode(value))
           }
         }
@@ -282,7 +282,7 @@ export const Node = {
     const needsScoping = (!preferPerformance || node['__noInsertionPoint'] === undefined) &&
         !currentScopeIsCorrect(node, newScopeName);
     const needsSlotFinding = ownerRoot && !node['__noInsertionPoint'] &&
-        (!preferPerformance || node.nodeType === window.Node.DOCUMENT_FRAGMENT_NODE);
+        (!preferPerformance || node.nodeType === Node.DOCUMENT_FRAGMENT_NODE);
     if (needsSlotFinding || needsScoping) {
       // NOTE: avoid node.removeChild as this *can* trigger another patched
       // method (e.g. custom elements) and we want only the shady method to run.
@@ -447,7 +447,7 @@ export const Node = {
       // Attribute nodes historically had childNodes, but they have later
       // been removed from the spec.
       // Make sure we do not do a deep clone on them for old browsers (IE11)
-      if (deep && n.nodeType !== window.Node.ATTRIBUTE_NODE) {
+      if (deep && n.nodeType !== Node.ATTRIBUTE_NODE) {
         let c$ = this[utils.SHADY_PREFIX + 'childNodes'];
         for (let i=0, nc; i < c$.length; i++) {
           nc = c$[i][utils.SHADY_PREFIX + 'cloneNode'](true);

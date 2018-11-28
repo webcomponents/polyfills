@@ -93,7 +93,7 @@ function pathComposer(startNode, composed) {
     composedPath.push(current);
     if (current[utils.SHADY_PREFIX + 'assignedSlot']) {
       current = current[utils.SHADY_PREFIX + 'assignedSlot'];
-    } else if (current.nodeType === window.Node.DOCUMENT_FRAGMENT_NODE && current.host && (composed || current !== startRoot)) {
+    } else if (current.nodeType === Node.DOCUMENT_FRAGMENT_NODE && current.host && (composed || current !== startRoot)) {
       current = current.host;
     } else {
       current = current[utils.SHADY_PREFIX + 'parentNode'];
@@ -134,7 +134,7 @@ function retarget(refNode, path) {
   }
 }
 
-let eventMixin = {
+let EventPatches = {
 
   /**
    * @this {Event}
@@ -188,14 +188,14 @@ let eventMixin = {
    * @this {Event}
    */
   stopPropagation() {
-    window.Event.prototype.stopPropagation.call(this);
+    Event.prototype.stopPropagation.call(this);
     this.__propagationStopped = true;
   },
   /**
    * @this {Event}
    */
   stopImmediatePropagation() {
-    window.Event.prototype.stopImmediatePropagation.call(this);
+    Event.prototype.stopImmediatePropagation.call(this);
     this.__immediatePropagationStopped = true;
     this.__propagationStopped = true;
   }
@@ -273,7 +273,7 @@ function retargetNonBubblingEvent(e) {
   }
 
   // set the event phase to `AT_TARGET` as in spec
-  Object.defineProperty(e, 'eventPhase', {get() { return window.Event.AT_TARGET }});
+  Object.defineProperty(e, 'eventPhase', {get() { return Event.AT_TARGET }});
 
   // the event only needs to be fired when owner roots change when iterating the event path
   // keep track of the last seen owner root
@@ -352,7 +352,7 @@ export function addEventListener(type, fnOrObj, optionsOrCapture) {
     return;
   }
 
-    if (unpatchedEvents[type]) {
+  if (unpatchedEvents[type]) {
     return this[utils.NATIVE_PREFIX + 'addEventListener'](type, fnOrObj, optionsOrCapture);
   }
 
@@ -423,7 +423,7 @@ export function addEventListener(type, fnOrObj, optionsOrCapture) {
         return;
       }
       // prevent non-bubbling events from triggering bubbling handlers on shadowroot, but only if not in capture phase
-      if (e.eventPhase !== window.Event.CAPTURING_PHASE && !e.bubbles && e.target !== target && !(target instanceof Window)) {
+      if (e.eventPhase !== Event.CAPTURING_PHASE && !e.bubbles && e.target !== target && !(target instanceof Window)) {
         return;
       }
       let ret = handlerType === 'function' ?
@@ -520,21 +520,33 @@ function activateFocusEventOverrides() {
   }
 }
 
+const EventPatchesDescriptors = utils.getOwnPropertyDescriptors(EventPatches);
+
+const SHADY_PROTO = '__shady_patchedProto';
+const SHADY_SOURCE_PROTO = '__shady_sourceProto';
+
 function patchEvent(event) {
   event['__target'] = event.target;
   event.__relatedTarget = event.relatedTarget;
-  // patch event prototype if we can
+  // attempt to patch prototype (via cache)
   if (utils.settings.hasDescriptors) {
-    utils.patchPrototype(event, eventMixin);
+    const proto = Object.getPrototypeOf(event);
+    if (!Object.hasOwnProperty(proto, SHADY_PROTO)) {
+      const patchedProto = Object.create(proto);
+      patchedProto[SHADY_SOURCE_PROTO] = proto;
+      utils.patchProperties(patchedProto, EventPatchesDescriptors, true);
+      proto[SHADY_PROTO] = patchedProto;
+    }
+    event.__proto__ = proto[SHADY_PROTO];
   // and fallback to patching instance
   } else {
-    utils.extend(event, eventMixin);
+    utils.patchProperties(event, EventPatchesDescriptors, true);
   }
 }
 
-let PatchedEvent = mixinComposedFlag(window.Event);
-let PatchedCustomEvent = mixinComposedFlag(window.CustomEvent);
-let PatchedMouseEvent = mixinComposedFlag(window.MouseEvent);
+let PatchedEvent = mixinComposedFlag(Event);
+let PatchedCustomEvent = mixinComposedFlag(CustomEvent);
+let PatchedMouseEvent = mixinComposedFlag(MouseEvent);
 
 export function patchEvents() {
   activateFocusEventOverrides();
@@ -547,7 +559,7 @@ export function patchEvents() {
 
 
   // Fix up `Element.prototype.click()` if `isTrusted` is supported, but `composed` isn't
-  if (!composedGetter && Object.getOwnPropertyDescriptor(window.Event.prototype, 'isTrusted')) {
+  if (!composedGetter && Object.getOwnPropertyDescriptor(Event.prototype, 'isTrusted')) {
     /** @this {Element} */
     const composedClickFn = function() {
       const ev = new MouseEvent('click', {
@@ -557,10 +569,10 @@ export function patchEvents() {
       });
       this[utils.SHADY_PREFIX + 'dispatchEvent'](ev);
     };
-    if (window.Element.prototype.click) {
-      window.Element.prototype.click = composedClickFn;
-    } else if (window.HTMLElement.prototype.click) {
-      window.HTMLElement.prototype.click = composedClickFn;
+    if (Element.prototype.click) {
+      Element.prototype.click = composedClickFn;
+    } else if (HTMLElement.prototype.click) {
+      HTMLElement.prototype.click = composedClickFn;
     }
   }
 }

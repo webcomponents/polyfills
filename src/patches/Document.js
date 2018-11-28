@@ -12,7 +12,7 @@ import * as utils from '../utils.js';
 
 const doc = window.document;
 
-export const Document = {
+export const DocumentPatches = {
 
   // note: Though not technically correct, we fast path `importNode`
   // when called on a node not owned by the main document.
