@@ -22,21 +22,27 @@ import {DocumentOrShadowRoot} from './patches/DocumentOrShadowRoot.js';
 import {Document} from './patches/Document.js';
 import {Window} from './patches/Window.js';
 
-const IEHTMLElement = {};
+// Some browsers (IE/Edge) have non-standard HTMLElement accessors.
+const NonStandardHTMLElement = {};
 
-if (utils.settings.IS_IE) {
-  Object.defineProperty(IEHTMLElement, 'parentElement',
+if (Object.getOwnPropertyDescriptor(utils.NativeHTMLElement.prototype, 'parentElement')) {
+  Object.defineProperty(NonStandardHTMLElement, 'parentElement',
     Object.getOwnPropertyDescriptor(Node, 'parentElement'));
+}
 
-  Object.defineProperty(IEHTMLElement, 'contains',
+if (Object.getOwnPropertyDescriptor(utils.NativeHTMLElement.prototype, 'contains')) {
+  Object.defineProperty(NonStandardHTMLElement, 'contains',
     Object.getOwnPropertyDescriptor(Node, 'contains'));
+}
 
-  Object.defineProperty(IEHTMLElement, 'children',
+if (Object.getOwnPropertyDescriptor(utils.NativeHTMLElement.prototype, 'children')) {
+  Object.defineProperty(NonStandardHTMLElement, 'children',
     Object.getOwnPropertyDescriptor(ParentNode, 'children'));
+}
 
-  Object.defineProperty(IEHTMLElement, 'innerHTML',
+if (Object.getOwnPropertyDescriptor(utils.NativeHTMLElement.prototype, 'innerHTML')) {
+  Object.defineProperty(NonStandardHTMLElement, 'innerHTML',
     Object.getOwnPropertyDescriptor(ElementOrShadowRoot, 'innerHTML'));
-
 }
 
 // setup patching
@@ -45,7 +51,7 @@ const patchMap = {
   Node: [Node, !window.EventTarget ? EventTarget : null],
   Text: [Slotable],
   Element: [Element, ParentNode, Slotable, utils.settings.IS_IE ? null : ElementOrShadowRoot, !window.HTMLSlotElement ? Slot : null],
-  HTMLElement: [HTMLElement, utils.settings.IS_IE ? IEHTMLElement : null],
+  HTMLElement: [HTMLElement, NonStandardHTMLElement],
   HTMLSlotElement: [Slot],
   DocumentFragment: [ParentNodeDocumentOrFragment, DocumentOrFragment],
   Document: [Document, ParentNodeDocumentOrFragment, DocumentOrFragment, DocumentOrShadowRoot],

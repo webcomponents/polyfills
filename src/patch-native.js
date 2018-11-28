@@ -269,11 +269,14 @@ export const patchNative = () => {
       'innerHTML'
     ]);
 
-    // NOTE, IE 11 is the only supported browser with
-    // children and innerHTML on HTMLElement instead of Element
-    if (utils.settings.IS_IE) {
+    // NOTE, on IE 11 / Edge 15 children and/or innerHTML on HTMLElement instead of Element
+    if (Object.getOwnPropertyDescriptor(utils.NativeHTMLElement.prototype, 'children')) {
       copyAccessors(utils.NativeHTMLElement.prototype, [
-        'children',
+        'children'
+      ]);
+    }
+    if (Object.getOwnPropertyDescriptor(utils.NativeHTMLElement.prototype, 'innerHTML')) {
+      copyAccessors(utils.NativeHTMLElement.prototype, [
         'innerHTML'
       ]);
     }
