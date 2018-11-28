@@ -462,6 +462,21 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       assert.isNull(scoped, 'scoped events should fire on shadowRoot after listener removed');
     });
 
+    test('should use bubbling phase for event listeners added via properties', function () {
+      const parent = document.createElement('div');
+      parent.id = "parent";
+      ShadyDOM.wrap(document.body).appendChild(parent);
+      const child = document.createElement('div');
+      child.id = "child";
+      ShadyDOM.wrap(parent).appendChild(child);
+      const parentMouseDownSpy = sinon.spy();
+      const childMouseDownSpy = sinon.spy();
+      ShadyDOM.wrap(parent).onmousedown = parentMouseDownSpy;
+      ShadyDOM.wrap(child).onmousedown = childMouseDownSpy;
+      ShadyDOM.wrap(child).dispatchEvent(new MouseEvent('mousedown', { bubbles: true, composed: true }));
+      assert.isTrue(childMouseDownSpy.calledBefore(parentMouseDownSpy), 'Event handler on child should be called first');
+    });
+
     test('composed focus and blur events retarget up tree', function() {
       let el = createEnabledElement('x-focus');
       el.fireComposed();
