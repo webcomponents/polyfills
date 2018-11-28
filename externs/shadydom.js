@@ -25,3 +25,9 @@ Node.prototype.__handlers;
 
 /** @type {Object} */
 Node.prototype.__shady;
+
+/** @interface */
+function IWrapper() {}
+
+/** @type {Object} */
+IWrapper.prototype._activeElement;

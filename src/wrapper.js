@@ -11,7 +11,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 import * as utils from './utils.js';
 import {eventPropertyNames} from './patch-events.js';
 
-export class Wrapper {
+/** @implements {IWrapper} */
+class Wrapper {
 
   constructor(node) {
     this.node = node;
@@ -228,6 +229,8 @@ export class Wrapper {
   }
 
 }
+
+export {Wrapper};
 
 eventPropertyNames.forEach(name => {
   Object.defineProperty(Wrapper.prototype, name, {
