@@ -708,7 +708,7 @@ function getEffectiveChildNodes(node) {
 }
 
 function getComposedHTML(node) {
-  return ShadyDOM.nativeAccessor(node, 'innerHTML');
+  return ShadyDOM.nativeTree.innerHTML(node);
 }
 
 function getComposedChildAtIndex(node, index) {

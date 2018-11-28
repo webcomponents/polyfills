@@ -684,13 +684,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     ShadyDOM.wrap(rere).appendChild(s);
     assert.equal(ShadyDOM.wrap(rere).querySelector('#light'), s);
     assert.equal(ShadyDOM.wrap(s).parentNode, rere);
-    assert.notEqual(ShadyDOM.nativeAccessor(s, 'parentNode'), rere);
+    assert.notEqual(ShadyDOM.nativeTree.parentNode(s), rere);
     ShadyDOM.flush();
-    assert.equal(ShadyDOM.nativeAccessor(s, 'parentNode'), p);
+    assert.equal(ShadyDOM.nativeTree.parentNode(s), p);
     ShadyDOM.wrap(rere).removeChild(s);
-    assert.equal(ShadyDOM.nativeAccessor(s, 'parentNode'), p);
+    assert.equal(ShadyDOM.nativeTree.parentNode(s), p);
     ShadyDOM.flush();
-    assert.equal(ShadyDOM.nativeAccessor(s, 'parentNode'), null);
+    assert.equal(ShadyDOM.nativeTree.parentNode(s), null);
   });
 
   test('querySelector', function() {
@@ -759,7 +759,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     ShadyDOM.wrap(document.body).appendChild(b);
     ShadyDOM.flush();
     assert.equal(ShadyDOM.wrap(b).childNodes.length, 0, 'shallow copy has incorrect children');
-    assert.equal(ShadyDOM.nativeAccessor(b, 'children').length, 2, 'shallow copy has incorrect composed children');
+    assert.equal(ShadyDOM.nativeTree.children(b).length, 2, 'shallow copy has incorrect composed children');
   });
 
   test('cloneNode deep', function() {
@@ -772,7 +772,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     ShadyDOM.wrap(document.body).appendChild(b);
     ShadyDOM.flush();
     assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(b).firstElementChild).childNodes.length, 2, 'deep copy has incorrect children');
-    assert.equal(ShadyDOM.nativeAccessor(ShadyDOM.wrap(b).firstElementChild, 'children').length, 4, 'deep copy has incorrect composed children');
+    assert.equal(ShadyDOM.nativeTree.children(ShadyDOM.wrap(b).firstElementChild).length, 4, 'deep copy has incorrect composed children');
   });
 
   test('cloneNode attribute', function() {
@@ -795,7 +795,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     ShadyDOM.wrap(document.body).appendChild(b);
     ShadyDOM.flush();
     assert.equal(ShadyDOM.wrap(b).childNodes.length, 0, 'shallow import has incorrect children');
-    assert.equal(ShadyDOM.nativeAccessor(b, 'children').length, 2, 'shallow import has incorrect composed children');
+    assert.equal(ShadyDOM.nativeTree.children(b).length, 2, 'shallow import has incorrect composed children');
   });
 
   test('importNode deep', function() {
@@ -807,7 +807,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     ShadyDOM.wrap(document.body).appendChild(b);
     ShadyDOM.flush();
     assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(b).firstElementChild).childNodes.length, 2, 'deep copy has incorrect children');
-    assert.equal(ShadyDOM.nativeAccessor(ShadyDOM.wrap(b).firstElementChild, 'children').length, 4, 'deep copy has incorrect composed children');
+    assert.equal(ShadyDOM.nativeTree.children(ShadyDOM.wrap(b).firstElementChild).length, 4, 'deep copy has incorrect composed children');
   });
 
   test('importNode template deep', function() {
@@ -923,7 +923,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     var html = '<div id="added"></div>';
     ShadyDOM.wrap(e).innerHTML = html;
     ShadyDOM.wrap(e).dispatchEvent(new Event('foo'));
-    assert.equal(ShadyDOM.nativeAccessor(e, 'innerHTML'), html);
+    assert.equal(ShadyDOM.nativeTree.innerHTML(e), html);
     ShadyDOM.wrap(document.body).removeChild(e);
   });
 
@@ -934,7 +934,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     ShadyDOM.wrap(e).innerHTML = html;
     assert.isTrue(ShadyDOM.wrap(e).firstChild.nodeType == Node.TEXT_NODE);
     ShadyDOM.wrap(ShadyDOM.wrap(e).firstChild).dispatchEvent(new Event('foo'));
-    assert.equal(ShadyDOM.nativeAccessor(e, 'innerHTML'), html);
+    assert.equal(ShadyDOM.nativeTree.innerHTML(e), html);
     ShadyDOM.wrap(document.body).removeChild(e);
   });
 
@@ -954,7 +954,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
   test('shadowRoot.appendChild element with slot child and shadowRoot with slot pending distribution', function() {
     var outerElement = ShadyDOM.wrap(document).querySelector('outer-element');
-    assert.equal(ShadyDOM.nativeAccessor(outerElement, 'innerHTML'), '<inner-element>hello</inner-element>');
+    assert.equal(ShadyDOM.nativeTree.innerHTML(outerElement), '<inner-element>hello</inner-element>');
     var test = ShadyDOM.wrap(outerElement).firstChild;
     var outerSlot = ShadyDOM.wrap(ShadyDOM.wrap(outerElement).shadowRoot).querySelector('slot');
     var innerElement = ShadyDOM.wrap(ShadyDOM.wrap(outerElement).shadowRoot).querySelector('inner-element');
@@ -997,7 +997,7 @@ suite('insertBefore', function() {
     ShadyDOM.wrap(e).appendChild(d1);
     ShadyDOM.wrap(e).appendChild(d2);
     ShadyDOM.flush();
-    assert.equal(ShadyDOM.nativeAccessor(e, 'innerHTML'), '<div id="d1"></div><div id="d2"></div>')
+    assert.equal(ShadyDOM.nativeTree.innerHTML(e), '<div id="d1"></div><div id="d2"></div>')
     var d3 = document.createElement('div');
     d3.id = 'd3';
     var d4 = document.createElement('div');
@@ -1008,7 +1008,7 @@ suite('insertBefore', function() {
     ShadyDOM.wrap(e).insertBefore(d4, d2);
     ShadyDOM.wrap(e).appendChild(d5);
     ShadyDOM.flush();
-    assert.equal(ShadyDOM.nativeAccessor(e, 'innerHTML'),
+    assert.equal(ShadyDOM.nativeTree.innerHTML(e),
       '<div id="d3"></div><div id="d1"></div><div id="d4"></div><div id="d2"></div><div id="d5"></div>')
     ShadyDOM.wrap(document.body).removeChild(e);
   });
@@ -1271,7 +1271,7 @@ suite('Accessors', function() {
     assert.equal(ShadyDOM.wrap(testElement).textContent, 'Hello World', 'textContent getter incorrect');
     ShadyDOM.wrap(document.body).appendChild(testElement);
     ShadyDOM.flush();
-    assert.equal(ShadyDOM.nativeAccessor(testElement, 'childNodes')[1].textContent, 'Hello World', 'text content setter incorrect');
+    assert.equal(ShadyDOM.nativeTree.childNodes(testElement)[1].textContent, 'Hello World', 'text content setter incorrect');
     testElement = createEnabledElement('x-commented');
     assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(testElement).shadowRoot).textContent, '[]', 'text content getter with comment incorrect');
 
@@ -1291,10 +1291,10 @@ suite('Accessors', function() {
     var d = document.createElement('div');
     ShadyDOM.wrap(fragment).appendChild(d);
     ShadyDOM.flush();
-    assert.equal(ShadyDOM.nativeAccessor(fragment, 'childNodes').length, 1, 'documentFragment.appendChild is incorrect');
+    assert.equal(ShadyDOM.nativeTree.childNodes(fragment).length, 1, 'documentFragment.appendChild is incorrect');
     ShadyDOM.wrap(fragment).textContent = "";
     ShadyDOM.flush();
-    assert.equal(ShadyDOM.nativeAccessor(fragment, 'childNodes').length, 0, 'textContent setter on document fragment is incorrect');
+    assert.equal(ShadyDOM.nativeTree.childNodes(fragment).length, 0, 'textContent setter on document fragment is incorrect');
   });
 
   test('setting textContent to null should set it to the empty string', function() {
@@ -1339,7 +1339,7 @@ suite('Accessors', function() {
     assert.equal(ShadyDOM.wrap(testElement).innerHTML , '<div>Hello World</div><div>2</div><div>3</div>', 'innerHTML getter incorrect');
     ShadyDOM.wrap(document.body).appendChild(testElement);
     ShadyDOM.flush();
-    var children = ShadyDOM.nativeAccessor(testElement, 'childNodes');
+    var children = ShadyDOM.nativeTree.childNodes(testElement);
     assert.equal(children[1], added, 'innerHTML setter composed incorrectly');
     assert.equal(children[2].textContent, '2', 'innerHTML setter composed incorrectly');
     assert.equal(children[3].textContent, '3', 'innerHTML setter composed incorrectly');

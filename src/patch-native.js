@@ -14,8 +14,40 @@ import {getInnerHTML} from './innerHTML.js';
 const hasDescriptors = utils.settings.hasDescriptors;
 export const NATIVE_PREFIX = utils.NATIVE_PREFIX;
 
-const defineNativeAccessors = (proto, descriptors) =>
-    patchAccessors(proto, descriptors, true, NATIVE_PREFIX);
+// Object on which raw native methods are stored.
+// e.g. `nativeMethods.querySelector.call(node, selector)`
+// same as `node.querySelector(selector)`
+export const nativeMethods = {
+  querySelector(selector) {
+    return this[NATIVE_PREFIX + 'querySelector'](selector);
+  },
+  querySelectorAll(selector) {
+    return this[NATIVE_PREFIX + 'querySelectorAll'](selector);
+  }
+};
+// Object on which raw native accessors are available via `accessorName(node)`.
+// e.g. `nativeTree.firstChild(node)`
+// same as `node.firstChild`
+export const nativeTree = {};
+
+const installNativeAccessor = (name) => {
+  nativeTree[name] = (node) => node[NATIVE_PREFIX + name];
+}
+
+const installNativeMethod = (name, fn) => {
+  if (!nativeMethods[name]) {
+    nativeMethods[name] = fn;
+  }
+}
+
+
+const defineNativeAccessors = (proto, descriptors) => {
+  patchAccessors(proto, descriptors, true, NATIVE_PREFIX);
+  // make native accessors available to users
+  for (let prop in descriptors) {
+    installNativeAccessor(prop);
+  }
+}
 
 const copyAccessors = (proto, list = []) => {
   for (let i = 0; i < list.length; i++) {
@@ -23,6 +55,13 @@ const copyAccessors = (proto, list = []) => {
     const descriptor = Object.getOwnPropertyDescriptor(proto, name);
     if (descriptor) {
       Object.defineProperty(proto, NATIVE_PREFIX + name, descriptor);
+      // make native methods/accessors available to users
+      if (descriptor.value) {
+        installNativeMethod(name, descriptor.value);
+      } else {
+        installNativeAccessor(name);
+
+      }
     }
   }
 }
