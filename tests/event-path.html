@@ -463,6 +463,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     });
 
     test('should use bubbling phase for event listeners added via properties', function () {
+      if (!hasOnListenersOnPrototype) {
+        this.skip();
+      }
       const parent = document.createElement('div');
       parent.id = "parent";
       ShadyDOM.wrap(document.body).appendChild(parent);

@@ -230,8 +230,6 @@ class Wrapper {
 
 }
 
-export {Wrapper};
-
 eventPropertyNames.forEach(name => {
   Object.defineProperty(Wrapper.prototype, name, {
     get() {
@@ -244,6 +242,8 @@ eventPropertyNames.forEach(name => {
   });
 
 });
+
+export {Wrapper};
 
 const wrapperMap = new WeakMap();
 
