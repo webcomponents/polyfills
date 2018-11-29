@@ -340,6 +340,12 @@ export default class ScopingShim {
     let owner = this._styleOwnerForNode(host);
     let ownerStyleInfo = StyleInfo.get(owner);
     let ownerProperties = ownerStyleInfo.styleProperties;
+    if (!ownerProperties) {
+      // style owner has not updated properties yet
+      // go up the chain and force property update
+      this._updateProperties(owner);
+      ownerProperties = ownerStyleInfo.styleProperties;
+    }
     let props = Object.create(ownerProperties || null);
     let hostAndRootProps = StyleProperties.hostAndRootPropertiesForScope(host, styleInfo.styleRules, styleInfo.cssBuild);
     let propertyData = StyleProperties.propertyDataFromStyles(ownerStyleInfo.styleRules, host);
