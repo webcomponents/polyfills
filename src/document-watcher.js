@@ -12,7 +12,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 import {nativeShadow} from './style-settings.js';
 import StyleTransformer from './style-transformer.js';
-import {getIsExtends, elementHasBuiltCss} from './style-util.js';
+import {getIsExtends, elementHasBuiltCss, wrap} from './style-util.js';
 
 export let flush = function() {};
 
@@ -49,7 +49,7 @@ export function getCurrentScope(element) {
  * @param {!Node} node
  */
 export function getOwnerScope(node) {
-  const ownerRoot = node.getRootNode();
+  const ownerRoot = wrap(node).getRootNode();
   if (ownerRoot === node || ownerRoot === node.ownerDocument) {
     return '';
   }
@@ -66,7 +66,7 @@ export function getOwnerScope(node) {
  */
 export function ensureCorrectScope(element) {
   const currentScope = getCurrentScope(element);
-  const ownerRoot = element.getRootNode();
+  const ownerRoot = wrap(element).getRootNode();
   if (ownerRoot === element) {
     return;
   }

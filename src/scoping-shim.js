@@ -305,7 +305,7 @@ export default class ScopingShim {
     }
   }
   _styleOwnerForNode(node) {
-    let root = node.getRootNode();
+    let root = StyleUtil.wrap(node).getRootNode();
     let host = root.host;
     if (host) {
       if (StyleInfo.get(host) || this._prepareHost(host)) {
@@ -479,7 +479,7 @@ export default class ScopingShim {
   // the element's class with the provided classString and adds
   // any necessary ShadyCSS static and property based scoping selectors
   setElementClass(element, classString) {
-    let root = element.getRootNode();
+    let root = StyleUtil.wrap(element).getRootNode();
     let classes = classString ? classString.split(/\s/) : [];
     let scopeName = root.host && root.host.localName;
     // If no scope, try to discover scope name from existing class.
