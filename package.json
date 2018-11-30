@@ -29,7 +29,8 @@
     "build": "gulp",
     "debug": "gulp debug",
     "lint": "eslint src tests entrypoints",
-    "test": "npm run lint && gulp && wct"
+    "test": "npm run lint && gulp && wct",
+    "prepack": "gulp closure"
   },
   "files": [
     "apply-shim.html",
