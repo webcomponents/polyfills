@@ -147,7 +147,7 @@ export default class ScopingShim {
   }
   _prepareHost(host) {
     let {is, typeExtension} = StyleUtil.getIsExtends(host);
-    let placeholder = getStylePlaceholder(is)
+    let placeholder = getStylePlaceholder(is);
     let template = templateMap[is];
     let ast;
     let ownStylePropertyNames;
@@ -308,7 +308,7 @@ export default class ScopingShim {
     let root = StyleUtil.wrap(node).getRootNode();
     let host = root.host;
     if (host) {
-      if (StyleInfo.get(host)) {
+      if (StyleInfo.get(host) || this._prepareHost(host)) {
         return host;
       } else {
         return this._styleOwnerForNode(host);
@@ -340,6 +340,13 @@ export default class ScopingShim {
     let owner = this._styleOwnerForNode(host);
     let ownerStyleInfo = StyleInfo.get(owner);
     let ownerProperties = ownerStyleInfo.styleProperties;
+    // style owner has not updated properties yet
+    // go up the chain and force property update,
+    // except if the owner is the document
+    if (owner !== this._documentOwner && !ownerProperties) {
+      this._updateProperties(owner, ownerStyleInfo);
+      ownerProperties = ownerStyleInfo.styleProperties;
+    }
     let props = Object.create(ownerProperties || null);
     let hostAndRootProps = StyleProperties.hostAndRootPropertiesForScope(host, styleInfo.styleRules, styleInfo.cssBuild);
     let propertyData = StyleProperties.propertyDataFromStyles(ownerStyleInfo.styleRules, host);
