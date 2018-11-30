@@ -147,7 +147,7 @@ export default class ScopingShim {
   }
   _prepareHost(host) {
     let {is, typeExtension} = StyleUtil.getIsExtends(host);
-    let placeholder = getStylePlaceholder(is)
+    let placeholder = getStylePlaceholder(is);
     let template = templateMap[is];
     let ast;
     let ownStylePropertyNames;
@@ -308,7 +308,7 @@ export default class ScopingShim {
     let root = node.getRootNode();
     let host = root.host;
     if (host) {
-      if (StyleInfo.get(host)) {
+      if (StyleInfo.get(host) || this._prepareHost(host)) {
         return host;
       } else {
         return this._styleOwnerForNode(host);

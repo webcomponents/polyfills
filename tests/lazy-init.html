@@ -20,7 +20,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <script src="../scoping-shim.min.js"></script>
 <script src="../apply-shim.min.js"></script>
 <script src="../custom-style-interface.min.js"></script>
-<template id="x-foo">
+<template id="x-eager">
   <style>
     :host {
       display: block;
@@ -28,13 +28,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       background-color: blue;
     }
 
-    :host > x-bar {
+    :host > x-lazy {
       --foo: rgb(255, 0, 0);
     }
   </style>
-  <x-bar></x-bar>
+  <x-lazy></x-lazy>
 </template>
-<template id="x-bar">
+<template id="x-lazy">
   <style>
     :host {
       display: block;
@@ -48,6 +48,24 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   </style>
   <div>Hello!</div>
 </template>
+
+<template id="x-parent">
+  <style>
+    :host {
+      --property: 10px solid black;
+    }
+  </style>
+  <x-child></x-child>
+</template>
+<template id="x-child">
+  <style>
+    div {
+      border: var(--property);
+    }
+  </style>
+  <div></div>
+</template>
+
 <script>
   class LazyElement extends HTMLElement {
     constructor() {
@@ -93,19 +111,65 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     }
   }
 
+  class LazyParent extends HTMLElement {
+    constructor() {
+      super();
+      this.template = document.querySelector(`template#${this.localName}`);
+      if (!this.template.initialized) {
+        this.template.initialized = true;
+        window.ShadyCSS.prepareTemplate(this.template, this.localName);
+      }
+    }
+    connectedCallback() {
+      if (this.template && !this.shadowRoot) {
+        this.attachShadow({ mode: 'open' });
+        this.shadowRoot.appendChild(this.template.content.cloneNode(true));
+      }
+      window.ShadyCSS.styleElement(this);
+    }
+  }
+
+  class EagerChild extends HTMLElement {
+    constructor() {
+      super();
+      this.template = document.querySelector(`template#${this.localName}`);
+      if (!this.template.initialized) {
+        this.template.initialized = true;
+        window.ShadyCSS.prepareTemplate(this.template, this.localName);
+      }
+    }
+    connectedCallback() {
+      if (this.template && !this.shadowRoot) {
+        this.attachShadow({mode: 'open'});
+        this.shadowRoot.appendChild(this.template.content.cloneNode(true));
+      }
+      window.ShadyCSS.styleElement(this);
+    }
+  }
+
   suite('Lazy Initialization', function() {
     test('Lazy element is eventually correct', function() {
-      customElements.define('x-bar', class extends LazyElement{});
-      customElements.define('x-foo', class extends EagerElement{});
-      const host = document.createElement('x-foo');
+      customElements.define('x-lazy', class extends LazyElement{});
+      customElements.define('x-eager', class extends EagerElement{});
+      const host = document.createElement('x-eager');
       document.body.appendChild(host);
       window.ShadyCSS.styleDocument();
-      const inner = host.shadowRoot.querySelector('x-bar');
+      const inner = host.shadowRoot.querySelector('x-lazy');
       if (inner.init) {
         inner.init();
       }
       const div = inner.shadowRoot.querySelector('div');
       assert.equal(getComputedStyle(div).getPropertyValue('border-color').trim(), 'rgb(255, 0, 0)');
+    });
+
+    test('Custom Property Shim can force lazy parent to evaluate', function() {
+      customElements.define('x-child', class extends EagerChild {});
+      customElements.define('x-parent', class extends LazyParent {});
+      const host = document.createElement('x-parent');
+      document.body.appendChild(host);
+      const inner = host.shadowRoot.querySelector('x-child');
+      const div = inner.shadowRoot.querySelector('div');
+      assert.equal(getComputedStyle(div).getPropertyValue('border-top-width').trim(), '10px');
     });
   });
 </script>
