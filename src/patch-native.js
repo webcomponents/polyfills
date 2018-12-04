@@ -49,7 +49,7 @@ const defineNativeAccessors = (proto, descriptors) => {
   }
 }
 
-const copyAccessors = (proto, list = []) => {
+const copyProperties = (proto, list = []) => {
   for (let i = 0; i < list.length; i++) {
     const name = list[i];
     const descriptor = Object.getOwnPropertyDescriptor(proto, name);
@@ -71,6 +71,9 @@ const nodeWalker = document.createTreeWalker(document, NodeFilter.SHOW_ALL,
 
 const elementWalker = document.createTreeWalker(document, NodeFilter.SHOW_ELEMENT,
   null, false);
+
+const textWalker = document.createTreeWalker(document, NodeFilter.SHOW_TEXT,
+                null, false);
 
 const inertDoc = document.implementation.createHTMLDocument('inert');
 
@@ -103,16 +106,16 @@ export const addNativePrefixedProperties = () => {
     'removeEventListener'
   ];
   if (window.EventTarget) {
-    copyAccessors(window.EventTarget.prototype, eventProps);
+    copyProperties(window.EventTarget.prototype, eventProps);
   } else {
-    copyAccessors(Node.prototype, eventProps);
-    copyAccessors(Window.prototype, eventProps);
+    copyProperties(Node.prototype, eventProps);
+    copyProperties(Window.prototype, eventProps);
   }
 
 
   // Node
   if (hasDescriptors) {
-    copyAccessors(Node.prototype, [
+    copyProperties(Node.prototype, [
       'parentNode',
       'firstChild',
       'lastChild',
@@ -180,8 +183,7 @@ export const addNativePrefixedProperties = () => {
           switch (this.nodeType) {
             case Node.ELEMENT_NODE:
             case Node.DOCUMENT_FRAGMENT_NODE:
-              let textWalker = document.createTreeWalker(this, NodeFilter.SHOW_TEXT,
-                null, false);
+              textWalker.currentNode = this;
               let content = '', n;
               while ( (n = textWalker.nextNode()) ) {
                 // TODO(sorvell): can't use textContent since we patch it on Node.prototype!
@@ -218,7 +220,7 @@ export const addNativePrefixedProperties = () => {
     });
   }
 
-  copyAccessors(Node.prototype, [
+  copyProperties(Node.prototype, [
     'appendChild',
     'insertBefore',
     'removeChild',
@@ -261,22 +263,22 @@ export const addNativePrefixedProperties = () => {
 
   // Element
   if (hasDescriptors) {
-    copyAccessors(Element.prototype, ParentNodeAccessors);
+    copyProperties(Element.prototype, ParentNodeAccessors);
 
-    copyAccessors(Element.prototype, [
+    copyProperties(Element.prototype, [
       'previousElementSibling',
       'nextElementSibling',
       'innerHTML'
     ]);
 
-    // NOTE, on IE 11 / Edge 15 children and/or innerHTML on HTMLElement instead of Element
-    if (Object.getOwnPropertyDescriptor(utils.NativeHTMLElement.prototype, 'children')) {
-      copyAccessors(utils.NativeHTMLElement.prototype, [
+    // NOTE, on IE 11 / Edge 15 children and/or innerHTML are on HTMLElement instead of Element
+    if (Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'children')) {
+      copyProperties(HTMLElement.prototype, [
         'children'
       ]);
     }
-    if (Object.getOwnPropertyDescriptor(utils.NativeHTMLElement.prototype, 'innerHTML')) {
-      copyAccessors(utils.NativeHTMLElement.prototype, [
+    if (Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'innerHTML')) {
+      copyProperties(HTMLElement.prototype, [
         'innerHTML'
       ]);
     }
@@ -324,7 +326,7 @@ export const addNativePrefixedProperties = () => {
     });
   }
 
-  copyAccessors(Element.prototype, [
+  copyProperties(Element.prototype, [
     'setAttribute',
     'getAttribute',
     'hasAttribute',
@@ -333,10 +335,10 @@ export const addNativePrefixedProperties = () => {
     'focus',
     'blur',
   ]);
-  copyAccessors(Element.prototype, ParentNodeMethods);
+  copyProperties(Element.prototype, ParentNodeMethods);
 
   // HTMLElement
-  copyAccessors(HTMLElement.prototype, [
+  copyProperties(HTMLElement.prototype, [
     'focus',
     'blur',
     // On IE these are on HTMLElement
@@ -344,7 +346,7 @@ export const addNativePrefixedProperties = () => {
   ]);
 
   if (hasDescriptors) {
-    copyAccessors(HTMLElement.prototype, [
+    copyProperties(HTMLElement.prototype, [
       'parentElement',
       'children',
       'innerHTML'
@@ -353,7 +355,7 @@ export const addNativePrefixedProperties = () => {
 
   // HTMLTemplateElement
   if (window.HTMLTemplateElement) {
-    copyAccessors(window.HTMLTemplateElement.prototype, ['innerHTML']);
+    copyProperties(window.HTMLTemplateElement.prototype, ['innerHTML']);
   }
 
   // DocumentFragment
@@ -361,27 +363,27 @@ export const addNativePrefixedProperties = () => {
     // NOTE, IE 11 does not have on DocumentFragment
     // firstElementChild
     // lastElementChild
-    copyAccessors(DocumentFragment.prototype, ParentNodeAccessors);
+    copyProperties(DocumentFragment.prototype, ParentNodeAccessors);
   } else {
     defineNativeAccessors(DocumentFragment.prototype, ParentNodeWalkerDescriptors);
   }
 
-  copyAccessors(DocumentFragment.prototype, ParentNodeMethods);
+  copyProperties(DocumentFragment.prototype, ParentNodeMethods);
 
   // Document
   if (hasDescriptors) {
-    copyAccessors(DocumentFragment.prototype, ParentNodeAccessors);
-    copyAccessors(Document.prototype, [
+    copyProperties(DocumentFragment.prototype, ParentNodeAccessors);
+    copyProperties(Document.prototype, [
       'activeElement'
     ]);
   } else {
     defineNativeAccessors(Document.prototype, ParentNodeWalkerDescriptors);
   }
 
-  copyAccessors(Document.prototype, [
+  copyProperties(Document.prototype, [
     'importNode',
     'getElementById'
   ]);
-  copyAccessors(Document.prototype, ParentNodeMethods);
+  copyProperties(Document.prototype, ParentNodeMethods);
 
 };

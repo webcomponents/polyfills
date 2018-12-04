@@ -25,22 +25,22 @@ import {WindowPatches} from './patches/Window.js';
 // Some browsers (IE/Edge) have non-standard HTMLElement accessors.
 const NonStandardHTMLElement = {};
 
-if (Object.getOwnPropertyDescriptor(utils.NativeHTMLElement.prototype, 'parentElement')) {
+if (Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'parentElement')) {
   Object.defineProperty(NonStandardHTMLElement, 'parentElement',
     Object.getOwnPropertyDescriptor(NodePatches, 'parentElement'));
 }
 
-if (Object.getOwnPropertyDescriptor(utils.NativeHTMLElement.prototype, 'contains')) {
+if (Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'contains')) {
   Object.defineProperty(NonStandardHTMLElement, 'contains',
     Object.getOwnPropertyDescriptor(NodePatches, 'contains'));
 }
 
-if (Object.getOwnPropertyDescriptor(utils.NativeHTMLElement.prototype, 'children')) {
+if (Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'children')) {
   Object.defineProperty(NonStandardHTMLElement, 'children',
     Object.getOwnPropertyDescriptor(ParentNodePatches, 'children'));
 }
 
-if (Object.getOwnPropertyDescriptor(utils.NativeHTMLElement.prototype, 'innerHTML')) {
+if (Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'innerHTML')) {
   Object.defineProperty(NonStandardHTMLElement, 'innerHTML',
     Object.getOwnPropertyDescriptor(ElementOrShadowRootPatches, 'innerHTML'));
 }
@@ -61,34 +61,28 @@ const patchMap = {
 }
 
 const getPatchPrototype = (name) => (name === 'HTMLElement') ?
-    utils.NativeHTMLElement.prototype :
+    HTMLElement.prototype :
     window[name] && window[name].prototype;
 
-const onPatchMap = (fn) => {
+export const applyPatches = (prefix) => {
   for (let p in patchMap) {
     const proto = getPatchPrototype(p);
-    patchMap[p].forEach(patch => proto && patch && fn(proto, patch));
+    patchMap[p].forEach(patch => proto && patch &&
+        utils.patchProperties(proto, utils.getOwnPropertyDescriptors(patch), true, prefix));
   }
 }
 
 export const addShadyPrefixedProperties = () => {
   // perform shady patches
-  onPatchMap((proto, patch) =>
-    utils.patchProperties(proto,
-      utils.getOwnPropertyDescriptors(patch), true, utils.SHADY_PREFIX));
+  applyPatches(utils.SHADY_PREFIX);
 
   // install `_activeElement` because some browsers (older Chrome/Safari) do not have
   // a 'configurable' `activeElement` accesssor.
   const descriptor = Object.getOwnPropertyDescriptor(DocumentOrShadowRootPatches, 'activeElement');
-  Object.defineProperty(Document.prototype, '_activeElement', descriptor);
+  Object.defineProperty(document, '_activeElement', descriptor);
 
   // On Window, we're patching `addEventListener` which is a weird auto-bound
   // property that is not directly on the Window prototype.
   utils.patchProperties(Window.prototype,
       utils.getOwnPropertyDescriptors(WindowPatches), true, utils.SHADY_PREFIX);
-};
-
-export const patchProperties = () => {
-  onPatchMap((proto, patch) =>
-    utils.patchProperties(proto, utils.getOwnPropertyDescriptors(patch), true));
 };

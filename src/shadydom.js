@@ -26,7 +26,7 @@ import {patchInsideElementAccessors, patchOutsideElementAccessors} from './patch
 import {patchEvents, composedPath} from './patch-events.js';
 import {ShadyRoot} from './attach-shadow.js';
 import {wrap, Wrapper} from './wrapper.js';
-import {addShadyPrefixedProperties, patchProperties} from './patch-prototypes.js';
+import {addShadyPrefixedProperties, applyPatches} from './patch-prototypes.js';
 
 if (utils.settings.inUse) {
   let ShadyDOM = {
@@ -113,7 +113,7 @@ if (utils.settings.inUse) {
   // On these browsers, instance level patching is performed where needed; this
   // instance patching is only done when `noPatch` is *not* set.
   if (!utils.settings.noPatch) {
-    patchProperties();
+    applyPatches();
   }
 
   // Patches the event system to have Shadow DOM compatible behavior (e.g.

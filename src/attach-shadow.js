@@ -10,7 +10,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 import {calculateSplices} from './array-splice.js';
 import * as utils from './utils.js';
-import './patch-native.js';
 import {enqueue} from './flush.js';
 import {ensureShadyDataForNode, shadyDataForNode} from './shady-data.js';
 import {recordChildNodes} from './link-nodes.js';
@@ -38,7 +37,7 @@ function ancestorList(node) {
   return ancestors;
 }
 
-function capturedChildNodes(node) {
+function captureChildNodes(node) {
   const nodes = [];
   for (let n = node[utils.NATIVE_PREFIX + 'firstChild']; n; n = n[utils.NATIVE_PREFIX + 'nextSibling']) {
     nodes.push(n);
@@ -62,7 +61,7 @@ class ShadyRoot {
     // root <=> host
     this.host = host;
     this.mode = options && options.mode;
-    const c$ = capturedChildNodes(host);
+    const c$ = captureChildNodes(host);
     recordChildNodes(host, c$);
     const hostData = ensureShadyDataForNode(host);
     hostData.root = this;
