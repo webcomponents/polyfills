@@ -72,9 +72,6 @@ const nodeWalker = document.createTreeWalker(document, NodeFilter.SHOW_ALL,
 const elementWalker = document.createTreeWalker(document, NodeFilter.SHOW_ELEMENT,
   null, false);
 
-const textWalker = document.createTreeWalker(document, NodeFilter.SHOW_TEXT,
-                null, false);
-
 const inertDoc = document.implementation.createHTMLDocument('inert');
 
 const clearNode = node => {
@@ -183,7 +180,10 @@ export const addNativePrefixedProperties = () => {
           switch (this.nodeType) {
             case Node.ELEMENT_NODE:
             case Node.DOCUMENT_FRAGMENT_NODE:
-              textWalker.currentNode = this;
+              // TODO(sorvell): This cannot be a single TreeWalker that's reused
+              // at least for Safari 9, but it's unclear why.
+              const textWalker = document.createTreeWalker(this, NodeFilter.SHOW_TEXT,
+                null, false);
               let content = '', n;
               while ( (n = textWalker.nextNode()) ) {
                 // TODO(sorvell): can't use textContent since we patch it on Node.prototype!
