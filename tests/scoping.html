@@ -995,6 +995,20 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       const inner = p.shadowRoot.querySelector('x-skip').shadowRoot.querySelector('x-child-skip').shadowRoot.querySelector('div');
       assertComputed(inner, '10px');
       document.body.removeChild(p);
+    });
+
+    test('trees with elements missing templates render correctly', function() {
+      makeElement('no-shadow');
+      const p = document.createElement('x-parent-skip');
+      const n = document.createElement('no-shadow');
+      const c = document.createElement('x-child-skip');
+      document.body.appendChild(p);
+      p.shadowRoot.appendChild(n);
+      n.shadowRoot.appendChild(c);
+      flush();
+      const inner = c.shadowRoot.querySelector('div');
+      assertComputed(inner, '10px');
+      document.body.removeChild(p);
     })
 
   });
