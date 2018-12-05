@@ -230,10 +230,7 @@ export default class ScopingShim {
    * @param {Object=} overrideProps
    */
   styleElement(host, overrideProps) {
-    let styleInfo = StyleInfo.get(host);
-    if (!styleInfo) {
-      styleInfo = this._prepareHost(host);
-    }
+    const styleInfo = StyleInfo.get(host) || this._prepareHost(host);
     // if there is no style info at this point, bail
     if (!styleInfo) {
       return;
