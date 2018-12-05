@@ -763,6 +763,19 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         pathCompare([bot, top], recv);
         ShadyDOM.wrap(ShadyDOM.wrap(top).parentNode).removeChild(top);
       });
+
+      test('composedPath of events from non-Node subclasses works', function() {
+        return new Promise((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          xhr.open('GET', window.location.href);
+          xhr.addEventListener('load', (e) => {
+            assert.doesNotThrow(() => {e.composedPath()});
+            resolve();
+          });
+          xhr.addEventListener('error', reject);
+          xhr.send();
+        });
+      });
     });
 
     test('click function is composed', function() {

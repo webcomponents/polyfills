@@ -85,10 +85,25 @@ const unpatchedEvents = {
   'DOMSubtreeModified': true
 }
 
+/**
+ * Some EventTarget subclasses are not Node subclasses, and you cannot call
+ * `getRootNode()` on them.
+ *
+ * @param {!(Node|EventTarget)} eventTarget
+ * @return {!(Node|EventTarget)}
+ */
+function getRootNodeWithFallback(eventTarget) {
+  if (eventTarget instanceof Node) {
+    return eventTarget[utils.SHADY_PREFIX + 'getRootNode']();
+  } else {
+    return eventTarget;
+  }
+}
+
 function pathComposer(startNode, composed) {
   let composedPath = [];
   let current = startNode;
-  let startRoot = startNode === window ? window : startNode[utils.SHADY_PREFIX + 'getRootNode']();
+  let startRoot = getRootNodeWithFallback(startNode);
   while (current) {
     composedPath.push(current);
     if (current[utils.SHADY_PREFIX + 'assignedSlot']) {
@@ -123,7 +138,7 @@ function retarget(refNode, path) {
   let p$ = path;
   for (let i=0, ancestor, lastRoot, root, rootIdx; i < p$.length; i++) {
     ancestor = p$[i];
-    root = ancestor === window ? window : ancestor[utils.SHADY_PREFIX + 'getRootNode']();
+    root = getRootNodeWithFallback(ancestor);
     if (root !== lastRoot) {
       rootIdx = refNodePath.indexOf(root);
       lastRoot = root;
