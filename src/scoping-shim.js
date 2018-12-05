@@ -146,17 +146,15 @@ export default class ScopingShim {
     return null;
   }
   _prepareHost(host) {
-    let {is, typeExtension} = StyleUtil.getIsExtends(host);
-    let placeholder = getStylePlaceholder(is);
-    let template = templateMap[is];
-    let ast;
-    let ownStylePropertyNames;
-    let cssBuild;
-    if (template) {
-      ast = template['_styleAst'];
-      ownStylePropertyNames = template._ownPropertyNames;
-      cssBuild = StyleUtil.getCssBuild(template);
+    const {is, typeExtension} = StyleUtil.getIsExtends(host);
+    const placeholder = getStylePlaceholder(is);
+    const template = templateMap[is];
+    if (!template) {
+      return;
     }
+    const ast = template['_styleAst'];
+    const ownStylePropertyNames = template._ownPropertyNames;
+    const cssBuild = StyleUtil.getCssBuild(template);
     const styleInfo = new StyleInfo(
       ast,
       placeholder,
@@ -165,10 +163,7 @@ export default class ScopingShim {
       typeExtension,
       cssBuild
     );
-    // only set the style info after this element has registered its template
-    if (template) {
-      StyleInfo.set(host, styleInfo);
-    }
+    StyleInfo.set(host, styleInfo);
     return styleInfo;
   }
   _ensureApplyShim() {
@@ -235,9 +230,10 @@ export default class ScopingShim {
    * @param {Object=} overrideProps
    */
   styleElement(host, overrideProps) {
-    let styleInfo = StyleInfo.get(host);
+    const styleInfo = StyleInfo.get(host) || this._prepareHost(host);
+    // if there is no style info at this point, bail
     if (!styleInfo) {
-      styleInfo = this._prepareHost(host);
+      return;
     }
     // Only trip the `elementsHaveApplied` flag if a node other that the root document has `applyStyle` called
     if (!this._isRootOwner(host)) {
