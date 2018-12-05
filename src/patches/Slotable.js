@@ -11,18 +11,16 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 import * as utils from '../utils.js';
 import {shadyDataForNode} from '../shady-data.js';
 
-// TODO(sorvell): why does this force rendering without checking if anything is pending?
-export function renderRootNode(element) {
-  var root = element[utils.SHADY_PREFIX + 'getRootNode']();
-  if (utils.isShadyRoot(root)) {
-    root._render(true);
-  }
-}
-
 export const SlotablePatches = utils.getOwnPropertyDescriptors({
 
   get assignedSlot() {
-    renderRootNode(this);
+    // Force any parent's shadowRoot to flush so that distribution occurs
+    // and this node has an assignedSlot.
+    const parent = this[utils.SHADY_PREFIX + 'parentNode'];
+    const ownerRoot = parent && parent[utils.SHADY_PREFIX + 'shadowRoot'];
+    if (ownerRoot) {
+      ownerRoot._flush();
+    }
     const nodeData = shadyDataForNode(this);
     return nodeData && nodeData.assignedSlot || null;
   }

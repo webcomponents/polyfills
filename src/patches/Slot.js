@@ -10,7 +10,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 import * as utils from '../utils.js';
 import {shadyDataForNode} from '../shady-data.js';
-import {renderRootNode} from './Slotable.js';
 
 export const SlotPatches = utils.getOwnPropertyDescriptors({
 
@@ -20,7 +19,12 @@ export const SlotPatches = utils.getOwnPropertyDescriptors({
    */
   assignedNodes(options) {
     if (this.localName === 'slot') {
-      renderRootNode(this);
+      // Force any containing shadowRoot to flush so that distribution occurs
+      // and this node has assignedNodes.
+      const root = this[utils.SHADY_PREFIX + 'getRootNode']();
+      if (root && utils.isShadyRoot(root)) {
+        root._flush();
+      }
       const nodeData = shadyDataForNode(this);
       return nodeData ?
         ((options && options.flatten ? nodeData.flattenedNodes :

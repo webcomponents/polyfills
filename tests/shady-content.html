@@ -191,6 +191,16 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
   suite(`shadowRoots containing and mutating <slot>'s`, function() {
 
+    test('assignedSlot with render pending', function() {
+      var el = document.createElement('x-compose-lazy-no-dist');
+      var c = document.createElement('div');
+      ShadyDOM.wrap(document.body).appendChild(el);
+      var slot = ShadyDOM.wrap(ShadyDOM.wrap(el).shadowRoot).querySelector('slot');
+      ShadyDOM.wrap(el).appendChild(c);
+      assert.equal(ShadyDOM.wrap(c).assignedSlot, slot);
+      ShadyDOM.wrap(document.body).removeChild(el);
+    });
+
     test('append div to distributing element', function() {
       var dist = document.createElement('x-dist');
       ShadyDOM.wrap(document.body).appendChild(dist);

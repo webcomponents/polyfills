@@ -127,9 +127,17 @@ class ShadyRoot {
     }
   }
 
-  _render(ifPending) {
+  _render() {
     const root = this._getRenderRoot();
-    if (root && (!ifPending || root._renderPending)) {
+    if (root) {
+      root['_renderRoot']();
+    }
+  }
+
+  // renders if render is pending.
+  _flush() {
+    const root = this._getRenderRoot();
+    if (root && root._renderPending) {
       root['_renderRoot']();
     }
   }
