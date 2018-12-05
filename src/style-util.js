@@ -237,6 +237,9 @@ export function setElementClassRaw(element, value) {
   }
 }
 
+/**
+ * @type {function(*):*}
+ */
 export const wrap = window['ShadyDOM'] && window['ShadyDOM']['wrap'] || ((node) => node);
 
 /**
