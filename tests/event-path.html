@@ -768,11 +768,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         return new Promise((resolve, reject) => {
           const xhr = new XMLHttpRequest();
           xhr.open('GET', window.location.href);
-          xhr.addEventListener('load', (e) => {
+          ShadyDOM.wrap(xhr).addEventListener('load', (e) => {
             assert.doesNotThrow(() => {e.composedPath()});
             resolve();
           });
-          xhr.addEventListener('error', reject);
+          ShadyDOM.wrap(xhr).addEventListener('error', reject);
           xhr.send();
         });
       });
