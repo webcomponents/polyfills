@@ -100,21 +100,20 @@ export const recordRemoveChild = (node, container) => {
  * @param  {!Node} node
  * @param  {Array<Node>=} nodes
  */
-export const recordChildNodes = (node, nodes) => {
+export const recordChildNodes = (node) => {
   const nodeData = ensureShadyDataForNode(node);
   if (nodeData.firstChild === undefined) {
     // remove caching of childNodes
     nodeData.childNodes = null;
-    const c$ = nodes || node[utils.NATIVE_PREFIX + 'childNodes'];
-    nodeData.firstChild = c$[0] || null;
-    nodeData.lastChild = c$[c$.length-1] || null;
+    const first = nodeData.firstChild = node[utils.NATIVE_PREFIX + 'firstChild'] || null;
+    nodeData.lastChild = node[utils.NATIVE_PREFIX + 'lastChild'] || null;
     patchInsideElementAccessors(node);
-    for (let i=0; i<c$.length; i++) {
-      const n = c$[i];
+    for (let n = first, previous; n; (n = n[utils.NATIVE_PREFIX + 'nextSibling'])) {
       const sd = ensureShadyDataForNode(n);
       sd.parentNode = node;
-      sd.nextSibling = c$[i+1] || null;
-      sd.previousSibling = c$[i-1] || null;
+      sd.nextSibling = n[utils.NATIVE_PREFIX + 'nextSibling'] || null;
+      sd.previousSibling = previous || null;
+      previous = n;
       patchOutsideElementAccessors(n);
     }
   }

@@ -37,14 +37,6 @@ function ancestorList(node) {
   return ancestors;
 }
 
-function captureChildNodes(node) {
-  const nodes = [];
-  for (let n = node[utils.NATIVE_PREFIX + 'firstChild']; n; n = n[utils.NATIVE_PREFIX + 'nextSibling']) {
-    nodes.push(n);
-  }
-  return nodes;
-}
-
 /**
  * @extends {ShadowRoot}
  */
@@ -61,8 +53,7 @@ class ShadyRoot {
     // root <=> host
     this.host = host;
     this.mode = options && options.mode;
-    const c$ = captureChildNodes(host);
-    recordChildNodes(host, c$);
+    recordChildNodes(host);
     const hostData = ensureShadyDataForNode(host);
     hostData.root = this;
     hostData.publicRoot = this.mode !== MODE_CLOSED ? this : null;
@@ -83,8 +74,9 @@ class ShadyRoot {
     // NOTE: optimization flag, only require an asynchronous render
     // to record parsed children if flag is not set.
     if (utils.settings['preferPerformance']) {
-      for (let i=0, l=c$.length; i < l; i++) {
-        host[utils.NATIVE_PREFIX + 'removeChild'](c$[i]);
+      let n;
+      while ((n = host[utils.NATIVE_PREFIX + 'firstChild'])) {
+        host[utils.NATIVE_PREFIX + 'removeChild'](n);
       }
     } else {
       this._asyncRender();
