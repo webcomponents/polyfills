@@ -26,23 +26,19 @@ import {WindowPatches} from './patches/Window.js';
 const NonStandardHTMLElement = {};
 
 if (Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'parentElement')) {
-  Object.defineProperty(NonStandardHTMLElement, 'parentElement',
-    NodePatches.parentElement);
+  NonStandardHTMLElement.parentElement = NodePatches.parentElement;
 }
 
 if (Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'contains')) {
-  Object.defineProperty(NonStandardHTMLElement, 'contains',
-    NodePatches.contains);
+  NonStandardHTMLElement.contains = NodePatches.contains;
 }
 
 if (Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'children')) {
-  Object.defineProperty(NonStandardHTMLElement, 'children',
-    ParentNodePatches.children);
+  NonStandardHTMLElement.children = ParentNodePatches.children;
 }
 
 if (Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'innerHTML')) {
-  Object.defineProperty(NonStandardHTMLElement, 'innerHTML',
-    ElementOrShadowRootPatches.innerHTML);
+  NonStandardHTMLElement.innerHTML = ElementOrShadowRootPatches.innerHTML;
 }
 
 // setup patching
@@ -60,9 +56,7 @@ const patchMap = {
   Window: [WindowPatches]
 }
 
-const getPatchPrototype = (name) => (name === 'HTMLElement') ?
-    HTMLElement.prototype :
-    window[name] && window[name].prototype;
+const getPatchPrototype = (name) => window[name] && window[name].prototype;
 
 export const applyPatches = (prefix) => {
   for (let p in patchMap) {
