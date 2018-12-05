@@ -548,16 +548,15 @@ let PatchedEvent = mixinComposedFlag(Event);
 let PatchedCustomEvent = mixinComposedFlag(CustomEvent);
 let PatchedMouseEvent = mixinComposedFlag(MouseEvent);
 
+
 export function patchEvents() {
   activateFocusEventOverrides();
   window.Event = PatchedEvent;
   window.CustomEvent = PatchedCustomEvent;
   window.MouseEvent = PatchedMouseEvent;
-  if (utils.settings['noPatch']) {
-    return;
-  }
+}
 
-
+export function patchClick() {
   // Fix up `Element.prototype.click()` if `isTrusted` is supported, but `composed` isn't
   if (!composedGetter && Object.getOwnPropertyDescriptor(Event.prototype, 'isTrusted')) {
     /** @this {Element} */

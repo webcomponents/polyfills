@@ -23,7 +23,7 @@ import {flush, enqueue} from './flush.js';
 import {observeChildren, unobserveChildren, filterMutations} from './observe-changes.js';
 import {addNativePrefixedProperties, nativeMethods, nativeTree} from './patch-native.js';
 import {patchInsideElementAccessors, patchOutsideElementAccessors} from './patch-instances.js';
-import {patchEvents, composedPath} from './patch-events.js';
+import {patchEvents, patchClick, composedPath} from './patch-events.js';
 import {ShadyRoot} from './attach-shadow.js';
 import {wrap, Wrapper} from './wrapper.js';
 import {addShadyPrefixedProperties, applyPatches} from './patch-prototypes.js';
@@ -114,8 +114,11 @@ if (utils.settings.inUse) {
   // instance patching is only done when `noPatch` is *not* set.
   if (!utils.settings.noPatch) {
     applyPatches();
+    // Patch click event behavior only if we're patching
+    patchClick()
   }
 
+  // For simplicity, patch events unconditionally.
   // Patches the event system to have Shadow DOM compatible behavior (e.g.
   // event retargeting). When `noPatch` is set, retargeting is only available
   // when adding event listeners and dispatching events via `ShadyDOM.wrap`
