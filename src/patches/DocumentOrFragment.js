@@ -7,10 +7,10 @@ The complete set of contributors may be found at http://polymer.github.io/CONTRI
 Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 */
-
+import * as utils from '../utils.js';
 import { query } from './ParentNode.js';
 
-export const DocumentOrFragmentPatches = {
+export const DocumentOrFragmentPatches = utils.getOwnPropertyDescriptors({
 
   /**
    * @this {Element}
@@ -25,4 +25,4 @@ export const DocumentOrFragmentPatches = {
     return result || null;
   }
 
-};
+});

@@ -88,7 +88,7 @@ function scheduleObserver(node, addedNode, removedNode) {
   }
 }
 
-export const NodePatches = {
+export const NodePatches = utils.getOwnPropertyDescriptors({
 
   /** @this {Node} */
   get parentNode() {
@@ -495,4 +495,4 @@ export const NodePatches = {
     return utils.contains(this, node);
   }
 
-};
+});

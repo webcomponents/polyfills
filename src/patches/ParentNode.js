@@ -45,7 +45,7 @@ function queryElement(node, matcher, halter, list) {
 }
 
 // Needed on Element, DocumentFragment, Document
-export const ParentNodePatches = {
+export const ParentNodePatches = utils.getOwnPropertyDescriptors({
 
   /** @this {Element} */
   get firstElementChild() {
@@ -91,9 +91,9 @@ export const ParentNodePatches = {
     return this[utils.SHADY_PREFIX + 'children'].length;
   }
 
-};
+});
 
-export const QueryPatches = {
+export const QueryPatches = utils.getOwnPropertyDescriptors({
   // TODO(sorvell): consider doing native QSA and filtering results.
   /**
    * @this {Element}
@@ -128,11 +128,11 @@ export const QueryPatches = {
     });
   }
 
-};
+});
 
 // Create a custom `ParentNodeDocumentOrFragment` that optionally does not
 // mixin querySelector/All; this is a performance optimization.
 export const ParentNodeDocumentOrFragmentPatches = utils.settings.preferPerformance ?
-  Object.defineProperties({}, utils.getOwnPropertyDescriptors(ParentNodePatches)) : ParentNodePatches;
+  Object.assign({}, ParentNodePatches) : ParentNodePatches;
 
 Object.assign(ParentNodePatches, QueryPatches);

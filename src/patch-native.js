@@ -42,7 +42,7 @@ const installNativeMethod = (name, fn) => {
 
 
 const defineNativeAccessors = (proto, descriptors) => {
-  patchProperties(proto, descriptors, true, NATIVE_PREFIX);
+  patchProperties(proto, descriptors, NATIVE_PREFIX);
   // make native accessors available to users
   for (let prop in descriptors) {
     installNativeAccessor(prop);

@@ -14,7 +14,7 @@ import {clearNode} from './Node.js';
 
 const inertDoc = document.implementation.createHTMLDocument('inert');
 
-export const ElementOrShadowRootPatches = {
+export const ElementOrShadowRootPatches = utils.getOwnPropertyDescriptors({
 
   /** @this {Element} */
   get innerHTML() {
@@ -55,4 +55,4 @@ export const ElementOrShadowRootPatches = {
     }
   }
 
-};
+});

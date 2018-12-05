@@ -534,13 +534,13 @@ function patchEvent(event) {
     if (!Object.hasOwnProperty(proto, SHADY_PROTO)) {
       const patchedProto = Object.create(proto);
       patchedProto[SHADY_SOURCE_PROTO] = proto;
-      utils.patchProperties(patchedProto, EventPatchesDescriptors, true);
+      utils.patchProperties(patchedProto, EventPatchesDescriptors);
       proto[SHADY_PROTO] = patchedProto;
     }
     event.__proto__ = proto[SHADY_PROTO];
   // and fallback to patching instance
   } else {
-    utils.patchProperties(event, EventPatchesDescriptors, true);
+    utils.patchProperties(event, EventPatchesDescriptors);
   }
 }
 

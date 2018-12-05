@@ -12,7 +12,7 @@ import * as utils from '../utils.js';
 import {eventPropertyNames} from '../patch-events.js';
 import {shadyDataForNode, ensureShadyDataForNode} from '../shady-data.js';
 
-export const HTMLElementPatches = {
+export const HTMLElementPatches = utils.getOwnPropertyDescriptors({
 
   /** @this {HTMLElement} */
   blur() {
@@ -26,10 +26,10 @@ export const HTMLElementPatches = {
     }
   }
 
-};
+});
 
 eventPropertyNames.forEach(property => {
-  Object.defineProperty(HTMLElementPatches, property, {
+  HTMLElementPatches[property] = {
     /** @this {HTMLElement} */
     set: function(fn) {
       const shadyData = ensureShadyDataForNode(this);
@@ -44,6 +44,6 @@ eventPropertyNames.forEach(property => {
       return shadyData && shadyData.__onCallbackListeners[property];
     },
     configurable: true
-  });
+  };
 });
 

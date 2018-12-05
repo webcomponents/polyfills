@@ -37,7 +37,7 @@ function distributeAttributeChange(node, name) {
   }
 }
 
-export const ElementPatches = {
+export const ElementPatches = utils.getOwnPropertyDescriptors({
 
   /** @this {Element} */
   get previousElementSibling() {
@@ -130,4 +130,4 @@ export const ElementPatches = {
     return attachShadow(this, options);
   }
 
-};
+});

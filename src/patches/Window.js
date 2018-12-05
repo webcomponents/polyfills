@@ -7,10 +7,10 @@ The complete set of contributors may be found at http://polymer.github.io/CONTRI
 Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 */
-
+import * as utils from '../utils.js';
 import {addEventListener, removeEventListener} from '../patch-events.js';
 
-export const WindowPatches = {
+export const WindowPatches = utils.getOwnPropertyDescriptors({
 
   // NOTE: ensure these methods are bound to `window` so that `this` is correct
   // when called directly from global context without a receiver; e.g.
@@ -19,4 +19,4 @@ export const WindowPatches = {
 
   removeEventListener: removeEventListener.bind(window)
 
-};
+});

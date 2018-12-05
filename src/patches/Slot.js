@@ -8,10 +8,11 @@ Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 */
 
+import * as utils from '../utils.js';
 import {shadyDataForNode} from '../shady-data.js';
 import {renderRootNode} from './Slotable.js';
 
-export const SlotPatches = {
+export const SlotPatches = utils.getOwnPropertyDescriptors({
 
   /**
    * @this {HTMLSlotElement}
@@ -28,4 +29,4 @@ export const SlotPatches = {
     }
   }
 
-};
+});

@@ -18,15 +18,11 @@ import {ElementOrShadowRootPatches} from './patches/ElementOrShadowRoot.js';
 import {ShadowRootPatches} from './patches/ShadowRoot.js';
 
 const patchShadyAccessors = (proto, prefix) => {
-  utils.patchProperties(proto,
-    utils.getOwnPropertyDescriptors(ShadowRootPatches), true, prefix);
-  utils.patchProperties(proto,
-    utils.getOwnPropertyDescriptors(DocumentOrShadowRootPatches), true, prefix);
-  utils.patchProperties(proto,
-    utils.getOwnPropertyDescriptors(ElementOrShadowRootPatches), true, prefix);
+  utils.patchProperties(proto, ShadowRootPatches, prefix);
+  utils.patchProperties(proto, DocumentOrShadowRootPatches, prefix);
+  utils.patchProperties(proto, ElementOrShadowRootPatches, prefix);
   // We ensure ParentNode accessors since these do not exist in Edge/IE on DocumentFragments.
-  utils.patchProperties(proto,
-    utils.getOwnPropertyDescriptors(ParentNodePatches), true, prefix);
+  utils.patchProperties(proto, ParentNodePatches, prefix);
   // Ensure `shadowRoot` has basic descriptors when we cannot rely
   // on them coming from DocumentFragment.
   //
@@ -37,16 +33,14 @@ const patchShadyAccessors = (proto, prefix) => {
   // Note, it's important to only install these in this mode so as not to stomp
   // over CustomElements polyfill's patches on Node/DocumentFragment methods.
   if (utils.settings.noPatch && !prefix) {
-    utils.patchProperties(proto,
-      utils.getOwnPropertyDescriptors(NodePatches), true, prefix);
-    utils.patchProperties(proto,
-      utils.getOwnPropertyDescriptors(DocumentOrFragmentPatches), true, prefix);
+    utils.patchProperties(proto, NodePatches, prefix);
+    utils.patchProperties(proto, DocumentOrFragmentPatches, prefix);
   // Case 2, bad descriptors: Ensure accessors are on ShadowRoot.
   // These descriptors are normally used for instance patching but because
   // ShadyRoot can always be patched, just do it to the prototype.
   } else if (!utils.settings.hasDescriptors) {
-    utils.patchProperties(proto, OutsideDescriptors, true);
-    utils.patchProperties(proto, InsideDescriptors, true);
+    utils.patchProperties(proto, OutsideDescriptors);
+    utils.patchProperties(proto, InsideDescriptors);
   }
 }
 

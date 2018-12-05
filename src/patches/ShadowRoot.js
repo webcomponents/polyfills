@@ -10,7 +10,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 import * as utils from '../utils.js';
 
-export const ShadowRootPatches = {
+export const ShadowRootPatches = utils.getOwnPropertyDescriptors({
 
   /**
    * @this {ShadowRoot}
@@ -44,4 +44,4 @@ export const ShadowRootPatches = {
     this.host[utils.SHADY_PREFIX + 'removeEventListener'](type, fn, optionsOrCapture);
   }
 
-}
+});

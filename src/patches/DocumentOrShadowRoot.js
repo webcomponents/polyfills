@@ -18,7 +18,7 @@ function getDocumentActiveElement() {
   }
 }
 
-export const DocumentOrShadowRootPatches = {
+export const DocumentOrShadowRootPatches = utils.getOwnPropertyDescriptors({
 
   /** @this {Document|ShadowRoot} */
   get activeElement() {
@@ -61,4 +61,4 @@ export const DocumentOrShadowRootPatches = {
       return activeRoot === this ? active : null;
     }
   }
-};
+});

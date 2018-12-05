@@ -19,7 +19,7 @@ export function renderRootNode(element) {
   }
 }
 
-export const SlotablePatches = {
+export const SlotablePatches = utils.getOwnPropertyDescriptors({
 
   get assignedSlot() {
     renderRootNode(this);
@@ -27,4 +27,4 @@ export const SlotablePatches = {
     return nodeData && nodeData.assignedSlot || null;
   }
 
-};
+});

@@ -27,22 +27,22 @@ const NonStandardHTMLElement = {};
 
 if (Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'parentElement')) {
   Object.defineProperty(NonStandardHTMLElement, 'parentElement',
-    Object.getOwnPropertyDescriptor(NodePatches, 'parentElement'));
+    NodePatches.parentElement);
 }
 
 if (Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'contains')) {
   Object.defineProperty(NonStandardHTMLElement, 'contains',
-    Object.getOwnPropertyDescriptor(NodePatches, 'contains'));
+    NodePatches.contains);
 }
 
 if (Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'children')) {
   Object.defineProperty(NonStandardHTMLElement, 'children',
-    Object.getOwnPropertyDescriptor(ParentNodePatches, 'children'));
+    ParentNodePatches.children);
 }
 
 if (Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'innerHTML')) {
   Object.defineProperty(NonStandardHTMLElement, 'innerHTML',
-    Object.getOwnPropertyDescriptor(ElementOrShadowRootPatches, 'innerHTML'));
+    ElementOrShadowRootPatches.innerHTML);
 }
 
 // setup patching
@@ -68,7 +68,7 @@ export const applyPatches = (prefix) => {
   for (let p in patchMap) {
     const proto = getPatchPrototype(p);
     patchMap[p].forEach(patch => proto && patch &&
-        utils.patchProperties(proto, utils.getOwnPropertyDescriptors(patch), true, prefix));
+        utils.patchProperties(proto, patch, prefix));
   }
 }
 
@@ -78,11 +78,10 @@ export const addShadyPrefixedProperties = () => {
 
   // install `_activeElement` because some browsers (older Chrome/Safari) do not have
   // a 'configurable' `activeElement` accesssor.
-  const descriptor = Object.getOwnPropertyDescriptor(DocumentOrShadowRootPatches, 'activeElement');
+  const descriptor = DocumentOrShadowRootPatches.activeElement;
   Object.defineProperty(document, '_activeElement', descriptor);
 
   // On Window, we're patching `addEventListener` which is a weird auto-bound
   // property that is not directly on the Window prototype.
-  utils.patchProperties(Window.prototype,
-      utils.getOwnPropertyDescriptors(WindowPatches), true, utils.SHADY_PREFIX);
+  utils.patchProperties(Window.prototype, WindowPatches, utils.SHADY_PREFIX);
 };

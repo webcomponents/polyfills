@@ -135,7 +135,7 @@ export let patchOutsideElementAccessors = noInstancePatching ?
     const sd = ensureShadyDataForNode(element);
     if (!sd.__outsideAccessors) {
       sd.__outsideAccessors = true;
-      utils.patchProperties(element, OutsideDescriptors, true);
+      utils.patchProperties(element, OutsideDescriptors);
     }
   }
 
@@ -145,6 +145,6 @@ export let patchInsideElementAccessors = noInstancePatching ?
     const sd = ensureShadyDataForNode(element);
     if (!sd.__insideAccessors) {
       sd.__insideAccessors = true;
-      utils.patchProperties(element, InsideDescriptors, true);
+      utils.patchProperties(element, InsideDescriptors);
     }
   }

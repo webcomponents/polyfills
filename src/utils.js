@@ -152,25 +152,22 @@ export const SHADY_PREFIX = '__shady_';
  * @param {!Object} descriptors
  * @param {boolean=} force
  */
-export const patchProperties = (proto, descriptors, force, prefix = '') => {
+export const patchProperties = (proto, descriptors, prefix = '') => {
   for (let p in descriptors) {
-    const oldDescriptor = Object.getOwnPropertyDescriptor(proto, p);
     const newDescriptor = descriptors[p];
     newDescriptor.configurable = true;
     const name = prefix + p;
-    if (force || oldDescriptor) {
-      // NOTE: we prefer writing directly because some browsers
-      // have descriptors that are writable but not configurable (e.g.
-      // `appendChild` on older browsers)
-      if (newDescriptor.value) {
-        proto[name] = newDescriptor.value;
-      } else if (force || oldDescriptor.configurable) {
-        // NOTE: this can throw if 'force' is used so catch the error.
-        try {
-          Object.defineProperty(proto, name, newDescriptor);
-        } catch(e) {
-          // this error is harmless so we just trap it.
-        }
+    // NOTE: we prefer writing directly because some browsers
+    // have descriptors that are writable but not configurable (e.g.
+    // `appendChild` on older browsers)
+    if (newDescriptor.value) {
+      proto[name] = newDescriptor.value;
+    } else {
+      // NOTE: this can throw if 'force' is used so catch the error.
+      try {
+        Object.defineProperty(proto, name, newDescriptor);
+      } catch(e) {
+        // this error is harmless so we just trap it.
       }
     }
   }
