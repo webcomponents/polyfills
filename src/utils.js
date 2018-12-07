@@ -20,17 +20,6 @@ settings.inUse = settings['force'] || !settings.hasNativeShadowDOM;
 settings.noPatch = settings['noPatch'] || false;
 settings.preferPerformance = settings['preferPerformance'];
 
-// Default to using native accessors (instead of treewalker) only for
-// IE/Edge where they are faster.
-const IS_IE = navigator.userAgent.match('Trident');
-settings.IS_IE = IS_IE;
-
-const IS_EDGE = navigator.userAgent.match('Edge');
-
-if (settings.useNativeAccessors === undefined) {
-  settings.useNativeAccessors = settings.hasDescriptors && (IS_IE || IS_EDGE);
-}
-
 export const isTrackingLogicalChildNodes = (node) => {
   const nodeData = shadyDataForNode(node);
   return (nodeData && nodeData.firstChild !== undefined);
