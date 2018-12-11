@@ -41,13 +41,16 @@ if (Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'innerHTML')) {
   NonStandardHTMLElement.innerHTML = ElementOrShadowRootPatches.innerHTML;
 }
 
+// Avoid patching `innerHTML` if it does not exist on Element (IE)
+const ElementHasInnerHTML = 'innerHTML' in Element.prototype;
+
 // setup patching
 const patchMap = {
   EventTarget: [EventTargetPatches],
   Node: [NodePatches, !window.EventTarget ? EventTargetPatches : null],
   Text: [SlotablePatches],
   Element: [ElementPatches, ParentNodePatches, SlotablePatches,
-    utils.settings.IS_IE ? null : ElementOrShadowRootPatches,
+    ElementHasInnerHTML ? ElementOrShadowRootPatches : null,
     !window.HTMLSlotElement ? SlotPatches : null],
   HTMLElement: [HTMLElementPatches, NonStandardHTMLElement],
   HTMLSlotElement: [SlotPatches],
