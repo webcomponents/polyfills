@@ -21,12 +21,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 import * as utils from './utils.js';
 import {flush, enqueue} from './flush.js';
 import {observeChildren, unobserveChildren, filterMutations} from './observe-changes.js';
-import * as nativeMethods from './native-methods.js';
-import {accessors as nativeTree} from './native-tree.js';
-import {patchBuiltins} from './patch-builtins.js';
-import {patchInsideElementAccessors, patchOutsideElementAccessors} from './patch-accessors.js';
-import {patchEvents} from './patch-events.js';
+import {addNativePrefixedProperties, nativeMethods, nativeTree} from './patch-native.js';
+import {patchInsideElementAccessors, patchOutsideElementAccessors} from './patch-instances.js';
+import {patchEvents, patchClick, composedPath} from './patch-events.js';
 import {ShadyRoot} from './attach-shadow.js';
+import {wrap, Wrapper} from './wrapper.js';
+import {addShadyPrefixedProperties, applyPatches} from './patch-prototypes.js';
 
 if (utils.settings.inUse) {
   let ShadyDOM = {
@@ -51,8 +51,6 @@ if (utils.settings.inUse) {
     'filterMutations': filterMutations,
     'observeChildren': observeChildren,
     'unobserveChildren': unobserveChildren,
-    'nativeMethods': nativeMethods,
-    'nativeTree': nativeTree,
     // Set to true to defer native custom elements connection until the
     // document has fully parsed. This enables custom elements that create
     // shadowRoots to be defined while the document is loading. Elements
@@ -70,15 +68,62 @@ if (utils.settings.inUse) {
     'preferPerformance': utils.settings['preferPerformance'],
     // Integration point with ShadyCSS to disable styling MutationObserver,
     // as ShadyDOM will now handle dynamic scoping.
-    'handlesDynamicScoping': true
+    'handlesDynamicScoping': true,
+    'wrap': utils.settings.noPatch ? wrap : (n) => n,
+    'Wrapper': Wrapper,
+    'composedPath': composedPath,
+    // Set to true to avoid patching regular platform property names. When set,
+    // Shadow DOM compatible behavior is only available when accessing DOM
+    // API using `ShadyDOM.wrap`, e.g. `ShadyDOM.wrap(element).shadowRoot`.
+    // This setting provides a small performance boost, but requires all DOM API
+    // access that requires Shadow DOM behavior to be proxied via `ShadyDOM.wrap`.
+    'noPatch': utils.settings.noPatch,
+    'nativeMethods': nativeMethods,
+    'nativeTree': nativeTree
   };
 
   window['ShadyDOM'] = ShadyDOM;
 
-  // Apply patches to events...
+  // Modifies native prototypes for Node, Element, etc. to
+  // make native platform behavior available at prefixed names, e.g.
+  // `utils.NATIVE_PREFIX + 'firstChild'` or `__shady_native_firstChild`.
+  // This allows the standard names to be safely patched while retaining the
+  // ability for native behavior to be used. This polyfill manipulates DOM
+  // by using this saved native behavior.
+  // Note, some browsers do not have proper element descriptors for
+  // accessors; in this case, native behavior for these accessors is simulated
+  // via a TreeWalker.
+  addNativePrefixedProperties();
+
+  // Modifies native prototypes for Node, Element, etc. to make ShadowDOM
+  // behavior available at prefixed names, e.g.
+  // `utils.SHADY_PREFIX + 'firstChild` or `__shady_firstChild`. This is done
+  // so this polyfill can perform Shadow DOM style DOM manipulation.
+  // Because patching normal platform property names is optional, these prefixed
+  // names are used internally.
+  addShadyPrefixedProperties();
+
+  // Modifies native prototypes for Node, Element, etc. to patch
+  // regular platform property names to have Shadow DOM compatible API behavior.
+  // This applies the utils.SHADY_PREFIX behavior to normal names. For example,
+  // if `noPatch` is not set, then `el.__shady_firstChild` is equivalent to
+  // `el.firstChild`.
+  // NOTE, on older browsers (old Chrome/Safari) native accessors cannot be
+  // patched on prototypes (e.g. Node.prototype.firstChild cannot be modified).
+  // On these browsers, instance level patching is performed where needed; this
+  // instance patching is only done when `noPatch` is *not* set.
+  if (!utils.settings.noPatch) {
+    applyPatches();
+    // Patch click event behavior only if we're patching
+    patchClick()
+  }
+
+  // For simplicity, patch events unconditionally.
+  // Patches the event system to have Shadow DOM compatible behavior (e.g.
+  // event retargeting). When `noPatch` is set, retargeting is only available
+  // when adding event listeners and dispatching events via `ShadyDOM.wrap`
+  // (e.g. `ShadyDOM.wrap(element).addEventListener(...)`).
   patchEvents();
-  // Apply patches to builtins (e.g. Element.prototype) where applicable.
-  patchBuiltins();
 
   window.ShadowRoot = ShadyRoot;
 }

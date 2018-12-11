@@ -9,7 +9,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 */
 
 import * as utils from './utils.js';
-import * as nativeMethods from './native-methods.js';
 import {shadyDataForNode} from './shady-data.js';
 
 /*
@@ -86,18 +85,33 @@ const unpatchedEvents = {
   'DOMSubtreeModified': true
 }
 
+/**
+ * Some EventTarget subclasses are not Node subclasses, and you cannot call
+ * `getRootNode()` on them.
+ *
+ * @param {!(Node|EventTarget)} eventTarget
+ * @return {!(Node|EventTarget)}
+ */
+function getRootNodeWithFallback(eventTarget) {
+  if (eventTarget instanceof Node) {
+    return eventTarget[utils.SHADY_PREFIX + 'getRootNode']();
+  } else {
+    return eventTarget;
+  }
+}
+
 function pathComposer(startNode, composed) {
   let composedPath = [];
   let current = startNode;
-  let startRoot = startNode === window ? window : startNode.getRootNode();
+  let startRoot = getRootNodeWithFallback(startNode);
   while (current) {
     composedPath.push(current);
-    if (current.assignedSlot) {
-      current = current.assignedSlot;
+    if (current[utils.SHADY_PREFIX + 'assignedSlot']) {
+      current = current[utils.SHADY_PREFIX + 'assignedSlot'];
     } else if (current.nodeType === Node.DOCUMENT_FRAGMENT_NODE && current.host && (composed || current !== startRoot)) {
       current = current.host;
     } else {
-      current = current.parentNode;
+      current = current[utils.SHADY_PREFIX + 'parentNode'];
     }
   }
   // event composedPath includes window when startNode's ownerRoot is document
@@ -105,6 +119,13 @@ function pathComposer(startNode, composed) {
     composedPath.push(window);
   }
   return composedPath;
+}
+
+export const composedPath = (event) => {
+  if (!event.__composedPath) {
+    event.__composedPath = pathComposer(event.target, true);
+  }
+  return event.__composedPath;
 }
 
 function retarget(refNode, path) {
@@ -117,7 +138,7 @@ function retarget(refNode, path) {
   let p$ = path;
   for (let i=0, ancestor, lastRoot, root, rootIdx; i < p$.length; i++) {
     ancestor = p$[i];
-    root = ancestor === window ? window : ancestor.getRootNode();
+    root = getRootNodeWithFallback(ancestor);
     if (root !== lastRoot) {
       rootIdx = refNodePath.indexOf(root);
       lastRoot = root;
@@ -128,7 +149,7 @@ function retarget(refNode, path) {
   }
 }
 
-let eventMixin = {
+let EventPatches = {
 
   /**
    * @this {Event}
@@ -205,7 +226,7 @@ function mixinComposedFlag(Base) {
     return event;
   }
   // put constructor properties on subclass
-  utils.mixin(klazz, Base);
+  klazz.__proto__ = Base;
   klazz.prototype = Base.prototype;
   return klazz;
 }
@@ -280,7 +301,7 @@ function retargetNonBubblingEvent(e) {
       fireHandlers(e, node, 'bubble');
       // don't bother with window, it doesn't have `getRootNode` and will be last in the path anyway
       if (node !== window) {
-        lastFiredRoot = node.getRootNode();
+        lastFiredRoot = node[utils.SHADY_PREFIX + 'getRootNode']();
       }
       if (e.__propagationStopped) {
         return;
@@ -346,11 +367,8 @@ export function addEventListener(type, fnOrObj, optionsOrCapture) {
     return;
   }
 
-  const ael = this instanceof Window ? nativeMethods.windowAddEventListener :
-      nativeMethods.addEventListener;
-
   if (unpatchedEvents[type]) {
-    return ael.call(this, type, fnOrObj, optionsOrCapture);
+    return this[utils.NATIVE_PREFIX + 'addEventListener'](type, fnOrObj, optionsOrCapture);
   }
 
   // The callback `fn` might be used for multiple nodes/events. Since we generate
@@ -391,7 +409,7 @@ export function addEventListener(type, fnOrObj, optionsOrCapture) {
   const wrapperFn = function(e) {
     // Support `once` option.
     if (once) {
-      this.removeEventListener(type, fnOrObj, optionsOrCapture);
+      this[utils.SHADY_PREFIX + 'removeEventListener'](type, fnOrObj, optionsOrCapture);
     }
     if (!e['__target']) {
       patchEvent(e);
@@ -456,7 +474,7 @@ export function addEventListener(type, fnOrObj, optionsOrCapture) {
       {'capture': [], 'bubble': []};
     this.__handlers[type][capture ? 'capture' : 'bubble'].push(wrapperFn);
   } else {
-    ael.call(this, type, wrapperFn, optionsOrCapture);
+    this[utils.NATIVE_PREFIX + 'addEventListener'](type, wrapperFn, optionsOrCapture);
   }
 }
 
@@ -467,10 +485,8 @@ export function removeEventListener(type, fnOrObj, optionsOrCapture) {
   if (!fnOrObj) {
     return;
   }
-  const rel = this instanceof Window ? nativeMethods.windowRemoveEventListener :
-    nativeMethods.removeEventListener;
   if (unpatchedEvents[type]) {
-    return rel.call(this, type, fnOrObj, optionsOrCapture);
+    return this[utils.NATIVE_PREFIX + 'removeEventListener'](type, fnOrObj, optionsOrCapture);
   }
   // NOTE(valdrin) invoking external functions is costly, inline has better perf.
   let capture, once, passive;
@@ -497,7 +513,7 @@ export function removeEventListener(type, fnOrObj, optionsOrCapture) {
       }
     }
   }
-  rel.call(this, type, wrapperFn || fnOrObj, optionsOrCapture);
+  this[utils.NATIVE_PREFIX + 'removeEventListener'](type, wrapperFn || fnOrObj, optionsOrCapture);
   if (wrapperFn && nonBubblingEventsToRetarget[type] &&
       this.__handlers && this.__handlers[type]) {
     const arr = this.__handlers[type][capture ? 'capture' : 'bubble'];
@@ -510,7 +526,7 @@ export function removeEventListener(type, fnOrObj, optionsOrCapture) {
 
 function activateFocusEventOverrides() {
   for (let ev in nonBubblingEventsToRetarget) {
-    window.addEventListener(ev, function(e) {
+    window[utils.NATIVE_PREFIX + 'addEventListener'](ev, function(e) {
       if (!e['__target']) {
         patchEvent(e);
         retargetNonBubblingEvent(e);
@@ -519,28 +535,43 @@ function activateFocusEventOverrides() {
   }
 }
 
+const EventPatchesDescriptors = utils.getOwnPropertyDescriptors(EventPatches);
+
+const SHADY_PROTO = '__shady_patchedProto';
+const SHADY_SOURCE_PROTO = '__shady_sourceProto';
+
 function patchEvent(event) {
   event['__target'] = event.target;
   event.__relatedTarget = event.relatedTarget;
-  // patch event prototype if we can
+  // attempt to patch prototype (via cache)
   if (utils.settings.hasDescriptors) {
-    utils.patchPrototype(event, eventMixin);
+    const proto = Object.getPrototypeOf(event);
+    if (!Object.hasOwnProperty(proto, SHADY_PROTO)) {
+      const patchedProto = Object.create(proto);
+      patchedProto[SHADY_SOURCE_PROTO] = proto;
+      utils.patchProperties(patchedProto, EventPatchesDescriptors);
+      proto[SHADY_PROTO] = patchedProto;
+    }
+    event.__proto__ = proto[SHADY_PROTO];
   // and fallback to patching instance
   } else {
-    utils.extend(event, eventMixin);
+    utils.patchProperties(event, EventPatchesDescriptors);
   }
 }
 
-let PatchedEvent = mixinComposedFlag(window.Event);
-let PatchedCustomEvent = mixinComposedFlag(window.CustomEvent);
-let PatchedMouseEvent = mixinComposedFlag(window.MouseEvent);
+let PatchedEvent = mixinComposedFlag(Event);
+let PatchedCustomEvent = mixinComposedFlag(CustomEvent);
+let PatchedMouseEvent = mixinComposedFlag(MouseEvent);
+
 
 export function patchEvents() {
+  activateFocusEventOverrides();
   window.Event = PatchedEvent;
   window.CustomEvent = PatchedCustomEvent;
   window.MouseEvent = PatchedMouseEvent;
-  activateFocusEventOverrides();
+}
 
+export function patchClick() {
   // Fix up `Element.prototype.click()` if `isTrusted` is supported, but `composed` isn't
   if (!composedGetter && Object.getOwnPropertyDescriptor(Event.prototype, 'isTrusted')) {
     /** @this {Element} */
@@ -550,7 +581,7 @@ export function patchEvents() {
         cancelable: true,
         composed: true
       });
-      this.dispatchEvent(ev);
+      this[utils.SHADY_PREFIX + 'dispatchEvent'](ev);
     };
     if (Element.prototype.click) {
       Element.prototype.click = composedClickFn;
@@ -559,3 +590,6 @@ export function patchEvents() {
     }
   }
 }
+
+export const eventPropertyNames = Object.getOwnPropertyNames(Document.prototype)
+    .filter(name => name.substring(0,2) === 'on');

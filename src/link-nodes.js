@@ -8,33 +8,9 @@ Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 */
 
-import {patchInsideElementAccessors, patchOutsideElementAccessors} from './patch-accessors.js';
-import {accessors} from './native-tree.js';
-import {ensureShadyDataForNode, shadyDataForNode} from './shady-data.js';
-
-const {childNodes} = accessors;
-
-export function recordInsertBefore(node, container, ref_node) {
-  patchInsideElementAccessors(container);
-  const containerData = ensureShadyDataForNode(container);
-  if (containerData.firstChild !== undefined) {
-    containerData.childNodes = null;
-  }
-  // handle document fragments
-  if (node.nodeType === Node.DOCUMENT_FRAGMENT_NODE) {
-    let c$ = node.childNodes;
-    for (let i=0; i < c$.length; i++) {
-      linkNode(c$[i], container, ref_node);
-    }
-    // cleanup logical dom in doc fragment.
-    const nodeData = ensureShadyDataForNode(node);
-    let resetTo = (nodeData.firstChild !== undefined) ? null : undefined;
-    nodeData.firstChild = nodeData.lastChild = resetTo;
-    nodeData.childNodes = resetTo;
-  } else {
-    linkNode(node, container, ref_node);
-  }
-}
+import * as utils from './utils.js';
+import {shadyDataForNode, ensureShadyDataForNode} from './shady-data.js';
+import {patchInsideElementAccessors, patchOutsideElementAccessors} from './patch-instances.js';
 
 function linkNode(node, container, ref_node) {
   patchOutsideElementAccessors(node);
@@ -44,7 +20,7 @@ function linkNode(node, container, ref_node) {
   const ref_nodeData = ref_node ? ensureShadyDataForNode(ref_node) : null;
   // update ref_node.previousSibling <-> node
   nodeData.previousSibling = ref_node ? ref_nodeData.previousSibling :
-    container.lastChild;
+    container[utils.SHADY_PREFIX + 'lastChild'];
   let psd = shadyDataForNode(nodeData.previousSibling);
   if (psd) {
     psd.nextSibling = node;
@@ -70,7 +46,29 @@ function linkNode(node, container, ref_node) {
   containerData.childNodes = null;
 }
 
-export function recordRemoveChild(node, container) {
+export const recordInsertBefore = (node, container, ref_node) => {
+  patchInsideElementAccessors(container);
+  const containerData = ensureShadyDataForNode(container);
+  if (containerData.firstChild !== undefined) {
+    containerData.childNodes = null;
+  }
+  // handle document fragments
+  if (node.nodeType === Node.DOCUMENT_FRAGMENT_NODE) {
+    let c$ = node[utils.SHADY_PREFIX + 'childNodes'];
+    for (let i=0; i < c$.length; i++) {
+      linkNode(c$[i], container, ref_node);
+    }
+    // cleanup logical dom in doc fragment.
+    const nodeData = ensureShadyDataForNode(node);
+    let resetTo = (nodeData.firstChild !== undefined) ? null : undefined;
+    nodeData.firstChild = nodeData.lastChild = resetTo;
+    nodeData.childNodes = resetTo;
+  } else {
+    linkNode(node, container, ref_node);
+  }
+}
+
+export const recordRemoveChild = (node, container) => {
   const nodeData = ensureShadyDataForNode(node);
   const containerData = ensureShadyDataForNode(container);
   if (node === containerData.firstChild) {
@@ -102,24 +100,21 @@ export function recordRemoveChild(node, container) {
  * @param  {!Node} node
  * @param  {Array<Node>=} nodes
  */
-function recordChildNodes(node, nodes) {
+export const recordChildNodes = (node) => {
   const nodeData = ensureShadyDataForNode(node);
   if (nodeData.firstChild === undefined) {
     // remove caching of childNodes
     nodeData.childNodes = null;
-    const c$ = nodes || childNodes(node);
-    nodeData.firstChild = c$[0] || null;
-    nodeData.lastChild = c$[c$.length-1] || null;
+    const first = nodeData.firstChild = node[utils.NATIVE_PREFIX + 'firstChild'] || null;
+    nodeData.lastChild = node[utils.NATIVE_PREFIX + 'lastChild'] || null;
     patchInsideElementAccessors(node);
-    for (let i=0; i<c$.length; i++) {
-      const n = c$[i];
+    for (let n = first, previous; n; (n = n[utils.NATIVE_PREFIX + 'nextSibling'])) {
       const sd = ensureShadyDataForNode(n);
       sd.parentNode = node;
-      sd.nextSibling = c$[i+1] || null;
-      sd.previousSibling = c$[i-1] || null;
+      sd.nextSibling = n[utils.NATIVE_PREFIX + 'nextSibling'] || null;
+      sd.previousSibling = previous || null;
+      previous = n;
       patchOutsideElementAccessors(n);
     }
   }
 }
-
-export {recordChildNodes}

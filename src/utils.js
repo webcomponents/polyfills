@@ -9,37 +9,37 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 */
 import {shadyDataForNode} from './shady-data.js';
 
-export let settings = window['ShadyDOM'] || {};
+export const settings = window['ShadyDOM'] || {};
 
 settings.hasNativeShadowDOM = Boolean(Element.prototype.attachShadow && Node.prototype.getRootNode);
 
-let desc = Object.getOwnPropertyDescriptor(Node.prototype, 'firstChild');
+const desc = Object.getOwnPropertyDescriptor(Node.prototype, 'firstChild');
 
 settings.hasDescriptors = Boolean(desc && desc.configurable && desc.get);
 settings.inUse = settings['force'] || !settings.hasNativeShadowDOM;
+settings.noPatch = settings['noPatch'] || false;
+settings.preferPerformance = settings['preferPerformance'];
 
-// Default to using native accessors (instead of treewalker) only for
-// IE/Edge where they are faster.
-const IS_IE = navigator.userAgent.match('Trident');
-const IS_EDGE = navigator.userAgent.match('Edge');
-if (settings.useNativeAccessors === undefined) {
-  settings.useNativeAccessors = settings.hasDescriptors && (IS_IE || IS_EDGE);
-}
-
-export function isTrackingLogicalChildNodes(node) {
+export const isTrackingLogicalChildNodes = (node) => {
   const nodeData = shadyDataForNode(node);
   return (nodeData && nodeData.firstChild !== undefined);
 }
 
-export function isShadyRoot(obj) {
+export const isShadyRoot = (obj) => {
   return Boolean(obj._localName === 'ShadyRoot');
 }
 
-export function ownerShadyRootForNode(node) {
-  let root = node.getRootNode();
+export const ownerShadyRootForNode = (node) => {
+  let root = node[SHADY_PREFIX + 'getRootNode']();
   if (isShadyRoot(root)) {
     return root;
   }
+}
+
+export const hasShadowRootWithSlot = (node) => {
+  const nodeData = shadyDataForNode(node);
+  let root = nodeData && nodeData.root;
+  return (root && root._hasInsertionPoint());
 }
 
 let p = Element.prototype;
@@ -47,54 +47,19 @@ let matches = p.matches || p.matchesSelector ||
   p.mozMatchesSelector || p.msMatchesSelector ||
   p.oMatchesSelector || p.webkitMatchesSelector;
 
-export function matchesSelector(element, selector) {
+export const matchesSelector = (element, selector) => {
   return matches.call(element, selector);
 }
 
-function copyOwnProperty(name, source, target) {
-  let pd = Object.getOwnPropertyDescriptor(source, name);
-  if (pd) {
-    Object.defineProperty(target, name, pd);
-  }
-}
-
-export function extend(target, source) {
-  if (target && source) {
-    let n$ = Object.getOwnPropertyNames(source);
-    for (let i=0, n; (i<n$.length) && (n=n$[i]); i++) {
-      copyOwnProperty(n, source, target);
-    }
-  }
-  return target || source;
-}
-
-export function extendAll(target, ...sources) {
-  for (let i=0; i < sources.length; i++) {
-    extend(target, sources[i]);
-  }
-  return target;
-}
-
-export function mixin(target, source) {
+export const mixin = (target, source) => {
   for (var i in source) {
     target[i] = source[i];
   }
   return target;
 }
 
-export function patchPrototype(obj, mixin) {
-  let proto = Object.getPrototypeOf(obj);
-  if (!proto.hasOwnProperty('__patchProto')) {
-    let patchProto = Object.create(proto);
-    patchProto.__sourceProto = proto;
-    extend(patchProto, mixin);
-    proto['__patchProto'] = patchProto;
-  }
-  // old browsers don't have setPrototypeOf
-  obj.__proto__ = proto['__patchProto'];
-}
-
-
+// NOTE, prefer MutationObserver over Promise for microtask timing
+// for consistency x-platform.
 let twiddle = document.createTextNode('');
 let content = 0;
 let queue = [];
@@ -112,32 +77,29 @@ new MutationObserver(() => {
 }).observe(twiddle, {characterData: true});
 
 // use MutationObserver to get microtask async timing.
-export function microtask(callback) {
+export const microtask = (callback) => {
   queue.push(callback);
   twiddle.textContent = content++;
 }
 
 export const hasDocumentContains = Boolean(document.contains);
 
-export function contains(container, node) {
+export const contains = (container, node) => {
   while (node) {
     if (node == container) {
       return true;
     }
-    node = node.parentNode;
+    node = node[SHADY_PREFIX + 'parentNode'];
   }
   return false;
 }
 
-function getNodeHTMLCollectionName(node) {
-  return node.getAttribute('id') || node.getAttribute('name');
-}
+const getNodeHTMLCollectionName = (node) =>
+    node.getAttribute('id') || node.getAttribute('name');
 
-function isValidHTMLCollectionName(name) {
-  return name !== 'length' && isNaN(name);
-}
+const isValidHTMLCollectionName = (name) => name !== 'length' && isNaN(name);
 
-export function createPolyfilledHTMLCollection(nodes) {
+export const createPolyfilledHTMLCollection = (nodes) => {
   // Note: loop in reverse so that the first named item matches the named property
   for (let l = nodes.length - 1; l >= 0; l--) {
     const node = nodes[l];
@@ -167,3 +129,48 @@ export function createPolyfilledHTMLCollection(nodes) {
   };
   return nodes;
 }
+
+export const NATIVE_PREFIX = '__shady_native_';
+export const SHADY_PREFIX = '__shady_';
+
+
+// patch a group of accessors on an object only if it exists or if the `force`
+// argument is true.
+/**
+ * @param {!Object} obj
+ * @param {!Object} descriptors
+ * @param {boolean=} force
+ */
+export const patchProperties = (proto, descriptors, prefix = '') => {
+  for (let p in descriptors) {
+    const newDescriptor = descriptors[p];
+    newDescriptor.configurable = true;
+    const name = prefix + p;
+    // NOTE: we prefer writing directly because some browsers
+    // have descriptors that are writable but not configurable (e.g.
+    // `appendChild` on older browsers)
+    if (newDescriptor.value) {
+      proto[name] = newDescriptor.value;
+    } else {
+      // NOTE: this can throw if 'force' is used so catch the error.
+      try {
+        Object.defineProperty(proto, name, newDescriptor);
+      } catch(e) {
+        // this error is harmless so we just trap it.
+      }
+    }
+  }
+}
+
+export const NativeHTMLElement =
+    (window['customElements'] && window['customElements']['nativeHTMLElement']) ||
+    HTMLElement;
+
+// note, this is not a perfect polyfill since it doesn't include symbols
+export const getOwnPropertyDescriptors = (obj) => {
+  const descriptors = {};
+  Object.getOwnPropertyNames(obj).forEach((name) => {
+    descriptors[name] = Object.getOwnPropertyDescriptor(obj, name);
+  });
+  return descriptors;
+};

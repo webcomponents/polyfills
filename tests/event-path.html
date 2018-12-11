@@ -12,11 +12,18 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <head>
   <meta charset="utf-8">
   <script src="../node_modules/@webcomponents/webcomponents-platform/webcomponents-platform.js"></script>
-  <script src="../node_modules/es6-promise/es6-promise.auto.min.js"></script>
   <script src="../node_modules/@webcomponents/template/template.js"></script>
+  <script src="loader.js"></script>
   <script>
-    ShadyDOM = {force: true, flush(){}};
-  </script>
+  if (customElements.polyfillWrapFlushCallback) {
+    customElements.polyfillWrapFlushCallback(function(cb) {
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', cb);
+      } else {
+        cb();
+      }
+    });
+  }</script>
   <script>
     /**
      * Safari's Element.prototype.click may set `composed: false`, which is counter to the spec.
@@ -25,35 +32,20 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     window.brokenClickFn = (() => {
       let brokenComposed = false;
       const div = document.createElement('div');
-      div.addEventListener('click', (e) => {
+      ShadyDOM.wrap(div).addEventListener('click', (e) => {
         brokenComposed = e.composed === false;
       });
       div.click();
       return brokenComposed;
     })();
   </script>
-  <script src="../shadydom.min.js"></script>
-  <script src="../node_modules/@webcomponents/custom-elements/custom-elements.min.js"></script>
-  <script>
-    // Ensure customElements are updated when document is ready.
-    if (customElements.polyfillWrapFlushCallback) {
-      customElements.polyfillWrapFlushCallback(function(cb) {
-        if (document.readyState === 'loading') {
-          document.addEventListener('DOMContentLoaded', cb);
-        } else {
-          cb();
-        }
-      });
-    }
-  </script>
-
   <script src="../node_modules/wct-browser-legacy/browser.js"></script>
 </head>
 <body>
 
   <script>
     window.defineTestElement = function(name, connected, mixin) {
-      let template = document.querySelector('#' + name);
+      let template = ShadyDOM.wrap(document).querySelector('#' + name);
       // es5 compat class
       function Klass() {
         const self = (window.Reflect && Reflect.construct)
@@ -74,8 +66,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         if (!this._initialized) {
           this._initialized = true;
           if (template) {
-            this.attachShadow({mode: 'open'});
-            this.shadowRoot.appendChild(document.importNode(template.content, true));
+            ShadyDOM.wrap(this).attachShadow({mode: 'open'});
+            ShadyDOM.wrap(ShadyDOM.wrap(this).shadowRoot).appendChild(ShadyDOM.wrap(document).importNode(template.content, true));
           }
           if (connected) {
             connected.call(this);
@@ -103,13 +95,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   </template>
     <script>
     defineTestElement('x-event-scoped', function() {
-      this.scoped = this.shadowRoot.querySelector('#scoped');
+      this.scoped = ShadyDOM.wrap(ShadyDOM.wrap(this).shadowRoot).querySelector('#scoped');
       this.hostEvents = [];
       this.childEvents = [];
-      this.addEventListener('composed', this.hostHandler.bind(this));
-      this.addEventListener('scoped', this.hostHandler.bind(this));
-      this.scoped.addEventListener('composed', this.childHandler.bind(this));
-      this.scoped.addEventListener('scoped', this.childHandler.bind(this));
+      ShadyDOM.wrap(this).addEventListener('composed', this.hostHandler.bind(this));
+      ShadyDOM.wrap(this).addEventListener('scoped', this.hostHandler.bind(this));
+      ShadyDOM.wrap(this.scoped).addEventListener('composed', this.childHandler.bind(this));
+      ShadyDOM.wrap(this.scoped).addEventListener('scoped', this.childHandler.bind(this));
     }, {
       hostHandler: function(e) {
         this.hostEvents.push({
@@ -126,11 +118,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         });
       },
       fireComposed: function() {
-        return this.scoped.dispatchEvent(
+        return ShadyDOM.wrap(this.scoped).dispatchEvent(
           new Event('composed', {composed: true, bubbles: true}));
       },
       fireScoped: function(){
-        return this.scoped.dispatchEvent(
+        return ShadyDOM.wrap(this.scoped).dispatchEvent(
           new Event('scoped', {bubbles: true}));
       }
     });
@@ -141,10 +133,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   </template>
     <script>
     defineTestElement('x-event-scoped-window', function() {
-      this.scoped = this.shadowRoot.querySelector('#scoped');
+      this.scoped = ShadyDOM.wrap(ShadyDOM.wrap(this).shadowRoot).querySelector('#scoped');
       this.windowEvents = [];
-      window.addEventListener('composed', this.windowHandler.bind(this));
-      window.addEventListener('scoped', this.windowHandler.bind(this));
+      ShadyDOM.wrap(window).addEventListener('composed', this.windowHandler.bind(this));
+      ShadyDOM.wrap(window).addEventListener('scoped', this.windowHandler.bind(this));
     }, {
       windowHandler: function(e) {
         this.windowEvents.push({
@@ -154,11 +146,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         });
       },
       fireComposed: function() {
-        return this.scoped.dispatchEvent(
+        return ShadyDOM.wrap(this.scoped).dispatchEvent(
           new Event('composed', {composed: true, bubbles: true}));
       },
       fireScoped: function(){
-        return this.scoped.dispatchEvent(
+        return ShadyDOM.wrap(this.scoped).dispatchEvent(
           new Event('scoped', {bubbles: true}));
       }
     });
@@ -169,10 +161,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   </template>
     <script>
     defineTestElement('x-event-scoped-document', function() {
-      this.scoped = this.shadowRoot.querySelector('#scoped');
+      this.scoped = ShadyDOM.wrap(ShadyDOM.wrap(this).shadowRoot).querySelector('#scoped');
       this.documentEvents = [];
-      document.addEventListener('composed', this.handler.bind(this));
-      document.addEventListener('scoped', this.handler.bind(this));
+      ShadyDOM.wrap(document).addEventListener('composed', this.handler.bind(this));
+      ShadyDOM.wrap(document).addEventListener('scoped', this.handler.bind(this));
     }, {
       handler: function(e) {
         this.documentEvents.push({
@@ -182,11 +174,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         });
       },
       fireComposed: function() {
-        return this.scoped.dispatchEvent(
+        return ShadyDOM.wrap(this.scoped).dispatchEvent(
           new Event('composed', {composed: true, bubbles: true}));
       },
       fireScoped: function(){
-        return this.scoped.dispatchEvent(
+        return ShadyDOM.wrap(this.scoped).dispatchEvent(
           new Event('scoped', {bubbles: true}));
       }
     });
@@ -198,25 +190,25 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         display: block;
       }
     </style>
-    <div id="child" on-focus="focusHandler"></div>
+    <div id="child"></div>
   </template>
   <script>
   defineTestElement('x-focus', function() {
     this.events = [];
-    this.child = this.shadowRoot.querySelector('#child');
-    this.addEventListener('focus', this.focusHandler.bind(this));
-    this.child.addEventListener('focus', this.focusHandler.bind(this));
+    this.child = ShadyDOM.wrap(ShadyDOM.wrap(this).shadowRoot).querySelector('#child');
+    ShadyDOM.wrap(this).addEventListener('focus', this.focusHandler.bind(this));
+    ShadyDOM.wrap(this.child).addEventListener('focus', this.focusHandler.bind(this));
   }, {
     focusHandler: function(e) {
       this.events.push(e.target);
     },
     fireComposed: function() {
       let ev = new Event('focus', {composed: true});
-      this.child.dispatchEvent(ev);
+      ShadyDOM.wrap(this.child).dispatchEvent(ev);
     },
     fireScoped: function() {
       let ev = new Event('focus');
-      this.child.dispatchEvent(ev);
+      ShadyDOM.wrap(this.child).dispatchEvent(ev);
     }
   });
   </script>
@@ -229,11 +221,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       this.tabIndex = -1;
       this.events = [];
       this.lastFocus = null;
-      this.child = this.shadowRoot.querySelector('#child');
-      this.addEventListener('focus', this.focusHandler.bind(this));
-      this.addEventListener('blur', this.focusHandler.bind(this));
-      this.child.addEventListener('focus', this.focusHandler.bind(this));
-      this.child.addEventListener('blur', this.focusHandler.bind(this));
+      this.child = ShadyDOM.wrap(ShadyDOM.wrap(this).shadowRoot).querySelector('#child');
+      ShadyDOM.wrap(this).addEventListener('focus', this.focusHandler.bind(this));
+      ShadyDOM.wrap(this).addEventListener('blur', this.focusHandler.bind(this));
+      ShadyDOM.wrap(this.child).addEventListener('focus', this.focusHandler.bind(this));
+      ShadyDOM.wrap(this.child).addEventListener('blur', this.focusHandler.bind(this));
     }, {
       focusHandler(e) {
         this.events.push({type: e.type, target: e.target, relatedTarget: e.relatedTarget});
@@ -247,10 +239,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   </template>
   <script>
   defineTestElement('x-a', function() {
-    this.child = this.shadowRoot.querySelector('#child');
-    this.child2 = this.shadowRoot.querySelector('#child2');
-    this.addEventListener('foo', this.fooHandler.bind(this));
-    this.child.addEventListener('foo', this.childFooHandler.bind(this));
+    this.child = ShadyDOM.wrap(ShadyDOM.wrap(this).shadowRoot).querySelector('#child');
+    this.child2 = ShadyDOM.wrap(ShadyDOM.wrap(this).shadowRoot).querySelector('#child2');
+    ShadyDOM.wrap(this).addEventListener('foo', this.fooHandler.bind(this));
+    ShadyDOM.wrap(this.child).addEventListener('foo', this.childFooHandler.bind(this));
   }, {
     fooHandler: function(e) {
       this.event = {target: e.target, relatedTarget: e.relatedTarget};
@@ -273,16 +265,16 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
   function createEnabledElement(tag) {
     let e = document.createElement(tag);
-    document.body.appendChild(e);
+    ShadyDOM.wrap(document.body).appendChild(e);
     return e;
   }
 
   function stampNodes(selector) {
-    let t = document.querySelector(selector);
-    let dom = document.importNode(t.content, true);
+    let t = ShadyDOM.wrap(document).querySelector(selector);
+    let dom = ShadyDOM.wrap(document).importNode(t.content, true);
     let c = document.createElement('div');
-    c.appendChild(dom);
-    document.body.appendChild(c);
+    ShadyDOM.wrap(c).appendChild(dom);
+    ShadyDOM.wrap(document.body).appendChild(c);
     return c;
   }
 
@@ -300,27 +292,28 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       el.fireComposed();
       assert.equal(el.hostEvents[0].target, el);
       assert.equal(el.childEvents[0].target, el.scoped);
-      el.parentNode.removeChild(el);
+      ShadyDOM.wrap(ShadyDOM.wrap(el).parentNode).removeChild(el);
     });
+
     test('window events retarget', function() {
       let el = createEnabledElement('x-event-scoped-window');
       el.fireComposed();
       assert.equal(el.windowEvents[0].target, el);
-      el.parentNode.removeChild(el);
+      ShadyDOM.wrap(ShadyDOM.wrap(el).parentNode).removeChild(el);
     });
 
     test('window remove event listener', function() {
       let el = createEnabledElement('x-event-scoped-window');
-      let listener = function(e) {
+      let listener = function() {
         el.windowListenerEvents = el.windowListenerEvents ? el.windowListenerEvents+1 : 1;
       };
-      window.addEventListener("composed", listener);
+      ShadyDOM.wrap(window).addEventListener("composed", listener);
       el.fireComposed();
       assert.equal(1, el.windowListenerEvents);
-      window.removeEventListener("composed", listener);
+      ShadyDOM.wrap(window).removeEventListener("composed", listener);
       el.fireComposed();
       assert.equal(1, el.windowListenerEvents);
-      el.parentNode.removeChild(el);
+      ShadyDOM.wrap(ShadyDOM.wrap(el).parentNode).removeChild(el);
     });
 
     test('implicit window add/remove event listener', function() {
@@ -328,35 +321,35 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       let listener = function(e) {
         el.windowListenerEvents = el.windowListenerEvents ? el.windowListenerEvents+1 : 1;
       };
-      addEventListener("composed", listener);
+      ShadyDOM.wrap(window).addEventListener("composed", listener);
       el.fireComposed();
       assert.equal(1, el.windowListenerEvents);
-      removeEventListener("composed", listener);
+      ShadyDOM.wrap(window).removeEventListener("composed", listener);
       el.fireComposed();
       assert.equal(1, el.windowListenerEvents);
-      el.parentNode.removeChild(el);
+      ShadyDOM.wrap(ShadyDOM.wrap(el).parentNode).removeChild(el);
     });
 
     test('scoped event does not reach window', function() {
       let el = createEnabledElement('x-event-scoped-window');
       el.fireScoped();
       assert.equal(0, el.windowEvents.length);
-      el.parentNode.removeChild(el);
+      ShadyDOM.wrap(ShadyDOM.wrap(el).parentNode).removeChild(el);
     });
 
     test('scoped composed does not reach shadowRoot', function() {
       // Create a div element with a shadow root
       const theDiv = document.createElement('div');
-      theDiv.attachShadow({mode: 'open'});
-      document.body.appendChild(theDiv);
+      ShadyDOM.wrap(theDiv).attachShadow({mode: 'open'});
+      ShadyDOM.wrap(document.body).appendChild(theDiv);
 
       const spy = sinon.spy();
 
       // Add event listener to the shadow root
-      theDiv.shadowRoot.addEventListener('composed', spy);
+      ShadyDOM.wrap(ShadyDOM.wrap(theDiv).shadowRoot).addEventListener('composed', spy);
 
       // Dispatch a comosed event to the div element (not its shadow root)
-      theDiv.dispatchEvent(new CustomEvent('composed', {bubbles: true, composed: true}));
+      ShadyDOM.wrap(theDiv).dispatchEvent(new CustomEvent('composed', {bubbles: true, composed: true}));
 
       assert.isFalse(spy.called, 'Callback should not be called on shadowRoot');
     });
@@ -364,18 +357,18 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     test('composed event on child lightdom does not reach shadowRoot', function() {
       // Create a div element with a shadow root
       const theDiv = document.createElement('div');
-      theDiv.attachShadow({mode: 'open'});
-      document.body.appendChild(theDiv);
+      ShadyDOM.wrap(theDiv).attachShadow({mode: 'open'});
+      ShadyDOM.wrap(document.body).appendChild(theDiv);
       const child = document.createElement('div');
-      theDiv.appendChild(child);
+      ShadyDOM.wrap(theDiv).appendChild(child);
 
       const spy = sinon.spy();
 
       // Add event listener to the shadow root
-      theDiv.shadowRoot.addEventListener('composed', spy);
+      ShadyDOM.wrap(ShadyDOM.wrap(theDiv).shadowRoot).addEventListener('composed', spy);
 
       // Dispatch a comosed event to a child of the div element (not its shadow root)
-      child.dispatchEvent(new CustomEvent('composed', {bubbles: true, composed: true}));
+      ShadyDOM.wrap(child).dispatchEvent(new CustomEvent('composed', {bubbles: true, composed: true}));
 
       assert.isFalse(spy.called, 'Callback should not be called on shadowRoot');
     });
@@ -384,7 +377,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       let el = createEnabledElement('x-event-scoped-document');
       el.fireComposed();
       assert.equal(el.documentEvents[0].target, el);
-      el.parentNode.removeChild(el);
+      ShadyDOM.wrap(ShadyDOM.wrap(el).parentNode).removeChild(el);
     });
 
     test('document remove event listener', function() {
@@ -392,27 +385,27 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       let listener = function(e) {
         el.listenerEvents = el.listenerEvents ? el.listenerEvents+1 : 1;
       };
-      document.addEventListener("composed", listener);
+      ShadyDOM.wrap(document).addEventListener("composed", listener);
       el.fireComposed();
       assert.equal(1, el.listenerEvents);
-      document.removeEventListener("composed", listener);
+      ShadyDOM.wrap(document).removeEventListener("composed", listener);
       el.fireComposed();
       assert.equal(1, el.listenerEvents);
-      el.parentNode.removeChild(el);
+      ShadyDOM.wrap(ShadyDOM.wrap(el).parentNode).removeChild(el);
     });
 
     test('scoped event does not reach document', function() {
       let el = createEnabledElement('x-event-scoped-document');
       el.fireScoped();
       assert.equal(0, el.documentEvents.length);
-      el.parentNode.removeChild(el);
+      ShadyDOM.wrap(ShadyDOM.wrap(el).parentNode).removeChild(el);
     });
 
     test('event.composedPath is consistent', function() {
       let el = createEnabledElement('x-event-scoped');
       el.fireComposed();
       assert.equal(el.hostEvents.length, el.childEvents.length);
-      el.parentNode.removeChild(el);
+      ShadyDOM.wrap(ShadyDOM.wrap(el).parentNode).removeChild(el);
     });
 
     test('`composed` flag controls event propagation through roots', function() {
@@ -424,23 +417,23 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       assert.equal(el.childEvents.length, 2);
       assert.equal(el.childEvents[0].type, 'scoped');
       assert.equal(el.childEvents[1].type, 'composed');
-      el.parentNode.removeChild(el);
+      ShadyDOM.wrap(ShadyDOM.wrap(el).parentNode).removeChild(el);
     });
 
     test('event patching (add and remove) works on any elements', function() {
-      let el = document.querySelector('#globalpatch');
+      let el = ShadyDOM.wrap(document).querySelector('#globalpatch');
       let path;
       const fn = function(e) {
         path = e.composedPath();
       }
-      el.addEventListener('foo', fn);
+      ShadyDOM.wrap(el).addEventListener('foo', fn);
       const e = new Event('foo', {composed: true});
-      el.dispatchEvent(e);
+      ShadyDOM.wrap(el).dispatchEvent(e);
       assert.deepEqual([el, document.body, document.documentElement, document, window], path);
       path = null;
-      el.removeEventListener('foo', fn);
+      ShadyDOM.wrap(el).removeEventListener('foo', fn);
       const e2 = new Event('foo', {composed: true});
-      el.dispatchEvent(e2);
+      ShadyDOM.wrap(el).dispatchEvent(e2);
       assert.isNull(path);
     });
 
@@ -453,20 +446,38 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       const scopedFn = function() {
         scoped = true;
       }
-      el.shadowRoot.addEventListener('composed', composedFn);
-      el.shadowRoot.addEventListener('scoped', scopedFn);
+      ShadyDOM.wrap(ShadyDOM.wrap(el).shadowRoot).addEventListener('composed', composedFn);
+      ShadyDOM.wrap(ShadyDOM.wrap(el).shadowRoot).addEventListener('scoped', scopedFn);
       el.fireComposed()
       el.fireScoped();
       assert.isTrue(composed, 'composed events should fire on shadowRoot');
       assert.isTrue(scoped, 'scoped events should fire on shadowRoot');
       composed = null;
       scoped = null;
-      el.shadowRoot.removeEventListener('composed', composedFn);
-      el.shadowRoot.removeEventListener('scoped', scopedFn);
+      ShadyDOM.wrap(ShadyDOM.wrap(el).shadowRoot).removeEventListener('composed', composedFn);
+      ShadyDOM.wrap(ShadyDOM.wrap(el).shadowRoot).removeEventListener('scoped', scopedFn);
       el.fireComposed()
       el.fireScoped();
       assert.isNull(composed, 'composed events should not fire on shadowRoot after listener removed');
       assert.isNull(scoped, 'scoped events should fire on shadowRoot after listener removed');
+    });
+
+    test('should use bubbling phase for event listeners added via properties', function () {
+      if (!hasOnListenersOnPrototype) {
+        this.skip();
+      }
+      const parent = document.createElement('div');
+      parent.id = "parent";
+      ShadyDOM.wrap(document.body).appendChild(parent);
+      const child = document.createElement('div');
+      child.id = "child";
+      ShadyDOM.wrap(parent).appendChild(child);
+      const parentMouseDownSpy = sinon.spy();
+      const childMouseDownSpy = sinon.spy();
+      ShadyDOM.wrap(parent).onmousedown = parentMouseDownSpy;
+      ShadyDOM.wrap(child).onmousedown = childMouseDownSpy;
+      ShadyDOM.wrap(child).dispatchEvent(new MouseEvent('mousedown', { bubbles: true, composed: true }));
+      assert.isTrue(childMouseDownSpy.calledBefore(parentMouseDownSpy), 'Event handler on child should be called first');
     });
 
     test('composed focus and blur events retarget up tree', function() {
@@ -475,7 +486,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       assert.equal(el.events.length, 2);
       assert.equal(el.events[0], el.child);
       assert.equal(el.events[1], el);
-      el.parentNode.removeChild(el);
+      ShadyDOM.wrap(ShadyDOM.wrap(el).parentNode).removeChild(el);
     });
 
     test('focusin and focusout events patched to be always composed', function() {
@@ -485,23 +496,23 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         this.skip();
       }
       const theDiv = document.createElement('div');
-      theDiv.attachShadow({mode: 'open'});
+      ShadyDOM.wrap(theDiv).attachShadow({mode: 'open'});
 
       const theInput = document.createElement('input');
-      theDiv.shadowRoot.appendChild(theInput);
-      document.body.appendChild(theDiv);
+      ShadyDOM.wrap(ShadyDOM.wrap(theDiv).shadowRoot).appendChild(theInput);
+      ShadyDOM.wrap(document.body).appendChild(theDiv);
 
       const dispatchMockEvent = function(type, target) {
         // do not set composed to force patching needed for Firefox 61
         const e = new CustomEvent(type);
-        target.dispatchEvent(e);
+        ShadyDOM.wrap(target).dispatchEvent(e);
       };
 
       const focusinSpy = sinon.spy();
       const focusoutSpy = sinon.spy();
 
-      theInput.addEventListener('focusin', focusinSpy);
-      theInput.addEventListener('focusout', focusoutSpy);
+      ShadyDOM.wrap(theInput).addEventListener('focusin', focusinSpy);
+      ShadyDOM.wrap(theInput).addEventListener('focusout', focusoutSpy);
 
       dispatchMockEvent('focusin', theInput);
       dispatchMockEvent('focusout', theInput);
@@ -525,13 +536,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       let input = createEnabledElement('input');
       const callback = (event) => {
         assert.isTrue(event.currentTarget === input, 'CurrentTarget should be input, not window');
-        document.body.removeChild(input);
+        ShadyDOM.wrap(document.body).removeChild(input);
         done();
       };
-      input.onfocus = callback;
-      assert.equal(input.onfocus, callback);
+      ShadyDOM.wrap(input).onfocus = callback;
+      assert.equal(ShadyDOM.wrap(input).onfocus, callback);
       let ev = new Event('focus', {composed: true});
-      input.dispatchEvent(ev);
+      ShadyDOM.wrap(input).dispatchEvent(ev);
     });
 
     test('onblur property has correct eventTarget', function(done) {
@@ -541,13 +552,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       let input = createEnabledElement('input');
       const callback = (event) => {
         assert.isTrue(event.currentTarget === input, 'CurrentTarget should be input, not window');
-        document.body.removeChild(input);
+        ShadyDOM.wrap(document.body).removeChild(input);
         done();
       };
-      input.onblur = callback;
-      assert.equal(input.onblur, callback);
+      ShadyDOM.wrap(input).onblur = callback;
+      assert.equal(ShadyDOM.wrap(input).onblur, callback);
       let ev = new Event('blur', {composed: true});
-      input.dispatchEvent(ev);
+      ShadyDOM.wrap(input).dispatchEvent(ev);
     });
 
     test('scoped focus and blur events do not retarget', function() {
@@ -561,7 +572,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       el.fireScoped();
       assert.equal(el.events.length, 1);
       assert.equal(el.events[0], el.child);
-      el.parentNode.removeChild(el);
+      ShadyDOM.wrap(ShadyDOM.wrap(el).parentNode).removeChild(el);
     });
 
     test('focusing a shadow nested node does not blur the parent', function(done) {
@@ -572,15 +583,15 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         this.skip();
       }
       let el = createEnabledElement('x-nested-focus');
-      el.focus();
-      el.child.focus();
+      ShadyDOM.wrap(el).focus();
+      ShadyDOM.wrap(el.child).focus();
       setTimeout(function() {
         let filtered = el.events.map(ev => ({type: ev.type, target: ev.target}));
         assert.deepEqual(filtered, [
           {type: 'focus', target: el},
           {type: 'focus', target: el.child}
         ]);
-        el.parentNode.removeChild(el);
+        ShadyDOM.wrap(ShadyDOM.wrap(el).parentNode).removeChild(el);
         done();
       });
     });
@@ -599,7 +610,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         });
       }
       return Promise.resolve().then(function() {
-        el.child.focus();
+        ShadyDOM.wrap(el.child).focus();
         return wait();
       }).then(function() {
         assert.deepEqual(el.events, [
@@ -607,7 +618,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           {type: 'focus', target: el, relatedTarget: null},
         ]);
       }).then(function(){
-        el.focus();
+        ShadyDOM.wrap(el).focus();
         return wait();
       }).then(function() {
         assert.deepEqual(el.events, [
@@ -616,7 +627,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           {type: 'blur', target: el.child, relatedTarget: el}
         ]);
       }).then(function() {
-        el.blur();
+        ShadyDOM.wrap(el).blur();
         return wait();
       }).then(function() {
         assert.deepEqual(el.events, [
@@ -626,48 +637,48 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           {type: 'blur', target: el, relatedTarget: null}
         ]);
       }).then(function() {
-        el.parentNode.removeChild(el);
+        ShadyDOM.wrap(ShadyDOM.wrap(el).parentNode).removeChild(el);
       });
     });
 
     test('composed relatedTarget retargets', function() {
       let container = stampNodes('#relatedtarget');
-      let a = container.children[0];
-      let b = container.children[1];
+      let a = ShadyDOM.wrap(container).children[0];
+      let b = ShadyDOM.wrap(container).children[1];
       let ev = new MouseEvent('foo', {bubbles: true, composed: true, relatedTarget: b.child});
-      a.child.dispatchEvent(ev);
+      ShadyDOM.wrap(a.child).dispatchEvent(ev);
       assert.property(a, 'childEvent');
       assert.deepEqual(a.childEvent, {target: a.child, relatedTarget: b});
       assert.property(a, 'event');
       assert.deepEqual(a.event, {target: a, relatedTarget: b});
-      container.parentNode.removeChild(container);
+      ShadyDOM.wrap(ShadyDOM.wrap(container).parentNode).removeChild(container);
     });
 
     test('events do not fire if relatedtarget and target are the same node after retargeting', function() {
       let container = stampNodes('#relatedtarget');
-      let a = container.children[0];
+      let a = ShadyDOM.wrap(container).children[0];
       let ev = new MouseEvent('foo', {bubbles: true, composed: true, relatedTarget: a.child2});
-      a.child.dispatchEvent(ev);
+      ShadyDOM.wrap(a.child).dispatchEvent(ev);
       assert.property(a, 'childEvent');
       assert.deepEqual(a.childEvent, {target: a.child, relatedTarget: a.child2});
       assert.notProperty(a, 'event');
-      container.parentNode.removeChild(container);
+      ShadyDOM.wrap(ShadyDOM.wrap(container).parentNode).removeChild(container);
     });
 
     test('events fire if relatedtarget and target are the same node without retargeting', function() {
       let container = stampNodes('#relatedtarget');
-      let a = container.children[0];
+      let a = ShadyDOM.wrap(container).children[0];
       let ev = new MouseEvent('foo', {bubbles: true, composed: true, relatedTarget: a});
-      a.dispatchEvent(ev);
+      ShadyDOM.wrap(a).dispatchEvent(ev);
       assert.property(a, 'event');
       assert.deepEqual(a.event, {target: a, relatedTarget: a});
-      container.parentNode.removeChild(container);
+      ShadyDOM.wrap(ShadyDOM.wrap(container).parentNode).removeChild(container);
     });
 
     test('capturing event listeners fire correctly for focus and blur', function() {
       let el = createEnabledElement('x-focus');
       let timeStamp;
-      el.addEventListener('focus', function(e) {
+      ShadyDOM.wrap(el).addEventListener('focus', function(e) {
         timeStamp = e.timeStamp;
       }, true);
       el.fireComposed();
@@ -675,7 +686,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       assert.equal(el.events.length, 2);
       assert.equal(el.events[0], el.child);
       assert.equal(el.events[1], el);
-      el.parentNode.removeChild(el);
+      ShadyDOM.wrap(ShadyDOM.wrap(el).parentNode).removeChild(el);
     });
 
     test('.focus() and .blur() work as expected', function() {
@@ -685,72 +696,82 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         this.skip();
       }
       let el = createEnabledElement('x-nested-focus');
-      el.child.focus();
-      assert.equal(document._activeElement, el);
-      assert.equal(el.shadowRoot.activeElement, el.child);
-      el.blur();
-      assert.equal(el.shadowRoot.activeElement, null);
-      assert.notEqual(document._activeElement, el);
-      el.parentNode.removeChild(el);
+      ShadyDOM.wrap(el.child).focus();
+      assert.equal(ShadyDOM.wrap(document)._activeElement, el);
+      assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(el).shadowRoot).activeElement, el.child);
+      ShadyDOM.wrap(el).blur();
+      assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(el).shadowRoot).activeElement, null);
+      assert.notEqual(ShadyDOM.wrap(document)._activeElement, el);
+      ShadyDOM.wrap(ShadyDOM.wrap(el).parentNode).removeChild(el);
     });
 
     suite('composedPath', function() {
       test('does not confuse anchor with shadowroot', function() {
         let el = document.createElement('div');
-        let root = el.attachShadow({mode: 'open'});
+        let root = ShadyDOM.wrap(el).attachShadow({mode: 'open'});
         let a = document.createElement('a');
         a.href = 'http://localhost/foo.html';
-        a.textContent = 'link!';
-        root.appendChild(a)
-        el.addEventListener('foo', function(event) {
+        ShadyDOM.wrap(a).textContent = 'link!';
+        ShadyDOM.wrap(root).appendChild(a)
+        ShadyDOM.wrap(el).addEventListener('foo', function(event) {
           let path = event.composedPath();
           pathCompare([a, root, el, document.body, document.documentElement, document, window], path);
         });
-        document.body.appendChild(el);
+        ShadyDOM.wrap(document.body).appendChild(el);
         ShadyDOM.flush();
         let ev = new Event('foo', {bubbles: true, composed: true});
-        a.dispatchEvent(ev);
-        el.parentNode.removeChild(el);
+        ShadyDOM.wrap(a).dispatchEvent(ev);
+        ShadyDOM.wrap(ShadyDOM.wrap(el).parentNode).removeChild(el);
       });
 
       test('focus events retarget', function() {
         let recv = [];
         function track(el) {
-          el.addEventListener('focus', function() {
+          ShadyDOM.wrap(el).addEventListener('focus', function() {
             recv.push(el);
           })
         }
         let top = document.createElement('div');
         top.id = 'top';
-        top.attachShadow({mode: 'open'});
+        ShadyDOM.wrap(top).attachShadow({mode: 'open'});
         track(top);
-        track(top.shadowRoot);
+        track(ShadyDOM.wrap(top).shadowRoot);
 
         let mid = document.createElement('div');
-        mid.attachShadow({mode: 'open'});
+        ShadyDOM.wrap(mid).attachShadow({mode: 'open'});
         mid.id = 'mid';
         track(mid);
-        track(mid.shadowRoot);
+        track(ShadyDOM.wrap(mid).shadowRoot);
         let slot = document.createElement('slot');
         track(slot);
-        mid.shadowRoot.appendChild(slot);
-        top.shadowRoot.appendChild(mid);
+        ShadyDOM.wrap(ShadyDOM.wrap(mid).shadowRoot).appendChild(slot);
+        ShadyDOM.wrap(ShadyDOM.wrap(top).shadowRoot).appendChild(mid);
 
         let bot = document.createElement('div');
         bot.id = 'bot';
         track(bot);
-        mid.appendChild(bot);
+        ShadyDOM.wrap(mid).appendChild(bot);
 
-        document.body.appendChild(top);
+        ShadyDOM.wrap(document.body).appendChild(top);
 
         ShadyDOM.flush();
 
         let ev = new Event('focus', {composed: true});
-        bot.dispatchEvent(ev);
+        ShadyDOM.wrap(bot).dispatchEvent(ev);
 
         assert.equal(recv.length, 2);
         pathCompare([bot, top], recv);
-        top.parentNode.removeChild(top);
+        ShadyDOM.wrap(ShadyDOM.wrap(top).parentNode).removeChild(top);
+      });
+
+      test('composedPath of events from non-Node subclasses works', function() {
+        const xhr = new XMLHttpRequest();
+        xhr.open('GET', window.location.href);
+        xhr.addEventListener('load', (e) => {
+          assert.doesNotThrow(() => {e.composedPath()});
+        });
+        xhr.addEventListener('error', () => assert.fail('xhr failed'));
+        xhr.send();
       });
     });
 
@@ -760,16 +781,16 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       }
       let sawClick = false;
       const top = document.createElement('div');
-      top.addEventListener('click', () => {
+      ShadyDOM.wrap(top).addEventListener('click', () => {
         sawClick = true;
       });
-      top.attachShadow({mode: 'open'});
+      ShadyDOM.wrap(top).attachShadow({mode: 'open'});
       const inner = document.createElement('div');
-      top.shadowRoot.appendChild(inner);
-      document.body.appendChild(top);
+      ShadyDOM.wrap(ShadyDOM.wrap(top).shadowRoot).appendChild(inner);
+      ShadyDOM.wrap(document.body).appendChild(top);
       inner.click();
       assert.equal(sawClick, true, 'host should see click from inner node');
-      top.parentNode.removeChild(top);
+      ShadyDOM.wrap(ShadyDOM.wrap(top).parentNode).removeChild(top);
     });
 
     test('delayed target does not throw', function(done) {
@@ -781,22 +802,22 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           done();
         });
       });
-      document.body.appendChild(button);
+      ShadyDOM.wrap(document.body).appendChild(button);
       button.click();
-      document.body.removeChild(button);
+      ShadyDOM.wrap(document.body).removeChild(button);
     });
 
     test('delayed relatedTarget does not throw', function(done) {
       const div = document.createElement('div');
-      div.addEventListener('mouseover', (e) => {
+      ShadyDOM.wrap(div).addEventListener('mouseover', (e) => {
         setTimeout(() => {
           assert.equal(e.relatedTarget, document);
           assert.isNotOk(e.currentTarget);
           done();
         });
       });
-      document.body.appendChild(div);
-      div.dispatchEvent(new MouseEvent('mouseover', {bubbles: true, cancelable: true, relatedTarget: document}));
+      ShadyDOM.wrap(document.body).appendChild(div);
+      ShadyDOM.wrap(div).dispatchEvent(new MouseEvent('mouseover', {bubbles: true, cancelable: true, relatedTarget: document}));
     });
   });
   </script>

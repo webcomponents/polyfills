@@ -14,41 +14,31 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
   <script src="../node_modules/@webcomponents/webcomponents-platform/webcomponents-platform.js"></script>
   <script src="../node_modules/@webcomponents/template/template.js"></script>
+  <script src="loader.js"></script>
   <script>
-    ShadyDOM = {force: true};
-    if (window.customElements) {
-      customElements.forcePolyfill = true;
-    }
-  </script>
-  <script src="../shadydom.min.js"></script>
-  <script src="../node_modules/@webcomponents/custom-elements/custom-elements.min.js"></script>
-  <script>
-    // Ensure customElements are updated when document is ready.
-    if (customElements.polyfillWrapFlushCallback) {
-      customElements.polyfillWrapFlushCallback(function(cb) {
-        if (document.readyState === 'loading') {
-          document.addEventListener('DOMContentLoaded', cb);
-        } else {
-          cb();
-        }
-      });
-    }
-  </script>
-
+  if (customElements.polyfillWrapFlushCallback) {
+    customElements.polyfillWrapFlushCallback(function(cb) {
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', cb);
+      } else {
+        cb();
+      }
+    });
+  }</script>
   <script src="../node_modules/wct-browser-legacy/browser.js"></script>
 </head>
 <body>
 
   <script>
     window.defineTestElement = function(name, connected, shadowRootInConstrutor) {
-      var template = document.querySelector('#' + name);
+      var template = ShadyDOM.wrap(document).querySelector('#' + name);
       // es5 compat class
       function Klass() {
         const self = (window.Reflect && Reflect.construct)
           ? Reflect.construct(HTMLElement, [], this.constructor || Klass)
           : HTMLElement.call(this);
         if (shadowRootInConstrutor) {
-          self.attachShadow({mode: 'open'});
+          ShadyDOM.wrap(self).attachShadow({mode: 'open'});
         }
         return self;
       }
@@ -65,15 +55,15 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         if (!this._initialized) {
           this._initialized = true;
           if (!shadowRootInConstrutor) {
-            this.attachShadow({mode: 'open'});
+            ShadyDOM.wrap(this).attachShadow({mode: 'open'});
           }
           if (connected) {
             connected.call(this);
           }
           if (template) {
-            this.shadowRoot.appendChild(document.importNode(template.content, true));
+            ShadyDOM.wrap(ShadyDOM.wrap(this).shadowRoot).appendChild(ShadyDOM.wrap(document).importNode(template.content, true));
           }
-          var idEls = this.shadowRoot.querySelectorAll('[id]');
+          var idEls = ShadyDOM.wrap(ShadyDOM.wrap(this).shadowRoot).querySelectorAll('[id]');
           this.$ = {};
           for (var i=0; i < idEls.length; i++) {
             var el = idEls[i];
@@ -163,6 +153,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     defineTestElement('x-multi-dist');
   </script>
 
+  <x-compose-lazy-no-dist><span>Child</span></x-compose-lazy-no-dist>
+
   <template id="x-lazy-no-dist">
     Lazy no dist!
   </template>
@@ -176,23 +168,19 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     defineTestElement('x-compose-lazy-no-dist');
   </script>
 
-
-<x-compose-lazy-no-dist><span>Child</span></x-compose-lazy-no-dist>
+<use-inner-html>A</use-inner-html>
 
 <script>
   defineTestElement('inner-html', function() {
-    this.attachShadow({mode: 'open'});
-    this.shadowRoot.innerHTML = '[<slot></slot>]';
+    ShadyDOM.wrap(this).attachShadow({mode: 'open'});
+    ShadyDOM.wrap(ShadyDOM.wrap(this).shadowRoot).innerHTML = '[<slot></slot>]';
   });
 
   defineTestElement('use-inner-html', function() {
-    this.attachShadow({mode: 'open'});
-    this.shadowRoot.innerHTML = '<inner-html>I</inner-html>[<slot></slot>]';
+    ShadyDOM.wrap(this).attachShadow({mode: 'open'});
+    ShadyDOM.wrap(ShadyDOM.wrap(this).shadowRoot).innerHTML = '<inner-html>I</inner-html>[<slot></slot>]';
   });
 </script>
-
-<use-inner-html>A</use-inner-html>
-
 
 <script>
 
@@ -203,736 +191,746 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
   suite(`shadowRoots containing and mutating <slot>'s`, function() {
 
+    test('assignedSlot with render pending', function() {
+      var el = document.createElement('x-compose-lazy-no-dist');
+      var c = document.createElement('div');
+      ShadyDOM.wrap(document.body).appendChild(el);
+      var slot = ShadyDOM.wrap(ShadyDOM.wrap(el).shadowRoot).querySelector('slot');
+      ShadyDOM.wrap(el).appendChild(c);
+      assert.equal(ShadyDOM.wrap(c).assignedSlot, slot);
+      ShadyDOM.wrap(document.body).removeChild(el);
+    });
+
     test('append div to distributing element', function() {
       var dist = document.createElement('x-dist');
-      document.body.appendChild(dist);
+      ShadyDOM.wrap(document.body).appendChild(dist);
       // Distribute div
       var div = document.createElement('div');
-      dist.appendChild(div);
+      ShadyDOM.wrap(dist).appendChild(div);
       ShadyDOM.flush();
-      assert.equal(div.assignedSlot, dist.shadowRoot.querySelector('#content'));
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, ShadyDOM.wrap(ShadyDOM.wrap(dist).shadowRoot).querySelector('#content'));
       // Append to distributed div
       var div2 = document.createElement('div');
-      div.appendChild(div2);
+      ShadyDOM.wrap(div).appendChild(div2);
       ShadyDOM.flush();
       // Remove
-      dist.removeChild(div);
+      ShadyDOM.wrap(dist).removeChild(div);
       ShadyDOM.flush();
-      assert.equal(div.assignedSlot, null);
-      document.body.removeChild(dist);
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, null);
+      ShadyDOM.wrap(document.body).removeChild(dist);
     });
 
     test('append div to non-distributing element', function() {
       var noDist = document.createElement('x-no-dist');
-      document.body.appendChild(noDist);
+      ShadyDOM.wrap(document.body).appendChild(noDist);
       // Distribute div
       var div = document.createElement('div');
-      noDist.appendChild(div);
+      ShadyDOM.wrap(noDist).appendChild(div);
       ShadyDOM.flush();
-      assert.equal(div.assignedSlot, null);
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, null);
       // Append to distributed div
       var div2 = document.createElement('div');
-      div.appendChild(div2);
+      ShadyDOM.wrap(div).appendChild(div2);
       ShadyDOM.flush();
       // Remove
-      noDist.removeChild(div);
+      ShadyDOM.wrap(noDist).removeChild(div);
       ShadyDOM.flush();
-      document.body.removeChild(noDist);
+      ShadyDOM.wrap(document.body).removeChild(noDist);
     });
 
     test('append div to shady root of distributing element', function() {
       var dist = document.createElement('x-dist');
-      document.body.appendChild(dist);
+      ShadyDOM.wrap(document.body).appendChild(dist);
       // Append div to root
       var div = document.createElement('div');
-      dist.shadowRoot.appendChild(div);
+      ShadyDOM.wrap(ShadyDOM.wrap(dist).shadowRoot).appendChild(div);
       ShadyDOM.flush();
       // Append to div in root
       var div2 = document.createElement('div');
-      div.appendChild(div2);
+      ShadyDOM.wrap(div).appendChild(div2);
       ShadyDOM.flush();
       // Remove
-      dist.shadowRoot.removeChild(div);
+      ShadyDOM.wrap(ShadyDOM.wrap(dist).shadowRoot).removeChild(div);
       ShadyDOM.flush();
-      document.body.removeChild(dist);
+      ShadyDOM.wrap(document.body).removeChild(dist);
     });
 
     test('append div to shady root of non-distributing element', function() {
       var noDist = document.createElement('x-no-dist');
-      document.body.appendChild(noDist);
+      ShadyDOM.wrap(document.body).appendChild(noDist);
       // Append div to root
       var div = document.createElement('div');
-      noDist.shadowRoot.appendChild(div);
+      ShadyDOM.wrap(ShadyDOM.wrap(noDist).shadowRoot).appendChild(div);
       ShadyDOM.flush();
       // Append to div in root
       var div2 = document.createElement('div');
-      div.appendChild(div2);
+      ShadyDOM.wrap(div).appendChild(div2);
       ShadyDOM.flush();
       // Remove
-      noDist.shadowRoot.removeChild(div);
+      ShadyDOM.wrap(ShadyDOM.wrap(noDist).shadowRoot).removeChild(div);
       ShadyDOM.flush();
-      document.body.removeChild(noDist);
+      ShadyDOM.wrap(document.body).removeChild(noDist);
     });
 
     test('append div to distributing element in root', function() {
       var compose = document.createElement('x-compose-dist');
-      document.body.appendChild(compose);
+      ShadyDOM.wrap(document.body).appendChild(compose);
       // Distribute div
       var div = document.createElement('div');
-      compose.shadowRoot.querySelector('#dist').appendChild(div);
+      ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(compose).shadowRoot).querySelector('#dist')).appendChild(div);
       ShadyDOM.flush();
       // Append to distributed div
       var div2 = document.createElement('div');
-      div.appendChild(div2);
+      ShadyDOM.wrap(div).appendChild(div2);
       ShadyDOM.flush();
       // Remove
-      compose.shadowRoot.querySelector('#dist').removeChild(div);
+      ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(compose).shadowRoot).querySelector('#dist')).removeChild(div);
       ShadyDOM.flush();
-      document.body.removeChild(compose);
+      ShadyDOM.wrap(document.body).removeChild(compose);
     });
 
     test('append div to non-distributing element in root', function() {
       var compose = document.createElement('x-compose-no-dist');
-      document.body.appendChild(compose);
+      ShadyDOM.wrap(document.body).appendChild(compose);
       // Append div to root
       var div = document.createElement('div');
-      compose.shadowRoot.querySelector('#noDist').appendChild(div);
+      ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(compose).shadowRoot).querySelector('#noDist')).appendChild(div);
       ShadyDOM.flush();
       // Append to div in root
       var div2 = document.createElement('div');
-      div.appendChild(div2);
+      ShadyDOM.wrap(div).appendChild(div2);
       ShadyDOM.flush();
       // Remove
-      compose.shadowRoot.querySelector('#noDist').removeChild(div);
+      ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(compose).shadowRoot).querySelector('#noDist')).removeChild(div);
       ShadyDOM.flush();
-      document.body.removeChild(compose);
+      ShadyDOM.wrap(document.body).removeChild(compose);
     });
 
     test('append slot to shady root of element (div first)', function() {
       var noDist = document.createElement('x-no-dist');
-      document.body.appendChild(noDist);
+      ShadyDOM.wrap(document.body).appendChild(noDist);
       // Append div to light dom
       var div = document.createElement('div');
-      div.slot = 'insert';
-      noDist.appendChild(div);
+      ShadyDOM.wrap(div).slot = 'insert';
+      ShadyDOM.wrap(noDist).appendChild(div);
       ShadyDOM.flush();
       // Append slot to shady root
       var slot = document.createElement('slot');
-      slot.setAttribute('name', 'insert');
-      noDist.shadowRoot.appendChild(slot);
+      ShadyDOM.wrap(slot).setAttribute('name', 'insert');
+      ShadyDOM.wrap(ShadyDOM.wrap(noDist).shadowRoot).appendChild(slot);
       ShadyDOM.flush();
-      assert.equal(div.assignedSlot, slot);
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, slot);
       // Remove
-      noDist.shadowRoot.removeChild(slot);
+      ShadyDOM.wrap(ShadyDOM.wrap(noDist).shadowRoot).removeChild(slot);
       ShadyDOM.flush();
-      assert.equal(div.assignedSlot, null);
-      document.body.removeChild(noDist);
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, null);
+      ShadyDOM.wrap(document.body).removeChild(noDist);
     });
 
     test('append slot to shady root of element (slot first)', function() {
       var noDist = document.createElement('x-no-dist');
-      document.body.appendChild(noDist);
+      ShadyDOM.wrap(document.body).appendChild(noDist);
       // Append slot to shady root
       var slot = document.createElement('slot');
-      slot.setAttribute('name', 'insert');
-      noDist.shadowRoot.appendChild(slot);
+      ShadyDOM.wrap(slot).setAttribute('name', 'insert');
+      ShadyDOM.wrap(ShadyDOM.wrap(noDist).shadowRoot).appendChild(slot);
       // Append div to light dom
       var div = document.createElement('div');
-      div.slot = 'insert';
-      noDist.appendChild(div);
+      ShadyDOM.wrap(div).slot = 'insert';
+      ShadyDOM.wrap(noDist).appendChild(div);
       ShadyDOM.flush();
-      assert.equal(div.assignedSlot, slot);
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, slot);
       // Remove
-      noDist.shadowRoot.removeChild(slot);
+      ShadyDOM.wrap(ShadyDOM.wrap(noDist).shadowRoot).removeChild(slot);
       ShadyDOM.flush();
-      assert.equal(div.assignedSlot, null);
-      document.body.removeChild(noDist);
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, null);
+      ShadyDOM.wrap(document.body).removeChild(noDist);
     });
 
     test('append slot to div in shady root of element (div first)', function() {
       var noDist = document.createElement('x-no-dist');
-      document.body.appendChild(noDist);
+      ShadyDOM.wrap(document.body).appendChild(noDist);
       // Append div to light dom
       var div = document.createElement('div');
-      div.slot = 'insert';
-      noDist.appendChild(div);
+      ShadyDOM.wrap(div).slot = 'insert';
+      ShadyDOM.wrap(noDist).appendChild(div);
       ShadyDOM.flush();
-      assert.equal(div.assignedSlot, null);
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, null);
       // Append slot to shady root
       var slot = document.createElement('slot');
-      slot.setAttribute('name', 'insert');
-      noDist.shadowRoot.querySelector('#static').appendChild(slot);
+      ShadyDOM.wrap(slot).setAttribute('name', 'insert');
+      ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(noDist).shadowRoot).querySelector('#static')).appendChild(slot);
       ShadyDOM.flush();
-      assert.equal(div.assignedSlot, slot);
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, slot);
       // Remove
-      noDist.shadowRoot.querySelector('#static').removeChild(slot);
+      ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(noDist).shadowRoot).querySelector('#static')).removeChild(slot);
       ShadyDOM.flush();
-      assert.equal(div.assignedSlot, null);
-      document.body.removeChild(noDist);
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, null);
+      ShadyDOM.wrap(document.body).removeChild(noDist);
     });
 
     test('append slot to div in shady root of element (slot first)', function() {
       var noDist = document.createElement('x-no-dist');
-      document.body.appendChild(noDist);
+      ShadyDOM.wrap(document.body).appendChild(noDist);
       // Append slot to shady root
       var slot = document.createElement('slot');
-      slot.setAttribute('name', 'insert');
-      noDist.shadowRoot.querySelector('#static').appendChild(slot);
+      ShadyDOM.wrap(slot).setAttribute('name', 'insert');
+      ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(noDist).shadowRoot).querySelector('#static')).appendChild(slot);
       // Append div to light dom
       var div = document.createElement('div');
-      div.slot = 'insert';
-      noDist.appendChild(div);
+      ShadyDOM.wrap(div).slot = 'insert';
+      ShadyDOM.wrap(noDist).appendChild(div);
       ShadyDOM.flush();
-      assert.equal(div.assignedSlot, slot);
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, slot);
       // Remove
-      noDist.shadowRoot.querySelector('#static').removeChild(slot);
+      ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(noDist).shadowRoot).querySelector('#static')).removeChild(slot);
       ShadyDOM.flush();
-      assert.equal(div.assignedSlot, null);
-      document.body.removeChild(noDist);
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, null);
+      ShadyDOM.wrap(document.body).removeChild(noDist);
     });
 
     test('append slot in fragment to shady root of element (div first)', function() {
       var noDist = document.createElement('x-no-dist');
-      document.body.appendChild(noDist);
+      ShadyDOM.wrap(document.body).appendChild(noDist);
       // Append div to light dom
       var div = document.createElement('div');
-      div.slot = 'insert';
-      noDist.appendChild(div);
+      ShadyDOM.wrap(div).slot = 'insert';
+      ShadyDOM.wrap(noDist).appendChild(div);
       ShadyDOM.flush();
-      assert.equal(div.assignedSlot, null);
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, null);
       // Append slot to shady root
       var frag = document.createDocumentFragment();
       var slot = document.createElement('slot');
-      slot.setAttribute('name', 'insert');
-      frag.appendChild(slot);
-      noDist.shadowRoot.appendChild(frag);
+      ShadyDOM.wrap(slot).setAttribute('name', 'insert');
+      ShadyDOM.wrap(frag).appendChild(slot);
+      ShadyDOM.wrap(ShadyDOM.wrap(noDist).shadowRoot).appendChild(frag);
       ShadyDOM.flush();
-      assert.equal(div.assignedSlot, slot);
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, slot);
       // Remove
-      noDist.shadowRoot.removeChild(slot);
+      ShadyDOM.wrap(ShadyDOM.wrap(noDist).shadowRoot).removeChild(slot);
       ShadyDOM.flush();
-      assert.equal(div.assignedSlot, null);
-      document.body.removeChild(noDist);
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, null);
+      ShadyDOM.wrap(document.body).removeChild(noDist);
     });
 
     test('append slot in fragment to shady root of element (slot first)', function() {
       var noDist = document.createElement('x-no-dist');
-      document.body.appendChild(noDist);
+      ShadyDOM.wrap(document.body).appendChild(noDist);
       // Append slot to shady root
       var frag = document.createDocumentFragment();
       var slot = document.createElement('slot');
-      slot.setAttribute('name', 'insert');
-      frag.appendChild(slot);
-      noDist.shadowRoot.appendChild(frag);
+      ShadyDOM.wrap(slot).setAttribute('name', 'insert');
+      ShadyDOM.wrap(frag).appendChild(slot);
+      ShadyDOM.wrap(ShadyDOM.wrap(noDist).shadowRoot).appendChild(frag);
       // Append div to light dom
       var div = document.createElement('div');
-      div.slot = 'insert';
-      noDist.appendChild(div);
+      ShadyDOM.wrap(div).slot = 'insert';
+      ShadyDOM.wrap(noDist).appendChild(div);
       ShadyDOM.flush();
-      assert.equal(div.assignedSlot, slot);
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, slot);
       // Remove
-      noDist.shadowRoot.removeChild(slot);
+      ShadyDOM.wrap(ShadyDOM.wrap(noDist).shadowRoot).removeChild(slot);
       ShadyDOM.flush();
-      assert.equal(div.assignedSlot, null);
-      document.body.removeChild(noDist);
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, null);
+      ShadyDOM.wrap(document.body).removeChild(noDist);
     });
 
     test('append wrapped slot to shady root of element (div first)', function() {
       var noDist = document.createElement('x-no-dist');
-      document.body.appendChild(noDist);
+      ShadyDOM.wrap(document.body).appendChild(noDist);
       // Append div to light dom
       var div = document.createElement('div');
-      div.slot = 'insert';
-      noDist.appendChild(div);
+      ShadyDOM.wrap(div).slot = 'insert';
+      ShadyDOM.wrap(noDist).appendChild(div);
       ShadyDOM.flush();
-      assert.equal(div.assignedSlot, null);
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, null);
       // Append slot to shady root
       var frag = document.createDocumentFragment();
       var wrapper = document.createElement('div');
       var slot = document.createElement('slot');
-      slot.setAttribute('name', 'insert');
-      wrapper.appendChild(slot);
-      frag.appendChild(wrapper);
-      noDist.shadowRoot.appendChild(frag);
+      ShadyDOM.wrap(slot).setAttribute('name', 'insert');
+      ShadyDOM.wrap(wrapper).appendChild(slot);
+      ShadyDOM.wrap(frag).appendChild(wrapper);
+      ShadyDOM.wrap(ShadyDOM.wrap(noDist).shadowRoot).appendChild(frag);
       ShadyDOM.flush();
-      assert.equal(div.assignedSlot, slot);
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, slot);
       // Remove
-      noDist.shadowRoot.removeChild(wrapper);
+      ShadyDOM.wrap(ShadyDOM.wrap(noDist).shadowRoot).removeChild(wrapper);
       ShadyDOM.flush();
-      assert.equal(div.assignedSlot, null);
-      document.body.removeChild(noDist);
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, null);
+      ShadyDOM.wrap(document.body).removeChild(noDist);
     });
 
     test('append wrapped slot to shady root of element (slot first)', function() {
       var noDist = document.createElement('x-no-dist');
-      document.body.appendChild(noDist);
+      ShadyDOM.wrap(document.body).appendChild(noDist);
       // Append slot to shady root
       var frag = document.createDocumentFragment();
       var wrapper = document.createElement('div');
       var slot = document.createElement('slot');
-      slot.setAttribute('name', 'insert');
-      wrapper.appendChild(slot);
-      frag.appendChild(wrapper);
-      noDist.shadowRoot.appendChild(frag);
+      ShadyDOM.wrap(slot).setAttribute('name', 'insert');
+      ShadyDOM.wrap(wrapper).appendChild(slot);
+      ShadyDOM.wrap(frag).appendChild(wrapper);
+      ShadyDOM.wrap(ShadyDOM.wrap(noDist).shadowRoot).appendChild(frag);
       // Append div to light dom
       var div = document.createElement('div');
-      div.slot = 'insert';
-      noDist.appendChild(div);
+      ShadyDOM.wrap(div).slot = 'insert';
+      ShadyDOM.wrap(noDist).appendChild(div);
       ShadyDOM.flush();
-      assert.equal(div.assignedSlot, slot);
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, slot);
       // Remove
-      noDist.shadowRoot.removeChild(wrapper);
+      ShadyDOM.wrap(ShadyDOM.wrap(noDist).shadowRoot).removeChild(wrapper);
       ShadyDOM.flush();
-      assert.equal(div.assignedSlot, null);
-      document.body.removeChild(noDist);
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, null);
+      ShadyDOM.wrap(document.body).removeChild(noDist);
     });
 
     test('append wrapped slot to div in shady root of element (div first)', function() {
       var noDist = document.createElement('x-no-dist');
-      document.body.appendChild(noDist);
+      ShadyDOM.wrap(document.body).appendChild(noDist);
       // Append div to light dom
       var div = document.createElement('div');
-      div.slot = 'insert';
-      noDist.appendChild(div);
+      ShadyDOM.wrap(div).slot = 'insert';
+      ShadyDOM.wrap(noDist).appendChild(div);
       ShadyDOM.flush();
-      assert.equal(div.assignedSlot, null);
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, null);
       // Append slot to shady root
       var frag = document.createDocumentFragment();
       var wrapper = document.createElement('div');
       var slot = document.createElement('slot');
-      slot.setAttribute('name', 'insert');
-      wrapper.appendChild(slot);
-      frag.appendChild(wrapper);
-      noDist.shadowRoot.querySelector('#static').appendChild(frag);
+      ShadyDOM.wrap(slot).setAttribute('name', 'insert');
+      ShadyDOM.wrap(wrapper).appendChild(slot);
+      ShadyDOM.wrap(frag).appendChild(wrapper);
+      ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(noDist).shadowRoot).querySelector('#static')).appendChild(frag);
       ShadyDOM.flush();
-      assert.equal(div.assignedSlot, slot);
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, slot);
       // Remove
-      var s = noDist.shadowRoot.querySelector('#static');
-      s.removeChild(wrapper);
+      var s = ShadyDOM.wrap(ShadyDOM.wrap(noDist).shadowRoot).querySelector('#static');
+      ShadyDOM.wrap(s).removeChild(wrapper);
       ShadyDOM.flush();
-      assert.equal(div.assignedSlot, null);
-      document.body.removeChild(noDist);
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, null);
+      ShadyDOM.wrap(document.body).removeChild(noDist);
     });
 
     test('append wrapped slot to div in shady root of element (slot first)', function() {
       var noDist = document.createElement('x-no-dist');
-      document.body.appendChild(noDist);
+      ShadyDOM.wrap(document.body).appendChild(noDist);
       // Append slot to shady root
       var frag = document.createDocumentFragment();
       var wrapper = document.createElement('div');
       var slot = document.createElement('slot');
-      slot.setAttribute('name', 'insert');
-      wrapper.appendChild(slot);
-      frag.appendChild(wrapper);
-      noDist.shadowRoot.querySelector('#static').appendChild(frag);
+      ShadyDOM.wrap(slot).setAttribute('name', 'insert');
+      ShadyDOM.wrap(wrapper).appendChild(slot);
+      ShadyDOM.wrap(frag).appendChild(wrapper);
+      ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(noDist).shadowRoot).querySelector('#static')).appendChild(frag);
       // Append div to light dom
       var div = document.createElement('div');
-      div.slot = 'insert';
-      noDist.appendChild(div);
+      ShadyDOM.wrap(div).slot = 'insert';
+      ShadyDOM.wrap(noDist).appendChild(div);
       ShadyDOM.flush();
-      assert.equal(div.assignedSlot, slot);
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, slot);
       // Remove
-      noDist.shadowRoot.querySelector('#static').removeChild(wrapper);
+      ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(noDist).shadowRoot).querySelector('#static')).removeChild(wrapper);
       ShadyDOM.flush();
-      assert.equal(div.assignedSlot, null);
-      document.body.removeChild(noDist);
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, null);
+      ShadyDOM.wrap(document.body).removeChild(noDist);
     });
 
     test('append slot to non-distributing element in shady root of composed element (div first)', function() {
       var compose = document.createElement('x-compose-no-dist');
-      document.body.appendChild(compose);
+      ShadyDOM.wrap(document.body).appendChild(compose);
       // Append slot to light DOM of non-distributing element
       var div = document.createElement('div');
-      div.slot = 'insert';
-      compose.appendChild(div);
+      ShadyDOM.wrap(div).slot = 'insert';
+      ShadyDOM.wrap(compose).appendChild(div);
       ShadyDOM.flush();
-      assert.equal(div.assignedSlot, null);
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, null);
       // Append slot to non-distributing element
       var slot = document.createElement('slot');
-      slot.setAttribute('name', 'insert');
-      compose.shadowRoot.querySelector('#noDist').appendChild(slot);
+      ShadyDOM.wrap(slot).setAttribute('name', 'insert');
+      ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(compose).shadowRoot).querySelector('#noDist')).appendChild(slot);
       ShadyDOM.flush();
-      assert.equal(div.assignedSlot, slot);
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, slot);
       // Remove
-      compose.shadowRoot.querySelector('#noDist').removeChild(slot);
+      ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(compose).shadowRoot).querySelector('#noDist')).removeChild(slot);
       ShadyDOM.flush();
-      assert.equal(div.assignedSlot, null);
-      document.body.removeChild(compose);
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, null);
+      ShadyDOM.wrap(document.body).removeChild(compose);
     });
 
     test('append slot to non-distributing element in shady root of composed element (slot first)', function() {
       var compose = document.createElement('x-compose-no-dist');
-      document.body.appendChild(compose);
+      ShadyDOM.wrap(document.body).appendChild(compose);
       // Append slot to light DOM of non-distributing element
       var slot = document.createElement('slot');
-      slot.setAttribute('name', 'insert');
-      compose.shadowRoot.querySelector('#noDist').appendChild(slot);
+      ShadyDOM.wrap(slot).setAttribute('name', 'insert');
+      ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(compose).shadowRoot).querySelector('#noDist')).appendChild(slot);
       // Append div to light dom
       var div = document.createElement('div');
-      div.slot = 'insert';
-      compose.appendChild(div);
+      ShadyDOM.wrap(div).slot = 'insert';
+      ShadyDOM.wrap(compose).appendChild(div);
       ShadyDOM.flush();
-      assert.equal(div.assignedSlot, slot);
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, slot);
       // Remove
-      compose.shadowRoot.querySelector('#noDist').removeChild(slot);
+      ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(compose).shadowRoot).querySelector('#noDist')).removeChild(slot);
       ShadyDOM.flush();
-      assert.equal(div.assignedSlot, null);
-      document.body.removeChild(compose);
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, null);
+      ShadyDOM.wrap(document.body).removeChild(compose);
     });
 
     test('append wrapped slot to non-distributing element in shady root of composed element (div first)', function() {
       var compose = document.createElement('x-compose-no-dist');
-      document.body.appendChild(compose);
+      ShadyDOM.wrap(document.body).appendChild(compose);
       // Append div to light dom
       var div = document.createElement('div');
-      div.slot = 'insert';
-      compose.appendChild(div);
+      ShadyDOM.wrap(div).slot = 'insert';
+      ShadyDOM.wrap(compose).appendChild(div);
       ShadyDOM.flush();
-      assert.equal(div.assignedSlot, null);
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, null);
       // Append slot to shady root
       var frag = document.createDocumentFragment();
       var wrapper = document.createElement('div');
       var slot = document.createElement('slot');
-      slot.setAttribute('name', 'insert');
-      wrapper.appendChild(slot);
-      frag.appendChild(wrapper);
-      compose.shadowRoot.querySelector('#noDist').appendChild(frag);
+      ShadyDOM.wrap(slot).setAttribute('name', 'insert');
+      ShadyDOM.wrap(wrapper).appendChild(slot);
+      ShadyDOM.wrap(frag).appendChild(wrapper);
+      ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(compose).shadowRoot).querySelector('#noDist')).appendChild(frag);
       ShadyDOM.flush();
-      assert.equal(div.assignedSlot, slot);
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, slot);
       // Remove
-      compose.shadowRoot.querySelector('#noDist').removeChild(wrapper);
+      ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(compose).shadowRoot).querySelector('#noDist')).removeChild(wrapper);
       ShadyDOM.flush();
-      assert.equal(div.assignedSlot, null);
-      document.body.removeChild(compose);
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, null);
+      ShadyDOM.wrap(document.body).removeChild(compose);
     });
 
     test('append wrapped slot to non-distributing element in shady root of composed element (slot first)', function() {
       var compose = document.createElement('x-compose-no-dist');
-      document.body.appendChild(compose);
+      ShadyDOM.wrap(document.body).appendChild(compose);
       // Append slot to shady root
       var frag = document.createDocumentFragment();
       var wrapper = document.createElement('div');
       var slot = document.createElement('slot');
-      slot.setAttribute('name', 'insert');
-      wrapper.appendChild(slot);
-      frag.appendChild(wrapper);
-      compose.shadowRoot.querySelector('#noDist').appendChild(frag);
+      ShadyDOM.wrap(slot).setAttribute('name', 'insert');
+      ShadyDOM.wrap(wrapper).appendChild(slot);
+      ShadyDOM.wrap(frag).appendChild(wrapper);
+      ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(compose).shadowRoot).querySelector('#noDist')).appendChild(frag);
       // Append div to light dom
       var div = document.createElement('div');
-      div.slot = 'insert';
-      compose.appendChild(div);
+      ShadyDOM.wrap(div).slot = 'insert';
+      ShadyDOM.wrap(compose).appendChild(div);
       ShadyDOM.flush();
-      assert.equal(div.assignedSlot, slot);
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, slot);
       // Remove
-      compose.shadowRoot.querySelector('#noDist').removeChild(wrapper);
+      ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(compose).shadowRoot).querySelector('#noDist')).removeChild(wrapper);
       ShadyDOM.flush();
-      assert.equal(div.assignedSlot, null);
-      document.body.removeChild(compose);
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, null);
+      ShadyDOM.wrap(document.body).removeChild(compose);
     });
 
     test('append slot to distributing element in shady root of composed element (div first)', function() {
       var compose = document.createElement('x-compose-dist');
-      document.body.appendChild(compose);
+      ShadyDOM.wrap(document.body).appendChild(compose);
       // Append slot to light DOM of non-distributing element
       var div = document.createElement('div');
-      div.slot = 'insert';
-      compose.appendChild(div);
+      ShadyDOM.wrap(div).slot = 'insert';
+      ShadyDOM.wrap(compose).appendChild(div);
       ShadyDOM.flush();
-      assert.equal(div.assignedSlot, null);
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, null);
       // Append slot to non-distributing element
       var slot = document.createElement('slot');
-      slot.setAttribute('name', 'insert');
-      compose.shadowRoot.querySelector('#dist').appendChild(slot);
+      ShadyDOM.wrap(slot).setAttribute('name', 'insert');
+      ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(compose).shadowRoot).querySelector('#dist')).appendChild(slot);
       ShadyDOM.flush();
-      assert.equal(div.assignedSlot, slot);
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, slot);
       // Remove
-      compose.shadowRoot.querySelector('#dist').removeChild(slot);
+      ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(compose).shadowRoot).querySelector('#dist')).removeChild(slot);
       ShadyDOM.flush();
-      assert.equal(div.assignedSlot, null);
-      document.body.removeChild(compose);
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, null);
+      ShadyDOM.wrap(document.body).removeChild(compose);
     });
 
     test('append slot to distributing element in shady root of composed element (slot first)', function() {
       var compose = document.createElement('x-compose-dist');
-      document.body.appendChild(compose);
+      ShadyDOM.wrap(document.body).appendChild(compose);
       // Append slot to non-distributing element
       var slot = document.createElement('slot');
-      slot.setAttribute('name', 'insert');
-      compose.shadowRoot.querySelector('#dist').appendChild(slot);
+      ShadyDOM.wrap(slot).setAttribute('name', 'insert');
+      ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(compose).shadowRoot).querySelector('#dist')).appendChild(slot);
       // Append slot to light DOM of non-distributing element
       var div = document.createElement('div');
-      div.slot = 'insert';
-      compose.appendChild(div);
+      ShadyDOM.wrap(div).slot = 'insert';
+      ShadyDOM.wrap(compose).appendChild(div);
       ShadyDOM.flush();
-      assert.equal(div.assignedSlot, slot);
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, slot);
       // Remove
-      compose.shadowRoot.querySelector('#dist').removeChild(slot);
+      ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(compose).shadowRoot).querySelector('#dist')).removeChild(slot);
       ShadyDOM.flush();
-      assert.equal(div.assignedSlot, null);
-      document.body.removeChild(compose);
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, null);
+      ShadyDOM.wrap(document.body).removeChild(compose);
     });
 
     test('append wrapped slot to distributing element in shady root of composed element (div first)', function() {
       var compose = document.createElement('x-compose-dist');
-      document.body.appendChild(compose);
+      ShadyDOM.wrap(document.body).appendChild(compose);
       // Append div to light dom
       var div = document.createElement('div');
-      div.slot = 'insert';
-      compose.appendChild(div);
+      ShadyDOM.wrap(div).slot = 'insert';
+      ShadyDOM.wrap(compose).appendChild(div);
       ShadyDOM.flush();
-      assert.equal(div.assignedSlot, null);
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, null);
       // Append slot to shady root
       var frag = document.createDocumentFragment();
       var wrapper = document.createElement('div');
       var slot = document.createElement('slot');
-      slot.setAttribute('name', 'insert');
-      wrapper.appendChild(slot);
-      frag.appendChild(wrapper);
-      compose.shadowRoot.querySelector('#dist').appendChild(frag);
+      ShadyDOM.wrap(slot).setAttribute('name', 'insert');
+      ShadyDOM.wrap(wrapper).appendChild(slot);
+      ShadyDOM.wrap(frag).appendChild(wrapper);
+      ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(compose).shadowRoot).querySelector('#dist')).appendChild(frag);
       ShadyDOM.flush();
-      assert.equal(div.assignedSlot, slot);
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, slot);
       // Remove
-      compose.shadowRoot.querySelector('#dist').removeChild(wrapper);
+      ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(compose).shadowRoot).querySelector('#dist')).removeChild(wrapper);
       ShadyDOM.flush();
-      assert.equal(div.assignedSlot, null);
-      document.body.removeChild(compose);
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, null);
+      ShadyDOM.wrap(document.body).removeChild(compose);
     });
 
     test('append wrapped slot to distributing element in shady root of composed element (slot first)', function() {
       var compose = document.createElement('x-compose-dist');
-      document.body.appendChild(compose);
+      ShadyDOM.wrap(document.body).appendChild(compose);
       // Append slot to shady root
       var frag = document.createDocumentFragment();
       var wrapper = document.createElement('div');
       var slot = document.createElement('slot');
-      slot.setAttribute('name', 'insert');
-      wrapper.appendChild(slot);
-      frag.appendChild(wrapper);
-      compose.shadowRoot.querySelector('#dist').appendChild(frag);
+      ShadyDOM.wrap(slot).setAttribute('name', 'insert');
+      ShadyDOM.wrap(wrapper).appendChild(slot);
+      ShadyDOM.wrap(frag).appendChild(wrapper);
+      ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(compose).shadowRoot).querySelector('#dist')).appendChild(frag);
       // Append div to light dom
       var div = document.createElement('div');
-      div.slot = 'insert';
-      compose.appendChild(div);
+      ShadyDOM.wrap(div).slot = 'insert';
+      ShadyDOM.wrap(compose).appendChild(div);
       ShadyDOM.flush();
-      assert.equal(div.assignedSlot, slot);
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, slot);
       // Remove
-      compose.shadowRoot.querySelector('#dist').removeChild(wrapper);
+      ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(compose).shadowRoot).querySelector('#dist')).removeChild(wrapper);
       ShadyDOM.flush();
-      assert.equal(div.assignedSlot, null);
-      document.body.removeChild(compose);
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, null);
+      ShadyDOM.wrap(document.body).removeChild(compose);
     });
 
     test('append slot to initially un-upgraded element', function() {
-      var lazyContainer = document.querySelector('x-compose-lazy-no-dist');
-      var child = lazyContainer.firstElementChild;
+      var lazyContainer = ShadyDOM.wrap(document).querySelector('x-compose-lazy-no-dist');
+      var child = ShadyDOM.wrap(lazyContainer).firstElementChild;
       defineTestElement('x-lazy-no-dist');
       var slot = document.createElement('slot');
-      lazyContainer.shadowRoot.querySelector('#lazy').shadowRoot.appendChild(slot);
+      ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(lazyContainer).shadowRoot).querySelector('#lazy')).shadowRoot).appendChild(slot);
       ShadyDOM.flush();
-      assert.equal(slot.assignedNodes({flatten: true})[1], child);
+      assert.equal(ShadyDOM.wrap(slot).assignedNodes({flatten: true})[1], child);
 
     });
 
     test('append/remove multiple slots with same name (catchall) to element', function() {
       var el = document.createElement('x-dist');
-      document.body.appendChild(el);
+      ShadyDOM.wrap(document.body).appendChild(el);
       var frag = document.createDocumentFragment();
       var s1 = document.createElement('slot');
-      s1.innerHTML = 'fallback1';
+      ShadyDOM.wrap(s1).innerHTML = 'fallback1';
       var s2 = document.createElement('slot');
-      s2.innerHTML = 'fallback2';
+      ShadyDOM.wrap(s2).innerHTML = 'fallback2';
       var s3 = document.createElement('slot');
-      s3.innerHTML = 'fallback3';
-      frag.appendChild(s1);
-      frag.appendChild(s2);
-      frag.appendChild(s3);
-      el.shadowRoot.appendChild(frag);
+      ShadyDOM.wrap(s3).innerHTML = 'fallback3';
+      ShadyDOM.wrap(frag).appendChild(s1);
+      ShadyDOM.wrap(frag).appendChild(s2);
+      ShadyDOM.wrap(frag).appendChild(s3);
+      ShadyDOM.wrap(ShadyDOM.wrap(el).shadowRoot).appendChild(frag);
       var span = document.createElement('span');
-      span.textContent = 'hi';
-      el.appendChild(span);
+      ShadyDOM.wrap(span).textContent = 'hi';
+      ShadyDOM.wrap(el).appendChild(span);
       ShadyDOM.flush();
       assert.equal(ShadyDOM.nativeTree.textContent(el), 'x-disthifallback1fallback2fallback3', 'composed textContent incorrect');
-      var origSlot = el.shadowRoot.querySelector('slot');
-      origSlot.innerHTML = 'fallbackOrig';
+      var origSlot = ShadyDOM.wrap(ShadyDOM.wrap(el).shadowRoot).querySelector('slot');
+      ShadyDOM.wrap(origSlot).innerHTML = 'fallbackOrig';
       var s0 = document.createElement('slot');
-      s0.innerHTML = 'fallback0';
-      el.shadowRoot.insertBefore(s0, el.shadowRoot.firstChild);
+      ShadyDOM.wrap(s0).innerHTML = 'fallback0';
+      ShadyDOM.wrap(ShadyDOM.wrap(el).shadowRoot).insertBefore(s0, ShadyDOM.wrap(ShadyDOM.wrap(el).shadowRoot).firstChild);
       ShadyDOM.flush();
       assert.equal(ShadyDOM.nativeTree.textContent(el), 'hix-distfallbackOrigfallback1fallback2fallback3', 'composed textContent incorrect');
       var s4 = document.createElement('slot');
-      s4.innerHTML = 'fallback4';
+      ShadyDOM.wrap(s4).innerHTML = 'fallback4';
       var s5 = document.createElement('slot');
-      s5.innerHTML = 'fallback5';
+      ShadyDOM.wrap(s5).innerHTML = 'fallback5';
       var slotContainer = document.createElement('span');
-      slotContainer.appendChild(s4);
-      slotContainer.appendChild(s5);
-      el.shadowRoot.insertBefore(slotContainer, s2);
+      ShadyDOM.wrap(slotContainer).appendChild(s4);
+      ShadyDOM.wrap(slotContainer).appendChild(s5);
+      ShadyDOM.wrap(ShadyDOM.wrap(el).shadowRoot).insertBefore(slotContainer, s2);
       var s6 = document.createElement('slot');
-      s6.innerHTML = 'fallback6';
-      el.shadowRoot.appendChild(s6);
+      ShadyDOM.wrap(s6).innerHTML = 'fallback6';
+      ShadyDOM.wrap(ShadyDOM.wrap(el).shadowRoot).appendChild(s6);
       ShadyDOM.flush();
       assert.equal(ShadyDOM.nativeTree.textContent(el), 'hix-distfallbackOrigfallback1fallback4fallback5fallback2fallback3fallback6', 'composed textContent incorrect');
-      el.shadowRoot.removeChild(slotContainer);
+      ShadyDOM.wrap(ShadyDOM.wrap(el).shadowRoot).removeChild(slotContainer);
       ShadyDOM.flush();
       assert.equal(ShadyDOM.nativeTree.textContent(el), 'hix-distfallbackOrigfallback1fallback2fallback3fallback6', 'composed textContent incorrect');
-      el.shadowRoot.removeChild(s0);
-      el.shadowRoot.removeChild(s1);
-      el.shadowRoot.removeChild(s2);
-      el.shadowRoot.removeChild(s3);
-      origSlot.parentNode.removeChild(origSlot);
+      ShadyDOM.wrap(ShadyDOM.wrap(el).shadowRoot).removeChild(s0);
+      ShadyDOM.wrap(ShadyDOM.wrap(el).shadowRoot).removeChild(s1);
+      ShadyDOM.wrap(ShadyDOM.wrap(el).shadowRoot).removeChild(s2);
+      ShadyDOM.wrap(ShadyDOM.wrap(el).shadowRoot).removeChild(s3);
+      ShadyDOM.wrap(ShadyDOM.wrap(origSlot).parentNode).removeChild(origSlot);
       ShadyDOM.flush();
       assert.equal(ShadyDOM.nativeTree.textContent(el), 'x-disthi', 'composed textContent incorrect');
-      document.body.removeChild(el);
+      ShadyDOM.wrap(document.body).removeChild(el);
     });
 
     test('append/remove multiple slots with same name to element', function() {
       var el = document.createElement('x-dist');
-      document.body.appendChild(el);
+      ShadyDOM.wrap(document.body).appendChild(el);
       var frag = document.createDocumentFragment();
       var s1 = document.createElement('slot');
-      s1.setAttribute('name', 'foo');
-      s1.innerHTML = 'fallback1';
+      ShadyDOM.wrap(s1).setAttribute('name', 'foo');
+      ShadyDOM.wrap(s1).innerHTML = 'fallback1';
       var s2 = document.createElement('slot');
-      s2.setAttribute('name', 'foo');
-      s2.innerHTML = 'fallback2';
+      ShadyDOM.wrap(s2).setAttribute('name', 'foo');
+      ShadyDOM.wrap(s2).innerHTML = 'fallback2';
       var s3 = document.createElement('slot');
-      s3.setAttribute('name', 'foo');
-      s3.innerHTML = 'fallback3';
-      frag.appendChild(s1);
-      frag.appendChild(s2);
-      frag.appendChild(s3);
-      el.shadowRoot.appendChild(frag);
+      ShadyDOM.wrap(s3).setAttribute('name', 'foo');
+      ShadyDOM.wrap(s3).innerHTML = 'fallback3';
+      ShadyDOM.wrap(frag).appendChild(s1);
+      ShadyDOM.wrap(frag).appendChild(s2);
+      ShadyDOM.wrap(frag).appendChild(s3);
+      ShadyDOM.wrap(ShadyDOM.wrap(el).shadowRoot).appendChild(frag);
       var span = document.createElement('span');
-      span.textContent = 'hi';
-      el.appendChild(span);
+      ShadyDOM.wrap(span).textContent = 'hi';
+      ShadyDOM.wrap(el).appendChild(span);
       ShadyDOM.flush();
       assert.equal(ShadyDOM.nativeTree.textContent(el), 'x-disthifallback1fallback2fallback3', 'composed textContent incorrect');
-      var origSlot = el.shadowRoot.querySelector('slot');
-      origSlot.innerHTML = 'fallbackOrig';
+      var origSlot = ShadyDOM.wrap(ShadyDOM.wrap(el).shadowRoot).querySelector('slot');
+      ShadyDOM.wrap(origSlot).innerHTML = 'fallbackOrig';
       var s0 = document.createElement('slot');
       s0.setAttribute('name', 'foo');
-      s0.innerHTML = 'fallback0';
-      el.shadowRoot.insertBefore(s0, el.shadowRoot.firstChild);
+      ShadyDOM.wrap(s0).innerHTML = 'fallback0';
+      ShadyDOM.wrap(ShadyDOM.wrap(el).shadowRoot).insertBefore(s0, ShadyDOM.wrap(ShadyDOM.wrap(el).shadowRoot).firstChild);
       ShadyDOM.flush();
       assert.equal(ShadyDOM.nativeTree.textContent(el), 'fallback0x-disthifallback1fallback2fallback3', 'composed textContent incorrect');
       var s4 = document.createElement('slot');
       s4.setAttribute('name', 'foo');
-      s4.innerHTML = 'fallback4';
+      ShadyDOM.wrap(s4).innerHTML = 'fallback4';
       var s5 = document.createElement('slot');
       s5.setAttribute('name', 'foo');
-      s5.innerHTML = 'fallback5';
+      ShadyDOM.wrap(s5).innerHTML = 'fallback5';
       var slotContainer = document.createElement('span');
-      slotContainer.appendChild(s4);
-      slotContainer.appendChild(s5);
-      el.shadowRoot.insertBefore(slotContainer, s2);
+      ShadyDOM.wrap(slotContainer).appendChild(s4);
+      ShadyDOM.wrap(slotContainer).appendChild(s5);
+      ShadyDOM.wrap(ShadyDOM.wrap(el).shadowRoot).insertBefore(slotContainer, s2);
       ShadyDOM.flush();
       assert.equal(ShadyDOM.nativeTree.textContent(el), 'fallback0x-disthifallback1fallback4fallback5fallback2fallback3', 'composed textContent incorrect');
-      el.shadowRoot.removeChild(slotContainer);
+      ShadyDOM.wrap(ShadyDOM.wrap(el).shadowRoot).removeChild(slotContainer);
       ShadyDOM.flush();
       assert.equal(ShadyDOM.nativeTree.textContent(el), 'fallback0x-disthifallback1fallback2fallback3', 'composed textContent incorrect');
-      span.slot = 'foo';
+      ShadyDOM.wrap(span).slot = 'foo';
       ShadyDOM.flush();
       assert.equal(ShadyDOM.nativeTree.textContent(el), 'hix-distfallbackOrigfallback1fallback2fallback3', 'composed textContent incorrect');
-      document.body.removeChild(el);
+      ShadyDOM.wrap(document.body).removeChild(el);
     });
 
     test('change slot name duplicating existing slot names', function() {
       var el = document.createElement('x-dist-slot-name-change');
-      document.body.appendChild(el);
+      ShadyDOM.wrap(document.body).appendChild(el);
       var foo = document.createElement('div');
-      foo.setAttribute('slot', 'foo');
-      foo.textContent = 'fooChild';
+      ShadyDOM.wrap(foo).setAttribute('slot', 'foo');
+      ShadyDOM.wrap(foo).textContent = 'fooChild';
       var bar = document.createElement('div');
-      bar.setAttribute('slot', 'bar');
-      bar.textContent = 'barChild';
-      el.appendChild(foo);
-      el.appendChild(bar);
+      ShadyDOM.wrap(bar).setAttribute('slot', 'bar');
+      ShadyDOM.wrap(bar).textContent = 'barChild';
+      ShadyDOM.wrap(el).appendChild(foo);
+      ShadyDOM.wrap(el).appendChild(bar);
       ShadyDOM.flush();
-      assert.deepEqual(el.$.f1.assignedNodes(), [foo]);
-      assert.deepEqual(el.$.b1.assignedNodes(), [bar]);
+      assert.deepEqual(ShadyDOM.wrap(el.$.f1).assignedNodes(), [foo]);
+      assert.deepEqual(ShadyDOM.wrap(el.$.b1).assignedNodes(), [bar]);
       assert.equal(ShadyDOM.nativeTree.textContent(el.$.c1), 'fooChildfoo2');
       assert.equal(ShadyDOM.nativeTree.textContent(el.$.c2), 'barChildbar2');
       var slot = document.createElement('slot');
-      slot.setAttribute('name', 'foo');
-      slot.appendChild(document.createTextNode('test'));
-      el.$.c1.appendChild(slot);
+      ShadyDOM.wrap(slot).setAttribute('name', 'foo');
+      ShadyDOM.wrap(slot).appendChild(document.createTextNode('test'));
+      ShadyDOM.wrap(el.$.c1).appendChild(slot);
       ShadyDOM.flush();
       assert.equal(ShadyDOM.nativeTree.textContent(el.$.c1), 'fooChildfoo2test');
-      slot.setAttribute('name', 'bar');
+      ShadyDOM.wrap(slot).setAttribute('name', 'bar');
       ShadyDOM.flush();
       assert.equal(ShadyDOM.nativeTree.textContent(el.$.c1), 'fooChildfoo2barChild');
       assert.equal(ShadyDOM.nativeTree.textContent(el.$.c2), 'bar1bar2');
-      el.$.f1.setAttribute('name', 'bar');
+      ShadyDOM.wrap(el.$.f1).setAttribute('name', 'bar');
       ShadyDOM.flush();
       assert.equal(ShadyDOM.nativeTree.textContent(el.$.c1), 'barChildfooChildtest');
       assert.equal(ShadyDOM.nativeTree.textContent(el.$.c2), 'bar1bar2');
-      el.$.f2.setAttribute('name', 'bar');
+      ShadyDOM.wrap(el.$.f2).setAttribute('name', 'bar');
       ShadyDOM.flush();
       assert.equal(ShadyDOM.nativeTree.textContent(el.$.c1), 'barChildfoo2test');
       assert.equal(ShadyDOM.nativeTree.textContent(el.$.c2), 'bar1bar2');
-      slot.setAttribute('name', 'foo');
+      ShadyDOM.wrap(slot).setAttribute('name', 'foo');
       ShadyDOM.flush();
       assert.equal(ShadyDOM.nativeTree.textContent(el.$.c1), 'barChildfoo2fooChild');
       assert.equal(ShadyDOM.nativeTree.textContent(el.$.c2), 'bar1bar2');
-      el.$.f2.setAttribute('name', 'foo');
+      ShadyDOM.wrap(el.$.f2).setAttribute('name', 'foo');
       ShadyDOM.flush();
       assert.equal(ShadyDOM.nativeTree.textContent(el.$.c1), 'barChildfooChildtest');
       assert.equal(ShadyDOM.nativeTree.textContent(el.$.c2), 'bar1bar2');
-      el.$.f1.setAttribute('name', 'foo');
+      ShadyDOM.wrap(el.$.f1).setAttribute('name', 'foo');
       ShadyDOM.flush();
       assert.equal(ShadyDOM.nativeTree.textContent(el.$.c1), 'fooChildfoo2test');
       assert.equal(ShadyDOM.nativeTree.textContent(el.$.c2), 'barChildbar2');
-      document.body.removeChild(el);
+      ShadyDOM.wrap(document.body).removeChild(el);
     });
 
     test('composition around slots', function() {
       var el = document.createElement('x-dist-slot-name-change');
-      document.body.appendChild(el);
+      ShadyDOM.wrap(document.body).appendChild(el);
       ShadyDOM.flush();
       var a = document.createElement('div');
-      a.textContent = 'a';
-      el.$.c1.appendChild(a);
+      ShadyDOM.wrap(a).textContent = 'a';
+      ShadyDOM.wrap(el.$.c1).appendChild(a);
       assert.equal(ShadyDOM.nativeTree.textContent(el.$.c1), 'foo1foo2a');
-      el.$.c1.insertBefore(a, el.$.f2);
+      ShadyDOM.wrap(el.$.c1).insertBefore(a, el.$.f2);
       assert.equal(ShadyDOM.nativeTree.textContent(el.$.c1), 'foo1afoo2');
-      el.$.c1.insertBefore(a, el.$.f1);
+      ShadyDOM.wrap(el.$.c1).insertBefore(a, el.$.f1);
       assert.equal(ShadyDOM.nativeTree.textContent(el.$.c1), 'afoo1foo2');
       var slot = document.createElement('slot');
-      slot.setAttribute('name', 'foo');
-      el.$.c1.insertBefore(slot, el.$.f2);
+      ShadyDOM.wrap(slot).setAttribute('name', 'foo');
+      ShadyDOM.wrap(el.$.c1).insertBefore(slot, el.$.f2);
       var slot2 = document.createElement('slot');
-      slot2.setAttribute('name', 'foo');
-      el.$.c1.insertBefore(slot2, el.$.f2);
+      ShadyDOM.wrap(slot2).setAttribute('name', 'foo');
+      ShadyDOM.wrap(el.$.c1).insertBefore(slot2, el.$.f2);
       ShadyDOM.flush();
       assert.equal(ShadyDOM.nativeTree.textContent(el.$.c1), 'afoo1foo2');
-      el.$.c1.insertBefore(a, slot2);
+      ShadyDOM.wrap(el.$.c1).insertBefore(a, slot2);
       assert.equal(ShadyDOM.nativeTree.textContent(el.$.c1), 'foo1afoo2');
-      el.$.c1.insertBefore(a, slot);
+      ShadyDOM.wrap(el.$.c1).insertBefore(a, slot);
       assert.equal(ShadyDOM.nativeTree.textContent(el.$.c1), 'foo1afoo2');
-      el.$.c1.insertBefore(a, el.$.f1);
+      ShadyDOM.wrap(el.$.c1).insertBefore(a, el.$.f1);
       assert.equal(ShadyDOM.nativeTree.textContent(el.$.c1), 'afoo1foo2');
     });
 
     test('composed children distributed', function() {
       var host = document.createElement('x-dist');
-      document.body.appendChild(host);
-      var target = host.shadowRoot.querySelector('#distWrapper');
+      ShadyDOM.wrap(document.body).appendChild(host);
+      var target = ShadyDOM.wrap(ShadyDOM.wrap(host).shadowRoot).querySelector('#distWrapper');
       var s0 = document.createElement('span');
       var frag = document.createDocumentFragment();
       var s1 = document.createElement('span');
       var s2 = document.createElement('span');
       var s3 = document.createElement('span');
-      frag.appendChild(s1);
-      frag.appendChild(s2);
-      frag.appendChild(s3);
-      host.appendChild(s0);
-      host.insertBefore(frag, s0);
+      ShadyDOM.wrap(frag).appendChild(s1);
+      ShadyDOM.wrap(frag).appendChild(s2);
+      ShadyDOM.wrap(frag).appendChild(s3);
+      ShadyDOM.wrap(host).appendChild(s0);
+      ShadyDOM.wrap(host).insertBefore(frag, s0);
       ShadyDOM.flush();
       var c$ = Array.from(getComposedChildNodes(target));
       assert.deepEqual(c$, [s1, s2, s3, s0]);
-      host.removeChild(s1);
-      host.removeChild(s2);
-      host.removeChild(s3);
+      ShadyDOM.wrap(host).removeChild(s1);
+      ShadyDOM.wrap(host).removeChild(s2);
+      ShadyDOM.wrap(host).removeChild(s3);
       ShadyDOM.flush();
       c$ = Array.from(getComposedChildNodes(target));
       assert.deepEqual(c$, [s0]);
@@ -942,419 +940,421 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     test('moving children between distributing hosts', function() {
       var h1 = document.createElement('x-dist');
       var h2 = document.createElement('x-dist');
-      document.body.appendChild(h1);
-      document.body.appendChild(h2);
+      ShadyDOM.wrap(document.body).appendChild(h1);
+      ShadyDOM.wrap(document.body).appendChild(h2);
       ShadyDOM.flush();
       var d = document.createElement('div');
-      h1.appendChild(d);
+      ShadyDOM.wrap(h1).appendChild(d);
       ShadyDOM.flush();
-      assert.equal(h1.childNodes.length, 1);
-      assert.equal(h1.firstElementChild, d);
-      assert.deepEqual(h1.shadowRoot.querySelector('#content').assignedNodes({flatten: true}), [d]);
-      assert.equal(h2.childNodes.length, 0);
-      assert.deepEqual(h2.shadowRoot.querySelector('#content').assignedNodes({flatten: true}).length, 0);
-      h2.appendChild(d);
+      assert.equal(ShadyDOM.wrap(h1).childNodes.length, 1);
+      assert.equal(ShadyDOM.wrap(h1).firstElementChild, d);
+      assert.deepEqual(ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(h1).shadowRoot).querySelector('#content')).assignedNodes({flatten: true}), [d]);
+      assert.equal(ShadyDOM.wrap(h2).childNodes.length, 0);
+      assert.deepEqual(ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(h2).shadowRoot).querySelector('#content')).assignedNodes({flatten: true}).length, 0);
+      ShadyDOM.wrap(h2).appendChild(d);
       ShadyDOM.flush();
-      assert.equal(h2.childNodes.length, 1);
-      assert.equal(h2.firstElementChild, d);
-      assert.deepEqual(h2.shadowRoot.querySelector('#content').assignedNodes({flatten: true}), [d]);
-      assert.equal(h1.childNodes.length, 0);
-      assert.deepEqual(h1.shadowRoot.querySelector('#content').assignedNodes({flatten: true}).length, 0);
-      h1.appendChild(d);
+      assert.equal(ShadyDOM.wrap(h2).childNodes.length, 1);
+      assert.equal(ShadyDOM.wrap(h2).firstElementChild, d);
+      assert.deepEqual(ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(h2).shadowRoot).querySelector('#content')).assignedNodes({flatten: true}), [d]);
+      assert.equal(ShadyDOM.wrap(h1).childNodes.length, 0);
+      assert.deepEqual(ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(h1).shadowRoot).querySelector('#content')).assignedNodes({flatten: true}).length, 0);
+      ShadyDOM.wrap(h1).appendChild(d);
       ShadyDOM.flush();
-      assert.equal(h1.childNodes.length, 1);
-      assert.equal(h1.firstElementChild, d);
-      assert.deepEqual(h1.shadowRoot.querySelector('#content').assignedNodes({flatten: true}), [d]);
-      assert.equal(h2.childNodes.length, 0);
-      assert.deepEqual(h2.shadowRoot.querySelector('#content').assignedNodes({flatten: true}).length, 0);
-      h2.appendChild(d);
+      assert.equal(ShadyDOM.wrap(h1).childNodes.length, 1);
+      assert.equal(ShadyDOM.wrap(h1).firstElementChild, d);
+      assert.deepEqual(ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(h1).shadowRoot).querySelector('#content')).assignedNodes({flatten: true}), [d]);
+      assert.equal(ShadyDOM.wrap(h2).childNodes.length, 0);
+      assert.deepEqual(ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(h2).shadowRoot).querySelector('#content')).assignedNodes({flatten: true}).length, 0);
+      ShadyDOM.wrap(h2).appendChild(d);
       ShadyDOM.flush();
-      assert.equal(h2.childNodes.length, 1);
-      assert.equal(h2.firstElementChild, d);
-      assert.deepEqual(h2.shadowRoot.querySelector('#content').assignedNodes({flatten: true}), [d]);
-      assert.equal(h1.childNodes.length, 0);
-      assert.deepEqual(h1.shadowRoot.querySelector('#content').assignedNodes({flatten: true}).length, 0);
-      document.body.removeChild(h1);
-      document.body.removeChild(h2);
+      assert.equal(ShadyDOM.wrap(h2).childNodes.length, 1);
+      assert.equal(ShadyDOM.wrap(h2).firstElementChild, d);
+      assert.deepEqual(ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(h2).shadowRoot).querySelector('#content')).assignedNodes({flatten: true}), [d]);
+      assert.equal(ShadyDOM.wrap(h1).childNodes.length, 0);
+      assert.deepEqual(ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(h1).shadowRoot).querySelector('#content')).assignedNodes({flatten: true}).length, 0);
+      ShadyDOM.wrap(document.body).removeChild(h1);
+      ShadyDOM.wrap(document.body).removeChild(h2);
     });
 
     test('moving children between distributing hosts (parsed child)', function() {
       var div = document.createElement('div');
-      div.innerHTML = '<x-dist><div></div></x-dist>';
-      var h1 = div.firstChild;
+      ShadyDOM.wrap(div).innerHTML = '<x-dist><div></div></x-dist>';
+      var h1 = ShadyDOM.wrap(div).firstChild;
       var h2 = document.createElement('x-dist');
-      document.body.appendChild(div);
-      document.body.appendChild(h2);
+      ShadyDOM.wrap(document.body).appendChild(div);
+      ShadyDOM.wrap(document.body).appendChild(h2);
       ShadyDOM.flush();
-      var d = h1.firstElementChild;
+      var d = ShadyDOM.wrap(h1).firstElementChild;
       assert.equal(d.localName, 'div');
-      assert.equal(h1.childNodes.length, 1);
-      assert.equal(h1.firstElementChild, d);
-      assert.deepEqual(h1.shadowRoot.querySelector('#content').assignedNodes({flatten: true}), [d]);
-      assert.equal(h2.childNodes.length, 0);
-      assert.deepEqual(h2.shadowRoot.querySelector('#content').assignedNodes({flatten: true}).length, 0);
-      h2.appendChild(d);
+      assert.equal(ShadyDOM.wrap(h1).childNodes.length, 1);
+      assert.equal(ShadyDOM.wrap(h1).firstElementChild, d);
+      assert.deepEqual(ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(h1).shadowRoot).querySelector('#content')).assignedNodes({flatten: true}), [d]);
+      assert.equal(ShadyDOM.wrap(h2).childNodes.length, 0);
+      assert.deepEqual(ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(h2).shadowRoot).querySelector('#content')).assignedNodes({flatten: true}).length, 0);
+      ShadyDOM.wrap(h2).appendChild(d);
       ShadyDOM.flush();
-      assert.equal(h2.childNodes.length, 1);
-      assert.equal(h2.firstElementChild, d);
-      assert.deepEqual(h2.shadowRoot.querySelector('#content').assignedNodes({flatten: true}), [d]);
-      assert.equal(h1.childNodes.length, 0);
-      assert.deepEqual(h1.shadowRoot.querySelector('#content').assignedNodes({flatten: true}).length, 0);
-      h1.appendChild(d);
+      assert.equal(ShadyDOM.wrap(h2).childNodes.length, 1);
+      assert.equal(ShadyDOM.wrap(h2).firstElementChild, d);
+      assert.deepEqual(ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(h2).shadowRoot).querySelector('#content')).assignedNodes({flatten: true}), [d]);
+      assert.equal(ShadyDOM.wrap(h1).childNodes.length, 0);
+      assert.deepEqual(ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(h1).shadowRoot).querySelector('#content')).assignedNodes({flatten: true}).length, 0);
+      ShadyDOM.wrap(h1).appendChild(d);
       ShadyDOM.flush();
-      assert.equal(h1.childNodes.length, 1);
-      assert.equal(h1.firstElementChild, d);
-      assert.deepEqual(h1.shadowRoot.querySelector('#content').assignedNodes({flatten: true}), [d]);
-      assert.equal(h2.childNodes.length, 0);
-      assert.deepEqual(h2.shadowRoot.querySelector('#content').assignedNodes({flatten: true}).length, 0);
-      h2.appendChild(d);
+      assert.equal(ShadyDOM.wrap(h1).childNodes.length, 1);
+      assert.equal(ShadyDOM.wrap(h1).firstElementChild, d);
+      assert.deepEqual(ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(h1).shadowRoot).querySelector('#content')).assignedNodes({flatten: true}), [d]);
+      assert.equal(ShadyDOM.wrap(h2).childNodes.length, 0);
+      assert.deepEqual(ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(h2).shadowRoot).querySelector('#content')).assignedNodes({flatten: true}).length, 0);
+      ShadyDOM.wrap(h2).appendChild(d);
       ShadyDOM.flush();
-      assert.equal(h2.childNodes.length, 1);
-      assert.equal(h2.firstElementChild, d);
-      assert.deepEqual(h2.shadowRoot.querySelector('#content').assignedNodes({flatten: true}), [d]);
-      assert.equal(h1.childNodes.length, 0);
-      assert.deepEqual(h1.shadowRoot.querySelector('#content').assignedNodes({flatten: true}).length, 0);
-      document.body.removeChild(div);
-      document.body.removeChild(h2);
+      assert.equal(ShadyDOM.wrap(h2).childNodes.length, 1);
+      assert.equal(ShadyDOM.wrap(h2).firstElementChild, d);
+      assert.deepEqual(ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(h2).shadowRoot).querySelector('#content')).assignedNodes({flatten: true}), [d]);
+      assert.equal(ShadyDOM.wrap(h1).childNodes.length, 0);
+      assert.deepEqual(ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(h1).shadowRoot).querySelector('#content')).assignedNodes({flatten: true}).length, 0);
+      ShadyDOM.wrap(document.body).removeChild(div);
+      ShadyDOM.wrap(document.body).removeChild(h2);
     });
 
     test('moving children between distributing host and fragment', function() {
       var h1 = document.createElement('x-dist');
       var h2 = createPatchedDocumentFragment();
-      document.body.appendChild(h1);
+      ShadyDOM.wrap(document.body).appendChild(h1);
       ShadyDOM.flush();
       var d = document.createElement('div');
-      h1.appendChild(d);
+      ShadyDOM.wrap(h1).appendChild(d);
       ShadyDOM.flush();
-      assert.equal(h1.childNodes.length, 1);
-      assert.equal(h1.firstElementChild, d);
-      assert.deepEqual(h1.shadowRoot.querySelector('#content').assignedNodes({flatten: true}), [d]);
-      assert.equal(h2.childNodes.length, 0);
-      h2.appendChild(d);
+      assert.equal(ShadyDOM.wrap(h1).childNodes.length, 1);
+      assert.equal(ShadyDOM.wrap(h1).firstElementChild, d);
+      assert.deepEqual(ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(h1).shadowRoot).querySelector('#content')).assignedNodes({flatten: true}), [d]);
+      assert.equal(ShadyDOM.wrap(h2).childNodes.length, 0);
+      ShadyDOM.wrap(h2).appendChild(d);
       ShadyDOM.flush();
-      assert.equal(h2.childNodes.length, 1);
+      assert.equal(ShadyDOM.wrap(h2).childNodes.length, 1);
       assert.equal(h2.firstChild, d);
-      assert.equal(h1.childNodes.length, 0);
-      assert.deepEqual(h1.shadowRoot.querySelector('#content').assignedNodes({flatten: true}).length, 0);
-      h1.appendChild(d);
+      assert.equal(ShadyDOM.wrap(h1).childNodes.length, 0);
+      assert.deepEqual(ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(h1).shadowRoot).querySelector('#content')).assignedNodes({flatten: true}).length, 0);
+      ShadyDOM.wrap(h1).appendChild(d);
       ShadyDOM.flush();
-      assert.equal(h1.childNodes.length, 1);
-      assert.equal(h1.firstElementChild, d);
-      assert.deepEqual(h1.shadowRoot.querySelector('#content').assignedNodes({flatten: true}), [d]);
-      assert.equal(h2.childNodes.length, 0);
-      h2.appendChild(d);
+      assert.equal(ShadyDOM.wrap(h1).childNodes.length, 1);
+      assert.equal(ShadyDOM.wrap(h1).firstElementChild, d);
+      assert.deepEqual(ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(h1).shadowRoot).querySelector('#content')).assignedNodes({flatten: true}), [d]);
+      assert.equal(ShadyDOM.wrap(h2).childNodes.length, 0);
+      ShadyDOM.wrap(h2).appendChild(d);
       ShadyDOM.flush();
-      assert.equal(h2.childNodes.length, 1);
+      assert.equal(ShadyDOM.wrap(h2).childNodes.length, 1);
       assert.equal(h2.firstChild, d);
-      assert.equal(h1.childNodes.length, 0);
-      assert.deepEqual(h1.shadowRoot.querySelector('#content').assignedNodes({flatten: true}).length, 0);
-      document.body.removeChild(h1);
+      assert.equal(ShadyDOM.wrap(h1).childNodes.length, 0);
+      assert.deepEqual(ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(h1).shadowRoot).querySelector('#content')).assignedNodes({flatten: true}).length, 0);
+      ShadyDOM.wrap(document.body).removeChild(h1);
     });
 
     test('moving children between distributing host and fragment (parsed child)', function() {
       var div = document.createElement('div');
-      div.innerHTML = '<x-dist><div></div></x-dist>';
-      var h1 = div.firstChild;
+      ShadyDOM.wrap(div).innerHTML = '<x-dist><div></div></x-dist>';
+      var h1 = ShadyDOM.wrap(div).firstChild;
       var h2 = createPatchedDocumentFragment();;
-      document.body.appendChild(h1);
+      ShadyDOM.wrap(document.body).appendChild(h1);
       ShadyDOM.flush();
-      var d = h1.firstElementChild;
+      var d = ShadyDOM.wrap(h1).firstElementChild;
       assert.equal(d.localName, 'div');
-      assert.equal(h1.childNodes.length, 1);
-      assert.equal(h1.firstElementChild, d);
-      assert.deepEqual(h1.shadowRoot.querySelector('#content').assignedNodes({flatten: true}), [d]);
-      assert.equal(h2.childNodes.length, 0);
-      h2.appendChild(d);
+      assert.equal(ShadyDOM.wrap(h1).childNodes.length, 1);
+      assert.equal(ShadyDOM.wrap(h1).firstElementChild, d);
+      assert.deepEqual(ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(h1).shadowRoot).querySelector('#content')).assignedNodes({flatten: true}), [d]);
+      assert.equal(ShadyDOM.wrap(h2).childNodes.length, 0);
+      ShadyDOM.wrap(h2).appendChild(d);
       ShadyDOM.flush();
-      assert.equal(h2.childNodes.length, 1);
+      assert.equal(ShadyDOM.wrap(h2).childNodes.length, 1);
       assert.equal(h2.firstChild, d);
-      assert.equal(h1.childNodes.length, 0);
-      assert.deepEqual(h1.shadowRoot.querySelector('#content').assignedNodes({flatten: true}).length, 0);
-      h1.appendChild(d);
+      assert.equal(ShadyDOM.wrap(h1).childNodes.length, 0);
+      assert.deepEqual(ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(h1).shadowRoot).querySelector('#content')).assignedNodes({flatten: true}).length, 0);
+      ShadyDOM.wrap(h1).appendChild(d);
       ShadyDOM.flush();
-      assert.equal(h1.childNodes.length, 1);
-      assert.equal(h1.firstElementChild, d);
-      assert.deepEqual(h1.shadowRoot.querySelector('#content').assignedNodes({flatten: true}), [d]);
-      assert.equal(h2.childNodes.length, 0);
-      h2.appendChild(d);
+      assert.equal(ShadyDOM.wrap(h1).childNodes.length, 1);
+      assert.equal(ShadyDOM.wrap(h1).firstElementChild, d);
+      assert.deepEqual(ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(h1).shadowRoot).querySelector('#content')).assignedNodes({flatten: true}), [d]);
+      assert.equal(ShadyDOM.wrap(h2).childNodes.length, 0);
+      ShadyDOM.wrap(h2).appendChild(d);
       ShadyDOM.flush();
-      assert.equal(h2.childNodes.length, 1);
+      assert.equal(ShadyDOM.wrap(h2).childNodes.length, 1);
       assert.equal(h2.firstChild, d);
-      assert.equal(h1.childNodes.length, 0);
-      assert.deepEqual(h1.shadowRoot.querySelector('#content').assignedNodes({flatten: true}).length, 0);
-      document.body.removeChild(h1);
+      assert.equal(ShadyDOM.wrap(h1).childNodes.length, 0);
+      assert.deepEqual(ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(h1).shadowRoot).querySelector('#content')).assignedNodes({flatten: true}).length, 0);
+      ShadyDOM.wrap(document.body).removeChild(h1);
     });
 
     test('moving children between distributing hosts with deep insertion points', function() {
       var h1 = document.createElement('x-dist-inside-deep-tree');
       var h2 = document.createElement('x-dist-inside-deep-tree');
-      document.body.appendChild(h1);
-      document.body.appendChild(h2);
+      ShadyDOM.wrap(document.body).appendChild(h1);
+      ShadyDOM.wrap(document.body).appendChild(h2);
       ShadyDOM.flush();
       var d = document.createElement('div');
-      h1.appendChild(d);
+      ShadyDOM.wrap(h1).appendChild(d);
       ShadyDOM.flush();
-      assert.equal(h1.childNodes.length, 1);
-      assert.equal(h1.firstElementChild, d);
-      assert.deepEqual(h1.shadowRoot.querySelector('#content').assignedNodes({flatten: true}), [d]);
-      assert.equal(h2.childNodes.length, 0);
-      assert.deepEqual(h2.shadowRoot.querySelector('#content').assignedNodes({flatten: true}).length, 0);
-      h2.appendChild(d);
+      assert.equal(ShadyDOM.wrap(h1).childNodes.length, 1);
+      assert.equal(ShadyDOM.wrap(h1).firstElementChild, d);
+      assert.deepEqual(ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(h1).shadowRoot).querySelector('#content')).assignedNodes({flatten: true}), [d]);
+      assert.equal(ShadyDOM.wrap(h2).childNodes.length, 0);
+      assert.deepEqual(ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(h2).shadowRoot).querySelector('#content')).assignedNodes({flatten: true}).length, 0);
+      ShadyDOM.wrap(h2).appendChild(d);
       ShadyDOM.flush();
-      assert.equal(h2.childNodes.length, 1);
-      assert.equal(h2.firstElementChild, d);
-      assert.deepEqual(h2.shadowRoot.querySelector('#content').assignedNodes({flatten: true}), [d]);
-      assert.equal(h1.childNodes.length, 0);
-      assert.deepEqual(h1.shadowRoot.querySelector('#content').assignedNodes({flatten: true}).length, 0);
-      h1.appendChild(d);
+      assert.equal(ShadyDOM.wrap(h2).childNodes.length, 1);
+      assert.equal(ShadyDOM.wrap(h2).firstElementChild, d);
+      assert.deepEqual(ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(h2).shadowRoot).querySelector('#content')).assignedNodes({flatten: true}), [d]);
+      assert.equal(ShadyDOM.wrap(h1).childNodes.length, 0);
+      assert.deepEqual(ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(h1).shadowRoot).querySelector('#content')).assignedNodes({flatten: true}).length, 0);
+      ShadyDOM.wrap(h1).appendChild(d);
       ShadyDOM.flush();
-      assert.equal(h1.childNodes.length, 1);
-      assert.equal(h1.firstElementChild, d);
-      assert.deepEqual(h1.shadowRoot.querySelector('#content').assignedNodes({flatten: true}), [d]);
-      assert.equal(h2.childNodes.length, 0);
-      assert.deepEqual(h2.shadowRoot.querySelector('#content').assignedNodes({flatten: true}).length, 0);
-      h2.appendChild(d);
+      assert.equal(ShadyDOM.wrap(h1).childNodes.length, 1);
+      assert.equal(ShadyDOM.wrap(h1).firstElementChild, d);
+      assert.deepEqual(ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(h1).shadowRoot).querySelector('#content')).assignedNodes({flatten: true}), [d]);
+      assert.equal(ShadyDOM.wrap(h2).childNodes.length, 0);
+      assert.deepEqual(ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(h2).shadowRoot).querySelector('#content')).assignedNodes({flatten: true}).length, 0);
+      ShadyDOM.wrap(h2).appendChild(d);
       ShadyDOM.flush();
-      assert.equal(h2.childNodes.length, 1);
-      assert.equal(h2.firstElementChild, d);
-      assert.deepEqual(h2.shadowRoot.querySelector('#content').assignedNodes({flatten: true}), [d]);
-      assert.equal(h1.childNodes.length, 0);
-      assert.deepEqual(h1.shadowRoot.querySelector('#content').assignedNodes({flatten: true}).length, 0);
-      document.body.removeChild(h1);
-      document.body.removeChild(h2);
+      assert.equal(ShadyDOM.wrap(h2).childNodes.length, 1);
+      assert.equal(ShadyDOM.wrap(h2).firstElementChild, d);
+      assert.deepEqual(ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(h2).shadowRoot).querySelector('#content')).assignedNodes({flatten: true}), [d]);
+      assert.equal(ShadyDOM.wrap(h1).childNodes.length, 0);
+      assert.deepEqual(ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(h1).shadowRoot).querySelector('#content')).assignedNodes({flatten: true}).length, 0);
+      ShadyDOM.wrap(document.body).removeChild(h1);
+      ShadyDOM.wrap(document.body).removeChild(h2);
     });
 
     test('moving children between distributing hosts with deep insertion points (parsed child)', function() {
       var div = document.createElement('div');
-      div.innerHTML = '<x-dist-inside-deep-tree><div></div></x-dist-inside-deep-tree>';
-      var h1 = div.firstChild;
+      ShadyDOM.wrap(div).innerHTML = '<x-dist-inside-deep-tree><div></div></x-dist-inside-deep-tree>';
+      var h1 = ShadyDOM.wrap(div).firstChild;
       var h2 = document.createElement('x-dist-inside-deep-tree');
-      document.body.appendChild(div);
-      document.body.appendChild(h2);
+      ShadyDOM.wrap(document.body).appendChild(div);
+      ShadyDOM.wrap(document.body).appendChild(h2);
       ShadyDOM.flush();
-      var d = h1.firstElementChild;
+      var d = ShadyDOM.wrap(h1).firstElementChild;
       assert.equal(d.localName, 'div');
-      assert.equal(h1.childNodes.length, 1);
-      assert.equal(h1.firstElementChild, d);
-      assert.deepEqual(h1.shadowRoot.querySelector('#content').assignedNodes({flatten: true}), [d]);
-      assert.equal(h2.childNodes.length, 0);
-      assert.deepEqual(h2.shadowRoot.querySelector('#content').assignedNodes({flatten: true}).length, 0);
-      h2.appendChild(d);
+      assert.equal(ShadyDOM.wrap(h1).childNodes.length, 1);
+      assert.equal(ShadyDOM.wrap(h1).firstElementChild, d);
+      assert.deepEqual(ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(h1).shadowRoot).querySelector('#content')).assignedNodes({flatten: true}), [d]);
+      assert.equal(ShadyDOM.wrap(h2).childNodes.length, 0);
+      assert.deepEqual(ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(h2).shadowRoot).querySelector('#content')).assignedNodes({flatten: true}).length, 0);
+      ShadyDOM.wrap(h2).appendChild(d);
       ShadyDOM.flush();
-      assert.equal(h2.childNodes.length, 1);
-      assert.equal(h2.firstElementChild, d);
-      assert.deepEqual(h2.shadowRoot.querySelector('#content').assignedNodes({flatten: true}), [d]);
-      assert.equal(h1.childNodes.length, 0);
-      assert.deepEqual(h1.shadowRoot.querySelector('#content').assignedNodes({flatten: true}).length, 0);
-      h1.appendChild(d);
+      assert.equal(ShadyDOM.wrap(h2).childNodes.length, 1);
+      assert.equal(ShadyDOM.wrap(h2).firstElementChild, d);
+      assert.deepEqual(ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(h2).shadowRoot).querySelector('#content')).assignedNodes({flatten: true}), [d]);
+      assert.equal(ShadyDOM.wrap(h1).childNodes.length, 0);
+      assert.deepEqual(ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(h1).shadowRoot).querySelector('#content')).assignedNodes({flatten: true}).length, 0);
+      ShadyDOM.wrap(h1).appendChild(d);
       ShadyDOM.flush();
-      assert.equal(h1.childNodes.length, 1);
-      assert.equal(h1.firstElementChild, d);
-      assert.deepEqual(h1.shadowRoot.querySelector('#content').assignedNodes({flatten: true}), [d]);
-      assert.equal(h2.childNodes.length, 0);
-      assert.deepEqual(h2.shadowRoot.querySelector('#content').assignedNodes({flatten: true}).length, 0);
-      h2.appendChild(d);
+      assert.equal(ShadyDOM.wrap(h1).childNodes.length, 1);
+      assert.equal(ShadyDOM.wrap(h1).firstElementChild, d);
+      assert.deepEqual(ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(h1).shadowRoot).querySelector('#content')).assignedNodes({flatten: true}), [d]);
+      assert.equal(ShadyDOM.wrap(h2).childNodes.length, 0);
+      assert.deepEqual(ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(h2).shadowRoot).querySelector('#content')).assignedNodes({flatten: true}).length, 0);
+      ShadyDOM.wrap(h2).appendChild(d);
       ShadyDOM.flush();
-      assert.equal(h2.childNodes.length, 1);
-      assert.equal(h2.firstElementChild, d);
-      assert.deepEqual(h2.shadowRoot.querySelector('#content').assignedNodes({flatten: true}), [d]);
-      assert.equal(h1.childNodes.length, 0);
-      assert.deepEqual(h1.shadowRoot.querySelector('#content').assignedNodes({flatten: true}).length, 0);
-      document.body.removeChild(div);
-      document.body.removeChild(h2);
+      assert.equal(ShadyDOM.wrap(h2).childNodes.length, 1);
+      assert.equal(ShadyDOM.wrap(h2).firstElementChild, d);
+      assert.deepEqual(ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(h2).shadowRoot).querySelector('#content')).assignedNodes({flatten: true}), [d]);
+      assert.equal(ShadyDOM.wrap(h1).childNodes.length, 0);
+      assert.deepEqual(ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(h1).shadowRoot).querySelector('#content')).assignedNodes({flatten: true}).length, 0);
+      ShadyDOM.wrap(document.body).removeChild(div);
+      ShadyDOM.wrap(document.body).removeChild(h2);
     });
 
     test('moving children between distributing host with deep insertion and fragment', function() {
       var h1 = document.createElement('x-dist-inside-deep-tree');
       var h2 = createPatchedDocumentFragment();
-      document.body.appendChild(h1);
+      ShadyDOM.wrap(document.body).appendChild(h1);
       ShadyDOM.flush();
       var d = document.createElement('div');
-      h1.appendChild(d);
+      ShadyDOM.wrap(h1).appendChild(d);
       ShadyDOM.flush();
-      assert.equal(h1.childNodes.length, 1);
-      assert.equal(h1.firstElementChild, d);
-      assert.deepEqual(h1.shadowRoot.querySelector('#content').assignedNodes({flatten: true}), [d]);
-      assert.equal(h2.childNodes.length, 0);
-      h2.appendChild(d);
+      assert.equal(ShadyDOM.wrap(h1).childNodes.length, 1);
+      assert.equal(ShadyDOM.wrap(h1).firstElementChild, d);
+      assert.deepEqual(ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(h1).shadowRoot).querySelector('#content')).assignedNodes({flatten: true}), [d]);
+      assert.equal(ShadyDOM.wrap(h2).childNodes.length, 0);
+      ShadyDOM.wrap(h2).appendChild(d);
       ShadyDOM.flush();
-      assert.equal(h2.childNodes.length, 1);
+      assert.equal(ShadyDOM.wrap(h2).childNodes.length, 1);
       assert.equal(h2.firstChild, d);
-      assert.equal(h1.childNodes.length, 0);
-      assert.deepEqual(h1.shadowRoot.querySelector('#content').assignedNodes({flatten: true}).length, 0);
-      h1.appendChild(d);
+      assert.equal(ShadyDOM.wrap(h1).childNodes.length, 0);
+      assert.deepEqual(ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(h1).shadowRoot).querySelector('#content')).assignedNodes({flatten: true}).length, 0);
+      ShadyDOM.wrap(h1).appendChild(d);
       ShadyDOM.flush();
-      assert.equal(h1.childNodes.length, 1);
-      assert.equal(h1.firstElementChild, d);
-      assert.deepEqual(h1.shadowRoot.querySelector('#content').assignedNodes({flatten: true}), [d]);
-      assert.equal(h2.childNodes.length, 0);
-      h2.appendChild(d);
+      assert.equal(ShadyDOM.wrap(h1).childNodes.length, 1);
+      assert.equal(ShadyDOM.wrap(h1).firstElementChild, d);
+      assert.deepEqual(ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(h1).shadowRoot).querySelector('#content')).assignedNodes({flatten: true}), [d]);
+      assert.equal(ShadyDOM.wrap(h2).childNodes.length, 0);
+      ShadyDOM.wrap(h2).appendChild(d);
       ShadyDOM.flush();
-      assert.equal(h2.childNodes.length, 1);
+      assert.equal(ShadyDOM.wrap(h2).childNodes.length, 1);
       assert.equal(h2.firstChild, d);
-      assert.equal(h1.childNodes.length, 0);
-      assert.deepEqual(h1.shadowRoot.querySelector('#content').assignedNodes({flatten: true}).length, 0);
-      document.body.removeChild(h1);
+      assert.equal(ShadyDOM.wrap(h1).childNodes.length, 0);
+      assert.deepEqual(ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(h1).shadowRoot).querySelector('#content')).assignedNodes({flatten: true}).length, 0);
+      ShadyDOM.wrap(document.body).removeChild(h1);
     });
 
     test('moving children between distributing host with deep insertion and fragment (parsed child)', function() {
       var div = document.createElement('div');
-      div.innerHTML = '<x-dist-inside-deep-tree><div></div></x-dist-inside-deep-tree>';
-      var h1 = div.firstChild;
+      ShadyDOM.wrap(div).innerHTML = '<x-dist-inside-deep-tree><div></div></x-dist-inside-deep-tree>';
+      var h1 = ShadyDOM.wrap(div).firstChild;
       var h2 = createPatchedDocumentFragment();
-      document.body.appendChild(h1);
+      ShadyDOM.wrap(document.body).appendChild(h1);
       ShadyDOM.flush();
-      var d = h1.firstElementChild;
+      var d = ShadyDOM.wrap(h1).firstElementChild;
       assert.equal(d.localName, 'div');
-      assert.equal(h1.childNodes.length, 1);
-      assert.equal(h1.firstElementChild, d);
-      assert.deepEqual(h1.shadowRoot.querySelector('#content').assignedNodes({flatten: true}), [d]);
-      assert.equal(h2.childNodes.length, 0);
-      h2.appendChild(d);
+      assert.equal(ShadyDOM.wrap(h1).childNodes.length, 1);
+      assert.equal(ShadyDOM.wrap(h1).firstElementChild, d);
+      assert.deepEqual(ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(h1).shadowRoot).querySelector('#content')).assignedNodes({flatten: true}), [d]);
+      assert.equal(ShadyDOM.wrap(h2).childNodes.length, 0);
+      ShadyDOM.wrap(h2).appendChild(d);
       ShadyDOM.flush();
-      assert.equal(h2.childNodes.length, 1);
+      assert.equal(ShadyDOM.wrap(h2).childNodes.length, 1);
       assert.equal(h2.firstChild, d);
-      assert.equal(h1.childNodes.length, 0);
-      assert.deepEqual(h1.shadowRoot.querySelector('#content').assignedNodes({flatten: true}).length, 0);
-      h1.appendChild(d);
+      assert.equal(ShadyDOM.wrap(h1).childNodes.length, 0);
+      assert.deepEqual(ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(h1).shadowRoot).querySelector('#content')).assignedNodes({flatten: true}).length, 0);
+      ShadyDOM.wrap(h1).appendChild(d);
       ShadyDOM.flush();
-      assert.equal(h1.childNodes.length, 1);
-      assert.equal(h1.firstElementChild, d);
-      assert.deepEqual(h1.shadowRoot.querySelector('#content').assignedNodes({flatten: true}), [d]);
-      assert.equal(h2.childNodes.length, 0);
-      h2.appendChild(d);
+      assert.equal(ShadyDOM.wrap(h1).childNodes.length, 1);
+      assert.equal(ShadyDOM.wrap(h1).firstElementChild, d);
+      assert.deepEqual(ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(h1).shadowRoot).querySelector('#content')).assignedNodes({flatten: true}), [d]);
+      assert.equal(ShadyDOM.wrap(h2).childNodes.length, 0);
+      ShadyDOM.wrap(h2).appendChild(d);
       ShadyDOM.flush();
-      assert.equal(h2.childNodes.length, 1);
+      assert.equal(ShadyDOM.wrap(h2).childNodes.length, 1);
       assert.equal(h2.firstChild, d);
-      assert.equal(h1.childNodes.length, 0);
-      assert.deepEqual(h1.shadowRoot.querySelector('#content').assignedNodes({flatten: true}).length, 0);
-      document.body.removeChild(h1);
+      assert.equal(ShadyDOM.wrap(h1).childNodes.length, 0);
+      assert.deepEqual(ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(h1).shadowRoot).querySelector('#content')).assignedNodes({flatten: true}).length, 0);
+      ShadyDOM.wrap(document.body).removeChild(h1);
     });
 
     test('moving children between distributing host with shallow insertion and fragment', function() {
       var h1 = document.createElement('x-dist-simple');
       var h2 = createPatchedDocumentFragment();
-      document.body.appendChild(h1);
+      ShadyDOM.wrap(document.body).appendChild(h1);
       ShadyDOM.flush();
       var d = document.createElement('div');
-      h1.appendChild(d);
+      ShadyDOM.wrap(h1).appendChild(d);
       ShadyDOM.flush();
-      assert.equal(h1.childNodes.length, 1);
-      assert.equal(h1.firstElementChild, d);
-      assert.deepEqual(h1.shadowRoot.querySelector('#content').assignedNodes({flatten: true}), [d]);
-      assert.equal(h2.childNodes.length, 0);
-      h2.appendChild(d);
+      assert.equal(ShadyDOM.wrap(h1).childNodes.length, 1);
+      assert.equal(ShadyDOM.wrap(h1).firstElementChild, d);
+      assert.deepEqual(ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(h1).shadowRoot).querySelector('#content')).assignedNodes({flatten: true}), [d]);
+      assert.equal(ShadyDOM.wrap(h2).childNodes.length, 0);
+      ShadyDOM.wrap(h2).appendChild(d);
       ShadyDOM.flush();
-      assert.equal(h2.childNodes.length, 1);
+      assert.equal(ShadyDOM.wrap(h2).childNodes.length, 1);
       assert.equal(h2.firstChild, d);
-      assert.equal(h1.childNodes.length, 0);
-      assert.deepEqual(h1.shadowRoot.querySelector('#content').assignedNodes({flatten: true}).length, 0);
-      h1.appendChild(d);
+      assert.equal(ShadyDOM.wrap(h1).childNodes.length, 0);
+      assert.deepEqual(ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(h1).shadowRoot).querySelector('#content')).assignedNodes({flatten: true}).length, 0);
+      ShadyDOM.wrap(h1).appendChild(d);
       ShadyDOM.flush();
-      assert.equal(h1.childNodes.length, 1);
-      assert.equal(h1.firstElementChild, d);
-      assert.deepEqual(h1.shadowRoot.querySelector('#content').assignedNodes({flatten: true}), [d]);
-      assert.equal(h2.childNodes.length, 0);
-      h2.appendChild(d);
+      assert.equal(ShadyDOM.wrap(h1).childNodes.length, 1);
+      assert.equal(ShadyDOM.wrap(h1).firstElementChild, d);
+      assert.deepEqual(ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(h1).shadowRoot).querySelector('#content')).assignedNodes({flatten: true}), [d]);
+      assert.equal(ShadyDOM.wrap(h2).childNodes.length, 0);
+      ShadyDOM.wrap(h2).appendChild(d);
       ShadyDOM.flush();
-      assert.equal(h2.childNodes.length, 1);
+      assert.equal(ShadyDOM.wrap(h2).childNodes.length, 1);
       assert.equal(h2.firstChild, d);
-      assert.equal(h1.childNodes.length, 0);
-      assert.deepEqual(h1.shadowRoot.querySelector('#content').assignedNodes({flatten: true}).length, 0);
-      document.body.removeChild(h1);
+      assert.equal(ShadyDOM.wrap(h1).childNodes.length, 0);
+      assert.deepEqual(ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(h1).shadowRoot).querySelector('#content')).assignedNodes({flatten: true}).length, 0);
+      ShadyDOM.wrap(document.body).removeChild(h1);
     });
 
     test('moving children between distributing host with shallow insertion and fragment (parsed child)', function() {
       var div = document.createElement('div');
-      div.innerHTML = '<x-dist-simple><div></div></x-dist-simple>';
-      var h1 = div.firstChild;
+      ShadyDOM.wrap(div).innerHTML = '<x-dist-simple><div></div></x-dist-simple>';
+      var h1 = ShadyDOM.wrap(div).firstChild;
       var h2 = createPatchedDocumentFragment();
-      document.body.appendChild(h1);
+      ShadyDOM.wrap(document.body).appendChild(h1);
       ShadyDOM.flush();
-      var d = h1.firstElementChild;
+      var d = ShadyDOM.wrap(h1).firstElementChild;
       assert.equal(d.localName, 'div');
-      assert.equal(h1.childNodes.length, 1);
-      assert.equal(h1.firstElementChild, d);
-      assert.deepEqual(h1.shadowRoot.querySelector('#content').assignedNodes({flatten: true}), [d]);
-      assert.equal(h2.childNodes.length, 0);
-      h2.appendChild(d);
+      assert.equal(ShadyDOM.wrap(h1).childNodes.length, 1);
+      assert.equal(ShadyDOM.wrap(h1).firstElementChild, d);
+      assert.deepEqual(ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(h1).shadowRoot).querySelector('#content')).assignedNodes({flatten: true}), [d]);
+      assert.equal(ShadyDOM.wrap(h2).childNodes.length, 0);
+      ShadyDOM.wrap(h2).appendChild(d);
       ShadyDOM.flush();
-      assert.equal(h2.childNodes.length, 1);
+      assert.equal(ShadyDOM.wrap(h2).childNodes.length, 1);
       assert.equal(h2.firstChild, d);
-      assert.equal(h1.childNodes.length, 0);
-      assert.deepEqual(h1.shadowRoot.querySelector('#content').assignedNodes({flatten: true}).length, 0);
-      h1.appendChild(d);
+      assert.equal(ShadyDOM.wrap(h1).childNodes.length, 0);
+      assert.deepEqual(ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(h1).shadowRoot).querySelector('#content')).assignedNodes({flatten: true}).length, 0);
+      ShadyDOM.wrap(h1).appendChild(d);
       ShadyDOM.flush();
-      assert.equal(h1.childNodes.length, 1);
-      assert.equal(h1.firstElementChild, d);
-      assert.deepEqual(h1.shadowRoot.querySelector('#content').assignedNodes({flatten: true}), [d]);
-      assert.equal(h2.childNodes.length, 0);
-      h2.appendChild(d);
+      assert.equal(ShadyDOM.wrap(h1).childNodes.length, 1);
+      assert.equal(ShadyDOM.wrap(h1).firstElementChild, d);
+      assert.deepEqual(ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(h1).shadowRoot).querySelector('#content')).assignedNodes({flatten: true}), [d]);
+      assert.equal(ShadyDOM.wrap(h2).childNodes.length, 0);
+      ShadyDOM.wrap(h2).appendChild(d);
       ShadyDOM.flush();
-      assert.equal(h2.childNodes.length, 1);
+      assert.equal(ShadyDOM.wrap(h2).childNodes.length, 1);
       assert.equal(h2.firstChild, d);
-      assert.equal(h1.childNodes.length, 0);
-      assert.deepEqual(h1.shadowRoot.querySelector('#content').assignedNodes({flatten: true}).length, 0);
-      document.body.removeChild(h1);
+      assert.equal(ShadyDOM.wrap(h1).childNodes.length, 0);
+      assert.deepEqual(ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(h1).shadowRoot).querySelector('#content')).assignedNodes({flatten: true}).length, 0);
+      ShadyDOM.wrap(document.body).removeChild(h1);
     });
 
     test('adding a document fragment clears nodes in the fragment', function() {
       var x = document.createElement('x-dist-star');
-      document.body.appendChild(x);
+      ShadyDOM.wrap(document.body).appendChild(x);
       var frag = document.createDocumentFragment();
       var t = document.createTextNode('hi');
       var d = document.createElement('div');
-      frag.appendChild(t);
-      frag.appendChild(d);
-      x.appendChild(frag);
+      ShadyDOM.wrap(frag).appendChild(t);
+      ShadyDOM.wrap(frag).appendChild(d);
+      ShadyDOM.wrap(x).appendChild(frag);
       ShadyDOM.flush();
       assert.equal(t.parentNode, x, 'logical parent wrong');
       assert.equal(d.parentNode, x, 'logical parent wrong');
       assert.equal(frag.childNodes.length, 0, 'fragment not empty');
-      document.body.removeChild(x);
+      ShadyDOM.wrap(document.body).removeChild(x);
     });
 
     test('adding a non-distributing node removes the node from its current location', function() {
       var x = document.createElement('x-dist-star');
       var t = document.createTextNode('hi');
-      document.body.appendChild(t);
-      x.appendChild(t);
+      ShadyDOM.wrap(document.body).appendChild(t);
+      ShadyDOM.wrap(x).appendChild(t);
       ShadyDOM.flush();
       assert.equal(t.parentNode, x);
     });
 
     test('shadowRoot set via innerHTML that contains a <slot> and a custom element that also sets shadowRoot content via innerHTML', function() {
-      var el = document.querySelector('use-inner-html');
+      var el = ShadyDOM.wrap(document).querySelector('use-inner-html');
       assert.equal(ShadyDOM.nativeTree.textContent(el), '[I][A]');
     });
 
     test('elements created in inert documents correctly upgrade when added to shadow hosts with shadowRoots containing slots', function() {
       var t = document.createElement('template');
-      t.innerHTML = '<x-simple></x-simple>';
-      var clone = t.content.cloneNode(true).firstChild;
+      ShadyDOM.wrap(t).innerHTML = '<x-simple></x-simple>';
+      var clone = ShadyDOM.wrap(ShadyDOM.wrap(t.content).cloneNode(true)).firstChild;
       var host = document.createElement('x-dist');
-      document.body.appendChild(host);
+      ShadyDOM.wrap(document.body).appendChild(host);
       ShadyDOM.flush();
-      host.appendChild(clone);
+      ShadyDOM.wrap(host).appendChild(clone);
+      // NOTE: flush needed when noPatch is true since upgrade happens only then the element hits the dom via distribution.
+      ShadyDOM.flush();
       assert.equal(clone._initialized, true);
       assert.equal(ShadyDOM.nativeTree.textContent(clone), 'simple');
-      document.body.removeChild(host);
+      ShadyDOM.wrap(document.body).removeChild(host);
     });
 
     test('creating redistribution tree asynchronously (simulated) in elements with constructor created shadowRoots', function() {
       // render an element with a shadowRoot
       var x = document.createElement('x-ctor');
       var t = document.createTextNode('hi');
-      x.appendChild(t);
-      document.body.appendChild(x);
+      ShadyDOM.wrap(x).appendChild(t);
+      ShadyDOM.wrap(document.body).appendChild(x);
       ShadyDOM.flush();
       // later attach an element that makes a shadowRoot in its constructor and a slot
       var inner = document.createElement('x-ctor');
-      inner.appendChild(document.createElement('slot'));
-      x.shadowRoot.appendChild(inner);
+      ShadyDOM.wrap(inner).appendChild(document.createElement('slot'));
+      ShadyDOM.wrap(ShadyDOM.wrap(x).shadowRoot).appendChild(inner);
       ShadyDOM.flush();
       // later attach a slot to that element...
-      inner.shadowRoot.appendChild(document.createElement('slot'));
+      ShadyDOM.wrap(ShadyDOM.wrap(inner).shadowRoot).appendChild(document.createElement('slot'));
       ShadyDOM.flush();
       // check rendering
       assert.deepEqual(getComposedChildNodes(inner), [t]);
@@ -1363,7 +1363,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   });
 
   function getComposedChildNodes(node) {
-    return ShadyDOM.nativeTree.childNodes(node);
+    return Array.from(ShadyDOM.nativeTree.childNodes(node));
   }
 
 </script>

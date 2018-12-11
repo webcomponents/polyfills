@@ -28,7 +28,7 @@
   "scripts": {
     "build": "gulp",
     "test": "npm run lint && npm run build && wct",
-    "debug": "rollup -c",
+    "debug": "gulp debug",
     "lint": "eslint src",
     "regen-package-lock": "rm -rf node_modules package-lock.json; npm install",
     "prepack": "npm run build"
@@ -43,13 +43,15 @@
   "homepage": "https://webcomponents.org/polyfills",
   "devDependencies": {
     "@webcomponents/custom-elements": "^1.1.3",
-    "@webcomponents/shadycss": "^1.5.0",
+    "@webcomponents/shadycss": "^1.7.1",
     "@webcomponents/template": "^1.3.1",
     "@webcomponents/webcomponents-platform": "^1.0.0",
     "eslint": "^4.19.1",
     "eslint-plugin-html": "^4.0.5",
     "google-closure-compiler": "^20180506.0.0",
     "gulp": "^4.0.0",
+    "gulp-rename": "^1.4.0",
+    "gulp-rollup": "^2.16.2",
     "gulp-size": "^3.0.0",
     "gulp-sourcemaps": "^2.6.4",
     "promise-polyfill": "^8.0.0",

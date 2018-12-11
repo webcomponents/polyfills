@@ -104,7 +104,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       el.parentNode.removeChild(el);
     });
 
-
     test('node accessors', function() {
       let srFirst = el.shadowRoot.firstChild;
       let srLast = el.shadowRoot.lastChild;
@@ -170,7 +169,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   });
 
   suite('nativeMethods', function() {
-
     let el;
 
     setup(function() {
@@ -224,7 +222,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       assert.isTrue(ShadyDOM.nativeMethods.contains.call(el, srFirst));
       assert.isTrue(ShadyDOM.nativeMethods.contains.call(document.documentElement, srFirst));
     });
-
   });
 
 </script>
