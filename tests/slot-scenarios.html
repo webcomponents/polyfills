@@ -12,9 +12,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 <head>
   <meta charset="utf-8">
-  <script>
-    window.hasNativeCustomElements = Boolean(window.customElements);
-  </script>
   <script src="../node_modules/@webcomponents/webcomponents-platform/webcomponents-platform.js"></script>
   <script src="../node_modules/@webcomponents/template/template.js"></script>
   <script src="loader.js"></script>
@@ -129,6 +126,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         customElements.define('outer-element', OuterElement);
 
         test('querying for assignedNodes in constructor does not throw', function() {
+          // skip test with native custom elements since elements cannot
+          // be made in the constructor.
+          if (!window.customElements.forcePolyfill) {
+            this.skip();
+          }
           assert.doesNotThrow(() => {
             const el = document.createElement('outer-element');
           });
@@ -136,6 +138,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         });
 
         test('querying for flattened assignedNodes correct after accessing in constructor', function() {
+          // skip test with native custom elements since elements cannot
+          // be made in the constructor.
+          if (!window.customElements.forcePolyfill) {
+            this.skip();
+          }
           const dom = ShadyDOM.wrap(document).importNode(outerWithChildTemplate.content, true);
           const outer = ShadyDOM.wrap(dom).querySelector('outer-element');
           const inner = ShadyDOM.wrap(ShadyDOM.wrap(outer).shadowRoot).querySelector('inner-element')
@@ -149,6 +156,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       });
 
       test('nested slots work with template innerHTML', function () {
+        // skip test with native custom elements since elements cannot
+        // be made in the constructor.
+        if (!window.customElements.forcePolyfill) {
+          this.skip();
+        }
         class InnerInlineElement extends HTMLElement {
           constructor() {
             super();
