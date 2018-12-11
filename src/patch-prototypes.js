@@ -42,7 +42,8 @@ if (Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'innerHTML')) {
 }
 
 // Avoid patching `innerHTML` if it does not exist on Element (IE)
-const ElementHasInnerHTML = 'innerHTML' in Element.prototype;
+// and we can patch accessors (hasDescriptors).
+const ElementShouldHaveInnerHTML = !utils.settings.hasDescriptors || 'innerHTML' in Element.prototype;
 
 // setup patching
 const patchMap = {
@@ -50,7 +51,7 @@ const patchMap = {
   Node: [NodePatches, !window.EventTarget ? EventTargetPatches : null],
   Text: [SlotablePatches],
   Element: [ElementPatches, ParentNodePatches, SlotablePatches,
-    ElementHasInnerHTML ? ElementOrShadowRootPatches : null,
+    ElementShouldHaveInnerHTML ? ElementOrShadowRootPatches : null,
     !window.HTMLSlotElement ? SlotPatches : null],
   HTMLElement: [HTMLElementPatches, NonStandardHTMLElement],
   HTMLSlotElement: [SlotPatches],
