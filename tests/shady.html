@@ -694,6 +694,15 @@ suite('Patch of innerHTML setter', function() {
   });
 });
 
+suite('Patch of getElementById', function() {
+  [undefined, null, '', 'unknown-elem'].forEach(function(id) {
+    test.only(`should return null for unknown id: "${id}"`, function() {
+      const elem = document.getElementById(id);
+      assert.isNull(elem);
+    });
+  });
+})
+
 function getEffectiveChildNodes(node) {
   var list = [];
   var c$ = ShadyDOM.wrap(node).childNodes;

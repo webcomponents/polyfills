@@ -17,6 +17,9 @@ export const DocumentOrFragmentPatches = utils.getOwnPropertyDescriptors({
    * @param {string} id
    */
   getElementById(id) {
+    if (id === '') {
+      return null;
+    }
     let result = query(this, function(n) {
       return n.id == id;
     }, function(n) {
