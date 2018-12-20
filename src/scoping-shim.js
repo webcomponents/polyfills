@@ -382,7 +382,8 @@ export default class ScopingShim {
    * @param {Object=} properties
    */
   styleSubtree(host, properties) {
-    let root = host.shadowRoot;
+    const wrappedHost = StyleUtil.wrap(host);
+    let root = wrappedHost.shadowRoot;
     if (root || this._isRootOwner(host)) {
       this.styleElement(host, properties);
     }
@@ -396,7 +397,7 @@ export default class ScopingShim {
       }
     } else {
       // process the lightdom children of `host`
-      let children = host.children || host.childNodes;
+      let children = wrappedHost.children || wrappedHost.childNodes;
       if (children) {
         for (let i = 0; i < children.length; i++) {
           let c = /** @type {!HTMLElement} */(children[i]);
