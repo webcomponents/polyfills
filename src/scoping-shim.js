@@ -24,6 +24,8 @@ import * as ApplyShimUtils from './apply-shim-utils.js';
 import {updateNativeProperties, detectMixin} from './common-utils.js';
 import {CustomStyleInterfaceInterface} from './custom-style-interface.js'; // eslint-disable-line no-unused-vars
 
+const adoptedCssTextMap = {};
+
 /**
  * @const {StyleCache}
  */
@@ -93,7 +95,7 @@ export default class ScopingShim {
       is: elementName,
       extends: typeExtension,
     };
-    let cssText = this._gatherStyles(template);
+    let cssText = this._gatherStyles(template) + (adoptedCssTextMap[elementName] || '');
     // check if the styling has mixin definitions or uses
     this._ensure();
     if (!optimalBuild) {
@@ -116,6 +118,13 @@ export default class ScopingShim {
       template._style = style;
     }
     template._ownPropertyNames = ownPropertyNames;
+  }
+
+  prepareAdoptedCssText(cssTextArray, elementName) {
+    if (!adoptedCssTextMap[elementName]) {
+      adoptedCssTextMap[elementName] = '';
+    }
+    adoptedCssTextMap[elementName] += cssTextArray.reduce((a, v) => `${a} ${v}`, '');
   }
   /**
    * Prepare template for the given element type

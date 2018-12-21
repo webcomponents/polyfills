@@ -6,6 +6,7 @@
  * prepareTemplate: function(!HTMLTemplateElement, string, string=),
  * prepareTemplateStyles: function(!HTMLTemplateElement, string, string=),
  * prepareTemplateDom: function(!HTMLTemplateElement, string),
+ * prepareAdoptedCssText: function(Array, string),
  * styleDocument: function(Object<string, string>=),
  * flushCustomStyles: function(),
  * getComputedStyleValue: function(!Element, string): string,
