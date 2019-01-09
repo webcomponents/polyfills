@@ -498,6 +498,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <div></div>
 </template>
 
+<template id="x-adopted">
+  <style>
+    div {
+      border: 1px solid orange;
+    }
+  </style>
+</template>
+
 <script>
 (function() {
   function assertComputed(element, value, property, pseudo) {
@@ -639,6 +647,87 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     });
 
   });
+
+  suite('prepareAdoptedCssText', function() {
+    test('Adopted cssText applies', function() {
+      const name = 'adopted-simple';
+      const template = document.createElement('template');
+      template.innerHTML = '<h1></h1><h2></h2><h3></h3>';
+      window.ShadyCSS.ScopingShim.prepareAdoptedCssText([
+        `h1 { border: 1px solid black;}`,
+        `h2 { border: 2px solid black;}`,
+        `h3 { border: 3px solid black;}`
+      ], name);
+      window.ShadyCSS.prepareTemplate(template, name);
+      window.customElements.define(name, class extends window.HTMLElement {
+        connectedCallback() {
+          window.ShadyCSS.styleElement(this);
+          this.attachShadow({mode: 'open'});
+          this.shadowRoot.appendChild(template.content.cloneNode(true));
+        }
+      });
+
+      const el = document.createElement(name);
+      document.body.appendChild(el);
+      assertComputed(el.shadowRoot.querySelector('h1'), '1px')
+      assertComputed(el.shadowRoot.querySelector('h2'), '2px')
+      assertComputed(el.shadowRoot.querySelector('h3'), '3px')
+      document.body.removeChild(el);
+    });
+
+    test('Adopted cssText applies after template styles', function() {
+      const name = 'adopted-template';
+      const template = document.createElement('template');
+      template.innerHTML = `<style>
+        h1 { border: 10px solid black; }
+        h4 { border: 4px solid black; }
+        </style><h1></h1><h4></h4>`;
+      window.ShadyCSS.ScopingShim.prepareAdoptedCssText([
+        `h1 { border: 1px solid black;}`
+      ], name);
+      window.ShadyCSS.prepareTemplate(template, name);
+      window.customElements.define(name, class extends window.HTMLElement {
+        connectedCallback() {
+          window.ShadyCSS.styleElement(this);
+          this.attachShadow({mode: 'open'});
+          this.shadowRoot.appendChild(template.content.cloneNode(true));
+        }
+      });
+
+      const el = document.createElement(name);
+      document.body.appendChild(el);
+      assertComputed(el.shadowRoot.querySelector('h1'), '1px')
+      assertComputed(el.shadowRoot.querySelector('h4'), '4px')
+      document.body.removeChild(el);
+    });
+
+    test('Calling `prepareAdoptedCssText` after `prepareTemplate` has no effect', function() {
+      const name = 'adopted-after';
+      const template = document.createElement('template');
+      template.innerHTML = `<style>
+        h1 { border: 10px solid black; }
+        h4 { border: 4px solid black; }
+        </style><h1></h1><h4></h4>`;
+      window.ShadyCSS.prepareTemplate(template, name);
+      window.ShadyCSS.ScopingShim.prepareAdoptedCssText([
+        `h1 { border: 1px solid black;}`
+      ], name);
+      window.customElements.define(name, class extends window.HTMLElement {
+        connectedCallback() {
+          window.ShadyCSS.styleElement(this);
+          this.attachShadow({mode: 'open'});
+          this.shadowRoot.appendChild(template.content.cloneNode(true));
+        }
+      });
+
+      const el = document.createElement(name);
+      document.body.appendChild(el);
+      assertComputed(el.shadowRoot.querySelector('h1'), '10px')
+      assertComputed(el.shadowRoot.querySelector('h4'), '4px')
+      document.body.removeChild(el);
+    });
+
+  })
 
   suite('slotted', function() {
 
