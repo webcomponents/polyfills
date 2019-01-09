@@ -24,6 +24,7 @@ import * as ApplyShimUtils from './apply-shim-utils.js';
 import {updateNativeProperties, detectMixin} from './common-utils.js';
 import {CustomStyleInterfaceInterface} from './custom-style-interface.js'; // eslint-disable-line no-unused-vars
 
+/** @type {!Object<string, string>} */
 const adoptedCssTextMap = {};
 
 /**
@@ -120,11 +121,12 @@ export default class ScopingShim {
     template._ownPropertyNames = ownPropertyNames;
   }
 
+  /**
+   * @param {!Array<string>} cssTextArray
+   * @param {string} elementName
+   */
   prepareAdoptedCssText(cssTextArray, elementName) {
-    if (!adoptedCssTextMap[elementName]) {
-      adoptedCssTextMap[elementName] = '';
-    }
-    adoptedCssTextMap[elementName] += cssTextArray.reduce((a, v) => `${a} ${v}`, '');
+    adoptedCssTextMap[elementName] = cssTextArray.join(' ');
   }
   /**
    * Prepare template for the given element type
@@ -565,6 +567,7 @@ ScopingShim.prototype['scopeNode'] = ScopingShim.prototype.scopeNode;
 ScopingShim.prototype['unscopeNode'] = ScopingShim.prototype.unscopeNode;
 ScopingShim.prototype['scopeForNode'] = ScopingShim.prototype.scopeForNode;
 ScopingShim.prototype['currentScopeForNode'] = ScopingShim.prototype.currentScopeForNode;
+ScopingShim.prototype['prepareAdoptedCssText'] = ScopingShim.prototype.prepareAdoptedCssText;
 /* eslint-enable no-self-assign */
 Object.defineProperties(ScopingShim.prototype, {
   'nativeShadow': {

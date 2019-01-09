@@ -52,14 +52,6 @@ window.ShadyCSS = {
     scopingShim.flushCustomStyles();
     scopingShim.prepareTemplateStyles(template, elementName, elementExtends)
   },
-
-  /**
-   * @param {!Array} cssTextArray
-   * @param {string} elementName
-   */
-  prepareAdoptedCssText(cssTextArray, elementName) {
-    scopingShim.prepareAdoptedCssText(cssTextArray, elementName);
-  },
   /**
    * @param {!HTMLElement} element
    * @param {Object=} properties
