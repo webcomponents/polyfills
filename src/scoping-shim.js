@@ -11,7 +11,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 'use strict';
 
 import {parse, StyleNode} from './css-parse.js';
-import {nativeShadow, nativeCssVariables} from './style-settings.js';
+import {nativeShadow, nativeCssVariables, disableRuntime} from './style-settings.js';
 import StyleTransformer from './style-transformer.js';
 import * as StyleUtil from './style-util.js';
 import StyleProperties from './style-properties.js';
@@ -79,7 +79,7 @@ export default class ScopingShim {
    * @param {string=} typeExtension
    */
   prepareTemplateStyles(template, elementName, typeExtension) {
-    if (template._prepared) {
+    if (template._prepared || disableRuntime) {
       return;
     }
     // style placeholders are only used when ShadyDOM is active
@@ -241,6 +241,9 @@ export default class ScopingShim {
    * @param {Object=} overrideProps
    */
   styleElement(host, overrideProps) {
+    if (disableRuntime) {
+      return;
+    }
     const styleInfo = StyleInfo.get(host) || this._prepareHost(host);
     // if there is no style info at this point, bail
     if (!styleInfo) {
