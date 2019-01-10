@@ -62,11 +62,17 @@ const patchMap = {
 
 const getPatchPrototype = (name) => window[name] && window[name].prototype;
 
+// Note, must avoid patching accessors on prototypes when descriptors are not correct
+// because the CustomElements polyfill checks if these exist before patching instances.
+// CustomElements polyfill *only* cares about these accessors.
+const disallowedNativePatches = utils.settings.hasDescriptors ? null : ['innerHTML', 'textContent'];
+
 export const applyPatches = (prefix) => {
+  const disallowed = prefix ? null : disallowedNativePatches;
   for (let p in patchMap) {
     const proto = getPatchPrototype(p);
     patchMap[p].forEach(patch => proto && patch &&
-        utils.patchProperties(proto, patch, prefix));
+        utils.patchProperties(proto, patch, prefix, disallowed));
   }
 }
 

@@ -140,10 +140,14 @@ export const SHADY_PREFIX = '__shady_';
  * @param {!Object} obj
  * @param {!Object} descriptors
  * @param {boolean=} force
+ * @param {Array=} disallowedPatches
  */
-export const patchProperties = (proto, descriptors, prefix = '') => {
+export const patchProperties = (proto, descriptors, prefix = '', disallowedPatches) => {
   for (let p in descriptors) {
     const newDescriptor = descriptors[p];
+    if (disallowedPatches && disallowedPatches.indexOf(p) >= 0) {
+      continue;
+    }
     newDescriptor.configurable = true;
     const name = prefix + p;
     // NOTE: we prefer writing directly because some browsers

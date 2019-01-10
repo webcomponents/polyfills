@@ -97,6 +97,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       });
 
       Klass.prototype.connectedCallback = function() {
+        this._isDisconnected = false;
         if (!this._initialized) {
           this._initialized = true;
           if (connected) {
@@ -107,6 +108,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             ShadyDOM.wrap(ShadyDOM.wrap(this).shadowRoot).appendChild(ShadyDOM.wrap(document).importNode(template.content, true));
           }
         }
+      }
+
+      Klass.prototype.disconnectedCallback = function() {
+        this._isDisconnected = true;
       }
 
       customElements.define(name, Klass);
@@ -1373,6 +1378,22 @@ suite('Accessors', function() {
     ShadyDOM.wrap(element).innerHTML = '<div>A</div><div>B</div>';
     assert.equal(ShadyDOM.wrap(element).childNodes.length, 0);
     assert.equal(ShadyDOM.wrap(element.content).childNodes.length, 2);
+  });
+
+  test('innerHTML containing custom element', function() {
+    var testElement = document.createElement('div');
+    ShadyDOM.wrap(document.body).appendChild(testElement);
+    ShadyDOM.wrap(testElement).innerHTML = '<x-simple></x-simple>';
+    assert.isTrue(ShadyDOM.wrap(testElement).firstChild._initialized);
+  });
+
+  test('textContent that removes custom element', function() {
+    var testElement = document.createElement('div');
+    ShadyDOM.wrap(document.body).appendChild(testElement);
+    ShadyDOM.wrap(testElement).innerHTML = '<x-simple></x-simple>';
+    const el = ShadyDOM.wrap(testElement).firstChild;
+    ShadyDOM.wrap(testElement).textContent = '';
+    assert.isTrue(el._isDisconnected);
   });
 
 });
