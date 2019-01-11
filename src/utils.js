@@ -9,6 +9,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 */
 import {shadyDataForNode} from './shady-data.js';
 
+/** @type {!Object} */
 export const settings = window['ShadyDOM'] || {};
 
 settings.hasNativeShadowDOM = Boolean(Element.prototype.attachShadow && Node.prototype.getRootNode);
@@ -27,13 +28,6 @@ export const isTrackingLogicalChildNodes = (node) => {
 
 export const isShadyRoot = (obj) => {
   return Boolean(obj._localName === 'ShadyRoot');
-}
-
-export const ownerShadyRootForNode = (node) => {
-  let root = node[SHADY_PREFIX + 'getRootNode']();
-  if (isShadyRoot(root)) {
-    return root;
-  }
 }
 
 export const hasShadowRootWithSlot = (node) => {
@@ -134,12 +128,13 @@ export const NATIVE_PREFIX = '__shady_native_';
 export const SHADY_PREFIX = '__shady_';
 
 
-// patch a group of accessors on an object only if it exists or if the `force`
-// argument is true.
+
 /**
- * @param {!Object} obj
+ * Patch a group of accessors on an object only if it exists or if the `force`
+ * argument is true.
+ * @param {!Object} proto
  * @param {!Object} descriptors
- * @param {boolean=} force
+ * @param {string=} prefix
  * @param {Array=} disallowedPatches
  */
 export const patchProperties = (proto, descriptors, prefix = '', disallowedPatches) => {
@@ -166,11 +161,13 @@ export const patchProperties = (proto, descriptors, prefix = '', disallowedPatch
   }
 }
 
+/** @type {!function(new:HTMLElement)} */
 export const NativeHTMLElement =
     (window['customElements'] && window['customElements']['nativeHTMLElement']) ||
     HTMLElement;
 
 // note, this is not a perfect polyfill since it doesn't include symbols
+/** @return {!Object<!ObjectPropertyDescriptor>} */
 export const getOwnPropertyDescriptors = (obj) => {
   const descriptors = {};
   Object.getOwnPropertyNames(obj).forEach((name) => {

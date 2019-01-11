@@ -11,7 +11,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 import * as utils from '../utils.js';
 import {scopeClassAttribute} from '../style-scoping.js';
 import {shadyDataForNode} from '../shady-data.js';
-import {attachShadow} from '../attach-shadow.js';
+import {attachShadow, ownerShadyRootForNode} from '../attach-shadow.js';
 
 const doc = window.document;
 
@@ -29,7 +29,7 @@ function distributeAttributeChange(node, name) {
       shadyDataForNode(parent).root._asyncRender();
     }
   } else if (node.localName === 'slot' && name === 'name') {
-    let root = utils.ownerShadyRootForNode(node);
+    let root = ownerShadyRootForNode(node);
     if (root) {
       root._updateSlotName(node);
       root._asyncRender();
@@ -124,7 +124,7 @@ export const ElementPatches = utils.getOwnPropertyDescriptors({
 
   /**
    * @this {Element}
-   * @param {object} options
+   * @param {!{mode: string}} options
    */
   attachShadow(options) {
     return attachShadow(this, options);

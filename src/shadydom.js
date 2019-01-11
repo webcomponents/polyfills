@@ -125,5 +125,5 @@ if (utils.settings.inUse) {
   // (e.g. `ShadyDOM.wrap(element).addEventListener(...)`).
   patchEvents();
 
-  window.ShadowRoot = ShadyRoot;
+  window.ShadowRoot = /** @type {function(new:ShadowRoot)} */(ShadyRoot);
 }

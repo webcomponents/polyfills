@@ -45,6 +45,7 @@ export class ShadyData {
     this.__onCallbackListeners = {};
   }
 
+  /** @override */
   toJSON() {
     return {};
   }

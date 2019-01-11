@@ -15,8 +15,8 @@ export const ShadowRootPatches = utils.getOwnPropertyDescriptors({
   /**
    * @this {ShadowRoot}
    * @param {string} type
-   * @param {function} fn
-   * @param {object|boolean} optionsOrCapture
+   * @param {Function} fn
+   * @param {Object|boolean=} optionsOrCapture
    */
   addEventListener(type, fn, optionsOrCapture) {
     if (typeof optionsOrCapture !== 'object') {
@@ -31,8 +31,8 @@ export const ShadowRootPatches = utils.getOwnPropertyDescriptors({
   /**
    * @this {ShadowRoot}
    * @param {string} type
-   * @param {function} fn
-   * @param {object|boolean} optionsOrCapture
+   * @param {Function} fn
+   * @param {Object|boolean=} optionsOrCapture
    */
   removeEventListener(type, fn, optionsOrCapture) {
     if (typeof optionsOrCapture !== 'object') {

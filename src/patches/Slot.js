@@ -15,7 +15,7 @@ export const SlotPatches = utils.getOwnPropertyDescriptors({
 
   /**
    * @this {HTMLSlotElement}
-   * @param {object} options
+   * @param {Object=} options
    */
   assignedNodes(options) {
     if (this.localName === 'slot') {

@@ -165,7 +165,7 @@ let EventPatches = {
         this.__composed = alwaysComposed[this.type];
       }
     }
-    return this.__composed || false;
+    return /** @type {!Event} */(this).__composed || false;
   },
 
   /**
@@ -175,7 +175,7 @@ let EventPatches = {
     if (!this.__composedPath) {
       this.__composedPath = pathComposer(this['__target'], this.composed);
     }
-    return this.__composedPath;
+    return /** @type {!Event} */(this).__composedPath;
   },
 
   /**
@@ -197,7 +197,7 @@ let EventPatches = {
       this.__relatedTargetComposedPath = pathComposer(this.__relatedTarget, true);
     }
     // find the deepest node in relatedTarget composed path that is in the same root with the currentTarget
-    return retarget(this.currentTarget || this['__previousCurrentTarget'], this.__relatedTargetComposedPath);
+    return retarget(this.currentTarget || this['__previousCurrentTarget'], /** @type {!Event} */(this).__relatedTargetComposedPath);
   },
   /**
    * @this {Event}
@@ -348,7 +348,7 @@ function getEventWrappers(eventLike) {
 }
 
 /**
- * @this {Event}
+ * @this {EventTarget}
  */
 export function addEventListener(type, fnOrObj, optionsOrCapture) {
   if (!fnOrObj) {
@@ -456,6 +456,7 @@ export function addEventListener(type, fnOrObj, optionsOrCapture) {
       return ret;
     }
   };
+
   // Store the wrapper information.
   fnOrObj[eventWrappersName].push({
     // note: use target here which is either a shadowRoot
@@ -479,7 +480,7 @@ export function addEventListener(type, fnOrObj, optionsOrCapture) {
 }
 
 /**
- * @this {Event}
+ * @this {EventTarget}
  */
 export function removeEventListener(type, fnOrObj, optionsOrCapture) {
   if (!fnOrObj) {

@@ -14,6 +14,7 @@ import {eventPropertyNames} from './patch-events.js';
 /** @implements {IWrapper} */
 class Wrapper {
 
+  /** @param {!Node} node */
   constructor(node) {
     this.node = node;
   }
@@ -82,6 +83,7 @@ class Wrapper {
     return this.node[utils.SHADY_PREFIX + 'attachShadow'](options);
   }
 
+  /** @return {!Node|undefined} */
   get activeElement() {
     if (utils.isShadyRoot(this.node) || this.node.nodeType === Node.DOCUMENT_NODE) {
       const e = this.node[utils.SHADY_PREFIX + 'activeElement'];
@@ -89,14 +91,19 @@ class Wrapper {
     }
   }
 
-  // Installed for compatibility with browsers (older Chrome/Safari) that do
-  // not have a configurable `activeElement` accessor. Enables noPatch and
-  // patch mode both to consistently use ShadyDOM.wrap(document)._activeElement.
+  /**
+   * Installed for compatibility with browsers (older Chrome/Safari) that do
+   * not have a configurable `activeElement` accessor. Enables noPatch and
+   * patch mode both to consistently use ShadyDOM.wrap(document)._activeElement.
+   * @override
+   * @return {!Node|undefined}
+   */
   get _activeElement() {
     return this.activeElement;
   }
 
   // NOTE: not needed, just here for balance
+  /** @override */
   focus() {
     this.node[utils.NATIVE_PREFIX + 'focus']();
   }
@@ -136,7 +143,7 @@ class Wrapper {
 
   get host() {
     if (utils.isShadyRoot(this.node)) {
-      return this.node.host;
+      return /** @type {!ShadowRoot} */(this.node).host;
     }
   }
 
@@ -232,9 +239,11 @@ class Wrapper {
 
 eventPropertyNames.forEach(name => {
   Object.defineProperty(Wrapper.prototype, name, {
+    /** @this {Wrapper} */
     get() {
       return this.node[utils.SHADY_PREFIX + name];
     },
+    /** @this {Wrapper} */
     set(value) {
       this.node[utils.SHADY_PREFIX + name] = value;
     },

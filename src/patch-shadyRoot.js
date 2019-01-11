@@ -17,6 +17,10 @@ import {DocumentOrShadowRootPatches} from './patches/DocumentOrShadowRoot.js';
 import {ElementOrShadowRootPatches} from './patches/ElementOrShadowRoot.js';
 import {ShadowRootPatches} from './patches/ShadowRoot.js';
 
+/**
+ * @param {!Object} proto
+ * @param {string=} prefix
+ */
 const patchShadyAccessors = (proto, prefix) => {
   utils.patchProperties(proto, ShadowRootPatches, prefix);
   utils.patchProperties(proto, DocumentOrShadowRootPatches, prefix);
@@ -87,6 +91,7 @@ export const patchShadyRoot = (proto) => {
     'isConnected'
   ].forEach((prop) => {
     Object.defineProperty(proto, prop, {
+      /** @this {ShadowRoot} */
       get() {
         return this.host[prop];
       },
