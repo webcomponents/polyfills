@@ -28,10 +28,22 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <script src="../node_modules/@webcomponents/shadydom/shadydom.min.js"></script>
   <script src="../node_modules/@webcomponents/custom-elements/custom-elements.min.js"></script>
   <script src="../scoping-shim.min.js"></script>
+  <script src="../apply-shim.min.js"></script>
+  <script src="../custom-style-interface.min.js"></script>
   <script src="module/generated/make-element.js"></script>
+  <script src="module/generated/custom-style-element.js"></script>
 </head>
 
 <body>
+  <custom-style>
+    <style>
+      html {
+        --foo: {
+          border: 2px solid black;
+        }
+      }
+    </style>
+  </custom-style>
   <template id="x-foo">
     <div></div>
   </template>
@@ -66,6 +78,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         const style = template.content.querySelector('style');
         assert(style, 'style should still be in template');
         assert.include(style.textContent, ':host', 'style should not been transformed');
+      });
+      test('custom styles are not processed', function() {
+        const style = document.querySelector('custom-style > style');
+        assert.notInclude(style.textContent, '--foo_-_border', 'custom style should not have ApplyShim applied');
       });
     });
   </script>

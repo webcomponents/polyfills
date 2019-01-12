@@ -212,6 +212,9 @@ export default class ScopingShim {
    * Flush and apply custom styles to document
    */
   flushCustomStyles() {
+    if (disableRuntime) {
+      return;
+    }
     this._ensure();
     if (!this._customStyleInterface) {
       return;
