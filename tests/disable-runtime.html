@@ -36,6 +36,18 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     <div></div>
   </template>
 
+  <template id="no-scope">
+    <style>
+      :host {
+        display: block;
+      }
+      div {
+        border: 2px solid black;
+      }
+    </style>
+    <div></div>
+  </template>
+
   <script>
     suite('disable runtime', function() {
       test('disableRuntime setting is visible', function() {
@@ -46,6 +58,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         makeElement('x-foo');
         spy.restore();
         assert(spy.notCalled, 'placeholder was created but should not have been');
+      });
+      test('no scoping occurs', function() {
+        makeElement('no-scope');
+        const template = document.querySelector('template#no-scope');
+        assert.deepEqual(template.content.querySelectorAll('.style-scope'), [], 'no DOM should be scoped');
+        const style = template.content.querySelector('style');
+        assert(style, 'style should still be in template');
+        assert.include(style.textContent, ':host', 'style should not been transformed');
       });
     });
   </script>

@@ -134,6 +134,9 @@ export default class ScopingShim {
    * @param {string} elementName
    */
   prepareTemplateDom(template, elementName) {
+    if (disableRuntime) {
+      return;
+    }
     const cssBuild = StyleUtil.getCssBuild(template);
     if (!nativeShadow && cssBuild !== 'shady' && !template._domPrepared) {
       template._domPrepared = true;
