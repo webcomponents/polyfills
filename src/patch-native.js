@@ -18,9 +18,11 @@ export const NATIVE_PREFIX = utils.NATIVE_PREFIX;
 // e.g. `nativeMethods.querySelector.call(node, selector)`
 // same as `node.querySelector(selector)`
 export const nativeMethods = {
+  /** @this {Element} */
   querySelector(selector) {
     return this[NATIVE_PREFIX + 'querySelector'](selector);
   },
+  /** @this {Element} */
   querySelectorAll(selector) {
     return this[NATIVE_PREFIX + 'querySelectorAll'](selector);
   }
@@ -66,12 +68,15 @@ const copyProperties = (proto, list = []) => {
   }
 }
 
+/** @type {!TreeWalker} */
 const nodeWalker = document.createTreeWalker(document, NodeFilter.SHOW_ALL,
   null, false);
 
+/** @type {!TreeWalker} */
 const elementWalker = document.createTreeWalker(document, NodeFilter.SHOW_ELEMENT,
   null, false);
 
+/** @type {!Document} */
 const inertDoc = document.implementation.createHTMLDocument('inert');
 
 const clearNode = node => {
@@ -125,18 +130,21 @@ export const addNativePrefixedProperties = () => {
   } else {
     defineNativeAccessors(Node.prototype, {
       parentNode: {
+        /** @this {Node} */
         get() {
           nodeWalker.currentNode = this;
           return nodeWalker.parentNode();
         }
       },
       firstChild: {
+        /** @this {Node} */
         get() {
           nodeWalker.currentNode = this;
           return nodeWalker.firstChild();
         }
       },
       lastChild: {
+        /** @this {Node} */
         get() {
           nodeWalker.currentNode = this;
           return nodeWalker.lastChild();
@@ -144,12 +152,14 @@ export const addNativePrefixedProperties = () => {
 
       },
       previousSibling: {
+        /** @this {Node} */
         get() {
           nodeWalker.currentNode = this;
           return nodeWalker.previousSibling();
         }
       },
       nextSibling: {
+        /** @this {Node} */
         get() {
           nodeWalker.currentNode = this;
           return nodeWalker.nextSibling();
@@ -157,6 +167,7 @@ export const addNativePrefixedProperties = () => {
       },
       // TODO(sorvell): make this a NodeList or whatever
       childNodes: {
+        /** @this {Node} */
         get() {
           const nodes = [];
           nodeWalker.currentNode = this;
@@ -169,12 +180,14 @@ export const addNativePrefixedProperties = () => {
         }
       },
       parentElement: {
+        /** @this {Node} */
         get() {
           elementWalker.currentNode = this;
           return elementWalker.parentNode();
         }
       },
       textContent: {
+        /** @this {Node} */
         get() {
           /* eslint-disable no-case-declarations */
           switch (this.nodeType) {
@@ -196,6 +209,7 @@ export const addNativePrefixedProperties = () => {
           }
         },
         // Needed on browsers that do not proper accessors (e.g. old versions of Chrome)
+        /** @this {Node} */
         set(value) {
           if (typeof value === 'undefined' || value === null) {
             value = ''
@@ -231,18 +245,21 @@ export const addNativePrefixedProperties = () => {
 
   const ParentNodeWalkerDescriptors = {
     firstElementChild: {
+      /** @this {ParentNode} */
       get() {
         elementWalker.currentNode = this;
         return elementWalker.firstChild();
       }
     },
     lastElementChild: {
+      /** @this {ParentNode} */
       get() {
         elementWalker.currentNode = this;
         return elementWalker.lastChild();
       }
     },
     children: {
+      /** @this {ParentNode} */
       get() {
         let nodes = [];
         elementWalker.currentNode = this;
@@ -255,6 +272,7 @@ export const addNativePrefixedProperties = () => {
       }
     },
     childElementCount: {
+      /** @this {ParentNode} */
       get() {
         return this.children.length;
       }
@@ -286,22 +304,26 @@ export const addNativePrefixedProperties = () => {
     defineNativeAccessors(Element.prototype, ParentNodeWalkerDescriptors);
     defineNativeAccessors(Element.prototype, {
       previousElementSibling: {
+        /** @this {Element} */
         get() {
           elementWalker.currentNode = this;
           return elementWalker.previousSibling();
         }
       },
       nextElementSibling: {
+        /** @this {Element} */
         get() {
           elementWalker.currentNode = this;
           return elementWalker.nextSibling();
         }
       },
       innerHTML: {
+        /** @this {Element} */
         get() {
           return getInnerHTML(this, n => n[NATIVE_PREFIX + 'childNodes']);
         },
         // Needed on browsers that do not proper accessors (e.g. old versions of Chrome)
+        /** @this {Element} */
         set(value) {
           const content = this.localName === 'template' ?
           /** @type {HTMLTemplateElement} */(this).content : this;

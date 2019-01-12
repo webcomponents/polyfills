@@ -12,6 +12,7 @@ import * as utils from '../utils.js';
 import {getInnerHTML} from '../innerHTML.js';
 import {clearNode} from './Node.js';
 
+/** @type {!Document} */
 const inertDoc = document.implementation.createHTMLDocument('inert');
 
 export const ElementOrShadowRootPatches = utils.getOwnPropertyDescriptors({

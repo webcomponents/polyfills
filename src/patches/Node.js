@@ -13,6 +13,7 @@ import {getScopingShim, removeShadyScoping, replaceShadyScoping,
   treeVisitor, currentScopeForNode, currentScopeIsCorrect } from '../style-scoping.js';
 import {shadyDataForNode, ensureShadyDataForNode} from '../shady-data.js';
 import {recordInsertBefore, recordRemoveChild} from '../link-nodes.js';
+import {ownerShadyRootForNode} from '../attach-shadow.js';
 
 const doc = window.document;
 
@@ -264,8 +265,7 @@ export const NodePatches = utils.getOwnPropertyDescriptors({
     }
     /** @type {!Array<!HTMLSlotElement>} */
     const slotsAdded = [];
-    /** @type {function(!Node, string): void} */
-    const ownerRoot = utils.ownerShadyRootForNode(this);
+    const ownerRoot = ownerShadyRootForNode(this);
     /** @type {string} */
     const newScopeName = ownerRoot ? ownerRoot.host.localName : currentScopeForNode(this);
     /** @type {string} */
@@ -275,7 +275,7 @@ export const NodePatches = utils.getOwnPropertyDescriptors({
     if (parentNode) {
       oldScopeName = currentScopeForNode(node);
       parentNode[utils.SHADY_PREFIX + 'removeChild'](node,
-        Boolean(ownerRoot) || !utils.ownerShadyRootForNode(node));
+        Boolean(ownerRoot) || !ownerShadyRootForNode(node));
     }
     // add to new parent
     let allowNativeInsert = true;
@@ -376,7 +376,7 @@ export const NodePatches = utils.getOwnPropertyDescriptors({
         node);
     }
     let preventNativeRemove;
-    let ownerRoot = utils.ownerShadyRootForNode(node);
+    let ownerRoot = ownerShadyRootForNode(node);
     let removingInsertionPoint;
     const parentData = shadyDataForNode(this);
     if (utils.isTrackingLogicalChildNodes(this)) {
@@ -459,7 +459,7 @@ export const NodePatches = utils.getOwnPropertyDescriptors({
   },
 
   /**
-   * @param {Node} this
+   * @this {Node}
    * @param {Object=} options
    */
   // TODO(sorvell): implement `options` e.g. `{ composed: boolean }`
@@ -490,7 +490,7 @@ export const NodePatches = utils.getOwnPropertyDescriptors({
     return root;
   },
 
-  /** @param {Node} this */
+  /** @this {Node} */
   contains(node) {
     return utils.contains(this, node);
   }

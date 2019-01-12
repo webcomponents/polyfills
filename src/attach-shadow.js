@@ -52,9 +52,11 @@ class ShadyRoot {
     this._localName = SHADYROOT_NAME;
     // root <=> host
     this.host = host;
+    /** @type {!string|undefined} */
     this.mode = options && options.mode;
     recordChildNodes(host);
     const hostData = ensureShadyDataForNode(host);
+    /** @type {!ShadyRoot} */
     hostData.root = this;
     hostData.publicRoot = this.mode !== MODE_CLOSED ? this : null;
     // setup root
@@ -83,7 +85,6 @@ class ShadyRoot {
     }
   }
 
-  // async render
   _asyncRender() {
     if (!this._renderPending) {
       this._renderPending = true;
@@ -122,7 +123,7 @@ class ShadyRoot {
   _render() {
     const root = this._getRenderRoot();
     if (root) {
-      root['_renderRoot']();
+      root._renderRoot();
     }
   }
 
@@ -130,12 +131,12 @@ class ShadyRoot {
   _flush() {
     const root = this._getRenderRoot();
     if (root && root._renderPending) {
-      root['_renderRoot']();
+      root._renderRoot();
     }
   }
 
-  // NOTE: avoid renaming to ease testability.
-  ['_renderRoot']() {
+  /** @override */
+  _renderRoot() {
     // track rendering state.
     const wasRendering = isRendering;
     isRendering = true;
@@ -189,7 +190,7 @@ class ShadyRoot {
       const slotParentData = shadyDataForNode(slot[utils.SHADY_PREFIX + 'parentNode']);
       const slotParentRoot = slotParentData && slotParentData.root;
       if (slotParentRoot && (slotParentRoot._hasInsertionPoint() || slotParentRoot._renderPending)) {
-        slotParentRoot['_renderRoot']();
+        slotParentRoot._renderRoot();
       }
       this._addAssignedToFlattenedNodes(slotData.flattenedNodes,
         slotData.assignedNodes);
@@ -552,10 +553,10 @@ export {ShadyRoot};
 */
 export const attachShadow = (host, options) => {
   if (!host) {
-    throw 'Must provide a host.';
+    throw new Error('Must provide a host.');
   }
   if (!options) {
-    throw 'Not enough arguments.'
+    throw new Error('Not enough arguments.');
   }
   return new ShadyRoot(ShadyRootConstructionToken, host, options);
 }
@@ -603,6 +604,7 @@ if (window['customElements'] && utils.settings.inUse && !utils.settings['preferP
     const connectFlag = `__isConnected${counter++}`;
     if (connected || disconnected) {
 
+      /** @this {!HTMLElement} */
       base.prototype.connectedCallback = base.prototype.__shadydom_connectedCallback = function() {
         // if rendering defer connected
         // otherwise connect only if we haven't already
@@ -616,6 +618,7 @@ if (window['customElements'] && utils.settings.inUse && !utils.settings['preferP
         }
       }
 
+      /** @this {!HTMLElement} */
       base.prototype.disconnectedCallback = base.prototype.__shadydom_disconnectedCallback = function() {
         // if rendering, cancel a pending connection and queue disconnect,
         // otherwise disconnect only if a connection has been allowed
@@ -658,4 +661,12 @@ if (window['customElements'] && utils.settings.inUse && !utils.settings['preferP
     }
   });
 
+}
+
+/** @return {!ShadyRoot|undefined} */
+export const ownerShadyRootForNode = (node) => {
+  let root = node[utils.SHADY_PREFIX + 'getRootNode']();
+  if (utils.isShadyRoot(root)) {
+    return root;
+  }
 }

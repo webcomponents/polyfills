@@ -67,6 +67,7 @@ const getPatchPrototype = (name) => window[name] && window[name].prototype;
 // CustomElements polyfill *only* cares about these accessors.
 const disallowedNativePatches = utils.settings.hasDescriptors ? null : ['innerHTML', 'textContent'];
 
+/** @param {string=} prefix */
 export const applyPatches = (prefix) => {
   const disallowed = prefix ? null : disallowedNativePatches;
   for (let p in patchMap) {

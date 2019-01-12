@@ -13,6 +13,7 @@ import {shadyDataForNode} from '../shady-data.js';
 
 export const SlotablePatches = utils.getOwnPropertyDescriptors({
 
+  /** @this {Node} */
   get assignedSlot() {
     // Force any parent's shadowRoot to flush so that distribution occurs
     // and this node has an assignedSlot.

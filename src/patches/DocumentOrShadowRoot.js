@@ -9,6 +9,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 */
 
 import * as utils from '../utils.js';
+import {ownerShadyRootForNode} from '../attach-shadow.js';
 
 function getDocumentActiveElement() {
   if (utils.settings.hasDescriptors) {
@@ -47,10 +48,10 @@ export const DocumentOrShadowRootPatches = utils.getOwnPropertyDescriptors({
     // This node is either the document or a shady root of which the active
     // element is a (composed) descendant of its host; iterate upwards to
     // find the active element's most shallow host within it.
-    let activeRoot = utils.ownerShadyRootForNode(active);
+    let activeRoot = ownerShadyRootForNode(active);
     while (activeRoot && activeRoot !== this) {
       active = activeRoot.host;
-      activeRoot = utils.ownerShadyRootForNode(active);
+      activeRoot = ownerShadyRootForNode(active);
     }
     if (this === document) {
       // This node is the document, so activeRoot should be null.
