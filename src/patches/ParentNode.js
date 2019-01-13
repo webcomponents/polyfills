@@ -88,7 +88,11 @@ export const ParentNodePatches = utils.getOwnPropertyDescriptors({
 
   /** @this {Element} */
   get childElementCount() {
-    return this[utils.SHADY_PREFIX + 'children'].length;
+    let children = this[utils.SHADY_PREFIX + 'children'];
+    if(children) {
+      return children.length;
+    }
+    return 0;
   }
 
 });

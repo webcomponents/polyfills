@@ -274,7 +274,10 @@ export const addNativePrefixedProperties = () => {
     childElementCount: {
       /** @this {ParentNode} */
       get() {
-        return this.children.length;
+        if (this.children) {
+          return this.children.length;
+        }
+        return 0;
       }
     }
   };
