@@ -16,7 +16,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <script>
     window.NATIVE = {
       children: Object.getOwnPropertyDescriptor(Element.prototype, 'children')
-             || Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'children')
+             || Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'children'),
+      documentHasParentNodeAccessors: Object.getOwnPropertyDescriptor(Document.prototype, 'firstElementChild')
     };
   </script>
   <script src="loader.js"></script>
@@ -1254,7 +1255,10 @@ suite('Accessors', function() {
     assert.equal(ShadyDOM.wrap(element).previousElementSibling, null, 'previousElementSibling incorrect');
   });
 
-  test('document accessors', function() {
+  test('document ParentNode accessors', function() {
+    if (!window.NATIVE.documentHasParentNodeAccessors) {
+      this.skip();
+    }
     const doc = ShadyDOM.wrap(document);
     assert.ok(doc.firstChild);
     assert.ok(doc.lastChild);
