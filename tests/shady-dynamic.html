@@ -1254,6 +1254,17 @@ suite('Accessors', function() {
     assert.equal(ShadyDOM.wrap(element).previousElementSibling, null, 'previousElementSibling incorrect');
   });
 
+  test('document accessors', function() {
+    const doc = ShadyDOM.wrap(document);
+    assert.ok(doc.firstChild);
+    assert.ok(doc.lastChild);
+    assert.equal(doc.firstElementChild, document.documentElement);
+    assert.equal(doc.lastElementChild, document.documentElement);
+    assert.equal(doc.children.length, 1);
+    assert.equal(doc.children[0], document.documentElement);
+    assert.equal(doc.childElementCount, 1);
+  });
+
   test('template accessors (innerHTML)', function() {
     var template = document.createElement('template');
     ShadyDOM.wrap(template).innerHTML = '<div></div>';
