@@ -34,6 +34,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 </head>
 <body>
 
+  <svg id="emptySvg"></svg>
+
   <x-test></x-test>
 
   <x-test-esc></x-test-esc>
@@ -753,6 +755,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     assert.equal(ShadyDOM.wrap(rere).childElementCount, 1);
     var projected = ShadyDOM.wrap(ShadyDOM.wrap(test).shadowRoot).querySelector('#projected');
     assert.equal(ShadyDOM.wrap(projected).childElementCount, 0);
+    var emptySvg = ShadyDOM.wrap(document).querySelector('#emptySvg');
+    assert.equal(ShadyDOM.wrap(emptySvg).childElementCount, 0);
   });
 
   test('cloneNode shallow', function() {
