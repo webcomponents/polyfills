@@ -397,7 +397,7 @@ export const addNativePrefixedProperties = () => {
 
   // Document
   if (hasDescriptors) {
-    copyProperties(DocumentFragment.prototype, ParentNodeAccessors);
+    copyProperties(Document.prototype, ParentNodeAccessors);
     copyProperties(Document.prototype, [
       'activeElement'
     ]);
