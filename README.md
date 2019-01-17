@@ -53,3 +53,5 @@ This should only be an issue when setting `textContent` or `innerHTML` on a
 node inside a shadowRoot adds or removes a `<slot>` element.
 In this case, the shadowRoot will not render correctly. To workaround this,
 call `ShadyDOM.patch(node)` prior to setting `textContent` or `innerHTML`.
+
+For additional information about Web Component polyfills, including browser compatibility, please see [the webcomponentsjs repository](https://github.com/webcomponents/webcomponentsjs).
