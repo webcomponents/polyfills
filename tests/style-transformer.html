@@ -68,6 +68,9 @@ WCT = {waitFor: function (cb) {HTMLImports.whenReady(cb)}}
   :host(:dir(rtl)) {
     color: blue;
   }
+  :dir(rtl) > .pin.expand > .slider-knob > .slider-knob-inner::after {
+    color: blue;
+  }
   </style>
 </template>
 
@@ -185,6 +188,11 @@ suite('Style Transformer', function() {
 
     test('host(:dir(rtl))', function() {
       assert.equal(ast.rules[1].selector, '[dir="rtl"] x-dir, x-dir[dir="rtl"]');
+    });
+
+    test('complicated :dir', function() {
+      // :dir(rtl) > .pin.expand > .slider-knob > .slider-knob-inner::after
+      assert.equal(ast.rules[2].selector, '[dir="rtl"] .x-dir > .pin.expand.x-dir > .slider-knob.x-dir > .slider-knob-inner.x-dir::after, .x-dir[dir="rtl"] > .pin.expand.x-dir > .slider-knob.x-dir > .slider-knob-inner.x-dir::after');
     });
 
   });
