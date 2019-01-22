@@ -83,6 +83,15 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         const style = document.querySelector('custom-style > style');
         assert.notInclude(style.textContent, '--foo_-_border', 'custom style should not have ApplyShim applied');
       });
+      test('styleElement with props still works', function() {
+        makeElement('update-props');
+        const el = document.createElement('update-props');
+        document.body.appendChild(el);
+        assert.equal(window.ShadyCSS.getComputedStyleValue(el, '--bar'), '');
+        debugger;
+        window.ShadyCSS.styleSubtree(el, {'--bar': '20px'});
+        assert.equal(window.ShadyCSS.getComputedStyleValue(el, '--bar'), '20px');
+      });
     });
   </script>
 </body>

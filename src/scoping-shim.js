@@ -248,6 +248,14 @@ export default class ScopingShim {
    */
   styleElement(host, overrideProps) {
     if (disableRuntime) {
+      if (overrideProps) {
+        if (!StyleInfo.get(host)) {
+          StyleInfo.set(host, new StyleInfo(null));
+        }
+        const styleInfo = /** @type {!StyleInfo} */(StyleInfo.get(host));
+        this._mixOverrideStyleProps(styleInfo, overrideProps);
+        this.styleElementNativeVariables(host, styleInfo);
+      }
       return;
     }
     const styleInfo = StyleInfo.get(host) || this._prepareHost(host);
@@ -259,16 +267,24 @@ export default class ScopingShim {
     if (!this._isRootOwner(host)) {
       this._elementsHaveApplied = true;
     }
-    if (overrideProps) {
-      styleInfo.overrideStyleProperties =
-        styleInfo.overrideStyleProperties || {};
-      Object.assign(styleInfo.overrideStyleProperties, overrideProps);
-    }
+    this._mixOverrideStyleProps(styleInfo, overrideProps);
     if (!nativeCssVariables) {
       this.styleElementShimVariables(host, styleInfo);
     } else {
       this.styleElementNativeVariables(host, styleInfo);
     }
+  }
+  /**
+   * @param {StyleInfo} styleInfo
+   * @param {Object=} overrideProps
+   */
+  _mixOverrideStyleProps(styleInfo, overrideProps) {
+    if (!styleInfo || !overrideProps) {
+      return;
+    }
+    styleInfo.overrideStyleProperties =
+      styleInfo.overrideStyleProperties || {};
+    Object.assign(styleInfo.overrideStyleProperties, overrideProps);
   }
   /**
    * @param {!HTMLElement} host
