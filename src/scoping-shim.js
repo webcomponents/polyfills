@@ -267,7 +267,9 @@ export default class ScopingShim {
     if (!this._isRootOwner(host)) {
       this._elementsHaveApplied = true;
     }
-    this._mixOverrideStyleProps(styleInfo, overrideProps);
+    if (overrideProps) {
+      this._mixOverrideStyleProps(styleInfo, overrideProps);
+    }
     if (!nativeCssVariables) {
       this.styleElementShimVariables(host, styleInfo);
     } else {
@@ -275,13 +277,10 @@ export default class ScopingShim {
     }
   }
   /**
-   * @param {StyleInfo} styleInfo
-   * @param {Object=} overrideProps
+   * @param {!StyleInfo} styleInfo
+   * @param {Object} overrideProps
    */
   _mixOverrideStyleProps(styleInfo, overrideProps) {
-    if (!styleInfo || !overrideProps) {
-      return;
-    }
     styleInfo.overrideStyleProperties =
       styleInfo.overrideStyleProperties || {};
     Object.assign(styleInfo.overrideStyleProperties, overrideProps);
