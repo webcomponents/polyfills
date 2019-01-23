@@ -9,6 +9,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 */
 
 import * as utils from '../utils.js';
+import {treeVisitor} from '../style-scoping.js';
+import {recordChildNodes} from '../link-nodes.js';
 
 export const ShadowRootPatches = utils.getOwnPropertyDescriptors({
 
@@ -42,6 +44,44 @@ export const ShadowRootPatches = utils.getOwnPropertyDescriptors({
     }
     optionsOrCapture.__shadyTarget = this;
     this.host[utils.SHADY_PREFIX + 'removeEventListener'](type, fn, optionsOrCapture);
-  }
+  },
+
+  // Optimized initial insertion for pre-scoped node.
+  ['_attachDom'](node) {
+    /** @type {!Array<!HTMLSlotElement>} */
+    let slotsAdded;
+    /** @type {string} */
+    // const newScopeName = ownerRoot ? ownerRoot.host.localName : currentScopeForNode(this);
+    // /** @type {string} */
+    // let oldScopeName;
+    // remove from existing location
+    // add to new parent
+    let allowNativeInsert = true;
+    const needsSlotFinding = !node['__noInsertionPoint'];
+    if (needsSlotFinding) {
+      treeVisitor(node, (node) => {
+        if (node.localName === 'slot') {
+          if (!slotsAdded) {
+            slotsAdded = [];
+          }
+          slotsAdded.push(/** @type {!HTMLSlotElement} */(node));
+        }
+      });
+    }
+    // if a slot is added, must render containing root.
+    if (slotsAdded) {
+      this._addSlots(slotsAdded);
+      this._asyncRender();
+    }
+    recordChildNodes(node, this);
+    if (this._hasInsertionPoint()) {
+        this._asyncRender();
+        allowNativeInsert = false;
+    }
+    if (allowNativeInsert) {
+      /** @type {ShadowRoot} */(this).host[utils.NATIVE_PREFIX + 'appendChild'](node);
+    }
+    return node;
+  },
 
 });

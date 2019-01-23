@@ -34,6 +34,9 @@ eventPropertyNames.forEach(property => {
     set: function(fn) {
       const shadyData = ensureShadyDataForNode(this);
       const eventName = property.substring(2);
+      if (!shadyData.__onCallbackListeners) {
+        shadyData.__onCallbackListeners = {};
+      }
       shadyData.__onCallbackListeners[property] && this.removeEventListener(eventName, shadyData.__onCallbackListeners[property]);
       this[utils.SHADY_PREFIX + 'addEventListener'](eventName, fn);
       shadyData.__onCallbackListeners[property] = fn;
@@ -41,7 +44,7 @@ eventPropertyNames.forEach(property => {
     /** @this {HTMLElement} */
     get() {
       const shadyData = shadyDataForNode(this);
-      return shadyData && shadyData.__onCallbackListeners[property];
+      return shadyData && shadyData.__onCallbackListeners && shadyData.__onCallbackListeners[property];
     },
     configurable: true
   };

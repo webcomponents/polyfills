@@ -42,37 +42,49 @@ function ancestorList(node) {
  */
 class ShadyRoot {
 
+  static ['upgrade'](fragment, host, options) {
+    fragment.__proto__ = ShadowRoot.prototype;
+    fragment._init(fragment, host, options);
+    fragment['_attachDom'](fragment);
+    return fragment;
+  }
+
   constructor(token, host, options) {
     if (token !== ShadyRootConstructionToken) {
       throw new TypeError('Illegal constructor');
     }
+    /** @type {boolean} */
+    this._renderPending;
+    /** @type {boolean} */
+    this._hasRendered;
+    /** @type {Array<HTMLSlotElement>>} */
+    this._slotList = null;
+    /** @type {Object<string, Array<HTMLSlotElement>>} */
+    this._slotMap;
+    /** @type {Array<HTMLSlotElement>>} */
+    this._pendingSlots;
+    this._init(this, host, options);
+  }
+
+  _init(root, host, options) {
     // NOTE: set a fake local name so this element can be
     // distinguished from a DocumentFragment when patching.
     // FF doesn't allow this to be `localName`
-    this._localName = SHADYROOT_NAME;
+    root._localName = SHADYROOT_NAME;
     // root <=> host
-    this.host = host;
+    root.host = host;
     /** @type {!string|undefined} */
-    this.mode = options && options.mode;
+    root.mode = options && options.mode;
     recordChildNodes(host);
     const hostData = ensureShadyDataForNode(host);
     /** @type {!ShadyRoot} */
-    hostData.root = this;
-    hostData.publicRoot = this.mode !== MODE_CLOSED ? this : null;
+    hostData.root = root;
+    hostData.publicRoot = root.mode !== MODE_CLOSED ? root : null;
     // setup root
-    const rootData = ensureShadyDataForNode(this);
+    const rootData = ensureShadyDataForNode(root);
     rootData.firstChild = rootData.lastChild =
         rootData.parentNode = rootData.nextSibling =
         rootData.previousSibling = null;
-    rootData.childNodes = [];
-    // state flags
-    this._renderPending = false;
-    this._hasRendered = false;
-    // marsalled lazily
-    this._slotList = null;
-    /** @type {Object<string, Array<HTMLSlotElement>>} */
-    this._slotMap = null;
-    this._pendingSlots = null;
     // NOTE: optimization flag, only require an asynchronous render
     // to record parsed children if flag is not set.
     if (utils.settings['preferPerformance']) {
@@ -81,7 +93,7 @@ class ShadyRoot {
         host[utils.NATIVE_PREFIX + 'removeChild'](n);
       }
     } else {
-      this._asyncRender();
+      root._asyncRender();
     }
   }
 
@@ -578,9 +590,9 @@ if (window['customElements'] && utils.settings.inUse && !utils.settings['preferP
     for (let i=0; i < r.length; i++) {
       const e = r[i][0], value = r[i][1];
       if (value) {
-        e.__shadydom_connectedCallback();
+        e['__shadydom_connectedCallback']();
       } else {
-        e.__shadydom_disconnectedCallback();
+        e['__shadydom_disconnectedCallback']();
       }
     }
   }
@@ -605,7 +617,7 @@ if (window['customElements'] && utils.settings.inUse && !utils.settings['preferP
     if (connected || disconnected) {
 
       /** @this {!HTMLElement} */
-      base.prototype.connectedCallback = base.prototype.__shadydom_connectedCallback = function() {
+      base.prototype.connectedCallback = base.prototype['__shadydom_connectedCallback'] = function() {
         // if rendering defer connected
         // otherwise connect only if we haven't already
         if (isRendering) {
@@ -619,7 +631,7 @@ if (window['customElements'] && utils.settings.inUse && !utils.settings['preferP
       }
 
       /** @this {!HTMLElement} */
-      base.prototype.disconnectedCallback = base.prototype.__shadydom_disconnectedCallback = function() {
+      base.prototype.disconnectedCallback = base.prototype['__shadydom_disconnectedCallback'] = function() {
         // if rendering, cancel a pending connection and queue disconnect,
         // otherwise disconnect only if a connection has been allowed
         if (isRendering) {
@@ -647,8 +659,8 @@ if (window['customElements'] && utils.settings.inUse && !utils.settings['preferP
   // NOTE: Instead of patching customElements.define,
   // re-define on the CustomElementRegistry.prototype.define
   // for Safari 10 compatibility (it's flakey otherwise).
-  Object.defineProperty(window['CustomElementRegistry'].prototype, 'define', {
-    value: function(name, constructor) {
+  //Object.defineProperty(window['CustomElementRegistry'].prototype, 'define', {
+  window.customElements.define = function(name, constructor) {
       const connected = constructor.prototype.connectedCallback;
       const disconnected = constructor.prototype.disconnectedCallback;
       define.call(window['customElements'], name,
@@ -659,7 +671,6 @@ if (window['customElements'] && utils.settings.inUse && !utils.settings['preferP
       constructor.prototype.connectedCallback = connected;
       constructor.prototype.disconnectedCallback = disconnected;
     }
-  });
 
 }
 

@@ -12,11 +12,10 @@ import * as utils from './utils.js';
 import {shadyDataForNode, ensureShadyDataForNode} from './shady-data.js';
 import {patchInsideElementAccessors, patchOutsideElementAccessors} from './patch-instances.js';
 
-function linkNode(node, container, ref_node) {
+function linkNode(node, container, containerData, ref_node) {
   patchOutsideElementAccessors(node);
   ref_node = ref_node || null;
   const nodeData = ensureShadyDataForNode(node);
-  const containerData = ensureShadyDataForNode(container);
   const ref_nodeData = ref_node ? ensureShadyDataForNode(ref_node) : null;
   // update ref_node.previousSibling <-> node
   nodeData.previousSibling = ref_node ? ref_nodeData.previousSibling :
@@ -54,17 +53,12 @@ export const recordInsertBefore = (node, container, ref_node) => {
   }
   // handle document fragments
   if (node.nodeType === Node.DOCUMENT_FRAGMENT_NODE) {
-    let c$ = node[utils.SHADY_PREFIX + 'childNodes'];
-    for (let i=0; i < c$.length; i++) {
-      linkNode(c$[i], container, ref_node);
+    const first = node[utils.NATIVE_PREFIX + 'firstChild'] || null;
+    for (let n = first; n; (n = n[utils.NATIVE_PREFIX + 'nextSibling'])) {
+      linkNode(n, container, containerData, ref_node);
     }
-    // cleanup logical dom in doc fragment.
-    const nodeData = ensureShadyDataForNode(node);
-    let resetTo = (nodeData.firstChild !== undefined) ? null : undefined;
-    nodeData.firstChild = nodeData.lastChild = resetTo;
-    nodeData.childNodes = resetTo;
   } else {
-    linkNode(node, container, ref_node);
+    linkNode(node, container, containerData, ref_node);
   }
 }
 
@@ -98,22 +92,25 @@ export const recordRemoveChild = (node, container) => {
 
 /**
  * @param  {!Node} node
+ * @param  {!Node=} root
  */
-export const recordChildNodes = (node) => {
+export const recordChildNodes = (node, root) => {
   const nodeData = ensureShadyDataForNode(node);
-  if (nodeData.firstChild === undefined) {
-    // remove caching of childNodes
-    nodeData.childNodes = null;
-    const first = nodeData.firstChild = node[utils.NATIVE_PREFIX + 'firstChild'] || null;
-    nodeData.lastChild = node[utils.NATIVE_PREFIX + 'lastChild'] || null;
-    patchInsideElementAccessors(node);
-    for (let n = first, previous; n; (n = n[utils.NATIVE_PREFIX + 'nextSibling'])) {
-      const sd = ensureShadyDataForNode(n);
-      sd.parentNode = node;
-      sd.nextSibling = n[utils.NATIVE_PREFIX + 'nextSibling'] || null;
-      sd.previousSibling = previous || null;
-      previous = n;
-      patchOutsideElementAccessors(n);
-    }
+  if (!root && nodeData.firstChild !== undefined) {
+    return;
+  }
+  root = root || node;
+  // remove caching of childNodes
+  nodeData.childNodes = null;
+  const first = nodeData.firstChild = node[utils.NATIVE_PREFIX + 'firstChild'] || null;
+  nodeData.lastChild = node[utils.NATIVE_PREFIX + 'lastChild'] || null;
+  patchInsideElementAccessors(node);
+  for (let n = first, previous; n; (n = n[utils.NATIVE_PREFIX + 'nextSibling'])) {
+    const sd = ensureShadyDataForNode(n);
+    sd.parentNode = root;
+    sd.nextSibling = n[utils.NATIVE_PREFIX + 'nextSibling'] || null;
+    sd.previousSibling = previous || null;
+    previous = n;
+    patchOutsideElementAccessors(n);
   }
 }
