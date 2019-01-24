@@ -122,10 +122,8 @@ class ShadyRoot {
   _rendererForHost() {
     let root = this.host[utils.SHADY_PREFIX + 'getRootNode']();
     if (utils.isShadyRoot(root)) {
-      let c$ = this.host[utils.SHADY_PREFIX + 'childNodes'];
-      for (let i=0, c; i < c$.length; i++) {
-        c = c$[i];
-        if (this._isInsertionPoint(c)) {
+      for (let n=this.host[utils.SHADY_PREFIX + 'firstChild']; n; n = n[utils.SHADY_PREFIX + 'nextSibling']) {
+        if (this._isInsertionPoint(n)) {
           return root;
         }
       }
@@ -161,13 +159,11 @@ class ShadyRoot {
     // if optimization flag is not set.
     // on initial render remove any undistributed children.
     if (!utils.settings['preferPerformance'] && !this._hasRendered) {
-      const c$ = this.host[utils.SHADY_PREFIX + 'childNodes'];
-      for (let i=0, l=c$.length; i < l; i++) {
-        const child = c$[i];
-        const data = shadyDataForNode(child);
-        if (child[utils.NATIVE_PREFIX + 'parentNode'] === this.host &&
-            (child.localName === 'slot' || !data.assignedSlot)) {
-          this.host[utils.NATIVE_PREFIX + 'removeChild'](child);
+      for (let n=this.host[utils.SHADY_PREFIX + 'firstChild']; n; n = n[utils.SHADY_PREFIX + 'nextSibling']) {
+        const data = shadyDataForNode(n);
+        if (n[utils.NATIVE_PREFIX + 'parentNode'] === this.host &&
+            (n.localName === 'slot' || !data.assignedSlot)) {
+          this.host[utils.NATIVE_PREFIX + 'removeChild'](n);
         }
       }
     }
@@ -347,20 +343,18 @@ class ShadyRoot {
   // Returns the list of nodes which should be rendered inside `node`.
   _composeNode(node) {
     let children = [];
-    let c$ = node[utils.SHADY_PREFIX + 'childNodes'];
-    for (let i = 0; i < c$.length; i++) {
-      let child = c$[i];
+    for (let n=node[utils.SHADY_PREFIX + 'firstChild']; n; n = n[utils.SHADY_PREFIX + 'nextSibling']) {
       // Note: if we see a slot here, the nodes are guaranteed to need to be
       // composed here. This is because if there is redistribution, it has
       // already been handled by this point.
-      if (this._isInsertionPoint(child)) {
-        let flattenedNodes = shadyDataForNode(child).flattenedNodes;
+      if (this._isInsertionPoint(n)) {
+        let flattenedNodes = shadyDataForNode(n).flattenedNodes;
         for (let j = 0; j < flattenedNodes.length; j++) {
           let distributedNode = flattenedNodes[j];
             children.push(distributedNode);
         }
       } else {
-        children.push(child);
+        children.push(n);
       }
     }
     return children;

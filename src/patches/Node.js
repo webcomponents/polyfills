@@ -36,8 +36,7 @@ export function clearNode(node) {
 function removeOwnerShadyRoot(node) {
   // optimization: only reset the tree if node is actually in a root
   if (hasCachedOwnerRoot(node)) {
-    let c$ = node[utils.SHADY_PREFIX + 'childNodes'];
-    for (let i=0, l=c$.length, n; (i<l) && (n=c$[i]); i++) {
+    for (let n=node[utils.SHADY_PREFIX + 'firstChild']; n; n = n[utils.SHADY_PREFIX + 'nextSibling']) {
       removeOwnerShadyRoot(n);
     }
   }
@@ -187,9 +186,9 @@ export const NodePatches = utils.getOwnPropertyDescriptors({
   get textContent() {
     if (utils.isTrackingLogicalChildNodes(this)) {
       let tc = [];
-      for (let i = 0, cn = this[utils.SHADY_PREFIX + 'childNodes'], c; (c = cn[i]); i++) {
-        if (c.nodeType !== Node.COMMENT_NODE) {
-          tc.push(c[utils.SHADY_PREFIX + 'textContent']);
+      for (let n=this[utils.SHADY_PREFIX + 'firstChild']; n; n = n[utils.SHADY_PREFIX + 'nextSibling']) {
+        if (n.nodeType !== Node.COMMENT_NODE) {
+          tc.push(n[utils.SHADY_PREFIX + 'textContent']);
         }
       }
       return tc.join('');
@@ -448,9 +447,8 @@ export const NodePatches = utils.getOwnPropertyDescriptors({
       // been removed from the spec.
       // Make sure we do not do a deep clone on them for old browsers (IE11)
       if (deep && n.nodeType !== Node.ATTRIBUTE_NODE) {
-        let c$ = this[utils.SHADY_PREFIX + 'childNodes'];
-        for (let i=0, nc; i < c$.length; i++) {
-          nc = c$[i][utils.SHADY_PREFIX + 'cloneNode'](true);
+        for (let c=this[utils.SHADY_PREFIX + 'firstChild'], nc; c; c = c[utils.SHADY_PREFIX + 'nextSibling']) {
+          nc = c[utils.SHADY_PREFIX + 'cloneNode'](true);
           n[utils.SHADY_PREFIX + 'appendChild'](nc);
         }
       }
