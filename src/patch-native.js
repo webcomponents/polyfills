@@ -323,7 +323,7 @@ export const addNativePrefixedProperties = () => {
       innerHTML: {
         /** @this {Element} */
         get() {
-          return getInnerHTML(this, n => n[NATIVE_PREFIX + 'childNodes']);
+          return getInnerHTML(this, utils.nativeChildNodesArray);
         },
         // Needed on browsers that do not proper accessors (e.g. old versions of Chrome)
         /** @this {Element} */

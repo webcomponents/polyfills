@@ -366,7 +366,7 @@ class ShadyRoot {
 
   // Ensures that the rendered node list inside `container` is `children`.
   _updateChildNodes(container, children) {
-    let composed = Array.prototype.slice.call(container[utils.NATIVE_PREFIX + 'childNodes']);
+    let composed = utils.nativeChildNodesArray(container);
     let splices = calculateSplices(children, composed);
     // process removals
     for (let i=0, d=0, s; (i<splices.length) && (s=splices[i]); i++) {
@@ -465,7 +465,7 @@ class ShadyRoot {
         let nA = listA[i];
         let nB = listB[i];
         if (nA !== nB) {
-          let c$ = Array.from(nA[utils.SHADY_PREFIX + 'parentNode'][utils.SHADY_PREFIX + 'childNodes']);
+          let c$ = utils.childNodesArray(nA[utils.SHADY_PREFIX + 'parentNode']);
           return c$.indexOf(nA) - c$.indexOf(nB);
         }
       }

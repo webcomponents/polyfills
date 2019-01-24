@@ -127,7 +127,21 @@ export const createPolyfilledHTMLCollection = (nodes) => {
 export const NATIVE_PREFIX = '__shady_native_';
 export const SHADY_PREFIX = '__shady_';
 
+export const nativeChildNodesArray = (parent) => {
+  const result = [];
+  for (let n=parent[NATIVE_PREFIX + 'firstChild']; n; n = n[NATIVE_PREFIX + 'nextSibling']) {
+    result.push(n);
+  }
+  return result;
+}
 
+export const childNodesArray = (parent) => {
+  const result = [];
+  for (let n=parent[SHADY_PREFIX + 'firstChild']; n; n = n[SHADY_PREFIX + 'nextSibling']) {
+    result.push(n);
+  }
+  return result;
+}
 
 /**
  * Patch a group of accessors on an object only if it exists or if the `force`
