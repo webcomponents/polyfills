@@ -306,7 +306,7 @@ export const NodePatches = utils.getOwnPropertyDescriptors({
       });
     }
     // if a slot is added, must render containing root.
-    if (this.localName === 'slot' || slotsAdded.length) {
+    if (slotsAdded.length) {
       if (slotsAdded.length) {
         ownerRoot._addSlots(slotsAdded);
       }
