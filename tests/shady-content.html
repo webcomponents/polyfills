@@ -98,9 +98,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     defineTestElement('x-dist-slot-name-change');
   </script>
 
-  <template id="x-dist-simple">
-    <slot id="content"></slot>
-  </template>
+  <template id="x-dist-simple"><slot id="content"></slot></template>
   <script>
     defineTestElement('x-dist-simple');
   </script>
@@ -108,6 +106,21 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <template id="x-dist-star"><slot></slot></template>
   <script>
     defineTestElement('x-dist-star');
+  </script>
+
+  <template id="x-dist-two"><x-dist-simple><slot></slot></x-dist-simple></template>
+  <script>
+    defineTestElement('x-dist-two');
+  </script>
+
+  <template id="x-dist-three"><x-dist-two><slot></slot></x-dist-two></template>
+  <script>
+    defineTestElement('x-dist-three');
+  </script>
+
+  <template id="x-dist-four"><x-dist-three><slot></slot></x-dist-three></template>
+  <script>
+    defineTestElement('x-dist-four');
   </script>
 
   <template id="x-dist-inside-deep-tree">
@@ -1358,6 +1371,29 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       ShadyDOM.flush();
       // check rendering
       assert.deepEqual(getComposedChildNodes(inner), [t]);
+    });
+
+    test('initial distribution can be flushed with `ShadyDOM.flushInitial`', function() {
+      const el = document.createElement('x-dist-four');
+      ShadyDOM.wrap(document.body).appendChild(el);
+      const d = document.createElement('div');
+      ShadyDOM.wrap(el).appendChild(d);
+      assert.equal(ShadyDOM.nativeTree.innerHTML(el), '<x-dist-three><slot></slot><x-dist-two><slot></slot><x-dist-simple><slot></slot><slot id="content"></slot></x-dist-simple></x-dist-two></x-dist-three>');
+      ShadyDOM.flushInitial(ShadyDOM.wrap(el).shadowRoot);
+      assert.equal(ShadyDOM.nativeTree.innerHTML(el), '<x-dist-three><x-dist-two><x-dist-simple><div></div></x-dist-simple></x-dist-two></x-dist-three>');
+      document.body.removeChild(el);
+    });
+
+    test('events dispatch correctly with `ShadyDOM.wrap().dispatchEvent`', function() {
+      const el = document.createElement('x-dist-four');
+      ShadyDOM.wrap(document.body).appendChild(el);
+      const d = document.createElement('div');
+      ShadyDOM.wrap(el).appendChild(d);
+      let heardEvent = false;
+      el.addEventListener('foo', function() { heardEvent = true});
+      ShadyDOM.wrap(d).dispatchEvent(new Event('foo', {bubbles: true}));
+      assert.isTrue(heardEvent);
+      document.body.removeChild(el);
     });
 
   });

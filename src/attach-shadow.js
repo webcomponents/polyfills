@@ -135,6 +135,12 @@ class ShadyRoot {
     }
   }
 
+  _flushInitial() {
+    if (!this._hasRendered && this._hasInsertionPoint()) {
+      this._flush();
+    }
+  }
+
   /** @override */
   _renderRoot() {
     // track rendering state.

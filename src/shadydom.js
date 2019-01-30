@@ -47,6 +47,9 @@ if (utils.settings.inUse) {
     'isShadyRoot': utils.isShadyRoot,
     'enqueue': enqueue,
     'flush': flush,
+    'flushInitial': (root) => {
+      root._flushInitial();
+    },
     'settings': utils.settings,
     'filterMutations': filterMutations,
     'observeChildren': observeChildren,
