@@ -1658,13 +1658,30 @@ suite('renders roots', function() {
     ShadyDOM.wrap(p).appendChild(document.createElement('div'));
     ShadyDOM.flush();
     assert.equal(ShadyDOM.wrap(el).shadowRoot._renderRoot.callCount, 0);
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(p).shadowRoot)._renderRoot.callCount, 1);
+    assert.equal(ShadyDOM.wrap(p).shadowRoot._renderRoot.callCount, 1);
     assert.equal(ShadyDOM.wrap(c).shadowRoot._renderRoot.callCount, 1);
     ShadyDOM.wrap(el).appendChild(document.createElement('div'));
     ShadyDOM.wrap(p).appendChild(document.createElement('div'));
     ShadyDOM.flush();
     assert.equal(ShadyDOM.wrap(el).shadowRoot._renderRoot.callCount, 1);
     assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(p).shadowRoot)._renderRoot.callCount, 2);
+    assert.equal(ShadyDOM.wrap(c).shadowRoot._renderRoot.callCount, 2);
+  });
+
+  test('renders oldest dirty root when slot moved', function() {
+    ShadyDOM.wrap(el).appendChild(document.createElement('div'));
+    ShadyDOM.flush();
+    assert.equal(ShadyDOM.wrap(el).shadowRoot._renderRoot.callCount, 1);
+    assert.equal(ShadyDOM.wrap(p).shadowRoot._renderRoot.callCount, 1);
+    assert.equal(ShadyDOM.wrap(c).shadowRoot._renderRoot.callCount, 1);
+    // move the slot:
+    // from: <x-project><slot></slot></x-project>
+    // to: <x-project></x-project><slot></slot>
+    const slot = ShadyDOM.wrap(c).firstElementChild;
+    ShadyDOM.wrap(p).shadowRoot.appendChild(slot);
+    ShadyDOM.flush();
+    assert.equal(ShadyDOM.wrap(el).shadowRoot._renderRoot.callCount, 1);
+    assert.equal(ShadyDOM.wrap(p).shadowRoot._renderRoot.callCount, 2);
     assert.equal(ShadyDOM.wrap(c).shadowRoot._renderRoot.callCount, 2);
   });
 

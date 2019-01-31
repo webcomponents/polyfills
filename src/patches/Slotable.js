@@ -20,7 +20,7 @@ export const SlotablePatches = utils.getOwnPropertyDescriptors({
     const parent = this[utils.SHADY_PREFIX + 'parentNode'];
     const ownerRoot = parent && parent[utils.SHADY_PREFIX + 'shadowRoot'];
     if (ownerRoot) {
-      ownerRoot._flush();
+      ownerRoot._render();
     }
     const nodeData = shadyDataForNode(this);
     return nodeData && nodeData.assignedSlot || null;
