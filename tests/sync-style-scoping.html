@@ -281,7 +281,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           const el = document.createElement('naive-element');
           const span = document.createElement('span');
           ShadyDOM.wrap(ShadyDOM.wrap(el).shadowRoot).appendChild(span);
-          span.setAttribute('class', 'foo');
+          ShadyDOM.wrap(span).setAttribute('class', 'foo');
           assert.equal(csfn(span), 'naive-element');
         });
 
@@ -289,7 +289,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           const el = document.createElement('naive-element');
           const span = document.createElement('span');
           ShadyDOM.wrap(ShadyDOM.wrap(el).shadowRoot).appendChild(span);
-          span.className = 'foo';
+          ShadyDOM.wrap(span).className = 'foo';
           assert.equal(csfn(span), 'naive-element');
         });
       });
