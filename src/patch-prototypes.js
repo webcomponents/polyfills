@@ -41,6 +41,10 @@ if (Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'innerHTML')) {
   NonStandardHTMLElement.innerHTML = ElementOrShadowRootPatches.innerHTML;
 }
 
+if (Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'className')) {
+  NonStandardHTMLElement.className = ElementPatches.className;
+}
+
 // Avoid patching `innerHTML` if it does not exist on Element (IE)
 // and we can patch accessors (hasDescriptors).
 const ElementShouldHaveInnerHTML = !utils.settings.hasDescriptors || 'innerHTML' in Element.prototype;
