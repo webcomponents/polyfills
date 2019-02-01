@@ -376,7 +376,7 @@ export const NodePatches = utils.getOwnPropertyDescriptors({
     }
     let preventNativeRemove;
     let ownerRoot = ownerShadyRootForNode(node);
-    let removingInsertionPoint;
+    const removingInsertionPoint = ownerRoot && ownerRoot._removeContainedSlots(node);
     const parentData = shadyDataForNode(this);
     if (utils.isTrackingLogicalChildNodes(this)) {
       recordRemoveChild(node, this);
@@ -400,7 +400,6 @@ export const NodePatches = utils.getOwnPropertyDescriptors({
       if (changeSlotContent) {
         preventNativeRemove = true;
       }
-      removingInsertionPoint = ownerRoot._removeContainedSlots(node);
       if (removingInsertionPoint || changeSlotContent) {
         ownerRoot._asyncRender();
       }

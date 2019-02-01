@@ -112,14 +112,14 @@ class ShadyRoot {
       if (root._renderPending) {
         renderRoot = root;
       }
-      root = root._rendererForHost();
+      root = root._getDistributionParent();
     }
     return renderRoot;
   }
 
   // Returns the shadyRoot `this.host` if `this.host`
   // has children that require distribution.
-  _rendererForHost() {
+  _getDistributionParent() {
     let root = this.host[utils.SHADY_PREFIX + 'getRootNode']();
     if (utils.isShadyRoot(root)) {
       for (let n=this.host[utils.SHADY_PREFIX + 'firstChild']; n; n = n[utils.SHADY_PREFIX + 'nextSibling']) {
@@ -131,18 +131,24 @@ class ShadyRoot {
   }
 
   _render() {
+    // Optimization to avoid finding render root if initial flush was used
+    if (this._skipNextRender) {
+      this._skipNextRender = false;
+      if (!this._renderPending) {
+        return;
+      }
+    }
     const root = this._getRenderRoot();
     if (root) {
       root._renderRoot();
     }
   }
 
-  // renders if render is pending.
-  _flush() {
-    const root = this._getRenderRoot();
-    if (root && root._renderPending) {
-      root._renderRoot();
+  _flushInitial() {
+    if (!this._hasRendered && this._renderPending) {
+      this._render();
     }
+    this._skipNextRender = true;
   }
 
   /** @override */
@@ -419,14 +425,17 @@ class ShadyRoot {
   _mapSlots(slots) {
     let slotNamesToSort;
     for (let i=0; i < slots.length; i++) {
-      let slot = slots[i];
+      const slot = slots[i];
       // ensure insertionPoints's and their parents have logical dom info.
       // save logical tree info
       // a. for shadyRoot
       // b. for insertion points (fallback)
       // c. for parents of insertion points
       recordChildNodes(slot);
-      recordChildNodes(slot[utils.SHADY_PREFIX + 'parentNode']);
+      const slotParent = slot[utils.SHADY_PREFIX + 'parentNode'];
+      recordChildNodes(slotParent);
+      const slotParentData = shadyDataForNode(slotParent);
+      slotParentData.__slotChildren = (slotParentData.__slotChildren || 0) + 1;
       let name = this._nameForSlot(slot);
       if (this._slotMap[name]) {
         slotNamesToSort = slotNamesToSort || {};
@@ -485,14 +494,18 @@ class ShadyRoot {
     let didRemove;
     const map = this._slotMap;
     for (let n in map) {
-      let slots = map[n];
+      const slots = map[n];
       for (let i=0; i < slots.length; i++) {
-        let slot = slots[i];
+        const slot = slots[i];
         if (utils.contains(container, slot)) {
           slots.splice(i, 1);
           const x = this._slotList.indexOf(slot);
           if (x >= 0) {
             this._slotList.splice(x, 1);
+            const slotParentData = shadyDataForNode(slot[utils.SHADY_PREFIX + 'parentNode']);
+            if (slotParentData && slotParentData.__slotChildren) {
+              slotParentData.__slotChildren--;
+            }
           }
           i--;
           this._removeFlattenedNodes(slot);
