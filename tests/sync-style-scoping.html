@@ -276,6 +276,22 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           ShadyDOM.wrap(ShadyDOM.wrap(el).shadowRoot).appendChild(span);
           assert.equal(csfn(span), 'naive-element');
         });
+
+        test('`setAttribute(\'class\', ...)` scopes correctly', function() {
+          const el = document.createElement('naive-element');
+          const span = document.createElement('span');
+          ShadyDOM.wrap(ShadyDOM.wrap(el).shadowRoot).appendChild(span);
+          ShadyDOM.wrap(span).setAttribute('class', 'foo');
+          assert.equal(csfn(span), 'naive-element');
+        });
+
+        test('`className` scopes correctly', function() {
+          const el = document.createElement('naive-element');
+          const span = document.createElement('span');
+          ShadyDOM.wrap(ShadyDOM.wrap(el).shadowRoot).appendChild(span);
+          ShadyDOM.wrap(span).className = 'foo';
+          assert.equal(csfn(span), 'naive-element');
+        });
       });
 
       suite('remove', function() {
