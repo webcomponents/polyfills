@@ -118,15 +118,12 @@ class ShadyRoot {
     }
   }
 
+  // Renders the top most render pending shadowRoot in the distribution tree.
+  // This is safe because when a distribution parent renders, all children render.
   _render() {
-    // Optimization to avoid finding render root if initial flush was used
-    if (this._skipNextRender) {
-      this._skipNextRender = false;
-      if (!this._renderPending) {
-        return;
-      }
-    }
-    const root = this._getRenderRoot();
+    // If this root is not pending, it needs no rendering work. Any pending
+    // parent that needs to render wll cause this root to render.
+    const root = this._renderPending && this._getRenderRoot();
     if (root) {
       root._renderRoot();
     }
@@ -136,7 +133,6 @@ class ShadyRoot {
     if (!this._hasRendered && this._renderPending) {
       this._render();
     }
-    this._skipNextRender = true;
   }
 
   /** @override */
