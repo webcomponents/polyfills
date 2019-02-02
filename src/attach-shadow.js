@@ -93,7 +93,7 @@ class ShadyRoot {
   }
 
   // returns the oldest renderPending ancestor root.
-  _getRenderRoot() {
+  _getPendingDistributionRoot() {
     let renderRoot;
     let root = this;
     while (root) {
@@ -113,7 +113,7 @@ class ShadyRoot {
       return;
     }
     const nodeData = shadyDataForNode(this.host);
-    if (nodeData && nodeData.__slotChildren > 0) {
+    if (nodeData && nodeData.__childSlotCount > 0) {
       return root;
     }
   }
@@ -123,9 +123,9 @@ class ShadyRoot {
   _render() {
     // If this root is not pending, it needs no rendering work. Any pending
     // parent that needs to render wll cause this root to render.
-    const root = this._renderPending && this._getRenderRoot();
+    const root = this._renderPending && this._getPendingDistributionRoot();
     if (root) {
-      root._renderRoot();
+      root._renderSelf();
     }
   }
 
@@ -136,7 +136,7 @@ class ShadyRoot {
   }
 
   /** @override */
-  _renderRoot() {
+  _renderSelf() {
     // track rendering state.
     const wasRendering = isRendering;
     isRendering = true;
@@ -190,7 +190,7 @@ class ShadyRoot {
       const slotParentData = shadyDataForNode(slot[utils.SHADY_PREFIX + 'parentNode']);
       const slotParentRoot = slotParentData && slotParentData.root;
       if (slotParentRoot && (slotParentRoot._hasInsertionPoint() || slotParentRoot._renderPending)) {
-        slotParentRoot._renderRoot();
+        slotParentRoot._renderSelf();
       }
       this._addAssignedToFlattenedNodes(slotData.flattenedNodes,
         slotData.assignedNodes);
@@ -423,7 +423,7 @@ class ShadyRoot {
       const slotParent = slot[utils.SHADY_PREFIX + 'parentNode'];
       recordChildNodes(slotParent);
       const slotParentData = shadyDataForNode(slotParent);
-      slotParentData.__slotChildren = (slotParentData.__slotChildren || 0) + 1;
+      slotParentData.__childSlotCount = (slotParentData.__childSlotCount || 0) + 1;
       let name = this._nameForSlot(slot);
       if (this._slotMap[name]) {
         slotNamesToSort = slotNamesToSort || {};
@@ -491,8 +491,8 @@ class ShadyRoot {
           if (x >= 0) {
             this._slotList.splice(x, 1);
             const slotParentData = shadyDataForNode(slot[utils.SHADY_PREFIX + 'parentNode']);
-            if (slotParentData && slotParentData.__slotChildren) {
-              slotParentData.__slotChildren--;
+            if (slotParentData && slotParentData.__childSlotCount) {
+              slotParentData.__childSlotCount--;
             }
           }
           i--;
