@@ -23,7 +23,7 @@ export const SlotPatches = utils.getOwnPropertyDescriptors({
       // and this node has assignedNodes.
       const root = this[utils.SHADY_PREFIX + 'getRootNode']();
       if (root && utils.isShadyRoot(root)) {
-        root._flush();
+        root._render();
       }
       const nodeData = shadyDataForNode(this);
       return nodeData ?
