@@ -15,14 +15,6 @@ CustomElementRegistry.prototype.forcePolyfill;
 class AlreadyConstructedMarkerType {}
 
 /**
- * @enum {number}
- */
-const CustomElementState = {
-  custom: 1,
-  failed: 2,
-};
-
-/**
  * @typedef {{
  *  localName: string,
  *  constructorFunction: !Function,
@@ -62,7 +54,7 @@ Node.prototype.readyState;
 
 // Apply generally to Element.
 
-/** @type {!CustomElementState|undefined} */
+/** @type {number|undefined} */
 Element.prototype.__CE_state;
 
 /** @type {!CustomElementDefinition|undefined} */
