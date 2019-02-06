@@ -48,4 +48,4 @@ Event.prototype.__relatedTargetComposedPath;
 /**
  * Prevent renaming of this method on ShadyRoot for testing and debugging.
  */
-ShadowRoot.prototype._renderRoot = function(){};
+ShadowRoot.prototype._renderSelf = function(){};

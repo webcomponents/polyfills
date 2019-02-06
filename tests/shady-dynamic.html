@@ -1616,11 +1616,11 @@ suite('renders roots', function() {
     el = document.createElement('x-rereproject');
     ShadyDOM.wrap(document.body).appendChild(el);
     ShadyDOM.flush();
-    sinon.spy(ShadyDOM.wrap(el).shadowRoot, '_renderRoot');
+    sinon.spy(ShadyDOM.wrap(el).shadowRoot, '_renderSelf');
     p = ShadyDOM.wrap(el).shadowRoot.querySelector('x-reproject');
-    sinon.spy(ShadyDOM.wrap(ShadyDOM.wrap(p).shadowRoot), '_renderRoot');
+    sinon.spy(ShadyDOM.wrap(ShadyDOM.wrap(p).shadowRoot), '_renderSelf');
     c = ShadyDOM.wrap(ShadyDOM.wrap(p).shadowRoot).querySelector('x-project');
-    sinon.spy(ShadyDOM.wrap(c).shadowRoot, '_renderRoot');
+    sinon.spy(ShadyDOM.wrap(c).shadowRoot, '_renderSelf');
   });
 
   teardown(function() {
@@ -1630,59 +1630,59 @@ suite('renders roots', function() {
   test('renders all roots that are dirtied via distribution', function() {
     ShadyDOM.wrap(el).appendChild(document.createElement('div'));
     ShadyDOM.flush();
-    assert.equal(ShadyDOM.wrap(el).shadowRoot._renderRoot.callCount, 1);
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(p).shadowRoot)._renderRoot.callCount, 1);
-    assert.equal(ShadyDOM.wrap(c).shadowRoot._renderRoot.callCount, 1);
+    assert.equal(ShadyDOM.wrap(el).shadowRoot._renderSelf.callCount, 1);
+    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(p).shadowRoot)._renderSelf.callCount, 1);
+    assert.equal(ShadyDOM.wrap(c).shadowRoot._renderSelf.callCount, 1);
   });
 
   test('renders only roots that are dirty', function() {
     ShadyDOM.wrap(c).appendChild(document.createElement('div'));
     ShadyDOM.flush();
-    assert.equal(ShadyDOM.wrap(el).shadowRoot._renderRoot.callCount, 0);
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(p).shadowRoot)._renderRoot.callCount, 0);
-    assert.equal(ShadyDOM.wrap(c).shadowRoot._renderRoot.callCount, 1);
+    assert.equal(ShadyDOM.wrap(el).shadowRoot._renderSelf.callCount, 0);
+    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(p).shadowRoot)._renderSelf.callCount, 0);
+    assert.equal(ShadyDOM.wrap(c).shadowRoot._renderSelf.callCount, 1);
     ShadyDOM.wrap(p).appendChild(document.createElement('div'));
     ShadyDOM.flush();
-    assert.equal(ShadyDOM.wrap(el).shadowRoot._renderRoot.callCount, 0);
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(p).shadowRoot)._renderRoot.callCount, 1);
-    assert.equal(ShadyDOM.wrap(c).shadowRoot._renderRoot.callCount, 2);
+    assert.equal(ShadyDOM.wrap(el).shadowRoot._renderSelf.callCount, 0);
+    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(p).shadowRoot)._renderSelf.callCount, 1);
+    assert.equal(ShadyDOM.wrap(c).shadowRoot._renderSelf.callCount, 2);
     ShadyDOM.wrap(el).appendChild(document.createElement('div'));
     ShadyDOM.flush();
-    assert.equal(ShadyDOM.wrap(el).shadowRoot._renderRoot.callCount, 1);
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(p).shadowRoot)._renderRoot.callCount, 2);
-    assert.equal(ShadyDOM.wrap(c).shadowRoot._renderRoot.callCount, 3);
+    assert.equal(ShadyDOM.wrap(el).shadowRoot._renderSelf.callCount, 1);
+    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(p).shadowRoot)._renderSelf.callCount, 2);
+    assert.equal(ShadyDOM.wrap(c).shadowRoot._renderSelf.callCount, 3);
   });
 
   test('renders oldest dirty root', function() {
     ShadyDOM.wrap(c).appendChild(document.createElement('div'));
     ShadyDOM.wrap(p).appendChild(document.createElement('div'));
     ShadyDOM.flush();
-    assert.equal(ShadyDOM.wrap(el).shadowRoot._renderRoot.callCount, 0);
-    assert.equal(ShadyDOM.wrap(p).shadowRoot._renderRoot.callCount, 1);
-    assert.equal(ShadyDOM.wrap(c).shadowRoot._renderRoot.callCount, 1);
+    assert.equal(ShadyDOM.wrap(el).shadowRoot._renderSelf.callCount, 0);
+    assert.equal(ShadyDOM.wrap(p).shadowRoot._renderSelf.callCount, 1);
+    assert.equal(ShadyDOM.wrap(c).shadowRoot._renderSelf.callCount, 1);
     ShadyDOM.wrap(el).appendChild(document.createElement('div'));
     ShadyDOM.wrap(p).appendChild(document.createElement('div'));
     ShadyDOM.flush();
-    assert.equal(ShadyDOM.wrap(el).shadowRoot._renderRoot.callCount, 1);
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(p).shadowRoot)._renderRoot.callCount, 2);
-    assert.equal(ShadyDOM.wrap(c).shadowRoot._renderRoot.callCount, 2);
+    assert.equal(ShadyDOM.wrap(el).shadowRoot._renderSelf.callCount, 1);
+    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(p).shadowRoot)._renderSelf.callCount, 2);
+    assert.equal(ShadyDOM.wrap(c).shadowRoot._renderSelf.callCount, 2);
   });
 
   test('renders oldest dirty root when slot moved', function() {
     ShadyDOM.wrap(el).appendChild(document.createElement('div'));
     ShadyDOM.flush();
-    assert.equal(ShadyDOM.wrap(el).shadowRoot._renderRoot.callCount, 1);
-    assert.equal(ShadyDOM.wrap(p).shadowRoot._renderRoot.callCount, 1);
-    assert.equal(ShadyDOM.wrap(c).shadowRoot._renderRoot.callCount, 1);
+    assert.equal(ShadyDOM.wrap(el).shadowRoot._renderSelf.callCount, 1);
+    assert.equal(ShadyDOM.wrap(p).shadowRoot._renderSelf.callCount, 1);
+    assert.equal(ShadyDOM.wrap(c).shadowRoot._renderSelf.callCount, 1);
     // move the slot:
     // from: <x-project><slot></slot></x-project>
     // to: <x-project></x-project><slot></slot>
     const slot = ShadyDOM.wrap(c).firstElementChild;
     ShadyDOM.wrap(p).shadowRoot.appendChild(slot);
     ShadyDOM.flush();
-    assert.equal(ShadyDOM.wrap(el).shadowRoot._renderRoot.callCount, 1);
-    assert.equal(ShadyDOM.wrap(p).shadowRoot._renderRoot.callCount, 2);
-    assert.equal(ShadyDOM.wrap(c).shadowRoot._renderRoot.callCount, 2);
+    assert.equal(ShadyDOM.wrap(el).shadowRoot._renderSelf.callCount, 1);
+    assert.equal(ShadyDOM.wrap(p).shadowRoot._renderSelf.callCount, 2);
+    assert.equal(ShadyDOM.wrap(c).shadowRoot._renderSelf.callCount, 2);
   });
 
 
