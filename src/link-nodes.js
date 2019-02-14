@@ -91,8 +91,8 @@ export const recordRemoveChild = (node, container) => {
 }
 
 /**
- * @param  {!Node} node
- * @param  {!Node=} root
+ * @param  {!Node|DocumentFragment} node
+ * @param  {!Node|DocumentFragment=} root
  */
 export const recordChildNodes = (node, root) => {
   const nodeData = ensureShadyDataForNode(node);

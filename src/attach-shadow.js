@@ -42,13 +42,6 @@ function ancestorList(node) {
  */
 class ShadyRoot {
 
-  static ['upgrade'](fragment, host, options) {
-    fragment.__proto__ = ShadowRoot.prototype;
-    fragment._init(fragment, host, options);
-    fragment['_attachDom'](fragment);
-    return fragment;
-  }
-
   constructor(token, host, options) {
     if (token !== ShadyRootConstructionToken) {
       throw new TypeError('Illegal constructor');
@@ -57,11 +50,11 @@ class ShadyRoot {
     this._renderPending;
     /** @type {boolean} */
     this._hasRendered;
-    /** @type {Array<HTMLSlotElement>>} */
+    /** @type {?Array<HTMLSlotElement>} */
     this._slotList = null;
-    /** @type {Object<string, Array<HTMLSlotElement>>} */
+    /** @type {?Object<string, Array<HTMLSlotElement>>} */
     this._slotMap;
-    /** @type {Array<HTMLSlotElement>>} */
+    /** @type {?Array<HTMLSlotElement>} */
     this._pendingSlots;
     this._init(this, host, options);
   }
