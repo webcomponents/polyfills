@@ -84,10 +84,17 @@ if (utils.settings.inUse) {
     'nativeMethods': nativeMethods,
     'nativeTree': nativeTree,
     'upgrade': (fragment, host, options) => {
-      fragment.__proto__ = ShadowRoot.prototype;
-      fragment._init(fragment, host, options);
-      fragment._attachDom(fragment);
-      return fragment;
+      let root;
+      if (!window.customElements || !window.customElements.polyfillWrapFlushCallback) {
+        fragment.__proto__ = ShadowRoot.prototype;
+        fragment._init(fragment, host, options);
+        fragment._attachDom(fragment);
+        root = fragment;
+      } else {
+        root = ShadyDOM.wrap(host).attachShadow(options);
+        root.appendChild(fragment);
+      }
+      return root;
     }
   };
 
