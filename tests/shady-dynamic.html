@@ -710,6 +710,20 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     assert.notOk(projected);
   });
 
+  test('disconnected node: isConnected, getRootNode', function() {
+    let div = document.createElement('div');
+    assert.isFalse(ShadyDOM.wrap(div).isConnected);
+    assert.equal(ShadyDOM.wrap(div).getRootNode(), div);
+  });
+
+  test('slot, assignedSlot accessor', function() {
+    let div = document.createElement('div');
+    ShadyDOM.wrap(div).slot = 'slot';
+    assert.equal(ShadyDOM.wrap(div).slot, 'slot');
+    assert.equal(div.getAttribute('slot'), 'slot');
+    assert.equal(ShadyDOM.wrap(div).assignedSlot, null);
+  });
+
   test('parentNode', function() {
     var rere = ShadyDOM.wrap(ShadyDOM.wrap(testElement).shadowRoot).querySelector('x-rereproject');
     var projected = ShadyDOM.wrap(ShadyDOM.wrap(testElement).shadowRoot).querySelector('#projected');
