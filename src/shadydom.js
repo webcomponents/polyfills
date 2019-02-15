@@ -28,7 +28,9 @@ import {ShadyRoot} from './attach-shadow.js';
 import {wrap, Wrapper} from './wrapper.js';
 import {addShadyPrefixedProperties, applyPatches} from './patch-prototypes.js';
 
+
 if (utils.settings.inUse) {
+
   let ShadyDOM = {
     // TODO(sorvell): remove when Polymer does not depend on this.
     'inUse': utils.settings.inUse,
@@ -85,18 +87,19 @@ if (utils.settings.inUse) {
     'nativeTree': nativeTree,
     'upgrade': (fragment, host, options) => {
       let root;
-      if (!window.customElements || !window.customElements.polyfillWrapFlushCallback) {
+      if (utils.canUpgrade()) {
         fragment.__proto__ = ShadowRoot.prototype;
         fragment._init(fragment, host, options);
         fragment._attachDom(fragment);
         root = fragment;
       } else {
-        root = ShadyDOM.wrap(host).attachShadow(options);
+        root = ShadyDOM['wrap'](host).attachShadow(options);
         root.appendChild(fragment);
       }
       return root;
     }
   };
+
 
   window['ShadyDOM'] = ShadyDOM;
 

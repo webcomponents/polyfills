@@ -21,6 +21,19 @@ settings.inUse = settings['force'] || !settings.hasNativeShadowDOM;
 settings.noPatch = settings['noPatch'] || false;
 settings.preferPerformance = settings['preferPerformance'];
 
+const IS_IE = navigator.userAgent.match('Trident');
+settings.IS_IE = IS_IE;
+
+let _canUpgrade;
+// do not use `upgrade` when custom elements is polyfilled or on IE.
+export const canUpgrade = () => {
+  if (_canUpgrade === undefined) {
+    _canUpgrade = (window['customElements'] && !window['customElements']['polyfillWrapFlushCallback']) &&
+      !settings.IS_IE;
+  }
+  return _canUpgrade;
+}
+
 export const isTrackingLogicalChildNodes = (node) => {
   const nodeData = shadyDataForNode(node);
   return (nodeData && nodeData.firstChild !== undefined);
