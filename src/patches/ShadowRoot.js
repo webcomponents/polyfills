@@ -52,7 +52,7 @@ export const ShadowRootPatches = utils.getOwnPropertyDescriptors({
   _attachDom(fragment) {
     recordChildNodes(fragment, this);
     // Note: qsa is native when used with noPatch.
-    /** @type {?NodeList<(Element|null)>} */
+    /** @type {?NodeList<Element>} */
     const slotsAdded = fragment['__noInsertionPoint'] ? null : fragment.querySelectorAll('slot');
     // if a slot is added, must render containing root.
     if (slotsAdded) {

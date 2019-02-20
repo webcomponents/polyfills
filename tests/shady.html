@@ -68,7 +68,7 @@ suite('Rendering', function() {
       ShadyDOM.wrap(document.body).removeChild(host);
     });
 
-    test(descr + ' fragment via ShadyDOM.upgrade', function() {
+    test(descr + ' fragment via ShadyDOM.attachDom', function() {
       // Create an instance of the test element.
       var host = document.createElement('div');
       // Populate the initial pool of light DOM children.
@@ -81,7 +81,7 @@ suite('Rendering', function() {
       while (ShadyDOM.wrap(div).firstChild) {
         ShadyDOM.wrap(frag).appendChild(ShadyDOM.wrap(div).firstChild);
       }
-      ShadyDOM.upgrade(frag, host, {mode: 'open'});
+      ShadyDOM.attachDom(frag, host, {mode: 'open'});
       // Invoke distribution and verify the resulting tree.
       ShadyDOM.flush();
       assert.strictEqual(getComposedHTML(host), expectedHtml);

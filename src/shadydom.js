@@ -85,7 +85,7 @@ if (utils.settings.inUse) {
     'noPatch': utils.settings.noPatch,
     'nativeMethods': nativeMethods,
     'nativeTree': nativeTree,
-    'upgrade': (fragment, host, options) => {
+    'attachDom': (fragment, host, options) => {
       let root;
       if (utils.canUpgrade()) {
         fragment.__proto__ = ShadowRoot.prototype;

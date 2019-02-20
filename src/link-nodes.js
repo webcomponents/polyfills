@@ -53,7 +53,7 @@ export const recordInsertBefore = (node, container, ref_node) => {
   }
   // handle document fragments
   if (node.nodeType === Node.DOCUMENT_FRAGMENT_NODE) {
-    const first = node[utils.NATIVE_PREFIX + 'firstChild'] || null;
+    const first = node[utils.NATIVE_PREFIX + 'firstChild'];
     for (let n = first; n; (n = n[utils.NATIVE_PREFIX + 'nextSibling'])) {
       linkNode(n, container, containerData, ref_node);
     }
@@ -92,23 +92,22 @@ export const recordRemoveChild = (node, container) => {
 
 /**
  * @param  {!Node|DocumentFragment} node
- * @param  {!Node|DocumentFragment=} root
+ * @param  {!Node|DocumentFragment=} adoptedParent
  */
-export const recordChildNodes = (node, root) => {
+export const recordChildNodes = (node, adoptedParent) => {
   const nodeData = ensureShadyDataForNode(node);
-  if (!root && nodeData.firstChild !== undefined) {
+  if (!adoptedParent && nodeData.firstChild !== undefined) {
     return;
   }
-  root = root || node;
   // remove caching of childNodes
   nodeData.childNodes = null;
-  const first = nodeData.firstChild = node[utils.NATIVE_PREFIX + 'firstChild'] || null;
-  nodeData.lastChild = node[utils.NATIVE_PREFIX + 'lastChild'] || null;
+  const first = nodeData.firstChild = node[utils.NATIVE_PREFIX + 'firstChild'];
+  nodeData.lastChild = node[utils.NATIVE_PREFIX + 'lastChild'];
   patchInsideElementAccessors(node);
   for (let n = first, previous; n; (n = n[utils.NATIVE_PREFIX + 'nextSibling'])) {
     const sd = ensureShadyDataForNode(n);
-    sd.parentNode = root;
-    sd.nextSibling = n[utils.NATIVE_PREFIX + 'nextSibling'] || null;
+    sd.parentNode = adoptedParent || node;
+    sd.nextSibling = n[utils.NATIVE_PREFIX + 'nextSibling'];
     sd.previousSibling = previous || null;
     previous = n;
     patchOutsideElementAccessors(n);

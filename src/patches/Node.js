@@ -307,12 +307,8 @@ export const NodePatches = utils.getOwnPropertyDescriptors({
     }
     // if a slot is added, must render containing root.
     if (slotsAdded.length) {
-      if (slotsAdded.length) {
-        ownerRoot._addSlots(slotsAdded);
-      }
-      if (ownerRoot) {
-        ownerRoot._asyncRender();
-      }
+      ownerRoot._addSlots(slotsAdded);
+      ownerRoot._asyncRender();
     }
     if (utils.isTrackingLogicalChildNodes(this)) {
       recordInsertBefore(node, this, ref_node);

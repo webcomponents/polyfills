@@ -652,10 +652,8 @@ if (window['customElements'] && utils.settings.inUse && !utils.settings['preferP
   }
 
   const define = window['customElements']['define'];
-  // NOTE: Instead of patching customElements.define,
-  // re-define on the CustomElementRegistry.prototype.define
-  // for Safari 10 compatibility (it's flakey otherwise).
-  //Object.defineProperty(window['CustomElementRegistry'].prototype, 'define', {
+  // Note, it would be better to patch the CustomElementRegistry.prototype, but
+  // ShadyCSS patches define directly.
   window.customElements.define = function(name, constructor) {
       const connected = constructor.prototype.connectedCallback;
       const disconnected = constructor.prototype.disconnectedCallback;
