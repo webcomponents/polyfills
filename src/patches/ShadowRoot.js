@@ -49,11 +49,12 @@ export const ShadowRootPatches = utils.getOwnPropertyDescriptors({
    * Optimized initial insertion for pre-scoped node.
    * @param {DocumentFragment} fragment
    */
-  _attachDom(fragment) {
-    recordChildNodes(fragment, this);
+  _attachToHost(host, options) {
+    this._init(host, options);
+    recordChildNodes(this, this);
     // Note: qsa is native when used with noPatch.
     /** @type {?NodeList<Element>} */
-    const slotsAdded = fragment['__noInsertionPoint'] ? null : fragment.querySelectorAll('slot');
+    const slotsAdded = this['__noInsertionPoint'] ? null : this.querySelectorAll('slot');
     // if a slot is added, must render containing root.
     if (slotsAdded) {
       this._addSlots(slotsAdded);
@@ -61,8 +62,7 @@ export const ShadowRootPatches = utils.getOwnPropertyDescriptors({
     if (this._hasInsertionPoint()) {
         this._asyncRender();
     }
-    /** @type {ShadowRoot} */(this).host[utils.NATIVE_PREFIX + 'appendChild'](fragment);
-    return fragment;
+    /** @type {ShadowRoot} */(this).host[utils.NATIVE_PREFIX + 'appendChild'](this);
   },
 
 });

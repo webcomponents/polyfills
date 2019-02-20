@@ -56,25 +56,25 @@ class ShadyRoot {
     this._slotMap;
     /** @type {?Array<HTMLSlotElement>} */
     this._pendingSlots;
-    this._init(this, host, options);
+    this._init(host, options);
   }
 
-  _init(root, host, options) {
+  _init(host, options) {
     // NOTE: set a fake local name so this element can be
     // distinguished from a DocumentFragment when patching.
     // FF doesn't allow this to be `localName`
-    root._localName = SHADYROOT_NAME;
+    this._localName = SHADYROOT_NAME;
     // root <=> host
-    root.host = host;
+    this.host = host;
     /** @type {!string|undefined} */
-    root.mode = options && options.mode;
+    this.mode = options && options.mode;
     recordChildNodes(host);
     const hostData = ensureShadyDataForNode(host);
     /** @type {!ShadyRoot} */
-    hostData.root = root;
-    hostData.publicRoot = root.mode !== MODE_CLOSED ? root : null;
+    hostData.root = this;
+    hostData.publicRoot = this.mode !== MODE_CLOSED ? this : null;
     // setup root
-    const rootData = ensureShadyDataForNode(root);
+    const rootData = ensureShadyDataForNode(this);
     rootData.firstChild = rootData.lastChild =
         rootData.parentNode = rootData.nextSibling =
         rootData.previousSibling = null;
@@ -86,7 +86,7 @@ class ShadyRoot {
         host[utils.NATIVE_PREFIX + 'removeChild'](n);
       }
     } else {
-      root._asyncRender();
+      this._asyncRender();
     }
   }
 

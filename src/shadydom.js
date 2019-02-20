@@ -89,8 +89,7 @@ if (utils.settings.inUse) {
       let root;
       if (utils.canUpgrade()) {
         fragment.__proto__ = ShadowRoot.prototype;
-        fragment._init(fragment, host, options);
-        fragment._attachDom(fragment);
+        fragment._attachToHost(host, options);
         root = fragment;
       } else {
         root = ShadyDOM['wrap'](host).attachShadow(options);
