@@ -53,6 +53,9 @@ export const recordInsertBefore = (node, container, ref_node) => {
   }
   // handle document fragments
   if (node.nodeType === Node.DOCUMENT_FRAGMENT_NODE) {
+    // Note, documentFragments should not have logical DOM so there's
+    // no need update that. It is possible to append a ShadowRoot, but we're
+    // choosing not to support that.
     const first = node[utils.NATIVE_PREFIX + 'firstChild'];
     for (let n = first; n; (n = n[utils.NATIVE_PREFIX + 'nextSibling'])) {
       linkNode(n, container, containerData, ref_node);

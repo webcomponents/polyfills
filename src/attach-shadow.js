@@ -57,19 +57,24 @@ class ShadyRoot {
     /** @type {?Array<HTMLSlotElement>} */
     this._pendingSlots;
     this._init(host, options);
+    this._setup();
   }
 
   _init(host, options) {
     // NOTE: set a fake local name so this element can be
     // distinguished from a DocumentFragment when patching.
     // FF doesn't allow this to be `localName`
+    /** @type {string} */
     this._localName = SHADYROOT_NAME;
     // root <=> host
     this.host = host;
     /** @type {!string|undefined} */
     this.mode = options && options.mode;
-    recordChildNodes(host);
-    const hostData = ensureShadyDataForNode(host);
+  }
+
+  _setup() {
+    recordChildNodes(this.host);
+    const hostData = ensureShadyDataForNode(this.host);
     /** @type {!ShadyRoot} */
     hostData.root = this;
     hostData.publicRoot = this.mode !== MODE_CLOSED ? this : null;
@@ -82,8 +87,8 @@ class ShadyRoot {
     // to record parsed children if flag is not set.
     if (utils.settings['preferPerformance']) {
       let n;
-      while ((n = host[utils.NATIVE_PREFIX + 'firstChild'])) {
-        host[utils.NATIVE_PREFIX + 'removeChild'](n);
+      while ((n = this.host[utils.NATIVE_PREFIX + 'firstChild'])) {
+        this.host[utils.NATIVE_PREFIX + 'removeChild'](n);
       }
     } else {
       this._asyncRender();
@@ -566,7 +571,18 @@ export const attachShadow = (host, options) => {
   if (!options) {
     throw new Error('Not enough arguments.');
   }
-  return new ShadyRoot(ShadyRootConstructionToken, host, options);
+  let root;
+  // Optimization for booting up a shadowRoot from a fragment rather than
+  // creating one.
+  if (host.__shady_fragment) {
+    root = host.__shady_fragment;
+    host.__shady_fragment = null;
+    root.__proto__ = ShadowRoot.prototype;
+    root._init(host, options);
+  } else {
+    root = new ShadyRoot(ShadyRootConstructionToken, host, options);
+  }
+  return root;
 }
 
 // Mitigate connect/disconnect spam by wrapping custom element classes.

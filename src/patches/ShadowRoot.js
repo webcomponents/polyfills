@@ -9,7 +9,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 */
 
 import * as utils from '../utils.js';
-import {recordChildNodes} from '../link-nodes.js';
 
 export const ShadowRootPatches = utils.getOwnPropertyDescriptors({
 
@@ -43,26 +42,6 @@ export const ShadowRootPatches = utils.getOwnPropertyDescriptors({
     }
     optionsOrCapture.__shadyTarget = this;
     this.host[utils.SHADY_PREFIX + 'removeEventListener'](type, fn, optionsOrCapture);
-  },
-
-  /**
-   * Optimized initial insertion for pre-scoped node.
-   * @param {DocumentFragment} fragment
-   */
-  _attachToHost(host, options) {
-    this._init(host, options);
-    recordChildNodes(this, this);
-    // Note: qsa is native when used with noPatch.
-    /** @type {?NodeList<Element>} */
-    const slotsAdded = this['__noInsertionPoint'] ? null : this.querySelectorAll('slot');
-    // if a slot is added, must render containing root.
-    if (slotsAdded) {
-      this._addSlots(slotsAdded);
-    }
-    if (this._hasInsertionPoint()) {
-        this._asyncRender();
-    }
-    /** @type {ShadowRoot} */(this).host[utils.NATIVE_PREFIX + 'appendChild'](this);
-  },
+  }
 
 });

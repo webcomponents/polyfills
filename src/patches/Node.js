@@ -12,7 +12,7 @@ import * as utils from '../utils.js';
 import {getScopingShim, removeShadyScoping, replaceShadyScoping,
   treeVisitor, currentScopeForNode, currentScopeIsCorrect } from '../style-scoping.js';
 import {shadyDataForNode, ensureShadyDataForNode} from '../shady-data.js';
-import {recordInsertBefore, recordRemoveChild} from '../link-nodes.js';
+import {recordInsertBefore, recordRemoveChild, recordChildNodes} from '../link-nodes.js';
 import {ownerShadyRootForNode} from '../attach-shadow.js';
 
 const doc = window.document;
@@ -351,7 +351,24 @@ export const NodePatches = utils.getOwnPropertyDescriptors({
    * @param {Node} node
    */
   appendChild(node) {
-    return this[utils.SHADY_PREFIX + 'insertBefore'](node);
+    // Optimized initial insertion for DOM into a shadowRoot (i.e. into itself).
+    if (this === node && utils.isShadyRoot(node)) {
+      this._setup();
+      recordChildNodes(this, this);
+      // Note: qsa is native when used with noPatch.
+      /** @type {?NodeList<Element>} */
+      const slotsAdded = this['__noInsertionPoint'] ? null : this.querySelectorAll('slot');
+      // if a slot is added, must render containing root.
+      if (slotsAdded) {
+        this._addSlots(slotsAdded);
+      }
+      if (this._hasInsertionPoint()) {
+          this._asyncRender();
+      }
+      /** @type {ShadowRoot} */(this).host[utils.NATIVE_PREFIX + 'appendChild'](this);
+    } else {
+      return this[utils.SHADY_PREFIX + 'insertBefore'](node);
+    }
   },
 
   /**
