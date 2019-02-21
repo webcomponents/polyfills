@@ -1,4 +1,8 @@
-ShadyDOM = {force: true, noPatch: window.location.search.match('noPatch')};
+ShadyDOM = {
+  force: true,
+  noPatch: !!window.location.search.match('noPatch'),
+  preferPerformance: !!window.location.search.match('preferPerformance')
+};
 
 // TODO(sorvell): noPatching does not work with the custom elements polyfill.
 // IF the polyfill used `ShadyDOM.wrap` throughout, it could be made to work.

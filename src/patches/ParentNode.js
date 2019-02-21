@@ -136,7 +136,8 @@ export const QueryPatches = utils.getOwnPropertyDescriptors({
 
 // Create a custom `ParentNodeDocumentOrFragment` that optionally does not
 // mixin querySelector/All; this is a performance optimization.
-export const ParentNodeDocumentOrFragmentPatches = utils.settings.preferPerformance ?
+export const ParentNodeDocumentOrFragmentPatches =
+  (utils.settings.preferPerformance && !utils.settings.noPatch) ?
   Object.assign({}, ParentNodePatches) : ParentNodePatches;
 
 Object.assign(ParentNodePatches, QueryPatches);

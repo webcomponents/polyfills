@@ -345,6 +345,25 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           assert.equal(ShadyDOM.wrap(el).getAttribute('class'), scopeSelector);
         });
       });
+
+      suite('moving back into document fragment', function() {
+        test('pre-scoped content moved back into doc fragment', function() {
+          const template = document.createElement('template');
+          template.innerHTML = '<span></span>';
+          window.ShadyCSS.prepareTemplate(template, 'x-host');
+          const host = document.body.appendChild(document.createElement('x-host'));
+          ShadyDOM.wrap(host).attachShadow({mode: 'open'});
+          const fragment = ShadyDOM.wrap(document).importNode(template.content, true);
+          fragment.__noInsertionPoint = true;
+          ShadyDOM.wrap(host).shadowRoot.appendChild(fragment);
+          ShadyDOM.wrap(fragment).appendChild(ShadyDOM.wrap(host).shadowRoot.firstChild);
+          assert.isTrue(ShadyDOM.wrap(fragment).firstChild.classList.contains('style-scope'));
+          assert.isTrue(ShadyDOM.wrap(fragment).firstChild.classList.contains('x-host'));
+          ShadyDOM.wrap(host).shadowRoot.appendChild(fragment);
+          assert.isTrue(ShadyDOM.wrap(host).shadowRoot.firstChild.classList.contains('style-scope'));
+          assert.isTrue(ShadyDOM.wrap(host).shadowRoot.firstChild.classList.contains('x-host'));
+        });
+      });
     });
   </script>
 </body>
