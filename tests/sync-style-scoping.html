@@ -358,9 +358,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           fragment.__noInsertionPoint = true;
           ShadyDOM.wrap(host).shadowRoot.appendChild(fragment);
           ShadyDOM.wrap(fragment).appendChild(ShadyDOM.wrap(host).shadowRoot.firstChild);
-          assert.isTrue(ShadyDOM.wrap(fragment).firstChild.classList.contains('style-scope'));
-          assert.isTrue(ShadyDOM.wrap(fragment).firstChild.classList.contains('x-host'));
+          // Under preferPerformance, the scoping classes are not removed when moving
+          // back into a pre-scoped fragment, otherwise they are
+          assert.equal(ShadyDOM.wrap(fragment).firstChild.classList.contains('style-scope'), ShadyDOM.preferPerformance);
+          assert.equal(ShadyDOM.wrap(fragment).firstChild.classList.contains('x-host'), ShadyDOM.preferPerformance);
           ShadyDOM.wrap(host).shadowRoot.appendChild(fragment);
+          // However, when put back into a shadowRoot, it should always be scoped
           assert.isTrue(ShadyDOM.wrap(host).shadowRoot.firstChild.classList.contains('style-scope'));
           assert.isTrue(ShadyDOM.wrap(host).shadowRoot.firstChild.classList.contains('x-host'));
         });
