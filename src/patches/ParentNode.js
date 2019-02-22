@@ -134,8 +134,10 @@ export const QueryPatches = utils.getOwnPropertyDescriptors({
 
 });
 
-// Create a custom `ParentNodeDocumentOrFragment` that optionally does not
-// mixin querySelector/All; this is a performance optimization.
+// In preferPerformance mode, create a custom `ParentNodeDocumentOrFragment`
+// that optionally does not mixin querySelector/All; this is a performance
+// optimization. In noPatch, we need to keep the query patches here in order to
+// ensure the query API is available on the wrapper
 export const ParentNodeDocumentOrFragmentPatches =
   (utils.settings.preferPerformance && !utils.settings.noPatch) ?
   Object.assign({}, ParentNodePatches) : ParentNodePatches;
