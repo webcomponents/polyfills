@@ -30,7 +30,6 @@ export function isValidCustomElementName(localName) {
 }
 
 /**
- * @private
  * @param {!Node} node
  * @return {boolean}
  */
