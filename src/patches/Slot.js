@@ -10,6 +10,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 import * as utils from '../utils.js';
 import {shadyDataForNode} from '../shady-data.js';
+import {addEventListener, removeEventListener} from '../patch-events.js';
 
 export const SlotPatches = utils.getOwnPropertyDescriptors({
 
@@ -30,6 +31,54 @@ export const SlotPatches = utils.getOwnPropertyDescriptors({
         ((options && options.flatten ? nodeData.flattenedNodes :
           nodeData.assignedNodes) || []) :
         [];
+    }
+  },
+
+  /**
+   * @this {HTMLSlotElement}
+   * @param {string} type
+   * @param {Function} fn
+   * @param {Object|boolean=} optionsOrCapture
+   */
+  addEventListener(type, fn, optionsOrCapture) {
+    if (typeof optionsOrCapture !== 'object') {
+      optionsOrCapture = {
+        capture: Boolean(optionsOrCapture)
+      }
+    }
+    if (type === 'slotchange') {
+      addEventListener.call(this, type, fn, optionsOrCapture);
+    } else {
+      const parent = this[utils.SHADY_PREFIX + 'parentNode'];
+      if (!parent) {
+        throw new Error('ShadyDOM cannot attach event to slot unless it has a `parentNode`');
+      }
+      optionsOrCapture.__shadyTarget = this;
+      parent[utils.SHADY_PREFIX + 'addEventListener'](type, fn, optionsOrCapture);
+    }
+  },
+
+  /**
+   * @this {HTMLSlotElement}
+   * @param {string} type
+   * @param {Function} fn
+   * @param {Object|boolean=} optionsOrCapture
+   */
+  removeEventListener(type, fn, optionsOrCapture) {
+    if (typeof optionsOrCapture !== 'object') {
+      optionsOrCapture = {
+        capture: Boolean(optionsOrCapture)
+      }
+    }
+    if (type === 'slotchange') {
+      removeEventListener.call(this, type, fn, optionsOrCapture);
+    } else {
+      const parent = this[utils.SHADY_PREFIX + 'parentNode'];
+      if (!parent) {
+        throw new Error('ShadyDOM cannot attach event to slot unless it has a `parentNode`');
+      }
+      optionsOrCapture.__shadyTarget = this;
+      parent[utils.SHADY_PREFIX + 'removeEventListener'](type, fn, optionsOrCapture);
     }
   }
 

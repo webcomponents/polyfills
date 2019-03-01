@@ -347,6 +347,10 @@ function getEventWrappers(eventLike) {
   return wrappers;
 }
 
+function targetNeedsPathCheck(node) {
+  return utils.isShadyRoot(node) || node.localName === 'slot';
+}
+
 /**
  * @this {EventTarget}
  */
@@ -421,10 +425,10 @@ export function addEventListener(type, fnOrObj, optionsOrCapture) {
       Object.defineProperty(e, 'currentTarget', {get() { return target }, configurable: true});
     }
     e['__previousCurrentTarget'] = e['currentTarget'];
-    // Always check if a shadowRoot is in the current event path.
+    // Always check if a shadowRoot or slot is in the current event path.
     // If it is not, the event was generated on either the host of the shadowRoot
     // or a children of the host.
-    if (utils.isShadyRoot(target) && e.composedPath().indexOf(target) == -1) {
+    if (targetNeedsPathCheck(target) && e.composedPath().indexOf(target) == -1) {
       return;
     }
     // There are two critera that should stop events from firing on this node
