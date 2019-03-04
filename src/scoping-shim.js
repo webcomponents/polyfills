@@ -557,8 +557,7 @@ export default class ScopingShim {
     StyleTransformer.element(node, scope);
   }
   /**
-   * @param 
-   {!Element} node
+   * @param {!Element} node
    * @param {string} scope
    */
   unscopeNode(node, scope) {
