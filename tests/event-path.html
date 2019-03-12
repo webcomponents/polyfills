@@ -549,6 +549,23 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       assert.isNull(scoped, 'scoped events should fire on shadowRoot after listener removed');
     });
 
+    test('addEventListener using event options to set capture false', function() {
+      const parent = document.createElement('div');
+      document.body.appendChild(parent);
+      const child = document.createElement('div');
+      ShadyDOM.wrap(parent).appendChild(child);
+      let heardEvent = false;
+      function listener(e) {
+        assert.equal(e.eventPhase, Event.BUBBLING_PHASE);
+        heardEvent = true;
+      }
+      ShadyDOM.wrap(parent).addEventListener('foo', listener);
+      ShadyDOM.wrap(child).dispatchEvent(new Event('foo', {bubbles: true}));
+      ShadyDOM.flush();
+      assert.isTrue(heardEvent);
+      document.body.removeChild(parent);
+    });
+
     test('should use bubbling phase for event listeners added via properties', function () {
       if (!hasOnListenersOnPrototype) {
         this.skip();

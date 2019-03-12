@@ -41,16 +41,16 @@ export const SlotPatches = utils.getOwnPropertyDescriptors({
    * @param {Object|boolean=} optionsOrCapture
    */
   addEventListener(type, fn, optionsOrCapture) {
-    if (typeof optionsOrCapture !== 'object') {
-      optionsOrCapture = {
-        capture: Boolean(optionsOrCapture)
-      }
-    }
     // NOTE, check if this is a `slot` because these patches are installed on
     // Element where browsers don't have `<slot>`
     if (this.localName !== 'slot' || type === 'slotchange') {
       addEventListener.call(this, type, fn, optionsOrCapture);
     } else {
+      if (typeof optionsOrCapture !== 'object') {
+        optionsOrCapture = {
+          capture: Boolean(optionsOrCapture)
+        }
+      }
       const parent = this[utils.SHADY_PREFIX + 'parentNode'];
       if (!parent) {
         throw new Error('ShadyDOM cannot attach event to slot unless it has a `parentNode`');
@@ -67,16 +67,16 @@ export const SlotPatches = utils.getOwnPropertyDescriptors({
    * @param {Object|boolean=} optionsOrCapture
    */
   removeEventListener(type, fn, optionsOrCapture) {
-    if (typeof optionsOrCapture !== 'object') {
-      optionsOrCapture = {
-        capture: Boolean(optionsOrCapture)
-      }
-    }
     // NOTE, check if this is a `slot` because these patches are installed on
     // Element where browsers don't have `<slot>`
     if (this.localName !== 'slot' || type === 'slotchange') {
       removeEventListener.call(this, type, fn, optionsOrCapture);
     } else {
+      if (typeof optionsOrCapture !== 'object') {
+        optionsOrCapture = {
+          capture: Boolean(optionsOrCapture)
+        }
+      }
       const parent = this[utils.SHADY_PREFIX + 'parentNode'];
       if (!parent) {
         throw new Error('ShadyDOM cannot attach event to slot unless it has a `parentNode`');

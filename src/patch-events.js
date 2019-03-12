@@ -23,6 +23,41 @@ const composedGetter = (() => {
   return composedProp ? (ev) => composedProp.get.call(ev) : null;
 })();
 
+const supportsEventOptions = (() => {
+  let supported = false;
+  let eventOptions = {
+    get capture() {
+      supported = true;
+    }
+  }
+  const listener = () => {}
+  // NOTE: These will be unpatched at this point.
+  window.addEventListener('test', listener, eventOptions);
+  window.removeEventListener('test', listener, eventOptions);
+  return supported;
+})();
+
+const parseEventOptions = (optionsOrCapture) => {
+  let capture, once, passive, shadyTarget;
+  if (optionsOrCapture && typeof optionsOrCapture === 'object') {
+    capture = Boolean(optionsOrCapture.capture);
+    once = Boolean(optionsOrCapture.once);
+    passive = Boolean(optionsOrCapture.passive);
+    shadyTarget = optionsOrCapture.__shadyTarget;
+  } else {
+    capture = Boolean(optionsOrCapture);
+    once = false;
+    passive = false;
+  }
+  return {
+    shadyTarget,
+    capture,
+    once,
+    passive,
+    nativeEventOptions: supportsEventOptions ? optionsOrCapture : capture
+  }
+}
+
 // https://github.com/w3c/webcomponents/issues/513#issuecomment-224183937
 const alwaysComposed = {
   'blur': true,
@@ -355,6 +390,8 @@ function targetNeedsPathCheck(node) {
  * @this {EventTarget}
  */
 export function addEventListener(type, fnOrObj, optionsOrCapture) {
+  const {capture, once, passive, shadyTarget, nativeEventOptions} =
+    parseEventOptions(optionsOrCapture);
   if (!fnOrObj) {
     return;
   }
@@ -372,32 +409,22 @@ export function addEventListener(type, fnOrObj, optionsOrCapture) {
   }
 
   if (unpatchedEvents[type]) {
-    return this[utils.NATIVE_PREFIX + 'addEventListener'](type, fnOrObj, optionsOrCapture);
+    return this[utils.NATIVE_PREFIX + 'addEventListener'](type, fnOrObj, nativeEventOptions);
   }
 
-  // The callback `fn` might be used for multiple nodes/events. Since we generate
-  // a wrapper function, we need to keep track of it when we remove the listener.
-  // It's more efficient to store the node/type/options information as Array in
-  // `fn` itself rather than the node (we assume that the same callback is used
-  // for few nodes at most, whereas a node will likely have many event listeners).
-  // NOTE(valdrin) invoking external functions is costly, inline has better perf.
-  let capture, once, passive;
-  if (optionsOrCapture && typeof optionsOrCapture === 'object') {
-    capture = Boolean(optionsOrCapture.capture);
-    once = Boolean(optionsOrCapture.once);
-    passive = Boolean(optionsOrCapture.passive);
-  } else {
-    capture = Boolean(optionsOrCapture);
-    once = false;
-    passive = false;
-  }
   // hack to let ShadyRoots have event listeners
   // event listener will be on host, but `currentTarget`
   // will be set to shadyroot for event listener
-  let target = (optionsOrCapture && optionsOrCapture.__shadyTarget) || this;
+  let target = shadyTarget || this;
 
   let wrappers = fnOrObj[eventWrappersName];
   if (wrappers) {
+    // The callback `fn` might be used for multiple nodes/events. Since we generate
+    // a wrapper function, we need to keep track of it when we remove the listener.
+    // It's more efficient to store the node/type/options information as Array in
+    // `fn` itself rather than the node (we assume that the same callback is used
+    // for few nodes at most, whereas a node will likely have many event listeners).
+    // NOTE(valdrin) invoking external functions is costly, inline has better perf.
     // Stop if the wrapper function has already been created.
     if (findListener(wrappers, target, type, capture, once, passive) > -1) {
       return;
@@ -413,7 +440,7 @@ export function addEventListener(type, fnOrObj, optionsOrCapture) {
   const wrapperFn = function(e) {
     // Support `once` option.
     if (once) {
-      this[utils.SHADY_PREFIX + 'removeEventListener'](type, fnOrObj, optionsOrCapture);
+      this[utils.SHADY_PREFIX + 'removeEventListener'](type, fnOrObj, nativeEventOptions);
     }
     if (!e['__target']) {
       patchEvent(e);
@@ -479,7 +506,7 @@ export function addEventListener(type, fnOrObj, optionsOrCapture) {
       {'capture': [], 'bubble': []};
     this.__handlers[type][capture ? 'capture' : 'bubble'].push(wrapperFn);
   } else {
-    this[utils.NATIVE_PREFIX + 'addEventListener'](type, wrapperFn, optionsOrCapture);
+    this[utils.NATIVE_PREFIX + 'addEventListener'](type, wrapperFn, nativeEventOptions);
   }
 }
 
@@ -490,21 +517,12 @@ export function removeEventListener(type, fnOrObj, optionsOrCapture) {
   if (!fnOrObj) {
     return;
   }
+  const {capture, once, passive, shadyTarget, nativeEventOptions} =
+    parseEventOptions(optionsOrCapture);
   if (unpatchedEvents[type]) {
-    return this[utils.NATIVE_PREFIX + 'removeEventListener'](type, fnOrObj, optionsOrCapture);
+    return this[utils.NATIVE_PREFIX + 'removeEventListener'](type, fnOrObj, nativeEventOptions);
   }
-  // NOTE(valdrin) invoking external functions is costly, inline has better perf.
-  let capture, once, passive;
-  if (optionsOrCapture && typeof optionsOrCapture === 'object') {
-    capture = Boolean(optionsOrCapture.capture);
-    once = Boolean(optionsOrCapture.once);
-    passive = Boolean(optionsOrCapture.passive);
-  } else {
-    capture = Boolean(optionsOrCapture);
-    once = false;
-    passive = false;
-  }
-  let target = (optionsOrCapture && optionsOrCapture.__shadyTarget) || this;
+  let target = shadyTarget || this;
   // Search the wrapped function.
   let wrapperFn = undefined;
   let wrappers = getEventWrappers(fnOrObj);
@@ -518,7 +536,8 @@ export function removeEventListener(type, fnOrObj, optionsOrCapture) {
       }
     }
   }
-  this[utils.NATIVE_PREFIX + 'removeEventListener'](type, wrapperFn || fnOrObj, optionsOrCapture);
+  this[utils.NATIVE_PREFIX + 'removeEventListener'](type, wrapperFn || fnOrObj,
+    nativeEventOptions);
   if (wrapperFn && nonBubblingEventsToRetarget[type] &&
       this.__handlers && this.__handlers[type]) {
     const arr = this.__handlers[type][capture ? 'capture' : 'bubble'];
