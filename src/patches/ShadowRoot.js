@@ -24,7 +24,8 @@ export const ShadowRootPatches = utils.getOwnPropertyDescriptors({
         capture: Boolean(optionsOrCapture)
       }
     }
-    optionsOrCapture.__shadyTarget = this;
+    // Note, `__shadyTarget` may already be set if an event was added on a <slot> child
+    optionsOrCapture.__shadyTarget = optionsOrCapture.__shadyTarget || this;
     this.host[utils.SHADY_PREFIX + 'addEventListener'](type, fn, optionsOrCapture);
   },
 
@@ -40,7 +41,8 @@ export const ShadowRootPatches = utils.getOwnPropertyDescriptors({
         capture: Boolean(optionsOrCapture)
       }
     }
-    optionsOrCapture.__shadyTarget = this;
+    // Note, `__shadyTarget` may already be set if an event was added on a <slot> child
+    optionsOrCapture.__shadyTarget = optionsOrCapture.__shadyTarget || this;
     this.host[utils.SHADY_PREFIX + 'removeEventListener'](type, fn, optionsOrCapture);
   }
 
