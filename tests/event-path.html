@@ -11,6 +11,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <html>
 <head>
   <meta charset="utf-8">
+  <script src="wct-browser-config.js"></script>
   <script src="../node_modules/@webcomponents/webcomponents-platform/webcomponents-platform.js"></script>
   <script src="../node_modules/@webcomponents/template/template.js"></script>
   <script src="loader.js"></script>
@@ -337,6 +338,26 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       ShadyDOM.wrap(ShadyDOM.wrap(el).parentNode).removeChild(el);
     });
 
+    test('bubbling events reach shadowRoot', function() {
+      // Create a div element with a shadow root
+      const theDiv = document.createElement('div');
+      const root = ShadyDOM.wrap(theDiv).attachShadow({mode: 'open'});
+      ShadyDOM.wrap(document.body).appendChild(theDiv);
+
+      const shadowChild = document.createElement('div');
+      root.appendChild(shadowChild);
+
+      const spy = sinon.spy();
+
+      // Add event listener to the shadow root
+      ShadyDOM.wrap(ShadyDOM.wrap(theDiv).shadowRoot).addEventListener('anEvent', spy);
+
+      // Dispatch a bubbling event to the a shadowRoot child
+      ShadyDOM.wrap(shadowChild).dispatchEvent(new CustomEvent('anEvent', {bubbles: true}));
+
+      assert.isTrue(spy.called, 'Callback should be called on shadowRoot');
+    });
+
     test('scoped composed does not reach shadowRoot', function() {
       // Create a div element with a shadow root
       const theDiv = document.createElement('div');
@@ -348,7 +369,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       // Add event listener to the shadow root
       ShadyDOM.wrap(ShadyDOM.wrap(theDiv).shadowRoot).addEventListener('composed', spy);
 
-      // Dispatch a comosed event to the div element (not its shadow root)
+      // Dispatch a composed event to the div element (not its shadow root)
       ShadyDOM.wrap(theDiv).dispatchEvent(new CustomEvent('composed', {bubbles: true, composed: true}));
 
       assert.isFalse(spy.called, 'Callback should not be called on shadowRoot');
@@ -367,10 +388,76 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       // Add event listener to the shadow root
       ShadyDOM.wrap(ShadyDOM.wrap(theDiv).shadowRoot).addEventListener('composed', spy);
 
-      // Dispatch a comosed event to a child of the div element (not its shadow root)
+      // Dispatch a composed event to a child of the div element (not its shadow root)
       ShadyDOM.wrap(child).dispatchEvent(new CustomEvent('composed', {bubbles: true, composed: true}));
 
       assert.isFalse(spy.called, 'Callback should not be called on shadowRoot');
+    });
+
+    test('bubbling events reach <slot>', function() {
+      // Create a div element with a shadow root
+      const theDiv = document.createElement('div');
+      const root = ShadyDOM.wrap(theDiv).attachShadow({mode: 'open'});
+      ShadyDOM.wrap(document.body).appendChild(theDiv);
+
+      const slot = document.createElement('slot');
+      root.appendChild(slot);
+      const child = document.createElement('div');
+      ShadyDOM.wrap(theDiv).appendChild(child);
+
+      const spy = sinon.spy();
+
+      // Add event listener to the <slot>
+      ShadyDOM.wrap(slot).addEventListener('bubbling', spy);
+
+      // Dispatch a bubbling event to the child distributed to the slot
+      ShadyDOM.wrap(child).dispatchEvent(new CustomEvent('bubbling', {bubbles: true}));
+
+      assert.isTrue(spy.called, 'Callback should be called on <slot>');
+    });
+
+    test('events on slot parent do not reach <slot>', function() {
+      // Create a div element with a shadow root
+      const theDiv = document.createElement('div');
+      const root = ShadyDOM.wrap(theDiv).attachShadow({mode: 'open'});
+      ShadyDOM.wrap(document.body).appendChild(theDiv);
+
+      const slot = document.createElement('slot');
+      const slotParent = document.createElement('div');
+      slotParent.appendChild(slot);
+      root.appendChild(slotParent);
+
+      const spy = sinon.spy();
+
+      // Add event listener to the shadow root
+      ShadyDOM.wrap(slot).addEventListener('bubbling', spy);
+
+      // Dispatch a bubbling event to the slot parent
+      slotParent.dispatchEvent(new CustomEvent('bubbling', {bubbles: true}));
+
+      assert.isFalse(spy.called, 'Callback should not be called on <slot>');
+    });
+
+    test('events bubbling to slot parent do not reach <slot>', function() {
+      // Create a div element with a shadow root
+      const theDiv = document.createElement('div');
+      const root = ShadyDOM.wrap(theDiv).attachShadow({mode: 'open'});
+      ShadyDOM.wrap(document.body).appendChild(theDiv);
+
+      const slot = document.createElement('slot');
+      root.appendChild(slot);
+      const child = document.createElement('div');
+      root.appendChild(child);
+
+      const spy = sinon.spy();
+
+      // Add event listener to the <slot>
+      ShadyDOM.wrap(slot).addEventListener('bubbling', spy);
+
+      // Dispatch a bubbling event to a sibling of the slot (not distributed to it)
+      ShadyDOM.wrap(child).dispatchEvent(new CustomEvent('bubbling', {bubbles: true}));
+
+      assert.isFalse(spy.called, 'Callback should not be called on <slot>');
     });
 
     test('document events retarget', function() {
@@ -460,6 +547,23 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       el.fireScoped();
       assert.isNull(composed, 'composed events should not fire on shadowRoot after listener removed');
       assert.isNull(scoped, 'scoped events should fire on shadowRoot after listener removed');
+    });
+
+    test('addEventListener using event options to set capture false', function() {
+      const parent = document.createElement('div');
+      document.body.appendChild(parent);
+      const child = document.createElement('div');
+      ShadyDOM.wrap(parent).appendChild(child);
+      let heardEvent = false;
+      function listener(e) {
+        assert.equal(e.eventPhase, Event.BUBBLING_PHASE);
+        heardEvent = true;
+      }
+      ShadyDOM.wrap(parent).addEventListener('foo', listener);
+      ShadyDOM.wrap(child).dispatchEvent(new Event('foo', {bubbles: true}));
+      ShadyDOM.flush();
+      assert.isTrue(heardEvent);
+      document.body.removeChild(parent);
     });
 
     test('should use bubbling phase for event listeners added via properties', function () {
@@ -743,8 +847,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         track(mid);
         track(ShadyDOM.wrap(mid).shadowRoot);
         let slot = document.createElement('slot');
-        track(slot);
         ShadyDOM.wrap(ShadyDOM.wrap(mid).shadowRoot).appendChild(slot);
+        track(slot);
         ShadyDOM.wrap(ShadyDOM.wrap(top).shadowRoot).appendChild(mid);
 
         let bot = document.createElement('div');

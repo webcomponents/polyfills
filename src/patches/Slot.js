@@ -10,6 +10,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 import * as utils from '../utils.js';
 import {shadyDataForNode} from '../shady-data.js';
+import {addEventListener, removeEventListener} from '../patch-events.js';
 
 export const SlotPatches = utils.getOwnPropertyDescriptors({
 
@@ -30,6 +31,58 @@ export const SlotPatches = utils.getOwnPropertyDescriptors({
         ((options && options.flatten ? nodeData.flattenedNodes :
           nodeData.assignedNodes) || []) :
         [];
+    }
+  },
+
+  /**
+   * @this {HTMLSlotElement}
+   * @param {string} type
+   * @param {Function} fn
+   * @param {Object|boolean=} optionsOrCapture
+   */
+  addEventListener(type, fn, optionsOrCapture) {
+    // NOTE, check if this is a `slot` because these patches are installed on
+    // Element where browsers don't have `<slot>`
+    if (this.localName !== 'slot' || type === 'slotchange') {
+      addEventListener.call(this, type, fn, optionsOrCapture);
+    } else {
+      if (typeof optionsOrCapture !== 'object') {
+        optionsOrCapture = {
+          capture: Boolean(optionsOrCapture)
+        }
+      }
+      const parent = this[utils.SHADY_PREFIX + 'parentNode'];
+      if (!parent) {
+        throw new Error('ShadyDOM cannot attach event to slot unless it has a `parentNode`');
+      }
+      optionsOrCapture.__shadyTarget = this;
+      parent[utils.SHADY_PREFIX + 'addEventListener'](type, fn, optionsOrCapture);
+    }
+  },
+
+  /**
+   * @this {HTMLSlotElement}
+   * @param {string} type
+   * @param {Function} fn
+   * @param {Object|boolean=} optionsOrCapture
+   */
+  removeEventListener(type, fn, optionsOrCapture) {
+    // NOTE, check if this is a `slot` because these patches are installed on
+    // Element where browsers don't have `<slot>`
+    if (this.localName !== 'slot' || type === 'slotchange') {
+      removeEventListener.call(this, type, fn, optionsOrCapture);
+    } else {
+      if (typeof optionsOrCapture !== 'object') {
+        optionsOrCapture = {
+          capture: Boolean(optionsOrCapture)
+        }
+      }
+      const parent = this[utils.SHADY_PREFIX + 'parentNode'];
+      if (!parent) {
+        throw new Error('ShadyDOM cannot attach event to slot unless it has a `parentNode`');
+      }
+      optionsOrCapture.__shadyTarget = this;
+      parent[utils.SHADY_PREFIX + 'removeEventListener'](type, fn, optionsOrCapture);
     }
   }
 

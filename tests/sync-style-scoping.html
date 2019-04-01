@@ -11,6 +11,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <html>
 <head>
   <meta charset="utf-8">
+  <script src="wct-browser-config.js"></script>
   <script src="../node_modules/@webcomponents/webcomponents-platform/webcomponents-platform.js"></script>
   <script src="../node_modules/promise-polyfill/dist/polyfill.js"></script>
   <script>
@@ -343,6 +344,28 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           d.className = scopeSelector;
           ShadyDOM.wrap(container).removeChild(d);
           assert.equal(ShadyDOM.wrap(el).getAttribute('class'), scopeSelector);
+        });
+      });
+
+      suite('moving back into document fragment', function() {
+        test('pre-scoped content moved back into doc fragment', function() {
+          const template = document.createElement('template');
+          template.innerHTML = '<span></span>';
+          window.ShadyCSS.prepareTemplate(template, 'x-host');
+          const host = document.body.appendChild(document.createElement('x-host'));
+          ShadyDOM.wrap(host).attachShadow({mode: 'open'});
+          const fragment = ShadyDOM.wrap(document).importNode(template.content, true);
+          fragment.__noInsertionPoint = true;
+          ShadyDOM.wrap(host).shadowRoot.appendChild(fragment);
+          ShadyDOM.wrap(fragment).appendChild(ShadyDOM.wrap(host).shadowRoot.firstChild);
+          // Under preferPerformance, the scoping classes are not removed when moving
+          // back into a pre-scoped fragment, otherwise they are
+          assert.equal(ShadyDOM.wrap(fragment).firstChild.classList.contains('style-scope'), ShadyDOM.preferPerformance);
+          assert.equal(ShadyDOM.wrap(fragment).firstChild.classList.contains('x-host'), ShadyDOM.preferPerformance);
+          ShadyDOM.wrap(host).shadowRoot.appendChild(fragment);
+          // However, when put back into a shadowRoot, it should always be scoped
+          assert.isTrue(ShadyDOM.wrap(host).shadowRoot.firstChild.classList.contains('style-scope'));
+          assert.isTrue(ShadyDOM.wrap(host).shadowRoot.firstChild.classList.contains('x-host'));
         });
       });
     });

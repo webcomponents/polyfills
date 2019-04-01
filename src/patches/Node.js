@@ -273,12 +273,26 @@ export const NodePatches = utils.getOwnPropertyDescriptors({
     const parentNode = node[utils.SHADY_PREFIX + 'parentNode'];
     if (parentNode) {
       oldScopeName = currentScopeForNode(node);
-      parentNode[utils.SHADY_PREFIX + 'removeChild'](node,
-        Boolean(ownerRoot) || !ownerShadyRootForNode(node));
+      const skipUnscoping = 
+        // Don't remove scoping if we're inserting into another shadowRoot; 
+        // this would be unnecessary since it will be re-scoped below
+        Boolean(ownerRoot) || 
+        // Don't remove scoping if we're being moved between non-shadowRoot
+        // locations (the likely case is when moving pre-scoped nodes in a template)
+        !ownerShadyRootForNode(node) || 
+        // Under preferPerformance, don't remove scoping when moving back into
+        // a document fragment that was previously scoped; the assumption is
+        // that the user should only move correctly-scoped DOM back into it
+        (preferPerformance && this['__noInsertionPoint'] !== undefined);
+      parentNode[utils.SHADY_PREFIX + 'removeChild'](node, skipUnscoping);
     }
     // add to new parent
     let allowNativeInsert = true;
-    const needsScoping = (!preferPerformance || node['__noInsertionPoint'] === undefined) &&
+    const needsScoping = (!preferPerformance || 
+        // Under preferPerformance, only re-scope if we're not coming from a
+        // pre-scoped doc fragment or back into a pre-scoped doc fragment
+        (node['__noInsertionPoint'] === undefined && 
+         this['__noInsertionPoint'] === undefined)) &&
         !currentScopeIsCorrect(node, newScopeName);
     const needsSlotFinding = ownerRoot && !node['__noInsertionPoint'] &&
         (!preferPerformance || node.nodeType === Node.DOCUMENT_FRAGMENT_NODE);
