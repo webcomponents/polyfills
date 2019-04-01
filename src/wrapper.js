@@ -235,6 +235,14 @@ class Wrapper {
     this.node[utils.SHADY_PREFIX + 'slot'] = value;
   }
 
+  get className() {
+    return this.node[utils.SHADY_PREFIX + 'className'];
+  }
+
+  set className(value) {
+    return this.node[utils.SHADY_PREFIX + 'className'] = value;
+  }
+
 }
 
 eventPropertyNames.forEach(name => {
