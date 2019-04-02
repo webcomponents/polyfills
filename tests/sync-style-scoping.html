@@ -315,6 +315,22 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         });
       });
 
+      suite('mutation', function() {
+        test('setting class and className works and preserves scoping', function() {
+          const el = document.createElement('api-element');
+          ShadyDOM.wrap(arena).appendChild(el);
+          const inner = ShadyDOM.wrap(ShadyDOM.wrap(el).shadowRoot).querySelector('#internal');
+          const innerWrapper = ShadyDOM.wrap(inner);
+          assert.equal(csfn(inner), 'api-element');
+          innerWrapper.setAttribute('class', 'a');
+          assert.isTrue(inner.classList.contains('a'));
+          assert.equal(csfn(inner), 'api-element');
+          innerWrapper.className = 'b';
+          assert.isTrue(inner.classList.contains('b'));
+          assert.equal(csfn(inner), 'api-element');
+        })
+      });
+
       suite('elements not owned by the main document', function() {
         let el;
         const template = document.createElement('template');
