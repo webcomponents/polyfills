@@ -273,13 +273,13 @@ export const NodePatches = utils.getOwnPropertyDescriptors({
     const parentNode = node[utils.SHADY_PREFIX + 'parentNode'];
     if (parentNode) {
       oldScopeName = currentScopeForNode(node);
-      const skipUnscoping = 
-        // Don't remove scoping if we're inserting into another shadowRoot; 
+      const skipUnscoping =
+        // Don't remove scoping if we're inserting into another shadowRoot;
         // this would be unnecessary since it will be re-scoped below
-        Boolean(ownerRoot) || 
+        Boolean(ownerRoot) ||
         // Don't remove scoping if we're being moved between non-shadowRoot
         // locations (the likely case is when moving pre-scoped nodes in a template)
-        !ownerShadyRootForNode(node) || 
+        !ownerShadyRootForNode(node) ||
         // Under preferPerformance, don't remove scoping when moving back into
         // a document fragment that was previously scoped; the assumption is
         // that the user should only move correctly-scoped DOM back into it
@@ -288,10 +288,10 @@ export const NodePatches = utils.getOwnPropertyDescriptors({
     }
     // add to new parent
     let allowNativeInsert = true;
-    const needsScoping = (!preferPerformance || 
+    const needsScoping = (!preferPerformance ||
         // Under preferPerformance, only re-scope if we're not coming from a
         // pre-scoped doc fragment or back into a pre-scoped doc fragment
-        (node['__noInsertionPoint'] === undefined && 
+        (node['__noInsertionPoint'] === undefined &&
          this['__noInsertionPoint'] === undefined)) &&
         !currentScopeIsCorrect(node, newScopeName);
     const needsSlotFinding = ownerRoot && !node['__noInsertionPoint'] &&
@@ -372,6 +372,8 @@ export const NodePatches = utils.getOwnPropertyDescriptors({
       // Note: qsa is native when used with noPatch.
       /** @type {?NodeList<Element>} */
       const slotsAdded = this['__noInsertionPoint'] ? null : this.querySelectorAll('slot');
+      // Reset scoping information so normal scoing rules apply after this.
+      this['__noInsertionPoint'] = undefined;
       // if a slot is added, must render containing root.
       if (slotsAdded) {
         this._addSlots(slotsAdded);
@@ -414,7 +416,8 @@ export const NodePatches = utils.getOwnPropertyDescriptors({
     }
     // unscope a node leaving a ShadowRoot if ShadyCSS is present, and this node
     // is not going to be rescoped in `insertBefore`
-    if (getScopingShim() && !skipUnscoping && ownerRoot) {
+    if (getScopingShim() && !skipUnscoping && ownerRoot
+      && node.nodeType !== Node.TEXT_NODE) {
       const oldScopeName = currentScopeForNode(node);
       treeVisitor(node, (node) => {
         removeShadyScoping(node, oldScopeName);
