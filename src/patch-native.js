@@ -62,7 +62,6 @@ const copyProperties = (proto, list = []) => {
         installNativeMethod(name, descriptor.value);
       } else {
         installNativeAccessor(name);
-
       }
     }
   }
@@ -243,6 +242,12 @@ export const addNativePrefixedProperties = () => {
     'contains'
   ]);
 
+  // NOTE, on some browsers IE 11 / Edge 15 some properties are incorrectly on HTMLElement
+  copyProperties(HTMLElement.prototype, [
+    'parentElement',
+    'contains'
+  ]);
+
   const ParentNodeWalkerDescriptors = {
     firstElementChild: {
       /** @this {ParentNode} */
@@ -289,20 +294,16 @@ export const addNativePrefixedProperties = () => {
     copyProperties(Element.prototype, [
       'previousElementSibling',
       'nextElementSibling',
-      'innerHTML'
+      'innerHTML',
+      'className'
     ]);
 
-    // NOTE, on IE 11 / Edge 15 children and/or innerHTML are on HTMLElement instead of Element
-    if (Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'children')) {
-      copyProperties(HTMLElement.prototype, [
-        'children'
-      ]);
-    }
-    if (Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'innerHTML')) {
-      copyProperties(HTMLElement.prototype, [
-        'innerHTML'
-      ]);
-    }
+    // NOTE, on some browsers IE 11 / Edge 15 some properties are incorrectly on HTMLElement
+    copyProperties(HTMLElement.prototype, [
+      'children',
+      'innerHTML',
+      'className'
+    ]);
   } else {
     defineNativeAccessors(Element.prototype, ParentNodeWalkerDescriptors);
     defineNativeAccessors(Element.prototype, {
@@ -347,6 +348,16 @@ export const addNativePrefixedProperties = () => {
             content[NATIVE_PREFIX + 'insertBefore'](firstChild, undefined);
           }
         }
+      },
+      className: {
+        /** @this {Element} */
+        get() {
+          return this.getAttribute('class') || '';
+        },
+        /** @this {Element} */
+        set(value) {
+          this.setAttribute('class', value);
+        }
       }
     });
   }
@@ -365,18 +376,8 @@ export const addNativePrefixedProperties = () => {
   // HTMLElement
   copyProperties(HTMLElement.prototype, [
     'focus',
-    'blur',
-    // On IE these are on HTMLElement
-    'contains'
+    'blur'
   ]);
-
-  if (hasDescriptors) {
-    copyProperties(HTMLElement.prototype, [
-      'parentElement',
-      'children',
-      'innerHTML'
-    ]);
-  }
 
   // HTMLTemplateElement
   if (window.HTMLTemplateElement) {
