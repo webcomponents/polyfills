@@ -29,16 +29,6 @@ export const InsideDescriptors = utils.getOwnPropertyDescriptors({
   },
 
   /** @this {Node} */
-  get textContent() {
-    return this[utils.SHADY_PREFIX + 'textContent'];
-  },
-
-  /** @this {Node} */
-  set textContent(value) {
-    this[utils.SHADY_PREFIX + 'textContent'] = value;
-  },
-
-  /** @this {Node} */
   get childElementCount() {
     return this[utils.SHADY_PREFIX + 'childElementCount'];
   },
@@ -59,6 +49,24 @@ export const InsideDescriptors = utils.getOwnPropertyDescriptors({
   },
 
   /** @this {Node} */
+  get shadowRoot() {
+    return this[utils.SHADY_PREFIX + 'shadowRoot'];
+  },
+
+});
+
+export const TextContentInnerHTMLDescriptors = utils.getOwnPropertyDescriptors({
+  /** @this {Node} */
+  get textContent() {
+    return this[utils.SHADY_PREFIX + 'textContent'];
+  },
+
+  /** @this {Node} */
+  set textContent(value) {
+    this[utils.SHADY_PREFIX + 'textContent'] = value;
+  },
+
+  /** @this {Node} */
   get innerHTML() {
     return this[utils.SHADY_PREFIX + 'innerHTML'];
   },
@@ -67,12 +75,6 @@ export const InsideDescriptors = utils.getOwnPropertyDescriptors({
   set innerHTML(value) {
     return this[utils.SHADY_PREFIX + 'innerHTML'] = value;
   },
-
-  /** @this {Node} */
-  get shadowRoot() {
-    return this[utils.SHADY_PREFIX + 'shadowRoot'];
-  }
-
 });
 
 export const OutsideDescriptors = utils.getOwnPropertyDescriptors({
@@ -123,6 +125,10 @@ for (let prop in InsideDescriptors) {
   InsideDescriptors[prop].enumerable = false;
 }
 
+for (let prop in TextContentInnerHTMLDescriptors) {
+  TextContentInnerHTMLDescriptors[prop].enumerable = false;
+}
+
 for (let prop in OutsideDescriptors) {
   OutsideDescriptors[prop].enumerable = false;
 }
@@ -146,5 +152,21 @@ export let patchInsideElementAccessors = noInstancePatching ?
     if (!sd.__insideAccessors) {
       sd.__insideAccessors = true;
       utils.patchProperties(element, InsideDescriptors);
+      // NOTE: There are compatibility issues with patches for `textContent`
+      // and `innerHTML` between CE and SD. Since SD patches are applied
+      // via `ShadyDOM.patch` and CE patches are applied as the tree is walked,
+      // SD patches overwrite CE patches.
+      // * When SD is in patching mode, SD calls through to native
+      // methods not patched by CE (since SD is at the bottom) and CE does not
+      // upgrade, connect, or disconnect elements. Therefore do *not patch*
+      // these acceessoes in this case.
+      // * When SD is in `noPatch` mode, the SD patches call through to
+      // "native" methods that are patched by CE (since CE is at the bottom).
+      // Therefore continue to patch in this case.
+      // If customElements is not loaded, then these accessors should be
+      // patched so they work correctly.
+      if (!window.customElements || utils.settings.noPatch) {
+        utils.patchProperties(element, TextContentInnerHTMLDescriptors);
+      }
     }
   }
