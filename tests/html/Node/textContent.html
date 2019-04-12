@@ -120,7 +120,7 @@ suite('Custom element descendants of the context element are disconnected when s
 
     // Edge's native textContent creates a text node with 'undefined' in
     // it; the spec seems ambiguous
-    if (!navigator.userAgent.match(/Edge/)) {
+    if (!navigator.userAgent.match(/Trident|Edge/)) {
       div.textContent = 'textNode';
       assert.equal(div.childNodes.length, 1);
       // Setting textContent to `undefined` should result in no node (?)
