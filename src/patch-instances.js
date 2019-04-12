@@ -159,13 +159,13 @@ export let patchInsideElementAccessors = noInstancePatching ?
       // * When SD is in patching mode, SD calls through to native
       // methods not patched by CE (since SD is at the bottom) and CE does not
       // upgrade, connect, or disconnect elements. Therefore do *not patch*
-      // these acceessoes in this case.
+      // these accessors in this case.
       // * When SD is in `noPatch` mode, the SD patches call through to
       // "native" methods that are patched by CE (since CE is at the bottom).
       // Therefore continue to patch in this case.
       // If customElements is not loaded, then these accessors should be
       // patched so they work correctly.
-      if (!window.customElements || utils.settings.noPatch) {
+      if (!window['customElements'] || utils.settings.noPatch) {
         utils.patchProperties(element, TextContentInnerHTMLDescriptors);
       }
     }

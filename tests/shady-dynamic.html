@@ -1400,6 +1400,15 @@ suite('Accessors', function() {
     assert.equal(ShadyDOM.wrap(element.content).childNodes.length, 2);
   });
 
+  test('innerHTML removing a custom element', function() {
+    var testElement = document.createElement('div');
+    ShadyDOM.wrap(document.body).appendChild(testElement);
+    const simple = document.createElement('x-simple');
+    testElement.appendChild(simple);
+    ShadyDOM.wrap(testElement).innerHTML = '';
+    assert.isTrue(simple._isDisconnected);
+  });
+
   test('innerHTML containing custom element', function() {
     var testElement = document.createElement('div');
     ShadyDOM.wrap(document.body).appendChild(testElement);
@@ -1414,6 +1423,36 @@ suite('Accessors', function() {
     const el = ShadyDOM.wrap(testElement).firstChild;
     ShadyDOM.wrap(testElement).textContent = '';
     assert.isTrue(el._isDisconnected);
+  });
+
+  suite('innerHTML and textContent when using ShadyDOM.patch', function() {
+    test('innerHTML removing a custom element', function() {
+      var testElement = document.createElement('div');
+      ShadyDOM.patch(testElement);
+      ShadyDOM.wrap(document.body).appendChild(testElement);
+      const simple = document.createElement('x-simple');
+      testElement.appendChild(simple);
+      ShadyDOM.wrap(testElement).innerHTML = '';
+      assert.isTrue(simple._isDisconnected);
+    });
+
+    test('innerHTML containing custom element', function() {
+      var testElement = document.createElement('div');
+      ShadyDOM.patch(testElement);
+      ShadyDOM.wrap(document.body).appendChild(testElement);
+      ShadyDOM.wrap(testElement).innerHTML = '<x-simple></x-simple>';
+      assert.isTrue(ShadyDOM.wrap(testElement).firstChild._initialized);
+    });
+
+    test('textContent that removes custom element', function() {
+      var testElement = document.createElement('div');
+      ShadyDOM.patch(testElement);
+      ShadyDOM.wrap(document.body).appendChild(testElement);
+      ShadyDOM.wrap(testElement).innerHTML = '<x-simple></x-simple>';
+      const el = ShadyDOM.wrap(testElement).firstChild;
+      ShadyDOM.wrap(testElement).textContent = '';
+      assert.isTrue(el._isDisconnected);
+    });
   });
 
 });
