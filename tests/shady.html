@@ -83,7 +83,7 @@ suite('Rendering', function() {
         ShadyDOM.wrap(frag).appendChild(ShadyDOM.wrap(div).firstChild);
       }
       ShadyDOM.wrap(host).attachShadow({mode: 'open', shadyUpgradeFragment: frag});
-      ShadyDOM.wrap(host).appendChild(frag);
+      ShadyDOM.wrap(ShadyDOM.wrap(host).shadowRoot).appendChild(frag);
       // Invoke distribution and verify the resulting tree.
       ShadyDOM.flush();
       assert.strictEqual(getComposedHTML(host), expectedHtml);
