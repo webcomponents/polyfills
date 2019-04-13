@@ -22,7 +22,7 @@ export const ElementOrShadowRootPatches = utils.getOwnPropertyDescriptors({
     if (utils.isTrackingLogicalChildNodes(this)) {
       const content = this.localName === 'template' ?
       /** @type {HTMLTemplateElement} */(this).content : this;
-      return getInnerHTML(content, (e) => e[utils.SHADY_PREFIX + 'childNodes']);
+      return getInnerHTML(content, utils.childNodesArray);
     } else {
       return this[utils.NATIVE_PREFIX + 'innerHTML'];
     }

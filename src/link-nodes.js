@@ -12,11 +12,10 @@ import * as utils from './utils.js';
 import {shadyDataForNode, ensureShadyDataForNode} from './shady-data.js';
 import {patchInsideElementAccessors, patchOutsideElementAccessors} from './patch-instances.js';
 
-function linkNode(node, container, ref_node) {
+function linkNode(node, container, containerData, ref_node) {
   patchOutsideElementAccessors(node);
   ref_node = ref_node || null;
   const nodeData = ensureShadyDataForNode(node);
-  const containerData = ensureShadyDataForNode(container);
   const ref_nodeData = ref_node ? ensureShadyDataForNode(ref_node) : null;
   // update ref_node.previousSibling <-> node
   nodeData.previousSibling = ref_node ? ref_nodeData.previousSibling :
@@ -54,17 +53,15 @@ export const recordInsertBefore = (node, container, ref_node) => {
   }
   // handle document fragments
   if (node.nodeType === Node.DOCUMENT_FRAGMENT_NODE) {
-    let c$ = node[utils.SHADY_PREFIX + 'childNodes'];
-    for (let i=0; i < c$.length; i++) {
-      linkNode(c$[i], container, ref_node);
+    // Note, documentFragments should not have logical DOM so there's
+    // no need update that. It is possible to append a ShadowRoot, but we're
+    // choosing not to support that.
+    const first = node[utils.NATIVE_PREFIX + 'firstChild'];
+    for (let n = first; n; (n = n[utils.NATIVE_PREFIX + 'nextSibling'])) {
+      linkNode(n, container, containerData, ref_node);
     }
-    // cleanup logical dom in doc fragment.
-    const nodeData = ensureShadyDataForNode(node);
-    let resetTo = (nodeData.firstChild !== undefined) ? null : undefined;
-    nodeData.firstChild = nodeData.lastChild = resetTo;
-    nodeData.childNodes = resetTo;
   } else {
-    linkNode(node, container, ref_node);
+    linkNode(node, container, containerData, ref_node);
   }
 }
 
@@ -97,23 +94,25 @@ export const recordRemoveChild = (node, container) => {
 }
 
 /**
- * @param  {!Node} node
+ * @param  {!Node|DocumentFragment} node
+ * @param  {!Node|DocumentFragment=} adoptedParent
  */
-export const recordChildNodes = (node) => {
+export const recordChildNodes = (node, adoptedParent) => {
   const nodeData = ensureShadyDataForNode(node);
-  if (nodeData.firstChild === undefined) {
-    // remove caching of childNodes
-    nodeData.childNodes = null;
-    const first = nodeData.firstChild = node[utils.NATIVE_PREFIX + 'firstChild'] || null;
-    nodeData.lastChild = node[utils.NATIVE_PREFIX + 'lastChild'] || null;
-    patchInsideElementAccessors(node);
-    for (let n = first, previous; n; (n = n[utils.NATIVE_PREFIX + 'nextSibling'])) {
-      const sd = ensureShadyDataForNode(n);
-      sd.parentNode = node;
-      sd.nextSibling = n[utils.NATIVE_PREFIX + 'nextSibling'] || null;
-      sd.previousSibling = previous || null;
-      previous = n;
-      patchOutsideElementAccessors(n);
-    }
+  if (!adoptedParent && nodeData.firstChild !== undefined) {
+    return;
+  }
+  // remove caching of childNodes
+  nodeData.childNodes = null;
+  const first = nodeData.firstChild = node[utils.NATIVE_PREFIX + 'firstChild'];
+  nodeData.lastChild = node[utils.NATIVE_PREFIX + 'lastChild'];
+  patchInsideElementAccessors(node);
+  for (let n = first, previous; n; (n = n[utils.NATIVE_PREFIX + 'nextSibling'])) {
+    const sd = ensureShadyDataForNode(n);
+    sd.parentNode = adoptedParent || node;
+    sd.nextSibling = n[utils.NATIVE_PREFIX + 'nextSibling'];
+    sd.previousSibling = previous || null;
+    previous = n;
+    patchOutsideElementAccessors(n);
   }
 }

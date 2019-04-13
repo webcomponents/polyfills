@@ -36,8 +36,7 @@ export function clearNode(node) {
 function removeOwnerShadyRoot(node) {
   // optimization: only reset the tree if node is actually in a root
   if (hasCachedOwnerRoot(node)) {
-    let c$ = node[utils.SHADY_PREFIX + 'childNodes'];
-    for (let i=0, l=c$.length, n; (i<l) && (n=c$[i]); i++) {
+    for (let n=node[utils.SHADY_PREFIX + 'firstChild']; n; n = n[utils.SHADY_PREFIX + 'nextSibling']) {
       removeOwnerShadyRoot(n);
     }
   }
@@ -187,9 +186,9 @@ export const NodePatches = utils.getOwnPropertyDescriptors({
   get textContent() {
     if (utils.isTrackingLogicalChildNodes(this)) {
       let tc = [];
-      for (let i = 0, cn = this[utils.SHADY_PREFIX + 'childNodes'], c; (c = cn[i]); i++) {
-        if (c.nodeType !== Node.COMMENT_NODE) {
-          tc.push(c[utils.SHADY_PREFIX + 'textContent']);
+      for (let n=this[utils.SHADY_PREFIX + 'firstChild']; n; n = n[utils.SHADY_PREFIX + 'nextSibling']) {
+        if (n.nodeType !== Node.COMMENT_NODE) {
+          tc.push(n[utils.SHADY_PREFIX + 'textContent']);
         }
       }
       return tc.join('');
@@ -274,13 +273,13 @@ export const NodePatches = utils.getOwnPropertyDescriptors({
     const parentNode = node[utils.SHADY_PREFIX + 'parentNode'];
     if (parentNode) {
       oldScopeName = currentScopeForNode(node);
-      const skipUnscoping = 
-        // Don't remove scoping if we're inserting into another shadowRoot; 
+      const skipUnscoping =
+        // Don't remove scoping if we're inserting into another shadowRoot;
         // this would be unnecessary since it will be re-scoped below
-        Boolean(ownerRoot) || 
+        Boolean(ownerRoot) ||
         // Don't remove scoping if we're being moved between non-shadowRoot
         // locations (the likely case is when moving pre-scoped nodes in a template)
-        !ownerShadyRootForNode(node) || 
+        !ownerShadyRootForNode(node) ||
         // Under preferPerformance, don't remove scoping when moving back into
         // a document fragment that was previously scoped; the assumption is
         // that the user should only move correctly-scoped DOM back into it
@@ -289,10 +288,10 @@ export const NodePatches = utils.getOwnPropertyDescriptors({
     }
     // add to new parent
     let allowNativeInsert = true;
-    const needsScoping = (!preferPerformance || 
+    const needsScoping = (!preferPerformance ||
         // Under preferPerformance, only re-scope if we're not coming from a
         // pre-scoped doc fragment or back into a pre-scoped doc fragment
-        (node['__noInsertionPoint'] === undefined && 
+        (node['__noInsertionPoint'] === undefined &&
          this['__noInsertionPoint'] === undefined)) &&
         !currentScopeIsCorrect(node, newScopeName);
     const needsSlotFinding = ownerRoot && !node['__noInsertionPoint'] &&
@@ -321,13 +320,9 @@ export const NodePatches = utils.getOwnPropertyDescriptors({
       });
     }
     // if a slot is added, must render containing root.
-    if (this.localName === 'slot' || slotsAdded.length) {
-      if (slotsAdded.length) {
-        ownerRoot._addSlots(slotsAdded);
-      }
-      if (ownerRoot) {
-        ownerRoot._asyncRender();
-      }
+    if (slotsAdded.length) {
+      ownerRoot._addSlots(slotsAdded);
+      ownerRoot._asyncRender();
     }
     if (utils.isTrackingLogicalChildNodes(this)) {
       recordInsertBefore(node, this, ref_node);
@@ -370,7 +365,11 @@ export const NodePatches = utils.getOwnPropertyDescriptors({
    * @param {Node} node
    */
   appendChild(node) {
-    return this[utils.SHADY_PREFIX + 'insertBefore'](node);
+    // if this is a shadowRoot and the shadowRoot is passed as `node`
+    // then an optimized append has already been performed, so do nothing.
+    if (!(this == node && utils.isShadyRoot(node))) {
+      return this[utils.SHADY_PREFIX + 'insertBefore'](node);
+    }
   },
 
   /**
@@ -402,7 +401,8 @@ export const NodePatches = utils.getOwnPropertyDescriptors({
     }
     // unscope a node leaving a ShadowRoot if ShadyCSS is present, and this node
     // is not going to be rescoped in `insertBefore`
-    if (getScopingShim() && !skipUnscoping && ownerRoot) {
+    if (getScopingShim() && !skipUnscoping && ownerRoot
+      && node.nodeType !== Node.TEXT_NODE) {
       const oldScopeName = currentScopeForNode(node);
       treeVisitor(node, (node) => {
         removeShadyScoping(node, oldScopeName);
@@ -461,9 +461,8 @@ export const NodePatches = utils.getOwnPropertyDescriptors({
       // been removed from the spec.
       // Make sure we do not do a deep clone on them for old browsers (IE11)
       if (deep && n.nodeType !== Node.ATTRIBUTE_NODE) {
-        let c$ = this[utils.SHADY_PREFIX + 'childNodes'];
-        for (let i=0, nc; i < c$.length; i++) {
-          nc = c$[i][utils.SHADY_PREFIX + 'cloneNode'](true);
+        for (let c=this[utils.SHADY_PREFIX + 'firstChild'], nc; c; c = c[utils.SHADY_PREFIX + 'nextSibling']) {
+          nc = c[utils.SHADY_PREFIX + 'cloneNode'](true);
           n[utils.SHADY_PREFIX + 'appendChild'](nc);
         }
       }

@@ -18,15 +18,15 @@ import {shadyDataForNode} from '../shady-data.js';
  */
 export function query(node, matcher, halter) {
   let list = [];
-  queryElements(node[utils.SHADY_PREFIX + 'childNodes'], matcher,
+  queryChildNodes(node, matcher,
     halter, list);
   return list;
 }
 
-function queryElements(elements, matcher, halter, list) {
-  for (let i=0, l=elements.length, c; (i<l) && (c=elements[i]); i++) {
-    if (c.nodeType === Node.ELEMENT_NODE &&
-        queryElement(c, matcher, halter, list)) {
+function queryChildNodes(parent, matcher, halter, list) {
+  for (let n = parent[utils.SHADY_PREFIX + 'firstChild']; n; n = n[utils.SHADY_PREFIX + 'nextSibling']) {
+    if (n.nodeType === Node.ELEMENT_NODE &&
+        queryElement(n, matcher, halter, list)) {
       return true;
     }
   }
@@ -40,7 +40,7 @@ function queryElement(node, matcher, halter, list) {
   if (halter && halter(result)) {
     return result;
   }
-  queryElements(node[utils.SHADY_PREFIX + 'childNodes'], matcher,
+  queryChildNodes(node, matcher,
     halter, list);
 }
 
@@ -81,7 +81,7 @@ export const ParentNodePatches = utils.getOwnPropertyDescriptors({
       return this[utils.NATIVE_PREFIX + 'children'];
     }
     return utils.createPolyfilledHTMLCollection(Array.prototype.filter.call(
-        this[utils.SHADY_PREFIX + 'childNodes'], function(n) {
+        utils.childNodesArray(this), (n) => {
       return (n.nodeType === Node.ELEMENT_NODE);
     }));
   },

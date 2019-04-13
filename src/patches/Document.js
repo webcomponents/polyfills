@@ -32,9 +32,8 @@ export const DocumentPatches = utils.getOwnPropertyDescriptors({
     }
     let n = this[utils.NATIVE_PREFIX + 'importNode'](node, false);
     if (deep) {
-      let c$ = node[utils.SHADY_PREFIX + 'childNodes'];
-      for (let i=0, nc; i < c$.length; i++) {
-        nc = this[utils.SHADY_PREFIX + 'importNode'](c$[i], true);
+      for (let c=node[utils.SHADY_PREFIX + 'firstChild'], nc; c; c = c[utils.SHADY_PREFIX + 'nextSibling']) {
+        nc = this[utils.SHADY_PREFIX + 'importNode'](c, true);
         n[utils.SHADY_PREFIX + 'appendChild'](nc);
       }
     }

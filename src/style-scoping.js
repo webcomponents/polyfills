@@ -87,10 +87,9 @@ export function currentScopeIsCorrect(node, newScopeName) {
     // NOTE: as an optimization, only check that all the top-level children
     // have the correct scope.
     let correctScope = true;
-    const childNodes = node[utils.SHADY_PREFIX + 'childNodes'];
-    for (let idx = 0; correctScope && (idx < childNodes.length); idx++) {
+    for (let n=node[utils.SHADY_PREFIX + 'firstChild']; n; n = n[utils.SHADY_PREFIX + 'nextSibling']) {
       correctScope = correctScope &&
-        currentScopeIsCorrect(childNodes[idx], newScopeName);
+        currentScopeIsCorrect(n, newScopeName);
     }
     return correctScope;
   }
@@ -130,9 +129,7 @@ export function treeVisitor(node, visitorFn) {
   if (node.nodeType === Node.ELEMENT_NODE) {
     visitorFn(node);
   }
-  const childNodes = node[utils.SHADY_PREFIX + 'childNodes'];
-  for (let idx = 0, n; idx < childNodes.length; idx++) {
-    n = childNodes[idx];
+  for (let n = node[utils.SHADY_PREFIX + 'firstChild']; n; (n = n[utils.SHADY_PREFIX + 'nextSibling'])) {
     if (n.nodeType === Node.ELEMENT_NODE) {
       treeVisitor(n, visitorFn);
     }

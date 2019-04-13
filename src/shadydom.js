@@ -28,7 +28,9 @@ import {ShadyRoot} from './attach-shadow.js';
 import {wrap, Wrapper} from './wrapper.js';
 import {addShadyPrefixedProperties, applyPatches} from './patch-prototypes.js';
 
+
 if (utils.settings.inUse) {
+
   let ShadyDOM = {
     // TODO(sorvell): remove when Polymer does not depend on this.
     'inUse': utils.settings.inUse,
