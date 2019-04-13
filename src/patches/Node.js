@@ -365,24 +365,9 @@ export const NodePatches = utils.getOwnPropertyDescriptors({
    * @param {Node} node
    */
   appendChild(node) {
-    // Optimized initial insertion for DOM into a shadowRoot (i.e. into itself).
-    if (this === node && utils.isShadyRoot(node)) {
-      this._setup();
-      recordChildNodes(this, this);
-      // Note: qsa is native when used with noPatch.
-      /** @type {?NodeList<Element>} */
-      const slotsAdded = this['__noInsertionPoint'] ? null : this.querySelectorAll('slot');
-      // Reset scoping information so normal scoing rules apply after this.
-      this['__noInsertionPoint'] = undefined;
-      // if a slot is added, must render containing root.
-      if (slotsAdded) {
-        this._addSlots(slotsAdded);
-      }
-      if (this._hasInsertionPoint()) {
-          this._asyncRender();
-      }
-      /** @type {ShadowRoot} */(this).host[utils.NATIVE_PREFIX + 'appendChild'](this);
-    } else {
+    // if this is a shadowRoot and the shadowRoot is passed as `node`
+    // then an optimized append has already been performed, so do nothing.
+    if (!(this == node && utils.isShadyRoot(node))) {
       return this[utils.SHADY_PREFIX + 'insertBefore'](node);
     }
   },

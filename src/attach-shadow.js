@@ -57,7 +57,6 @@ class ShadyRoot {
     /** @type {?Array<HTMLSlotElement>} */
     this._pendingSlots;
     this._init(host, options);
-    this._setup();
   }
 
   _init(host, options) {
@@ -70,9 +69,6 @@ class ShadyRoot {
     this.host = host;
     /** @type {!string|undefined} */
     this.mode = options && options.mode;
-  }
-
-  _setup() {
     recordChildNodes(this.host);
     const hostData = ensureShadyDataForNode(this.host);
     /** @type {!ShadyRoot} */
@@ -574,11 +570,22 @@ export const attachShadow = (host, options) => {
   let root;
   // Optimization for booting up a shadowRoot from a fragment rather than
   // creating one.
-  if (host.__shady_fragment) {
-    root = host.__shady_fragment;
-    host.__shady_fragment = null;
+  if (options['shadyUpgradeFragment'] && utils.canUpgrade()) {
+    root = options['shadyUpgradeFragment'];
     root.__proto__ = ShadowRoot.prototype;
     root._init(host, options);
+    recordChildNodes(root, root);
+    // Note: qsa is native when used with noPatch.
+    /** @type {?NodeList<Element>} */
+    const slotsAdded = root['__noInsertionPoint'] ? null : root.querySelectorAll('slot');
+    // Reset scoping information so normal scoing rules apply after this.
+    root['__noInsertionPoint'] = undefined;
+    // if a slot is added, must render containing root.
+    if (slotsAdded && slotsAdded.length) {
+      root._addSlots(slotsAdded);
+      root._asyncRender();
+    }
+    /** @type {ShadowRoot} */(root).host[utils.NATIVE_PREFIX + 'appendChild'](root);
   } else {
     root = new ShadyRoot(ShadyRootConstructionToken, host, options);
   }

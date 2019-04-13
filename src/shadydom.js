@@ -84,16 +84,7 @@ if (utils.settings.inUse) {
     // access that requires Shadow DOM behavior to be proxied via `ShadyDOM.wrap`.
     'noPatch': utils.settings.noPatch,
     'nativeMethods': nativeMethods,
-    'nativeTree': nativeTree,
-    'attachDom': (fragment, host, options) => {
-      let root;
-      if (utils.canUpgrade()) {
-        host.__shady_fragment = fragment;
-      }
-      root = ShadyDOM['wrap'](host).attachShadow(options);
-      root.appendChild(fragment);
-      return root;
-    }
+    'nativeTree': nativeTree
   };
 
   window['ShadyDOM'] = ShadyDOM;
