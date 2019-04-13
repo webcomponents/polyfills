@@ -237,7 +237,11 @@ export default function(internals) {
           while (this.firstChild) {
             Native.Node_removeChild.call(this, this.firstChild);
           }
-          Native.Node_appendChild.call(this, document.createTextNode(assignedValue));
+          // `textContent = null | undefined | ''` does not result in
+          // a TextNode childNode
+          if (assignedValue != null && assignedValue !== '') {
+            Native.Node_appendChild.call(this, document.createTextNode(assignedValue));
+          }
         },
       });
     });

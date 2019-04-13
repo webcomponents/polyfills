@@ -104,6 +104,31 @@ suite('Custom element descendants of the context element are disconnected when s
 
     document.body.removeChild(div);
   });
+
+  test('textContent API corner cases', function() {
+    div.textContent = 'textNode';
+    assert.equal(div.childNodes.length, 1);
+    // Setting textContent to empty string should result in no node
+    div.textContent = '';
+    assert.equal(div.childNodes.length, 0);
+
+    div.textContent = 'textNode';
+    assert.equal(div.childNodes.length, 1);
+    // Setting textContent to `null` should result in no node
+    div.textContent = null;
+    assert.equal(div.childNodes.length, 0);
+
+    // Edge's native textContent creates a text node with 'undefined' in
+    // it; the spec seems ambiguous
+    if (!navigator.userAgent.match(/Trident|Edge/)) {
+      div.textContent = 'textNode';
+      assert.equal(div.childNodes.length, 1);
+      // Setting textContent to `undefined` should result in no node (?)
+      div.textContent = undefined;
+      assert.equal(div.childNodes.length, 0);
+    }
+
+  });
 });
 </script>
 </body>
