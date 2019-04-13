@@ -12,7 +12,7 @@ import * as utils from '../utils.js';
 import {getScopingShim, removeShadyScoping, replaceShadyScoping,
   treeVisitor, currentScopeForNode, currentScopeIsCorrect } from '../style-scoping.js';
 import {shadyDataForNode, ensureShadyDataForNode} from '../shady-data.js';
-import {recordInsertBefore, recordRemoveChild, recordChildNodes} from '../link-nodes.js';
+import {recordInsertBefore, recordRemoveChild} from '../link-nodes.js';
 import {ownerShadyRootForNode} from '../attach-shadow.js';
 
 const doc = window.document;
