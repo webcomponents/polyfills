@@ -48,7 +48,7 @@
     "@webcomponents/webcomponents-platform": "^1.0.0",
     "eslint": "^4.19.1",
     "eslint-plugin-html": "^4.0.5",
-    "google-closure-compiler": "^20180506.0.0",
+    "google-closure-compiler": "^20190121.0.0",
     "gulp": "^4.0.0",
     "gulp-rename": "^1.4.0",
     "gulp-rollup": "^2.16.2",

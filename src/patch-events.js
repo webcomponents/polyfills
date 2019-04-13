@@ -440,7 +440,7 @@ export function addEventListener(type, fnOrObj, optionsOrCapture) {
   const wrapperFn = function(e) {
     // Support `once` option.
     if (once) {
-      this[utils.SHADY_PREFIX + 'removeEventListener'](type, fnOrObj, nativeEventOptions);
+      this[utils.SHADY_PREFIX + 'removeEventListener'](type, fnOrObj, optionsOrCapture);
     }
     if (!e['__target']) {
       patchEvent(e);

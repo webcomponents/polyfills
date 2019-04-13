@@ -24,73 +24,86 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <body>
 <script>
 
-/**
- * Test the `<slot>` element distribution algorithm by verifying the
- * resulting composed tree structure.
- */
-function testRender(descr, hostInnerHtml, shadowRootHtml, expectedHtml) {
-  test(descr, function() {
-    // Create an instance of the test element.
-    var host = document.createElement('div');
-    ShadyDOM.wrap(host).attachShadow({mode: 'open'});
-    // Populate the initial pool of light DOM children.
-    ShadyDOM.wrap(host).innerHTML = hostInnerHtml;
-    ShadyDOM.wrap(document.body).appendChild(host);
-        // Pretend we're stamping the template contents.
-    if (shadowRootHtml) {
-      ShadyDOM.wrap(ShadyDOM.wrap(host).shadowRoot).innerHTML = shadowRootHtml;
-    }
-    // Invoke distribution and verify the resulting tree.
-    ShadyDOM.flush();
-    assert.strictEqual(getComposedHTML(host), expectedHtml);
-    ShadyDOM.wrap(document.body).removeChild(host);
-  });
-  test(descr + ' fragment', function() {
-    // Create an instance of the test element.
-    var host = document.createElement('div');
-    ShadyDOM.wrap(host).attachShadow({mode: 'open'});
-    // Populate the initial pool of light DOM children.
-    ShadyDOM.wrap(host).innerHTML = hostInnerHtml;
-    ShadyDOM.wrap(document.body).appendChild(host);
-        // Pretend we're stamping the template contents.
-    var div = document.createElement('div');
-    ShadyDOM.wrap(div).innerHTML = shadowRootHtml;
-    var frag = document.createDocumentFragment();
-    while (ShadyDOM.wrap(div).firstChild) {
-      ShadyDOM.wrap(frag).appendChild(ShadyDOM.wrap(div).firstChild);
-    }
-    ShadyDOM.wrap(ShadyDOM.wrap(host).shadowRoot).appendChild(frag);
-    // Invoke distribution and verify the resulting tree.
-    ShadyDOM.flush();
-    assert.strictEqual(getComposedHTML(host), expectedHtml);
-    ShadyDOM.wrap(document.body).removeChild(host);
-  });
-}
 
-test('Node/Element accessors', function() {
-  var div = document.createElement('div');
-  assert.isFalse(ShadyDOM.wrap(div).isConnected);
-  assert.equal(ShadyDOM.wrap(div).getRootNode(), div);
-  ShadyDOM.wrap(div).slot = 'slot';
-  assert.equal(ShadyDOM.wrap(div).slot, 'slot');
-  assert.equal(div.getAttribute('slot'), 'slot');
-  assert.equal(ShadyDOM.wrap(div).assignedSlot, null);
-});
+suite('Rendering', function() {
 
-testRender('Empty shadow', 'abc', '', '');
-testRender('Simple shadow', 'abc', 'def', 'def');
-testRender('Fallback shadow', 'abc',
-           '<slot name="xxx">fallback</name>', 'fallback');
-testRender('Fallback shadow, empty host', '',
-           '<slot name="xxx">fallback</name>', 'fallback');
-testRender('Content', 'abc',
-           '<slot>fallback</slot>', 'abc');
-testRender('Content before', 'abc',
-           'before<slot>fallback</slot>', 'beforeabc');
-testRender('Content after', 'abc',
-           '<slot>fallback</slot>after', 'abcafter');
+  /**
+   * Test the `<slot>` element distribution algorithm by verifying the
+   * resulting composed tree structure.
+   */
+  function testRender(descr, hostInnerHtml, shadowRootHtml, expectedHtml) {
+    test(descr, function() {
+      // Create an instance of the test element.
+      var host = document.createElement('div');
+      ShadyDOM.wrap(host).attachShadow({mode: 'open'});
+      // Populate the initial pool of light DOM children.
+      ShadyDOM.wrap(host).innerHTML = hostInnerHtml;
+      ShadyDOM.wrap(document.body).appendChild(host);
+          // Pretend we're stamping the template contents.
+      if (shadowRootHtml) {
+        ShadyDOM.wrap(ShadyDOM.wrap(host).shadowRoot).innerHTML = shadowRootHtml;
+      }
+      // Invoke distribution and verify the resulting tree.
+      ShadyDOM.flush();
+      assert.strictEqual(getComposedHTML(host), expectedHtml);
+      ShadyDOM.wrap(document.body).removeChild(host);
+    });
+    test(descr + ' fragment', function() {
+      // Create an instance of the test element.
+      var host = document.createElement('div');
+      ShadyDOM.wrap(host).attachShadow({mode: 'open'});
+      // Populate the initial pool of light DOM children.
+      ShadyDOM.wrap(host).innerHTML = hostInnerHtml;
+      ShadyDOM.wrap(document.body).appendChild(host);
+          // Pretend we're stamping the template contents.
+      var div = document.createElement('div');
+      ShadyDOM.wrap(div).innerHTML = shadowRootHtml;
+      var frag = document.createDocumentFragment();
+      while (ShadyDOM.wrap(div).firstChild) {
+        ShadyDOM.wrap(frag).appendChild(ShadyDOM.wrap(div).firstChild);
+      }
+      ShadyDOM.wrap(ShadyDOM.wrap(host).shadowRoot).appendChild(frag);
+      // Invoke distribution and verify the resulting tree.
+      ShadyDOM.flush();
+      assert.strictEqual(getComposedHTML(host), expectedHtml);
+      ShadyDOM.wrap(document.body).removeChild(host);
+    });
 
-suite('render content', function() {
+    test(descr + ' fragment via options: shadyUpgradeFragment', function() {
+      // Create an instance of the test element.
+      var host = document.createElement('div');
+      // Populate the initial pool of light DOM children.
+      ShadyDOM.wrap(host).innerHTML = hostInnerHtml;
+      ShadyDOM.wrap(document.body).appendChild(host);
+          // Pretend we're stamping the template contents.
+      var div = document.createElement('div');
+      ShadyDOM.wrap(div).innerHTML = shadowRootHtml;
+      var frag = document.createDocumentFragment();
+      while (ShadyDOM.wrap(div).firstChild) {
+        ShadyDOM.wrap(frag).appendChild(ShadyDOM.wrap(div).firstChild);
+      }
+      ShadyDOM.wrap(host).attachShadow({mode: 'open', shadyUpgradeFragment: frag});
+      ShadyDOM.wrap(ShadyDOM.wrap(host).shadowRoot).appendChild(frag);
+      // Invoke distribution and verify the resulting tree.
+      ShadyDOM.flush();
+      assert.strictEqual(getComposedHTML(host), expectedHtml);
+      ShadyDOM.wrap(document.body).removeChild(host);
+    });
+  }
+
+  testRender('Empty shadow', 'abc', '', '');
+  testRender('Simple shadow', 'abc', 'def', 'def');
+  testRender('Fallback shadow', 'abc',
+            '<slot name="xxx">fallback</name>', 'fallback');
+  testRender('Fallback shadow, empty host', '',
+            '<slot name="xxx">fallback</name>', 'fallback');
+  testRender('Content', 'abc',
+            '<slot>fallback</slot>', 'abc');
+  testRender('Content before', 'abc',
+            'before<slot>fallback</slot>', 'beforeabc');
+  testRender('Content after', 'abc',
+            '<slot>fallback</slot>after', 'abcafter');
+
   testRender('no select', '<a href="">Link</a> <b>bold</b>',
              '<slot></slot>',
              '<a href="">Link</a> <b>bold</b>');
@@ -122,50 +135,54 @@ suite('render content', function() {
              '<span>a</span><span>b</span><span slot="c">c</span><span>d</span>',
              '<slot name="c"></slot><slot></slot>',
              '<span slot="c">c</span><span>a</span><span>b</span><span>d</span>');
+
 });
 
+suite('Reprojection', function() {
 
-test('Reproject', function() {
-  var host = document.createElement('div');
-  ShadyDOM.wrap(host).attachShadow({mode: 'open'});
-  ShadyDOM.wrap(document.body).appendChild(host);
-    ShadyDOM.wrap(host).innerHTML = '<a></a>';
-  // pre-distirbution grab first composed node.
-  var a = getComposedChildAtIndex(host, 0);
-  ShadyDOM.wrap(ShadyDOM.wrap(host).shadowRoot).innerHTML = '<div id="p"></div>';
-  ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(host).shadowRoot).firstElementChild).attachShadow({mode: 'open'});
-  // force upgrade on polyfilled browsers
-  var p = ShadyDOM.wrap(ShadyDOM.wrap(host).shadowRoot).firstChild;
-    ShadyDOM.wrap(p).innerHTML = '<b slot="b"></b><slot slot="a"></slot>';
-  var b = ShadyDOM.wrap(p).firstChild;
-  var content = ShadyDOM.wrap(p).lastChild;
+  test('Reprojection', function() {
+    var host = document.createElement('div');
+    ShadyDOM.wrap(host).attachShadow({mode: 'open'});
+    ShadyDOM.wrap(document.body).appendChild(host);
+      ShadyDOM.wrap(host).innerHTML = '<a></a>';
+    // pre-distirbution grab first composed node.
+    var a = getComposedChildAtIndex(host, 0);
+    ShadyDOM.wrap(ShadyDOM.wrap(host).shadowRoot).innerHTML = '<div id="p"></div>';
+    ShadyDOM.wrap(ShadyDOM.wrap(ShadyDOM.wrap(host).shadowRoot).firstElementChild).attachShadow({mode: 'open'});
+    // force upgrade on polyfilled browsers
+    var p = ShadyDOM.wrap(ShadyDOM.wrap(host).shadowRoot).firstChild;
+      ShadyDOM.wrap(p).innerHTML = '<b slot="b"></b><slot slot="a"></slot>';
+    var b = ShadyDOM.wrap(p).firstChild;
+    var content = ShadyDOM.wrap(p).lastChild;
 
-  ShadyDOM.wrap(ShadyDOM.wrap(p).shadowRoot).innerHTML =
-      'a: <slot name="a"></slot>b: <slot name="b"></slot>';
-  var textNodeA = ShadyDOM.wrap(ShadyDOM.wrap(p).shadowRoot).firstChild;
-  var contentA = ShadyDOM.wrap(ShadyDOM.wrap(p).shadowRoot).childNodes[1];
-  var textNodeB = ShadyDOM.wrap(ShadyDOM.wrap(p).shadowRoot).childNodes[2];
-  var contentB = ShadyDOM.wrap(ShadyDOM.wrap(p).shadowRoot).childNodes[3];
+    ShadyDOM.wrap(ShadyDOM.wrap(p).shadowRoot).innerHTML =
+        'a: <slot name="a"></slot>b: <slot name="b"></slot>';
+    var textNodeA = ShadyDOM.wrap(ShadyDOM.wrap(p).shadowRoot).firstChild;
+    var contentA = ShadyDOM.wrap(ShadyDOM.wrap(p).shadowRoot).childNodes[1];
+    var textNodeB = ShadyDOM.wrap(ShadyDOM.wrap(p).shadowRoot).childNodes[2];
+    var contentB = ShadyDOM.wrap(ShadyDOM.wrap(p).shadowRoot).childNodes[3];
 
-  function testRender() {
-    ShadyDOM.flush();
-    assert.strictEqual(getComposedHTML(host),
-        '<div id="p">a: <a></a>b: <b slot="b"></b></div>');
+    function testRender() {
+      ShadyDOM.flush();
+      assert.strictEqual(getComposedHTML(host),
+          '<div id="p">a: <a></a>b: <b slot="b"></b></div>');
 
-    assert.deepEqual(Array.from(ShadyDOM.wrap(host).childNodes), [a]);
-    assert.strictEqual(ShadyDOM.wrap(a).parentNode, host);
-    assert.deepEqual(Array.from(ShadyDOM.wrap(ShadyDOM.wrap(host).shadowRoot).childNodes), [p]);
-    assert.strictEqual(ShadyDOM.wrap(p).parentNode, ShadyDOM.wrap(host).shadowRoot);
-    assert.deepEqual(Array.from(ShadyDOM.wrap(p).childNodes), [b, content]);
-    assert.strictEqual(ShadyDOM.wrap(b).parentNode, p);
-    assert.strictEqual(ShadyDOM.wrap(content).parentNode, p);
-    assert.deepEqual(Array.from(ShadyDOM.wrap(ShadyDOM.wrap(p).shadowRoot).childNodes),
-        [textNodeA, contentA, textNodeB, contentB]);
-  }
+      assert.deepEqual(Array.from(ShadyDOM.wrap(host).childNodes), [a]);
+      assert.strictEqual(ShadyDOM.wrap(a).parentNode, host);
+      assert.deepEqual(Array.from(ShadyDOM.wrap(ShadyDOM.wrap(host).shadowRoot).childNodes), [p]);
+      assert.strictEqual(ShadyDOM.wrap(p).parentNode, ShadyDOM.wrap(host).shadowRoot);
+      assert.deepEqual(Array.from(ShadyDOM.wrap(p).childNodes), [b, content]);
+      assert.strictEqual(ShadyDOM.wrap(b).parentNode, p);
+      assert.strictEqual(ShadyDOM.wrap(content).parentNode, p);
+      assert.deepEqual(Array.from(ShadyDOM.wrap(ShadyDOM.wrap(p).shadowRoot).childNodes),
+          [textNodeA, contentA, textNodeB, contentB]);
+    }
 
-  testRender();
-  testRender();
-  ShadyDOM.wrap(document.body).removeChild(host);
+    testRender();
+    testRender();
+    ShadyDOM.wrap(document.body).removeChild(host);
+  });
+
 });
 
 
@@ -697,7 +714,7 @@ suite('Patch of innerHTML setter', function() {
 
 suite('Patch of getElementById', function() {
   [undefined, null, '', 'unknown-elem'].forEach(function(id) {
-    test.only(`should return null for unknown id: "${id}"`, function() {
+    test(`should return null for unknown id: "${id}"`, function() {
       const elem = document.getElementById(id);
       assert.isNull(elem);
     });
