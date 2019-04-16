@@ -20,7 +20,10 @@ export default class CustomElementInternals {
     this._constructorToDefinition = new Map();
 
     /** @type {!Array<!function(!Node)>} */
-    this._patches = [];
+    this._patchesNode = [];
+
+    /** @type {!Array<!function(!Element)>} */
+    this._patchesElement = [];
 
     /** @type {boolean} */
     this._hasPatches = false;
@@ -52,11 +55,19 @@ export default class CustomElementInternals {
   }
 
   /**
-   * @param {!function(!Node)} listener
+   * @param {!function(!Node)} patch
    */
-  addPatch(listener) {
+  addNodePatch(patch) {
     this._hasPatches = true;
-    this._patches.push(listener);
+    this._patchesNode.push(patch);
+  }
+
+  /**
+   * @param {!function(!Element)} patch
+   */
+  addElementPatch(patch) {
+    this._hasPatches = true;
+    this._patchesElement.push(patch);
   }
 
   /**
@@ -65,20 +76,38 @@ export default class CustomElementInternals {
   patchTree(node) {
     if (!this._hasPatches) return;
 
-    Utilities.walkDeepDescendantElements(node, element => this.patch(element));
+    Utilities.walkDeepDescendantElements(node, element => this.patchElement(element));
   }
 
   /**
    * @param {!Node} node
    */
-  patch(node) {
+  patchNode(node) {
     if (!this._hasPatches) return;
 
     if (node.__CE_patched) return;
     node.__CE_patched = true;
 
-    for (let i = 0; i < this._patches.length; i++) {
-      this._patches[i](node);
+    for (let i = 0; i < this._patchesNode.length; i++) {
+      this._patchesNode[i](node);
+    }
+  }
+
+  /**
+   * @param {!Element} element
+   */
+  patchElement(element) {
+    if (!this._hasPatches) return;
+
+    if (element.__CE_patched) return;
+    element.__CE_patched = true;
+
+    for (let i = 0; i < this._patchesNode.length; i++) {
+      this._patchesNode[i](element);
+    }
+
+    for (let i = 0; i < this._patchesElement.length; i++) {
+      this._patchesElement[i](element);
     }
   }
 
@@ -233,7 +262,7 @@ export default class CustomElementInternals {
 
     if (this._hasPatches) {
       for (let i = 0; i < elements.length; i++) {
-        this.patch(elements[i]);
+        this.patchElement(elements[i]);
       }
     }
 

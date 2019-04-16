@@ -39,7 +39,7 @@ export default function(internals) {
         Object.setPrototypeOf(element, constructor.prototype);
         element.__CE_state = CEState.custom;
         element.__CE_definition = definition;
-        internals.patch(element);
+        internals.patchElement(element);
         return element;
       }
 
@@ -52,7 +52,7 @@ export default function(internals) {
       constructionStack[lastIndex] = AlreadyConstructedMarker;
 
       Object.setPrototypeOf(toConstructElement, constructor.prototype);
-      internals.patch(toConstructElement);
+      internals.patchElement(toConstructElement);
 
       return toConstructElement;
     }

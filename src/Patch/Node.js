@@ -217,7 +217,7 @@ export default function(internals) {
   if (Native.Node_textContent && Native.Node_textContent.get) {
     patch_textContent(Node.prototype, Native.Node_textContent);
   } else {
-    internals.addPatch(function(element) {
+    internals.addNodePatch(function(element) {
       patch_textContent(element, {
         enumerable: true,
         configurable: true,

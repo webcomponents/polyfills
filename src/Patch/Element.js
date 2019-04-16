@@ -29,6 +29,7 @@ export default function(internals) {
        */
       function(init) {
         const shadowRoot = Native.Element_attachShadow.call(this, init);
+        internals.patchNode(shadowRoot);
         this.__CE_shadowRoot = shadowRoot;
         return shadowRoot;
       });
@@ -87,7 +88,7 @@ export default function(internals) {
   } else if (Native.HTMLElement_innerHTML && Native.HTMLElement_innerHTML.get) {
     patch_innerHTML(HTMLElement.prototype, Native.HTMLElement_innerHTML);
   } else {
-    internals.addPatch(function(element) {
+    internals.addElementPatch(function(element) {
       patch_innerHTML(element, {
         enumerable: true,
         configurable: true,
