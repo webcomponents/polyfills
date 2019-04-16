@@ -674,21 +674,27 @@ if (window['customElements'] && utils.settings.inUse && !utils.settings['preferP
     return base;
   }
 
-  const define = window['customElements']['define'];
-  // Note, it would be better to patch the CustomElementRegistry.prototype, but
-  // ShadyCSS patches define directly.
-  window.customElements.define = function(name, constructor) {
-      const connected = constructor.prototype.connectedCallback;
-      const disconnected = constructor.prototype.disconnectedCallback;
-      define.call(window['customElements'], name,
-          ManageConnect(constructor, connected, disconnected));
-      // unpatch connected/disconnected on class; custom elements tears this off
-      // so the patch is maintained, but if the user calls these methods for
-      // e.g. testing, they will be as expected.
-      constructor.prototype.connectedCallback = connected;
-      constructor.prototype.disconnectedCallback = disconnected;
-    }
-
+  const originalDefine = window['customElements']['define'];
+  const define = function(name, constructor) {
+    const connected = constructor.prototype.connectedCallback;
+    const disconnected = constructor.prototype.disconnectedCallback;
+    originalDefine.call(window['customElements'], name,
+        ManageConnect(constructor, connected, disconnected));
+    // unpatch connected/disconnected on class; custom elements tears this off
+    // so the patch is maintained, but if the user calls these methods for
+    // e.g. testing, they will be as expected.
+    constructor.prototype.connectedCallback = connected;
+    constructor.prototype.disconnectedCallback = disconnected;
+  }
+  // Note, it would be better to only patch the CustomElementRegistry.prototype,
+  // but ShadyCSS patches define directly.
+  window.customElements.define = define;
+  // Still patch the registry directly since Safari 10 loses the patch
+  // unless this is done.
+  Object.defineProperty(window['CustomElementRegistry'].prototype, 'define', {
+    value: define,
+    configurable: true
+  });
 }
 
 /** @return {!ShadyRoot|undefined} */
