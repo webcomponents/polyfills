@@ -228,7 +228,11 @@ export default function(internals) {
           const parts = [];
 
           for (let i = 0; i < this.childNodes.length; i++) {
-            parts.push(this.childNodes[i].textContent);
+            const childNode = this.childNodes[i];
+            if (childNode.nodeType === Node.COMMENT_NODE) {
+              continue;
+            }
+            parts.push(childNode.textContent);
           }
 
           return parts.join('');
