@@ -23,8 +23,6 @@
   },
   "homepage": "http://webcomponents.org",
   "devDependencies": {
-    "eslint": "^5.2.0",
-    "eslint-plugin-html": "^4.0.3",
     "wct-browser-legacy": "^1.0.1",
     "web-component-tester": "^6.7.1"
   },

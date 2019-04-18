@@ -26,7 +26,7 @@
       }
     }
 
-    Object.assign = function(target, sources) {
+    Object.assign = function(target) {
       var args = [].slice.call(arguments, 1);
       for (var i=0, s; i < args.length; i++) {
         s = args[i];

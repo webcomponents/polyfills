@@ -96,8 +96,8 @@
       return e;
     };
     if (origMouseEvent) {
-      for (var i in origMouseEvent) {
-        window.MouseEvent[i] = origMouseEvent[i];
+      for (var j in origMouseEvent) {
+        window.MouseEvent[j] = origMouseEvent[j];
       }
     }
     window.MouseEvent.prototype = origMouseEvent.prototype;
