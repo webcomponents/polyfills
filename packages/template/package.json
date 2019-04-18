@@ -21,6 +21,9 @@
     "lint": "eslint template.js tests/**/*.html",
     "prepack": "npm run build"
   },
+  "files": [
+    "template.min.js*"
+  ],
   "homepage": "http://webcomponents.org",
   "devDependencies": {
     "wct-browser-legacy": "^1.0.2"

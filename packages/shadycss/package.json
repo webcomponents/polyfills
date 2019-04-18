@@ -30,7 +30,7 @@
     "debug": "gulp debug",
     "lint": "eslint src tests entrypoints",
     "test": "wct",
-    "prepack": "gulp closure"
+    "prepack": "npm run build"
   },
   "files": [
     "apply-shim.html",
