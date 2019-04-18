@@ -10,6 +10,7 @@
     "nuke": "rm -rf package-lock.json node_modules && npm install && lerna exec \"rm -f package-lock.json\" && lerna clean --yes && lerna bootstrap && lerna exec --stream -- \"test -f package-lock.json || npm install --package-lock-only\""
   },
   "devDependencies": {
+    "del": "^3.0.0",
     "lerna": "^3.13.3",
     "google-closure-compiler": "^20180910.0.0",
     "gulp": "^4.0.0"
