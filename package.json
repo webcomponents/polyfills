@@ -11,6 +11,7 @@
   },
   "devDependencies": {
     "lerna": "^3.13.3",
+    "google-closure-compiler": "^20180910.0.0",
     "gulp": "^4.0.0"
   }
 }

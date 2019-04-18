@@ -21,7 +21,6 @@
     "access": "public"
   },
   "devDependencies": {
-    "google-closure-compiler": "^20180910.0.0",
     "gulp-sourcemaps": "^2.6.4"
   }
 }
