@@ -3,6 +3,10 @@
   "version": "1.2.0",
   "description": "HTML Custom Elements Polyfill",
   "main": "custom-elements.min.js",
+  "repository": "github:webcomponents/polyfills",
+  "bugs": "https://github.com/webcomponents/polyfills/issues",
+  "homepage": "https://webcomponents.org/polyfills",
+  "author": "The Polymer Project Authors (https://polymer.github.io/AUTHORS.txt)",
   "keywords": [
     "custom-elements",
     "customelements",
@@ -11,18 +15,7 @@
     "polyfill",
     "shim"
   ],
-  "directories": {
-    "test": "tests"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/webcomponents/custom-elements.git"
-  },
-  "author": "The Polymer Authors",
   "license": "BSD-3-Clause",
-  "bugs": {
-    "url": "https://github.com/webcomponents/custom-elements/issues"
-  },
   "scripts": {
     "build": "gulp",
     "debug": "rollup -c",
@@ -34,7 +27,6 @@
     "src/",
     "externs/"
   ],
-  "homepage": "https://webcomponents.org/polyfills",
   "devDependencies": {
     "@webcomponents/html-imports": "^1.2.0",
     "@webcomponents/shadydom": "^1.1.3",
