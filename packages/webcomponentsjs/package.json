@@ -37,7 +37,6 @@
     "@webcomponents/shadydom": "^1.4.2",
     "@webcomponents/template": "^1.4.0",
     "@webcomponents/url": "^0.7.2",
-    "babel-core": "^6.26.3",
     "babel-preset-minify": "^0.4.3",
     "get-own-property-symbols": "^0.9.2",
     "gulp-babel": "^7.0.1",
@@ -45,10 +44,6 @@
     "gulp-rollup": "^2.16.2",
     "gulp-sourcemaps": "^2.6.4",
     "promise-polyfill": "^8.0.0",
-    "rollup": "^0.60.7",
-    "rollup-plugin-babel": "^3.0.7",
-    "rollup-plugin-commonjs": "^9.2.0",
-    "rollup-plugin-license": "^0.6.0",
     "run-sequence": "^2.2.1",
     "wct-browser-legacy": "^1.0.2",
     "web-component-tester": "^6.9.0"

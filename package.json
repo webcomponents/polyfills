@@ -11,11 +11,16 @@
     "nuke": "rm -rf package-lock.json node_modules && npm install && lerna exec \"rm -f package-lock.json\" && lerna clean --yes && lerna bootstrap && lerna exec --stream -- \"test -f package-lock.json || npm install --package-lock-only\""
   },
   "devDependencies": {
+    "babel-core": "^6.26.3",
     "del": "^3.0.0",
     "eslint": "^5.9.0",
     "eslint-plugin-html": "^5.0.3",
     "lerna": "^3.13.3",
     "google-closure-compiler": "^20180910.0.0",
-    "gulp": "^4.0.0"
+    "gulp": "^4.0.0",
+    "rollup": "^0.62.0",
+    "rollup-plugin-babel": "^3.0.7",
+    "rollup-plugin-commonjs": "^9.2.0",
+    "rollup-plugin-license": "^0.6.0"
   }
 }

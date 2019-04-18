@@ -42,7 +42,6 @@
     "@webcomponents/webcomponents-platform": "^1.0.0",
     "es6-promise": "4.2.4",
     "gulp-sourcemaps": "^1.6.0",
-    "rollup": "^0.62.0",
     "wct-browser-legacy": "^1.0.1",
     "web-component-tester": "^6.7.1"
   },
