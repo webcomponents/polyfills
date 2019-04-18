@@ -1,0 +1,28 @@
+{
+  "name": "@webcomponents/url",
+  "version": "0.7.2",
+  "main": "url.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/webcomponents/URL.git"
+  },
+  "license": "SAX-PD",
+  "description": "URL parser in JavaScript",
+  "bugs": {
+    "url": "https://github.com/webcomponents/URL/issues"
+  },
+  "homepage": "https://github.com/webcomponents/URL#readme",
+  "scripts": {
+    "build": "gulp",
+    "prepack": "npm run build"
+  },
+  "author": "Erik Arvidsson <arv@chromium.org>",
+  "publishConfig": {
+    "access": "public"
+  },
+  "devDependencies": {
+    "google-closure-compiler": "^20180910.0.0",
+    "gulp": "^4.0.0",
+    "gulp-sourcemaps": "^2.6.4"
+  }
+}

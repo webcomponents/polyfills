@@ -2,3 +2,4 @@ packages/custom-elements/ @azakus @bicknellr
 packages/shadycss/ @azakus
 packages/shadydom/ @azakus @sorvell
 packages/template/ @azakus
+packages/url/ @azakus
