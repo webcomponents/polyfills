@@ -1,0 +1,16 @@
+{
+  "suites": ["tests/runner.html"],
+  "npm": true,
+  "clientOptions": {
+    "environmentImports": []
+  },
+  "plugins": {
+    "local": {
+      "browserOptions": {
+        "chrome": [
+          "no-sandbox"
+        ]
+      }
+    }
+  }
+}

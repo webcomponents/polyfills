@@ -1,0 +1,36 @@
+{
+  "name": "@webcomponents/template",
+  "version": "1.4.0",
+  "description": "Minimal template polyfills needed by webcomponents.js",
+  "main": "template.js",
+  "directories": {
+    "test": "tests"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/webcomponents/template.git"
+  },
+  "author": "The Polymer Authors",
+  "license": "BSD-3-Clause",
+  "bugs": {
+    "url": "https://github.com/webcomponents/template/issues"
+  },
+  "scripts": {
+    "build": "gulp",
+    "test": "npm run lint && wct",
+    "lint": "eslint template.js tests/**/*.html",
+    "prepack": "npm run build"
+  },
+  "homepage": "http://webcomponents.org",
+  "devDependencies": {
+    "eslint": "^5.2.0",
+    "eslint-plugin-html": "^4.0.3",
+    "google-closure-compiler": "^20180805.0.0",
+    "gulp": "^4.0.0",
+    "wct-browser-legacy": "^1.0.1",
+    "web-component-tester": "^6.7.1"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

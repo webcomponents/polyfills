@@ -1,0 +1,16 @@
+{
+  "extends": "eslint:recommended",
+  "env": {
+    "browser": true
+  },
+  "plugins": [
+    "html"
+  ],
+  "rules": {
+    "semi": "error",
+    "strict": "error"
+  },
+  "parserOptions": {
+    "ecmaVersion": 5
+  }
+}

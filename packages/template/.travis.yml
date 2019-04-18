@@ -1,0 +1,18 @@
+language: node_js
+sudo: false
+dist: trusty
+node_js: '9'
+addons:
+  firefox: latest
+  chrome: stable
+before_script:
+- npm run lint
+script:
+- xvfb-run wct --npm
+- if [ "${TRAVIS_PULL_REQUEST}" = "false" ]; then wct --npm -s 'windows 10/microsoftedge@13' -s 'windows 10/microsoftedge@14' -s 'windows 10/microsoftedge@15' -s 'windows 10/microsoftedge@16'
+  -s 'windows 8.1/internet explorer@11' -s 'macos 10.13/safari@11' -s 'os x 10.12/safari@10' -s 'os x 10.11/safari@9' -s 'Linux/chrome@41';
+  fi
+env:
+  global:
+  - secure: oucYIKHVGwlwga761L4VtSlIDA1rFOnglofd8A3DwbDG7yAJG8/5knkzB/1KiveGGswbfgLyi74ni43Ge1c6AUvEQOeKvaDmjvw4BZ59lRMD+ADWcSFHIhvQ7ArxFiWt/jusFoacMfxdX3ExnWFPfYOctb96olpIIyN6eif5vx13knmW+0iE9upuO1fkPKms7Ym/XjXDsv79SJ+wVrs8iqguO1oXoxwPP/RRAKhK3pyhSIqKnCFeU7UIVHFFEcfOSHm5LtrDvqqTfUGdG2poGo26A0DOUfNqcItp66Xd7MeshZLgnO5GarO1uzx7XffSQveTZWKgolnsee18KNb6cSTmzaa5VxLgUUUG7tRtBuwbJJfXJCTm53zr1608H5gYUcPCqkM1qK2cj9jjDCLzSPyJGPZIMppXCRl+Z9jyheubLYYEznyFHgXwC3+a1qCJLxrsSLMJZEKRSvkQI8j0acoxEqUWgm4ANAbsaswH4bwzz46dU7OIy2Pmw2lJJ1dtAGdJESVgHe6wuAyQjyt9zcw8n1SLkxZYcXGwby7h4iAUoKnhOKziamDFiWVT93Sj0GhmOsRi7lPb0uy8Cjvhy+0/qH0hTotdomPHDf89vVLrciRXqnNIW2l/P9hUKYi/rhf/46ik/k6MFx0WGHL/bmQmnJmpM4HmIpgT8EV8yvU=
+  - secure: 1/TYMa53/TEqJ9GvuJSZTW4a4PO5n/+SASWrb4khg6CQhlBTOm/5Gc9M6d8dTruqzND2jyVzeqpU+IhqjACItNCGx/i3Vu7rPAC4Psk6Fq+O/aD7UndDp5wEVER4fCrVlkK5s5tua0pPICLeEoOw58nYHn2KC9HtTHY0qZevAzq3WiR6W2fedFgwchSVGm01l8aoefXeeBYWqygi2uZBqHGLUmlAICGFU7iIixIyzt78M5PhH/env/RBO4oKTLjb921J7k0QTI6oz/3IVeVmrPRCnR5cRNxNJdA+ZqugLzzx5AnQ4HuOkFYsDMIzE2ZQjDcz+AZ3TL+kbedYr814CcA5cT1TbX8UC8sLdPMT+CYEFaL8cyH5olf4JsiMcAh+uRqaBop5op+NbsB2Gfd6/WQeY+85ZKSgm/uiJfXlCn4u38juVGTAkFzBSti8S5iHJldxZyCGHm2JCS4kx3V+TCczeKtKtX2MnPulGUFfqzvQKs7MQQ8hSZ7z/5YCO/UYntuQXxyQpqtyKpRWGAxBSqfT3IFXyt2cKsGbCG+07hxDtaWNmIfUkhYGBqfgQGuEXqYb8VeA7icHyCJhpfMuiJpmsOtNLsi1QSGrl/+9ShUXXLaP/vTgoxiWc3VyQ5k65/zIYJPjT8tpX8zWGeLX4KQNf0GYILNqgsWA8bjh4ws=
