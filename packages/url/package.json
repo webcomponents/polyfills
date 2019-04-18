@@ -20,7 +20,5 @@
   "publishConfig": {
     "access": "public"
   },
-  "devDependencies": {
-    "gulp-sourcemaps": "^2.6.4"
-  }
+  "devDependencies": {}
 }

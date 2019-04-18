@@ -52,7 +52,6 @@
     "es6-promise": "^4.2.5",
     "gulp-rename": "^1.4.0",
     "gulp-size": "^3.0.0",
-    "gulp-sourcemaps": "^2.6.4",
     "rollup-stream": "=1.23.1",
     "run-sequence": "^2.2.1",
     "vinyl-buffer": "^1.0.1",
