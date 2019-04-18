@@ -38,12 +38,9 @@
     "@webcomponents/url": "^0.7.2",
     "babel-preset-minify": "^0.4.3",
     "get-own-property-symbols": "^0.9.2",
-    "gulp-babel": "^7.0.1",
-    "gulp-rename": "^1.4.0",
-    "gulp-rollup": "^2.16.2",
     "gulp-sourcemaps": "^2.6.4",
+    "rollup": "^0.62.0",
     "promise-polyfill": "^8.0.0",
-    "run-sequence": "^2.2.1",
     "wct-browser-legacy": "^1.0.2",
     "web-component-tester": "^6.9.0"
   },

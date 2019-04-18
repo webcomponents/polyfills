@@ -19,10 +19,14 @@
     "lerna": "^3.13.3",
     "google-closure-compiler": "^20180910.0.0",
     "gulp": "^4.0.0",
+    "gulp-babel": "^7.0.1",
+    "gulp-rename": "^1.4.0",
+    "gulp-rollup": "^2.16.2",
+    "gulp-size": "^3.0.0",
     "gulp-sourcemaps": "^2.6.4",
     "rollup": "^0.62.0",
     "rollup-plugin-babel": "^3.0.7",
     "rollup-plugin-commonjs": "^9.2.0",
-    "rollup-plugin-license": "^0.6.0"
+    "rollup-plugin-license": "^0.8.1"
   }
 }
