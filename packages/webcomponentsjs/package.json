@@ -41,8 +41,7 @@
     "gulp-sourcemaps": "^2.6.4",
     "rollup": "^0.62.0",
     "promise-polyfill": "^8.0.0",
-    "wct-browser-legacy": "^1.0.2",
-    "web-component-tester": "^6.9.0"
+    "wct-browser-legacy": "^1.0.2"
   },
   "publishConfig": {
     "access": "public"

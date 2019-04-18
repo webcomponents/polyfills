@@ -41,8 +41,7 @@
     "@webcomponents/template": "^1.3.1",
     "@webcomponents/webcomponents-platform": "^1.0.0",
     "es6-promise": "4.2.4",
-    "wct-browser-legacy": "^1.0.1",
-    "web-component-tester": "^6.7.1"
+    "wct-browser-legacy": "^1.0.2"
   },
   "publishConfig": {
     "access": "public"
