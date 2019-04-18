@@ -35,7 +35,7 @@ export default function(internals) {
 
       const result = /** @type {!Element} */
         (Native.Document_createElement.call(this, localName));
-      internals.patch(result);
+      internals.patchElement(result);
       return result;
     });
 
@@ -77,7 +77,7 @@ export default function(internals) {
 
       const result = /** @type {!Element} */
         (Native.Document_createElementNS.call(this, namespace, localName));
-      internals.patch(result);
+      internals.patchElement(result);
       return result;
     });
 

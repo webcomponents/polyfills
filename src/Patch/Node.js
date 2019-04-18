@@ -217,7 +217,7 @@ export default function(internals) {
   if (Native.Node_textContent && Native.Node_textContent.get) {
     patch_textContent(Node.prototype, Native.Node_textContent);
   } else {
-    internals.addPatch(function(element) {
+    internals.addNodePatch(function(element) {
       patch_textContent(element, {
         enumerable: true,
         configurable: true,
@@ -228,7 +228,11 @@ export default function(internals) {
           const parts = [];
 
           for (let i = 0; i < this.childNodes.length; i++) {
-            parts.push(this.childNodes[i].textContent);
+            const childNode = this.childNodes[i];
+            if (childNode.nodeType === Node.COMMENT_NODE) {
+              continue;
+            }
+            parts.push(childNode.textContent);
           }
 
           return parts.join('');

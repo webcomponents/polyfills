@@ -129,6 +129,43 @@ suite('Custom element descendants of the context element are disconnected when s
     }
 
   });
+
+  if (window.Element.prototype.attachShadow) {
+    test('setting textContent on a ShadowRoot', function() {
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+
+      const shadowRoot = container.attachShadow({mode: 'open'});
+      shadowRoot.appendChild(div);
+
+      // `element1` was connected.
+      assert.equal(element1.connectedCallbackCount, 1);
+      assert.equal(element1.disconnectedCallbackCount, 0);
+      // `element2` was connected.
+      assert.equal(element2.connectedCallbackCount, 1);
+      assert.equal(element2.disconnectedCallbackCount, 0);
+
+      shadowRoot.textContent = '';
+
+      // `element1` was disconnected.
+      assert.equal(element1.connectedCallbackCount, 1);
+      assert.equal(element1.disconnectedCallbackCount, 1);
+      // `element2` was disconnected.
+      assert.equal(element2.connectedCallbackCount, 1);
+      assert.equal(element2.disconnectedCallbackCount, 1);
+    });
+  }
+});
+
+suite('Patch behavior', function() {
+  test('textContent setter does not include the `textContent` of child ' +
+      'comments', function() {
+    const div = document.createElement('div');
+    div.appendChild(document.createTextNode('A'));
+    div.appendChild(document.createComment('B'));
+    div.appendChild(document.createTextNode('C'));
+    assert.equal(div.textContent, 'AC');
+  });
 });
 </script>
 </body>
