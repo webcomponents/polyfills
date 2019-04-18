@@ -1,0 +1,1611 @@
+<!doctype html>
+<!--
+@license
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="../node_modules/@webcomponents/webcomponents-platform/webcomponents-platform.js"></script>
+  <script src="../node_modules/@webcomponents/template/template.js"></script>
+  <script>
+    ShadyDOM = {force: true};
+    if (window.customElements) {
+      customElements.forcePolyfill = true;
+    }
+    window.NATIVE = {
+      children: Object.getOwnPropertyDescriptor(Element.prototype, 'children')
+             || Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'children')
+    };
+  </script>
+  <script src="../shadydom.min.js"></script>
+  <script src="../node_modules/@webcomponents/custom-elements/custom-elements.min.js"></script>
+  <script>
+    // Ensure customElements are updated when document is ready.
+    if (customElements.polyfillWrapFlushCallback) {
+      customElements.polyfillWrapFlushCallback(function(cb) {
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', cb);
+        } else {
+          cb();
+        }
+      });
+    }
+  </script>
+
+  <script src="../node_modules/wct-browser-legacy/browser.js"></script>
+</head>
+<body>
+
+  <script>
+    window.defineTestElement = function(name, connected) {
+      var template = document.querySelector('#' + name);
+      // es5 compat class
+      function Klass() {
+        const self = (window.Reflect && Reflect.construct)
+          ? Reflect.construct(HTMLElement, [], this.constructor || Klass)
+          : HTMLElement.call(this);
+        self._constructed = true;
+        return self;
+      }
+
+      Klass.prototype = Object.create(HTMLElement.prototype, {
+        'constructor': {
+          value: Klass,
+          configurable: true,
+          writable: true
+        }
+      });
+
+      Klass.prototype.connectedCallback = function() {
+        if (!this._initialized) {
+          this._initialized = true;
+          if (connected) {
+            connected.call(this);
+          }
+          if (template) {
+            this.attachShadow({mode: 'open'});
+            this.shadowRoot.appendChild(document.importNode(template.content, true));
+          }
+        }
+      }
+
+      customElements.define(name, Klass);
+    }
+
+    window.makeFocusable = function() {
+      this.setAttribute('tabIndex', -1);
+    }
+  </script>
+
+  <template id="x-project">
+    x-project: [<slot></slot>]
+  </template>
+  <script>
+    defineTestElement('x-project');
+  </script>
+
+  <template id="x-reproject">
+    <x-project>x-reproject: [<slot></slot>]</x-project>
+  </template>
+
+  <script>
+    defineTestElement('x-reproject');
+  </script>
+
+  <template  id="x-rereproject">
+    <x-reproject>x-rereproject: [<slot></slot>]</x-reproject>
+  </template>
+
+  <script>
+    defineTestElement('x-rereproject', function() {
+      if (!this.attachedCount) {
+        this.attachedCount = 0;
+      }
+      this.attachedCount++;
+    });
+  </script>
+
+  <template id="x-test">
+    <x-rereproject><span id="projected">projected</span></x-rereproject>
+  </template>
+
+  <script>
+    defineTestElement('x-test');
+  </script>
+
+  <template id="x-test-esc">
+    <x-rereproject><span id="projected/escape">projected with id that needs escaping</span></x-rereproject>
+  </template>
+
+  <script>
+    defineTestElement('x-test-esc');
+  </script>
+
+  <template id="x-test-no-distribute">
+    <span>Local dom without insertion point.</span>
+  </template>
+
+  <script>
+    defineTestElement('x-test-no-distribute');
+  </script>
+
+  <template id="x-distribute">
+    <div>
+      <span>Elements without test attribute</span>
+      <div id="notTestContainer" style="color: white; background-color: green; min-height: 1em;">
+        <slot id="notTestContent"></slot>
+      </div>
+      <span>Elements with test attribute</span>
+      <div style="color: white; background-color: red; min-height: 1em;">
+        <div id="testContainer">
+          <slot id="testContent" name="test"></slot>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <script>
+    defineTestElement('x-distribute');
+  </script>
+
+  <template id="x-compose"><x-project id="project"></x-project></template>
+
+  <script>
+    defineTestElement('x-compose');
+  </script>
+
+  <template id="x-echo"><slot></slot></template>
+  <script>defineTestElement('x-echo');</script>
+
+
+  <template id="x-simple"><div>simple</div></template>
+  <script>defineTestElement('x-simple');</script>
+
+
+  <template id="x-attr">Attr1</template>
+  <script>
+    defineTestElement('x-attr', function() {
+      this.setAttribute('slot', 'bar');
+    });
+  </script>
+
+
+  <template id="x-attr2">Attr2</template>
+  <script>
+    defineTestElement('x-attr2', function() {
+      this.slot = 'foo';
+    });
+  </script>
+
+
+  <template id="x-select-attr">
+    Foo: [<slot name="foo"></slot>]
+    Bar: [<slot name="bar"></slot>]
+  </template>
+  <script>defineTestElement('x-select-attr');</script>
+
+
+  <template id="x-compose-select-attr">
+    <x-select-attr id="select">
+      <x-attr id="attr1"></x-attr>
+      <x-attr2 id="attr2"></x-attr2>
+    </x-select-attr>
+  </template>
+  <script>defineTestElement('x-compose-select-attr');</script>
+
+
+
+  <template id="x-clonate"><span>[</span><slot></slot><span>]</span></template>
+  <script>defineTestElement('x-clonate');</script>
+
+
+
+  <template id="x-commented"><span>[</span><!--comment--><slot></slot><span>]</span></template>
+  <script>defineTestElement('x-commented');</script>
+
+
+  <template id="x-deep-contains">
+    <div id="shadowed"></div>
+    <slot name="light"></slot>
+  </template>
+  <script>
+    defineTestElement('x-deep-contains', function() {
+      var e = document.createElement('div');
+      e.setAttribute('slot', 'light');
+      this.appendChild(e);
+      e = document.createElement('div');
+      e.setAttribute('slot', 'notdistributed');
+      this.appendChild(e);
+    });
+  </script>
+
+  <template id="innerTemplate"><slot></slot></template>
+
+  <template id="outerTemplate"><inner-element><slot></slot></inner-element></template>
+
+  <script>
+  (function() {
+    class InnerElement extends HTMLElement {
+      connectedCallback() {
+        const clone = document.importNode(innerTemplate.content, true);
+        this.attachShadow({ mode: 'open' });
+        this.shadowRoot.appendChild(clone);
+      }
+    }
+    customElements.define('inner-element', InnerElement);
+
+    class OuterElement extends HTMLElement {
+      connectedCallback() {
+        const clone = document.importNode(outerTemplate.content, true);
+        this.attachShadow({ mode: 'open' });
+        this.shadowRoot.appendChild(clone);
+      }
+    }
+    customElements.define('outer-element', OuterElement);
+
+  })();
+  </script>
+
+<template id="insertBeforeSlot">
+  <div id="slotHost">
+    <slot></slot>
+  </div>
+</template>
+
+<x-test></x-test>
+
+<x-test-esc></x-test-esc>
+
+<div class="accessors">
+  <x-test-no-distribute><div class="child"></div></x-test-no-distribute>
+  <x-project><div class="child"></div></x-project>
+</div>
+
+<x-test-no-distribute id="noDistribute">
+  <div class="bar">Bar</div>
+  <div class="foo">Foo</div>
+</x-test-no-distribute>
+
+<x-select-class1>
+  <div></div>
+</x-select-class1>
+
+<x-select-attr>
+  <x-attr></x-attr>
+</x-select-attr>
+
+<x-compose-select-attr></x-compose-select-attr>
+
+<x-redistribute-a-b></x-redistribute-a-b>
+
+<div id="container">
+  <x-echo></x-echo>
+  <span>1</span>
+  <span>2</span>
+</div>
+
+<x-deep-contains></x-deep-contains>
+
+<x-wrapped></x-wrapped>
+
+<x-outer>
+  <button>click me</button>
+</x-outer>
+
+<outer-element>hello</outer-element>
+
+<script>
+  defineTestElement('x-stamps-peer', function() {
+    var span = document.createElement('span');
+    span.setAttribute('id', 'peer');
+    this.parentNode.appendChild(span);
+  });
+</script>
+
+<script>
+
+  'use strict';
+
+  function updateRoot(element) {
+    if (element.shadyRoot) {
+      element.shadyRoot.update();
+    }
+  }
+
+  function createEnabledElement(tag) {
+    var e = document.createElement(tag);
+    document.body.appendChild(e);
+    document.body.removeChild(e);
+    return e;
+  }
+
+  function allInsertionPoints(e) {
+    var r = [];
+    while (e) {
+      e = e.assignedSlot;
+      if (e) {
+        r.push(e);
+      }
+    }
+    return r;
+  }
+
+  suite('ShadyDOM', function() {
+
+  var testElement;
+  var testElementEsc;
+
+  suiteSetup(function() {
+    testElement = document.querySelector('x-test');
+    testElementEsc = document.querySelector('x-test-esc');
+  });
+
+  test('mode `open` exposes `.shadowRoot`', function() {
+    let div = document.createElement('div');
+    div.attachShadow({mode: 'open'});
+    assert.ok(div.shadowRoot);
+  });
+
+  test('mode `closed` hides `.shadowRoot`', function() {
+    let div = document.createElement('div');
+    div.attachShadow({mode: 'closed'});
+    assert.notOk(div.shadowRoot);
+  });
+
+  test('shadowRoot.querySelector', function() {
+    var projected = testElement.shadowRoot.querySelector('#projected');
+    assert.equal(projected.textContent, 'projected');
+    var p2 = testElement.querySelector('#projected');
+    assert.isNull(p2);
+    var rere = testElement.shadowRoot.querySelector('x-rereproject');
+    assert.equal(rere.localName, 'x-rereproject');
+    var re = rere.shadowRoot.querySelector('x-reproject');
+    assert.equal(re.localName, 'x-reproject');
+    var p = re.shadowRoot.querySelector('x-project');
+    assert.equal(p.localName, 'x-project');
+  });
+
+  test('shadowRoot.querySelectorAll', function() {
+    var rere = testElement.shadowRoot.querySelector('x-rereproject');
+    var re = rere.shadowRoot.querySelector('x-reproject');
+    var p = re.shadowRoot.querySelector('x-project');
+    var rereList = rere.shadowRoot.querySelectorAll('*');
+    assert.include(rereList, re);
+    assert.equal(rereList.length, 2);
+    var reList = re.shadowRoot.querySelectorAll('*');
+    assert.include(reList, p);
+    assert.equal(reList.length, 2);
+    var pList = p.shadowRoot.querySelectorAll('*');
+    assert.equal(pList.length, 1);
+  });
+
+  test('shadowRoot.getElementById', function() {
+    var projected = testElement.shadowRoot.getElementById('projected');
+    assert.equal(projected.textContent, 'projected');
+  });
+
+  test('shadowRoot.getElementByIdEscStr', function() {
+    var projected = testElementEsc.shadowRoot.getElementById('projected/escape');
+    assert.equal(projected.textContent, 'projected with id that needs escaping');
+  });
+
+  test('element.querySelector', function() {
+    var projected = testElement.shadowRoot.querySelector('#projected');
+    var rere = testElement.shadowRoot.querySelector('x-rereproject');
+    var re = rere.shadowRoot.querySelector('x-reproject');
+    var p = re.shadowRoot.querySelector('x-project');
+    assert.equal(rere.querySelector('#projected'), projected);
+    assert(re.querySelector('slot'));
+    assert(p.querySelector('slot'));
+  });
+
+  test('element.querySelectorAll', function() {
+    var projected = testElement.shadowRoot.querySelector('#projected');
+    var rere = testElement.shadowRoot.querySelector('x-rereproject');
+    var re = rere.shadowRoot.querySelector('x-reproject');
+    var p = re.shadowRoot.querySelector('x-project');
+    assert.equal(rere.querySelectorAll('#projected')[0], projected);
+    assert(re.querySelectorAll('slot').length, 1);
+    assert(p.querySelectorAll('slot').length, 1);
+  });
+
+  test('document.querySelector', function() {
+    assert.ok(document.querySelector('body'));
+  });
+
+  test('document.getElementById', function() {
+    var p2 = document.getElementById('projected');
+    assert.isNull(p2);
+  });
+
+  test('document.getElementByIdEscStr', function() {
+    var p2 = document.getElementById('projected/escape');
+    assert.isNull(p2);
+  })
+
+  test('projection', function() {
+    var projected = testElement.shadowRoot.querySelector('#projected');
+    assert.equal(projected.textContent, 'projected');
+    var rere = testElement.shadowRoot.querySelector('x-rereproject');
+    assert.equal(rere.localName, 'x-rereproject');
+    var re = rere.shadowRoot.querySelector('x-reproject');
+    assert.equal(re.localName, 'x-reproject');
+    var p = re.shadowRoot.querySelector('x-project');
+    assert.equal(p.localName, 'x-project');
+    ShadyDOM.flush();
+    var c1 = rere.shadowRoot.querySelector('slot');
+    assert.include(c1.assignedNodes({flatten: true}), projected);
+    var c2 = re.shadowRoot.querySelector('slot');
+    assert.include(c2.assignedNodes({flatten: true}), projected);
+    var c3 = p.shadowRoot.querySelector('slot');
+    assert.include(c3.assignedNodes({flatten: true}), projected);
+    var ip$ = [c1, c2, c3];
+    var as$ = allInsertionPoints(projected);
+    assert.deepEqual(as$, ip$);
+  });
+
+  test('shadyRoot.update', function() {
+    var projected = testElement.shadowRoot.querySelector('#projected');
+    var rere = testElement.shadowRoot.querySelector('x-rereproject');
+    var c1 = rere.shadowRoot.querySelector('slot');
+    var re = rere.shadowRoot.querySelector('x-reproject');
+    var c2 = re.shadowRoot.querySelector('slot');
+    var p = re.shadowRoot.querySelector('x-project');
+    var c3 = p.shadowRoot.querySelector('slot');
+    var ip$ = [c1, c2, c3];
+    if (testElement.shadyRoot) {
+      testElement.shadyRoot.update();
+    }
+    ShadyDOM.flush();
+    assert.deepEqual(allInsertionPoints(projected), ip$);
+    rere = testElement.shadowRoot.querySelector('x-rereproject');
+    assert.equal(rere.localName, 'x-rereproject');
+    if (rere.shadyRoot) {
+      rere.shadyRoot.update();
+    }
+    ShadyDOM.flush();
+    assert.deepEqual(allInsertionPoints(projected), ip$);
+    re = rere.shadowRoot.querySelector('x-reproject');
+    assert.equal(re.localName, 'x-reproject');
+    if (re.shadyRoot) {
+      re.shadyRoot.update();
+    }
+    ShadyDOM.flush();
+    assert.deepEqual(allInsertionPoints(projected), ip$);
+    p = re.shadowRoot.querySelector('x-project');
+    assert.equal(p.localName, 'x-project');
+  });
+
+
+  test('without a host setting host attributes/reflecting properties provokes distribution', function() {
+    var e = document.querySelector('x-select-attr');
+    var ip$ = e.shadowRoot.querySelectorAll('slot');
+    var c = e.firstElementChild;
+    ShadyDOM.flush();
+    assert.equal(allInsertionPoints(c)[0], ip$[1], 'child not distributed based on host attribute');
+    c.slot = 'foo';
+    ShadyDOM.flush();
+    assert.equal(allInsertionPoints(c)[0], ip$[0], 'child not distributed based on reflecting attribute');
+    c.slot = '';
+    ShadyDOM.flush();
+    assert.equal(allInsertionPoints(c).length, 0, 'child not distributed based on reflecting attribute');
+  });
+
+  test('within a host setting host attributes/reflecting properties provokes distribution', function() {
+    var e = document.querySelector('x-compose-select-attr');
+    var ip$ = e.shadowRoot.querySelector('#select').shadowRoot.querySelectorAll('slot');
+    var c1 = e.shadowRoot.querySelector('#attr1');
+    ShadyDOM.flush();
+    assert.equal(allInsertionPoints(c1)[0], ip$[1], 'child not distributed based on host attribute');
+    c1.slot = 'foo';
+    ShadyDOM.flush();
+    assert.equal(allInsertionPoints(c1)[0], ip$[0], 'child not distributed based on reflecting attribute');
+    c1.slot = 'bar';
+    ShadyDOM.flush();
+    assert.equal(allInsertionPoints(c1)[0], ip$[1], 'child not distributed based on reflecting attribute');
+    var c2 = e.shadowRoot.querySelector('#attr2');
+    ShadyDOM.flush();
+    assert.equal(allInsertionPoints(c2)[0], ip$[0], 'child not distributed based on default value');
+  });
+
+  test('appendChild (light)', function() {
+    var rere = testElement.shadowRoot.querySelector('x-rereproject');
+    var s = document.createElement('span');
+    s.id = 'added';
+    s.textContent = 'Added';
+    rere.appendChild(s);
+    assert.equal(testElement.shadowRoot.querySelector('#added'), s);
+  });
+
+  test('insertBefore (light)', function() {
+    var rere = testElement.shadowRoot.querySelector('x-rereproject');
+    var ref = testElement.shadowRoot.querySelector('#added');
+    var s = document.createElement('span');
+    s.id = 'added2';
+    s.textContent = 'Added2';
+    rere.insertBefore(s, ref);
+    assert.equal(testElement.shadowRoot.querySelector('#added2'), s);
+  });
+
+  test('insertBefore before a <slot> in light', function() {
+    var template = document.querySelector('template#insertBeforeSlot');
+    var frag = template.content.cloneNode(true);
+    var div = frag.querySelector('div#slotHost');
+    var slot = div.firstElementChild;
+    document.body.appendChild(frag);
+    var el = document.createElement('span');
+    div.insertBefore(el, slot);
+    div.parentNode.removeChild(div);
+  });
+
+  test('removeChild (light)', function() {
+    var added = testElement.shadowRoot.querySelector('#added');
+    var added2 = testElement.shadowRoot.querySelector('#added2');
+    var rere = testElement.shadowRoot.querySelector('x-rereproject');
+    assert.equal(testElement.shadowRoot.querySelectorAll('*').length, 4);
+    rere.removeChild(added);
+    rere.removeChild(added2);
+    assert.equal(testElement.shadowRoot.querySelectorAll('*').length, 2);
+  });
+
+  test('appendChild (local)', function() {
+    var rere = testElement.shadowRoot.querySelector('x-rereproject');
+    var s = document.createElement('span');
+    s.id = 'local';
+    s.textContent = 'Local';
+    rere.shadowRoot.appendChild(s);
+    assert.equal(rere.shadowRoot.querySelector('#local'), s);
+  });
+
+  test('insertBefore (local)', function() {
+    var rere = testElement.shadowRoot.querySelector('x-rereproject');
+    var ref = testElement.shadowRoot.querySelector('#local');
+    var s = document.createElement('span');
+    s.id = 'local2';
+    s.textContent = 'Local2';
+    rere.shadowRoot.insertBefore(s, ref);
+    assert.equal(rere.shadowRoot.querySelector('#local2'), s);
+  });
+
+  test('removeChild (local)', function() {
+    var rere = testElement.shadowRoot.querySelector('x-rereproject');
+    var local = rere.shadowRoot.querySelector('#local');
+    var local2 = rere.shadowRoot.querySelector('#local2');
+    rere.shadowRoot.removeChild(local);
+    rere.shadowRoot.removeChild(local2);
+    assert.equal(rere.shadowRoot.querySelectorAll('#local').length, 0);
+  });
+
+  test('localDom.insertBefore first element results in minimal change', function() {
+    var children = testElement.shadowRoot.childNodes;
+    var rere = testElement.shadowRoot.querySelector('x-rereproject');
+    assert.equal(rere.attachedCount, 1);
+    var s = document.createElement('span');
+    s.id = 'local-first';
+    s.textContent = 'Local First';
+    testElement.shadowRoot.insertBefore(s, children[0]);
+    assert.equal(testElement.shadowRoot.querySelector('#local-first'), s);
+    assert.equal(rere.attachedCount, 1);
+    testElement.shadowRoot.removeChild(s);
+    assert.equal(rere.attachedCount, 1);
+  });
+
+  test('appendChild (fragment, local)', function() {
+    var rere = testElement.shadowRoot.querySelector('x-rereproject');
+    var fragment = document.createDocumentFragment();
+    var childCount = 5;
+    for (var i=0; i < childCount; i++) {
+      var s = document.createElement('span');
+      s.textContent = i;
+      fragment.appendChild(s);
+    }
+    rere.shadowRoot.appendChild(fragment);
+    var added = rere.shadowRoot.querySelectorAll('span');
+    assert.equal(added.length, childCount);
+    for (i=0; i < added.length; i++) {
+      rere.shadowRoot.removeChild(added[i]);
+    }
+    assert.equal(rere.shadowRoot.querySelectorAll('span').length, 0);
+  });
+
+  test('insertBefore (fragment, local)', function() {
+    var rere = testElement.shadowRoot.querySelector('x-rereproject');
+    var fragment = document.createDocumentFragment();
+    var childCount = 5;
+    for (var i=0; i < childCount; i++) {
+      var s = document.createElement('span');
+      s.textContent = i;
+      fragment.appendChild(s);
+    }
+    var l = document.createElement('span');
+    l.textContent = 'last';
+    rere.shadowRoot.appendChild(l);
+    rere.shadowRoot.insertBefore(fragment, l);
+    var added = rere.shadowRoot.querySelectorAll('span');
+    assert.equal(added.length, childCount+1);
+    assert.equal(added[added.length-1], l);
+    for (i=0; i < added.length; i++) {
+      rere.shadowRoot.removeChild(added[i]);
+    }
+    assert.equal(rere.shadowRoot.querySelectorAll('span').length, 0);
+  });
+
+  test('mutations using fragments without logical dom', function() {
+    var d = document.createElement('div');
+    document.body.appendChild(d);
+    assert.equal(d.childNodes.length, 0);
+    var frag = document.createDocumentFragment();
+    var c = document.createElement('div');
+    frag.appendChild(c);
+    d.appendChild(frag);
+    assert.equal(d.childNodes.length, 1);
+    assert.equal(d.firstChild, c);
+    var c1 = document.createElement('div');
+    frag.appendChild(c1);
+    d.appendChild(frag);
+    assert.equal(d.childNodes.length, 2);
+    assert.equal(d.firstChild, c);
+    assert.equal(d.lastChild, c1);
+  });
+
+  test('appendChild interacts with unmanaged parent tree', function() {
+    var container = document.querySelector('#container');
+    var echo = container.firstElementChild;
+    assert.equal(echo.localName, 'x-echo');
+    var s1 = echo.nextElementSibling;
+    assert.equal(s1.textContent, '1');
+    var s2 = s1.nextElementSibling;
+    assert.equal(s2.textContent, '2');
+    assert.equal(container.children.length, 3);
+    echo.appendChild(s1);
+    ShadyDOM.flush();
+    assert.equal(container.children.length, 2);
+    assert.equal(echo.nextElementSibling, s2);
+    echo.appendChild(s2);
+    ShadyDOM.flush();
+    assert.equal(container.children.length, 1);
+    assert.equal(echo.nextElementSibling, null);
+    container.appendChild(s1);
+    ShadyDOM.flush();
+    assert.equal(container.children.length, 2);
+    assert.equal(echo.nextElementSibling, s1);
+    container.appendChild(s2);
+    ShadyDOM.flush();
+    assert.equal(container.children.length, 3);
+    assert.equal(echo.nextElementSibling, s1);
+    assert.equal(s1.nextElementSibling, s2);
+  });
+
+  test('distribute (forced)', function() {
+    var rere = testElement.shadowRoot.querySelector('x-rereproject');
+    var re = rere.shadowRoot.querySelector('x-reproject');
+    var p = re.shadowRoot.querySelector('x-project');
+    var s = document.createElement('span');
+    s.id = 'light';
+    s.textContent = 'Light';
+    rere.appendChild(s);
+    assert.equal(rere.querySelector('#light'), s);
+    assert.equal(s.parentNode, rere);
+    assert.notEqual(ShadyDOM.nativeTree.parentNode(s), rere);
+    ShadyDOM.flush();
+    assert.equal(ShadyDOM.nativeTree.parentNode(s), p);
+    rere.removeChild(s);
+    assert.equal(ShadyDOM.nativeTree.parentNode(s), p);
+    ShadyDOM.flush();
+    assert.equal(ShadyDOM.nativeTree.parentNode(s), null);
+  });
+
+  test('querySelector', function() {
+    var test = document.querySelector('x-test');
+    var rere = document.querySelector('x-rereproject');
+    var projected = document.querySelector('#projected');
+    assert.ok(testElement);
+    assert.notOk(rere);
+    assert.notOk(projected);
+  });
+
+  test('parentNode', function() {
+    var rere = testElement.shadowRoot.querySelector('x-rereproject');
+    var projected = testElement.shadowRoot.querySelector('#projected');
+    assert.equal(testElement.parentNode, document.body);
+    assert.equal(projected.parentNode, rere);
+  });
+
+  test('parentElement', function() {
+    var rere = testElement.shadowRoot.querySelector('x-rereproject');
+    var projected = testElement.shadowRoot.querySelector('#projected');
+    assert.equal(testElement.parentElement, document.body);
+    assert.equal(projected.parentElement, rere);
+  });
+
+  test('childNodes is an array', function() {
+    var test = document.querySelector('x-test');
+    assert.isTrue(Array.isArray(test.childNodes));
+  });
+
+  test('childNodes.item(index)', function() {
+    var el = createEnabledElement('x-echo');
+    var d1 = document.createElement('div');
+    var t1 = document.createTextNode('');
+    el.appendChild(d1);
+    el.insertBefore(t1, d1);
+    assert.equal(el.childNodes.item(0), t1);
+    assert.equal(el.childNodes.item(1), d1);
+  });
+
+  test('children.item(index)', function() {
+    var el = createEnabledElement('x-echo');
+    var d1 = document.createElement('div');
+    var d2 = document.createElement('div');
+    el.appendChild(d1);
+    el.insertBefore(d2, d1);
+    assert.equal(el.children.item(0), d2);
+    assert.equal(el.children.item(1), d1);
+  });
+
+  test('childElementCount', function() {
+    var test = document.querySelector('x-test');
+    assert.equal(test.childElementCount, 0);
+    var rere = test.shadowRoot.querySelector('x-rereproject');
+    assert.equal(rere.childElementCount, 1);
+    var projected = test.shadowRoot.querySelector('#projected');
+    assert.equal(projected.childElementCount, 0);
+  });
+
+  test('cloneNode shallow', function() {
+    var a = document.createElement('div');
+    a.innerHTML = '<x-clonate><span>1</span><span>2</span></x-clonate>';
+    document.body.appendChild(a);
+    ShadyDOM.flush();
+    var b = a.firstElementChild.cloneNode();
+    document.body.appendChild(b);
+    ShadyDOM.flush();
+    assert.equal(b.childNodes.length, 0, 'shallow copy has incorrect children');
+    assert.equal(ShadyDOM.nativeTree.children(b).length, 2, 'shallow copy has incorrect composed children');
+  });
+
+  test('cloneNode deep', function() {
+    var a = document.createElement('div');
+    a.innerHTML = '<x-clonate><span>1</span><span>2</span></x-clonate>';
+    document.body.appendChild(a);
+    ShadyDOM.flush();
+    var b = a.cloneNode(true);
+    document.body.appendChild(b);
+    ShadyDOM.flush();
+    assert.equal(b.firstElementChild.childNodes.length, 2, 'deep copy has incorrect children');
+    assert.equal(ShadyDOM.nativeTree.children(b.firstElementChild).length, 4, 'deep copy has incorrect composed children');
+  });
+
+  test('cloneNode attribute', function() {
+    var div = document.createElement('div');
+    div.setAttribute('id', 'test');
+    document.body.appendChild(div);
+    ShadyDOM.flush();
+    var attr = div.getAttributeNode('id').cloneNode(true);
+    assert.equal(attr.name, 'id');
+    assert.equal(attr.value, 'test');
+  });
+
+  test('importNode shallow', function() {
+    var a = document.createElement('div');
+    a.innerHTML = '<x-clonate><span>1</span><span>2</span></x-clonate>';
+    document.body.appendChild(a);
+    ShadyDOM.flush();
+    // NOTE: Safari defaults do `deep` true for importNode so be explicit here.
+    var b = document.importNode(a.firstElementChild, false);
+    document.body.appendChild(b);
+    ShadyDOM.flush();
+    assert.equal(b.childNodes.length, 0, 'shallow import has incorrect children');
+    assert.equal(ShadyDOM.nativeTree.children(b).length, 2, 'shallow import has incorrect composed children');
+  });
+
+  test('importNode deep', function() {
+    var a = document.createElement('div');
+    a.innerHTML = '<x-clonate><span>1</span><span>2</span></x-clonate>';
+    document.body.appendChild(a);
+    ShadyDOM.flush();
+    var b = document.importNode(a, true);
+    document.body.appendChild(b);
+    ShadyDOM.flush();
+    assert.equal(b.firstElementChild.childNodes.length, 2, 'deep copy has incorrect children');
+    assert.equal(ShadyDOM.nativeTree.children(b.firstElementChild).length, 4, 'deep copy has incorrect composed children');
+  });
+
+  test('importNode template deep', function() {
+    var template = document.createElement('template');
+    template.innerHTML = '<x-clonate><span>1</span><span>2</span></x-clonate>';
+    document.body.appendChild(template);
+    ShadyDOM.flush();
+    var templateCopy = document.importNode(template, true);
+    document.body.appendChild(templateCopy);
+    ShadyDOM.flush();
+    assert.equal(templateCopy.content.childNodes.length, 1, 'deep copy has incorrect children');
+    var contentCopy = templateCopy.content.cloneNode(true);
+    assert.equal(contentCopy.firstChild.localName, 'x-clonate');
+  });
+
+  test('flush reentrancy', function() {
+    // Setup callbacks
+    var order = [];
+    var cb1 = sinon.spy(function() { order.push(cb1); });
+    var cb2 = sinon.spy(function() { order.push(cb2); });
+    var cb3 = sinon.spy(function() { order.push(cb3); });
+    var cb4 = sinon.spy(function() { order.push(cb4); });
+    var cbReentrant = sinon.spy(function() {
+      order.push(cbReentrant);
+      ShadyDOM.enqueue(cb3);
+      ShadyDOM.flush();
+      ShadyDOM.enqueue(cb4);
+    });
+    // Enqueue
+    ShadyDOM.enqueue(cb1);
+    ShadyDOM.enqueue(cbReentrant);
+    ShadyDOM.enqueue(cb2);
+    // Flush
+    ShadyDOM.flush();
+    // Check callbacks called and in correct order
+    assert.isTrue(cb1.calledOnce);
+    assert.isTrue(cb2.calledOnce);
+    assert.isTrue(cb3.calledOnce);
+    assert.isTrue(cb4.calledOnce);
+    assert.isTrue(cbReentrant.calledOnce);
+    assert.sameMembers(order, [cb1, cbReentrant, cb2, cb3, cb4]);
+  });
+
+  test('event.composedPath correctly calculated for elements with destination insertion points', function(done) {
+    var re = document.createElement('x-reproject');
+    document.body.appendChild(re);
+    ShadyDOM.flush();
+    var p = re.shadowRoot.querySelector('x-project');
+    var child = document.createElement('p');
+    child.innerHTML = "hello";
+    // child will be inserted into p after distributeContent is performed.
+    re.appendChild(child);
+    ShadyDOM.flush();
+    child.addEventListener('child-event', function(e){
+      var path = e.composedPath();
+      assert.isTrue(path.indexOf(p) !== -1, 'path contains p');
+      assert.isTrue(path.indexOf(re) !== -1, 'path contains re');
+      done();
+    });
+    var evt = new CustomEvent('child-event');
+    child.dispatchEvent(evt);
+    document.body.removeChild(re);
+  });
+
+  test('synchronous append during distribution', function() {
+    var echo = document.createElement('x-echo');
+    document.body.appendChild(echo);
+    // When connected will cause span#peer to be added after it,
+    // which should also be distributed
+    echo.appendChild(document.createElement('x-stamps-peer'));
+    ShadyDOM.flush();
+    var assignedNodes = echo.shadowRoot.firstElementChild.assignedNodes();
+    assert.equal(assignedNodes[0].localName, 'x-stamps-peer');
+    assert.equal(assignedNodes[1].id, 'peer');
+  });
+
+  test('dispatchEvent on element forces distribution', function() {
+    var e = document.createElement('x-echo');
+    document.body.appendChild(e);
+    var html = '<div id="added"></div>';
+    e.innerHTML = html;
+    e.dispatchEvent(new Event('foo'));
+    assert.equal(ShadyDOM.nativeTree.innerHTML(e), html);
+    document.body.removeChild(e);
+  });
+
+  test('dispatchEvent on text forces distribution', function() {
+    var e = document.createElement('x-echo');
+    document.body.appendChild(e);
+    var html = 'some text';
+    e.innerHTML = html;
+    assert.isTrue(e.firstChild.nodeType == Node.TEXT_NODE);
+    e.firstChild.dispatchEvent(new Event('foo'));
+    assert.equal(ShadyDOM.nativeTree.innerHTML(e), html);
+    document.body.removeChild(e);
+  });
+
+  test('dispatchEvent on element pending distribution bubbles correctly', function() {
+    var e = document.createElement('x-distribute');
+    document.body.appendChild(e);
+    var c = e.shadowRoot.getElementById('notTestContainer');
+    var eventCount = 0;
+    e.addEventListener('foo', function() { eventCount++ });
+    c.addEventListener('foo', function() { eventCount++ });
+    var div = document.createElement('div');
+    e.appendChild(div);
+    div.dispatchEvent(new Event('foo', {bubbles: true}));
+    assert.equal(eventCount, 2, 'event did not bubble through root and to target');
+    document.body.removeChild(e);
+  });
+
+  test('shadowRoot.appendChild element with slot child and shadowRoot with slot pending distribution', function() {
+    var outerElement = document.querySelector('outer-element');
+    assert.equal(ShadyDOM.nativeTree.innerHTML(outerElement), '<inner-element>hello</inner-element>');
+    var test = outerElement.firstChild;
+    var outerSlot = outerElement.shadowRoot.querySelector('slot');
+    var innerElement = outerElement.shadowRoot.querySelector('inner-element');
+    var innerSlot = innerElement.shadowRoot.querySelector('slot');
+    assert.deepEqual(outerSlot.assignedNodes(), [test]);
+    assert.deepEqual(innerSlot.assignedNodes(), [outerSlot]);
+  });
+
+});
+
+suite('insertBefore', function() {
+  test('insertBefore while ref_node in shadowRoot not yet distributed', function() {
+    var e = document.createElement('div');
+    document.body.appendChild(e);
+    e.attachShadow({mode: 'open'});
+    ShadyDOM.flush();
+    var frag = document.createDocumentFragment();
+    var s = document.createElement('slot');
+    var a = document.createElement('div');
+    frag.appendChild(s);
+    frag.appendChild(a);
+    // 1. append fragment with <slot> and ref_node a
+    // 2. because of the <slot>, the root will distribute and not do fast path insertion
+    // 3. this leaves node a in outer space until distribution.
+    e.shadowRoot.appendChild(frag);
+    var b = document.createElement('div');
+    // insertBefore ref_node a when it is not yet distributed.
+    e.shadowRoot.insertBefore(b, a);
+    ShadyDOM.flush();
+    assert.sameMembers(e.shadowRoot.childNodes, [s, b, a])
+  });
+
+  test('insertBefore multiple elements at different spots', function() {
+    var e = document.createElement('x-echo');
+    document.body.appendChild(e);
+    var d1 = document.createElement('div');
+    d1.id = 'd1';
+    var d2 = document.createElement('div');
+    d2.id = 'd2';
+    e.appendChild(d1);
+    e.appendChild(d2);
+    ShadyDOM.flush();
+    assert.equal(ShadyDOM.nativeTree.innerHTML(e), '<div id="d1"></div><div id="d2"></div>')
+    var d3 = document.createElement('div');
+    d3.id = 'd3';
+    var d4 = document.createElement('div');
+    d4.id = 'd4';
+    var d5 = document.createElement('div');
+    d5.id = 'd5';
+    e.insertBefore(d3, d1);
+    e.insertBefore(d4, d2);
+    e.appendChild(d5);
+    ShadyDOM.flush();
+    assert.equal(ShadyDOM.nativeTree.innerHTML(e),
+      '<div id="d3"></div><div id="d1"></div><div id="d4"></div><div id="d2"></div><div id="d5"></div>')
+    document.body.removeChild(e);
+  });
+
+  test('insertBefore while ref_node undistributed', function() {
+    var e = document.createElement('div');
+    document.body.appendChild(e);
+    e.attachShadow({mode: 'open'});
+    ShadyDOM.flush();
+    var a = document.createElement('div');
+    e.appendChild(a);
+    var b = document.createElement('div');
+    // insertBefore ref_node a when it is not yet distributed.
+    e.insertBefore(b, a);
+    ShadyDOM.flush();
+    assert.sameMembers(e.childNodes, [b, a])
+  });
+
+  test('insertBefore while ref_node in host not yet distributed', function() {
+    var e = document.createElement('div');
+    document.body.appendChild(e);
+    var frag = document.createDocumentFragment();
+    frag.appendChild(document.createElement('div'));
+    var slot = document.createElement('slot');
+    frag.firstChild.appendChild(slot);
+    e.attachShadow({mode: 'open'});
+    e.shadowRoot.appendChild(frag);
+    ShadyDOM.flush();
+    var a = document.createElement('div');
+    e.appendChild(a);
+    var b = document.createElement('div');
+    // insertBefore ref_node a when it is not yet distributed.
+    e.insertBefore(b, a);
+    ShadyDOM.flush();
+    assert.sameMembers(e.childNodes, [b, a])
+    assert.sameMembers(slot.assignedNodes(), [b, a]);
+  });
+
+  test('insertBefore while ref_node in container not yet distributed', function() {
+    var e = document.createElement('div');
+    document.body.appendChild(e);
+    var frag = document.createDocumentFragment();
+    var container = document.createElement('div');
+    frag.appendChild(container);
+    var slot = document.createElement('slot');
+    container.appendChild(slot);
+    var before = document.createElement('div');
+    container.appendChild(before);
+    e.attachShadow({mode: 'open'});
+    e.shadowRoot.appendChild(frag);
+    ShadyDOM.flush();
+    // inserting into container that includes a slot before distribution
+    var b = document.createElement('div');
+    // insertBefore ref_node a when it is not yet distributed.
+    container.insertBefore(b, before);
+    ShadyDOM.flush();
+    assert.sameMembers(container.childNodes, [slot, b, before]);
+  });
+
+  test('insertBefore no-ops when ref_node and node are the same', function() {
+    var e = document.createElement('div');
+    document.body.appendChild(e);
+    var div = document.createElement('div');
+    e.appendChild(div);
+    e.insertBefore(div, div);
+    assert.sameMembers(Array.from(e.childNodes), [div]);
+  });
+
+  test('insertBefore throws when ref_node is not in parent', function() {
+    var e = document.createElement('div');
+    document.body.appendChild(e);
+    var div1 = document.createElement('div');
+    var div2 = document.createElement('div');
+    assert.throws(function() {
+      e.insertBefore(div1, div2);
+    });
+  });
+
+  test('contains', function() {
+    var e = document.createElement('x-simple');
+    document.body.appendChild(e);
+    assert.isTrue(document.contains(e));
+    assert.isFalse(document.contains(e.shadowRoot.firstChild));
+    assert.isFalse(e.contains(e.firstChild));
+    assert.isTrue(e.shadowRoot.contains(e.shadowRoot.firstChild));
+    assert.isFalse(e.shadowRoot.contains(document));
+    document.body.removeChild(e);
+  });
+
+});
+
+suite('Accessors', function() {
+  var noDistribute, distribute;
+
+  suiteSetup(function() {
+    noDistribute = document.querySelector('.accessors x-test-no-distribute');
+    distribute = document.querySelector('.accessors x-project');
+  });
+
+  test('node accessors (no distribute)', function() {
+    var child = noDistribute.children[0];
+    assert.isTrue(child.classList.contains('child'), 'test node could not be found');
+    var before = document.createElement('div');
+    var after = document.createElement('div');
+    noDistribute.insertBefore(before, child);
+    noDistribute.appendChild(after);
+    ShadyDOM.flush();
+    assert.equal(noDistribute.firstChild, before, 'firstChild incorrect');
+    assert.equal(noDistribute.lastChild, after, 'lastChild incorrect');
+    assert.equal(before.nextSibling, child, 'nextSibling incorrect');
+    assert.equal(child.nextSibling, after, 'nextSibling incorrect');
+    assert.equal(after.previousSibling, child, 'previousSibling incorrect');
+    assert.equal(after.nextSibling, null, 'nextSibling incorrect');
+    assert.equal(child.previousSibling, before, 'previousSibling incorrect');
+  });
+
+  test('node accessors (distribute)', function() {
+    var child = distribute.children[0];
+    assert.isTrue(child.classList.contains('child'), 'test node could not be found');
+    var before = document.createElement('div');
+    var after = document.createElement('div');
+    distribute.insertBefore(before, child);
+    distribute.appendChild(after);
+    ShadyDOM.flush();
+    assert.equal(distribute.firstChild, before, 'firstChild incorrect');
+    assert.equal(distribute.lastChild, after, 'lastChild incorrect');
+    assert.equal(before.nextSibling, child, 'nextSibling incorrect');
+    assert.equal(child.nextSibling, after, 'nextSibling incorrect');
+    assert.equal(after.previousSibling, child, 'previousSibling incorrect');
+    assert.equal(after.nextSibling, null, 'nextSibling incorrect');
+    assert.equal(child.previousSibling, before, 'previousSibling incorrect');
+  });
+
+  test('element accessors (no distribute)', function() {
+    var parent = createEnabledElement('x-test-no-distribute');
+    var child = document.createElement('div');
+    parent.appendChild(child);
+    var before = document.createElement('div');
+    var after = document.createElement('div');
+    parent.insertBefore(before, child);
+    parent.appendChild(after);
+    assert.equal(parent.firstElementChild, before, 'firstElementChild incorrect');
+    assert.equal(parent.lastElementChild, after, 'lastElementChild incorrect');
+    assert.equal(before.nextElementSibling, child, 'nextElementSibling incorrect');
+    assert.equal(child.nextElementSibling, after, 'nextElementSibling incorrect');
+    assert.equal(after.previousElementSibling, child, 'previousElementSibling incorrect');
+    assert.equal(child.previousElementSibling, before, 'previousElementSibling incorrect');
+  });
+
+  test('element.children includes references to elements with name attribute', function() {
+    const container = document.createElement('div');
+    const a = document.createElement('div');
+    a.setAttribute('name', 'a');
+    const b = document.createElement('div');
+    b.setAttribute('id', 'b');
+    const c = document.createElement('div');
+    c.setAttribute('id', 'c');
+    c.setAttribute('name', 'ignoredname');
+    const lengthId = document.createElement('div');
+    lengthId.setAttribute('id', 'length');
+    const numericId = document.createElement('div');
+    numericId.setAttribute('id', '2');
+    const firstDuplicate = document.createElement('div');
+    firstDuplicate.setAttribute('id', 'duplicate');
+    const secondDuplicate = document.createElement('div');
+    secondDuplicate.setAttribute('id', 'duplicate');
+    container.appendChild(a);
+    container.appendChild(b);
+    container.appendChild(c);
+    container.appendChild(lengthId);
+    container.appendChild(numericId);
+    container.appendChild(firstDuplicate);
+    container.appendChild(secondDuplicate);
+    const children = container.children;
+    // References by the name attribute do not work in Edge and IE11
+    if (!window.NATIVE.children || !window.NATIVE.children.get || window.NATIVE.children.get.call(container).a) {
+      assert.equal(children.a, a);
+    }
+    assert.equal(children.b, b);
+    assert.equal(children.c, c);
+    assert.equal(children.namedItem('length'), lengthId);
+    assert.equal(children.namedItem('2'), numericId);
+    assert.equal(children[2], c);
+    // NOTE: IE is weird and returns a list if there are duplicates, something
+    // no other browser does.
+    if (!navigator.userAgent.match(/Trident/)) {
+      assert.equal(children.duplicate, firstDuplicate);
+    }
+  });
+
+  test('element accessors (distribute)', function() {
+    var parent = createEnabledElement('x-project');
+    var child = document.createElement('div');
+    parent.appendChild(child);
+    var before = document.createElement('div');
+    var after = document.createElement('div');
+    parent.insertBefore(before, child);
+    parent.appendChild(after);
+    assert.equal(parent.firstElementChild, before, 'firstElementChild incorrect');
+    assert.equal(parent.lastElementChild, after, 'lastElementChild incorrect');
+    assert.equal(before.nextElementSibling, child, 'nextElementSibling incorrect');
+    assert.equal(child.nextElementSibling, after, 'nextElementSibling incorrect');
+    assert.equal(after.previousElementSibling, child, 'previousElementSibling incorrect');
+    assert.equal(child.previousElementSibling, before, 'previousElementSibling incorrect');
+  });
+
+  test('node accessors (empty logical tree)', function() {
+    var element = createEnabledElement('x-simple');
+    assert.equal(element.parentNode, null, 'parentNode incorrect');
+    assert.equal(element.firstChild, null, 'firstChild incorrect');
+    assert.equal(element.lastChild, null, 'lastChild incorrect');
+    assert.equal(element.nextSibling, null, 'nextSibling incorrect');
+    assert.equal(element.previousSibling, null, 'previousSibling incorrect');
+    assert.equal(element.firstElementChild, null, 'firstElementChild incorrect');
+    assert.equal(element.lastElementChild, null, 'lastElementChild incorrect');
+    assert.equal(element.nextElementSibling, null, 'nextElementSibling incorrect');
+    assert.equal(element.previousElementSibling, null, 'previousElementSibling incorrect');
+  });
+
+  test('node accessors (unmanaged logical tree)', function() {
+    var element = document.createElement('div');
+    var child1 = document.createElement('div');
+    var child2 = document.createElement('div');
+    element.appendChild(child1);
+    element.appendChild(child2);
+    assert.equal(element.parentNode, null, 'parentNode incorrect');
+    assert.equal(element.firstChild, child1, 'firstChild incorrect');
+    assert.equal(element.lastChild, child2, 'lastChild incorrect');
+    assert.equal(element.nextSibling, null, 'nextSibling incorrect');
+    assert.equal(element.previousSibling, null, 'previousSibling incorrect');
+    assert.equal(element.firstElementChild, child1, 'firstElementChild incorrect');
+    assert.equal(element.lastElementChild, child2, 'lastElementChild incorrect');
+    assert.equal(element.nextElementSibling, null, 'nextElementSibling incorrect');
+    assert.equal(element.previousElementSibling, null, 'previousElementSibling incorrect');
+  });
+
+  test('template accessors (innerHTML)', function() {
+    var template = document.createElement('template');
+    template.innerHTML = '<div></div>';
+    assert.notOk(template.firstChild);
+    assert.ok(template.content.firstChild);
+    assert.equal(template.innerHTML, '<div></div>');
+  });
+
+  const SVG_NAMESPACE = 'http://www.w3.org/2000/svg';
+
+  test('svg innerHTML', function() {
+    if (!('innerHTML' in SVGSVGElement.prototype)) {
+      this.skip();
+    }
+    const svg = ShadyDOM.patch(document.createElementNS(SVG_NAMESPACE, 'svg'));
+    svg.innerHTML = '<circle cx="50" cy="50" r="40" stroke="black" stroke-width="3" fill="red" />';
+    const circle = svg.querySelector('circle');
+    assert.isTrue(circle instanceof SVGCircleElement, `Expected ${circle} to be a circle, but was "${typeof circle}" instead`);
+  });
+
+  test('textContent', function() {
+    var testElement = createEnabledElement('x-project');
+    testElement.textContent = 'Hello World';
+    assert.equal(testElement.textContent, 'Hello World', 'textContent getter incorrect');
+    document.body.appendChild(testElement);
+    ShadyDOM.flush();
+    assert.equal(ShadyDOM.nativeTree.childNodes(testElement)[1].textContent, 'Hello World', 'text content setter incorrect');
+    testElement = createEnabledElement('x-commented');
+    assert.equal(testElement.shadowRoot.textContent, '[]', 'text content getter with comment incorrect');
+
+    var textNode = document.createTextNode('foo');
+    assert.equal(textNode.textContent, 'foo', 'text content getter on textnode incorrect');
+    textNode.textContent = 'bar';
+    assert.equal(textNode.textContent, 'bar', 'text content setter on textnode incorrect');
+
+    var commentNode = document.createComment('foo');
+    assert.equal(commentNode.textContent, 'foo', 'text content getter on commentnode incorrect');
+    commentNode.textContent = 'bar';
+    assert.equal(commentNode.textContent, 'bar', 'text content setter on commentnode incorrect');
+  });
+
+  test('setting textContent to an empty string removes existing content', function() {
+    var fragment = document.createDocumentFragment();
+    var d = document.createElement('div');
+    fragment.appendChild(d);
+    ShadyDOM.flush();
+    assert.equal(ShadyDOM.nativeTree.childNodes(fragment).length, 1, 'documentFragment.appendChild is incorrect');
+    fragment.textContent = "";
+    ShadyDOM.flush();
+    assert.equal(ShadyDOM.nativeTree.childNodes(fragment).length, 0, 'textContent setter on document fragment is incorrect');
+  });
+
+  test('setting textContent to null should set it to the empty string', function() {
+    var testElement = createEnabledElement('x-project');
+    testElement.textContent = null;
+    ShadyDOM.flush();
+    assert.equal(testElement.textContent, '', 'text content should be set to empty string in case of setting it to null');
+  });
+
+  test('setting textContent to undefined should set it to the empty string', function() {
+    var testElement = createEnabledElement('x-project');
+    testElement.textContent = undefined;
+    ShadyDOM.flush();
+    assert.equal(testElement.textContent, '', 'text content should be set to empty string in case of setting it to undefined');
+  });
+
+  test('textContent on document fragment', function() {
+    var documentFragment = document.createDocumentFragment();
+    var b = document.createElement('b')
+    b.innerText = 'Hello'
+    documentFragment.appendChild(b);
+    var i = document.createElement('i')
+    i.innerText = 'World'
+    documentFragment.appendChild(i);
+
+    assert.equal(documentFragment.textContent, 'HelloWorld', 'textContent getter on document fragment incorrect');
+
+    documentFragment.textContent = 'HelloWorld';
+    assert.equal(documentFragment.childNodes.length, 1, 'textContent setter on document fragment incorrect');
+    assert.equal(documentFragment.textContent, 'HelloWorld', 'textContent setter on document fragment incorrect');
+
+    documentFragment.textContent = '';
+    assert.equal(documentFragment.childNodes.length, 0, 'textContent setter on document fragment incorrect');
+    assert.equal(documentFragment.textContent, '', 'textContent setter on document fragment incorrect');
+  });
+
+  test('innerHTML', function() {
+    var testElement = createEnabledElement('x-project');
+    testElement.innerHTML = '<div>Hello World</div><div>2</div><div>3</div>';
+    var added = testElement.firstChild;
+    assert.equal(added.textContent , 'Hello World', 'innerHTML setter incorrect');
+    assert.equal(testElement.innerHTML , '<div>Hello World</div><div>2</div><div>3</div>', 'innerHTML getter incorrect');
+    document.body.appendChild(testElement);
+    ShadyDOM.flush();
+    var children = ShadyDOM.nativeTree.childNodes(testElement);
+    assert.equal(children[1], added, 'innerHTML setter composed incorrectly');
+    assert.equal(children[2].textContent, '2', 'innerHTML setter composed incorrectly');
+    assert.equal(children[3].textContent, '3', 'innerHTML setter composed incorrectly');
+  });
+
+  test('innerHTML (non-composed)', function() {
+    var testElement = document.createElement('div');
+    document.body.appendChild(testElement);
+    testElement.innerHTML = '<div>Hello World</div><div>2</div><div>3</div>';
+    var added = testElement.firstChild;
+    assert.equal(added.textContent , 'Hello World', 'innerHTML setter incorrect');
+    assert.equal(testElement.innerHTML , '<div>Hello World</div><div>2</div><div>3</div>', 'innerHTML getter incorrect');
+    assert.equal(testElement.children.length, 3);
+  });
+
+  test('innerHTML on table elements', function() {
+    var element = document.createElement('table');
+    element.innerHTML = '<tbody></tbody>';
+    var tb = element.childNodes[0];
+    assert.equal(tb.localName, 'tbody');
+    tb.innerHTML = '<tr></tr>';
+    var tr = tb.childNodes[0];
+    assert.equal(tr.localName, 'tr');
+    tr.innerHTML = '<td></td>';
+    var td = tr.childNodes[0];
+    assert.equal(td.localName, 'td');
+  });
+
+  test('innerHTML on template element', function() {
+    var element = document.createElement('template');
+    element.innerHTML = '<div>A</div><div>B</div>';
+    assert.equal(element.childNodes.length, 0);
+    assert.equal(element.content.childNodes.length, 2);
+  });
+
+});
+
+suite('non-distributed elements', function() {
+
+  var nd;
+
+  suiteSetup(function() {
+    nd = document.querySelector('#noDistribute');
+  });
+
+  test('finds undistributed child', function() {
+    assert.ok(nd.children.length, 2, 'light children includes distributed and non-distributed nodes');
+  });
+
+  test('removes/adds undistributed child', function() {
+    var b = nd.children[0];
+    assert.equal(allInsertionPoints(b).length, 0, 'element improperly distributed');
+    nd.removeChild(b);
+    ShadyDOM.flush();
+    assert.equal(nd.children.length, 1, 'children length not decremented due to element removal');
+    nd.appendChild(b);
+    ShadyDOM.flush();
+    assert.equal(nd.children.length, 2, 'children length not incremented due to element addition');
+    var d = document.createElement('div');
+    d.innerHTML = 'added';
+    nd.insertBefore(d, b);
+    ShadyDOM.flush();
+    assert.equal(nd.children.length, 3, 'children length not incremented due to element addition');
+    nd.removeChild(d);
+    ShadyDOM.flush();
+    assert.equal(nd.children.length, 2, 'children length not decremented due to element removal');
+  });
+
+  test('removes/adds between light and local dom', function() {
+    var b = nd.children[1];
+    assert.equal(allInsertionPoints(b).length, 0, 'element improperly distributed');
+    nd.shadowRoot.appendChild(b);
+    ShadyDOM.flush();
+    assert.equal(nd.children.length, 1, 'children length not decremented due to element removal');
+    assert.equal(nd.shadowRoot.children.length, 2, 'root children length not incremented due to element addition');
+    nd.appendChild(b);
+    ShadyDOM.flush();
+    assert.equal(nd.children.length, 2, 'children length not incremented due to element addition');
+    assert.equal(nd.shadowRoot.children.length, 1, 'root children length not decremented due to element removal');
+  });
+
+  test('correctly distributes changes to light dom', function() {
+    function testNoAttr() {
+      assert.equal(allInsertionPoints(child)[0], d.shadowRoot.querySelector('#notTestContent'), 'child not distributed logically');
+    }
+    function testWithAttr() {
+      assert.equal(allInsertionPoints(child)[0], d.shadowRoot.querySelector('#testContent'), 'child not distributed logically');
+    }
+    // test with x-distribute
+    var d = document.createElement('x-distribute');
+    document.body.appendChild(d);
+    var child = document.createElement('div');
+    child.classList.add('child');
+    child.textContent = 'Child';
+    d.appendChild(child);
+    ShadyDOM.flush();
+    assert.equal(d.children[0], child, 'child not added to logical dom');
+    testNoAttr();
+    // set / unset `test` attr and see if it distributes properly
+    child.setAttribute('slot', 'test');
+    ShadyDOM.flush();
+    testWithAttr();
+    //
+    child.removeAttribute('slot');
+    ShadyDOM.flush();
+    testNoAttr();
+    //
+    child.setAttribute('slot', 'test');
+    ShadyDOM.flush();
+    testWithAttr();
+  });
+
+  test('getRootNode', function() {
+    var test = document.createElement('div');
+    var c1 = createEnabledElement('x-compose');
+    var c2 = createEnabledElement('x-compose');
+    c1.shadowRoot.querySelector('#project').appendChild(test);
+    ShadyDOM.flush();
+    assert.equal(test.getRootNode(), c1.shadowRoot, 'getOwnerRoot incorrect for child added to element in root');
+    c2.shadowRoot.querySelector('#project').appendChild(test);
+    ShadyDOM.flush();
+    assert.equal(test.getRootNode(), c2.shadowRoot, 'getOwnerRoot not correctly reset when element moved to different root');
+    c1.appendChild(test);
+    assert.equal(test.getRootNode(), c1, 'getOwnerRoot incorrect for child moved from a root to no root');
+  });
+
+  test('getRootNode into/out of shadowRoot', function() {
+    var test = document.createElement('div');
+    var c1 = createEnabledElement('x-compose');
+    c1.shadowRoot.querySelector('#project').appendChild(test);
+    ShadyDOM.flush();
+    assert.equal(test.getRootNode(), c1.shadowRoot, 'getOwnerRoot incorrect for child added to element in root');
+    document.body.appendChild(test);
+    ShadyDOM.flush();
+    assert.equal(test.getRootNode(), document, 'getOwnerRoot not correctly reset when element moved to different root');
+    c1.appendChild(test);
+    ShadyDOM.flush();
+    assert.equal(test.getRootNode(), c1, 'getOwnerRoot incorrect for child moved from a root to no root');
+  });
+
+
+  test('getRootNode when out of tree', function() {
+    var test = document.createElement('div');
+    assert.equal(test.getRootNode(), test, 'getOwnerRoot incorrect when not in root');
+    var c1 = createEnabledElement('x-compose');
+    var project = c1.shadowRoot.querySelector('#project');
+    project.appendChild(test);
+    ShadyDOM.flush();
+    assert.equal(test.getRootNode(), c1.shadowRoot, 'getOwnerRoot incorrect for child added to element in root');
+    project.removeChild(test);
+    ShadyDOM.flush();
+    assert.equal(test.getRootNode(), test, 'getOwnerRoot incorrect for child moved from a root to no root');
+    project.appendChild(test);
+    ShadyDOM.flush();
+    assert.equal(test.getRootNode(), c1.shadowRoot, 'getOwnerRoot incorrect for child added to element in root');
+  });
+
+  test('getRootNode when out of tree and adding subtree', function() {
+    var container = document.createDocumentFragment();
+    var test = document.createElement('div');
+    container.appendChild(test);
+    assert.equal(test.getRootNode(), container, 'getOwnerRoot incorrect when not in root');
+    var c1 = createEnabledElement('x-compose');
+    var project = c1.shadowRoot.querySelector('#project');
+    project.appendChild(container);
+    ShadyDOM.flush();
+    assert.equal(test.getRootNode(), c1.shadowRoot, 'getOwnerRoot incorrect for child added to element in root');
+    project.removeChild(test);
+    ShadyDOM.flush();
+    assert.equal(test.getRootNode(), test, 'getOwnerRoot incorrect for child moved from a root to no root');
+    project.appendChild(test);
+    ShadyDOM.flush();
+    assert.equal(test.getRootNode(), c1.shadowRoot, 'getOwnerRoot incorrect for child added to element in root');
+  });
+
+  test('getRootNode, subtree', function() {
+    var test = document.createElement('div');
+    var testChild = document.createElement('div');
+    test.appendChild(testChild);
+    assert.equal(test.getRootNode(), test, 'getOwnerRoot incorrect when not in root');
+    var c1 = createEnabledElement('x-compose');
+    var project = c1.shadowRoot.querySelector('#project');
+    project.appendChild(test);
+    ShadyDOM.flush();
+    assert.equal(test.getRootNode(), c1.shadowRoot, 'getOwnerRoot incorrect for child added to element in root');
+    assert.equal(testChild.getRootNode(), c1.shadowRoot, 'getOwnerRoot incorrect for sub-child added to element in root');
+    project.removeChild(test);
+    ShadyDOM.flush();
+    assert.equal(test.getRootNode(), test, 'getOwnerRoot incorrect for child moved from a root to no root');
+    assert.equal(testChild.getRootNode(), test, 'getOwnerRoot incorrect for sub-child moved from a root to no root');
+    project.appendChild(test);
+    ShadyDOM.flush();
+    assert.equal(test.getRootNode(), c1.shadowRoot, 'getOwnerRoot incorrect for child added to element in root');
+    assert.equal(testChild.getRootNode(), c1.shadowRoot, 'getOwnerRoot incorrect for sub-child added to element in root');
+  });
+
+  test('getRootNode (paper-ripple use case)', function() {
+    var test = document.createElement('div');
+    // child
+    var d = document.createElement('div');
+    test.appendChild(d);
+    var c1 = createEnabledElement('x-compose');
+    var c2 = createEnabledElement('x-compose');
+    c1.shadowRoot.querySelector('#project').appendChild(test);
+    ShadyDOM.flush();
+    assert.equal(test.getRootNode(), c1.shadowRoot, 'getOwnerRoot incorrect for child added to element in root');
+    c2.shadowRoot.querySelector('#project').appendChild(test);
+    ShadyDOM.flush();
+    assert.equal(test.getRootNode(), c2.shadowRoot, 'getOwnerRoot not correctly reset when element moved to different root');
+    c1.appendChild(test);
+    assert.equal(test.getRootNode(), c1, 'getOwnerRoot incorrect for child moved from a root to no root');
+  });
+
+  test('assignedNodes while distributing', function() {
+    var testElement = createEnabledElement('x-project');
+    var d = document.createElement('div');
+    testElement.appendChild(d);
+    var slot = testElement.shadowRoot.querySelector('slot');
+    assert.deepEqual(slot.assignedNodes({flatten: true}), [d]);
+  });
+
+  test('insertion points on non-distributable element', function() {
+    var d = document.createElement('div');
+    assert.equal(allInsertionPoints(d).length, 0);
+    assert.equal(allInsertionPoints(document).length, 0);
+  });
+
+});
+
+suite('renders roots', function() {
+  var el, p, c;
+
+  setup(function() {
+    el = document.createElement('x-rereproject');
+    document.body.appendChild(el);
+    ShadyDOM.flush();
+    sinon.spy(el.shadowRoot, '_renderRoot');
+    p = el.shadowRoot.querySelector('x-reproject');
+    sinon.spy(p.shadowRoot, '_renderRoot');
+    c = p.shadowRoot.querySelector('x-project');
+    sinon.spy(c.shadowRoot, '_renderRoot');
+  });
+
+  teardown(function() {
+    document.body.removeChild(el);
+  });
+
+  test('renders all roots that are dirtied via distribution', function() {
+    el.appendChild(document.createElement('div'));
+    ShadyDOM.flush();
+    assert.equal(el.shadowRoot._renderRoot.callCount, 1);
+    assert.equal(p.shadowRoot._renderRoot.callCount, 1);
+    assert.equal(c.shadowRoot._renderRoot.callCount, 1);
+  });
+
+  test('renders only roots that are dirty', function() {
+    c.appendChild(document.createElement('div'));
+    ShadyDOM.flush();
+    assert.equal(el.shadowRoot._renderRoot.callCount, 0);
+    assert.equal(p.shadowRoot._renderRoot.callCount, 0);
+    assert.equal(c.shadowRoot._renderRoot.callCount, 1);
+    p.appendChild(document.createElement('div'));
+    ShadyDOM.flush();
+    assert.equal(el.shadowRoot._renderRoot.callCount, 0);
+    assert.equal(p.shadowRoot._renderRoot.callCount, 1);
+    assert.equal(c.shadowRoot._renderRoot.callCount, 2);
+    el.appendChild(document.createElement('div'));
+    ShadyDOM.flush();
+    assert.equal(el.shadowRoot._renderRoot.callCount, 1);
+    assert.equal(p.shadowRoot._renderRoot.callCount, 2);
+    assert.equal(c.shadowRoot._renderRoot.callCount, 3);
+  });
+
+  test('renders oldest dirty root', function() {
+    c.appendChild(document.createElement('div'));
+    p.appendChild(document.createElement('div'));
+    ShadyDOM.flush();
+    assert.equal(el.shadowRoot._renderRoot.callCount, 0);
+    assert.equal(p.shadowRoot._renderRoot.callCount, 1);
+    assert.equal(c.shadowRoot._renderRoot.callCount, 1);
+    el.appendChild(document.createElement('div'));
+    p.appendChild(document.createElement('div'));
+    ShadyDOM.flush();
+    assert.equal(el.shadowRoot._renderRoot.callCount, 1);
+    assert.equal(p.shadowRoot._renderRoot.callCount, 2);
+    assert.equal(c.shadowRoot._renderRoot.callCount, 2);
+  });
+
+
+});
+
+</script>
+
+</body>
+</html>

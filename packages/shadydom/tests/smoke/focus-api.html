@@ -1,0 +1,39 @@
+<!doctype html>
+<!--
+@license
+Copyright (c) 2017 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<html>
+<head>
+  <meta charset="utf-8">
+  <script>
+    ShadyDOM = {force: true};
+  </script>
+  <script src="../../../es6-promise/es6-promise.auto.min.js"></script>
+  <script src="../../shadydom.min.js"></script>
+</head>
+<body>
+  <div id="host"></div>
+  <script>
+    host.tabIndex = 1;
+    host.attachShadow({mode: 'open'});
+    host.shadowRoot.appendChild(document.createElement('input'));
+    host.shadowRoot.firstElementChild.addEventListener('focus', function(e) {
+      console.log('focused '+ performance.now());
+    })
+    console.log('before '+ performance.now());
+    host.shadowRoot.firstElementChild.focus();
+    setTimeout(function(){console.log('timeout ' + performance.now())});
+    requestAnimationFrame(function() {
+      console.log('raf ' + performance.now())
+    });
+    Promise.resolve().then(function() {console.log('promise ' + performance.now());});
+    console.log('after ' + performance.now());
+  </script>
+</body>
+</html>

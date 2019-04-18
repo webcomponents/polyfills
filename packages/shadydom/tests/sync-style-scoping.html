@@ -1,0 +1,235 @@
+<!doctype html>
+<!--
+@license
+Copyright (c) 2018 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="../node_modules/@webcomponents/webcomponents-platform/webcomponents-platform.js"></script>
+  <script src="../node_modules/promise-polyfill/dist/polyfill.js"></script>
+  <script src="../node_modules/@webcomponents/template/template.js"></script>
+  <script>
+    ShadyDOM = { force: true };
+  </script>
+  <script src="../shadydom.min.js"></script>
+  <script src="../node_modules/@webcomponents/custom-elements/custom-elements.min.js"></script>
+  <script src="../node_modules/@webcomponents/shadycss/scoping-shim.min.js"></script>
+  <script src="../node_modules/wct-browser-legacy/browser.js"></script>
+</head>
+<body>
+  <template id="api-element">
+    <style>
+    </style>
+    <div id="internal"></div>
+    <slot></slot>
+  </template>
+  <template id="complicated">
+    <div></div>
+    <span></span>
+    <a>
+      <complicated>
+        <structure>
+          <of>
+            <img>
+            With
+            <img>
+            Some
+            <img>
+            Text
+          </of>
+        </structure>
+      </complicated>
+    </a>
+    <api-element></api-element>
+  </template>
+  <div id="arena"></div>
+  <script>
+    class Base extends HTMLElement {
+      constructor() {
+        super();
+        this.__template = document.querySelector(`template#${this.localName}`);
+      }
+      connectedCallback() {
+        if (this.__template) {
+          if (!this.__template.__prepared) {
+            window.ShadyCSS.prepareTemplate(this.__template, this.localName);
+            this.__template.__prepared = true;
+          }
+          window.ShadyCSS.styleElement(this);
+          if (!this.shadowRoot) {
+            this.attachShadow({mode: 'open'});
+            this.shadowRoot.appendChild(this.__template.content.cloneNode(true));
+          }
+        }
+      }
+    }
+
+    customElements.define('api-element', class extends Base {});
+    customElements.define('naive-element', class extends HTMLElement {
+      constructor() {
+        super();
+        this.attachShadow({mode: 'open'});
+      }
+    });
+
+    suite('Synchronous Scoping', function() {
+      let scopeSpy, unscopeSpy;
+
+      // returns the "current" scope of the node
+      const csfn = (node) => {
+        return window.ShadyCSS.ScopingShim.currentScopeForNode(node);
+      };
+
+      const arena = document.querySelector('#arena');
+
+
+      // set up spies on scoping APIs
+      const createSpies = () => {
+        scopeSpy = sinon.spy(window.ShadyCSS.ScopingShim, 'scopeNode');
+        unscopeSpy = sinon.spy(window.ShadyCSS.ScopingShim, 'unscopeNode');
+      };
+
+      teardown(function() {
+        // reset spies
+        if (scopeSpy) {
+          scopeSpy.restore();
+          scopeSpy = null;
+        }
+        if (unscopeSpy) {
+          unscopeSpy.restore();
+          unscopeSpy = null;
+        }
+        arena.innerHTML = '';
+      });
+
+      suite('append', function() {
+        test('elements appended to the document are unscoped', function() {
+          const el = document.createElement('div');
+          arena.appendChild(el);
+          assert.equal(csfn(el), '');
+        });
+
+        test('elements appended to a shadowRoot are scoped to that shadowroot', function () {
+          const el = document.createElement('api-element');
+          arena.appendChild(el);
+          const newDiv = document.createElement('div');
+          el.shadowRoot.appendChild(newDiv);
+          ShadyDOM.flush();
+          assert.equal(csfn(newDiv), 'api-element');
+        });
+
+        test('elements moved from a shadowroot to document are unscoped', function() {
+          const el = document.createElement('api-element');
+          arena.appendChild(el);
+          const inner = el.shadowRoot.querySelector('#internal');
+          arena.appendChild(inner);
+          assert.equal(csfn(inner), '');
+        });
+
+        test('elements moving document to document do not do unnecessary work', function() {
+          const owner1 = document.createElement('div');
+          const inner = document.createElement('a');
+          owner1.appendChild(inner);
+          const owner2 = document.createElement('span');
+          arena.appendChild(owner1);
+          arena.appendChild(owner2);
+          createSpies();
+          owner2.appendChild(inner);
+          assert(scopeSpy.notCalled, 'scoping function should not have been called');
+          assert(unscopeSpy.notCalled, 'unscoping function should not have been called');
+        });
+
+        test('appending to a deep shadowroot gets the right scope', function () {
+          const el = document.createElement('naive-element');
+          arena.appendChild(el);
+          const api = document.createElement('api-element');
+          el.shadowRoot.appendChild(api);
+          assert.equal(csfn(api), 'naive-element');
+          const div = document.createElement('div');
+          api.shadowRoot.appendChild(div);
+          assert.equal(csfn(div), 'api-element');
+        });
+
+        test('moving between two shadowroots of the same type does not call scoping functions', function() {
+          const owner1 = document.createElement('naive-element');
+          const owner2 = document.createElement('naive-element');
+          const el = document.createElement('div');
+          arena.appendChild(owner1);
+          arena.appendChild(owner2);
+          owner1.shadowRoot.appendChild(el);
+          assert.equal(csfn(el), 'naive-element');
+          createSpies();
+          owner2.shadowRoot.appendChild(el);
+          assert.equal(csfn(el), 'naive-element');
+          assert(unscopeSpy.notCalled, 'unscopeNode should not have been called');
+          assert(scopeSpy.notCalled, 'scopeNode should not have been called');
+        });
+
+        test('ShadyCSS prepareTemplate is not needed for bulk append', function() {
+          const el = document.createElement('naive-element');
+          arena.appendChild(el);
+          const template = document.querySelector('template#complicated');
+          el.shadowRoot.appendChild(template.content.cloneNode(true));
+          const nodes = el.shadowRoot.querySelectorAll('*');
+          for (const node of nodes) {
+            assert.equal(csfn(node), 'naive-element');
+          }
+        });
+
+        test('appending to a document fragment does not scope', function() {
+          const df = document.createDocumentFragment();
+          const api = document.createElement('api-element');
+          df.appendChild(api);
+          assert.equal(csfn(api), '');
+        });
+
+        test('appending a distributed node has the correct scope', function() {
+          const span = document.createElement('span');
+          const el = document.createElement('api-element');
+          arena.appendChild(el);
+          el.appendChild(span);
+          ShadyDOM.flush();
+          assert.equal(csfn(span), '');
+          const naive = document.createElement('naive-element');
+          arena.appendChild(naive);
+          naive.shadowRoot.appendChild(el);
+          ShadyDOM.flush();
+          assert.equal(csfn(span), 'naive-element');
+        });
+
+        test('appending a node to a disconnected light dom tree does not scope', function () {
+          const el = document.createElement('div');
+          const child = document.createElement('span');
+          el.appendChild(child);
+          assert.equal(csfn(child), '');
+        })
+      });
+
+      suite('remove', function() {
+        test('removing a shadowed node removes the scope', function() {
+          const el = document.createElement('api-element');
+          arena.appendChild(el);
+          const inner = el.shadowRoot.querySelector('#internal');
+          el.shadowRoot.removeChild(inner);
+          assert.equal(csfn(inner), '');
+        });
+
+        test('removing document scope node does not use scoping API', function() {
+          const el = document.createElement('div');
+          arena.appendChild(el);
+          createSpies();
+          arena.removeChild(el);
+          assert(scopeSpy.notCalled, 'scopeNode should not be called');
+          assert(unscopeSpy.notCalled, 'unscopeNode should not be called');
+        });
+      })
+    });
+  </script>
+</body>
+</html>

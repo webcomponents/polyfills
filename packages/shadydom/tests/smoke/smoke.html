@@ -1,0 +1,51 @@
+<!doctype html>
+<!--
+@license
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<html>
+<head>
+  <meta charset="utf-8">
+  <script>
+    ShadyDOM = {force: true};
+  </script>
+  <script src="../../shadydom.min.js"></script>
+</head>
+<body>
+
+<div id="simple"><div>simple</div></div>
+
+<hr>
+<div id="dist">
+  distribution content
+</div>
+
+<hr>
+
+<script>
+  simple.attachShadow({mode: 'open'});
+  var d = document.createElement('div');
+  d.textContent = 'shadowRoot!';
+  simple.shadowRoot.appendChild(d);
+
+  dist.attachShadow({mode: 'open'});
+  //dist.shadowRoot.appendChild(document.createElement('slot'));
+  dist.shadowRoot.innerHTML = 'before<slot></slot>';
+
+  var host = document.createElement('div');
+  host.id = 'host';
+  host.attachShadow({mode: 'open'});
+  // Populate the initial pool of light DOM children.
+  host.innerHTML = 'abc';
+  document.body.appendChild(host);
+  host.shadowRoot.innerHTML = '<slot>fallback</slot>';
+  ShadyDOM.flush();
+</script>
+
+</body>
+</html>
