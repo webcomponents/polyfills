@@ -8,7 +8,12 @@
     "local": {
       "browserOptions": {
         "chrome": [
+          "headless",
+          "disable-gpu",
           "no-sandbox"
+        ],
+        "firefox": [
+          "-headless"
         ]
       }
     }

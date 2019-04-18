@@ -17,14 +17,14 @@
   },
   "scripts": {
     "build": "gulp",
-    "test": "npm run lint && wct",
+    "test": "wct",
     "lint": "eslint template.js tests/**/*.html",
     "prepack": "npm run build"
   },
   "homepage": "http://webcomponents.org",
   "devDependencies": {
-    "wct-browser-legacy": "^1.0.1",
-    "web-component-tester": "^6.7.1"
+    "wct-browser-legacy": "^1.0.2",
+    "web-component-tester": "^6.9.2"
   },
   "publishConfig": {
     "access": "public"

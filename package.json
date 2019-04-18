@@ -8,6 +8,7 @@
     "bootstrap": "lerna bootstrap --ci",
     "build": "lerna run build --stream",
     "lint": "lerna run lint --stream",
+    "test": "lerna run test --stream",
     "nuke": "rm -rf package-lock.json node_modules && npm install && lerna exec \"rm -f package-lock.json\" && lerna clean --yes && lerna bootstrap && lerna exec --stream -- \"test -f package-lock.json || npm install --package-lock-only\""
   },
   "devDependencies": {
