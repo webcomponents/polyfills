@@ -14,5 +14,5 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
  * Used in: Firefox when CE is implemented
  */
 
-import '../node_modules/@webcomponents/shadydom/src/shadydom.js';
-import '../node_modules/@webcomponents/shadycss/entrypoints/scoping-shim.js';
+import '../../node_modules/@webcomponents/shadydom/src/shadydom.js';
+import '../../node_modules/@webcomponents/shadycss/entrypoints/scoping-shim.js';

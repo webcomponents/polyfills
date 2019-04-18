@@ -9,7 +9,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 */
 
 // import polyfill for Symbol and Object.getOwnPropertySymbols
-import '../node_modules/get-own-property-symbols/build/get-own-property-symbols.max.js';
+import '../../node_modules/get-own-property-symbols/build/get-own-property-symbols.max.js';
 
 // Fix issue in toString patch when compiled into strict mode via closure
 // https://github.com/es-shims/get-own-property-symbols/issues/16

@@ -8,7 +8,7 @@ Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 */
 
-import PromisePolyfill from '../node_modules/promise-polyfill/src/index.js';
+import PromisePolyfill from '../../node_modules/promise-polyfill/src/index.js';
 
 /*
 Assign the ES6 promise polyfill to window ourselves instead of using the "auto" polyfill

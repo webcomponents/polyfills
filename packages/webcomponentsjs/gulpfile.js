@@ -19,7 +19,6 @@ const sourcesContent = require('@gulp-sourcemaps/sources-content');
 const rename = require('gulp-rename');
 const rollup = require('gulp-rollup');
 const del = require('del');
-const runseq = require('run-sequence');
 const closure = require('google-closure-compiler').gulp();
 const babel = require('rollup-plugin-babel');
 const commonjs = require('rollup-plugin-commonjs');
@@ -32,7 +31,7 @@ function debugify(sourceName, fileName, extraRollupOptions) {
     fileName = sourceName;
   }
 
-  const entry = `./entrypoints/${sourceName}-index.js`;
+  const entry = `./src/entrypoints/${sourceName}-index.js`;
 
   const options = {
     input: entry,
@@ -71,7 +70,7 @@ function closurify(sourceName, fileName) {
     warning_level: 'VERBOSE',
     rewrite_polyfills: false,
     module_resolution: 'NODE',
-    entry_point: `entrypoints/${sourceName}-index.js`,
+    entry_point: `src/entrypoints/${sourceName}-index.js`,
     dependency_mode: 'STRICT',
     process_common_js_modules: true,
     externs: [
@@ -83,8 +82,7 @@ function closurify(sourceName, fileName) {
   };
 
   return gulp.src([
-      'entrypoints/*.js',
-      'src/*.js',
+      'src/**/*.js',
       'node_modules/get-own-property-symbols/build/get-own-property-symbols.max.js',
       'node_modules/promise-polyfill/src/**/*.js',
       'node_modules/@webcomponents/**/*.js',
@@ -170,8 +168,6 @@ gulp.task('debugify-ce-es5-adapter', () => {
   return debugify('custom-elements-es5-adapter', 'custom-elements-es5-adapter', rollupOptions);
 });
 
-gulp.task('default', ['closure']);
-
 gulp.task('clean', () => {
   return del([
     'custom-elements-es5-adapter.js{,.map}',
@@ -180,29 +176,25 @@ gulp.task('clean', () => {
   ]);
 });
 
-gulp.task('debug', (cb) => {
-  const tasks = [
-    'debugify-ce',
-    'debugify-sd',
-    'debugify-sd-ce',
-    'debugify-sd-ce-pf',
-    'debugify-bundle',
-    'debugify-ce-es5-adapter'
-  ];
-  runseq('clean', tasks, cb);
-});
+gulp.task('debug', gulp.series([
+  'debugify-ce',
+  'debugify-sd',
+  'debugify-sd-ce',
+  'debugify-sd-ce-pf',
+  'debugify-bundle',
+  'debugify-ce-es5-adapter'
+]));
 
-gulp.task('closure', (cb) => {
-  const tasks = [
-    'closurify-ce',
-    'closurify-sd',
-    'closurify-sd-ce',
-    'closurify-sd-ce-pf',
-    'closurify-bundle',
-    'debugify-ce-es5-adapter'
-  ];
-  runseq('clean', ...tasks, cb);
-});
+gulp.task('closure', gulp.series([
+  'closurify-ce',
+  'closurify-sd',
+  'closurify-sd-ce',
+  'closurify-sd-ce-pf',
+  'closurify-bundle',
+  'debugify-ce-es5-adapter'
+]));
+
+gulp.task('default', gulp.series('closure'));
 
 process.on('unhandledRejection', (err) => {
   console.error('Unhandled Promise Rejection:', err);
