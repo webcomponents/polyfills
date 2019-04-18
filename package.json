@@ -1,0 +1,14 @@
+{
+    "name": "webcomponents-polyfills",
+    "private": true,
+    "description": "Webcomponents polyfills monorepo",
+    "author": "The Polymer Authors",
+    "license": "BSD-3-Clause",
+    "scripts": {
+        "bootstrap": "lerna bootstrap --ci",
+        "build": "lerna run build --stream"
+    },
+    "devDependencies": {
+        "lerna": "^3.13.3"
+    }
+}
