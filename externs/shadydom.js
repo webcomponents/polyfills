@@ -4,12 +4,6 @@
  */
 
 /**
- * Upstream to closure-compiler
- * @type {string}
- */
-Element.prototype.slot;
-
-/**
  * Block renaming of properties added to Node to
  * prevent conflicts with other closure-compiler code.
  * @type {Object}
