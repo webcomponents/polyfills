@@ -28,6 +28,7 @@ const supportsEventOptions = (() => {
   let eventOptions = {
     get capture() {
       supported = true;
+      return false;
     }
   }
   const listener = () => {}

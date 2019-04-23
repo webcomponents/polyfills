@@ -89,6 +89,7 @@ class Wrapper {
       const e = this.node[utils.SHADY_PREFIX + 'activeElement'];
       return e;
     }
+    return undefined;
   }
 
   /**
@@ -145,6 +146,7 @@ class Wrapper {
     if (utils.isShadyRoot(this.node)) {
       return /** @type {!ShadowRoot} */(this.node).host;
     }
+    return undefined;
   }
 
   get parentNode() {

@@ -16,10 +16,12 @@ settings.hasNativeShadowDOM = Boolean(Element.prototype.attachShadow && Node.pro
 
 const desc = Object.getOwnPropertyDescriptor(Node.prototype, 'firstChild');
 
+/* eslint-disable */
 settings.hasDescriptors = Boolean(desc && desc.configurable && desc.get);
 settings.inUse = settings['force'] || !settings.hasNativeShadowDOM;
 settings.noPatch = settings['noPatch'] || false;
 settings.preferPerformance = settings['preferPerformance'];
+/* eslint-enable */
 
 const IS_IE = navigator.userAgent.match('Trident');
 settings.IS_IE = IS_IE;
