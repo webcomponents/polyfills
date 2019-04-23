@@ -13,7 +13,7 @@
   'use strict';
 
   var needsTemplate = (typeof HTMLTemplateElement === 'undefined');
-  var brokenDocFragment = !(document.createDocumentFragment().cloneNode(false) instanceof DocumentFragment);
+  var brokenDocFragment = !(document.createDocumentFragment().cloneNode() instanceof DocumentFragment);
   var needsDocFrag = false;
 
   // NOTE: Replace DocumentFragment to work around IE11 bug that
@@ -36,13 +36,7 @@
 
       // IE's DocumentFragment querySelector code doesn't work when
       // called on an element instance
-      /**
-       * @override
-       */
       DocumentFragment.prototype.querySelectorAll = HTMLElement.prototype.querySelectorAll;
-      /**
-       * @override
-       */
       DocumentFragment.prototype.querySelector = HTMLElement.prototype.querySelector;
 
       Object.defineProperties(DocumentFragment.prototype, {
@@ -69,12 +63,6 @@
       });
 
       var origInsertBefore = Node.prototype.insertBefore;
-      /**
-       * @this {Node}
-       * @param {Node} newNode
-       * @param {Node} refNode
-       * @return {!Node}
-       */
       function insertBefore(newNode, refNode) {
         if (newNode instanceof DocumentFragment) {
           var child;
@@ -84,7 +72,7 @@
         } else {
           origInsertBefore.call(this, newNode, refNode);
         }
-        return /** @type {!Node} */(newNode);
+        return newNode;
       }
       Node.prototype.insertBefore = insertBefore;
 
@@ -95,7 +83,7 @@
         } else {
           origAppendChild.call(this, child);
         }
-        return /** @type {!Node} */(child);
+        return child;
       };
 
       var origRemoveChild = Node.prototype.removeChild;
@@ -107,14 +95,13 @@
         } else {
           origReplaceChild.call(this, newChild, oldChild);
         }
-        return /** @type {!Node} */(oldChild);
+        return oldChild;
       };
 
-      /** @suppress {invalidCasts} */
       Document.prototype.createDocumentFragment = function createDocumentFragment() {
         var frag = this.createElement('df');
         frag.__proto__ = DocumentFragment.prototype;
-        return /** @type {!DocumentFragment}*/(frag);
+        return frag;
       };
 
       var origImportNode = Document.prototype.importNode;
@@ -150,15 +137,12 @@
     },
     /**
      * @this {!HTMLElement}
-     * @param {string} text
+     * @param {string}
      */
     set: function(text) {
       this.innerHTML = text;
     }
   };
-  /**
-   * @return {!NodeList<!Element>}
-   */
   var capturedChildNodes = Object.getOwnPropertyDescriptor(window.Node.prototype, 'childNodes') || {
     /**
      * @this {!Node}
@@ -175,11 +159,6 @@
 
   var scriptSelector = 'script:not([type]),script[type="application/javascript"],script[type="text/javascript"]';
 
-  /**
-   * @param {!Node|!Document|!DocumentFragment} node
-   * @param {!string} selector
-   * @return {!NodeList<!Element>|!Array<!Element>}
-   */
   function QSA(node, selector) {
     // IE 11 throws a SyntaxError with `scriptSelector` if the node has no children due to the `:not([type])` syntax
     if (!node.childNodes.length) {
@@ -187,55 +166,31 @@
     }
     switch (node.nodeType) {
       case Node.DOCUMENT_NODE:
-        return docQuerySelectorAll.call(/** @type {!Document} */(node), selector);
+        return docQuerySelectorAll.call(node, selector);
       case Node.DOCUMENT_FRAGMENT_NODE:
-        return fragQuerySelectorAll.call(/** @type {!DocumentFragment} */(node), selector);
+        return fragQuerySelectorAll.call(node, selector);
       default:
-        return elementQuerySelectorAll.call(/** @type {!Element} */(node), selector);
+        return elementQuerySelectorAll.call(node, selector);
     }
   }
 
   // returns true if nested templates cannot be cloned (they cannot be on
   // some impl's like Safari 8 and Edge)
   // OR if cloning a document fragment does not result in a document fragment
-  var needsCloning = (
-    /**
-     * @return {boolean}
-     */
-    function() {
-      if (!needsTemplate) {
-        var t = /** @type {HTMLTemplateElement} */(document.createElement('template'));
-        var t2 = /** @type {HTMLTemplateElement} */(document.createElement('template'));
-        t2.content.appendChild(document.createElement('div'));
-        t.content.appendChild(t2);
-        var clone = /** @type {HTMLTemplateElement} */(t.cloneNode(true));
-        return (clone.content.childNodes.length === 0 || /** @type {HTMLTemplateElement} */(clone.content.firstChild).content.childNodes.length === 0
-          || brokenDocFragment);
-      }
-      return false;
+  var needsCloning = (function() {
+    if (!needsTemplate) {
+      var t = document.createElement('template');
+      var t2 = document.createElement('template');
+      t2.content.appendChild(document.createElement('div'));
+      t.content.appendChild(t2);
+      var clone = t.cloneNode(true);
+      return (clone.content.childNodes.length === 0 || clone.content.firstChild.content.childNodes.length === 0
+        || brokenDocFragment);
+    }
   })();
 
   var TEMPLATE_TAG = 'template';
-
-  /**
-   * @constructor
-   * @extends {HTMLTemplateElement}
-   */
   var PolyfilledHTMLTemplateElement = function() {};
-
-  /**
-   * @param {!HTMLTemplateElement} template
-   */
-  // eslint-disable-next-line no-unused-vars
-  PolyfilledHTMLTemplateElement.prototype.decorate = function(template) {};
-
-  /**
-   * @param {!Node} template
-   * @param {boolean=} deep
-   * @return {!Node}
-   */
-  // eslint-disable-next-line no-unused-vars
-  PolyfilledHTMLTemplateElement.prototype._cloneNode = function(template, deep) {};
 
   if (needsTemplate) {
 
@@ -260,10 +215,9 @@
       !(document.createElement('div').hasOwnProperty('innerHTML'));
 
     /**
-      * The `decorate` method moves element children to the template's `content`.
-      * NOTE: there is no support for dynamically adding elements to templates.
-      * @param {!HTMLTemplateElement} template
-      */
+      The `decorate` method moves element children to the template's `content`.
+      NOTE: there is no support for dynamically adding elements to templates.
+    */
     PolyfilledHTMLTemplateElement.decorate = function(template) {
       // if the template is decorated or not in HTML namespace, return fast
       if (template.content ||
@@ -281,7 +235,7 @@
       if (canProtoPatch) {
         template.__proto__ = PolyfilledHTMLTemplateElement.prototype;
       } else {
-        template.cloneNode = /** @this {HTMLTemplateElement} */function(deep) {
+        template.cloneNode = function(deep) {
           return PolyfilledHTMLTemplateElement._cloneNode(this, deep);
         };
         // add innerHTML to template, if possible
@@ -300,9 +254,6 @@
     };
 
     // Taken from https://github.com/jquery/jquery/blob/73d7e6259c63ac45f42c6593da8c2796c6ce9281/src/manipulation/wrapMap.js
-    /**
-     * @type {!Object<string, !Array<string>>}
-     */
     var topLevelWrappingMap = {
       'option': ['select'],
       'thead': ['table'],
@@ -312,30 +263,16 @@
       'td': ['tr', 'tbody', 'table']
     };
 
-    /**
-     * @param {string} text
-     * @return {string}
-     */
     var getTagName = function(text) {
       // Taken from https://github.com/jquery/jquery/blob/73d7e6259c63ac45f42c6593da8c2796c6ce9281/src/manipulation/var/rtagName.js
-      return (/** @type {!RegExpResult} */(/<([a-z][^/\0>\x20\t\r\n\f]+)/i.exec(text)) || ['', ''])[1].toLowerCase();
+      return ( /<([a-z][^/\0>\x20\t\r\n\f]+)/i.exec(text) || ['', ''])[1].toLowerCase();
     };
 
-    /**
-     * @param {!Object} obj
-     */
-    var defineInnerHTML = function(obj) {
+    var defineInnerHTML = function defineInnerHTML(obj) {
       Object.defineProperty(obj, 'innerHTML', {
-        /**
-         * @this {Node}
-         */
         get: function() {
           return getInnerHTML(this);
         },
-        /**
-         * @this {HTMLTemplateElement}
-         * @param {string} text
-         */
         set: function(text) {
           // For IE11, wrap the text in the correct (table) context
           var wrap = topLevelWrappingMap[getTagName(text)];
@@ -364,21 +301,11 @@
       });
     };
 
-    /**
-     * @param {!Object} obj
-     */
-    var defineOuterHTML = function(obj) {
+    var defineOuterHTML = function defineOuterHTML(obj) {
       Object.defineProperty(obj, 'outerHTML', {
-        /**
-         * @this {Element}
-         */
         get: function() {
           return '<' + TEMPLATE_TAG + '>' + this.innerHTML + '</' + TEMPLATE_TAG + '>';
         },
-        /**
-         * @this {Node}
-         * @param {string} innerHTML
-         */
         set: function(innerHTML) {
           if (this.parentNode) {
             contentDoc.body.innerHTML = innerHTML;
@@ -399,14 +326,13 @@
     defineOuterHTML(PolyfilledHTMLTemplateElement.prototype);
 
     /**
-     * The `bootstrap` method is called automatically and "fixes" all
-     * <template> elements in the document referenced by the `doc` argument.
-     * @param {!Document|!DocumentFragment|!Element} doc
-     */
+      The `bootstrap` method is called automatically and "fixes" all
+      <template> elements in the document referenced by the `doc` argument.
+    */
     PolyfilledHTMLTemplateElement.bootstrap = function bootstrap(doc) {
-      var templates = /** @type {!Array<!HTMLTemplateElement>|!NodeList<!HTMLTemplateElement>} */(QSA(doc, TEMPLATE_TAG));
-      for (var i=0, l=templates.length; i<l; i++) {
-        PolyfilledHTMLTemplateElement.decorate(templates[i]);
+      var templates = QSA(doc, TEMPLATE_TAG);
+      for (var i=0, l=templates.length, t; (i<l) && (t=templates[i]); i++) {
+        PolyfilledHTMLTemplateElement.decorate(t);
       }
     };
 
@@ -419,28 +345,21 @@
     Document.prototype.createElement = function createElement() {
       var el = capturedCreateElement.apply(this, arguments);
       if (el.localName === 'template') {
-        PolyfilledHTMLTemplateElement.decorate(/** @type {!HTMLTemplateElement} */(el));
+        PolyfilledHTMLTemplateElement.decorate(el);
       }
       return el;
     };
 
     DOMParser.prototype.parseFromString = function() {
-      var el = /** @type {!Document} */(capturedParseFromString.apply(this, arguments));
+      var el = capturedParseFromString.apply(this, arguments);
       PolyfilledHTMLTemplateElement.bootstrap(el);
       return el;
     };
 
     Object.defineProperty(HTMLElement.prototype, 'innerHTML', {
-      /**
-       * @this {HTMLElement}
-       */
       get: function() {
         return getInnerHTML(this);
       },
-      /**
-       * @this {HTMLElement}
-       * @param {string} text
-       */
       set: function(text) {
         capturedHTMLElementInnerHTML.set.call(this, text);
         PolyfilledHTMLTemplateElement.bootstrap(this);
@@ -453,9 +372,6 @@
     var escapeAttrRegExp = /[&\u00A0"]/g;
     var escapeDataRegExp = /[&\u00A0<>]/g;
 
-    /**
-     * @param {string} c
-     */
     var escapeReplace = function(c) {
       switch (c) {
         case '&':
@@ -471,26 +387,14 @@
       }
     };
 
-    /**
-     * @param {string} s
-     * @return {string}
-     */
     var escapeAttr = function(s) {
       return s.replace(escapeAttrRegExp, escapeReplace);
     };
 
-    /**
-     * @param {string} s
-     * @return {string}
-     */
     var escapeData = function(s) {
       return s.replace(escapeDataRegExp, escapeReplace);
     };
 
-    /**
-     * @param {!Array<string>} arr
-     * @return {!Object<string,boolean>}
-     */
     var makeSet = function(arr) {
       var set = {};
       for (var i = 0; i < arr.length; i++) {
@@ -533,8 +437,7 @@
     /**
      * @param {Node} node
      * @param {Node} parentNode
-     * @param {function(!Node):!NodeList<!Element>=} callback
-     * @return {string}
+     * @param {Function=} callback
      */
     var getOuterHTML = function(node, parentNode, callback) {
       switch (node.nodeType) {
@@ -570,15 +473,13 @@
 
     /**
      * @param {Node} node
-     * @param {function(!Node):!NodeList<!Element>=} callback
-     * @return {string}
+     * @param {Function=} callback
      */
     var getInnerHTML = function(node, callback) {
       if (node.localName === 'template') {
         node =  /** @type {HTMLTemplateElement} */ (node).content;
       }
       var s = '';
-      /** @type {!NodeList<!Element>} */
       var c$ = callback ? callback(node) : capturedChildNodes.get.call(node);
       for (var i=0, l=c$.length, child; (i<l) && (child=c$[i]); i++) {
         s += getOuterHTML(child, node, callback);
@@ -591,14 +492,8 @@
   // make cloning/importing work!
   if (needsTemplate || needsCloning) {
 
-    /**
-     * @this {PolyfilledHTMLTemplateElement}
-     * @param {!HTMLTemplateElement} template
-     * @param {boolean=} deep
-     * @return {!Element}
-     */
     PolyfilledHTMLTemplateElement._cloneNode = function _cloneNode(template, deep) {
-      var clone = /** @type {!HTMLTemplateElement} */(capturedCloneNode.call(template, false));
+      var clone = capturedCloneNode.call(template, false);
       // NOTE: decorate doesn't auto-fix children because they are already
       // decorated so they need special clone fixup.
       if (this.decorate) {
@@ -614,13 +509,9 @@
       return clone;
     };
 
-    /**
-     * Given a source and cloned subtree, find <template>'s in the cloned
-     * subtree and replace them with cloned <template>'s from source.
-     * We must do this because only the source templates have proper .content.
-     * @param {!Node} clone
-     * @param {!Node} source
-     */
+    // Given a source and cloned subtree, find <template>'s in the cloned
+    // subtree and replace them with cloned <template>'s from source.
+    // We must do this because only the source templates have proper .content.
     var fixClonedDom = function fixClonedDom(clone, source) {
       // do nothing if cloned node is not an element
       if (!source.querySelectorAll) return;
@@ -631,8 +522,8 @@
       }
       var t$ = QSA(clone, TEMPLATE_TAG);
       for (var i=0, l=t$.length, t, s; i<l; i++) {
-        s = /** @type {!HTMLTemplateElement} */(s$[i]);
-        t = /** @type {!HTMLTemplateElement} */(t$[i]);
+        s = s$[i];
+        t = t$[i];
         if (PolyfilledHTMLTemplateElement && PolyfilledHTMLTemplateElement.decorate) {
           PolyfilledHTMLTemplateElement.decorate(s);
         }
@@ -641,13 +532,10 @@
     };
 
     // make sure scripts inside of a cloned template are executable
-    /**
-     * @param {!Node} fragment
-     */
     var fixClonedScripts = function fixClonedScripts(fragment) {
       var scripts = QSA(fragment, scriptSelector);
       for (var ns, s, i = 0; i < scripts.length; i++) {
-        s = /** @type {!HTMLScriptElement} */(scripts[i]);
+        s = scripts[i];
         ns = capturedCreateElement.call(document, 'script');
         ns.textContent = s.textContent;
         var attrs = s.attributes;
@@ -662,7 +550,6 @@
     // override all cloning to fix the cloned subtree to contain properly
     // cloned templates.
     var cloneNode = Node.prototype.cloneNode = function cloneNode(deep) {
-      /** @type {!Node} */
       var dom;
       // workaround for Edge bug cloning documentFragments
       // https://developer.microsoft.com/en-us/microsoft-edge/platform/issues/8619646/
@@ -670,12 +557,12 @@
         if (!deep) {
           return this.ownerDocument.createDocumentFragment();
         } else {
-          dom = /** @type {!Node} */(importNode.call(this.ownerDocument, this, true));
+          dom = importNode.call(this.ownerDocument, this, true);
         }
       } else if (this.nodeType === Node.ELEMENT_NODE &&
                  this.localName === TEMPLATE_TAG &&
                  this.namespaceURI == document.documentElement.namespaceURI) {
-        dom = PolyfilledHTMLTemplateElement._cloneNode(/** @type {!HTMLTemplateElement} */(this), deep);
+        dom = PolyfilledHTMLTemplateElement._cloneNode(this, deep);
       } else {
         dom = capturedCloneNode.call(this, deep);
       }
@@ -683,7 +570,7 @@
       if (deep) {
         fixClonedDom(dom, this);
       }
-      return /** @type {!Node} */(dom);
+      return dom;
     };
 
     // NOTE: we are cloning instead of importing <template>'s.
@@ -694,14 +581,15 @@
     var importNode = Document.prototype.importNode = function importNode(element, deep) {
       deep = deep || false;
       if (element.localName === TEMPLATE_TAG) {
-        return PolyfilledHTMLTemplateElement._cloneNode(/** @type {!HTMLTemplateElement} */(element), deep);
+        return PolyfilledHTMLTemplateElement._cloneNode(element, deep);
+      } else {
+        var dom = capturedImportNode.call(this, element, deep);
+        if (deep) {
+          fixClonedDom(dom, element);
+          fixClonedScripts(dom);
+        }
+        return dom;
       }
-      var dom = /** @type {!Node} */(capturedImportNode.call(this, element, deep));
-      if (deep) {
-        fixClonedDom(dom, element);
-        fixClonedScripts(dom);
-      }
-      return dom;
     };
   }
 
