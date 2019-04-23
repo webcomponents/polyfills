@@ -2,3 +2,4 @@ packages/*/node_modules/
 node_modules/
 lerna-debug.log
 *.min.js*
+*.tgz
