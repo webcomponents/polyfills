@@ -7,23 +7,16 @@ The complete set of contributors may be found at http://polymer.github.io/CONTRI
 Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 */
+import * as utils from '../utils.js';
+import {addEventListener, removeEventListener} from '../patch-events.js';
 
+export const WindowPatches = utils.getOwnPropertyDescriptors({
 
-export class ShadyData {
+  // NOTE: ensure these methods are bound to `window` so that `this` is correct
+  // when called directly from global context without a receiver; e.g.
+  // `addEventListener(...)`.
+  addEventListener: addEventListener.bind(window),
 
-  /** @override */
-  toJSON() {
-    return {};
-  }
-}
+  removeEventListener: removeEventListener.bind(window)
 
-export function ensureShadyDataForNode(node) {
-  if (!node.__shady) {
-    node.__shady = new ShadyData();
-  }
-  return node.__shady;
-}
-
-export function shadyDataForNode(node) {
-  return node && node.__shady;
-}
+});

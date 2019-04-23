@@ -34,7 +34,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     'activeElement',
     'assignedSlot',
     'slot',
-    'shadowRoot'
+    'shadowRoot',
+    'childElementCount',
+    'className'
   ];
   var methods = [
     'appendChild',
@@ -53,10 +55,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     'focus',
     'blur',
     'dispatchEvent',
-    'contains'
+    'contains',
+    'addEventListener',
+    'removeEventListener',
+    'dispatchEvent'
   ];
 
   var protos = {
+    'EventTarget': window.EventTarget ? window.EventTarget.prototype : undefined,
     'Node': Node.prototype,
     'Element': Element.prototype,
     'HTMLElement': HTMLElement.prototype,
@@ -77,7 +83,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     var info = {};
     for (var p in protos) {
       var proto = protos[p];
-      recordProperty(name, proto, info, p);
+      if (proto) {
+        recordProperty(name, proto, info, p);
+      }
     }
     return info;
   }

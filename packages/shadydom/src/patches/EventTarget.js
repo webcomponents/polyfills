@@ -8,22 +8,20 @@ Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 */
 
+import * as utils from '../utils.js';
+import {flush} from '../flush.js';
+import {addEventListener, removeEventListener} from '../patch-events.js';
 
-export class ShadyData {
+export const EventTargetPatches = utils.getOwnPropertyDescriptors({
 
-  /** @override */
-  toJSON() {
-    return {};
-  }
-}
+  /** @this {Node} */
+  dispatchEvent(event) {
+    flush();
+    return this[utils.NATIVE_PREFIX + 'dispatchEvent'](event);
+  },
 
-export function ensureShadyDataForNode(node) {
-  if (!node.__shady) {
-    node.__shady = new ShadyData();
-  }
-  return node.__shady;
-}
+  addEventListener,
 
-export function shadyDataForNode(node) {
-  return node && node.__shady;
-}
+  removeEventListener
+
+});

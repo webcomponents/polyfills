@@ -11,12 +11,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 import {calculateSplices} from './array-splice.js';
 import * as utils from './utils.js';
 import {enqueue} from './flush.js';
-import {recordChildNodes} from './logical-tree.js';
-import {removeChild, insertBefore, dispatchEvent} from './native-methods.js';
-import {accessors} from './native-tree.js';
 import {ensureShadyDataForNode, shadyDataForNode} from './shady-data.js';
-
-const {parentNode, childNodes} = accessors;
+import {recordChildNodes} from './link-nodes.js';
+import {patchShadyRoot} from './patch-shadyRoot.js';
 
 // Do not export this object. It must be passed as the first argument to the
 // ShadyRoot constructor in `attachShadow` to prevent the constructor from
@@ -36,7 +33,7 @@ function ancestorList(node) {
   let ancestors = [];
   do {
     ancestors.unshift(node);
-  } while ((node = node.parentNode));
+  } while ((node = node[utils.SHADY_PREFIX + 'parentNode']));
   return ancestors;
 }
 
@@ -49,36 +46,51 @@ class ShadyRoot {
     if (token !== ShadyRootConstructionToken) {
       throw new TypeError('Illegal constructor');
     }
+    /** @type {boolean} */
+    this._renderPending;
+    /** @type {boolean} */
+    this._hasRendered;
+    /** @type {?Array<HTMLSlotElement>} */
+    this._slotList = null;
+    /** @type {?Object<string, Array<HTMLSlotElement>>} */
+    this._slotMap;
+    /** @type {?Array<HTMLSlotElement>} */
+    this._pendingSlots;
+    this._init(host, options);
+  }
+
+  _init(host, options) {
     // NOTE: set a fake local name so this element can be
     // distinguished from a DocumentFragment when patching.
     // FF doesn't allow this to be `localName`
+    /** @type {string} */
     this._localName = SHADYROOT_NAME;
     // root <=> host
     this.host = host;
-    this._mode = options && options.mode;
-    recordChildNodes(host);
-    const hostData = ensureShadyDataForNode(host);
+    /** @type {!string|undefined} */
+    this.mode = options && options.mode;
+    recordChildNodes(this.host);
+    const hostData = ensureShadyDataForNode(this.host);
+    /** @type {!ShadyRoot} */
     hostData.root = this;
-    hostData.publicRoot = this._mode !== MODE_CLOSED ? this : null;
+    hostData.publicRoot = this.mode !== MODE_CLOSED ? this : null;
     // setup root
     const rootData = ensureShadyDataForNode(this);
     rootData.firstChild = rootData.lastChild =
         rootData.parentNode = rootData.nextSibling =
         rootData.previousSibling = null;
-    rootData.childNodes = [];
-    // state flags
-    this._renderPending = false;
-    this._hasRendered = false;
-    // marsalled lazily
-    this._slotList = null;
-    /** @type {Object<string, Array<HTMLSlotElement>>} */
-    this._slotMap = null;
-    this._pendingSlots = null;
-    this._initialChildren = null;
-    this._asyncRender();
+    // NOTE: optimization flag, only require an asynchronous render
+    // to record parsed children if flag is not set.
+    if (utils.settings['preferPerformance']) {
+      let n;
+      while ((n = this.host[utils.NATIVE_PREFIX + 'firstChild'])) {
+        this.host[utils.NATIVE_PREFIX + 'removeChild'](n);
+      }
+    } else {
+      this._asyncRender();
+    }
   }
 
-  // async render
   _asyncRender() {
     if (!this._renderPending) {
       this._renderPending = true;
@@ -87,42 +99,50 @@ class ShadyRoot {
   }
 
   // returns the oldest renderPending ancestor root.
-  _getRenderRoot() {
+  _getPendingDistributionRoot() {
     let renderRoot;
     let root = this;
     while (root) {
       if (root._renderPending) {
         renderRoot = root;
       }
-      root = root._rendererForHost();
+      root = root._getDistributionParent();
     }
     return renderRoot;
   }
 
   // Returns the shadyRoot `this.host` if `this.host`
   // has children that require distribution.
-  _rendererForHost() {
-    let root = this.host.getRootNode();
-    if (utils.isShadyRoot(root)) {
-      let c$ = this.host.childNodes;
-      for (let i=0, c; i < c$.length; i++) {
-        c = c$[i];
-        if (this._isInsertionPoint(c)) {
-          return root;
-        }
-      }
+  _getDistributionParent() {
+    let root = this.host[utils.SHADY_PREFIX + 'getRootNode']();
+    if (!utils.isShadyRoot(root)) {
+      return;
+    }
+    const nodeData = shadyDataForNode(this.host);
+    if (nodeData && nodeData.__childSlotCount > 0) {
+      return root;
     }
   }
 
+  // Renders the top most render pending shadowRoot in the distribution tree.
+  // This is safe because when a distribution parent renders, all children render.
   _render() {
-    const root = this._getRenderRoot();
+    // If this root is not pending, it needs no rendering work. Any pending
+    // parent that needs to render wll cause this root to render.
+    const root = this._renderPending && this._getPendingDistributionRoot();
     if (root) {
-      root['_renderRoot']();
+      root._renderSelf();
     }
   }
 
-  // NOTE: avoid renaming to ease testability.
-  ['_renderRoot']() {
+  _flushInitial() {
+    if (!this._hasRendered && this._renderPending) {
+      this._render();
+    }
+  }
+
+  /** @override */
+  _renderSelf() {
     // track rendering state.
     const wasRendering = isRendering;
     isRendering = true;
@@ -131,15 +151,15 @@ class ShadyRoot {
       this._distribute();
       this._compose();
     }
+    // NOTE: optimization flag, only process parsed children
+    // if optimization flag is not set.
     // on initial render remove any undistributed children.
-    if (!this._hasRendered) {
-      const c$ = this.host.childNodes;
-      for (let i=0, l=c$.length; i < l; i++) {
-        const child = c$[i];
-        const data = shadyDataForNode(child);
-        if (parentNode(child) === this.host &&
-            (child.localName === 'slot' || !data.assignedSlot)) {
-          removeChild.call(this.host, child);
+    if (!utils.settings['preferPerformance'] && !this._hasRendered) {
+      for (let n=this.host[utils.SHADY_PREFIX + 'firstChild']; n; n = n[utils.SHADY_PREFIX + 'nextSibling']) {
+        const data = shadyDataForNode(n);
+        if (n[utils.NATIVE_PREFIX + 'parentNode'] === this.host &&
+            (n.localName === 'slot' || !data.assignedSlot)) {
+          this.host[utils.NATIVE_PREFIX + 'removeChild'](n);
         }
       }
     }
@@ -158,7 +178,7 @@ class ShadyRoot {
       this._clearSlotAssignedNodes(slot);
     }
     // distribute host children.
-    for (let n=this.host.firstChild; n; n=n.nextSibling) {
+    for (let n=this.host[utils.SHADY_PREFIX + 'firstChild']; n; n=n[utils.SHADY_PREFIX + 'nextSibling']) {
       this._distributeNodeToSlot(n);
     }
     // fallback content, slotchange, and dirty roots
@@ -167,14 +187,14 @@ class ShadyRoot {
       const slotData = shadyDataForNode(slot);
       // distribute fallback content
       if (!slotData.assignedNodes.length) {
-        for (let n=slot.firstChild; n; n=n.nextSibling) {
+        for (let n=slot[utils.SHADY_PREFIX + 'firstChild']; n; n=n[utils.SHADY_PREFIX + 'nextSibling']) {
           this._distributeNodeToSlot(n, slot);
         }
       }
-      const slotParentData = shadyDataForNode(slot.parentNode);
+      const slotParentData = shadyDataForNode(slot[utils.SHADY_PREFIX + 'parentNode']);
       const slotParentRoot = slotParentData && slotParentData.root;
       if (slotParentRoot && (slotParentRoot._hasInsertionPoint() || slotParentRoot._renderPending)) {
-        slotParentRoot['_renderRoot']();
+        slotParentRoot._renderSelf();
       }
       this._addAssignedToFlattenedNodes(slotData.flattenedNodes,
         slotData.assignedNodes);
@@ -216,7 +236,7 @@ class ShadyRoot {
     nodeData._prevAssignedSlot = null;
     let slot = forcedSlot;
     if (!slot) {
-      let name = node.slot || CATCHALL_NAME;
+      let name = node[utils.SHADY_PREFIX + 'slot'] || CATCHALL_NAME;
       const list = this._slotMap[name];
       slot = list && list[0];
     }
@@ -280,7 +300,7 @@ class ShadyRoot {
     // NOTE: cannot bubble correctly here so not setting bubbles: true
     // Safari tech preview does not bubble but chrome does
     // Spec says it bubbles (https://dom.spec.whatwg.org/#mutation-observers)
-    dispatchEvent.call(slot, new Event('slotchange'));
+    slot[utils.NATIVE_PREFIX + 'dispatchEvent'](new Event('slotchange'));
     const slotData = shadyDataForNode(slot);
     if (slotData.assignedSlot) {
       this._fireSlotChange(slotData.assignedSlot);
@@ -296,7 +316,7 @@ class ShadyRoot {
     const slots = this._slotList;
     let composeList = [];
     for (let i=0; i < slots.length; i++) {
-      const parent = slots[i].parentNode;
+      const parent = slots[i][utils.SHADY_PREFIX + 'parentNode'];
       /* compose node only if:
         (1) parent does not have a shadowRoot since shadowRoot has already
         composed into the host
@@ -319,20 +339,18 @@ class ShadyRoot {
   // Returns the list of nodes which should be rendered inside `node`.
   _composeNode(node) {
     let children = [];
-    let c$ = node.childNodes;
-    for (let i = 0; i < c$.length; i++) {
-      let child = c$[i];
+    for (let n=node[utils.SHADY_PREFIX + 'firstChild']; n; n = n[utils.SHADY_PREFIX + 'nextSibling']) {
       // Note: if we see a slot here, the nodes are guaranteed to need to be
       // composed here. This is because if there is redistribution, it has
       // already been handled by this point.
-      if (this._isInsertionPoint(child)) {
-        let flattenedNodes = shadyDataForNode(child).flattenedNodes;
+      if (this._isInsertionPoint(n)) {
+        let flattenedNodes = shadyDataForNode(n).flattenedNodes;
         for (let j = 0; j < flattenedNodes.length; j++) {
           let distributedNode = flattenedNodes[j];
             children.push(distributedNode);
         }
       } else {
-        children.push(child);
+        children.push(n);
       }
     }
     return children;
@@ -344,7 +362,7 @@ class ShadyRoot {
 
   // Ensures that the rendered node list inside `container` is `children`.
   _updateChildNodes(container, children) {
-    let composed = Array.prototype.slice.call(childNodes(container));
+    let composed = utils.nativeChildNodesArray(container);
     let splices = calculateSplices(children, composed);
     // process removals
     for (let i=0, d=0, s; (i<splices.length) && (s=splices[i]); i++) {
@@ -353,8 +371,8 @@ class ShadyRoot {
         // to remove it; this can happen if we move a node and
         // then schedule its previous host for distribution resulting in
         // the node being removed here.
-        if (parentNode(n) === container) {
-          removeChild.call(container, n);
+        if (n[utils.NATIVE_PREFIX + 'parentNode'] === container) {
+          container[utils.NATIVE_PREFIX + 'removeChild'](n);
         }
         // TODO(sorvell): avoid the need for splicing here.
         composed.splice(s.index + d, 1);
@@ -366,7 +384,7 @@ class ShadyRoot {
       next = composed[s.index];
       for (let j=s.index, n; j < s.index + s.addedCount; j++) {
         n = children[j];
-        insertBefore.call(container, n, next);
+        container[utils.NATIVE_PREFIX + 'insertBefore'](n, next);
         composed.splice(j, 0, n);
       }
     }
@@ -397,14 +415,17 @@ class ShadyRoot {
   _mapSlots(slots) {
     let slotNamesToSort;
     for (let i=0; i < slots.length; i++) {
-      let slot = slots[i];
+      const slot = slots[i];
       // ensure insertionPoints's and their parents have logical dom info.
       // save logical tree info
       // a. for shadyRoot
       // b. for insertion points (fallback)
       // c. for parents of insertion points
       recordChildNodes(slot);
-      recordChildNodes(slot.parentNode);
+      const slotParent = slot[utils.SHADY_PREFIX + 'parentNode'];
+      recordChildNodes(slotParent);
+      const slotParentData = shadyDataForNode(slotParent);
+      slotParentData.__childSlotCount = (slotParentData.__childSlotCount || 0) + 1;
       let name = this._nameForSlot(slot);
       if (this._slotMap[name]) {
         slotNamesToSort = slotNamesToSort || {};
@@ -443,7 +464,7 @@ class ShadyRoot {
         let nA = listA[i];
         let nB = listB[i];
         if (nA !== nB) {
-          let c$ = Array.from(nA.parentNode.childNodes);
+          let c$ = utils.childNodesArray(nA[utils.SHADY_PREFIX + 'parentNode']);
           return c$.indexOf(nA) - c$.indexOf(nB);
         }
       }
@@ -463,14 +484,18 @@ class ShadyRoot {
     let didRemove;
     const map = this._slotMap;
     for (let n in map) {
-      let slots = map[n];
+      const slots = map[n];
       for (let i=0; i < slots.length; i++) {
-        let slot = slots[i];
+        const slot = slots[i];
         if (utils.contains(container, slot)) {
           slots.splice(i, 1);
           const x = this._slotList.indexOf(slot);
           if (x >= 0) {
             this._slotList.splice(x, 1);
+            const slotParentData = shadyDataForNode(slot[utils.SHADY_PREFIX + 'parentNode']);
+            if (slotParentData && slotParentData.__childSlotCount) {
+              slotParentData.__childSlotCount--;
+            }
           }
           i--;
           this._removeFlattenedNodes(slot);
@@ -512,9 +537,9 @@ class ShadyRoot {
     if (n$) {
       for (let i=0; i<n$.length; i++) {
         let node = n$[i];
-        let parent = parentNode(node);
+        let parent = node[utils.NATIVE_PREFIX + 'parentNode'];
         if (parent) {
-          removeChild.call(parent, node);
+          parent[utils.NATIVE_PREFIX + 'removeChild'](node);
         }
       }
     }
@@ -528,37 +553,65 @@ class ShadyRoot {
   }
 }
 
+patchShadyRoot(ShadyRoot.prototype);
 export {ShadyRoot};
 
 /**
   Implements a pared down version of ShadowDOM's scoping, which is easy to
   polyfill across browsers.
 */
-export function attachShadow(host, options) {
+export const attachShadow = (host, options) => {
   if (!host) {
-    throw 'Must provide a host.';
+    throw new Error('Must provide a host.');
   }
   if (!options) {
-    throw 'Not enough arguments.'
+    throw new Error('Not enough arguments.');
   }
-  return new ShadyRoot(ShadyRootConstructionToken, host, options);
+  let root;
+  // Optimization for booting up a shadowRoot from a fragment rather than
+  // creating one.
+  if (options['shadyUpgradeFragment'] && utils.canUpgrade()) {
+    root = options['shadyUpgradeFragment'];
+    root.__proto__ = ShadowRoot.prototype;
+    root._init(host, options);
+    recordChildNodes(root, root);
+    // Note: qsa is native when used with noPatch.
+    /** @type {?NodeList<Element>} */
+    const slotsAdded = root['__noInsertionPoint'] ? null : root.querySelectorAll('slot');
+    // Reset scoping information so normal scoing rules apply after this.
+    root['__noInsertionPoint'] = undefined;
+    // if a slot is added, must render containing root.
+    if (slotsAdded && slotsAdded.length) {
+      root._addSlots(slotsAdded);
+      root._asyncRender();
+    }
+    /** @type {ShadowRoot} */(root).host[utils.NATIVE_PREFIX + 'appendChild'](root);
+  } else {
+    root = new ShadyRoot(ShadyRootConstructionToken, host, options);
+  }
+  return root;
 }
 
 // Mitigate connect/disconnect spam by wrapping custom element classes.
-if (window['customElements'] && utils.settings.inUse) {
+if (window['customElements'] && utils.settings.inUse && !utils.settings['preferPerformance']) {
 
   // process connect/disconnect after roots have rendered to avoid
   // issues with reaction stack.
   let connectMap = new Map();
   rootRendered = function() {
     // allow elements to connect
-    const map = Array.from(connectMap);
+    // save map state (without needing polyfills on IE11)
+    const r = [];
+    connectMap.forEach((v, k) => {
+      r.push([k, v]);
+    });
     connectMap.clear();
-    for (const [e, value] of map) {
+    for (let i=0; i < r.length; i++) {
+      const e = r[i][0], value = r[i][1];
       if (value) {
-        e.__shadydom_connectedCallback();
+        e['__shadydom_connectedCallback']();
       } else {
-        e.__shadydom_disconnectedCallback();
+        e['__shadydom_disconnectedCallback']();
       }
     }
   }
@@ -582,7 +635,8 @@ if (window['customElements'] && utils.settings.inUse) {
     const connectFlag = `__isConnected${counter++}`;
     if (connected || disconnected) {
 
-      base.prototype.connectedCallback = base.prototype.__shadydom_connectedCallback = function() {
+      /** @this {!HTMLElement} */
+      base.prototype.connectedCallback = base.prototype['__shadydom_connectedCallback'] = function() {
         // if rendering defer connected
         // otherwise connect only if we haven't already
         if (isRendering) {
@@ -595,7 +649,8 @@ if (window['customElements'] && utils.settings.inUse) {
         }
       }
 
-      base.prototype.disconnectedCallback = base.prototype.__shadydom_disconnectedCallback = function() {
+      /** @this {!HTMLElement} */
+      base.prototype.disconnectedCallback = base.prototype['__shadydom_disconnectedCallback'] = function() {
         // if rendering, cancel a pending connection and queue disconnect,
         // otherwise disconnect only if a connection has been allowed
         if (isRendering) {
@@ -619,22 +674,33 @@ if (window['customElements'] && utils.settings.inUse) {
     return base;
   }
 
-  const define = window['customElements']['define'];
-  // NOTE: Instead of patching customElements.define,
-  // re-define on the CustomElementRegistry.prototype.define
-  // for Safari 10 compatibility (it's flakey otherwise).
+  const originalDefine = window['customElements']['define'];
+  const define = function(name, constructor) {
+    const connected = constructor.prototype.connectedCallback;
+    const disconnected = constructor.prototype.disconnectedCallback;
+    originalDefine.call(window['customElements'], name,
+        ManageConnect(constructor, connected, disconnected));
+    // unpatch connected/disconnected on class; custom elements tears this off
+    // so the patch is maintained, but if the user calls these methods for
+    // e.g. testing, they will be as expected.
+    constructor.prototype.connectedCallback = connected;
+    constructor.prototype.disconnectedCallback = disconnected;
+  }
+  // Note, it would be better to only patch the CustomElementRegistry.prototype,
+  // but ShadyCSS patches define directly.
+  window.customElements.define = define;
+  // Still patch the registry directly since Safari 10 loses the patch
+  // unless this is done.
   Object.defineProperty(window['CustomElementRegistry'].prototype, 'define', {
-    value: function(name, constructor) {
-      const connected = constructor.prototype.connectedCallback;
-      const disconnected = constructor.prototype.disconnectedCallback;
-      define.call(window['customElements'], name,
-          ManageConnect(constructor, connected, disconnected));
-      // unpatch connected/disconnected on class; custom elements tears this off
-      // so the patch is maintained, but if the user calls these methods for
-      // e.g. testing, they will be as expected.
-      constructor.prototype.connectedCallback = connected;
-      constructor.prototype.disconnectedCallback = disconnected;
-    }
+    value: define,
+    configurable: true
   });
+}
 
+/** @return {!ShadyRoot|undefined} */
+export const ownerShadyRootForNode = (node) => {
+  let root = node[utils.SHADY_PREFIX + 'getRootNode']();
+  if (utils.isShadyRoot(root)) {
+    return root;
+  }
 }
