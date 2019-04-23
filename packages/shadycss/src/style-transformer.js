@@ -75,13 +75,18 @@ class StyleTransformer {
     if (startNode.nodeType === Node.ELEMENT_NODE) {
       transformer(startNode)
     }
-    let c$ = (startNode.localName === 'template') ?
+    let c$;
+    if (startNode.localName === 'template') {
+      const template = /** @type {!HTMLTemplateElement} */ (startNode);
       // In case the template is in svg context, fall back to the node
       // since it won't be an HTMLTemplateElement with a .content property
-      (startNode.content || startNode._content || startNode).childNodes :
-      startNode.children || startNode.childNodes;
+      c$ = (template.content || template._content || template).childNodes;
+    } else {
+      c$ = /** @type {!ParentNode} */ (startNode).children ||
+          startNode.childNodes;
+    }
     if (c$) {
-      for (let i=0; i<c$.length; i++) {
+      for (let i = 0; i < c$.length; i++) {
         this._transformDom(c$[i], transformer);
       }
     }
@@ -151,20 +156,23 @@ class StyleTransformer {
    * @param {?} styleRules
    * @param {?=} callback
    * @param {string=} cssBuild
+   * @param {string=} cssText
+   * @return {string}
    */
-  elementStyles(element, styleRules, callback, cssBuild = '') {
+  elementStyles(element, styleRules, callback, cssBuild = '', cssText = '') {
     // no need to shim selectors if settings.useNativeShadow, also
     // a shady css build will already have transformed selectors
     // NOTE: This method may be called as part of static or property shimming.
     // When there is a targeted build it will not be called for static shimming,
     // but when the property shim is used it is called and should opt out of
     // static shimming work when a proper build exists.
-    let cssText = '';
-    if (nativeShadow || cssBuild === 'shady') {
-      cssText = StyleUtil.toCssText(styleRules, callback);
-    } else {
-      let {is, typeExtension} = StyleUtil.getIsExtends(element);
-      cssText = this.css(styleRules, is, typeExtension, callback) + '\n\n';
+    if (cssText === '') {
+      if (nativeShadow || cssBuild === 'shady') {
+        cssText = StyleUtil.toCssText(styleRules, callback);
+      } else {
+        let {is, typeExtension} = StyleUtil.getIsExtends(element);
+        cssText = this.css(styleRules, is, typeExtension, callback) + '\n\n';
+      }
     }
     return cssText.trim();
   }
@@ -330,6 +338,8 @@ class StyleTransformer {
     if (isNth) {
       selector = this._twiddleNthPlus(selector);
     }
+    selector = selector.replace(DIR_PAREN, (m, before, dir, after) =>
+      `[dir="${dir}"] ${before}${after}, ${before}[dir="${dir}"]${after}`);
     return selector;
   }
 
@@ -359,8 +369,6 @@ class StyleTransformer {
         selector = selector.replace(SLOTTED_PAREN, (m, paren) => ` > ${paren}`);
       }
     }
-    selector = selector.replace(DIR_PAREN, (m, before, dir) =>
-      `[dir="${dir}"] ${before}, ${before}[dir="${dir}"]`);
     return {value: selector, combinator, stop};
   }
 
@@ -453,26 +461,26 @@ class StyleTransformer {
   }
 }
 
-let NTH = /:(nth[-\w]+)\(([^)]+)\)/;
-let SCOPE_DOC_SELECTOR = `:not(.${SCOPE_NAME})`;
-let COMPLEX_SELECTOR_SEP = ',';
-let SIMPLE_SELECTOR_SEP = /(^|[\s>+~]+)((?:\[.+?\]|[^\s>+~=[])+)/g;
-let SIMPLE_SELECTOR_PREFIX = /[[.:#*]/;
-let HOST = ':host';
-let ROOT = ':root';
-let SLOTTED = '::slotted';
-let SLOTTED_START = new RegExp(`^(${SLOTTED})`);
+const NTH = /:(nth[-\w]+)\(([^)]+)\)/;
+const SCOPE_DOC_SELECTOR = `:not(.${SCOPE_NAME})`;
+const COMPLEX_SELECTOR_SEP = ',';
+const SIMPLE_SELECTOR_SEP = /(^|[\s>+~]+)((?:\[.+?\]|[^\s>+~=[])+)/g;
+const SIMPLE_SELECTOR_PREFIX = /[[.:#*]/;
+const HOST = ':host';
+const ROOT = ':root';
+const SLOTTED = '::slotted';
+const SLOTTED_START = new RegExp(`^(${SLOTTED})`);
 // NOTE: this supports 1 nested () pair for things like
 // :host(:not([selected]), more general support requires
 // parsing which seems like overkill
-let HOST_PAREN = /(:host)(?:\(((?:\([^)(]*\)|[^)(]*)+?)\))/;
+const HOST_PAREN = /(:host)(?:\(((?:\([^)(]*\)|[^)(]*)+?)\))/;
 // similar to HOST_PAREN
-let SLOTTED_PAREN = /(?:::slotted)(?:\(((?:\([^)(]*\)|[^)(]*)+?)\))/;
-let DIR_PAREN = /(.*):dir\((?:(ltr|rtl))\)/;
-let CSS_CLASS_PREFIX = '.';
-let PSEUDO_PREFIX = ':';
-let CLASS = 'class';
-let SELECTOR_NO_MATCH = 'should_not_match';
+const SLOTTED_PAREN = /(?:::slotted)(?:\(((?:\([^)(]*\)|[^)(]*)+?)\))/;
+const DIR_PAREN = /(.*):dir\((?:(ltr|rtl))\)(.*)/;
+const CSS_CLASS_PREFIX = '.';
+const PSEUDO_PREFIX = ':';
+const CLASS = 'class';
+const SELECTOR_NO_MATCH = 'should_not_match';
 const MATCHES = /:(?:matches|any|-(?:webkit|moz)-any)/;
 const MATCHES_REPLACEMENT = '\u{e000}';
 
