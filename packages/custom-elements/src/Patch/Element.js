@@ -1,3 +1,13 @@
+/**
+ * @license
+ * Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
+ * This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+ * The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+ * The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+ * Code distributed by Google as part of the polymer project is also
+ * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+ */
+
 import Native from './Native.js';
 import CustomElementInternals from '../CustomElementInternals.js';
 import CEState from '../CustomElementState.js';
@@ -19,13 +29,15 @@ export default function(internals) {
        */
       function(init) {
         const shadowRoot = Native.Element_attachShadow.call(this, init);
+        internals.patchNode(shadowRoot);
         this.__CE_shadowRoot = shadowRoot;
         return shadowRoot;
       });
   }
 
-  function patch_HTMLsetter(destination, property, baseDescriptor, patchCallback) {
-    Object.defineProperty(destination, property, {
+
+  function patch_innerHTML(destination, baseDescriptor) {
+    Object.defineProperty(destination, 'innerHTML', {
       enumerable: baseDescriptor.enumerable,
       configurable: true,
       get: baseDescriptor.get,
@@ -48,13 +60,6 @@ export default function(internals) {
           });
         }
 
-        // Memoize properties here before calling the baseDescriptor
-        // In the case of `outerHTML`, this node would already be disconnected
-        // and the properties therefore no longer exist
-        const parentNode = this.parentNode;
-        const previousSibling = this.previousSibling;
-        const nextSibling = this.nextSibling;
-
         baseDescriptor.set.call(this, htmlString);
 
         if (removedElements) {
@@ -69,18 +74,12 @@ export default function(internals) {
         // Only create custom elements if this element's owner document is
         // associated with the registry.
         if (!this.ownerDocument.__CE_hasRegistry) {
-          patchCallback(this, internals.patchTree, {parentNode, previousSibling, nextSibling});
+          internals.patchTree(this);
         } else {
-          patchCallback(this, internals.patchAndUpgradeTree, {parentNode, previousSibling, nextSibling});
+          internals.patchAndUpgradeTree(this);
         }
         return htmlString;
       },
-    });
-  }
-
-  function patch_innerHTML(destination, baseDescriptor) {
-    patch_HTMLsetter(destination, 'innerHTML', baseDescriptor, (node, patchFunction) => {
-      patchFunction.call(internals, node);
     });
   }
 
@@ -89,8 +88,7 @@ export default function(internals) {
   } else if (Native.HTMLElement_innerHTML && Native.HTMLElement_innerHTML.get) {
     patch_innerHTML(HTMLElement.prototype, Native.HTMLElement_innerHTML);
   } else {
-
-    internals.addPatch(function(element) {
+    internals.addElementPatch(function(element) {
       patch_innerHTML(element, {
         enumerable: true,
         configurable: true,
@@ -98,7 +96,9 @@ export default function(internals) {
         // of the element and returning the resulting element's `innerHTML`.
         // TODO: Is this too expensive?
         get: /** @this {Element} */ function() {
-          return Native.Node_cloneNode.call(this, true).innerHTML;
+          return /** @type {!Element} */ (
+                     Native.Node_cloneNode.call(this, true))
+              .innerHTML;
         },
         // Implements setting `innerHTML` by creating an unpatched element,
         // setting `innerHTML` of that element and replacing the target
@@ -111,7 +111,7 @@ export default function(internals) {
           /** @type {!Node} */
           const content = isTemplate ? (/** @type {!HTMLTemplateElement} */
             (this)).content : this;
-          /** @type {!Node} */
+          /** @type {!Element} */
           const rawElement = Native.Document_createElementNS.call(document,
               this.namespaceURI, this.localName);
           rawElement.innerHTML = assignedValue;
@@ -119,61 +119,12 @@ export default function(internals) {
           while (content.childNodes.length > 0) {
             Native.Node_removeChild.call(content, content.childNodes[0]);
           }
-          const container = isTemplate ? rawElement.content : rawElement;
+          const container = isTemplate ?
+              /** @type {!HTMLTemplateElement} */ (rawElement).content :
+              rawElement;
           while (container.childNodes.length > 0) {
             Native.Node_appendChild.call(content, container.childNodes[0]);
           }
-        },
-      });
-    });
-  }
-
-  function patch_outerHTML(destination, baseDescriptor) {
-    patch_HTMLsetter(destination, 'outerHTML', baseDescriptor, (node, patchFunction, {parentNode, previousSibling, nextSibling}) => {
-      if (parentNode === null) {
-        throw new Error(`Failed to set the 'outerHTML' property on 'Element': This element has no parent node.`);
-      }
-      if (previousSibling === null && nextSibling === null) {
-        patchFunction.call(internals, parentNode);
-      } else {
-        let sibling = previousSibling && previousSibling.nextSibling || parentNode.firstChild;
-
-        while (sibling !== null && sibling !== nextSibling) {
-          patchFunction.call(internals, sibling);
-          sibling = sibling.nextSibling;
-        }
-      }
-    });
-  }
-
-  if (Native.Element_outerHTML && Native.Element_outerHTML.get) {
-    patch_outerHTML(Element.prototype, Native.Element_outerHTML);
-  } else if (Native.HTMLElement_outerHTML && Native.HTMLElement_outerHTML.get) {
-    patch_outerHTML(HTMLElement.prototype, Native.HTMLElement_outerHTML);
-  } else {
-
-    internals.addPatch(function(element) {
-      patch_outerHTML(element, {
-        enumerable: true,
-        configurable: true,
-        // Implements getting `outerHTML` by performing an unpatched `cloneNode`
-        // of the element and returning the resulting element's `outerHTML`.
-        // TODO: Is this too expensive?
-        get: /** @this {Element} */ function() {
-          return Native.Node_cloneNode.call(this, true).outerHTML;
-        },
-        set: /** @this {Element} */ function(assignedValue) {
-          const container = Native.Document_createElementNS.call(document,
-            this.parentNode.namespaceURI || this.namespaceURI, this.parentNode.localName || this.localName);
-          container.innerHTML = assignedValue;
-
-          while (container.childNodes.length > 0) {
-            Native.Node_insertBefore.call(this.parentNode, container.childNodes[0], this);
-          }
-
-          Native.Node_removeChild.call(this.parentNode, this);
-
-          return assignedValue;
         },
       });
     });

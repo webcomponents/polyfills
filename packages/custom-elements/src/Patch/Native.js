@@ -1,3 +1,13 @@
+/**
+ * @license
+ * Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
+ * This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+ * The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+ * The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+ * Code distributed by Google as part of the polymer project is also
+ * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+ */
+
 export default {
   Document_createElement: window.Document.prototype.createElement,
   Document_createElementNS: window.Document.prototype.createElementNS,
@@ -14,7 +24,6 @@ export default {
   Node_textContent: Object.getOwnPropertyDescriptor(window.Node.prototype, 'textContent'),
   Element_attachShadow: window.Element.prototype['attachShadow'],
   Element_innerHTML: Object.getOwnPropertyDescriptor(window.Element.prototype, 'innerHTML'),
-  Element_outerHTML: Object.getOwnPropertyDescriptor(window.Element.prototype, 'outerHTML'),
   Element_getAttribute: window.Element.prototype.getAttribute,
   Element_setAttribute: window.Element.prototype.setAttribute,
   Element_removeAttribute: window.Element.prototype.removeAttribute,
@@ -31,7 +40,6 @@ export default {
   Element_remove: window.Element.prototype['remove'],
   HTMLElement: window.HTMLElement,
   HTMLElement_innerHTML: Object.getOwnPropertyDescriptor(window.HTMLElement.prototype, 'innerHTML'),
-  HTMLElement_outerHTML: Object.getOwnPropertyDescriptor(window.HTMLElement.prototype, 'outerHTML'),
   HTMLElement_insertAdjacentElement: window.HTMLElement.prototype['insertAdjacentElement'],
   HTMLElement_insertAdjacentHTML: window.HTMLElement.prototype['insertAdjacentHTML'],
 };
