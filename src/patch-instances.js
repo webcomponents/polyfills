@@ -125,7 +125,7 @@ const makeNonEnumerable = (descriptors) => {
   for (let prop in descriptors) {
     const descriptor = descriptors[prop];
     // NOTE, the only known reason the descriptor wouldn't exist here is
-    // if someone has patched `getOwnPropertyNames`, but we've seen this
+    // if someone has patched `Object.getOwnPropertyNames`, but we've seen this
     // so this is just to be extra safe.
     if (descriptor) {
       descriptor.enumerable = false;
