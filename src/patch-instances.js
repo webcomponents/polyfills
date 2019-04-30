@@ -121,17 +121,21 @@ export const OutsideDescriptors = utils.getOwnPropertyDescriptors({
 
 });
 
-for (let prop in InsideDescriptors) {
-  InsideDescriptors[prop].enumerable = false;
+const makeNonEnumerable = (descriptors) => {
+  for (let prop in descriptors) {
+    const descriptor = descriptors[prop];
+    // NOTE, the only known reason the descriptor wouldn't exist here is
+    // if someone has patched `getOwnPropertyNames`, but we've seen this
+    // so this is just to be extra safe.
+    if (descriptor) {
+      descriptor.enumerable = false;
+    }
+  }
 }
 
-for (let prop in TextContentInnerHTMLDescriptors) {
-  TextContentInnerHTMLDescriptors[prop].enumerable = false;
-}
-
-for (let prop in OutsideDescriptors) {
-  OutsideDescriptors[prop].enumerable = false;
-}
+makeNonEnumerable(InsideDescriptors);
+makeNonEnumerable(TextContentInnerHTMLDescriptors);
+makeNonEnumerable(OutsideDescriptors);
 
 const noInstancePatching = utils.settings.hasDescriptors || utils.settings.noPatch;
 
