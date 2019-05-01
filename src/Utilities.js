@@ -29,10 +29,9 @@ export function isValidCustomElementName(localName) {
   return !reserved && validForm;
 }
 
-// IE11 does not have document.contains so polyfill it.
-if (!document.contains) {
-  document.contains = (node) => document.documentElement.contains(node);
-}
+// Note, IE11 doesn't have `document.contains`.
+const nativeContains = document.contains ? document.contains.bind(document) :
+  document.documentElement.contains.bind(document.documentElement);
 
 /**
  * @param {!Node} node
@@ -46,7 +45,7 @@ export function isConnected(node) {
   }
   // Optimization: It's significantly faster here to try to use `contains`,
   // especially on Edge/IE/
-  if (document.contains(node)) {
+  if (nativeContains(node)) {
     return true;
   }
   /** @type {?Node|undefined} */
@@ -82,7 +81,7 @@ function nextNode(root, start) {
 /**
  * @param {!Node} root
  * @param {!function(!Element)} callback
- * @param {?Set<Node>} visitedImports
+ * @param {!Set<!Node>=} visitedImports
  */
 export function walkDeepDescendantElements(root, callback, visitedImports) {
   let node = root;
