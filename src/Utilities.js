@@ -29,6 +29,10 @@ export function isValidCustomElementName(localName) {
   return !reserved && validForm;
 }
 
+// Note, IE11 doesn't have `document.contains`.
+const nativeContains = document.contains ? document.contains.bind(document) :
+  document.documentElement.contains.bind(document.documentElement);
+
 /**
  * @param {!Node} node
  * @return {boolean}
@@ -39,7 +43,11 @@ export function isConnected(node) {
   if (nativeValue !== undefined) {
     return nativeValue;
   }
-
+  // Optimization: It's significantly faster here to try to use `contains`,
+  // especially on Edge/IE/
+  if (nativeContains(node)) {
+    return true;
+  }
   /** @type {?Node|undefined} */
   let current = node;
   while (current && !(current.__CE_isImportDocument || current instanceof Document)) {
@@ -73,9 +81,9 @@ function nextNode(root, start) {
 /**
  * @param {!Node} root
  * @param {!function(!Element)} callback
- * @param {!Set<Node>=} visitedImports
+ * @param {!Set<!Node>=} visitedImports
  */
-export function walkDeepDescendantElements(root, callback, visitedImports = new Set()) {
+export function walkDeepDescendantElements(root, callback, visitedImports) {
   let node = root;
   while (node) {
     if (node.nodeType === Node.ELEMENT_NODE) {
@@ -88,6 +96,9 @@ export function walkDeepDescendantElements(root, callback, visitedImports = new 
         // If this import (polyfilled or not) has it's root node available,
         // walk it.
         const importNode = /** @type {!Node} */ (element.import);
+        if (visitedImports === undefined) {
+          visitedImports = new Set();
+        }
         if (importNode instanceof Node && !visitedImports.has(importNode)) {
           // Prevent multiple walks of the same import root.
           visitedImports.add(importNode);

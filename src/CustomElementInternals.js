@@ -212,7 +212,7 @@ export default class CustomElementInternals {
    * }=} options
    */
   patchAndUpgradeTree(root, options = {}) {
-    const visitedImports = options.visitedImports || new Set();
+    const visitedImports = options.visitedImports;
     const upgrade = options.upgrade || (element => this.upgradeElement(element));
 
     const elements = [];
@@ -317,7 +317,8 @@ export default class CustomElementInternals {
     element.__CE_state = CEState.custom;
     element.__CE_definition = definition;
 
-    if (definition.attributeChangedCallback) {
+    // Check `hasAttributes` here to avoid iterating when it's not necessary.
+    if (definition.attributeChangedCallback && element.hasAttributes()) {
       const observedAttributes = definition.observedAttributes;
       for (let i = 0; i < observedAttributes.length; i++) {
         const name = observedAttributes[i];
