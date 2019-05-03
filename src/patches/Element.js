@@ -123,6 +123,9 @@ export const ElementPatches = utils.getOwnPropertyDescriptors({
     } else if (!scopeClassAttribute(this, attr, '')) {
       this[utils.NATIVE_PREFIX + 'removeAttribute'](attr);
       distributeAttributeChange(this, attr);
+    } else if (this.getAttribute(attr) === '') {
+      // ensure that "class" attribute is fully removed if ShadyCSS does not keep scoping
+      this[utils.NATIVE_PREFIX + 'removeAttribute'](attr);
     }
   },
 
