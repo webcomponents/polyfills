@@ -118,7 +118,9 @@ export const ElementPatches = utils.getOwnPropertyDescriptors({
    * @param {string} attr
    */
   removeAttribute(attr) {
-    if (!scopeClassAttribute(this, attr, '')) {
+    if (this.ownerDocument !== doc) {
+      this[utils.NATIVE_PREFIX + 'removeAttribute'](attr);
+    } else if (!scopeClassAttribute(this, attr, '')) {
       this[utils.NATIVE_PREFIX + 'removeAttribute'](attr);
       distributeAttributeChange(this, attr);
     }
