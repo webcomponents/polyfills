@@ -8,9 +8,13 @@ Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 */
 import * as utils from '../utils.js';
-import {addEventListener, removeEventListener} from '../patch-events.js';
+import {addEventListener, removeEventListener, dispatchEvent} from '../patch-events.js';
 
 export const WindowPatches = utils.getOwnPropertyDescriptors({
+
+  // Ensure that `dispatchEvent` is patched directly on Window since on
+  // IE11, Window does not descend from EventTarget.
+  dispatchEvent,
 
   // NOTE: ensure these methods are bound to `window` so that `this` is correct
   // when called directly from global context without a receiver; e.g.

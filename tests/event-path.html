@@ -923,6 +923,16 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       ShadyDOM.wrap(document.body).appendChild(div);
       ShadyDOM.wrap(div).dispatchEvent(new MouseEvent('mouseover', {bubbles: true, cancelable: true, relatedTarget: document}));
     });
+
+    test('events on window', function() {
+      const w = ShadyDOM.wrap(window);
+      let heardEvent = false;
+      w.addEventListener('foo', (e) => {
+        heardEvent = true;
+      })
+      w.dispatchEvent(new Event('foo'));
+      assert.isTrue(heardEvent);
+    });
   });
   </script>
 </body>
