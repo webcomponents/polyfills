@@ -52,5 +52,5 @@ DocumentFragment.prototype.$;
 DocumentFragment.prototype.__noInsertionPoint;
 /** @type {!Array<!Node>} */
 DocumentFragment.prototype.nodeList;
-/** type {!Object} */
+/** @type {!Object} */
 DocumentFragment.prototype.templateInfo;
