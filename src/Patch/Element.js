@@ -1,3 +1,13 @@
+/**
+ * @license
+ * Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
+ * This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+ * The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+ * The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+ * Code distributed by Google as part of the polymer project is also
+ * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+ */
+
 import Native from './Native.js';
 import CustomElementInternals from '../CustomElementInternals.js';
 import CEState from '../CustomElementState.js';
@@ -19,6 +29,7 @@ export default function(internals) {
        */
       function(init) {
         const shadowRoot = Native.Element_attachShadow.call(this, init);
+        internals.patchNode(shadowRoot);
         this.__CE_shadowRoot = shadowRoot;
         return shadowRoot;
       });
@@ -67,8 +78,7 @@ export default function(internals) {
   } else if (Native.HTMLElement_innerHTML && Native.HTMLElement_innerHTML.get) {
     patch_innerHTML(HTMLElement.prototype, Native.HTMLElement_innerHTML);
   } else {
-
-    internals.addPatch(function(element) {
+    internals.addElementPatch(function(element) {
       patch_innerHTML(element, {
         enumerable: true,
         configurable: true,
@@ -76,7 +86,9 @@ export default function(internals) {
         // of the element and returning the resulting element's `innerHTML`.
         // TODO: Is this too expensive?
         get: /** @this {Element} */ function() {
-          return Native.Node_cloneNode.call(this, true).innerHTML;
+          return /** @type {!Element} */ (
+                     Native.Node_cloneNode.call(this, true))
+              .innerHTML;
         },
         // Implements setting `innerHTML` by creating an unpatched element,
         // setting `innerHTML` of that element and replacing the target
@@ -89,7 +101,7 @@ export default function(internals) {
           /** @type {!Node} */
           const content = isTemplate ? (/** @type {!HTMLTemplateElement} */
             (this)).content : this;
-          /** @type {!Node} */
+          /** @type {!Element} */
           const rawElement = Native.Document_createElementNS.call(document,
               this.namespaceURI, this.localName);
           rawElement.innerHTML = assignedValue;
@@ -97,7 +109,9 @@ export default function(internals) {
           while (content.childNodes.length > 0) {
             Native.Node_removeChild.call(content, content.childNodes[0]);
           }
-          const container = isTemplate ? rawElement.content : rawElement;
+          const container = isTemplate ?
+              /** @type {!HTMLTemplateElement} */ (rawElement).content :
+              rawElement;
           while (container.childNodes.length > 0) {
             Native.Node_appendChild.call(content, container.childNodes[0]);
           }
@@ -271,8 +285,7 @@ export default function(internals) {
         if (position === "beforebegin") {
           const marker = this.previousSibling;
           baseMethod.call(this, position, text);
-          upgradeNodesInRange(
-            /** @type {!Node} */ (marker || this.parentNode.firstChild), this);
+          upgradeNodesInRange(marker || /** @type {!Node} */ (this.parentNode.firstChild), this);
         } else if (position === "afterbegin") {
           const marker = this.firstChild;
           baseMethod.call(this, position, text);
@@ -280,7 +293,7 @@ export default function(internals) {
         } else if (position === "beforeend") {
           const marker = this.lastChild;
           baseMethod.call(this, position, text);
-          upgradeNodesInRange(marker || this.firstChild, null);
+          upgradeNodesInRange(marker || /** @type {!Node} */ (this.firstChild), null);
         } else if (position === "afterend") {
           const marker = this.nextSibling;
           baseMethod.call(this, position, text);

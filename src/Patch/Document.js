@@ -1,3 +1,13 @@
+/**
+ * @license
+ * Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
+ * This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+ * The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+ * The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+ * Code distributed by Google as part of the polymer project is also
+ * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+ */
+
 import Native from './Native.js';
 import CustomElementInternals from '../CustomElementInternals.js';
 import * as Utilities from '../Utilities.js';
@@ -21,7 +31,7 @@ export default function(internals) {
       if (this.__CE_hasRegistry) {
         const definition = internals.localNameToDefinition(localName);
         if (definition) {
-          const element = new (definition.constructor)();
+          const element = new (definition.constructorFunction)();
           internals.popCEReactionsQueue();
           return element;
         }
@@ -29,7 +39,7 @@ export default function(internals) {
 
       const result = /** @type {!Element} */
         (Native.Document_createElement.call(this, localName));
-      internals.patch(result);
+      internals.patchElement(result);
       internals.popCEReactionsQueue();
       return result;
     });
@@ -44,7 +54,7 @@ export default function(internals) {
     function(node, deep) {
       internals.pushCEReactionsQueue();
 
-      const clone = Native.Document_importNode.call(this, node, deep);
+      const clone = /** @type {!Node} */ (Native.Document_importNode.call(this, node, !!deep));
       // Only create custom elements if this document is associated with the registry.
       if (!this.__CE_hasRegistry) {
         internals.patchTree(clone);
@@ -72,7 +82,7 @@ export default function(internals) {
       if (this.__CE_hasRegistry && (namespace === null || namespace === NS_HTML)) {
         const definition = internals.localNameToDefinition(localName);
         if (definition) {
-          const element = new (definition.constructor)();
+          const element = new (definition.constructorFunction)();
           internals.popCEReactionsQueue();
           return element;
         }
@@ -80,7 +90,7 @@ export default function(internals) {
 
       const result = /** @type {!Element} */
         (Native.Document_createElementNS.call(this, namespace, localName));
-      internals.patch(result);
+      internals.patchElement(result);
       internals.popCEReactionsQueue();
       return result;
     });

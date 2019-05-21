@@ -1,26 +1,29 @@
+/**
+ * @externs
+ * @license
+ * Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
+ * This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+ * The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+ * The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+ * Code distributed by Google as part of the polymer project is also
+ * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+ */
+
 /** @type {boolean|undefined} */
 CustomElementRegistry.prototype.forcePolyfill;
 
-class AlreadyConstructedMarker {}
-
-/**
- * @enum {number}
- */
-const CustomElementState = {
-  custom: 1,
-  failed: 2,
-};
+class AlreadyConstructedMarkerType {}
 
 /**
  * @typedef {{
  *  localName: string,
- *  constructor: !Function,
+ *  constructorFunction: !Function,
  *  connectedCallback: Function,
  *  disconnectedCallback: Function,
  *  adoptedCallback: Function,
  *  attributeChangedCallback: Function,
  *  observedAttributes: !Array<string>,
- *  constructionStack: !Array<!HTMLElement|!AlreadyConstructedMarker>,
+ *  constructionStack: !Array<!HTMLElement|!AlreadyConstructedMarkerType>,
  * }}
  */
 let CustomElementDefinition;
@@ -46,9 +49,12 @@ Node.prototype.__CE_documentLoadHandled;
 /** @type {boolean|undefined} */
 Node.prototype.__CE_patched;
 
+/** @type {string} */
+Node.prototype.readyState;
+
 // Apply generally to Element.
 
-/** @type {!CustomElementState|undefined} */
+/** @type {number|undefined} */
 Element.prototype.__CE_state;
 
 /** @type {!CustomElementDefinition|undefined} */
