@@ -12,7 +12,9 @@ export const descriptors = {
   getAttributeNS: getDescriptor(proto, 'getAttributeNS'),
   innerHTML: getDescriptor(proto, 'innerHTML'),
   insertAdjacentElement: getDescriptor(proto, 'insertAdjacentElement'),
+  insertAdjacentHTML: getDescriptor(proto, 'insertAdjacentHTML'),
   localName: getDescriptor(proto, 'localName'),
+  namespaceURI: getDescriptor(proto, 'namespaceURI'),
   prepend: getDescriptor(proto, 'prepend'),
   remove: getDescriptor(proto, 'remove'),
   removeAttribute: getDescriptor(proto, 'removeAttribute'),
@@ -32,6 +34,9 @@ const getAttributeNSMethod = method(descriptors.getAttributeNS);
 const localNameGetter = getter(
   descriptors.localName || /* Edge / IE11 */ getDescriptor(window['Node'].prototype, 'localName'),
   function() { return this.localName; });
+/** @type {function(this: Element): !string} */
+const namespaceURIGetter = getter(descriptors.namespaceURI,
+  function() { return this.namespaceURI; });
 /** @type {function(this: Element, !string)} */
 const removeAttributeMethod = method(descriptors.removeAttribute);
 /** @type {function(this: Element, ?string, !string)} */
@@ -47,6 +52,7 @@ const setAttributeNSMethod = method(descriptors.setAttributeNS);
  *   getAttribute: function(!Element, !string): ?string,
  *   getAttributeNS: function(!Element, ?string, !string): ?string,
  *   localName: function(!Element): !string,
+ *   namespaceURI: function(!Element): !string,
  *   removeAttribute: function(!Element, !string),
  *   removeAttributeNS: function(!Element, ?string, !string),
  *   setAttribute: function(!Element, !string, !string): ?string,
@@ -58,6 +64,7 @@ export const proxy = {
   getAttribute: (node, name) => getAttributeMethod.call(node, name),
   getAttributeNS: (node, ns, name) => getAttributeNSMethod.call(node, ns, name),
   localName: node => localNameGetter.call(node),
+  namespaceURI: node => namespaceURIGetter.call(node),
   removeAttribute: (node, name) => removeAttributeMethod.call(node, name),
   removeAttributeNS: (node, ns, name) => removeAttributeNSMethod.call(node, ns, name),
   setAttribute: (node, name, value) => setAttributeMethod.call(node, name, value),

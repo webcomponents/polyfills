@@ -1,8 +1,19 @@
+/**
+ * @license
+ * Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
+ * This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+ * The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+ * The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+ * Code distributed by Google as part of the polymer project is also
+ * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+ */
+
 import {constructor as DocumentCtor, proxy as DocumentProxy} from './Environment/Document.js';
 import {proxy as ElementProxy} from './Environment/Element.js';
 import {proxy as EventTargetProxy} from './Environment/EventTarget.js';
 import {proxy as HTMLLinkElementProxy} from './Environment/HTMLLinkElement.js';
 import {constructor as NodeCtor, proxy as NodeProxy} from './Environment/Node.js';
+
 import * as Utilities from './Utilities.js';
 import CEState from './CustomElementState.js';
 
@@ -15,7 +26,10 @@ export default class CustomElementInternals {
     this._constructorToDefinition = new Map();
 
     /** @type {!Array<!function(!Node)>} */
-    this._patches = [];
+    this._patchesNode = [];
+
+    /** @type {!Array<!function(!Element)>} */
+    this._patchesElement = [];
 
     /** @type {boolean} */
     this._hasPatches = false;
@@ -27,7 +41,7 @@ export default class CustomElementInternals {
    */
   setDefinition(localName, definition) {
     this._localNameToDefinition.set(localName, definition);
-    this._constructorToDefinition.set(definition.constructor, definition);
+    this._constructorToDefinition.set(definition.constructorFunction, definition);
   }
 
   /**
@@ -47,11 +61,19 @@ export default class CustomElementInternals {
   }
 
   /**
-   * @param {!function(!Node)} listener
+   * @param {!function(!Node)} patch
    */
-  addPatch(listener) {
+  addNodePatch(patch) {
     this._hasPatches = true;
-    this._patches.push(listener);
+    this._patchesNode.push(patch);
+  }
+
+  /**
+   * @param {!function(!Element)} patch
+   */
+  addElementPatch(patch) {
+    this._hasPatches = true;
+    this._patchesElement.push(patch);
   }
 
   /**
@@ -60,20 +82,38 @@ export default class CustomElementInternals {
   patchTree(node) {
     if (!this._hasPatches) return;
 
-    Utilities.walkDeepDescendantElements(node, element => this.patch(element));
+    Utilities.walkDeepDescendantElements(node, element => this.patchElement(element));
   }
 
   /**
    * @param {!Node} node
    */
-  patch(node) {
+  patchNode(node) {
     if (!this._hasPatches) return;
 
     if (node.__CE_patched) return;
     node.__CE_patched = true;
 
-    for (let i = 0; i < this._patches.length; i++) {
-      this._patches[i](node);
+    for (let i = 0; i < this._patchesNode.length; i++) {
+      this._patchesNode[i](node);
+    }
+  }
+
+  /**
+   * @param {!Element} element
+   */
+  patchElement(element) {
+    if (!this._hasPatches) return;
+
+    if (element.__CE_patched) return;
+    element.__CE_patched = true;
+
+    for (let i = 0; i < this._patchesNode.length; i++) {
+      this._patchesNode[i](element);
+    }
+
+    for (let i = 0; i < this._patchesElement.length; i++) {
+      this._patchesElement[i](element);
     }
   }
 
@@ -178,7 +218,7 @@ export default class CustomElementInternals {
    * }=} options
    */
   patchAndUpgradeTree(root, options = {}) {
-    const visitedImports = options.visitedImports || new Set();
+    const visitedImports = options.visitedImports;
     const upgrade = options.upgrade || (element => this.upgradeElement(element));
 
     const elements = [];
@@ -234,7 +274,7 @@ export default class CustomElementInternals {
 
     if (this._hasPatches) {
       for (let i = 0; i < elements.length; i++) {
-        this.patch(elements[i]);
+        this.patchElement(elements[i]);
       }
     }
 
@@ -244,7 +284,7 @@ export default class CustomElementInternals {
   }
 
   /**
-   * @param {!Element} element
+   * @param {!HTMLElement} element
    */
   upgradeElement(element) {
     const currentState = element.__CE_state;
@@ -260,7 +300,8 @@ export default class CustomElementInternals {
     //   "The defaultView IDL attribute of the Document interface, on getting,
     //   must return this Document's browsing context's WindowProxy object, if
     //   this Document has an associated browsing context, or null otherwise."
-    const ownerDocument = NodeProxy.ownerDocument(element);
+    const ownerDocument = /** @type {!Document} */ (
+        NodeProxy.ownerDocument(element));
     if (
       !DocumentProxy.defaultView(ownerDocument) &&
       !(ownerDocument.__CE_isImportDocument && ownerDocument.__CE_hasRegistry)
@@ -272,7 +313,7 @@ export default class CustomElementInternals {
 
     definition.constructionStack.push(element);
 
-    const constructor = definition.constructor;
+    const constructor = definition.constructorFunction;
     try {
       try {
         let result = new (constructor)();
@@ -290,7 +331,8 @@ export default class CustomElementInternals {
     element.__CE_state = CEState.custom;
     element.__CE_definition = definition;
 
-    if (definition.attributeChangedCallback) {
+    // Check `hasAttributes` here to avoid iterating when it's not necessary.
+    if (definition.attributeChangedCallback && element.hasAttributes()) {
       const observedAttributes = definition.observedAttributes;
       for (let i = 0; i < observedAttributes.length; i++) {
         const name = observedAttributes[i];

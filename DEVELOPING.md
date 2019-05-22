@@ -36,15 +36,15 @@ reactions. The source references old versions of the spec.
   3. Run tests
 
     ```bash
-    $ wct tests/CustomElements/v1/index.html -l chrome
+    $ wct --npm tests/CustomElements/v1/index.html -l chrome
     ```
 
-  4. Bower link to use in another project
+  4. npm link to use in another project
 
     ```bash
-    $ bower link
+    $ npm link
     $ cd {your project directory}
-    $ bower link webcomponentsjs
+    $ npm link @webcomponents/custom-elements
     ```
 
 ## Implementation approach and browser support

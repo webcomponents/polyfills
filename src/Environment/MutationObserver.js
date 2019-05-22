@@ -1,5 +1,6 @@
 import {getDescriptor, getter, method} from "./Utilities.js";
 
+/** @type {function(new: MutationObserver, function(...?): ?)} */
 export const constructor = window['MutationObserver'];
 export const proto = constructor['prototype'];
 

@@ -1,3 +1,13 @@
+/**
+ * @license
+ * Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
+ * This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+ * The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+ * The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+ * Code distributed by Google as part of the polymer project is also
+ * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+ */
+
 import CustomElementInternals from './CustomElementInternals.js';
 import DocumentConstructionObserver from './DocumentConstructionObserver.js';
 import Deferred from './Deferred.js';
@@ -112,7 +122,7 @@ export default class CustomElementRegistry {
 
     const definition = {
       localName,
-      constructor,
+      constructorFunction: constructor,
       connectedCallback,
       disconnectedCallback,
       adoptedCallback,
@@ -132,6 +142,10 @@ export default class CustomElementRegistry {
     }
   }
 
+  upgrade(element) {
+    this._internals.patchAndUpgradeTree(element);
+  }
+
   _flush() {
     // If no new definitions were defined, don't attempt to flush. This could
     // happen if a flush callback keeps the function it is given and calls it
@@ -144,14 +158,14 @@ export default class CustomElementRegistry {
     /**
      * Unupgraded elements with definitions that were defined *before* the last
      * flush, in document order.
-     * @type {!Array<!Element>}
+     * @type {!Array<!HTMLElement>}
      */
     const elementsWithStableDefinitions = [];
 
     /**
      * A map from `localName`s of definitions that were defined *after* the last
      * flush to unupgraded elements matching that definition, in document order.
-     * @type {!Map<string, !Array<!Element>>}
+     * @type {!Map<string, !Array<!HTMLElement>>}
      */
     const elementsWithPendingDefinitions = new Map();
     for (let i = 0; i < pendingDefinitions.length; i++) {
@@ -209,7 +223,7 @@ export default class CustomElementRegistry {
   get(localName) {
     const definition = this._internals.localNameToDefinition(localName);
     if (definition) {
-      return definition.constructor;
+      return definition.constructorFunction;
     }
 
     return undefined;
@@ -253,6 +267,7 @@ export default class CustomElementRegistry {
 // Closure compiler exports.
 window['CustomElementRegistry'] = CustomElementRegistry;
 CustomElementRegistry.prototype['define'] = CustomElementRegistry.prototype.define;
+CustomElementRegistry.prototype['upgrade'] = CustomElementRegistry.prototype.upgrade;
 CustomElementRegistry.prototype['get'] = CustomElementRegistry.prototype.get;
 CustomElementRegistry.prototype['whenDefined'] = CustomElementRegistry.prototype.whenDefined;
 CustomElementRegistry.prototype['polyfillWrapFlushCallback'] = CustomElementRegistry.prototype.polyfillWrapFlushCallback;

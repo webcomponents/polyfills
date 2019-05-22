@@ -1,9 +1,20 @@
+/**
+ * @license
+ * Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
+ * This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+ * The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+ * The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+ * Code distributed by Google as part of the polymer project is also
+ * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+ */
+
 import {proxy as DocumentProxy} from '../Environment/Document.js';
 import {
   descriptors as NodeDesc,
   proto as NodeProto,
   proxy as NodeProxy,
 } from '../Environment/Node.js';
+
 import CustomElementInternals from '../CustomElementInternals.js';
 import * as Utilities from '../Utilities.js';
 
@@ -96,7 +107,7 @@ export default function(internals) {
      * @return {!Node}
      */
     function(deep) {
-      const clone = NodeProxy.cloneNode(this, deep);
+      const clone = NodeProxy.cloneNode(this, !!deep);
       // Only create custom elements if this element's owner document is
       // associated with the registry.
       if (!NodeProxy.ownerDocument(this).__CE_hasRegistry) {
@@ -212,7 +223,7 @@ export default function(internals) {
   if (NodeDesc.textContent && NodeDesc.textContent.get) {
     patch_textContent(NodeProto, NodeDesc.textContent);
   } else {
-    internals.addPatch(function(element) {
+    internals.addNodePatch(function(element) {
       patch_textContent(element, {
         enumerable: true,
         configurable: true,
@@ -224,7 +235,14 @@ export default function(internals) {
 
           const childNodes = NodeProxy.childNodes(this);
           for (let i = 0; i < childNodes.length; i++) {
-            parts.push(childNodes[i].textContent);
+            const childNode = childNodes[i];
+            if (NodeProxy.nodeType(childNode) === Node.COMMENT_NODE) {
+              continue;
+            }
+            const textContent = NodeProxy.textContent(childNode);
+            if (textContent) {
+              parts.push(textContent);
+            }
           }
 
           return parts.join('');
@@ -234,7 +252,11 @@ export default function(internals) {
           while (child = NodeProxy.firstChild(this)) {
             NodeProxy.removeChild(this, child);
           }
-          NodeProxy.appendChild(this, DocumentProxy.createTextNode(document, assignedValue));
+          // `textContent = null | undefined | ''` does not result in
+          // a TextNode childNode
+          if (assignedValue != null && assignedValue !== '') {
+            NodeProxy.appendChild(this, DocumentProxy.createTextNode(document, assignedValue));
+          }
         },
       });
     });

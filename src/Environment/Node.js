@@ -7,6 +7,7 @@ export const descriptors = {
   appendChild: getDescriptor(proto, 'appendChild'),
   childNodes: getDescriptor(proto, 'childNodes'),
   cloneNode: getDescriptor(proto, 'cloneNode'),
+  contains: getDescriptor(proto, 'contains'),
   firstChild: getDescriptor(proto, 'firstChild'),
   insertBefore: getDescriptor(proto, 'insertBefore'),
   isConnected: getDescriptor(proto, 'isConnected'),
@@ -25,6 +26,8 @@ const appendChildMethod = method(descriptors.appendChild);
 const childNodesGetter = getter(descriptors.childNodes, function() { return this.childNodes; });
 /** @type {function(this: Node, boolean=): !Node} */
 const cloneNodeMethod = method(descriptors.cloneNode);
+/** @type {function(this: Node, ?Node): boolean} */
+const containsMethod = method(descriptors.contains);
 /** @type {function(this: Node): ?Node} */
 const firstChildGetter = getter(descriptors.firstChild, function() { return this.firstChild; });
 /** @type {function(this: Node, !Node, ?Node): !Node} */
@@ -43,12 +46,15 @@ const parentNodeGetter = getter(descriptors.parentNode, function() { return this
 const removeChildMethod = method(descriptors.removeChild);
 /** @type {function(this: Node, !Node, !Node): !Node} */
 const replaceChildMethod = method(descriptors.replaceChild);
+/** @type {function(this: Node): ?string} */
+const textContentGetter = getter(descriptors.textContent, function() { return this.textContent; });
 
 /**
  * @type {{
  *   appendChild: function(!Node, !Node): !Node,
  *   childNodes: function(!Node): !NodeList,
  *   cloneNode: function(!Node, boolean=): !Node,
+ *   contains: function(!Node, ?Node): boolean,
  *   firstChild: function(!Node): ?Node,
  *   insertBefore: function(!Node, !Node, ?Node): !Node,
  *   isConnected: function(!Node): boolean,
@@ -58,12 +64,14 @@ const replaceChildMethod = method(descriptors.replaceChild);
  *   parentNode: function(!Node): ?Node,
  *   removeChild: function(!Node, !Node): !Node,
  *   replaceChild: function(!Node, !Node, !Node): !Node,
+ *   textContent: function(!Node): ?string,
  * }}
  */
 export const proxy = {
   appendChild: (node, deep) => appendChildMethod.call(node, deep),
   childNodes: node => childNodesGetter.call(node),
   cloneNode: (node, deep) => cloneNodeMethod.call(node, deep),
+  contains: (node, other) => containsMethod.call(node, other),
   firstChild: node => firstChildGetter.call(node),
   insertBefore: (node, newChild, refChild) => insertBeforeMethod.call(node, newChild, refChild),
   isConnected: node => isConnectedGetter.call(node),
@@ -73,4 +81,5 @@ export const proxy = {
   parentNode: node => parentNodeGetter.call(node),
   removeChild: (node, deep) => removeChildMethod.call(node, deep),
   replaceChild: (node, newChild, oldChild) => replaceChildMethod.call(node, newChild, oldChild),
+  textContent: (node) => textContentGetter.call(node),
 };

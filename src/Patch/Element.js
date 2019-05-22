@@ -1,3 +1,13 @@
+/**
+ * @license
+ * Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
+ * This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+ * The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+ * The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+ * Code distributed by Google as part of the polymer project is also
+ * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+ */
+
 import {proxy as DocumentProxy} from '../Environment/Document.js';
 import {
   descriptors as ElementDesc,
@@ -10,6 +20,7 @@ import {
 } from '../Environment/HTMLElement.js';
 import {proxy as HTMLTemplateElementProxy} from '../Environment/HTMLTemplateElement.js';
 import {proxy as NodeProxy} from '../Environment/Node.js';
+
 import CustomElementInternals from '../CustomElementInternals.js';
 import CEState from '../CustomElementState.js';
 import * as Utilities from '../Utilities.js';
@@ -26,10 +37,12 @@ export default function(internals) {
       /**
        * @this {Element}
        * @param {!{mode: string}} init
-       * @return {ShadowRoot}
+       * @return {!ShadowRoot}
        */
       function(init) {
-        const shadowRoot = ElementProxy.attachShadow(this, init);
+        const shadowRoot = /** @type {!ShadowRoot} */ (
+            ElementProxy.attachShadow(this, init));
+        internals.patchNode(shadowRoot);
         this.__CE_shadowRoot = shadowRoot;
         return shadowRoot;
       });
@@ -91,7 +104,7 @@ export default function(internals) {
     // In this case, `innerHTML` has no exposed getter but still exists. Rather
     // than using the environment proxy, we have to get and set it directly.
 
-    internals.addPatch(function(element) {
+    internals.addElementPatch(function(element) {
       patch_innerHTML(element, {
         enumerable: true,
         configurable: true,
@@ -99,8 +112,8 @@ export default function(internals) {
         // of the element and returning the resulting element's `innerHTML`.
         // TODO: Is this too expensive?
         get: /** @this {Element} */ function() {
-          const clone = /** @type {Element} */ (NodeProxy.cloneNode(this, true))
-          return clone.innerHTML;
+          return /** @type {Element} */ (
+              NodeProxy.cloneNode(this, true)).innerHTML;
         },
         // Implements setting `innerHTML` by creating an unpatched element,
         // setting `innerHTML` of that element and replacing the target
@@ -110,19 +123,24 @@ export default function(internals) {
           // We need to do this because `template.appendChild` does not
           // route into `template.content`.
           const localName = ElementProxy.localName(this);
+          const namespaceURI = ElementProxy.namespaceURI(this);
           const isTemplate = (localName === 'template');
           /** @type {!Node} */
           const content =
             isTemplate
             ? HTMLTemplateElementProxy.content(/** @type {!HTMLTemplateElement} */ (this))
             : this;
-          const rawElement = DocumentProxy.createElement(document, localName);
+          /** @type {!Element} */
+          const rawElement = DocumentProxy.createElementNS(document, namespaceURI, localName);
           rawElement.innerHTML = assignedValue;
 
           while (NodeProxy.childNodes(content).length > 0) {
             NodeProxy.removeChild(content, content.childNodes[0]);
           }
-          const container = isTemplate ? HTMLTemplateElementProxy.content(rawElement) : rawElement;
+          const container = isTemplate ?
+              HTMLTemplateElementProxy.content(
+                  /** @type {!HTMLTemplateElement} */ (rawElement)) :
+              rawElement;
           while (NodeProxy.childNodes(container).length > 0) {
             NodeProxy.appendChild(content, container.childNodes[0]);
           }
@@ -215,14 +233,14 @@ export default function(internals) {
     Utilities.setPropertyUnchecked(destination, 'insertAdjacentElement',
       /**
        * @this {Element}
-       * @param {string} where
+       * @param {string} position
        * @param {!Element} element
        * @return {?Element}
        */
-      function(where, element) {
+      function(position, element) {
         const wasConnected = Utilities.isConnected(element);
         const insertedElement = /** @type {!Element} */
-          (baseMethod.call(this, where, element));
+          (baseMethod.call(this, position, element));
 
         if (wasConnected) {
           internals.disconnectTree(element);
@@ -241,6 +259,65 @@ export default function(internals) {
     patch_insertAdjacentElement(ElementProto, ElementDesc.insertAdjacentElement.value);
   } else {
     console.warn('Custom Elements: `Element#insertAdjacentElement` was not patched.');
+  }
+
+
+  function patch_insertAdjacentHTML(destination, baseMethod) {
+    /**
+     * Patches and upgrades all nodes which are siblings between `start`
+     * (inclusive) and `end` (exclusive). If `end` is `null`, then all siblings
+     * following `start` will be patched and upgraded.
+     * @param {!Node} start
+     * @param {?Node} end
+     */
+    function upgradeNodesInRange(start, end) {
+      const nodes = [];
+      for (let node = start; node !== end; node = node.nextSibling) {
+        nodes.push(node);
+      }
+      for (let i = 0; i < nodes.length; i++) {
+        internals.patchAndUpgradeTree(nodes[i]);
+      }
+    }
+
+    Utilities.setPropertyUnchecked(destination, 'insertAdjacentHTML',
+      /**
+       * @this {Element}
+       * @param {string} position
+       * @param {string} text
+       */
+      function(position, text) {
+        position = position.toLowerCase();
+
+        if (position === "beforebegin") {
+          const marker = this.previousSibling;
+          baseMethod.call(this, position, text);
+          upgradeNodesInRange(marker || /** @type {!Node} */ (this.parentNode.firstChild), this);
+        } else if (position === "afterbegin") {
+          const marker = this.firstChild;
+          baseMethod.call(this, position, text);
+          upgradeNodesInRange(/** @type {!Node} */ (this.firstChild), marker);
+        } else if (position === "beforeend") {
+          const marker = this.lastChild;
+          baseMethod.call(this, position, text);
+          upgradeNodesInRange(marker || /** @type {!Node} */ (this.firstChild), null);
+        } else if (position === "afterend") {
+          const marker = this.nextSibling;
+          baseMethod.call(this, position, text);
+          upgradeNodesInRange(/** @type {!Node} */ (this.nextSibling), marker);
+        } else {
+          throw new SyntaxError(`The value provided (${String(position)}) is ` +
+            "not one of 'beforebegin', 'afterbegin', 'beforeend', or 'afterend'.");
+        }
+      });
+  }
+
+  if (HTMLElementDesc.insertAdjacentHTML) {
+    patch_insertAdjacentHTML(HTMLElementProto, HTMLElementDesc.insertAdjacentHTML.value);
+  } else if (ElementDesc.insertAdjacentHTML) {
+    patch_insertAdjacentHTML(ElementProto, ElementDesc.insertAdjacentHTML.value);
+  } else {
+    console.warn('Custom Elements: `Element#insertAdjacentHTML` was not patched.');
   }
 
 
