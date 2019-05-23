@@ -13,14 +13,18 @@ import {
   descriptors as DocumentFragmentDesc,
   proto as DocumentFragmentProto,
 } from '../Environment/DocumentFragment.js';
-import PatchParentNode from './Interface/ParentNode.js';
+import {
+  default as PatchParentNode,
+  PrependType,
+  AppendType,
+} from './Interface/ParentNode.js';
 
 /**
  * @param {!CustomElementInternals} internals
  */
 export default function(internals) {
   PatchParentNode(internals, DocumentFragmentProto, {
-    prepend: (DocumentFragmentDesc.prepend || {}).value,
-    append: (DocumentFragmentDesc.append || {}).value,
+    prepend: /** @type {PrependType|undefined} */ ((DocumentFragmentDesc.prepend || {}).value),
+    append: /** @type {AppendType|undefined} */ ((DocumentFragmentDesc.append || {}).value),
   });
 };

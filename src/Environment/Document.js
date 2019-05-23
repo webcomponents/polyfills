@@ -27,21 +27,17 @@ const readyStateGetter = getter(descriptors.readyState, function() { return this
 /** @type {function(this: Document): ?Window} */
 const defaultViewGetter = getter(descriptors.defaultView, function() { return this.defaultView; });
 
-/**
- * @type {{
- *   createElement: function(!Document, !string): !Element,
- *   createElementNS: function(!Document, ?string, !string): !Element,
- *   createTextNode: function(!Document, !string): !Text,
- *   importNode: function(!Document, !Node, boolean=): !Node,
- *   readyState: function(!Document): (!string|undefined),
- *   defaultView: function(!Document): ?Window,
- * }}
- */
 export const proxy = {
+  /** @type {function(!Document, !string): !HTMLElement} */
   createElement: (doc, localName) => createElementMethod.call(doc, localName),
+  /** @type {function(!Document, ?string, !string): !Element} */
   createElementNS: (doc, namespace, qualifiedName) => createElementNSMethod.call(doc, namespace, qualifiedName),
+  /** @type {function(!Document, !string): !Text} */
   createTextNode: (doc, localName) => createTextNodeMethod.call(doc, localName),
+  /** @type {function(!Document, !Node, boolean=): !Node} */
   importNode: (doc, node, deep) => importNodeMethod.call(doc, node, deep),
+  /** @type {function(!Document): (!string|undefined)} */
   readyState: doc => readyStateGetter.call(doc),
+  /** @type {function(!Document): ?Window} */
   defaultView: doc => defaultViewGetter.call(doc),
 };

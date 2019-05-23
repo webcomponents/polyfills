@@ -13,13 +13,9 @@ const appendMethod = method(descriptors.append);
 /** @type {function(this: DocumentFragment, ...(!Node|!string))} */
 const prependMethod = method(descriptors.prepend);
 
-/**
- * @type {{
- *   append: function(!DocumentFragment, ...(!Node|!string)),
- *   prepend: function(!DocumentFragment, ...(!Node|!string)),
- * }}
- */
 export const proxy = {
+  /** @type {function(!DocumentFragment, ...(!Node|!string))} */
   append: (fragment, ...nodes) => appendMethod.call(fragment, ...nodes),
+  /** @type {function(!DocumentFragment, ...(!Node|!string))} */
   prepend: (fragment, ...nodes) => prependMethod.call(fragment, ...nodes),
 };

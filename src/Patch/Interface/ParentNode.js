@@ -12,23 +12,23 @@ import CustomElementInternals from '../../CustomElementInternals.js';
 import {proxy as NodeProxy} from '../../Environment/Node.js';
 import * as Utilities from '../../Utilities.js';
 
-/**
- * @typedef {{
- *   prepend: !function(...(!Node|string)),
-  *  append: !function(...(!Node|string)),
- * }}
- */
-let ParentNodeNativeMethods;
+/** @typedef {!function(...(!Node|string))} */
+export let PrependType;
+/** @typedef {!function(...(!Node|string))} */
+export let AppendType;
 
 /**
  * @param {!CustomElementInternals} internals
  * @param {!Object} destination
- * @param {!ParentNodeNativeMethods} builtIn
+ * @param {!{
+ *   prepend: (PrependType|undefined),
+ *   append: (AppendType|undefined),
+ * }} builtIn
  */
 export default function(internals, destination, builtIn) {
   /**
-   * @param {!function(...(!Node|string))} builtInMethod
-   * @return {!function(...(!Node|string))}
+   * @param {PrependType|AppendType} builtInMethod
+   * @return {PrependType|AppendType}
    */
   function appendPrependPatch(builtInMethod) {
     return /** @this {!Node} */ function(...nodes) {

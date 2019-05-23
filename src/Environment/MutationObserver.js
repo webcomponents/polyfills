@@ -14,13 +14,9 @@ const disconnectMethod = method(descriptors.disconnect);
 /** @type {function(this: MutationObserver, !Node, !MutationObserverInit=)} */
 const observeMethod = method(descriptors.observe);
 
-/**
- * @type {{
- *   disconnect: function(!MutationObserver),
- *   observe: function(!MutationObserver, !Node, !MutationObserverInit=),
- * }}
- */
 export const proxy = {
+  /** @type {function(!MutationObserver)} */
   disconnect: mutationObserver => disconnectMethod.call(mutationObserver),
+  /** @type {function(!MutationObserver, !Node, !MutationObserverInit=)} */
   observe: (mutationObserver, target, options) => observeMethod.call(mutationObserver, target, options),
 };

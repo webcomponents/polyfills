@@ -10,11 +10,7 @@ export const descriptors = {
 /** @type {function(this: HTMLLinkElement): ?Document} */
 const importGetter = getter(descriptors.import, function() { return this.import; });
 
-/**
- * @type {{
- *   import: function(!HTMLLinkElement): ?Document,
- * }}
- */
 export const proxy = {
+  /** @type {function(!HTMLLinkElement): ?Document} */
   import: node => importGetter.call(node),
 };

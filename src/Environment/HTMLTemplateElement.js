@@ -10,11 +10,7 @@ export const descriptors = !proto ? {} : {
 /** @type {function(this: HTMLTemplateElement): !DocumentFragment} */
 const contentGetter = getter(descriptors.content, function() { return this.content; });
 
-/**
- * @type {{
- *   content: function(!HTMLTemplateElement): !DocumentFragment,
- * }}
- */
 export const proxy = {
+  /** @type {function(!HTMLTemplateElement): !DocumentFragment} */
   content: node => contentGetter.call(node),
 };

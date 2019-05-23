@@ -46,27 +46,23 @@ const setAttributeMethod = method(descriptors.setAttribute);
 /** @type {function(this: Element, ?string, !string, !string): ?string} */
 const setAttributeNSMethod = method(descriptors.setAttributeNS);
 
-/**
- * @type {{
- *   attachShadow: function(!Element, !{mode: !string}): ShadowRoot,
- *   getAttribute: function(!Element, !string): ?string,
- *   getAttributeNS: function(!Element, ?string, !string): ?string,
- *   localName: function(!Element): !string,
- *   namespaceURI: function(!Element): !string,
- *   removeAttribute: function(!Element, !string),
- *   removeAttributeNS: function(!Element, ?string, !string),
- *   setAttribute: function(!Element, !string, !string): ?string,
- *   setAttributeNS: function(!Element, ?string, !string, !string): ?string,
- * }}
- */
 export const proxy = {
+  /** @type {function(!Element, !{mode: !string}): ShadowRoot} */
   attachShadow: (node, options) => attachShadowMethod.call(node, options),
+  /** @type {function(!Element, !string): ?string} */
   getAttribute: (node, name) => getAttributeMethod.call(node, name),
+  /** @type {function(!Element, ?string, !string): ?string} */
   getAttributeNS: (node, ns, name) => getAttributeNSMethod.call(node, ns, name),
+  /** @type {function(!Element): !string} */
   localName: node => localNameGetter.call(node),
+  /** @type {function(!Element): !string} */
   namespaceURI: node => namespaceURIGetter.call(node),
+  /** @type {function(!Element, !string)} */
   removeAttribute: (node, name) => removeAttributeMethod.call(node, name),
+  /** @type {function(!Element, ?string, !string)} */
   removeAttributeNS: (node, ns, name) => removeAttributeNSMethod.call(node, ns, name),
+  /** @type {function(!Element, !string, !string): ?string} */
   setAttribute: (node, name, value) => setAttributeMethod.call(node, name, value),
+  /** @type {function(!Element, ?string, !string, !string): ?string} */
   setAttributeNS: (node, ns, name, value) => setAttributeNSMethod.call(node, ns, name, value),
 };

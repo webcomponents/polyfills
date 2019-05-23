@@ -10,11 +10,7 @@ export const descriptors = {
 /** @type {function(this: MutationRecord): (!NodeList|undefined)} */
 const addedNodesGetter = getter(descriptors.addedNodes, function() { return this.addedNodes; });
 
-/**
- * @type {{
- *   addedNodes: function(!MutationRecord): (!NodeList|undefined),
- * }}
- */
 export const proxy = {
+  /** @type {function(!MutationRecord): (!NodeList|undefined)} */
   addedNodes: node => addedNodesGetter.call(node),
 };

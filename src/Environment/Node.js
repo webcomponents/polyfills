@@ -49,37 +49,33 @@ const replaceChildMethod = method(descriptors.replaceChild);
 /** @type {function(this: Node): ?string} */
 const textContentGetter = getter(descriptors.textContent, function() { return this.textContent; });
 
-/**
- * @type {{
- *   appendChild: function(!Node, !Node): !Node,
- *   childNodes: function(!Node): !NodeList,
- *   cloneNode: function(!Node, boolean=): !Node,
- *   contains: function(!Node, ?Node): boolean,
- *   firstChild: function(!Node): ?Node,
- *   insertBefore: function(!Node, !Node, ?Node): !Node,
- *   isConnected: function(!Node): boolean,
- *   nextSibling: function(!Node): ?Node,
- *   nodeType: function(!Node): number,
- *   ownerDocument: function(!Node): ?Document,
- *   parentNode: function(!Node): ?Node,
- *   removeChild: function(!Node, !Node): !Node,
- *   replaceChild: function(!Node, !Node, !Node): !Node,
- *   textContent: function(!Node): ?string,
- * }}
- */
 export const proxy = {
+  /** @type {function(!Node, !Node): !Node} */
   appendChild: (node, deep) => appendChildMethod.call(node, deep),
+  /** @type {function(!Node): !NodeList} */
   childNodes: node => childNodesGetter.call(node),
+  /** @type {function(!Node, boolean=): !Node} */
   cloneNode: (node, deep) => cloneNodeMethod.call(node, deep),
+  /** @type {function(!Node, ?Node): boolean} */
   contains: (node, other) => containsMethod.call(node, other),
+  /** @type {function(!Node): ?Node} */
   firstChild: node => firstChildGetter.call(node),
+  /** @type {function(!Node, !Node, ?Node): !Node} */
   insertBefore: (node, newChild, refChild) => insertBeforeMethod.call(node, newChild, refChild),
+  /** @type {function(!Node): boolean} */
   isConnected: node => isConnectedGetter.call(node),
+  /** @type {function(!Node): ?Node} */
   nextSibling: node => nextSiblingGetter.call(node),
+  /** @type {function(!Node): number} */
   nodeType: node => nodeTypeGetter.call(node),
+  /** @type {function(!Node): ?Document} */
   ownerDocument: node => ownerDocumentGetter.call(node),
+  /** @type {function(!Node): ?Node} */
   parentNode: node => parentNodeGetter.call(node),
+  /** @type {function(!Node, !Node): !Node} */
   removeChild: (node, deep) => removeChildMethod.call(node, deep),
+  /** @type {function(!Node, !Node, !Node): !Node} */
   replaceChild: (node, newChild, oldChild) => replaceChildMethod.call(node, newChild, oldChild),
+  /** @type {function(!Node): ?string} */
   textContent: (node) => textContentGetter.call(node),
 };

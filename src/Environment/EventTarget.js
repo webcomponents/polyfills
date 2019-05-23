@@ -13,11 +13,8 @@ const addEventListenerMethod =
   // IE11
   method(getDescriptor(window['Node']['prototype'], 'addEventListener'));
 
-/**
- * @type {{
- *   addEventListener: function(!EventTarget, !string, ?Function, AddEventListenerOptions=),
- * }}
- */
 export const proxy = {
-  addEventListener: (node, type, callback, options) => addEventListenerMethod.call(node, type, callback, options),
+  /** @type {function(!EventTarget, !string, ?Function, AddEventListenerOptions=)} */
+  addEventListener: (node, type, callback, options) =>
+      addEventListenerMethod.call(node, type, callback, options),
 };

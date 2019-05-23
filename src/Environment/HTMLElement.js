@@ -13,11 +13,7 @@ export const descriptors = {
 /** @type {function(this: Node, ?Node): boolean} */
 const containsMethod = method(descriptors.contains);
 
-/**
- * @type {!{
- *   contains: function(!Node, ?Node): boolean,
- * }}
- */
 export const proxy = {
+  /** @type {function(!Node, ?Node): boolean} */
   contains: (node, other) => containsMethod.call(node, other),
 };

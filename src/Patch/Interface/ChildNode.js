@@ -12,20 +12,24 @@ import CustomElementInternals from '../../CustomElementInternals.js';
 import {proxy as NodeProxy} from '../../Environment/Node.js';
 import * as Utilities from '../../Utilities.js';
 
-/**
- * @typedef {{
- *   before: !function(...(!Node|string)),
- *   after: !function(...(!Node|string)),
- *   replaceWith: !function(...(!Node|string)),
- *   remove: !function(),
- * }}
- */
-let ChildNodeNativeMethods;
+/** @typedef {!function(...(!Node|string))} */
+export let BeforeType;
+/** @typedef {!function(...(!Node|string))} */
+export let AfterType;
+/** @typedef {!function(...(!Node|string))} */
+export let ReplaceWithType;
+/** @typedef {!function()} */
+export let RemoveType;
 
 /**
  * @param {!CustomElementInternals} internals
  * @param {!Object} destination
- * @param {!ChildNodeNativeMethods} builtIn
+ * @param {!{
+ *   before: (BeforeType|undefined),
+ *   after: (AfterType|undefined),
+ *   replaceWith: (ReplaceWithType|undefined),
+ *   remove: (RemoveType|undefined),
+ * }} builtIn
  */
 export default function(internals, destination, builtIn) {
   /**
@@ -83,7 +87,7 @@ export default function(internals, destination, builtIn) {
     Utilities.setPropertyUnchecked(destination, 'before', beforeAfterPatch(builtIn.before));
   }
 
-  if (builtIn.before !== undefined) {
+  if (builtIn.after !== undefined) {
     Utilities.setPropertyUnchecked(destination, 'after', beforeAfterPatch(builtIn.after));
   }
 

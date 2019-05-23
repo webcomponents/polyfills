@@ -25,8 +25,18 @@ import CustomElementInternals from '../CustomElementInternals.js';
 import CEState from '../CustomElementState.js';
 import * as Utilities from '../Utilities.js';
 
-import PatchParentNode from './Interface/ParentNode.js';
-import PatchChildNode from './Interface/ChildNode.js';
+import {
+  default as PatchParentNode,
+  PrependType,
+  AppendType,
+} from './Interface/ParentNode.js';
+import {
+  default as PatchChildNode,
+  BeforeType,
+  AfterType,
+  ReplaceWithType,
+  RemoveType,
+}from './Interface/ChildNode.js';
 
 /**
  * @param {!CustomElementInternals} internals
@@ -322,14 +332,14 @@ export default function(internals) {
 
 
   PatchParentNode(internals, ElementProto, {
-    prepend: (ElementDesc.prepend || {}).value,
-    append: (ElementDesc.append || {}).value,
+    prepend: /** @type {PrependType|undefined} */ ((ElementDesc.prepend || {}).value),
+    append: /** @type {AppendType|undefined} */ ((ElementDesc.append || {}).value),
   });
 
   PatchChildNode(internals, ElementProto, {
-    before: (ElementDesc.before || {}).value,
-    after: (ElementDesc.after || {}).value,
-    replaceWith: (ElementDesc.replaceWith || {}).value,
-    remove: (ElementDesc.remove || {}).value,
+    before: /** @type {BeforeType|undefined} */ ((ElementDesc.before || {}).value),
+    after: /** @type {AfterType|undefined} */ ((ElementDesc.after || {}).value),
+    replaceWith: /** @type {ReplaceWithType|undefined} */ ((ElementDesc.replaceWith || {}).value),
+    remove: /** @type {RemoveType|undefined} */ ((ElementDesc.remove || {}).value),
   });
 };

@@ -17,7 +17,11 @@ import {
 import CustomElementInternals from '../CustomElementInternals.js';
 import * as Utilities from '../Utilities.js';
 
-import PatchParentNode from './Interface/ParentNode.js';
+import {
+  default as PatchParentNode,
+  PrependType,
+  AppendType,
+} from './Interface/ParentNode.js';
 
 /**
  * @param {!CustomElementInternals} internals
@@ -87,7 +91,7 @@ export default function(internals) {
     });
 
   PatchParentNode(internals, DocumentProto, {
-    prepend: (DocumentDesc.prepend || {}).value,
-    append: (DocumentDesc.append || {}).value,
+    prepend: /** @type {PrependType|undefined} */ ((DocumentDesc.prepend || {}).value),
+    append: /** @type {AppendType|undefined} */ ((DocumentDesc.append || {}).value),
   });
 };
