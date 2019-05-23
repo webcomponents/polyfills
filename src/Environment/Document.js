@@ -18,6 +18,7 @@ export const descriptors = {
   createElement: getDescriptor(proto, 'createElement'),
   createElementNS: getDescriptor(proto, 'createElementNS'),
   createTextNode: getDescriptor(proto, 'createTextNode'),
+  documentElement: getDescriptor(proto, 'documentElement'),
   importNode: getDescriptor(proto, 'importNode'),
   prepend: getDescriptor(proto, 'prepend'),
   readyState: getDescriptor(proto, 'readyState'),
@@ -30,6 +31,8 @@ const createElementMethod = method(descriptors.createElement);
 const createElementNSMethod = method(descriptors.createElementNS);
 /** @type {function(this: Document, !string): !Text} */
 const createTextNodeMethod = method(descriptors.createTextNode);
+/** @type {function(this: Document): ?Element} */
+const documentElementGetter = getter(descriptors.documentElement, function() { return this.documentElement; });
 /** @type {function(this: Document, !Node, boolean=): !Node} */
 const importNodeMethod = method(descriptors.importNode);
 /** @type {function(this: Document): (!string|undefined)} */
@@ -44,6 +47,8 @@ export const proxy = {
   createElementNS: (doc, namespace, qualifiedName) => createElementNSMethod.call(doc, namespace, qualifiedName),
   /** @type {function(!Document, !string): !Text} */
   createTextNode: (doc, localName) => createTextNodeMethod.call(doc, localName),
+  /** @type {function(!Document): ?Element} */
+  documentElement: (doc) => documentElementGetter.call(doc),
   /** @type {function(!Document, !Node, boolean=): !Node} */
   importNode: (doc, node, deep) => importNodeMethod.call(doc, node, deep),
   /** @type {function(!Document): (!string|undefined)} */

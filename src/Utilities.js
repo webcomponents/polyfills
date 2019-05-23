@@ -8,6 +8,7 @@
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
+import {proxy as DocumentProxy} from './Environment/Document.js';
 import {proxy as ElementProxy} from './Environment/Element.js';
 import {proxy as HTMLElementProxy} from './Environment/HTMLElement.js';
 import {
@@ -37,9 +38,17 @@ export function isValidCustomElementName(localName) {
 }
 
 // Note, in IE11 `#contains` is on HTMLElement instead of Node.
+/** @type {function(?Node): boolean} */
 const nativeDocumentContains = NodeDesc.contains ?
     (node) => NodeProxy.contains(document, node) :
-    (node) => HTMLElementProxy.contains(document.documentElement, node);
+    (node) => {
+      const documentElement = DocumentProxy.documentElement(document);
+      if (documentElement === null) {
+        return false;
+      }
+
+      return HTMLElementProxy.contains(documentElement, node);
+    };
 
 /**
  * @param {!Node} node
