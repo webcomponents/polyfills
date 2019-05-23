@@ -82,7 +82,7 @@ export default function(internals, destination, builtIn) {
     Utilities.setPropertyUnchecked(destination, 'before', beforeAfterPatch(builtIn.before));
   }
 
-  if (builtIn.before !== undefined) {
+  if (builtIn.after !== undefined) {
     Utilities.setPropertyUnchecked(destination, 'after', beforeAfterPatch(builtIn.after));
   }
 
