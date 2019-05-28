@@ -35,6 +35,13 @@ const nativeContains = document.contains ? document.contains.bind(document) :
 
 /**
  * @param {!Node} node
+ */
+export function isElementOrShadowRoot(node) {
+  return (node instanceof Element || node instanceof ShadowRoot);
+}
+
+/**
+ * @param {!Node} node
  * @return {boolean}
  */
 export function isConnected(node) {
@@ -54,6 +61,23 @@ export function isConnected(node) {
     current = current.parentNode || (window.ShadowRoot && current instanceof ShadowRoot ? current.host : undefined);
   }
   return !!(current && (current.__CE_isImportDocument || current instanceof Document));
+}
+
+/**
+ * @param {!DocumentFragment} fragment
+ * @return {!Array<!Element>}
+ */
+export function childrenFromFragment(fragment) {
+  if (fragment.children) {
+    return Array.prototype.slice.call(fragment.children);
+  }
+  const children = [];
+  for (let n = fragment.firstChild; n; n = n.nextSibling) {
+    if (n.nodeType === Node.ELEMENT_NODE) {
+      children.push(n);
+    }
+  }
+  return children;
 }
 
 /**

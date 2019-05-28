@@ -12,6 +12,9 @@
 /** @type {boolean|undefined} */
 CustomElementRegistry.prototype.forcePolyfill;
 
+/** @type {boolean|undefined} */
+CustomElementRegistry.prototype.preferPerformance;
+
 class AlreadyConstructedMarkerType {}
 
 /**

@@ -60,10 +60,11 @@ export default class CustomElementRegistry {
     this._pendingDefinitions = [];
 
     /**
-     * @private
-     * @type {!DocumentConstructionObserver}
-     */
-    this._documentConstructionObserver = new DocumentConstructionObserver(internals, document);
+    * @private
+    * @type {!DocumentConstructionObserver|undefined}
+    */
+    this._documentConstructionObserver = internals.preferPerformance ?
+      undefined : new DocumentConstructionObserver(internals, document);
   }
 
   /**
@@ -257,7 +258,9 @@ export default class CustomElementRegistry {
   }
 
   polyfillWrapFlushCallback(outer) {
-    this._documentConstructionObserver.disconnect();
+    if (this._documentConstructionObserver) {
+      this._documentConstructionObserver.disconnect();
+    }
     const inner = this._flushCallback;
     this._flushCallback = flush => outer(() => inner(flush));
   }

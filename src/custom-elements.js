@@ -23,8 +23,11 @@ if (!priorCustomElements ||
      priorCustomElements['forcePolyfill'] ||
      (typeof priorCustomElements['define'] != 'function') ||
      (typeof priorCustomElements['get'] != 'function')) {
+
+  const preferPerformance = priorCustomElements && priorCustomElements['preferPerformance'];
+
   /** @type {!CustomElementInternals} */
-  const internals = new CustomElementInternals();
+  const internals = new CustomElementInternals(preferPerformance);
 
   PatchHTMLElement(internals);
   PatchDocument(internals);

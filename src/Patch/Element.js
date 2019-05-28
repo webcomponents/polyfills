@@ -53,8 +53,9 @@ export default function(internals) {
         let removedElements = undefined;
         if (isConnected) {
           removedElements = [];
-          Utilities.walkDeepDescendantElements(this, element => {
-            if (element !== this) {
+          internals.forEachElement(this, element => {
+            if (element !== this &&
+                internals.localNameToDefinition(element.localName)) {
               removedElements.push(element);
             }
           });
