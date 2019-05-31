@@ -1,5 +1,7 @@
 # HTMLImports
 
+## 🚨 Moved to [`webcomponents/polyfills/packages/html-imports`][1] 🚨
+
 A polyfill for [HTMLImports](https://www.w3.org/TR/html-imports/).
 
 [![Build Status](https://travis-ci.org/webcomponents/html-imports.svg?branch=master)](https://travis-ci.org/webcomponents/html-imports)
