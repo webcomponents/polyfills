@@ -1,6 +1,6 @@
 # HTMLImports
 
-## 🚨 Moved to [`webcomponents/polyfills/packages/html-imports`][1] 🚨
+## 🚨 Moved to [`webcomponents/polyfills/packages/html-imports`](https://github.com/webcomponents/polyfills/tree/master/packages/html-imports) 🚨
 
 A polyfill for [HTMLImports](https://www.w3.org/TR/html-imports/).
 
