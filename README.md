@@ -1,6 +1,6 @@
 # HTMLImports
 
-## 🚨 Moved to [`webcomponents/polyfills/packages/html-imports`](https://github.com/webcomponents/polyfills/tree/master/packages/html-imports) 🚨
+## This platform feature, and polyfill, is deprecated, please consider using ES Modules instead.
 
 A polyfill for [HTMLImports](https://www.w3.org/TR/html-imports/).
 
