@@ -68,6 +68,7 @@ export function isConnected(node) {
  * @return {!Array<!Element>}
  */
 export function childrenFromFragment(fragment) {
+  // Note, IE doesn't have `children` on document fragments.
   if (fragment.children) {
     return Array.prototype.slice.call(fragment.children);
   }
