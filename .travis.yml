@@ -3,7 +3,9 @@ node_js: 'stable'
 dist: trusty
 sudo: required
 addons:
-  firefox: latest
+  # TODO: Revert to 'latest' once Firefox 67+ problems with WebDriver /
+  # Selenium are fixed.
+  firefox: "66.0"
   apt:
     sources:
     - google-chrome
