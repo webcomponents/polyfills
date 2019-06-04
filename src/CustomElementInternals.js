@@ -34,7 +34,6 @@ export default class CustomElementInternals {
 
     /** @type {boolean} */
     this.fastWalk = options.fastWalk;
-    this.supportHtmlImports = !options.noHtmlImports;
     this.useConstructionObserver = !options.noConstructionObserver;
   }
 
@@ -254,7 +253,7 @@ export default class CustomElementInternals {
       if (this._hasPatches) {
         this.patchElement(element);
       }
-      if (this.supportHtmlImports && element.localName === 'link' &&
+      if (element.localName === 'link' &&
           element.getAttribute('rel') === 'import') {
         // The HTML Imports polyfill sets a descendant element of the link to
         // the `import` property, specifically this is *not* a Document.
