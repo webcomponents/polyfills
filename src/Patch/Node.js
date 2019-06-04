@@ -154,7 +154,7 @@ export default function(internals) {
         return nativeResult;
       }
 
-      const nodeToInsertWasConnected = nodeToInsert instanceof Element &&
+      const nodeToInsertWasConnectedElement = nodeToInsert instanceof Element &&
         Utilities.isConnected(nodeToInsert);
       const nativeResult = Native.Node_replaceChild.call(this, nodeToInsert, nodeToRemove);
       const thisIsConnected = Utilities.isConnected(this);
@@ -163,7 +163,7 @@ export default function(internals) {
         internals.disconnectTree(nodeToRemove);
       }
 
-      if (nodeToInsertWasConnected) {
+      if (nodeToInsertWasConnectedElement) {
         internals.disconnectTree(nodeToInsert);
       }
 

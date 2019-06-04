@@ -21,7 +21,7 @@ export default function(internals) {
     /**
      * @type {function(new: HTMLElement): !HTMLElement}
      */
-    function HTMLElement() {
+    const PatchedHTMLElement = function HTMLElement() {
       // This should really be `new.target` but `new.target` can't be emulated
       // in ES5. Assuming the user keeps the default value of the constructor's
       // prototype's `constructor` property, this is equivalent.
@@ -55,19 +55,19 @@ export default function(internals) {
       internals.patchElement(toConstructElement);
 
       return toConstructElement;
-    }
+    };
 
-    HTMLElement.prototype = Native.HTMLElement.prototype;
+    PatchedHTMLElement.prototype = Native.HTMLElement.prototype;
     // Safari 9 has `writable: false` on the propertyDescriptor
     // Make it writable so that TypeScript can patch up the
     // constructor in the ES5 compiled code.
-    Object.defineProperty(HTMLElement.prototype, 'constructor', {
+    Object.defineProperty(PatchedHTMLElement.prototype, 'constructor', {
       writable: true,
       configurable: true,
       enumerable: false,
-      value: HTMLElement
+      value: PatchedHTMLElement
     });
 
-    return HTMLElement;
+    return PatchedHTMLElement;
   })();
 };

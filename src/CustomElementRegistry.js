@@ -55,7 +55,7 @@ export default class CustomElementRegistry {
 
     /**
     * @private
-    * @type {!DocumentConstructionObserver|undefined}
+    * @const {!DocumentConstructionObserver|undefined}
     */
     this._documentConstructionObserver = internals.useDocumentConstructionObserver ?
       new DocumentConstructionObserver(internals, document) : undefined;
