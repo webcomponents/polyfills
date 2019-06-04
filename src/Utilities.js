@@ -57,6 +57,25 @@ export function isConnected(node) {
 }
 
 /**
+ * @param {!DocumentFragment} fragment
+ * @return {!Array<!Element>}
+ */
+export function childrenFromFragment(fragment) {
+  // Note, IE doesn't have `children` on document fragments.
+  const nativeChildren = fragment.children;
+  if (nativeChildren) {
+    return Array.prototype.slice.call(nativeChildren);
+  }
+  const children = [];
+  for (let n = fragment.firstChild; n; n = n.nextSibling) {
+    if (n.nodeType === Node.ELEMENT_NODE) {
+      children.push(n);
+    }
+  }
+  return children;
+}
+
+/**
  * @param {!Node} root
  * @param {!Node} start
  * @return {?Node}

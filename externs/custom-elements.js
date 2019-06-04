@@ -12,6 +12,12 @@
 /** @type {boolean|undefined} */
 CustomElementRegistry.prototype.forcePolyfill;
 
+/** @type {boolean|undefined} */
+CustomElementRegistry.prototype.noDocumentConstructionObserver;
+
+/** @type {boolean|undefined} */
+CustomElementRegistry.prototype.shadyDomFastWalk;
+
 class AlreadyConstructedMarkerType {}
 
 /**

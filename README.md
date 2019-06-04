@@ -228,3 +228,23 @@ customElements.define('c-e', class extends HTMLElement {});
 // 'added first'
 // The document is walked to attempt upgrades.
 ```
+
+### Settings
+
+The polyfill provides a few settings to improve performance by tweaking behavior.
+These settings typically have correctness trade offs (noted below) and should be
+used with caution.
+
+* `customElements.noDocumentConstructionObserver`: Set this flag to true to
+prevent the polyfill from mutation observing and upgrading DOM as it is added
+to the main document. This provides a small performance improvement during
+document parsing. With this setting on, the polyfill will not upgrade elements
+created when parsing the main document's HTML. This setting should be
+used in conjunction with a `polyfillWrapFlushCallback` that defers element
+upgrades until the parser is complete.
+
+* `customElements.shadyDomFastWalk`: Set this flag to true when using the
+ShadyDOM polyfill to optimize how elements are found in the DOM. There are a
+couple of limitations: (1) Elements that are children of Shadow DOM hosts and
+are not distributed to slots may not upgrade; (2) This setting is not compatible
+with using native HTML Imports.
