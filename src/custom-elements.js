@@ -25,13 +25,11 @@ if (!priorCustomElements ||
      (typeof priorCustomElements['get'] != 'function')) {
 
   const noConstructionObserver = priorCustomElements && priorCustomElements['noConstructionObserver'];
-  const noHtmlImports = priorCustomElements && priorCustomElements['noHtmlImports'];
   const fastWalk = priorCustomElements && priorCustomElements['fastWalk'];
 
   /** @type {!CustomElementInternals} */
   const internals = new CustomElementInternals({
     noConstructionObserver,
-    noHtmlImports,
     fastWalk
   });
 
