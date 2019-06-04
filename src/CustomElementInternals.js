@@ -32,11 +32,14 @@ export default class CustomElementInternals {
     /** @type {boolean} */
     this._hasPatches = false;
 
+    /** @type {boolean} */
     this.addingDefinitionCallbacks = false;
 
-    /** @type {boolean} */
-    this.fastWalk = options.fastWalk;
-    this.useConstructionObserver = !options.noConstructionObserver;
+    /** @const {boolean} */
+    this.shadyDomFastWalk = options.shadyDomFastWalk;
+
+    /** @const {boolean} */
+    this.useDocumentConstructionObserver = !options.noDocumentConstructionObserver;
   }
 
   /**
@@ -130,7 +133,7 @@ export default class CustomElementInternals {
    */
   forEachElement(node, callback, visitedImports) {
     const sd = window['ShadyDOM'];
-    if (this.fastWalk && sd && sd['inUse']) {
+    if (this.shadyDomFastWalk && sd && sd['inUse']) {
       if (node.nodeType === Node.ELEMENT_NODE) {
         const element = /** @type {!Element} */(node);
         callback(element);

@@ -27,7 +27,6 @@ export default function(internals) {
      * @return {!Node}
      */
     function(node, refNode) {
-      const needsConnectTree = Utilities.isConnected(this);
       if (node instanceof DocumentFragment) {
         const insertedNodes = Utilities.childrenFromFragment(node);
         const nativeResult = Native.Node_insertBefore.call(this, node, refNode);
@@ -35,7 +34,7 @@ export default function(internals) {
         // DocumentFragments can't be connected, so `disconnectTree` will never
         // need to be called on a DocumentFragment's children after inserting it.
 
-        if (needsConnectTree) {
+        if (Utilities.isConnected(this)) {
           for (let i = 0; i < insertedNodes.length; i++) {
             internals.connectTree(insertedNodes[i]);
           }
@@ -51,7 +50,7 @@ export default function(internals) {
         internals.disconnectTree(node);
       }
 
-      if (needsConnectTree) {
+      if (Utilities.isConnected(this)) {
         internals.connectTree(node);
       }
 
@@ -65,7 +64,6 @@ export default function(internals) {
      * @return {!Node}
      */
     function(node) {
-      const needsConnectTree = Utilities.isConnected(this);
       if (node instanceof DocumentFragment) {
         const insertedNodes = Utilities.childrenFromFragment(node);
         const nativeResult = Native.Node_appendChild.call(this, node);
@@ -73,7 +71,7 @@ export default function(internals) {
         // DocumentFragments can't be connected, so `disconnectTree` will never
         // need to be called on a DocumentFragment's children after inserting it.
 
-        if (needsConnectTree) {
+        if (Utilities.isConnected(this)) {
           for (let i = 0; i < insertedNodes.length; i++) {
             internals.connectTree(insertedNodes[i]);
           }
@@ -89,7 +87,7 @@ export default function(internals) {
         internals.disconnectTree(node);
       }
 
-      if (needsConnectTree) {
+      if (Utilities.isConnected(this)) {
         internals.connectTree(node);
       }
 
@@ -139,7 +137,6 @@ export default function(internals) {
      * @return {!Node}
      */
     function(nodeToInsert, nodeToRemove) {
-      const needsConnectTree = Utilities.isConnected(this);
       if (nodeToInsert instanceof DocumentFragment) {
         const insertedNodes = Utilities.childrenFromFragment(nodeToInsert);
         const nativeResult = Native.Node_replaceChild.call(this, nodeToInsert, nodeToRemove);
@@ -147,7 +144,7 @@ export default function(internals) {
         // DocumentFragments can't be connected, so `disconnectTree` will never
         // need to be called on a DocumentFragment's children after inserting it.
 
-        if (needsConnectTree) {
+        if (Utilities.isConnected(this)) {
           internals.disconnectTree(nodeToRemove);
           for (let i = 0; i < insertedNodes.length; i++) {
             internals.connectTree(insertedNodes[i]);
@@ -160,8 +157,9 @@ export default function(internals) {
       const nodeToInsertWasConnected = nodeToInsert instanceof Element &&
         Utilities.isConnected(nodeToInsert);
       const nativeResult = Native.Node_replaceChild.call(this, nodeToInsert, nodeToRemove);
+      const thisIsConnected = Utilities.isConnected(this);
 
-      if (needsConnectTree) {
+      if (thisIsConnected) {
         internals.disconnectTree(nodeToRemove);
       }
 
@@ -169,7 +167,7 @@ export default function(internals) {
         internals.disconnectTree(nodeToInsert);
       }
 
-      if (needsConnectTree) {
+      if (thisIsConnected) {
         internals.connectTree(nodeToInsert);
       }
 

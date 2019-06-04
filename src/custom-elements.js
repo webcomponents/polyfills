@@ -24,13 +24,13 @@ if (!priorCustomElements ||
      (typeof priorCustomElements['define'] != 'function') ||
      (typeof priorCustomElements['get'] != 'function')) {
 
-  const noConstructionObserver = priorCustomElements && priorCustomElements['noConstructionObserver'];
-  const fastWalk = priorCustomElements && priorCustomElements['fastWalk'];
+  const noDocumentConstructionObserver = priorCustomElements && priorCustomElements['noDocumentConstructionObserver'];
+  const shadyDomFastWalk = priorCustomElements && priorCustomElements['shadyDomFastWalk'];
 
   /** @type {!CustomElementInternals} */
   const internals = new CustomElementInternals({
-    noConstructionObserver,
-    fastWalk
+    noDocumentConstructionObserver,
+    shadyDomFastWalk
   });
 
   PatchHTMLElement(internals);
