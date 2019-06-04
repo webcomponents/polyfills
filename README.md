@@ -229,7 +229,7 @@ customElements.define('c-e', class extends HTMLElement {});
 // The document is walked to attempt upgrades.
 ```
 
-## Settings
+### Settings
 
 The polyfill provides a few settings to improve performance by tweaking behavior.
 These settings typically have correctness trade offs (noted below) and should be
