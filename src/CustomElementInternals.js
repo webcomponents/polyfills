@@ -14,7 +14,10 @@ import CEState from './CustomElementState.js';
 export default class CustomElementInternals {
 
   /**
-   * @param {!Object} options
+   * @param {{
+   *   shadyDomFastWalk: boolean,
+   *   useDocumentConstructionObserver: boolean,
+   * }} options
    */
   constructor(options) {
     /** @type {!Map<string, !CustomElementDefinition>} */

@@ -62,8 +62,9 @@ export function isConnected(node) {
  */
 export function childrenFromFragment(fragment) {
   // Note, IE doesn't have `children` on document fragments.
-  if (fragment.children) {
-    return Array.prototype.slice.call(fragment.children);
+  const nativeChildren = fragment.children;
+  if (nativeChildren) {
+    return Array.prototype.slice.call(nativeChildren);
   }
   const children = [];
   for (let n = fragment.firstChild; n; n = n.nextSibling) {
