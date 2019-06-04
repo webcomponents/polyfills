@@ -83,7 +83,6 @@ export default class CustomElementInternals {
         }
       }
     } else {
-      console.log('slow walk');
       Utilities.walkDeepDescendantElements(node, callback, visitedImports);
     }
   }
