@@ -22,13 +22,21 @@ class AlreadyConstructedMarkerType {}
 
 /**
  * @typedef {{
- *  localName: string,
- *  constructorFunction: !Function,
  *  connectedCallback: Function,
  *  disconnectedCallback: Function,
  *  adoptedCallback: Function,
  *  attributeChangedCallback: Function,
  *  observedAttributes: !Array<string>,
+ * }}
+ */
+let CustomElementCallbacks;
+
+/**
+ * @typedef {{
+ *  isComplete: boolean,
+ *  localName: string,
+ *  constructorFunction: !Function,
+ *  callbacks: (CustomElementCallbacks|undefined),
  *  constructionStack: !Array<!HTMLElement|!AlreadyConstructedMarkerType>,
  * }}
  */

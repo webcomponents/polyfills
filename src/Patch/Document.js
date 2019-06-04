@@ -28,6 +28,7 @@ export default function(internals) {
       // Only create custom elements if this document is associated with the registry.
       if (this.__CE_hasRegistry) {
         const definition = internals.localNameToDefinition(localName);
+        internals.ensureDefinitionComplete(definition);
         if (definition) {
           return new (definition.constructorFunction)();
         }
@@ -70,6 +71,7 @@ export default function(internals) {
       // Only create custom elements if this document is associated with the registry.
       if (this.__CE_hasRegistry && (namespace === null || namespace === NS_HTML)) {
         const definition = internals.localNameToDefinition(localName);
+        internals.ensureDefinitionComplete(definition);
         if (definition) {
           return new (definition.constructorFunction)();
         }

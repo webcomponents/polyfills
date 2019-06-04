@@ -24,12 +24,6 @@ export default class CustomElementRegistry {
   constructor(internals) {
     /**
      * @private
-     * @type {boolean}
-     */
-    this._elementDefinitionIsRunning = false;
-
-    /**
-     * @private
      * @type {!CustomElementInternals}
      */
     this._internals = internals;
@@ -69,10 +63,11 @@ export default class CustomElementRegistry {
 
   /**
    * @param {string} localName
-   * @param {!Function} constructor
+   * @param {!Function} constructorOrGetter
+   * @param {boolean} canCompleteDefinition
    */
-  define(localName, constructor) {
-    if (!(constructor instanceof Function)) {
+  _define(localName, constructorOrGetter, canCompleteDefinition) {
+    if (!(constructorOrGetter instanceof Function)) {
       throw new TypeError('Custom element constructors must be functions.');
     }
 
@@ -84,52 +79,20 @@ export default class CustomElementRegistry {
       throw new Error(`A custom element with name '${localName}' has already been defined.`);
     }
 
-    if (this._elementDefinitionIsRunning) {
+    if (this._internals.addingDefinitionCallbacks) {
       throw new Error('A custom element is already being defined.');
-    }
-    this._elementDefinitionIsRunning = true;
-
-    let connectedCallback;
-    let disconnectedCallback;
-    let adoptedCallback;
-    let attributeChangedCallback;
-    let observedAttributes;
-    try {
-      /** @type {!Object} */
-      const prototype = constructor.prototype;
-      if (!(prototype instanceof Object)) {
-        throw new TypeError('The custom element constructor\'s prototype is not an object.');
-      }
-
-      function getCallback(name) {
-        const callbackValue = prototype[name];
-        if (callbackValue !== undefined && !(callbackValue instanceof Function)) {
-          throw new Error(`The '${name}' callback must be a function.`);
-        }
-        return callbackValue;
-      }
-
-      connectedCallback = getCallback('connectedCallback');
-      disconnectedCallback = getCallback('disconnectedCallback');
-      adoptedCallback = getCallback('adoptedCallback');
-      attributeChangedCallback = getCallback('attributeChangedCallback');
-      observedAttributes = constructor['observedAttributes'] || [];
-    } catch (e) {
-      return;
-    } finally {
-      this._elementDefinitionIsRunning = false;
     }
 
     const definition = {
       localName,
-      constructorFunction: constructor,
-      connectedCallback,
-      disconnectedCallback,
-      adoptedCallback,
-      attributeChangedCallback,
-      observedAttributes,
-      constructionStack: [],
+      isComplete: canCompleteDefinition,
+      constructorFunction: constructorOrGetter,
+      constructionStack: []
     };
+
+    if (canCompleteDefinition) {
+      this._internals.addDefinitionCallbacks(definition);
+    }
 
     this._internals.setDefinition(localName, definition);
     this._pendingDefinitions.push(definition);
@@ -140,6 +103,14 @@ export default class CustomElementRegistry {
       this._flushPending = true;
       this._flushCallback(() => this._flush());
     }
+  }
+
+  define(localName, constructor) {
+    this._define(localName, constructor, true);
+  }
+
+  polyfillDefineLazy(localName, constructorGetter) {
+    this._define(localName, constructorGetter, false);
   }
 
   upgrade(element) {
@@ -222,7 +193,7 @@ export default class CustomElementRegistry {
    */
   get(localName) {
     const definition = this._internals.localNameToDefinition(localName);
-    if (definition) {
+    if (definition && definition.isComplete) {
       return definition.constructorFunction;
     }
 
@@ -250,7 +221,8 @@ export default class CustomElementRegistry {
     // Resolve immediately only if the given local name has a definition *and*
     // the full document walk to upgrade elements with that local name has
     // already happened.
-    if (definition && !this._pendingDefinitions.some(d => d.localName === localName)) {
+    if (definition && definition.isComplete &&
+        !this._pendingDefinitions.some(d => d.localName === localName)) {
       deferred.resolve(undefined);
     }
 
@@ -269,6 +241,7 @@ export default class CustomElementRegistry {
 // Closure compiler exports.
 window['CustomElementRegistry'] = CustomElementRegistry;
 CustomElementRegistry.prototype['define'] = CustomElementRegistry.prototype.define;
+CustomElementRegistry.prototype['polyfillDefineLazy'] = CustomElementRegistry.prototype.polyfillDefineLazy;
 CustomElementRegistry.prototype['upgrade'] = CustomElementRegistry.prototype.upgrade;
 CustomElementRegistry.prototype['get'] = CustomElementRegistry.prototype.get;
 CustomElementRegistry.prototype['whenDefined'] = CustomElementRegistry.prototype.whenDefined;
