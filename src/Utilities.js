@@ -35,13 +35,6 @@ const nativeContains = document.contains ? document.contains.bind(document) :
 
 /**
  * @param {!Node} node
- */
-export function isElementOrShadowRoot(node) {
-  return (node instanceof Element || node instanceof ShadowRoot);
-}
-
-/**
- * @param {!Node} node
  * @return {boolean}
  */
 export function isConnected(node) {

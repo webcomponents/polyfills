@@ -13,7 +13,13 @@
 CustomElementRegistry.prototype.forcePolyfill;
 
 /** @type {boolean|undefined} */
-CustomElementRegistry.prototype.preferPerformance;
+CustomElementRegistry.prototype.noHtmlImports;
+
+/** @type {boolean|undefined} */
+CustomElementRegistry.prototype.noConstructionObserver;
+
+/** @type {boolean|undefined} */
+CustomElementRegistry.prototype.fastWalk;
 
 class AlreadyConstructedMarkerType {}
 

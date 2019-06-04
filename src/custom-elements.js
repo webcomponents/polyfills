@@ -24,10 +24,16 @@ if (!priorCustomElements ||
      (typeof priorCustomElements['define'] != 'function') ||
      (typeof priorCustomElements['get'] != 'function')) {
 
-  const preferPerformance = priorCustomElements && priorCustomElements['preferPerformance'];
+  const noConstructionObserver = priorCustomElements && priorCustomElements['noConstructionObserver'];
+  const noHtmlImports = priorCustomElements && priorCustomElements['noHtmlImports'];
+  const fastWalk = priorCustomElements && priorCustomElements['fastWalk'];
 
   /** @type {!CustomElementInternals} */
-  const internals = new CustomElementInternals(preferPerformance);
+  const internals = new CustomElementInternals({
+    noConstructionObserver,
+    noHtmlImports,
+    fastWalk
+  });
 
   PatchHTMLElement(internals);
   PatchDocument(internals);

@@ -12,7 +12,11 @@ import * as Utilities from './Utilities.js';
 import CEState from './CustomElementState.js';
 
 export default class CustomElementInternals {
-  constructor(preferPerformance) {
+
+  /**
+   * @param {!Object} options
+   */
+  constructor(options) {
     /** @type {!Map<string, !CustomElementDefinition>} */
     this._localNameToDefinition = new Map();
 
@@ -29,7 +33,9 @@ export default class CustomElementInternals {
     this._hasPatches = false;
 
     /** @type {boolean} */
-    this.preferPerformance = preferPerformance || false;
+    this.fastWalk = options.fastWalk;
+    this.supportHtmlImports = !options.noHtmlImports;
+    this.useConstructionObserver = !options.noConstructionObserver;
   }
 
   /**
@@ -63,22 +69,22 @@ export default class CustomElementInternals {
    * @param {!Set<!Node>=} visitedImports
    */
   forEachElement(node, callback, visitedImports) {
-    if (!this.preferPerformance) {
-      Utilities.walkDeepDescendantElements(node, callback, visitedImports);
-    } else {
+    const sd = window['ShadyDOM'];
+    if (this.fastWalk && sd && sd['inUse']) {
       if (node.nodeType === Node.ELEMENT_NODE) {
         const element = /** @type {!Element} */(node);
         callback(element);
       }
       // most easily gets to document, element, documentFragment
       if (node.querySelectorAll) {
-        const sd = window['ShadyDOM'];
-        const elements = (!sd || !sd['inUse']) ? node.querySelectorAll('*') :
-          sd['nativeMethods'].querySelectorAll.call(node, '*');
+        const elements = sd['nativeMethods'].querySelectorAll.call(node, '*');
         for (let i = 0; i < elements.length; i++) {
           callback(elements[i]);
         }
       }
+    } else {
+      console.log('slow walk');
+      Utilities.walkDeepDescendantElements(node, callback, visitedImports);
     }
   }
 
@@ -145,11 +151,7 @@ export default class CustomElementInternals {
   connectTree(root) {
     const elements = [];
 
-    this.forEachElement(root, element => {
-      if (this.localNameToDefinition(element.localName)) {
-        elements.push(element);
-      }
-    });
+    this.forEachElement(root, element => elements.push(element));
 
     for (let i = 0; i < elements.length; i++) {
       const element = elements[i];
@@ -167,11 +169,7 @@ export default class CustomElementInternals {
   disconnectTree(root) {
     const elements = [];
 
-    this.forEachElement(root, element => {
-      if (this.localNameToDefinition(element.localName)) {
-        elements.push(element);
-      }
-    });
+    this.forEachElement(root, element => elements.push(element));
 
     for (let i = 0; i < elements.length; i++) {
       const element = elements[i];
@@ -254,7 +252,10 @@ export default class CustomElementInternals {
     const elements = [];
 
     const gatherElements = element => {
-      if (!this.preferPerformance && element.localName === 'link' &&
+      if (this._hasPatches) {
+        this.patchElement(element);
+      }
+      if (this.supportHtmlImports && element.localName === 'link' &&
           element.getAttribute('rel') === 'import') {
         // The HTML Imports polyfill sets a descendant element of the link to
         // the `import` property, specifically this is *not* a Document.
@@ -284,17 +285,11 @@ export default class CustomElementInternals {
             // during the same `patchAndUpgradeTree` call.
             const clonedVisitedImports = new Set(visitedImports);
             clonedVisitedImports.delete(importNode);
-
             this.patchAndUpgradeTree(importNode, {visitedImports: clonedVisitedImports, upgrade});
           });
         }
       } else {
-        if (this._hasPatches) {
-          this.patchElement(element);
-        }
-        if (this.localNameToDefinition(element.localName)) {
-          elements.push(element);
-        }
+        elements.push(element);
       }
     };
 
@@ -330,7 +325,7 @@ export default class CustomElementInternals {
       !(ownerDocument.__CE_isImportDocument && ownerDocument.__CE_hasRegistry)
     ) return;
 
-    const definition = this.localNameToDefinition(element.localName);
+    const definition = this._localNameToDefinition.get(element.localName);
     if (!definition) return;
 
     definition.constructionStack.push(element);

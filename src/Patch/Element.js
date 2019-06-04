@@ -54,8 +54,7 @@ export default function(internals) {
         if (isConnected) {
           removedElements = [];
           internals.forEachElement(this, element => {
-            if (element !== this &&
-                internals.localNameToDefinition(element.localName)) {
+            if (element !== this) {
               removedElements.push(element);
             }
           });
