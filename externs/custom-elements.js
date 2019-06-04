@@ -13,9 +13,6 @@
 CustomElementRegistry.prototype.forcePolyfill;
 
 /** @type {boolean|undefined} */
-CustomElementRegistry.prototype.noHtmlImports;
-
-/** @type {boolean|undefined} */
 CustomElementRegistry.prototype.noConstructionObserver;
 
 /** @type {boolean|undefined} */
