@@ -79,7 +79,7 @@ export default class CustomElementRegistry {
       throw new Error(`A custom element with name '${localName}' has already been defined.`);
     }
 
-    if (this._internals.addingDefinitionCallbacks) {
+    if (this._internals.elementDefinitionIsRunning) {
       throw new Error('A custom element is already being defined.');
     }
 

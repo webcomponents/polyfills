@@ -16,7 +16,7 @@ export default class CustomElementInternals {
   /**
    * @param {{
    *   shadyDomFastWalk: boolean,
-   *   useDocumentConstructionObserver: boolean,
+   *   noDocumentConstructionObserver: boolean,
    * }} options
    */
   constructor(options) {
@@ -36,7 +36,7 @@ export default class CustomElementInternals {
     this._hasPatches = false;
 
     /** @type {boolean} */
-    this.addingDefinitionCallbacks = false;
+    this.elementDefinitionIsRunning = false;
 
     /** @const {boolean} */
     this.shadyDomFastWalk = options.shadyDomFastWalk;
@@ -46,10 +46,10 @@ export default class CustomElementInternals {
   }
 
   /**
-   * @param {Object} definition
+   * @param {!CustomElementDefinition} definition
    */
   addDefinitionCallbacks(definition) {
-    this.addingDefinitionCallbacks = true;
+    this.elementDefinitionIsRunning = true;
     let connectedCallback;
     let disconnectedCallback;
     let adoptedCallback;
@@ -84,21 +84,8 @@ export default class CustomElementInternals {
         adoptedCallback,
         attributeChangedCallback,
         observedAttributes
-      }
-      this.addingDefinitionCallbacks = false;
-    }
-  }
-
-  ensureDefinitionComplete(definition) {
-    if (definition && !definition.isComplete) {
-      try {
-        definition.constructorFunction = definition.constructorFunction();
-      } catch(e) {
-        return;
-      }
-      definition.isComplete = true;
-      this.addDefinitionCallbacks(definition);
-      this.setDefinition(definition.localName, definition);
+      };
+      this.elementDefinitionIsRunning = false;
     }
   }
 
@@ -119,6 +106,25 @@ export default class CustomElementInternals {
    */
   localNameToDefinition(localName) {
     return this._localNameToDefinition.get(localName);
+  }
+
+  /**
+   * @param {string} localName
+   * @return {!CustomElementDefinition|undefined}
+   */
+  localNameToCompleteDefinition(localName) {
+    const definition = this.localNameToDefinition(localName);
+    if (definition && !definition.isComplete) {
+      try {
+        definition.constructorFunction = definition.constructorFunction();
+      } catch(e) {
+        return;
+      }
+      definition.isComplete = true;
+      this.addDefinitionCallbacks(definition);
+      this.setDefinition(definition.localName, definition);
+    }
+    return definition;
   }
 
   /**
@@ -390,8 +396,7 @@ export default class CustomElementInternals {
       !(ownerDocument.__CE_isImportDocument && ownerDocument.__CE_hasRegistry)
     ) return;
 
-    const definition = this._localNameToDefinition.get(element.localName);
-    this.ensureDefinitionComplete(definition);
+    const definition = this.localNameToCompleteDefinition(element.localName);
     if (!definition) return;
 
     definition.constructionStack.push(element);

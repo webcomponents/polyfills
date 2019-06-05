@@ -36,7 +36,7 @@ let CustomElementCallbacks;
  *  isComplete: boolean,
  *  localName: string,
  *  constructorFunction: !Function,
- *  callbacks: (CustomElementCallbacks|undefined),
+ *  callbacks: (!CustomElementCallbacks|undefined),
  *  constructionStack: !Array<!HTMLElement|!AlreadyConstructedMarkerType>,
  * }}
  */
@@ -76,3 +76,7 @@ Element.prototype.__CE_definition;
 
 /** @type {!DocumentFragment|undefined} */
 Element.prototype.__CE_shadowRoot;
+
+// Note, the closure type is incorrect here.
+/** @type {!HTMLCollection} */
+DocumentFragment.prototype.children;
