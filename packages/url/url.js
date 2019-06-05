@@ -98,7 +98,8 @@ Window.prototype.forceJURL = false;
         buffer = '',
         seenAt = false,
         seenBracket = false,
-        errors = [];
+        errors = [],
+        lastVar;
 
     loop: while ((input[cursor - 1] != EOF || cursor == 0) && !this._isInvalid) {
       var c = input[cursor];
@@ -425,7 +426,7 @@ Window.prototype.forceJURL = false;
             buffer = '';
             if ('?' == c) {
               this._query = '?';
-              state = 'query';
+              state = 'query-var';
             } else if ('#' == c) {
               this._fragment = '#';
               state = 'fragment';
@@ -434,13 +435,33 @@ Window.prototype.forceJURL = false;
             buffer += percentEscape(c);
           }
           break;
-
-        case 'query':
-          if (!stateOverride && '#' == c) {
-            this._fragment = '#';
-            state = 'fragment';
+          
+				case 'query-var':
+					if (!stateOverride && '=' == c) {
+						this._query += percentEscapeQuery(c);
+            lastVar = buffer;
+            buffer = '';
+            state = 'query-val';
           } else if (EOF != c && '\t' != c && '\n' != c && '\r' != c) {
-            this._query += percentEscapeQuery(c);
+          	this._query += percentEscapeQuery(c);
+            buffer += percentEscapeQuery(c);
+          }
+          break;
+				case 'query-val':
+					if (!stateOverride && ('#' == c || '&' == c)) {
+						this._searchParams.set(lastVar, buffer);
+						buffer = '';
+						
+						if ('#' == c) {
+							this._fragment = '#';
+            	state = 'fragment';
+						} else {
+							this._query += percentEscapeQuery(c);
+							state = 'query-var';
+						}
+          } else if (EOF != c && '\t' != c && '\n' != c && '\r' != c) {
+          	this._query += percentEscapeQuery(c);
+            buffer += percentEscapeQuery(c);
           }
           break;
 
@@ -467,6 +488,7 @@ Window.prototype.forceJURL = false;
     this._fragment = '';
     this._isInvalid = false;
     this._isRelative = false;
+    this._searchParams = new Map();
   }
 
   // Does not process domain names or IP addresses.
@@ -522,6 +544,13 @@ Window.prototype.forceJURL = false;
       parse.call(this, protocol + ':', 'scheme start');
     },
 
+    get username() {
+      return this._username;
+    },
+    get password() {
+      return this._password;
+    },
+
     get host() {
       return this._isInvalid ? '' : this._port ?
           this._host + ':' + this._port : this._host;
@@ -572,6 +601,15 @@ Window.prototype.forceJURL = false;
       if ('?' == search[0])
         search = search.slice(1);
       parse.call(this, search, 'query');
+    },
+
+    get searchParams() {
+      return this._searchParams;
+    },
+    set searchParams(searchParams) {
+      if (this._isInvalid || !this._isRelative)
+        return;
+      this._searchParams = searchParams;
     },
 
     get hash() {

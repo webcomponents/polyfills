@@ -8,7 +8,7 @@ function URLTestParser(input) {
     this.base = ""
     this.scheme = ""
     this.username = ""
-    this.password = null
+    this.password = ""
     this.host = ""
     this.port = ""
     this.path = ""
@@ -16,7 +16,7 @@ function URLTestParser(input) {
     this.fragment = ""
     this.origin = ""
     Object.defineProperties(this, {
-      "href": { get: function() { return !this.scheme ? this.input : this.protocol + (relativeSchemes.indexOf(this.scheme) != -1 ? "//" + (("" != this.username || null != this.password) ? this.username + (null != this.password ? ":" + this.password : "") + "@" : "") + this.host : "") + (this.port ? ":" + this.port : "") + this.path + this.query + this.fragment } },
+      "href": { get: function() { return !this.scheme ? this.input : this.protocol + (relativeSchemes.indexOf(this.scheme) != -1 ? "//" + (("" != this.username || "" != this.password) ? this.username + ("" != this.password ? ":" + this.password : "") + "@" : "") + this.host : "") + (this.port ? ":" + this.port : "") + this.path + this.query + this.fragment } },
       "protocol": { get: function() { return this.scheme + ":" } },
       "search": { get: function() { return "?" == this.query ? "" : this.query } },
       "hash": { get: function() { return "#" == this.fragment ? "" : this.fragment } }
