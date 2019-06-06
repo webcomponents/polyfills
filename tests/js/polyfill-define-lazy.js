@@ -74,21 +74,19 @@ suite('polyfillLazyDefine', function() {
 
   suite('get', function() {
 
-    test('returns undefined and constructor after element upgrades', function() {
-      customElements.polyfillDefineLazy('x-get-lazy', () => class extends HTMLElement {});
-      assert.isUndefined(customElements.get('x-get-lazy'));
-      document.createElement('x-get-lazy');
-      assert.ok(customElements.get('x-get-lazy'));
+    test('returns constructor', function() {
+      const ctor = class extends HTMLElement {};
+      customElements.polyfillDefineLazy('x-get-lazy', () => ctor);
+      assert.equal(customElements.get('x-get-lazy'), ctor);
     });
 
   });
 
   suite('whenDefined', function() {
 
-    test('resolves when a lazy define is first upgraded', function() {
-      customElements.polyfillDefineLazy('x-when-defined-lazy', () =>class extends HTMLElement {});
-      const el = document.createElement('x-when-defined-lazy');
-      work.appendChild(el);
+    test('resolves', function() {
+      const ctor = class extends HTMLElement {};
+      customElements.polyfillDefineLazy('x-when-defined-lazy', () => ctor);
       return customElements.whenDefined('x-when-defined-lazy');
     });
 
@@ -125,6 +123,17 @@ suite('polyfillLazyDefine', function() {
       });
       assert.isTrue(el.upgraded);
       assert.isTrue(el.connected);
+    });
+
+    test('creating an element throws if a constructor getter is used with `define`', function() {
+      customElements.define('pass-getter-to-define', () => {});
+      let error;
+      try {
+        document.createElement('pass-getter-to-define');
+      } catch (e) {
+        error = e;
+      }
+      assert.ok(error);
     });
 
    });

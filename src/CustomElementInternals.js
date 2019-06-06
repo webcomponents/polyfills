@@ -20,8 +20,8 @@ export default class CustomElementInternals {
    * }} options
    */
   constructor(options) {
-    /** @type {!Map<string, !CustomElementDefinition>} */
-    this._localNameToDefinition = new Map();
+    /** @type {!Map<string, !CustomElementDefinitionProducer>} */
+    this._localNameToDefinitionProducer = new Map();
 
     /** @type {!Map<!Function, !CustomElementDefinition>} */
     this._constructorToDefinition = new Map();
@@ -46,58 +46,26 @@ export default class CustomElementInternals {
   }
 
   /**
+   * @param {string} localName
+   * @param {!CustomElementDefinitionProducer} definitionProducer
+   */
+  setDefinitionProducer(localName, definitionProducer) {
+    this._localNameToDefinitionProducer.set(localName, definitionProducer);
+  }
+
+  /**
    * @param {!CustomElementDefinition} definition
    */
-  addDefinitionCallbacks(definition) {
-    this.elementDefinitionIsRunning = true;
-    let connectedCallback;
-    let disconnectedCallback;
-    let adoptedCallback;
-    let attributeChangedCallback;
-    let observedAttributes;
-    try {
-      const constructor = definition.constructorFunction;
-      /** @type {!Object} */
-      const prototype = constructor.prototype;
-      if (!(prototype instanceof Object)) {
-        throw new TypeError('The custom element constructor\'s prototype is not an object.');
-      }
-
-      function getCallback(name) {
-        const callbackValue = prototype[name];
-        if (callbackValue !== undefined && !(callbackValue instanceof Function)) {
-          throw new Error(`The '${name}' callback must be a function.`);
-        }
-        return callbackValue;
-      }
-      connectedCallback = getCallback('connectedCallback');
-      disconnectedCallback = getCallback('disconnectedCallback');
-      adoptedCallback = getCallback('adoptedCallback');
-      attributeChangedCallback = getCallback('attributeChangedCallback');
-      observedAttributes = constructor['observedAttributes'] || [];
-    } catch (e) {
-      return;
-    } finally {
-      definition.callbacks = {
-        connectedCallback,
-        disconnectedCallback,
-        adoptedCallback,
-        attributeChangedCallback,
-        observedAttributes
-      };
-      this.elementDefinitionIsRunning = false;
-    }
+  setDefinitionConstructor(definition) {
+    this._constructorToDefinition.set(definition.constructorFunction, definition);
   }
 
   /**
    * @param {string} localName
-   * @param {!CustomElementDefinition} definition
+   * @return {!CustomElementDefinitionProducer|undefined}
    */
-  setDefinition(localName, definition) {
-    this._localNameToDefinition.set(localName, definition);
-    if (definition.isComplete) {
-      this._constructorToDefinition.set(definition.constructorFunction, definition);
-    }
+  localNameToDefinitionProducer(localName) {
+    return this._localNameToDefinitionProducer.get(localName);
   }
 
   /**
@@ -105,26 +73,8 @@ export default class CustomElementInternals {
    * @return {!CustomElementDefinition|undefined}
    */
   localNameToDefinition(localName) {
-    return this._localNameToDefinition.get(localName);
-  }
-
-  /**
-   * @param {string} localName
-   * @return {!CustomElementDefinition|undefined}
-   */
-  localNameToCompleteDefinition(localName) {
-    const definition = this.localNameToDefinition(localName);
-    if (definition && !definition.isComplete) {
-      try {
-        definition.constructorFunction = definition.constructorFunction();
-      } catch(e) {
-        return;
-      }
-      definition.isComplete = true;
-      this.addDefinitionCallbacks(definition);
-      this.setDefinition(definition.localName, definition);
-    }
-    return definition;
+    const definitionProducer = this.localNameToDefinitionProducer(localName);
+    return definitionProducer && definitionProducer.definition;
   }
 
   /**
@@ -396,7 +346,7 @@ export default class CustomElementInternals {
       !(ownerDocument.__CE_isImportDocument && ownerDocument.__CE_hasRegistry)
     ) return;
 
-    const definition = this.localNameToCompleteDefinition(element.localName);
+    const definition = this.localNameToDefinition(element.localName);
     if (!definition) return;
 
     definition.constructionStack.push(element);
@@ -418,10 +368,9 @@ export default class CustomElementInternals {
 
     element.__CE_state = CEState.custom;
     element.__CE_definition = definition;
-    const callbacks = definition.callbacks;
     // Check `hasAttributes` here to avoid iterating when it's not necessary.
-    if (callbacks.attributeChangedCallback && element.hasAttributes()) {
-      const observedAttributes = callbacks.observedAttributes;
+    if (definition.attributeChangedCallback && element.hasAttributes()) {
+      const observedAttributes = definition.observedAttributes;
       for (let i = 0; i < observedAttributes.length; i++) {
         const name = observedAttributes[i];
         const value = element.getAttribute(name);
@@ -440,9 +389,9 @@ export default class CustomElementInternals {
    * @param {!Element} element
    */
   connectedCallback(element) {
-    const callbacks = element.__CE_definition.callbacks;
-    if (callbacks.connectedCallback) {
-      callbacks.connectedCallback.call(element);
+    const definition = element.__CE_definition;
+    if (definition.connectedCallback) {
+      definition.connectedCallback.call(element);
     }
   }
 
@@ -450,9 +399,9 @@ export default class CustomElementInternals {
    * @param {!Element} element
    */
   disconnectedCallback(element) {
-    const callbacks = element.__CE_definition.callbacks;
-    if (callbacks.disconnectedCallback) {
-      callbacks.disconnectedCallback.call(element);
+    const definition = element.__CE_definition;
+    if (definition.disconnectedCallback) {
+      definition.disconnectedCallback.call(element);
     }
   }
 
@@ -464,12 +413,12 @@ export default class CustomElementInternals {
    * @param {?string} namespace
    */
   attributeChangedCallback(element, name, oldValue, newValue, namespace) {
-    const callbacks = element.__CE_definition.callbacks;
+    const definition = element.__CE_definition;
     if (
-      callbacks.attributeChangedCallback &&
-      callbacks.observedAttributes.indexOf(name) > -1
+      definition.attributeChangedCallback &&
+      definition.observedAttributes.indexOf(name) > -1
     ) {
-      callbacks.attributeChangedCallback.call(element, name, oldValue, newValue, namespace);
+      definition.attributeChangedCallback.call(element, name, oldValue, newValue, namespace);
     }
   }
 }
