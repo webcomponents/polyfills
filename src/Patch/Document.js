@@ -29,7 +29,9 @@ export default function(internals) {
       if (this.__CE_hasRegistry) {
         const definition = internals.localNameToDefinition(localName);
         if (definition) {
-          return new (definition.constructorFunction)();
+          const element = new (definition.constructorFunction)();
+          Utilities.assertIsHTMLElement(element, localName);
+          return element;
         }
       }
 
@@ -71,7 +73,9 @@ export default function(internals) {
       if (this.__CE_hasRegistry && (namespace === null || namespace === NS_HTML)) {
         const definition = internals.localNameToDefinition(localName);
         if (definition) {
-          return new (definition.constructorFunction)();
+          const element = new (definition.constructorFunction)();
+          Utilities.assertIsHTMLElement(element, localName);
+          return element;
         }
       }
 
