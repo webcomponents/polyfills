@@ -25,20 +25,17 @@ export default function(internals) {
      * @return {!Element}
      */
     function(localName) {
-      // Only create custom elements if this document is associated with the registry.
-      if (this.__CE_hasRegistry) {
-        const definition = internals.localNameToDefinition(localName);
-        if (definition) {
-          const element = new (definition.constructorFunction)();
-          Utilities.assertIsHTMLElement(element, localName);
-          return element;
-        }
+      const element = /** @type {!HTMLElement} */
+        (Native.Document_createElement.call(this, localName));
+      internals.patchElement(element);
+
+      // Only create custom elements if this document is associated with the
+      // registry.
+      if (this.__CE_hasRegistry && internals.localNameToDefinition(localName)) {
+        internals.upgradeElement(element);
       }
 
-      const result = /** @type {!Element} */
-        (Native.Document_createElement.call(this, localName));
-      internals.patchElement(result);
-      return result;
+      return element;
     });
 
   Utilities.setPropertyUnchecked(Document.prototype, 'importNode',
@@ -69,20 +66,19 @@ export default function(internals) {
      * @return {!Element}
      */
     function(namespace, localName) {
-      // Only create custom elements if this document is associated with the registry.
-      if (this.__CE_hasRegistry && (namespace === null || namespace === NS_HTML)) {
-        const definition = internals.localNameToDefinition(localName);
-        if (definition) {
-          const element = new (definition.constructorFunction)();
-          Utilities.assertIsHTMLElement(element, localName);
-          return element;
-        }
+      const element =
+          Native.Document_createElementNS.call(this, namespace, localName);
+      internals.patchElement(element);
+
+      // Only create custom elements if this document is associated with the
+      // registry.
+      if (this.__CE_hasRegistry &&
+          (namespace === null || namespace === NS_HTML) &&
+          internals.localNameToDefinition(localName)) {
+        internals.upgradeElement(/** @type {!HTMLElement} */ (element));
       }
 
-      const result = /** @type {!Element} */
-        (Native.Document_createElementNS.call(this, namespace, localName));
-      internals.patchElement(result);
-      return result;
+      return element;
     });
 
   PatchParentNode(internals, Document.prototype, {

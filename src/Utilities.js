@@ -20,17 +20,6 @@ const reservedTagList = new Set([
 ]);
 
 /**
- *
- * @param {HTMLElement} element
- * @param {string} localName
- */
-export function assertIsHTMLElement(element, localName) {
-  if (!(element instanceof HTMLElement)) {
-    throw new Error(`Failed to construct 'CustomElement' ${localName}: The result must implement HTMLElement interface.`);
-  }
-}
-
-/**
  * @param {string} localName
  * @returns {boolean}
  */

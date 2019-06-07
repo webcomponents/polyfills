@@ -11,8 +11,12 @@
 </head>
 <body>
 
-<template id="bad-custom-element-1">
-  <bad-custom-element-1></bad-custom-element-1>
+<template id="unconstructable-custom-element">
+  <unconstructable-custom-element></unconstructable-custom-element>
+</template>
+
+<template id="non-conformant-custom-element">
+  <non-conformant-custom-element></non-conformant-custom-element>
 </template>
 
 <script>
@@ -72,23 +76,52 @@ suite('Constructing elements', function() {
       });
     });
 
-  test('Custom element constructors may not cause more instances of the same ' +
-    'custom element to be created before calling into `HTMLElement` (e.g. via ' +
-    '`super()`).', function() {
+  test('Non-conformant custom element constructors that attempt to construct ' +
+    'more instances of themselves using `new` before calling into ' +
+    '`HTMLElement` (e.g. via `super()`) cause an error to be thrown when the ' +
+    '`HTMLElement` constructor finds the AlreadyConstructedMarker.',
+    function() {
       let createSelf = true;
-      customElements.define('bad-custom-element-1', class extends HTMLElement {
+      class UnconstructableCustomElement extends HTMLElement {
         constructor() {
           if (createSelf) {
             createSelf = false;
-            document.createElement('bad-custom-element-1');
+            new UnconstructableCustomElement();
+          }
+        }
+      }
+      customElements.define('unconstructable-custom-element',
+          UnconstructableCustomElement);
+
+      assert.throws(function() {
+        const templateContent =
+            document.querySelector('#unconstructable-custom-element').content;
+        document.importNode(templateContent, true);
+      });
+    });
+
+  test('Non-conformant custom element constructors that attempt to create ' +
+    'more instances of themselves using `Document#createElement` before ' +
+    'calling into `HTMLElement` (e.g. via `super()`) do NOT cause an error ' +
+    'to be thrown.', function() {
+      let createSelf = true;
+      class NonConformantCustomElement extends HTMLElement {
+        constructor() {
+          if (createSelf) {
+            createSelf = false;
+            document.createElement('non-conformant-custom-element');
           }
 
           super();
         }
-      });
+      }
+      customElements.define('non-conformant-custom-element',
+          NonConformantCustomElement);
 
-      assert.throws(function() {
-        document.importNode(document.querySelector('#bad-custom-element-1').content, true);
+      assert.doesNotThrow(function() {
+        const templateContent =
+            document.querySelector('#non-conformant-custom-element').content;
+        document.importNode(templateContent, true);
       });
     });
 });
