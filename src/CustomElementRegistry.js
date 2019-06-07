@@ -14,9 +14,6 @@ import DocumentConstructionObserver from './DocumentConstructionObserver.js';
 import Deferred from './Deferred.js';
 import * as Utilities from './Utilities.js';
 
-/**
- * @unrestricted
- */
 export default class CustomElementRegistry {
 
   /**
@@ -83,10 +80,18 @@ export default class CustomElementRegistry {
     }
   }
 
+  /**
+   * @param {string} localName
+   * @param {!Function} constructor
+   */
   define(localName, constructor) {
     this._define(localName, constructor, false);
   }
 
+  /**
+   * @param {string} localName
+   * @param {!Function} constructorGetter
+   */
   polyfillDefineLazy(localName, constructorGetter) {
     this._define(localName, constructorGetter, true);
   }

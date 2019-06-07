@@ -12,9 +12,6 @@ import CustomElementInternals from './CustomElementInternals.js';
 
 let elementDefinitionIsRunning = false;
 
-/**
- * @unrestricted
- */
 export default class CustomElementDefinitionProducer {
 
   /**
@@ -51,7 +48,7 @@ export default class CustomElementDefinitionProducer {
      * @private
      * @type {!CustomElementDefinition|undefined}
      */
-    this._definition;
+    this._definition = undefined;
 
     if (!(constructorOrGetter instanceof Function)) {
       throw new TypeError('Custom element constructors must be functions.');
@@ -77,13 +74,13 @@ export default class CustomElementDefinitionProducer {
 
   /** @return {!CustomElementDefinition} */
   get definition() {
-    this._ensureDefinition();
-    return /** @type {!CustomElementDefinition} */ (this._definition);
+    return this._ensureDefinition();
   }
 
+  /** @return {!CustomElementDefinition} */
   _ensureDefinition() {
     if (this._definition) {
-      return;
+      return this._definition;
     }
     elementDefinitionIsRunning = true;
     let connectedCallback;
@@ -92,7 +89,6 @@ export default class CustomElementDefinitionProducer {
     let attributeChangedCallback;
     let observedAttributes;
     let constructorFunction;
-    let error;
     try {
       constructorFunction = this._isGetter ? this._constructorOrGetter() :
         this._constructorOrGetter;
@@ -131,6 +127,8 @@ export default class CustomElementDefinitionProducer {
     }
 
     this._internals.setDefinitionConstructor(this._definition);
+
+    return this._definition;
   }
 
 }
