@@ -88,6 +88,8 @@ suite('Constructing elements', function() {
             createSelf = false;
             new UnconstructableCustomElement();
           }
+
+          super();
         }
       }
       customElements.define('unconstructable-custom-element',
@@ -122,6 +124,21 @@ suite('Constructing elements', function() {
         const templateContent =
             document.querySelector('#non-conformant-custom-element').content;
         document.importNode(templateContent, true);
+      });
+    });
+
+  test('Non-conformant custom element constructors that return a different ' +
+    'element throw.', function() {
+      class NonConformantCustomElement2 extends HTMLElement {
+        constructor() {
+          return document.createElement('div');
+        }
+      }
+      customElements.define('non-conformant-custom-element-2',
+          NonConformantCustomElement2);
+
+      assert.throws(function() {
+        document.createElement('non-conformant-custom-element-2');
       });
     });
 });
