@@ -113,9 +113,12 @@ export default class CustomElementRegistry {
       disconnectedCallback = getCallback('disconnectedCallback');
       adoptedCallback = getCallback('adoptedCallback');
       attributeChangedCallback = getCallback('attributeChangedCallback');
-      observedAttributes = constructor['observedAttributes'] || [];
+      // `observedAttributes` should not be read unless an
+      // `attributesChangedCallback` exists
+      observedAttributes = (attributeChangedCallback &&
+        constructor['observedAttributes']) || [];
     } catch (e) {
-      return;
+      throw e;
     } finally {
       this._elementDefinitionIsRunning = false;
     }

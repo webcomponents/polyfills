@@ -68,3 +68,7 @@ Element.prototype.__CE_definition;
 
 /** @type {!DocumentFragment|undefined} */
 Element.prototype.__CE_shadowRoot;
+
+// Note, the closure type is incorrect here.
+/** @type {!HTMLCollection} */
+DocumentFragment.prototype.children;

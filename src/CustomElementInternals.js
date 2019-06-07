@@ -16,7 +16,7 @@ export default class CustomElementInternals {
   /**
    * @param {{
    *   shadyDomFastWalk: boolean,
-   *   useDocumentConstructionObserver: boolean,
+   *   noDocumentConstructionObserver: boolean,
    * }} options
    */
   constructor(options) {
