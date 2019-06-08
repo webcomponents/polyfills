@@ -58,7 +58,10 @@ export default class CustomElementDefinitionProducer {
       throw new SyntaxError(`The element name '${localName}' is not valid.`);
     }
 
-    if (this._internals.localNameToDefinitionProducer(localName)) {
+    const existingProducer = this._internals.localNameToDefinitionProducer(localName);
+    // Note, only throw if the existing producer has a valid definition.
+    // If it does not, then re-defining is ok.
+    if (existingProducer && existingProducer.definition) {
       throw new Error(`A custom element with name '${localName}' has already been defined.`);
     }
 
@@ -70,11 +73,22 @@ export default class CustomElementDefinitionProducer {
     if (!this._isGetter) {
       this._ensureDefinition();
     }
+
+    this._internals.setDefinitionProducer(this.localName, this);
   }
 
   /** @return {!CustomElementDefinition} */
   get definition() {
-    return this._ensureDefinition();
+    try {
+      return this._ensureDefinition();
+    } catch (e) {
+      // If this definition is invalid, release it so it can be defined again.
+      this._internals.removeDefinitionProducer(this.localName);
+      // Note, if an error is generated while reading the definition, it's when
+      // the polyfill is in the processing of upgrading an entire tree and we
+      // don't want this to fail.
+      console.error(e);
+    }
   }
 
   /** @return {!CustomElementDefinition} */
@@ -92,6 +106,9 @@ export default class CustomElementDefinitionProducer {
     try {
       constructorFunction = this._isGetter ? this._constructorOrGetter() :
         this._constructorOrGetter;
+      if (!(constructorFunction instanceof Function)) {
+        throw new TypeError('Custom element constructors must be functions.');
+      }
       /** @type {!Object} */
       const prototype = constructorFunction.prototype;
       if (!(prototype instanceof Object)) {
@@ -109,8 +126,12 @@ export default class CustomElementDefinitionProducer {
       disconnectedCallback = getCallback('disconnectedCallback');
       adoptedCallback = getCallback('adoptedCallback');
       attributeChangedCallback = getCallback('attributeChangedCallback');
-      observedAttributes = constructorFunction['observedAttributes'] || [];
+      // Note, `observedAttributes` should only be read if
+      // `attributeChangedCallback` exists.
+      observedAttributes = (attributeChangedCallback &&
+        constructorFunction['observedAttributes']) || [];
     } catch (e) {
+      throw e;
     } finally {
       elementDefinitionIsRunning = false;
     }

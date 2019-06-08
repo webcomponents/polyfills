@@ -69,7 +69,6 @@ export default class CustomElementRegistry {
     const definitionProducer = new CustomElementDefinitionProducer(
       localName, constructorOrGetter, isGetter, this._internals);
 
-    this._internals.setDefinitionProducer(localName, definitionProducer);
     this._pendingDefinitionProducers.push(definitionProducer);
 
     // If we've already called the flush callback and it hasn't called back yet,

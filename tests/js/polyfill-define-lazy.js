@@ -70,6 +70,41 @@ suite('polyfillLazyDefine', function() {
       }, '', 'customElements.define failed to throw without a constructor argument');
     });
 
+    test('define succeeds with named used for a polyfillDefineLazy with an invalid class', function() {
+      customElements.polyfillDefineLazy('x-failed-define-lazy', () => {});
+      // Work around for console.error being considered an error.
+      sinon.spy(console, 'error');
+      let error;
+      try {
+        customElements.define('x-failed-define-lazy', class extends HTMLElement {});
+      } catch (e) {
+        error = !!(e && !console.error.called);
+      }
+      assert.isFalse(error, 'Error thrown when defining an element using the same name as a failed definition with an invalid class.')
+      console.error.restore();
+    });
+
+    test('define succeeds with named used for a polyfillDefineLazy with invalid callbacks', function() {
+      try {
+        customElements.polyfillDefineLazy('x-failed-define-lazy-callbacks', () => class extends HTMLElement {
+          attributeChangedCallback() {}
+          static get observedAttributes() {
+            throw new Error('no attributes');
+          }
+        });
+      } catch (e) {}
+      // Work around for console.error being considered an error.
+      sinon.spy(console, 'error');
+      let error;
+      try {
+        customElements.define('x-failed-define-lazy-callbacks', class extends HTMLElement {});
+      } catch (e) {
+        error = !!(e && !console.error.called);
+      }
+      assert.isFalse(error, 'Error thrown when defining an element using the same name as a failed definition with invalid callbacks.')
+      console.error.restore();
+    });
+
   });
 
   suite('get', function() {
@@ -126,7 +161,7 @@ suite('polyfillLazyDefine', function() {
     });
 
     test('creating an element throws if a constructor getter is used with `define`', function() {
-      customElements.define('pass-getter-to-define', () => {});
+      customElements.define('pass-getter-to-define', function() {});
       let error;
       try {
         document.createElement('pass-getter-to-define');

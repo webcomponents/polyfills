@@ -54,6 +54,13 @@ export default class CustomElementInternals {
   }
 
   /**
+   * @param {string} localName
+   */
+  removeDefinitionProducer(localName) {
+    this._localNameToDefinitionProducer.delete(localName);
+  }
+
+  /**
    * @param {!CustomElementDefinition} definition
    */
   setDefinitionConstructor(definition) {
