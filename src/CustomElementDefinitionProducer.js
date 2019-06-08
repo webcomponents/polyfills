@@ -50,8 +50,8 @@ export default class CustomElementDefinitionProducer {
      */
     this._definition = undefined;
 
-    if (!(constructorOrGetter instanceof Function)) {
-      throw new TypeError('Custom element constructors must be functions.');
+    if (this._isGetter && !(constructorOrGetter instanceof Function)) {
+      throw new TypeError('Custom element constructor getters must be functions.');
     }
 
     if (!Utilities.isValidCustomElementName(localName)) {
