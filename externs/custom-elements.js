@@ -72,3 +72,7 @@ Element.prototype.__CE_shadowRoot;
 // Note, the closure type is incorrect here.
 /** @type {!HTMLCollection} */
 DocumentFragment.prototype.children;
+
+// For IE.
+/** @type {undefined|!function(string, boolean, boolean, string, string, number)} */
+ErrorEvent.prototype.initErrorEvent;

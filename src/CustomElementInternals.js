@@ -508,10 +508,25 @@ export default class CustomElementInternals {
    * @see https://html.spec.whatwg.org/multipage/webappapis.html#report-the-exception
    */
   reportTheException(error) {
-    const event = new ErrorEvent('error', {
-      cancelable: true,
-      error,
-    });
+    let event = undefined;
+    if (ErrorEvent.prototype.initErrorEvent === undefined) {
+      event = new ErrorEvent('error', {
+        cancelable: true,
+        error,
+      });
+    } else {
+      event = document.createEvent('ErrorEvent');
+      // initErrorEvent(type, bubbles, cancelable, message, filename, line)
+      event.initErrorEvent('error', false, true, error.message, '', 0);
+      // Hack for IE, where ErrorEvent#preventDefault does not set
+      // #defaultPrevented to true.
+      event.preventDefault = function() {
+        Object.defineProperty(this, 'defaultPrevented', {
+          get: function() { return true; }
+        });
+      };
+    }
+
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
       console.error(error);
