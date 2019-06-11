@@ -43,3 +43,14 @@ Event.prototype.__relatedTargetComposedPath;
  * Prevent renaming of this method on ShadyRoot for testing and debugging.
  */
 ShadowRoot.prototype._renderSelf = function(){};
+
+// Prevent renaming of properties used by Polymer templates with
+// shadyUpgradeFragment optimization
+/** @type {!Object} */
+DocumentFragment.prototype.$;
+/** @type {boolean} */
+DocumentFragment.prototype.__noInsertionPoint;
+/** @type {!Array<!Node>} */
+DocumentFragment.prototype.nodeList;
+/** @type {!Object} */
+DocumentFragment.prototype.templateInfo;

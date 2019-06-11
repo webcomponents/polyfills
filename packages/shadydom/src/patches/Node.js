@@ -79,7 +79,11 @@ function scheduleObserver(node, addedNode, removedNode) {
   const observer = nodeData && nodeData.observer;
   if (observer) {
     if (addedNode) {
-      observer.addedNodes.push(addedNode);
+      if (addedNode.nodeType === Node.DOCUMENT_FRAGMENT_NODE) {
+        observer.addedNodes.push(...addedNode.childNodes);
+      } else {
+        observer.addedNodes.push(addedNode);
+      }
     }
     if (removedNode) {
       observer.removedNodes.push(removedNode);
@@ -262,6 +266,7 @@ export const NodePatches = utils.getOwnPropertyDescriptors({
     if (ref_node === node) {
       return node;
     }
+    scheduleObserver(this, node);
     /** @type {!Array<!HTMLSlotElement>} */
     const slotsAdded = [];
     const ownerRoot = ownerShadyRootForNode(this);
@@ -356,7 +361,6 @@ export const NodePatches = utils.getOwnPropertyDescriptors({
     } else if (node.ownerDocument !== this.ownerDocument) {
       this.ownerDocument.adoptNode(node);
     }
-    scheduleObserver(this, node);
     return node;
   },
 
@@ -388,6 +392,7 @@ export const NodePatches = utils.getOwnPropertyDescriptors({
       throw Error('The node to be removed is not a child of this node: ' +
         node);
     }
+    scheduleObserver(this, null, node);
     let preventNativeRemove;
     let ownerRoot = ownerShadyRootForNode(node);
     const removingInsertionPoint = ownerRoot && ownerRoot._removeContainedSlots(node);
@@ -433,7 +438,6 @@ export const NodePatches = utils.getOwnPropertyDescriptors({
         container[utils.NATIVE_PREFIX + 'removeChild'](node);
       }
     }
-    scheduleObserver(this, null, node);
     return node;
   },
 

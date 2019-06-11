@@ -125,11 +125,11 @@ export const QueryPatches = utils.getOwnPropertyDescriptors({
     if (useNative) {
       const o = Array.prototype.slice.call(this[utils.NATIVE_PREFIX + 'querySelectorAll'](selector));
       const root = this[utils.SHADY_PREFIX + 'getRootNode']();
-      return o.filter(e => e[utils.SHADY_PREFIX + 'getRootNode']() == root);
+      return utils.createPolyfilledHTMLCollection(o.filter(e => e[utils.SHADY_PREFIX + 'getRootNode']() == root));
     }
-    return query(this, function(n) {
+    return utils.createPolyfilledHTMLCollection(query(this, function(n) {
       return utils.matchesSelector(n, selector);
-    });
+    }));
   }
 
 });

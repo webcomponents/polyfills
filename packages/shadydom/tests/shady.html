@@ -461,9 +461,9 @@ suite('Mutate light DOM', function() {
     ShadyDOM.wrap(ShadyDOM.wrap(child).shadowRoot).innerHTML = '<slot></slot><span id="sub"></span>';
     var childLocalSub = ShadyDOM.wrap(ShadyDOM.wrap(child).shadowRoot).lastChild;
     ShadyDOM.flush();
-    assert.deepEqual(ShadyDOM.wrap(ShadyDOM.wrap(host).shadowRoot).querySelectorAll('span#main'), [hostLocalMain]);
-    assert.deepEqual(ShadyDOM.wrap(ShadyDOM.wrap(host).shadowRoot).querySelectorAll('div#sub'), [childLightSub]);
-    assert.deepEqual(ShadyDOM.wrap(ShadyDOM.wrap(child).shadowRoot).querySelectorAll('span#sub'), [childLocalSub]);
+    assert.deepEqual(ShadyDOM.wrap(ShadyDOM.wrap(host).shadowRoot).querySelectorAll('span#main').item(0), hostLocalMain);
+    assert.deepEqual(ShadyDOM.wrap(ShadyDOM.wrap(host).shadowRoot).querySelectorAll('div#sub')[0], childLightSub);
+    assert.deepEqual(Array.from(ShadyDOM.wrap(ShadyDOM.wrap(child).shadowRoot).querySelectorAll('span#sub')), [childLocalSub]);
   });
 
   test('querySelectorAll (light dom)', function() {
@@ -477,9 +477,9 @@ suite('Mutate light DOM', function() {
     var childLightSub = ShadyDOM.wrap(child).lastElementChild;
     ShadyDOM.wrap(ShadyDOM.wrap(child).shadowRoot).innerHTML = '<slot></slot><span id="sub"></span>';
     ShadyDOM.flush();
-    assert.deepEqual(ShadyDOM.wrap(host).querySelectorAll('div#main'), [hostLightMain]);
-    assert.deepEqual(ShadyDOM.wrap(host).querySelectorAll('#sub'), []);
-    assert.deepEqual(ShadyDOM.wrap(child).querySelectorAll('div#sub'), [childLightSub]);
+    assert.deepEqual(ShadyDOM.wrap(host).querySelectorAll('div#main').item(0), hostLightMain);
+    assert.deepEqual(Array.from(ShadyDOM.wrap(host).querySelectorAll('#sub')), []);
+    assert.deepEqual(ShadyDOM.wrap(child).querySelectorAll('div#sub')[0], childLightSub);
   });
 
   test('querySelectorAll useNative (light dom)', function() {
@@ -493,9 +493,9 @@ suite('Mutate light DOM', function() {
     var childLightSub = ShadyDOM.wrap(child).lastElementChild;
     ShadyDOM.wrap(ShadyDOM.wrap(child).shadowRoot).innerHTML = '<slot></slot><span id="sub"></span>';
     ShadyDOM.flush();
-    assert.deepEqual(ShadyDOM.wrap(host).querySelectorAll('div#main', true), [hostLightMain]);
-    assert.deepEqual(ShadyDOM.wrap(host).querySelectorAll('#sub', true), []);
-    assert.deepEqual(ShadyDOM.wrap(child).querySelectorAll('div#sub', true), [childLightSub]);
+    assert.deepEqual(ShadyDOM.wrap(host).querySelectorAll('div#main', true).item(0), hostLightMain);
+    assert.deepEqual(Array.from(ShadyDOM.wrap(host).querySelectorAll('#sub', true)), []);
+    assert.deepEqual(ShadyDOM.wrap(child).querySelectorAll('div#sub', true)[0], childLightSub);
   });
 
 });
