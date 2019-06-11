@@ -484,9 +484,9 @@ export default class CustomElementInternals {
         } catch (e) {
           this.reportTheException(e);
 
-          const result = /** @type {!Element} */
-              (Native.Document_createElementNS.call(
-              doc, namespace === null ? NS_HTML : namespace, localName));
+          const result = /** @type {!Element} */ (namespace === null ?
+              Native.Document_createElement.call(doc, localName) :
+              Native.Document_createElementNS.call(doc, namespace, localName));
           Object.setPrototypeOf(result, HTMLUnknownElement.prototype);
           result.__CE_state = CEState.failed;
           result.__CE_definition = undefined;
@@ -496,9 +496,9 @@ export default class CustomElementInternals {
       }
     }
 
-    const result = /** @type {!Element} */
-        (Native.Document_createElementNS.call(
-        doc, namespace === null ? NS_HTML : namespace, localName));
+    const result = /** @type {!Element} */ (namespace === null ?
+        Native.Document_createElement.call(doc, localName) :
+        Native.Document_createElementNS.call(doc, namespace, localName));
     this.patchElement(result);
     return result;
   }
