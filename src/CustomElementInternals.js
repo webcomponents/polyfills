@@ -437,34 +437,43 @@ export default class CustomElementInternals {
 
           if (result.__CE_state === undefined ||
               result.__CE_definition === undefined) {
-            throw new Error("Failed to construct custom element.");
+            throw new Error('Failed to construct \'' + localName + '\': ' +
+                'The returned value was not constructed with the HTMLElement ' +
+                'constructor.');
           }
 
           if (result.namespaceURI !== NS_HTML) {
-            throw new Error("Failed to construct custom element.");
+            throw new Error('Failed to construct \'' + localName + '\': ' +
+                'The constructed element\'s namespace must be the HTML ' +
+                'namespace.');
           }
 
           // The following Errors should be a DOMExceptions but DOMException
           // isn't constructable in all browsers.
 
           if (result.hasAttributes()) {
-            throw new Error("Failed to construct custom element.");
+            throw new Error('Failed to construct \'' + localName + '\': ' +
+                'The constructed element must not have any attributes.');
           }
 
           if (result.hasChildNodes()) {
-            throw new Error("Failed to construct custom element.");
+            throw new Error('Failed to construct \'' + localName + '\': ' +
+                'The constructed element must not have any children.');
           }
 
           if (result.parentNode !== null) {
-            throw new Error("Failed to construct custom element.");
+            throw new Error('Failed to construct \'' + localName + '\': ' +
+                'The constructed element must not have a parent node.');
           }
 
           if (result.ownerDocument !== doc) {
-            throw new Error("Failed to construct custom element.");
+            throw new Error('Failed to construct \'' + localName + '\': ' +
+                'The constructed element\'s owner document is incorrect.');
           }
 
           if (result.localName !== localName) {
-            throw new Error("Failed to construct custom element.");
+            throw new Error('Failed to construct \'' + localName + '\': ' +
+                'The constructed element\'s local name is incorrect.');
           }
 
           return result;
@@ -473,10 +482,7 @@ export default class CustomElementInternals {
 
           const result = /** @type {!Element} */
               (Native.Document_createElementNS.call(
-                doc,
-                namespace === null ? NS_HTML : namespace,
-                localName
-              ));
+              doc, namespace === null ? NS_HTML : namespace, localName));
           Object.setPrototypeOf(result, HTMLUnknownElement.prototype);
           result.__CE_state = CEState.failed;
           result.__CE_definition = undefined;
@@ -488,10 +494,7 @@ export default class CustomElementInternals {
 
     const result = /** @type {!Element} */
         (Native.Document_createElementNS.call(
-          doc,
-          namespace === null ? NS_HTML : namespace,
-          localName
-        ));
+        doc, namespace === null ? NS_HTML : namespace, localName));
     this.patchElement(result);
     return result;
   }
@@ -502,7 +505,7 @@ export default class CustomElementInternals {
    * @see https://html.spec.whatwg.org/multipage/webappapis.html#report-the-exception
    */
   _reportTheException(error) {
-    const event = new ErrorEvent("error", {
+    const event = new ErrorEvent('error', {
       cancelable: true,
       error,
     });
