@@ -28,7 +28,7 @@ export default function(internals) {
      */
     function(node, refNode) {
       if (node instanceof DocumentFragment) {
-        const insertedNodes = Array.prototype.slice.apply(node.childNodes);
+        const insertedNodes = Utilities.childrenFromFragment(node);
         const nativeResult = Native.Node_insertBefore.call(this, node, refNode);
 
         // DocumentFragments can't be connected, so `disconnectTree` will never
@@ -43,10 +43,10 @@ export default function(internals) {
         return nativeResult;
       }
 
-      const nodeWasConnected = Utilities.isConnected(node);
+      const nodeWasConnectedElement = node instanceof Element && Utilities.isConnected(node);
       const nativeResult = Native.Node_insertBefore.call(this, node, refNode);
 
-      if (nodeWasConnected) {
+      if (nodeWasConnectedElement) {
         internals.disconnectTree(node);
       }
 
@@ -65,7 +65,7 @@ export default function(internals) {
      */
     function(node) {
       if (node instanceof DocumentFragment) {
-        const insertedNodes = Array.prototype.slice.apply(node.childNodes);
+        const insertedNodes = Utilities.childrenFromFragment(node);
         const nativeResult = Native.Node_appendChild.call(this, node);
 
         // DocumentFragments can't be connected, so `disconnectTree` will never
@@ -80,10 +80,10 @@ export default function(internals) {
         return nativeResult;
       }
 
-      const nodeWasConnected = Utilities.isConnected(node);
+      const nodeWasConnectedElement = node instanceof Element && Utilities.isConnected(node);
       const nativeResult = Native.Node_appendChild.call(this, node);
 
-      if (nodeWasConnected) {
+      if (nodeWasConnectedElement) {
         internals.disconnectTree(node);
       }
 
@@ -119,10 +119,10 @@ export default function(internals) {
      * @return {!Node}
      */
     function(node) {
-      const nodeWasConnected = Utilities.isConnected(node);
+      const nodeWasConnectedElement = node instanceof Element && Utilities.isConnected(node);
       const nativeResult = Native.Node_removeChild.call(this, node);
 
-      if (nodeWasConnected) {
+      if (nodeWasConnectedElement) {
         internals.disconnectTree(node);
       }
 
@@ -138,7 +138,7 @@ export default function(internals) {
      */
     function(nodeToInsert, nodeToRemove) {
       if (nodeToInsert instanceof DocumentFragment) {
-        const insertedNodes = Array.prototype.slice.apply(nodeToInsert.childNodes);
+        const insertedNodes = Utilities.childrenFromFragment(nodeToInsert);
         const nativeResult = Native.Node_replaceChild.call(this, nodeToInsert, nodeToRemove);
 
         // DocumentFragments can't be connected, so `disconnectTree` will never
@@ -154,7 +154,8 @@ export default function(internals) {
         return nativeResult;
       }
 
-      const nodeToInsertWasConnected = Utilities.isConnected(nodeToInsert);
+      const nodeToInsertWasConnectedElement = nodeToInsert instanceof Element &&
+        Utilities.isConnected(nodeToInsert);
       const nativeResult = Native.Node_replaceChild.call(this, nodeToInsert, nodeToRemove);
       const thisIsConnected = Utilities.isConnected(this);
 
@@ -162,7 +163,7 @@ export default function(internals) {
         internals.disconnectTree(nodeToRemove);
       }
 
-      if (nodeToInsertWasConnected) {
+      if (nodeToInsertWasConnectedElement) {
         internals.disconnectTree(nodeToInsert);
       }
 
@@ -227,12 +228,11 @@ export default function(internals) {
           /** @type {!Array<string>} */
           const parts = [];
 
-          for (let i = 0; i < this.childNodes.length; i++) {
-            const childNode = this.childNodes[i];
-            if (childNode.nodeType === Node.COMMENT_NODE) {
+          for (let n = this.firstChild; n; n = n.nextSibling) {
+            if (n.nodeType === Node.COMMENT_NODE) {
               continue;
             }
-            parts.push(childNode.textContent);
+            parts.push(n.textContent);
           }
 
           return parts.join('');

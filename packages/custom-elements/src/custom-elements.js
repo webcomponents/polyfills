@@ -23,8 +23,15 @@ if (!priorCustomElements ||
      priorCustomElements['forcePolyfill'] ||
      (typeof priorCustomElements['define'] != 'function') ||
      (typeof priorCustomElements['get'] != 'function')) {
+
+  const noDocumentConstructionObserver = priorCustomElements && priorCustomElements['noDocumentConstructionObserver'];
+  const shadyDomFastWalk = priorCustomElements && priorCustomElements['shadyDomFastWalk'];
+
   /** @type {!CustomElementInternals} */
-  const internals = new CustomElementInternals();
+  const internals = new CustomElementInternals({
+    noDocumentConstructionObserver,
+    shadyDomFastWalk
+  });
 
   PatchHTMLElement(internals);
   PatchDocument(internals);

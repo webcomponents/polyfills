@@ -60,10 +60,11 @@ export default class CustomElementRegistry {
     this._pendingDefinitions = [];
 
     /**
-     * @private
-     * @type {!DocumentConstructionObserver}
-     */
-    this._documentConstructionObserver = new DocumentConstructionObserver(internals, document);
+    * @private
+    * @const {!DocumentConstructionObserver|undefined}
+    */
+    this._documentConstructionObserver = internals.useDocumentConstructionObserver ?
+      new DocumentConstructionObserver(internals, document) : undefined;
   }
 
   /**
@@ -112,9 +113,12 @@ export default class CustomElementRegistry {
       disconnectedCallback = getCallback('disconnectedCallback');
       adoptedCallback = getCallback('adoptedCallback');
       attributeChangedCallback = getCallback('attributeChangedCallback');
-      observedAttributes = constructor['observedAttributes'] || [];
+      // `observedAttributes` should not be read unless an
+      // `attributesChangedCallback` exists
+      observedAttributes = (attributeChangedCallback &&
+        constructor['observedAttributes']) || [];
     } catch (e) {
-      return;
+      throw e;
     } finally {
       this._elementDefinitionIsRunning = false;
     }
@@ -257,7 +261,9 @@ export default class CustomElementRegistry {
   }
 
   polyfillWrapFlushCallback(outer) {
-    this._documentConstructionObserver.disconnect();
+    if (this._documentConstructionObserver) {
+      this._documentConstructionObserver.disconnect();
+    }
     const inner = this._flushCallback;
     this._flushCallback = flush => outer(() => inner(flush));
   }

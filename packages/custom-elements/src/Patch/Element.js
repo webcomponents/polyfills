@@ -53,7 +53,7 @@ export default function(internals) {
         let removedElements = undefined;
         if (isConnected) {
           removedElements = [];
-          Utilities.walkDeepDescendantElements(this, element => {
+          internals.forEachElement(this, element => {
             if (element !== this) {
               removedElements.push(element);
             }
