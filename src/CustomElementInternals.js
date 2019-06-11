@@ -427,9 +427,11 @@ export default class CustomElementInternals {
    * @see https://dom.spec.whatwg.org/#concept-create-element
    */
   createAnElement(doc, localName, namespace) {
+    namespace = namespace === null ? NS_HTML : namespace;
+
     // Only create custom elements if the document is associated with the
     // registry.
-    if (doc.__CE_hasRegistry && (namespace === null || namespace === NS_HTML)) {
+    if (doc.__CE_hasRegistry && namespace === NS_HTML) {
       const definition = this._localNameToDefinition.get(localName);
       if (definition) {
         try {
@@ -481,8 +483,7 @@ export default class CustomElementInternals {
           this._reportTheException(e);
 
           const result = /** @type {!Element} */
-              (Native.Document_createElementNS.call(
-              doc, namespace === null ? NS_HTML : namespace, localName));
+              (Native.Document_createElementNS.call(doc, namespace, localName));
           Object.setPrototypeOf(result, HTMLUnknownElement.prototype);
           result.__CE_state = CEState.failed;
           result.__CE_definition = undefined;
@@ -493,8 +494,7 @@ export default class CustomElementInternals {
     }
 
     const result = /** @type {!Element} */
-        (Native.Document_createElementNS.call(
-        doc, namespace === null ? NS_HTML : namespace, localName));
+        (Native.Document_createElementNS.call(doc, namespace, localName));
     this.patchElement(result);
     return result;
   }
