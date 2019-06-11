@@ -146,6 +146,26 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     });
   });
 
+  test('appending a DocumentFragment causes the children of the fragment to ' +
+      'appear in addedNodes, not the fragment itself', function(done) {
+    var fragment = document.createDocumentFragment();
+    var fragmentChild0 = document.createElement('div');
+    fragment.appendChild(fragmentChild0);
+    var fragmentChild1 = document.createElement('div');
+    fragment.appendChild(fragmentChild1);
+    var target = document.createElement('div');
+    var observer = ShadyDOM.observeChildren(target, function(info) {
+      assert.equal(info.length, 1);
+      assert.isArray(info[0].addedNodes);
+      assert.equal(info[0].addedNodes.length, 2);
+      assert.equal(info[0].addedNodes[0], fragmentChild0);
+      assert.equal(info[0].addedNodes[1], fragmentChild1);
+      assert.isArray(info[0].removedNodes);
+      assert.equal(info[0].removedNodes.length, 0);
+      done();
+    });
+    ShadyDOM.wrap(target).appendChild(fragment);
+  });
 });
 
 </script>

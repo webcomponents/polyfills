@@ -9,6 +9,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 */
 
 import * as utils from './utils.js';
+import {flush} from './flush.js';
 import {shadyDataForNode} from './shady-data.js';
 
 /*
@@ -385,6 +386,12 @@ function getEventWrappers(eventLike) {
 
 function targetNeedsPathCheck(node) {
   return utils.isShadyRoot(node) || node.localName === 'slot';
+}
+
+/** @this {Node} */
+export function dispatchEvent(event) {
+  flush();
+  return this[utils.NATIVE_PREFIX + 'dispatchEvent'](event);
 }
 
 /**

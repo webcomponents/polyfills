@@ -9,16 +9,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 */
 
 import * as utils from '../utils.js';
-import {flush} from '../flush.js';
-import {addEventListener, removeEventListener} from '../patch-events.js';
+import {addEventListener, removeEventListener, dispatchEvent} from '../patch-events.js';
 
 export const EventTargetPatches = utils.getOwnPropertyDescriptors({
 
-  /** @this {Node} */
-  dispatchEvent(event) {
-    flush();
-    return this[utils.NATIVE_PREFIX + 'dispatchEvent'](event);
-  },
+  dispatchEvent,
 
   addEventListener,
 

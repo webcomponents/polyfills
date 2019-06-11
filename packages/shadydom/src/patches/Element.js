@@ -118,8 +118,15 @@ export const ElementPatches = utils.getOwnPropertyDescriptors({
    * @param {string} attr
    */
   removeAttribute(attr) {
-    this[utils.NATIVE_PREFIX + 'removeAttribute'](attr);
-    distributeAttributeChange(this, attr);
+    if (this.ownerDocument !== doc) {
+      this[utils.NATIVE_PREFIX + 'removeAttribute'](attr);
+    } else if (!scopeClassAttribute(this, attr, '')) {
+      this[utils.NATIVE_PREFIX + 'removeAttribute'](attr);
+      distributeAttributeChange(this, attr);
+    } else if (this.getAttribute(attr) === '') {
+      // ensure that "class" attribute is fully removed if ShadyCSS does not keep scoping
+      this[utils.NATIVE_PREFIX + 'removeAttribute'](attr);
+    }
   },
 
   /**
