@@ -46,7 +46,11 @@ export default function(internals) {
       const lastIndex = constructionStack.length - 1;
       const element = constructionStack[lastIndex];
       if (element === AlreadyConstructedMarker) {
-        throw new Error('The HTMLElement constructor was either called reentrantly for this constructor or called multiple times.');
+        const localName = definition.localName;
+        throw new Error('Failed to construct \'' + localName + '\': ' +
+            'This element was already constructed. The constructor may be ' +
+            'non-conformantly reentrant or might have called into the ' +
+            'HTMLElement constructor multiple times for the same element.');
       }
       const toConstructElement = /** @type {!HTMLElement} */ (element);
       constructionStack[lastIndex] = AlreadyConstructedMarker;

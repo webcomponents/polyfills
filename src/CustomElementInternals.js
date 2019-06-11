@@ -304,7 +304,11 @@ export default class CustomElementInternals {
     this.forEachElement(root, gatherElements, visitedImports);
 
     for (let i = 0; i < elements.length; i++) {
-      upgrade(elements[i]);
+      try {
+        upgrade(elements[i]);
+      } catch (e) {
+        this.reportTheException(e);
+      }
     }
   }
 
@@ -379,7 +383,7 @@ export default class CustomElementInternals {
       try {
         definition.connectedCallback.call(element);
       } catch (e) {
-        this._reportTheException(e);
+        this.reportTheException(e);
       }
     }
   }
@@ -393,7 +397,7 @@ export default class CustomElementInternals {
       try {
         definition.disconnectedCallback.call(element);
       } catch (e) {
-        this._reportTheException(e);
+        this.reportTheException(e);
       }
     }
   }
@@ -414,7 +418,7 @@ export default class CustomElementInternals {
       try {
         definition.attributeChangedCallback.call(element, name, oldValue, newValue, namespace);
       } catch (e) {
-        this._reportTheException(e);
+        this.reportTheException(e);
       }
     }
   }
@@ -480,7 +484,7 @@ export default class CustomElementInternals {
 
           return result;
         } catch (e) {
-          this._reportTheException(e);
+          this.reportTheException(e);
 
           const result = /** @type {!Element} */
               (Native.Document_createElementNS.call(doc, namespace, localName));
@@ -500,11 +504,10 @@ export default class CustomElementInternals {
   }
 
   /**
-   * @private
    * @param {!Error} error
    * @see https://html.spec.whatwg.org/multipage/webappapis.html#report-the-exception
    */
-  _reportTheException(error) {
+  reportTheException(error) {
     const event = new ErrorEvent('error', {
       cancelable: true,
       error,
