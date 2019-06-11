@@ -17,42 +17,35 @@ function generateLocalName() {
   return 'test-element-' + Math.random().toString(32).substring(2);
 }
 
-function defineWithLocalName(localName) {
-  const constructor = class extends HTMLElement {
-    constructor() {
-      super();
-      this.constructed = true;
-      this.connectedCallbackCount = 0;
-      this.disconnectedCallbackCount = 0;
-    }
-
-    connectedCallback() {
-      this.connectedCallbackCount++;
-    }
-
-    disconnectedCallback() {
-      this.disconnectedCallbackCount++;
-    }
-  }
-  
-  customElements.define(localName, constructor);
-
-  return constructor;
-}
-
 suite('Constructing elements', function() {
   let localName;
-  let constructor;
 
   setup(function() {
     localName = generateLocalName();
-    constructor = defineWithLocalName(localName);
   });
 
   test('Custom elements can be constructed from their constructor.', function() {
-    const element = new constructor();
+    class CustomElement extends HTMLElement {
+      constructor() {
+        super();
+        this.constructed = true;
+        this.connectedCallbackCount = 0;
+        this.disconnectedCallbackCount = 0;
+      }
 
-    assert(element instanceof constructor);
+      connectedCallback() {
+        this.connectedCallbackCount++;
+      }
+
+      disconnectedCallback() {
+        this.disconnectedCallbackCount++;
+      }
+    }
+    customElements.define(localName, CustomElement);
+
+    const element = new CustomElement();
+
+    assert(element instanceof CustomElement);
     assert(element instanceof HTMLElement);
     // The native `Element` function is not replaced, only patched; check that the
     // prototype chain is correctly connected.
@@ -71,77 +64,74 @@ suite('Constructing elements', function() {
 
   test('Non-conformant custom element constructors that attempt to construct ' +
     'more instances of themselves using `new` before calling into ' +
-    '`HTMLElement` (e.g. via `super()`) cause an error to be thrown when the ' +
-    '`HTMLElement` constructor finds the AlreadyConstructedMarker.',
+    '`HTMLElement` (e.g. via `super()`) DO NOT cause an error to be thrown ' +
+    'or reported when they are constructed.',
     function() {
       let createSelf = true;
-      class NonConformantCustomElement1 extends HTMLElement {
+      class NonConformantCustomElement extends HTMLElement {
         constructor() {
           if (createSelf) {
             createSelf = false;
-            new NonConformantCustomElement1();
+            new NonConformantCustomElement();
           }
 
           super();
         }
       }
-      customElements.define('unconstructable-custom-element-1',
-          NonConformantCustomElement1);
+      customElements.define(localName, NonConformantCustomElement);
 
       assert.doesNotThrow(function() {
         createSelf = true;
-        document.createElement('unconstructable-custom-element-1');
+        document.createElement(localName);
       });
 
       assert.doesNotThrow(function() {
         createSelf = true;
-        new NonConformantCustomElement1();
+        new NonConformantCustomElement();
       });
     });
 
   test('Non-conformant custom element constructors that attempt to create ' +
     'more instances of themselves using `Document#createElement` before ' +
-    'calling into `HTMLElement` (e.g. via `super()`) do NOT cause an error ' +
-    'to be thrown.', function() {
+    'calling into `HTMLElement` (e.g. via `super()`) DO NOT cause an error ' +
+    'to be thrown or reported when they are constructed.', function() {
       let createSelf = true;
-      class NonConformantCustomElement2 extends HTMLElement {
+      class NonConformantCustomElement extends HTMLElement {
         constructor() {
           if (createSelf) {
             createSelf = false;
-            document.createElement('non-conformant-custom-element-2');
+            document.createElement(localName);
           }
 
           super();
         }
       }
-      customElements.define('non-conformant-custom-element-2',
-          NonConformantCustomElement2);
+      customElements.define(localName, NonConformantCustomElement);
 
       assert.doesNotThrow(function() {
         createSelf = true;
-        document.createElement('non-conformant-custom-element-2');
+        document.createElement(localName);
       });
 
       assert.doesNotThrow(function() {
         createSelf = true;
-        new NonConformantCustomElement2();
+        new NonConformantCustomElement();
       });
     });
 
   test('Non-conformant custom element constructor that returns a different ' +
     'element causes an error to be thrown.', function() {
-      class NonConformantCustomElement3 extends HTMLElement {
+      class NonConformantCustomElement extends HTMLElement {
         constructor() {
           return document.createElement('div');
         }
       }
-      customElements.define('non-conformant-custom-element-3',
-          NonConformantCustomElement3);
+      customElements.define(localName, NonConformantCustomElement);
 
       const errors = [];
       catchReportedErrors(() => {
         assert.doesNotThrow(function() {
-          document.createElement('non-conformant-custom-element-3');
+          document.createElement(localName);
         });
       }, (e) => {
         e.preventDefault();
@@ -151,7 +141,7 @@ suite('Constructing elements', function() {
       assert.equal(errors.length, 1);
 
       assert.doesNotThrow(function() {
-        new NonConformantCustomElement3();
+        new NonConformantCustomElement();
       });
     });
 });
