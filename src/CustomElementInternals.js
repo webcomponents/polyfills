@@ -337,15 +337,17 @@ export default class CustomElementInternals {
     definition.constructionStack.push(element);
 
     try {
-      let result = new (definition.constructorFunction)();
-      if (result !== element) {
-        throw new Error('The custom element constructor did not produce the element being upgraded.');
+      try {
+        let result = new (definition.constructorFunction)();
+        if (result !== element) {
+          throw new Error('The custom element constructor did not produce the element being upgraded.');
+        }
+      } finally {
+        definition.constructionStack.pop();
       }
     } catch (e) {
       element.__CE_state = CEState.failed;
       throw e;
-    } finally {
-      definition.constructionStack.pop();
     }
 
     element.__CE_state = CEState.custom;
