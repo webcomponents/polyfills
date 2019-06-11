@@ -103,7 +103,7 @@ The `@apply` proposal has been abandoned in favor of the ::part/::theme [Shadow 
 * Nested mixins are not supported.
 * Shorthand properties are not expanded and may conflict with more explicit properties. Whenever shorthand notations are used in conjunction with their expanded forms in `@apply`, depending in the order of usage of the mixins, properties can be overridden. This means that using both `background-color: green;` and `background: red;` in two separate CSS selectors
  can result in `background-color: transparent` in the selector that `background: red;` is specified.
- 
+
    ```css
    #nonexistent {
      --my-mixin: {
@@ -120,8 +120,8 @@ The `@apply` proposal has been abandoned in favor of the ::part/::theme [Shadow 
    }
    ```
    results in the background being `transparent`, as an empty `background` definition replaces
-   the `@apply` definition. 
- 
+   the `@apply` definition.
+
    For this reason, we recommend avoiding shorthand properties.
 
 ### Example:

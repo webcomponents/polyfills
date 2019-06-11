@@ -512,7 +512,13 @@ export default class ScopingShim {
   // any necessary ShadyCSS static and property based scoping selectors
   setElementClass(element, classString) {
     let root = StyleUtil.wrap(element).getRootNode();
-    let classes = classString ? classString.split(/\s/) : [];
+    let classes;
+    if (classString) {
+      let definitelyString = typeof classString === 'string' ? classString : String(classString);
+      classes = definitelyString.split(/\s/);
+    } else {
+      classes = [];
+    }
     let scopeName = root.host && root.host.localName;
     // If no scope, try to discover scope name from existing class.
     // This can occur if, for example, a template stamped element that

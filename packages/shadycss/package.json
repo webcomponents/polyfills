@@ -1,6 +1,6 @@
 {
   "name": "@webcomponents/shadycss",
-  "version": "1.5.2",
+  "version": "1.9.1",
   "description": "Styling helpers for ShadyDOM",
   "main": "shadycss.min.js",
   "repository": "github:webcomponents/polyfills",
@@ -36,7 +36,7 @@
     "externs/**/*.js"
   ],
   "devDependencies": {
-    "@webcomponents/custom-elements": "^1.2.0",
+    "@webcomponents/custom-elements": "^1.2.1",
     "@webcomponents/html-imports": "^1.2.0",
     "@webcomponents/shadydom": "1.1.2",
     "@webcomponents/template": "^1.4.0",
