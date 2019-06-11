@@ -8,8 +8,11 @@
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
+import Native from './Patch/Native.js';
 import * as Utilities from './Utilities.js';
 import CEState from './CustomElementState.js';
+
+const NS_HTML = 'http://www.w3.org/1999/xhtml';
 
 export default class CustomElementInternals {
 
@@ -371,7 +374,11 @@ export default class CustomElementInternals {
   connectedCallback(element) {
     const definition = element.__CE_definition;
     if (definition.connectedCallback) {
-      definition.connectedCallback.call(element);
+      try {
+        definition.connectedCallback.call(element);
+      } catch (e) {
+        this._reportTheException(e);
+      }
     }
   }
 
@@ -381,7 +388,11 @@ export default class CustomElementInternals {
   disconnectedCallback(element) {
     const definition = element.__CE_definition;
     if (definition.disconnectedCallback) {
-      definition.disconnectedCallback.call(element);
+      try {
+        definition.disconnectedCallback.call(element);
+      } catch (e) {
+        this._reportTheException(e);
+      }
     }
   }
 
@@ -398,7 +409,104 @@ export default class CustomElementInternals {
       definition.attributeChangedCallback &&
       definition.observedAttributes.indexOf(name) > -1
     ) {
-      definition.attributeChangedCallback.call(element, name, oldValue, newValue, namespace);
+      try {
+        definition.attributeChangedCallback.call(element, name, oldValue, newValue, namespace);
+      } catch (e) {
+        this._reportTheException(e);
+      }
+    }
+  }
+
+  /**
+   * @param {!Document} doc
+   * @param {string} localName
+   * @param {string|null} namespace
+   * @return {!Element}
+   * @see https://dom.spec.whatwg.org/#concept-create-element
+   */
+  createAnElement(doc, localName, namespace) {
+    // Only create custom elements if the document is associated with the
+    // registry.
+    if (doc.__CE_hasRegistry && (namespace === null || namespace === NS_HTML)) {
+      const definition = this._localNameToDefinition.get(localName);
+      if (definition) {
+        try {
+          const result = new (definition.constructorFunction)();
+
+          if (result.__CE_state === undefined ||
+              result.__CE_definition === undefined) {
+            throw new Error("Failed to construct custom element.");
+          }
+
+          if (result.namespaceURI !== NS_HTML) {
+            throw new Error("Failed to construct custom element.");
+          }
+
+          // The following Errors should be a DOMExceptions but DOMException
+          // isn't constructable in all browsers.
+
+          if (result.hasAttributes()) {
+            throw new Error("Failed to construct custom element.");
+          }
+
+          if (result.hasChildNodes()) {
+            throw new Error("Failed to construct custom element.");
+          }
+
+          if (result.parentNode !== null) {
+            throw new Error("Failed to construct custom element.");
+          }
+
+          if (result.ownerDocument !== doc) {
+            throw new Error("Failed to construct custom element.");
+          }
+
+          if (result.localName !== localName) {
+            throw new Error("Failed to construct custom element.");
+          }
+
+          return result;
+        } catch (e) {
+          this._reportTheException(e);
+
+          const result = /** @type {!Element} */
+              (Native.Document_createElementNS.call(
+                doc,
+                namespace === null ? NS_HTML : namespace,
+                localName
+              ));
+          Object.setPrototypeOf(result, HTMLUnknownElement.prototype);
+          result.__CE_state = CEState.failed;
+          result.__CE_definition = undefined;
+          this.patchElement(result);
+          return result;
+        }
+      }
+    }
+
+    const result = /** @type {!Element} */
+        (Native.Document_createElementNS.call(
+          doc,
+          namespace === null ? NS_HTML : namespace,
+          localName
+        ));
+    this.patchElement(result);
+    return result;
+  }
+
+  /**
+   * @private
+   * @param {!Error} error
+   * @see https://html.spec.whatwg.org/multipage/webappapis.html#report-the-exception
+   */
+  _reportTheException(error) {
+    const event = new ErrorEvent("error", {
+      cancelable: true,
+      error,
+    });
+    window.dispatchEvent(event);
+    if (!event.defaultPrevented) {
+      console.error(error);
     }
   }
 }

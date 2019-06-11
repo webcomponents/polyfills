@@ -3,6 +3,25 @@
 <head>
 <title>HTMLElement</title>
 <script>
+
+// This needs to run first so that it can catch reported errors before Mocha's
+// global error handler does.
+window.catchReportedErrors = (() => {
+  let currentHandler = undefined;
+
+  window.addEventListener('error', e => {
+    if (currentHandler) currentHandler(e);
+  }, true);
+
+  return (fn, handler) => {
+    currentHandler = handler;
+    fn();
+    currentHandler = undefined;
+  };
+})();
+
+</script>
+<script>
   (window.customElements = window.customElements || {}).forcePolyfill = true;
 </script>
 <script src="../../../node_modules/es6-promise/dist/es6-promise.auto.min.js"></script>
@@ -10,14 +29,6 @@
 <script src="../../../custom-elements.min.js"></script>
 </head>
 <body>
-
-<template id="unconstructable-custom-element">
-  <unconstructable-custom-element></unconstructable-custom-element>
-</template>
-
-<template id="non-conformant-custom-element">
-  <non-conformant-custom-element></non-conformant-custom-element>
-</template>
 
 <script>
 function generateLocalName() {
@@ -82,23 +93,27 @@ suite('Constructing elements', function() {
     '`HTMLElement` constructor finds the AlreadyConstructedMarker.',
     function() {
       let createSelf = true;
-      class UnconstructableCustomElement extends HTMLElement {
+      class NonConformantCustomElement1 extends HTMLElement {
         constructor() {
           if (createSelf) {
             createSelf = false;
-            new UnconstructableCustomElement();
+            new NonConformantCustomElement1();
           }
 
           super();
         }
       }
-      customElements.define('unconstructable-custom-element',
-          UnconstructableCustomElement);
+      customElements.define('unconstructable-custom-element-1',
+          NonConformantCustomElement1);
 
-      assert.throws(function() {
-        const templateContent =
-            document.querySelector('#unconstructable-custom-element').content;
-        document.importNode(templateContent, true);
+      assert.doesNotThrow(function() {
+        createSelf = true;
+        document.createElement('unconstructable-custom-element-1');
+      });
+
+      assert.doesNotThrow(function() {
+        createSelf = true;
+        new NonConformantCustomElement1();
       });
     });
 
@@ -107,38 +122,54 @@ suite('Constructing elements', function() {
     'calling into `HTMLElement` (e.g. via `super()`) do NOT cause an error ' +
     'to be thrown.', function() {
       let createSelf = true;
-      class NonConformantCustomElement extends HTMLElement {
+      class NonConformantCustomElement2 extends HTMLElement {
         constructor() {
           if (createSelf) {
             createSelf = false;
-            document.createElement('non-conformant-custom-element');
+            document.createElement('non-conformant-custom-element-2');
           }
 
           super();
         }
       }
-      customElements.define('non-conformant-custom-element',
-          NonConformantCustomElement);
+      customElements.define('non-conformant-custom-element-2',
+          NonConformantCustomElement2);
 
       assert.doesNotThrow(function() {
-        const templateContent =
-            document.querySelector('#non-conformant-custom-element').content;
-        document.importNode(templateContent, true);
+        createSelf = true;
+        document.createElement('non-conformant-custom-element-2');
+      });
+
+      assert.doesNotThrow(function() {
+        createSelf = true;
+        new NonConformantCustomElement2();
       });
     });
 
-  test('Non-conformant custom element constructors that return a different ' +
-    'element throw.', function() {
-      class NonConformantCustomElement2 extends HTMLElement {
+  test('Non-conformant custom element constructor that returns a different ' +
+    'element causes an error to be thrown.', function() {
+      class NonConformantCustomElement3 extends HTMLElement {
         constructor() {
           return document.createElement('div');
         }
       }
-      customElements.define('non-conformant-custom-element-2',
-          NonConformantCustomElement2);
+      customElements.define('non-conformant-custom-element-3',
+          NonConformantCustomElement3);
 
-      assert.throws(function() {
-        document.createElement('non-conformant-custom-element-2');
+      const errors = [];
+      catchReportedErrors(() => {
+        assert.doesNotThrow(function() {
+          document.createElement('non-conformant-custom-element-3');
+        });
+      }, (e) => {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        errors.push(e);
+      });
+      assert.equal(errors.length, 1);
+
+      assert.doesNotThrow(function() {
+        new NonConformantCustomElement3();
       });
     });
 });
