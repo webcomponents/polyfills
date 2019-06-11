@@ -77,6 +77,48 @@ suite('CustomElementsRegistry', function() {
       }, '', 'customElements.define failed to throw with a constructor argument with no prototype');
     });
 
+    test('fails if reading callbacks fails', function() {
+      assert.throws(function () {
+        customElements.define('x-bad-attributes', class extends HTMLElement {
+          attributeChangedCallback() {}
+          static get observedAttributes() {
+            throw new Error('no attributes');
+          }
+        });
+      }, '', 'customElements.define failed to throw when reading callback throws.');
+    });
+
+    test('succeeds with named used for a failed definition with invalid class', function() {
+      try {
+        customElements.define('x-failed-define', {});
+      } catch (e) {}
+      let error;
+      try {
+        customElements.define('x-failed-define', class extends HTMLElement {});
+      } catch (e) {
+        error = e;
+      }
+      assert.isUndefined(error, 'Error thrown when defining an element using the same name as a failed definition with an invalid class.')
+    });
+
+    test('succeeds with named used for a failed definition with invalid callbacks', function() {
+      try {
+        customElements.define('x-failed-define-callbacks', class extends HTMLElement {
+          attributeChangedCallback() {}
+          static get observedAttributes() {
+            throw new Error('no attributes');
+          }
+        });
+      } catch (e) {}
+      let error;
+      try {
+        customElements.define('x-failed-define-callbacks', class extends HTMLElement {});
+      } catch (e) {
+        error = e;
+      }
+      assert.isUndefined(error, 'Error thrown when defining an element using the same name as a failed definition with invalid callbacks.')
+    });
+
   });
 
   suite('get', function() {
