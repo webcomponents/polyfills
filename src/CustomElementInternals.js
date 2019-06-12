@@ -535,6 +535,11 @@ export default class CustomElementInternals {
       event = document.createEvent('ErrorEvent');
       // initErrorEvent(type, bubbles, cancelable, message, filename, line)
       event.initErrorEvent('error', false, true, message, filename, lineno);
+      Object.defineProperty(event, 'error', {
+        configurable: true,
+        enumerable: true,
+        get: function() { return error; },
+      });
       // Hack for IE, where ErrorEvent#preventDefault does not set
       // #defaultPrevented to true.
       event.preventDefault = function() {
