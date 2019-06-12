@@ -174,6 +174,28 @@ for our complete browser support matrix:
 The polyfills may work in older browsers, however require additional polyfills (such as classList, or other [platform](https://github.com/webcomponents/webcomponents-platform)
 polyfills) to be used. We cannot guarantee support for browsers outside of our compatibility matrix.
 
+## Known Issues
+
+  * [Style encapsulation (inline styling in components) does not work out of the box](#shadycss)
+  * [Custom element's constructor property is unreliable](#constructor)
+  * [ShadyCSS: :host(.zot:not(.bar:nth-child(2))) doesn't work](#nestedparens)
+
+### Style encapsulation (inline styling in components) does not work out of the box. <a id="shadycss"></a>
+The ShadowDOM polyfill does not properly support CSS in ShadowDoM out of the box:
+ * Any styles inside components have an effect on the whole document (instead of on the component only - the encapsulation is broken).
+ * Any shadow-dom specific selectors (like `:host`) do not work.
+ 
+You can fix those issues by manually calling the `ShadyCSS` APIs. See [ShadyCSS usage](https://github.com/webcomponents/shadycss#usage).
+
+### Custom element's constructor property is unreliable <a id="constructor"></a>
+See [#215](https://github.com/webcomponents/webcomponentsjs/issues/215) for background.
+
+In Edge and IE, instances of Custom Elements have a `constructor` property of `HTMLUnknownElementConstructor` and `HTMLUnknownElement`, respectively. It's unsafe to rely on this property for checking element types.
+
+It's worth noting that `customElement.__proto__.__proto__.constructor` is `HTMLElementPrototype` and that the prototype chain isn't modified by the polyfills(onto `ElementPrototype`, etc.)
+
+### ShadyCSS: :host(.zot:not(.bar:nth-child(2))) doesn't work <a id="nestedparens"></a>
+ShadyCSS `:host()` rules can only have (at most) 1-level of nested parentheses in its argument selector under ShadyCSS. For example, `:host(.zot)` and `:host(.zot:not(.bar))` both work, but `:host(.zot:not(.bar:nth-child(2)))` does not.
 
 ### Manually Building
 
@@ -208,22 +230,3 @@ Copyright (c) 2015 The Polymer Authors. All rights reserved.
 most browsers, the expectation is that web components code will be loaded via
 ES modules.
 * When using `webcomponents-loader.js` with the `defer` attribute, scripts that rely on the polyfills *must* be loaded using `WebComponents.waitFor(loadCallback)`.
-
-## Known Issues
-
-  * [ShadowDOM CSS is not encapsulated out of the box](#shadycss)
-  * [Custom element's constructor property is unreliable](#constructor)
-  * [ShadyCSS: :host(.zot:not(.bar:nth-child(2))) doesn't work](#nestedparens)
-
-### ShadowDOM CSS is not encapsulated out of the box <a id="shadycss"></a>
-The ShadowDOM polyfill is not able to encapsulate CSS in ShadowDOM out of the box. You need to use specific code from the ShadyCSS library, included with the polyfill. See [ShadyCSS instructions](https://github.com/webcomponents/shadycss).
-
-### Custom element's constructor property is unreliable <a id="constructor"></a>
-See [#215](https://github.com/webcomponents/webcomponentsjs/issues/215) for background.
-
-In Edge and IE, instances of Custom Elements have a `constructor` property of `HTMLUnknownElementConstructor` and `HTMLUnknownElement`, respectively. It's unsafe to rely on this property for checking element types.
-
-It's worth noting that `customElement.__proto__.__proto__.constructor` is `HTMLElementPrototype` and that the prototype chain isn't modified by the polyfills(onto `ElementPrototype`, etc.)
-
-### ShadyCSS: :host(.zot:not(.bar:nth-child(2))) doesn't work <a id="nestedparens"></a>
-ShadyCSS `:host()` rules can only have (at most) 1-level of nested parentheses in its argument selector under ShadyCSS. For example, `:host(.zot)` and `:host(.zot:not(.bar))` both work, but `:host(.zot:not(.bar:nth-child(2)))` does not.
