@@ -516,21 +516,31 @@ export default class CustomElementInternals {
    * @see https://html.spec.whatwg.org/multipage/webappapis.html#report-the-exception
    */
   reportTheException(error) {
+    const message = error.message;
+    /** @type {string} */
+    const filename =
+        /* Safari */ error.sourceURL || /* Firefox */ error.fileName || "";
+    /** @type {number} */
+    const lineno =
+        /* Safari */ error.line || /* Firefox */ error.lineNumber || 0;
+    /** @type {number} */
+    const colno =
+        /* Safari */ error.column || /* Firefox */ error.columnNumber || 0;
+
     let event = undefined;
     if (ErrorEvent.prototype.initErrorEvent === undefined) {
-      event = new ErrorEvent('error', {
-        cancelable: true,
-        error,
-      });
+      event = new ErrorEvent('error',
+          {cancelable: true, message, filename, lineno, colno, error});
     } else {
       event = document.createEvent('ErrorEvent');
       // initErrorEvent(type, bubbles, cancelable, message, filename, line)
-      event.initErrorEvent('error', false, true, error.message, '', 0);
+      event.initErrorEvent('error', false, true, message, filename, lineno);
       // Hack for IE, where ErrorEvent#preventDefault does not set
       // #defaultPrevented to true.
       event.preventDefault = function() {
         Object.defineProperty(this, 'defaultPrevented', {
-          get: function() { return true; }
+          configurable: true,
+          get: function() { return true; },
         });
       };
     }
