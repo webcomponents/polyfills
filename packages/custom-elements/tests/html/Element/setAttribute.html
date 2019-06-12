@@ -111,8 +111,23 @@ suite('Changing previously set values.', function() {
     assert.equal(element.attrCallbackArgs.length, 2);
     assert.deepEqual(element.attrCallbackArgs[1], ['attr', 'abc', 'def', null]);
   });
+
+  test('Setting an observed attribute with a different capitalization triggers a callback', function() {
+    const element = document.createElement(localName);
+
+    assert.equal(element.attrCallbackArgs.length, 0);
+
+    element.setAttribute('Attr', 'abc');
+
+    assert.equal(element.attrCallbackArgs.length, 1);
+    assert.deepEqual(element.attrCallbackArgs[0], ['attr', null, 'abc', null]);
+
+    element.setAttribute('attR', 'def');
+
+    assert.equal(element.attrCallbackArgs.length, 2);
+    assert.deepEqual(element.attrCallbackArgs[1], ['attr', 'abc', 'def', null]);
+  });
 });
 </script>
 </body>
 </html>
-
