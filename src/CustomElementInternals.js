@@ -164,7 +164,11 @@ export default class CustomElementInternals {
       if (element.__CE_state === CEState.custom) {
         this.connectedCallback(element);
       } else {
-        this.upgradeElement(element);
+        try {
+          this.upgradeElement(element);
+        } catch (e) {
+          this.reportTheException(e);
+        }
       }
     }
   }
