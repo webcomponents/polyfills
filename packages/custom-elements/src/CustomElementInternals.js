@@ -470,7 +470,9 @@ export default class CustomElementInternals {
                 'The constructed element must not have any attributes.');
           }
 
-          if (result.hasChildNodes()) {
+          // ShadyDOM doesn't wrap `#hasChildNodes`, so we check `#firstChild`
+          // instead.
+          if (result.firstChild !== null) {
             throw new Error('Failed to construct \'' + localName + '\': ' +
                 'The constructed element must not have any children.');
           }
