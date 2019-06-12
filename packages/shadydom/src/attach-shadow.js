@@ -675,11 +675,11 @@ if (window['customElements'] && utils.settings.inUse && !utils.settings['preferP
   }
 
   const originalDefine = window['customElements']['define'];
-  const define = function(name, constructor) {
+  const define = function(name, constructor, options) {
     const connected = constructor.prototype.connectedCallback;
     const disconnected = constructor.prototype.disconnectedCallback;
     originalDefine.call(window['customElements'], name,
-        ManageConnect(constructor, connected, disconnected));
+        ManageConnect(constructor, connected, disconnected), options);
     // unpatch connected/disconnected on class; custom elements tears this off
     // so the patch is maintained, but if the user calls these methods for
     // e.g. testing, they will be as expected.
