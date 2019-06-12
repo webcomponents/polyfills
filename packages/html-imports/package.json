@@ -1,0 +1,40 @@
+{
+  "name": "@webcomponents/html-imports",
+  "version": "1.2.1",
+  "description": "HTML Imports polyfill",
+  "main": "html-imports.min.js",
+  "directories": {
+    "test": "tests"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/webcomponents/html-imports.git"
+  },
+  "author": "The Polymer Authors (https://polymer.github.io/AUTHORS.txt)",
+  "keywords": [
+    "html-imports",
+    "htmlimports",
+    "web-components",
+    "webcomponents",
+    "polyfill",
+    "shim"
+  ],
+  "license": "BSD-3-Clause",
+  "bugs": {
+    "url": "https://github.com/webcomponents/html-imports/issues"
+  },
+  "scripts": {
+    "build": "gulp",
+    "test": "wct"
+  },
+  "homepage": "https://webcomponents.org/polyfills",
+  "devDependencies": {
+    "google-closure-compiler": "^20171112.0.0",
+    "gulp": "^3.8.8",
+    "gulp-sourcemaps": "^2.4.1",
+    "web-component-tester": "^6.4.1"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

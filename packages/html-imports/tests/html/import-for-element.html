@@ -1,0 +1,65 @@
+<!doctype html>
+<!--
+    @license
+    Copyright (c) 2017 The Polymer Project Authors. All rights reserved.
+    This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+    The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+    The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+    Code distributed by Google as part of the polymer project is also
+    subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<html>
+
+<head>
+  <title>importForElement</title>
+  <script>
+    WCT = {
+      waitFor: function(callback) {
+        HTMLImports.whenReady(callback);
+      }
+    };
+  </script>
+  <script src="../../html-imports.min.js"></script>
+  <script src="../../../web-component-tester/browser.js"></script>
+  <link rel="import" href="imports/load-a.html">
+</head>
+
+<body>
+  <script>
+
+    test('baseURI updated', function() {
+      var rootLink = document.head.querySelector('link[rel=import]');
+      assert.equal(rootLink.href, rootLink.import.baseURI, 'rootLink baseURI ok');
+
+      var linkInA = rootLink.import.querySelector('link[rel=import]');
+      assert.equal(linkInA.href, linkInA.import.baseURI, 'linkInA baseURI ok');
+
+      var linkInB = linkInA.import.querySelector('link[rel=import]');
+      assert.equal(linkInB.href, linkInB.import.baseURI, 'linkInB baseURI ok');
+    });
+
+    test('returns the correct import document', function() {
+      var rootLink = document.head.querySelector('link[rel=import]');
+
+      var scriptInA = rootLink.import.querySelector('script');
+      assert.equal(HTMLImports.importForElement(scriptInA), rootLink.import, 'script in load-a ok');
+
+      var linkInA = rootLink.import.querySelector('link[rel=import]');
+      assert.equal(HTMLImports.importForElement(linkInA), rootLink.import, 'link in load-a ok');
+
+      var scriptInB = linkInA.import.querySelector('script');
+      assert.equal(HTMLImports.importForElement(scriptInB), linkInA.import, 'script in load-b ok');
+      var linkInB = linkInA.import.querySelector('link[rel=import]');
+      assert.equal(HTMLImports.importForElement(linkInB), linkInA.import, 'link in load-b ok');
+    });
+
+    test('handles not imported elements', function() {
+      var rootLink = document.head.querySelector('link[rel=import]');
+      assert.isNotOk(HTMLImports.importForElement(rootLink), 'rootLink has no import');
+      assert.isNotOk(HTMLImports.importForElement(document.body), '<body> has no import');
+      assert.isNotOk(HTMLImports.importForElement(document.createElement('div')), 'disconnected element has no import');
+    });
+  </script>
+</body>
+
+</html>

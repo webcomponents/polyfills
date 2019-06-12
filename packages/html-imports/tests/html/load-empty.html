@@ -1,0 +1,67 @@
+<!doctype html>
+<!--
+    @license
+    Copyright (c) 2017 The Polymer Project Authors. All rights reserved.
+    This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+    The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+    The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+    Code distributed by Google as part of the polymer project is also
+    subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<html>
+  <head>
+    <title>load event Test for empty resources</title>
+    <script src="../../html-imports.min.js"></script>
+    <script>
+      WCT = {
+        waitFor: function(callback) {
+          HTMLImports.whenReady(callback);
+        }
+      };
+    </script>
+    <script src="../../../web-component-tester/browser.js"></script>
+    <script>
+      window.loadEvents = 0;
+      function importLoadedWithCallback(done){
+        return function(event){
+          window.loadEvents++;
+          chai.assert.equal(event.type, 'load', 'event type should be `load`');
+          chai.assert.ok(event.target.import, 'link should have `import` defined');
+          done && done();
+        }
+      }
+      window.importLoaded = importLoadedWithCallback();
+    </script>
+    <link rel="import" href="imports/load-empty.html" onload="importLoaded(event)">
+    <link rel="import" href="imports/empty-script.html" onload="importLoaded(event)">
+    <link rel="import" href="imports/empty-style.html" onload="importLoaded(event)">
+
+  </head>
+  <body>
+    <script>
+      test('load empty resource', function() {
+        chai.assert.equal(loadEvents, 3, 'expected # of load events');
+      });
+      test('load empty resource asynchronously', function(done) {
+        loadEvents = 0;
+        setTimeout(function(){
+          var anotherHTMLImport = document.createElement('link');
+          anotherHTMLImport.rel = 'import';
+          anotherHTMLImport.href = 'imports/load-empty-async.html';
+          anotherHTMLImport.onload = importLoadedWithCallback(done);
+          document.head.appendChild(anotherHTMLImport);
+        });
+      });
+      test('load empty resource second time', function(done) {
+        loadEvents = 0
+        setTimeout(function(){
+          var anotherHTMLImport = document.createElement('link');
+          anotherHTMLImport.rel = 'import';
+          anotherHTMLImport.href = 'imports/load-empty.html';
+          anotherHTMLImport.onload = importLoadedWithCallback(done);
+          document.head.appendChild(anotherHTMLImport);
+        });
+      });
+    </script>
+  </body>
+</html>

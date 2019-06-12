@@ -1,0 +1,78 @@
+<!doctype html>
+<!--
+    @license
+    Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+    This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+    The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+    The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+    Code distributed by Google as part of the polymer project is also
+    subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<html>
+
+<head>
+  <title>HTML Imports Dynamic</title>
+  <script src="../../html-imports.min.js"></script>
+  <script>
+    WCT = {
+      waitFor: function(callback) {
+        HTMLImports.whenReady(callback);
+      }
+    };
+  </script>
+  <script src="../../../web-component-tester/browser.js"></script>
+</head>
+
+<body>
+
+  <script>
+    test('dynamic imports', function(done) {
+      var loadSpy = sinon.stub();
+      var whenReadySpy = sinon.stub();
+
+      var div = document.createElement('div');
+      div.innerHTML = '<link rel="import" href="imports/load-1.html">' +
+        '<link rel="import" href="imports/load-2.html">';
+      for (var i = 0, l = div.children.length; i < l; i++) {
+        div.children[i].addEventListener('load', loadSpy);
+      }
+      document.head.appendChild(div);
+
+      HTMLImports.whenReady(whenReadySpy);
+      assert.isFalse(whenReadySpy.called,
+        'captured elements dynamically added');
+
+      HTMLImports.whenReady(function() {
+        assert.equal(whenReadySpy.callCount, 1,
+          'called previous whenReady');
+        assert.equal(loadSpy.callCount, 2, 'load count ok');
+        done();
+      });
+    });
+
+    test('concurrent loads', function(done) {
+      var loadSpy = sinon.stub();
+      var errorSpy = sinon.stub();
+      
+      var link = document.createElement('link');
+      link.setAttribute('rel', 'import');
+      link.setAttribute('href', 'imports/load-a.html');
+      link.addEventListener('load', loadSpy);
+      link.addEventListener('error', errorSpy);
+
+      // Add also a <style> to have multiple mutations.
+      // HTMLImports should wait for link to load.
+      document.head.appendChild(document.createElement('style'));
+      document.head.appendChild(link);
+
+      HTMLImports.whenReady(function() {
+        assert.equal(errorSpy.callCount, 0, 'error not called');
+        assert.equal(loadSpy.callCount, 1, 'load ok');
+        assert.isOk(link.import, 'import ok');
+        done();
+      });
+    });
+  </script>
+</body>
+
+</html>

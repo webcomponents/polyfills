@@ -1,0 +1,41 @@
+<!doctype html>
+<!--
+    @license
+    Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+    This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+    The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+    The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+    Code distributed by Google as part of the polymer project is also
+    subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<html>
+
+<head>
+  <title>imports with base</title>
+  <base href="../../">
+  <script src="../html-imports.min.js"></script>
+  <script>
+    WCT = {
+      waitFor: function(cb) {
+        HTMLImports.whenReady(cb);
+      }
+    };
+  </script>
+  <script src="../../web-component-tester/browser.js"></script>
+  <link id="base1" rel="import" href="html/imports/base-1.html">
+</head>
+
+<body>
+  <script>
+    test('imports with base tag', function() {
+      // First import of base-1.html, which is base-2.html
+      var link = base1.import.querySelector('link[rel=import]');
+      // path to base-2.html
+      var url = window.location.href.replace('base/imports-with-base.html',
+        'imports/base/base-2.html');
+      assert.equal(link.href, url);
+    });
+  </script>
+</body>
+
+</html>

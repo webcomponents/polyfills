@@ -1,0 +1,36 @@
+<!doctype html>
+<!--
+    @license
+    Copyright (c) 2017 The Polymer Project Authors. All rights reserved.
+    This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+    The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+    The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+    Code distributed by Google as part of the polymer project is also
+    subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<html>
+<head>
+  <title>Resolve Path Test</title>
+  <script src="../../html-imports.min.js"></script>
+  <script>
+    WCT = {
+      waitFor: function(callback) {
+        HTMLImports.whenReady(callback);
+      }
+    };
+  </script>
+  <script src="../../../web-component-tester/browser.js"></script>
+  <link rel="import" href="resolve-import-a.html">
+</head>
+<body>
+  <script>
+    test('resolve-path', function() {
+      assert.isTrue(window.rootA, './resolve-import-a.html not loaded');
+      assert.isTrue(window.importsB, './imports/resolve-import-b.html not loaded');
+      assert.equal(window.importsBCount, 1, './imports/resolve-import-b.html loaded twice');
+      assert.isTrue(window.importsC, './imports/resolve-import-c.html not loaded');
+      assert.isNotOk(window.rootC, './resolve-import-c.html was loaded');
+    });
+  </script>
+</body>
+</html>

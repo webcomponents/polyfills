@@ -1,0 +1,46 @@
+<!doctype html>
+<!--
+    @license
+    Copyright (c) 2017 The Polymer Project Authors. All rights reserved.
+    This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+    The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+    The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+    Code distributed by Google as part of the polymer project is also
+    subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<html>
+
+<head>
+  <title>readyState</title>
+  <script>
+    WCT = {
+      waitFor: function(cb) {
+        cb()
+      }
+    };
+
+    window.checkReadyState = function() {
+      var link = document.querySelector('link[rel=import]');
+      chai.assert.equal(window.readyStateAtExecTime, 'loading',
+        'readyState ok at script exec time');
+      chai.assert.equal(link.import.readyState, 'complete',
+        'readyState ok at load time');
+    };
+  </script>
+  <script src="../../html-imports.min.js"></script>
+  <script src="../../../web-component-tester/browser.js"></script>
+  <link rel="import" href="imports/ready-state-check-import.html" onload="window.checkReadyState()">
+</head>
+
+<body>
+  <script>
+    test('import readyState', function(done) {
+      HTMLImports.whenReady(function() {
+        window.checkReadyState();
+        done();
+      });
+    });
+  </script>
+</body>
+
+</html>

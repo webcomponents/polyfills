@@ -1,0 +1,77 @@
+<!doctype html>
+<!--
+    @license
+    Copyright (c) 2017 The Polymer Project Authors. All rights reserved.
+    This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+    The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+    The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+    Code distributed by Google as part of the polymer project is also
+    subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<html>
+  <head>
+    <title>cloned template script Test</title>
+    <script src="../../../template/template.js"></script>
+    <script src="../../html-imports.min.js"></script>
+    <script>WCT = {waitFor: function(cb){cb()}};</script>
+    <script src="../../../web-component-tester/browser.js"></script>
+    <link rel="import" href="imports/template-import.html" id="template-import">
+  </head>
+  <body>
+    <div id="container"></div>
+    <script>
+      suite('template script execution', function() {
+        var template, container;
+        setup(function(done) {
+          // In native HTMLImports the event 'HTMLImportsLoaded' might have already
+          // been fired by this time, so use HTMLImports.whenReady.
+          container = document.querySelector('#container');
+          HTMLImports.whenReady(function() {
+            var importLink = document.querySelector('#template-import');
+            template = importLink.import.querySelector('template');
+            done();
+          });
+        });
+
+        teardown(function() {
+          window.executedTemplateScript = undefined;
+          window.executedNestedTemplateScript = undefined;
+          container.innerHTML = '';
+        });
+
+        test('import does not execute scripts in templates', function() {
+          assert.isUndefined(window.executedTemplateScript, 'remote template script is NOT executed after import');
+          assert.isUndefined(window.executedNestedTemplateScript, 'remote nested template script is NOT executed after import');
+        });
+
+        test('executes scripts when template is cloned and attached', function() {
+          container.appendChild(document.importNode(template.content, true));
+          assert.equal(window.executedTemplateScript, 1, 'remote template script executed once after clone and attach to the main document');
+          assert.isUndefined(window.executedNestedTemplateScript, 'remote nested template script is NOT executed after import');
+        });
+
+        test('executes scripts when nested template of cloned template is cloned and attached', function() {
+          container.appendChild(document.importNode(template.content, true));
+          var nestedTemplate = container.querySelector('template');
+          container.appendChild(document.importNode(nestedTemplate.content, true));
+          assert.equal(window.executedNestedTemplateScript, 1, 'remote nested template script executed after clone and attach to the main document');
+        });
+
+        test('executes scripts of each clone', function() {
+          container.appendChild(document.importNode(template.content, true));
+          assert.equal(window.executedTemplateScript, 1, 'remote template script executed after clone and attach to the main document');
+          container.appendChild(document.importNode(template.content, true));
+          assert.equal(window.executedTemplateScript, 2, 'remote template script executed after 2nd clone and attach to the main document');
+          assert.isUndefined(window.executedNestedTemplateScript, 'remote nested template script is NOT executed after parent is clone and attach to the main document');
+        });
+
+        test('executes scripts when nested template is cloned and attached', function() {
+          var nestedTemplate = template.content.querySelector('template');
+          container.appendChild(document.importNode(nestedTemplate.content, true));
+          assert.equal(window.executedNestedTemplateScript, 1, 'remote nested template script executed after clone and attach to the main document');
+        });
+
+      });
+    </script>
+  </body>
+</html>

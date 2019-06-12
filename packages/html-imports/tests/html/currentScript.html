@@ -1,0 +1,34 @@
+<!doctype html>
+<!--
+    @license
+    Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+    This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+    The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+    The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+    Code distributed by Google as part of the polymer project is also
+    subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<html>
+  <head>
+    <title>currentScript Test</title>
+    <script src="../../html-imports.min.js"></script>
+    <script>WCT = {waitFor: function(cb){cb()}};</script>
+    <script src="../../../web-component-tester/browser.js"></script>
+    <link rel="import" href="imports/script-1.html">
+    <script src="imports/current-script.js"></script>
+  </head>
+  <body>
+    <script>
+      var cs = document.currentScript;
+      test('currentScript', function(done) {
+        chai.assert.equal(cs.parentNode, document.body, 'currentScript set in main document');
+        // In native HTMLImports the event 'HTMLImportsLoaded' might have already
+        // been fired by this time, so use HTMLImports.whenReady.
+        HTMLImports.whenReady(function() {
+          chai.assert.equal(window.remoteCurrentScriptExecuted, 2, 'remote script executed from import and main document');
+          done();
+        });
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,60 @@
+<!doctype html>
+<!--
+    @license
+    Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+    This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+    The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+    The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+    Code distributed by Google as part of the polymer project is also
+    subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<html>
+  <head>
+    <title>HTML Imports Dynamic</title>
+    <script src="../../html-imports.min.js"></script>
+    <script>
+      var ready;
+      WCT = {
+        waitFor: function(cb) {
+          ready = cb;
+        }
+      };
+    </script>
+    <script src="../../../web-component-tester/browser.js"></script>
+  </head>
+  <body>
+
+    <script>
+      var loads = 0;
+      document.addEventListener('DOMContentLoaded', function() {
+        // some time later
+        setTimeout(function() {
+          var div = document.createElement('div');
+          div.innerHTML = '<link rel="import" href="imports/load-1.html">' +
+              '<link rel="import" href="imports/load-does-not-exist.html">';
+          document.head.appendChild(div);
+          var ports = document.querySelectorAll('link[rel=import]');
+          for (var i=0, l=ports.length, n; (i<l) && (n=ports[i]); i++) {
+            n.addEventListener('load', function(e) {
+              loads++;
+              assert.isOk(e.target.import, 'import ok');
+            });
+          }
+          ready();
+        });
+      });
+
+      test('HTMLImports whenready errors', function(done) {
+        HTMLImports.whenReady(function() {
+          assert.equal(loads, 1, 'load events count ok');
+          var links = document.querySelectorAll('link[rel=import]');
+          assert.equal(links.length, 2, 'links count ok');
+          assert.isOk(links[0].import, '1st link import ok');
+          assert.isNotOk(links[1].import, '2nd link import ok');
+          assert.include(links[1].href, 'imports/load-does-not-exist.html', '2nd link href ok');
+          done();
+        });
+      });
+    </script>
+  </body>
+</html>

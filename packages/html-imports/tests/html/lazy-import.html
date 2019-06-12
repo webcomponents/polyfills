@@ -1,0 +1,50 @@
+<!doctype html>
+<!--
+    @license
+    Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
+    This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+    The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+    The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+    Code distributed by Google as part of the polymer project is also
+    subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<html>
+
+<head>
+  <title>HTML Lazy Imports</title>
+  <script src="../../html-imports.min.js"></script>
+  <script>
+    var ready;
+    WCT = {
+      waitFor: function(cb) {
+        HTMLImports.whenReady(cb);
+      }
+    };
+  </script>
+  <script src="../../../web-component-tester/browser.js"></script>
+  <link rel="import" href="imports/load-1.html" id="load1Link">
+</head>
+
+<body>
+
+  <script>
+    test('Import lazy-loading another import', function(done) {
+      if (HTMLImports.useNative) {
+        done();
+        return;
+      }
+      // Some time later..
+      setTimeout(function() {
+        var link = document.createElement('link');
+        link.setAttribute('rel', 'import');
+        link.setAttribute('href', 'imports/load-2.html');
+        link.addEventListener('load', function() {
+          done();
+        });
+        load1Link.import.appendChild(link);
+      });
+    });
+  </script>
+</body>
+
+</html>
