@@ -176,6 +176,23 @@ suite('Custom Element Reactions', function() {
       assert.isTrue(passed);
     });
 
+    test('constructor reports an error if it does not produce an HTMLElement', function() {
+      class XFail {}
+      customElements.define('x-fail-to-be-html-element', XFail);
+
+      const errors = [];
+      catchReportedErrors(() => {
+        assert.doesNotThrow(function() {
+          document.createElement('x-fail-to-be-html-element');
+        });
+      }, (e) => {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        errors.push(e);
+      });
+      assert.equal(errors.length, 1);
+    });
+
   });
 
   suite('attributeChangedCallback', function() {
