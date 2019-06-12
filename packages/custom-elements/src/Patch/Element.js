@@ -35,9 +35,8 @@ export default function(internals) {
       });
   }
 
-
-  function patch_innerHTML(destination, baseDescriptor) {
-    Object.defineProperty(destination, 'innerHTML', {
+  function patch_HTMLsetter(destination, property, baseDescriptor, patchCallback) {
+    Object.defineProperty(destination, property, {
       enumerable: baseDescriptor.enumerable,
       configurable: true,
       get: baseDescriptor.get,
@@ -60,6 +59,13 @@ export default function(internals) {
           });
         }
 
+        // Memoize properties here before calling the baseDescriptor
+        // In the case of `outerHTML`, this node would already be disconnected
+        // and the properties therefore no longer exist
+        const parentNode = this.parentNode;
+        const previousSibling = this.previousSibling;
+        const nextSibling = this.nextSibling;
+
         baseDescriptor.set.call(this, htmlString);
 
         if (removedElements) {
@@ -74,12 +80,18 @@ export default function(internals) {
         // Only create custom elements if this element's owner document is
         // associated with the registry.
         if (!this.ownerDocument.__CE_hasRegistry) {
-          internals.patchTree(this);
+          patchCallback(this, internals.patchTree, {parentNode, previousSibling, nextSibling});
         } else {
-          internals.patchAndUpgradeTree(this);
+          patchCallback(this, internals.patchAndUpgradeTree, {parentNode, previousSibling, nextSibling});
         }
         return htmlString;
       },
+    });
+  }
+
+  function patch_innerHTML(destination, baseDescriptor) {
+    patch_HTMLsetter(destination, 'innerHTML', baseDescriptor, (node, patchFunction) => {
+      patchFunction.call(internals, node);
     });
   }
 
@@ -125,6 +137,57 @@ export default function(internals) {
           while (container.childNodes.length > 0) {
             Native.Node_appendChild.call(content, container.childNodes[0]);
           }
+        },
+      });
+    });
+  }
+
+  function patch_outerHTML(destination, baseDescriptor) {
+    patch_HTMLsetter(destination, 'outerHTML', baseDescriptor, (node, patchFunction, {parentNode, previousSibling, nextSibling}) => {
+      if (parentNode === null) {
+        throw new Error(`Failed to set the 'outerHTML' property on 'Element': This element has no parent node.`);
+      }
+      if (previousSibling === null && nextSibling === null) {
+        patchFunction.call(internals, parentNode);
+      } else {
+        let sibling = previousSibling && previousSibling.nextSibling || parentNode.firstChild;
+
+        while (sibling !== null && sibling !== nextSibling) {
+          patchFunction.call(internals, sibling);
+          sibling = sibling.nextSibling;
+        }
+      }
+    });
+  }
+
+  if (Native.Element_outerHTML && Native.Element_outerHTML.get) {
+    patch_outerHTML(Element.prototype, Native.Element_outerHTML);
+  } else if (Native.HTMLElement_outerHTML && Native.HTMLElement_outerHTML.get) {
+    patch_outerHTML(HTMLElement.prototype, Native.HTMLElement_outerHTML);
+  } else {
+
+    internals.addPatch(function(element) {
+      patch_outerHTML(element, {
+        enumerable: true,
+        configurable: true,
+        // Implements getting `outerHTML` by performing an unpatched `cloneNode`
+        // of the element and returning the resulting element's `outerHTML`.
+        // TODO: Is this too expensive?
+        get: /** @this {Element} */ function() {
+          return Native.Node_cloneNode.call(this, true).outerHTML;
+        },
+        set: /** @this {Element} */ function(assignedValue) {
+          const container = Native.Document_createElementNS.call(document,
+            this.parentNode.namespaceURI || this.namespaceURI, this.parentNode.localName || this.localName);
+          container.innerHTML = assignedValue;
+
+          while (container.childNodes.length > 0) {
+            Native.Node_insertBefore.call(this.parentNode, container.childNodes[0], this);
+          }
+
+          Native.Node_removeChild.call(this.parentNode, this);
+
+          return assignedValue;
         },
       });
     });
