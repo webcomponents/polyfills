@@ -1,4 +1,19 @@
 {
   "suites": ["tests/index.html"],
-  "environmentImports": []
+  "environmentImports": [],
+  "npm": true,
+  "plugins": {
+    "local": {
+      "browserOptions": {
+        "chrome": [
+          "headless",
+          "disable-gpu",
+          "no-sandbox"
+        ],
+        "firefox": [
+          "-headless"
+        ]
+      }
+    }
+  }
 }

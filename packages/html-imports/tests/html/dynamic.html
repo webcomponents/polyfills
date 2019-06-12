@@ -20,7 +20,7 @@
       }
     };
   </script>
-  <script src="../../../web-component-tester/browser.js"></script>
+  <script src="../../node_modules/wct-browser-legacy/browser.js"></script>
 </head>
 
 <body>
@@ -53,7 +53,7 @@
     test('concurrent loads', function(done) {
       var loadSpy = sinon.stub();
       var errorSpy = sinon.stub();
-      
+
       var link = document.createElement('link');
       link.setAttribute('rel', 'import');
       link.setAttribute('href', 'imports/load-a.html');
