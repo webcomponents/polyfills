@@ -424,6 +424,12 @@ export default class CustomElementInternals {
   }
 
   /**
+   * Runs the DOM's 'create an element'. If namespace is not null, then the
+   * native `createElementNS` is used. Otherwise, `createElement` is used.
+   *
+   * Note, the template polyfill only wraps `createElement`, preventing this
+   * function from using `createElementNS` in all cases.
+   *
    * @param {!Document} doc
    * @param {string} localName
    * @param {string|null} namespace
@@ -452,8 +458,8 @@ export default class CustomElementInternals {
                 'namespace.');
           }
 
-          // The following Errors should be a DOMExceptions but DOMException
-          // isn't constructable in all browsers.
+          // The following Errors should be DOMExceptions but DOMException
+          // isn't constructible in all browsers.
 
           if (result.hasAttributes()) {
             throw new Error('Failed to construct \'' + localName + '\': ' +
@@ -504,6 +510,8 @@ export default class CustomElementInternals {
   }
 
   /**
+   * Runs the DOM's 'report the exception' algorithm.
+   *
    * @param {!Error} error
    * @see https://html.spec.whatwg.org/multipage/webappapis.html#report-the-exception
    */
