@@ -44,6 +44,17 @@ export const ShadowRootPatches = utils.getOwnPropertyDescriptors({
     // Note, `__shadyTarget` may already be set if an event was added on a <slot> child
     optionsOrCapture.__shadyTarget = optionsOrCapture.__shadyTarget || this;
     this.host[utils.SHADY_PREFIX + 'removeEventListener'](type, fn, optionsOrCapture);
+  },
+
+  /**
+   * @this {ShadowRoot}
+   * @param {!Event} event
+   * @return {boolean} cancelled
+   */
+  dispatchEvent(event) {
+    // define target on event to have it distinguishable from the host
+    Object.defineProperty(event, 'target', {value: this, configurable: true, writable: true});
+    return this.host[utils.SHADY_PREFIX + 'dispatchEvent'](event);
   }
 
 });

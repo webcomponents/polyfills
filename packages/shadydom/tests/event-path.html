@@ -933,6 +933,17 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       w.dispatchEvent(new Event('foo'));
       assert.isTrue(heardEvent);
     });
+
+    test('dispatchEvent on ShadowRoot', function(done) {
+      const top = document.createElement('div');
+      const event = new Event('foo', {bubbles: true, composed: true});
+      ShadyDOM.wrap(top).addEventListener('foo', function(e) {
+        assert.equal(e.target, ShadyDOM.wrap(top).shadowRoot);
+        done();
+      })
+      const root = ShadyDOM.wrap(top).attachShadow({mode: 'open'});
+      ShadyDOM.wrap(root).dispatchEvent(event);
+    });
   });
   </script>
 </body>
