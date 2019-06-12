@@ -20,7 +20,9 @@
     "lint": "eslint src tests",
     "regen-package-lock": "rm -rf node_modules package-lock.json; npm install",
     "prepack": "npm run build",
-    "clean": "gulp clean"
+    "clean": "gulp clean",
+    "snapshot": "rm -rf comparison && mkdir comparison && cp -r webcomponents-bundle.js custom-elements-es5-adapter.js bundles comparison",
+    "compare": "npm run build && rm -rf new_comparison && mkdir new_comparison && cp -r webcomponents-bundle.js custom-elements-es5-adapter.js bundles new_comparison && diff -r comparison/ new_comparison/"
   },
   "devDependencies": {
     "@webcomponents/custom-elements": "^1.2.1",
