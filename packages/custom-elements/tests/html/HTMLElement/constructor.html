@@ -291,6 +291,41 @@ suite('Constructing elements', function() {
 
     document.body.removeChild(container);
   });
+
+  test('Callback errors do not halt upgrades in a tree.', function() {
+    const goodElementLocalName = generateLocalName();
+    const badElementLocalName = generateLocalName();
+
+    const container = document.createElement('div');
+    container.appendChild(document.createElement(goodElementLocalName));
+    container.appendChild(document.createElement(badElementLocalName));
+    container.appendChild(document.createElement(goodElementLocalName));
+
+    customElements.define(goodElementLocalName, class extends HTMLElement {
+      constructor() {
+        super();
+        this.didUpgrade = true;
+      }
+    });
+
+    customElements.define(badElementLocalName, class extends HTMLElement {
+      connectedCallback() {
+        throw new Error("Oh no!");
+      }
+    });
+
+    const errors = cancelAndReturnReportedErrors(() => {
+      assert.doesNotThrow(function() {
+        document.body.appendChild(container);
+      });
+    });
+    assert.equal(errors.length, 1);
+
+    assert.isOk(container.childNodes[0].didUpgrade);
+    assert.isOk(container.childNodes[2].didUpgrade);
+
+    document.body.removeChild(container);
+  });
 });
 </script>
 </body>
