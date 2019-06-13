@@ -145,7 +145,7 @@ export default class CustomElementDefinitionProducer {
       attributeChangedCallback,
       observedAttributes,
       constructionStack: []
-    }
+    };
 
     this._internals.setDefinitionConstructor(this._definition);
 
