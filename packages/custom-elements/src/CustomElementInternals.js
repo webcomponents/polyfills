@@ -164,11 +164,7 @@ export default class CustomElementInternals {
       if (element.__CE_state === CEState.custom) {
         this.connectedCallback(element);
       } else {
-        try {
-          this.upgradeElement(element);
-        } catch (e) {
-          this.reportTheException(e);
-        }
+        this.upgradeReaction(element);
       }
     }
   }
@@ -257,7 +253,7 @@ export default class CustomElementInternals {
    */
   patchAndUpgradeTree(root, options = {}) {
     const visitedImports = options.visitedImports;
-    const upgrade = options.upgrade || (element => this.upgradeElement(element));
+    const upgrade = options.upgrade || (element => this.upgradeReaction(element));
 
     const elements = [];
 
@@ -308,18 +304,27 @@ export default class CustomElementInternals {
     this.forEachElement(root, gatherElements, visitedImports);
 
     for (let i = 0; i < elements.length; i++) {
-      try {
-        upgrade(elements[i]);
-      } catch (e) {
-        this.reportTheException(e);
-      }
+      upgrade(elements[i]);
     }
   }
 
   /**
    * @param {!HTMLElement} element
    */
-  upgradeElement(element) {
+  upgradeReaction(element) {
+    try {
+      this._upgradeAnElement(element);
+    } catch (e) {
+      this._reportTheException(e);
+    }
+  }
+
+  /**
+   * @private
+   * @param {!HTMLElement} element
+   * @see https://html.spec.whatwg.org/multipage/custom-elements.html#concept-upgrade-an-element
+   */
+  _upgradeAnElement(element) {
     const currentState = element.__CE_state;
     if (currentState !== undefined) return;
 
@@ -387,7 +392,7 @@ export default class CustomElementInternals {
       try {
         definition.connectedCallback.call(element);
       } catch (e) {
-        this.reportTheException(e);
+        this._reportTheException(e);
       }
     }
   }
@@ -401,7 +406,7 @@ export default class CustomElementInternals {
       try {
         definition.disconnectedCallback.call(element);
       } catch (e) {
-        this.reportTheException(e);
+        this._reportTheException(e);
       }
     }
   }
@@ -422,7 +427,7 @@ export default class CustomElementInternals {
       try {
         definition.attributeChangedCallback.call(element, name, oldValue, newValue, namespace);
       } catch (e) {
-        this.reportTheException(e);
+        this._reportTheException(e);
       }
     }
   }
@@ -498,7 +503,7 @@ export default class CustomElementInternals {
 
           return result;
         } catch (e) {
-          this.reportTheException(e);
+          this._reportTheException(e);
 
           // When construction fails, a new HTMLUnknownElement is produced.
           // However, there's no direct way to create one, so we create a
@@ -525,10 +530,11 @@ export default class CustomElementInternals {
   /**
    * Runs the DOM's 'report the exception' algorithm.
    *
+   * @private
    * @param {!Error} error
    * @see https://html.spec.whatwg.org/multipage/webappapis.html#report-the-exception
    */
-  reportTheException(error) {
+  _reportTheException(error) {
     const message = error.message;
     /** @type {string} */
     const filename =
