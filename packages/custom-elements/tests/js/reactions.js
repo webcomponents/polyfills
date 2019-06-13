@@ -176,6 +176,14 @@ suite('Custom Element Reactions', function() {
       assert.isTrue(passed);
     });
 
+    test('constructor throws if it does not produce an HTMLElement', function() {
+      class XFail {}
+      customElements.define('x-fail-to-be-html-element', XFail);
+      assert.throws(function() {
+        document.createElement('x-fail-to-be-html-element');
+      })
+    });
+
   });
 
   suite('attributeChangedCallback', function() {

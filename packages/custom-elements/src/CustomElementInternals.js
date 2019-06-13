@@ -20,8 +20,8 @@ export default class CustomElementInternals {
    * }} options
    */
   constructor(options) {
-    /** @type {!Map<string, !CustomElementDefinition>} */
-    this._localNameToDefinition = new Map();
+    /** @type {!Map<string, !CustomElementDefinitionProducer>} */
+    this._localNameToDefinitionProducer = new Map();
 
     /** @type {!Map<!Function, !CustomElementDefinition>} */
     this._constructorToDefinition = new Map();
@@ -44,11 +44,32 @@ export default class CustomElementInternals {
 
   /**
    * @param {string} localName
+   * @param {!CustomElementDefinitionProducer} definitionProducer
+   */
+  setDefinitionProducer(localName, definitionProducer) {
+    this._localNameToDefinitionProducer.set(localName, definitionProducer);
+  }
+
+  /**
+   * @param {string} localName
+   */
+  removeDefinitionProducer(localName) {
+    this._localNameToDefinitionProducer.delete(localName);
+  }
+
+  /**
    * @param {!CustomElementDefinition} definition
    */
-  setDefinition(localName, definition) {
-    this._localNameToDefinition.set(localName, definition);
+  setDefinitionConstructor(definition) {
     this._constructorToDefinition.set(definition.constructorFunction, definition);
+  }
+
+  /**
+   * @param {string} localName
+   * @return {!CustomElementDefinitionProducer|undefined}
+   */
+  localNameToDefinitionProducer(localName) {
+    return this._localNameToDefinitionProducer.get(localName);
   }
 
   /**
@@ -56,7 +77,8 @@ export default class CustomElementInternals {
    * @return {!CustomElementDefinition|undefined}
    */
   localNameToDefinition(localName) {
-    return this._localNameToDefinition.get(localName);
+    const definitionProducer = this.localNameToDefinitionProducer(localName);
+    return definitionProducer && definitionProducer.definition;
   }
 
   /**
@@ -328,29 +350,25 @@ export default class CustomElementInternals {
       !(ownerDocument.__CE_isImportDocument && ownerDocument.__CE_hasRegistry)
     ) return;
 
-    const definition = this._localNameToDefinition.get(element.localName);
+    const definition = this.localNameToDefinition(element.localName);
     if (!definition) return;
 
     definition.constructionStack.push(element);
 
-    const constructor = definition.constructorFunction;
     try {
-      try {
-        let result = new (constructor)();
-        if (result !== element) {
-          throw new Error('The custom element constructor did not produce the element being upgraded.');
-        }
-      } finally {
-        definition.constructionStack.pop();
+      let result = new (definition.constructorFunction)();
+      if (result !== element) {
+        throw new Error('The custom element constructor did not produce the element being upgraded.');
       }
     } catch (e) {
       element.__CE_state = CEState.failed;
       throw e;
+    } finally {
+      definition.constructionStack.pop();
     }
 
     element.__CE_state = CEState.custom;
     element.__CE_definition = definition;
-
     // Check `hasAttributes` here to avoid iterating when it's not necessary.
     if (definition.attributeChangedCallback && element.hasAttributes()) {
       const observedAttributes = definition.observedAttributes;

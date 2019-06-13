@@ -22,6 +22,14 @@ class AlreadyConstructedMarkerType {}
 
 /**
  * @typedef {{
+ *   localName: string,
+ *   definition: !CustomElementDefinition
+ * }}
+ */
+let CustomElementDefinitionProducer;
+
+/**
+ * @typedef {{
  *  localName: string,
  *  constructorFunction: !Function,
  *  connectedCallback: Function,

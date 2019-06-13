@@ -9,25 +9,17 @@
  */
 
 import CustomElementInternals from './CustomElementInternals.js';
+import CustomElementDefinitionProducer from './CustomElementDefinitionProducer.js';
 import DocumentConstructionObserver from './DocumentConstructionObserver.js';
 import Deferred from './Deferred.js';
 import * as Utilities from './Utilities.js';
 
-/**
- * @unrestricted
- */
 export default class CustomElementRegistry {
 
   /**
    * @param {!CustomElementInternals} internals
    */
   constructor(internals) {
-    /**
-     * @private
-     * @type {boolean}
-     */
-    this._elementDefinitionIsRunning = false;
-
     /**
      * @private
      * @type {!CustomElementInternals}
@@ -55,9 +47,9 @@ export default class CustomElementRegistry {
 
     /**
      * @private
-     * @type {!Array<!CustomElementDefinition>}
+     * @type {!Array<!CustomElementDefinitionProducer>}
      */
-    this._pendingDefinitions = [];
+    this._pendingDefinitionProducers = [];
 
     /**
     * @private
@@ -69,73 +61,15 @@ export default class CustomElementRegistry {
 
   /**
    * @param {string} localName
-   * @param {!Function} constructor
+   * @param {!Function} constructorOrGetter
+   * @param {boolean} isGetter
    */
-  define(localName, constructor) {
-    if (!(constructor instanceof Function)) {
-      throw new TypeError('Custom element constructors must be functions.');
-    }
+  _define(localName, constructorOrGetter, isGetter) {
 
-    if (!Utilities.isValidCustomElementName(localName)) {
-      throw new SyntaxError(`The element name '${localName}' is not valid.`);
-    }
+    const definitionProducer = new CustomElementDefinitionProducer(
+      localName, constructorOrGetter, isGetter, this._internals);
 
-    if (this._internals.localNameToDefinition(localName)) {
-      throw new Error(`A custom element with name '${localName}' has already been defined.`);
-    }
-
-    if (this._elementDefinitionIsRunning) {
-      throw new Error('A custom element is already being defined.');
-    }
-    this._elementDefinitionIsRunning = true;
-
-    let connectedCallback;
-    let disconnectedCallback;
-    let adoptedCallback;
-    let attributeChangedCallback;
-    let observedAttributes;
-    try {
-      /** @type {!Object} */
-      const prototype = constructor.prototype;
-      if (!(prototype instanceof Object)) {
-        throw new TypeError('The custom element constructor\'s prototype is not an object.');
-      }
-
-      function getCallback(name) {
-        const callbackValue = prototype[name];
-        if (callbackValue !== undefined && !(callbackValue instanceof Function)) {
-          throw new Error(`The '${name}' callback must be a function.`);
-        }
-        return callbackValue;
-      }
-
-      connectedCallback = getCallback('connectedCallback');
-      disconnectedCallback = getCallback('disconnectedCallback');
-      adoptedCallback = getCallback('adoptedCallback');
-      attributeChangedCallback = getCallback('attributeChangedCallback');
-      // `observedAttributes` should not be read unless an
-      // `attributesChangedCallback` exists
-      observedAttributes = (attributeChangedCallback &&
-        constructor['observedAttributes']) || [];
-    } catch (e) {
-      throw e;
-    } finally {
-      this._elementDefinitionIsRunning = false;
-    }
-
-    const definition = {
-      localName,
-      constructorFunction: constructor,
-      connectedCallback,
-      disconnectedCallback,
-      adoptedCallback,
-      attributeChangedCallback,
-      observedAttributes,
-      constructionStack: [],
-    };
-
-    this._internals.setDefinition(localName, definition);
-    this._pendingDefinitions.push(definition);
+    this._pendingDefinitionProducers.push(definitionProducer);
 
     // If we've already called the flush callback and it hasn't called back yet,
     // don't call it again.
@@ -143,6 +77,22 @@ export default class CustomElementRegistry {
       this._flushPending = true;
       this._flushCallback(() => this._flush());
     }
+  }
+
+  /**
+   * @param {string} localName
+   * @param {!Function} constructor
+   */
+  define(localName, constructor) {
+    this._define(localName, constructor, false);
+  }
+
+  /**
+   * @param {string} localName
+   * @param {!Function} constructorGetter
+   */
+  polyfillDefineLazy(localName, constructorGetter) {
+    this._define(localName, constructorGetter, true);
   }
 
   upgrade(element) {
@@ -156,7 +106,7 @@ export default class CustomElementRegistry {
     if (this._flushPending === false) return;
     this._flushPending = false;
 
-    const pendingDefinitions = this._pendingDefinitions;
+    const pendingDefinitions = this._pendingDefinitionProducers;
 
     /**
      * Unupgraded elements with definitions that were defined *before* the last
@@ -189,7 +139,7 @@ export default class CustomElementRegistry {
           pendingElements.push(element);
         // If there is *any other* applicable definition for the element, add it
         // to the list of elements with stable definitions that need to be upgraded.
-        } else if (this._internals.localNameToDefinition(localName)) {
+        } else if (this._internals.localNameToDefinitionProducer(localName)) {
           elementsWithStableDefinitions.push(element);
         }
       },
@@ -224,12 +174,9 @@ export default class CustomElementRegistry {
    * @return {Function|undefined}
    */
   get(localName) {
-    const definition = this._internals.localNameToDefinition(localName);
-    if (definition) {
-      return definition.constructorFunction;
-    }
-
-    return undefined;
+    const definitionProducer = this._internals.localNameToDefinitionProducer(localName);
+    return definitionProducer &&
+      definitionProducer.definition.constructorFunction;
   }
 
   /**
@@ -249,11 +196,12 @@ export default class CustomElementRegistry {
     const deferred = new Deferred();
     this._whenDefinedDeferred.set(localName, deferred);
 
-    const definition = this._internals.localNameToDefinition(localName);
+    const definitionProducer = this._internals.localNameToDefinitionProducer(localName);
+    const definition = definitionProducer && definitionProducer.definition;
     // Resolve immediately only if the given local name has a definition *and*
     // the full document walk to upgrade elements with that local name has
     // already happened.
-    if (definition && !this._pendingDefinitions.some(d => d.localName === localName)) {
+    if (definition && !this._pendingDefinitionProducers.some(d => d.localName === localName)) {
       deferred.resolve(undefined);
     }
 
@@ -272,6 +220,7 @@ export default class CustomElementRegistry {
 // Closure compiler exports.
 window['CustomElementRegistry'] = CustomElementRegistry;
 CustomElementRegistry.prototype['define'] = CustomElementRegistry.prototype.define;
+CustomElementRegistry.prototype['polyfillDefineLazy'] = CustomElementRegistry.prototype.polyfillDefineLazy;
 CustomElementRegistry.prototype['upgrade'] = CustomElementRegistry.prototype.upgrade;
 CustomElementRegistry.prototype['get'] = CustomElementRegistry.prototype.get;
 CustomElementRegistry.prototype['whenDefined'] = CustomElementRegistry.prototype.whenDefined;
