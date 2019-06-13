@@ -1,4 +1,6 @@
 [![Build Status](https://travis-ci.org/webcomponents/polyfills.svg?branch=master)](https://travis-ci.org/webcomponents/polyfills)
+[![Mentioned in Web Components the Right Way](https://awesome.re/mentioned-badge.svg)](https://github.com/mateusortiz/webcomponents-the-right-way)
+
 # Monorepository for WebComponents v1 polyfills
 
 > **Note**. For polyfills that work with the older Custom Elements and Shadow DOM v0 specs,
