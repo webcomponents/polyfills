@@ -449,6 +449,10 @@ export default class CustomElementInternals {
         try {
           const result = new (definition.constructorFunction)();
 
+          // These conformance checks can't be performed when the user calls
+          // the element's constructor themselves. However, this also true in
+          // native implementations.
+
           if (result.__CE_state === undefined ||
               result.__CE_definition === undefined) {
             throw new Error('Failed to construct \'' + localName + '\': ' +
@@ -496,6 +500,9 @@ export default class CustomElementInternals {
         } catch (e) {
           this.reportTheException(e);
 
+          // When construction fails, a new HTMLUnknownElement is produced.
+          // However, there's no direct way to create one, so we create a
+          // regular HTMLElement and replace its prototype.
           const result = /** @type {!Element} */ (namespace === null ?
               Native.Document_createElement.call(doc, localName) :
               Native.Document_createElementNS.call(doc, namespace, localName));
@@ -558,6 +565,10 @@ export default class CustomElementInternals {
 
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
+      // In 'report the exception', UAs may optionally write errors to the
+      // console if their associated ErrorEvent isn't handled during dispatch
+      // (indicated by calling `preventDefault`). In practice, these errors are
+      // always displayed.
       console.error(error);
     }
   }

@@ -29,7 +29,8 @@ export default function(internals) {
 
       const definition = internals.constructorToDefinition(constructor);
       if (!definition) {
-        throw new Error('The custom element being constructed was not registered with `customElements`.');
+        throw new Error('Failed to construct a custom element: ' +
+            'The constructor was not registered with `customElements`.');
       }
 
       const constructionStack = definition.constructionStack;
@@ -48,9 +49,7 @@ export default function(internals) {
       if (element === AlreadyConstructedMarker) {
         const localName = definition.localName;
         throw new Error('Failed to construct \'' + localName + '\': ' +
-            'This element was already constructed. The constructor may be ' +
-            'non-conformantly reentrant or might have called into the ' +
-            'HTMLElement constructor multiple times for the same element.');
+            'This element was already constructed.');
       }
       const toConstructElement = /** @type {!HTMLElement} */ (element);
       constructionStack[lastIndex] = AlreadyConstructedMarker;
