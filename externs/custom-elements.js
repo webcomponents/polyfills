@@ -22,7 +22,7 @@ class AlreadyConstructedMarkerType {}
 
 /**
  * @typedef {{
- * localName: string,
+ *   localName: string,
  * definition: !CustomElementDefinition
  * }}
  */
