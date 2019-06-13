@@ -8,7 +8,7 @@
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
 import CustomElementInternals from './CustomElementInternals.js';
- import * as Utilities from './Utilities.js';
+import * as Utilities from './Utilities.js';
 
 let elementDefinitionIsRunning = false;
 
