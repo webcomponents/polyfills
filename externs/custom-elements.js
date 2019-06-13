@@ -23,7 +23,7 @@ class AlreadyConstructedMarkerType {}
 /**
  * @typedef {{
  *   localName: string,
- * definition: !CustomElementDefinition
+ *   definition: !CustomElementDefinition
  * }}
  */
 let CustomElementDefinitionProducer;
