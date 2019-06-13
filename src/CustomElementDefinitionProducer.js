@@ -15,7 +15,6 @@ let elementDefinitionIsRunning = false;
 export default class CustomElementDefinitionProducer {
 
   /**
-   *
    * @param {string} localName
    * @param {!Function} constructorOrGetter
    * @param {boolean} isGetter

@@ -11,7 +11,6 @@
 suite('polyfillLazyDefine', function() {
   var work;
   var assert = chai.assert;
-  var HTMLNS = 'http://www.w3.org/1999/xhtml';
 
   customElements.enableFlush = true;
 

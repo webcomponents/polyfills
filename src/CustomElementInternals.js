@@ -35,9 +35,6 @@ export default class CustomElementInternals {
     /** @type {boolean} */
     this._hasPatches = false;
 
-    /** @type {boolean} */
-    this.elementDefinitionIsRunning = false;
-
     /** @const {boolean} */
     this.shadyDomFastWalk = options.shadyDomFastWalk;
 
