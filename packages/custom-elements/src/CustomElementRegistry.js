@@ -270,7 +270,12 @@ export default class CustomElementRegistry {
 }
 
 // Closure compiler exports.
-window['CustomElementRegistry'] = CustomElementRegistry;
+Object.defineProperty(window, 'CustomElementRegistry', {
+  configurable: true,
+  enumerable: false,
+  writable: true,
+  value: CustomElementRegistry,
+});
 CustomElementRegistry.prototype['define'] = CustomElementRegistry.prototype.define;
 CustomElementRegistry.prototype['upgrade'] = CustomElementRegistry.prototype.upgrade;
 CustomElementRegistry.prototype['get'] = CustomElementRegistry.prototype.get;

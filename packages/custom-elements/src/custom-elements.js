@@ -48,6 +48,7 @@ if (!priorCustomElements ||
   Object.defineProperty(window, 'customElements', {
     configurable: true,
     enumerable: true,
-    value: customElements,
+    get: () => customElements,
+    set: undefined,
   });
 }
