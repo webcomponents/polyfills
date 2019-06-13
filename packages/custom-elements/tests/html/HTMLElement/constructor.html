@@ -17,6 +17,16 @@ function generateLocalName() {
   return 'test-element-' + Math.random().toString(32).substring(2);
 }
 
+function cancelAndReturnReportedErrors(fn) {
+  const errors = [];
+  catchReportedErrors(fn, (e) => {
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    errors.push(e);
+  });
+  return errors;
+}
+
 suite('Constructing elements', function() {
   let localName;
 
@@ -80,15 +90,21 @@ suite('Constructing elements', function() {
       }
       customElements.define(localName, NonConformantCustomElement);
 
-      assert.doesNotThrow(function() {
-        createSelf = true;
-        document.createElement(localName);
+      const errors1 = cancelAndReturnReportedErrors(() => {
+        assert.doesNotThrow(function() {
+          createSelf = true;
+          document.createElement(localName);
+        });
       });
+      assert.equal(errors1.length, 0);
 
-      assert.doesNotThrow(function() {
-        createSelf = true;
-        new NonConformantCustomElement();
+      const errors2 = cancelAndReturnReportedErrors(() => {
+        assert.doesNotThrow(function() {
+          createSelf = true;
+          new NonConformantCustomElement();
+        });
       });
+      assert.equal(errors1.length, 0);
     });
 
   test('Non-conformant custom element constructors that attempt to construct ' +
@@ -111,15 +127,10 @@ suite('Constructing elements', function() {
         }
       }
 
-      const errors = [];
-      catchReportedErrors(() => {
+      const errors = cancelAndReturnReportedErrors(() => {
         assert.doesNotThrow(() => {
           customElements.define(localName, NonConformantCustomElement);
         });
-      }, (e) => {
-        e.preventDefault();
-        e.stopImmediatePropagation();
-        errors.push(e);
       });
       assert.equal(errors.length, 1);
 
@@ -143,15 +154,21 @@ suite('Constructing elements', function() {
       }
       customElements.define(localName, NonConformantCustomElement);
 
-      assert.doesNotThrow(function() {
-        createSelf = true;
-        document.createElement(localName);
+      const errors1 = cancelAndReturnReportedErrors(() => {
+        assert.doesNotThrow(function() {
+          createSelf = true;
+          document.createElement(localName);
+        });
       });
+      assert.equal(errors1.length, 0);
 
-      assert.doesNotThrow(function() {
-        createSelf = true;
-        new NonConformantCustomElement();
+      const errors2 = cancelAndReturnReportedErrors(() => {
+        assert.doesNotThrow(function() {
+          createSelf = true;
+          new NonConformantCustomElement();
+        });
       });
+      assert.equal(errors2.length, 0);
     });
 
   test('Non-conformant custom element constructors that attempt to create ' +
@@ -181,15 +198,10 @@ suite('Constructing elements', function() {
         }
       }
 
-      const errors = [];
-      catchReportedErrors(() => {
+      const errors = cancelAndReturnReportedErrors(() => {
         assert.doesNotThrow(() => {
           customElements.define(localName, NonConformantCustomElement);
         });
-      }, (e) => {
-        e.preventDefault();
-        e.stopImmediatePropagation();
-        errors.push(e);
       });
       assert.equal(errors.length, 2);
 
@@ -207,21 +219,19 @@ suite('Constructing elements', function() {
       }
       customElements.define(localName, NonConformantCustomElement);
 
-      const errors = [];
-      catchReportedErrors(() => {
+      const errors1 = cancelAndReturnReportedErrors(() => {
         assert.doesNotThrow(function() {
           document.createElement(localName);
         });
-      }, (e) => {
-        e.preventDefault();
-        e.stopImmediatePropagation();
-        errors.push(e);
       });
-      assert.equal(errors.length, 1);
+      assert.equal(errors1.length, 1);
 
-      assert.doesNotThrow(function() {
-        new NonConformantCustomElement();
+      const errors2 = cancelAndReturnReportedErrors(() => {
+        assert.doesNotThrow(function() {
+          new NonConformantCustomElement();
+        });
       });
+      assert.equal(errors2.length, 0);
     });
 
   test('Non-conformant custom element constructors that return an element ' +
@@ -236,15 +246,10 @@ suite('Constructing elements', function() {
         }
       }
 
-      const errors = [];
-      catchReportedErrors(() => {
+      const errors = cancelAndReturnReportedErrors(() => {
         assert.doesNotThrow(function() {
           customElements.define(localName, NonConformantCustomElement);
         });
-      }, (e) => {
-        e.preventDefault();
-        e.stopImmediatePropagation();
-        errors.push(e);
       });
       assert.equal(errors.length, 1);
 
@@ -274,15 +279,10 @@ suite('Constructing elements', function() {
       }
     });
 
-    const errors = [];
-    catchReportedErrors(() => {
+    const errors = cancelAndReturnReportedErrors(() => {
       assert.doesNotThrow(function() {
         document.body.appendChild(container);
       });
-    }, (e) => {
-      e.preventDefault();
-      e.stopImmediatePropagation();
-      errors.push(e);
     });
     assert.equal(errors.length, 1);
 
