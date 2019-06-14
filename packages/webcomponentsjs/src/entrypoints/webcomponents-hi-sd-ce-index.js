@@ -10,11 +10,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 'use strict';
 
 /*
- * Polyfills loaded: Shady DOM/Shady CSS
- * Used in: Firefox when CE is implemented and using HTML Imports flag
+ * Polyfills loaded: Custom Elements, Shady DOM/Shady CSS
+ * Used in: Safari 9, Firefox, Edge when using HTML Imports flag
  */
 
-import '../node_modules/@webcomponents/html-imports/src/html-imports.js';
-import '../node_modules/@webcomponents/shadydom/src/shadydom.js';
-import '../node_modules/@webcomponents/shadycss/entrypoints/scoping-shim.js';
-import '../src/unresolved.js';
+import '../../node_modules/@webcomponents/html-imports/src/html-imports.js';
+import '../../node_modules/@webcomponents/shadydom/src/shadydom.js';
+import '../../node_modules/@webcomponents/custom-elements/src/custom-elements.js';
+import '../../node_modules/@webcomponents/shadycss/entrypoints/scoping-shim.js';
+import '../../src/unresolved.js';

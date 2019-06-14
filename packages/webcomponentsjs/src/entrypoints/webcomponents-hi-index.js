@@ -14,5 +14,5 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
  * Used in: Safari 11+, Firefox 63+ when loaded with flag
  */
 
-import '../node_modules/@webcomponents/html-imports/src/html-imports.js';
-import '../src/unresolved.js';
+import '../../node_modules/@webcomponents/html-imports/src/html-imports.js';
+import '../../src/unresolved.js';
