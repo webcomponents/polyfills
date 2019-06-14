@@ -72,7 +72,14 @@
       HTMLTemplateElement.bootstrap(window.document);
     }
     polyfillsLoaded = true;
-    runWhenLoadedFns().then(fireEvent);
+    var runCallbacksAndFireEvent = function() {
+      runWhenLoadedFns().then(fireEvent);
+    }
+    if (window.HTMLImports) {
+      window.HTMLImports.whenReady(runCallbacksAndFireEvent);
+    } else {
+      runCallbacksAndFireEvent();
+    }
   }
 
   function runWhenLoadedFns() {
@@ -101,10 +108,16 @@
     }
   };
   window.WebComponents._batchCustomElements = batchCustomElements;
+  window.WebComponents.loadHTMLImports = Boolean(window.WebComponents.loadHTMLImports);
+
+  var hasNativeImports = ('import' in document.createElement('link'));
 
   var name = 'webcomponents-loader.js';
   // Feature detect which polyfill needs to be imported.
   var polyfills = [];
+  if (window.WebComponents.loadHTMLImports && !hasNativeImports) {
+    polyfills.push('hi');
+  }
   if (!('attachShadow' in Element.prototype && 'getRootNode' in Element.prototype) ||
     (window.ShadyDOM && window.ShadyDOM.force)) {
     polyfills.push('sd');
@@ -135,7 +148,11 @@
   // NOTE: any browser that does not have template or ES6 features
   // must load the full suite of polyfills.
   if (!window.Promise || !Array.from || !window.URL || !window.Symbol || needsTemplate) {
-    polyfills = ['sd-ce-pf'];
+    var all = 'sd-ce-pf';
+    if (window.WebComponents.loadHTMLImports) {
+      all = 'hi-' + all;
+    }
+    polyfills = [all];
   }
 
   if (polyfills.length) {
