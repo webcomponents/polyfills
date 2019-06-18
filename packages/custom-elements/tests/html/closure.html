@@ -1,3 +1,19 @@
+<!doctype html>
+<html>
+<head>
+<title>Closure ES5 Output</title>
+<script>
+  (window.customElements = window.customElements || {}).forcePolyfill = true;
+</script>
+<script src="../../../node_modules/es6-promise/dist/es6-promise.auto.min.js"></script>
+<script src="../../../node_modules/wct-browser-legacy/browser.js"></script>
+<script src="../../../custom-elements.min.js"></script>
+</head>
+<body>
+<script type="module">
+import {ensureCEPolyfill} from "../safari-gc-bug-workaround.js";
+suiteSetup(() => ensureCEPolyfill());
+
 /**
  * @license
  * Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
@@ -50,3 +66,6 @@ suite('Closure ES5 Output', function() {
   });
 
 });
+</script>
+</body>
+</html>
