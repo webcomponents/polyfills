@@ -87,7 +87,8 @@ function closurify(sourceName, fileName) {
       'node_modules/promise-polyfill/src/**/*.js',
       'node_modules/@webcomponents/**/*.js',
       '!node_modules/@webcomponents/*/externs/*.js',
-      '!node_modules/@webcomponents/*/node_modules/**'
+      '!node_modules/@webcomponents/*/node_modules/**',
+      '!node_modules/@webcomponents/*/tests/**',
     ], {base: './', follow: true})
   .pipe(sourcemaps.init())
   .pipe(closure(closureOptions))
