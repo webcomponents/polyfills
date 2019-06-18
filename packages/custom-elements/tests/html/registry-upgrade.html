@@ -23,7 +23,10 @@
     <script src="../../node_modules/wct-browser-legacy/browser.js"></script>
   </head>
   <body>
-    <script>
+    <script type="module">
+    import {ensureCEPolyfill} from "../safari-gc-bug-workaround.js";
+    ensureCEPolyfill().then(() => {
+
     // Tests taken from the web-platform-test project:
     // https://github.com/w3c/web-platform-tests/blob/c642338c23cc660223a73948b9fdd1bc9cda13ed/custom-elements/custom-element-registry/upgrade.html
     suite('CustomElementsRegistry.upgrade', function() {
@@ -173,6 +176,8 @@
         assert.isFalse(el4 instanceof Element4, 'element 4 must still not be upgraded after upgrading the template contents');
         assert.isFalse(el5 instanceof Element5, 'element 5 must still not be upgraded after upgrading the template contents');
       });
+    });
+
     });
     </script>
   </body>

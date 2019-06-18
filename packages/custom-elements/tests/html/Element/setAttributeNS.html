@@ -10,7 +10,10 @@
 <script src="../../../custom-elements.min.js"></script>
 </head>
 <body>
-<script>
+<script type="module">
+import {ensureCEPolyfill} from "../../safari-gc-bug-workaround.js";
+suiteSetup(() => ensureCEPolyfill());
+
 // In older browsers, `Element#getAttributeNS` may return the empty string
 // instead of null if the attribute does not exist. For details, see;
 // https://developer.mozilla.org/en-US/docs/Web/API/Element/getAttributeNS#Notes
@@ -48,6 +51,7 @@ function defineWithLocalName(localName, observedAttributes) {
 
 suite('Setting new values.', function() {
   let localName1;
+  let localName2;
 
   setup(function() {
     localName1 = generateLocalName();

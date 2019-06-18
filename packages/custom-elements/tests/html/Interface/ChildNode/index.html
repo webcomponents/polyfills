@@ -10,7 +10,10 @@
 <script src="../../../../custom-elements.min.js"></script>
 </head>
 <body>
-<script>
+<script type="module">
+import {ensureCEPolyfill} from "../../../safari-gc-bug-workaround.js";
+suiteSetup(() => ensureCEPolyfill());
+
 function generateLocalName() {
   return 'test-element-' + Math.random().toString(32).substring(2);
 }

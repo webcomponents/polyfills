@@ -11,7 +11,7 @@
 </head>
 <body>
   <custom-element></custom-element>
-<script>
+<script type="module">
 /**
  * @license
  * Copyright (c) 2017 The Polymer Project Authors. All rights reserved.
@@ -21,6 +21,9 @@
  * Code distributed by Google as part of the polymer project is also
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
+
+import {ensureCEPolyfill} from "../../safari-gc-bug-workaround.js";
+suiteSetup(() => ensureCEPolyfill());
 
 test('`whenDefined` called before `define` does not resolve until its local name has flushed.', function(done) {
   const element = document.querySelector('custom-element');

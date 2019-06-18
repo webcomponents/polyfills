@@ -26,7 +26,7 @@
     </custom-element-0>
     <custom-element-1 id="elt_1_2"></custom-element-1>
   </custom-element-0>
-  <script>
+  <script type="module">
   /**
    * @license
    * Copyright (c) 2017 The Polymer Project Authors. All rights reserved.
@@ -36,6 +36,9 @@
    * Code distributed by Google as part of the polymer project is also
    * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
    */
+
+  import {ensureCEPolyfill} from "../../safari-gc-bug-workaround.js";
+  suiteSetup(() => ensureCEPolyfill());
 
   test('When a flush callback is installed and multiple calls to define are ' +
   'made calling the flush callback causes elements to upgrade in define-call ' +

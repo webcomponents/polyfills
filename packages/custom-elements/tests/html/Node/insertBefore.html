@@ -8,7 +8,10 @@
 <script src="../../../node_modules/es6-promise/dist/es6-promise.auto.min.js"></script>
 <script src="../../../node_modules/wct-browser-legacy/browser.js"></script>
 <script src="../../../custom-elements.min.js"></script>
-<script>
+<script type="module">
+  import {ensureCEPolyfill} from "../../safari-gc-bug-workaround.js";
+  suiteSetup(() => ensureCEPolyfill());
+
   function generateLocalName() {
     return 'test-element-' + Math.random().toString(32).substring(2);
   }

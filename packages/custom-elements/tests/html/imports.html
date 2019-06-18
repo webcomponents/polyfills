@@ -39,7 +39,10 @@
   <body>
     <x-foo></x-foo>
 
-    <script>
+    <script type="module">
+      import {ensureCEPolyfill} from '../safari-11-gc-workaround.js';
+      suiteSetup(() => ensureCEPolyfill());
+
       suite('HTML Imports Integration', function() {
         suiteSetup(function() {
           // This element is used in the imports
