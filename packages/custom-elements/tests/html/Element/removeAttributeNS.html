@@ -11,8 +11,8 @@
 </head>
 <body>
 <script type="module">
-import {ensureCEPolyfill} from "../../safari-gc-bug-workaround.js";
-suiteSetup(() => ensureCEPolyfill());
+import {safariGCBugWorkaround} from "../../safari-gc-bug-workaround.js";
+suiteSetup(() => safariGCBugWorkaround());
 
 // In older browsers, `Element#getAttributeNS` may return the empty string
 // instead of null if the attribute does not exist. For details, see;

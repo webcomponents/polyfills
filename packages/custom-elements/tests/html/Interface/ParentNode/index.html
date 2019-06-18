@@ -11,8 +11,8 @@
 </head>
 <body>
 <script type="module">
-import {ensureCEPolyfill} from "../../../safari-gc-bug-workaround.js";
-suiteSetup(() => ensureCEPolyfill());
+import {safariGCBugWorkaround} from "../../../safari-gc-bug-workaround.js";
+suiteSetup(() => safariGCBugWorkaround());
 
 function generateLocalName() {
   return 'test-element-' + Math.random().toString(32).substring(2);

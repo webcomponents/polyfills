@@ -24,8 +24,8 @@
   </head>
   <body>
     <script type="module">
-    import {ensureCEPolyfill} from "../safari-gc-bug-workaround.js";
-    ensureCEPolyfill().then(() => {
+    import {safariGCBugWorkaround} from "../safari-gc-bug-workaround.js";
+    safariGCBugWorkaround().then(() => {
 
     // Tests taken from the web-platform-test project:
     // https://github.com/w3c/web-platform-tests/blob/c642338c23cc660223a73948b9fdd1bc9cda13ed/custom-elements/custom-element-registry/upgrade.html

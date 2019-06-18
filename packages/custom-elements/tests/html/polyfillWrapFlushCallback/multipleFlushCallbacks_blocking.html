@@ -19,8 +19,8 @@
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
-import {ensureCEPolyfill} from "../../safari-gc-bug-workaround.js";
-suiteSetup(() => ensureCEPolyfill());
+import {safariGCBugWorkaround} from "../../safari-gc-bug-workaround.js";
+suiteSetup(() => safariGCBugWorkaround());
 
 test('Each installed flush callback blocks flushing.', function() {
   const element = document.querySelector('custom-element');

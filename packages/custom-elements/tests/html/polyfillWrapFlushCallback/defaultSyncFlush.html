@@ -19,8 +19,8 @@
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
-import {ensureCEPolyfill} from "../../safari-gc-bug-workaround.js";
-suiteSetup(() => ensureCEPolyfill());
+import {safariGCBugWorkaround} from "../../safari-gc-bug-workaround.js";
+suiteSetup(() => safariGCBugWorkaround());
 
 test('`define` flushes synchronously if no callbacks are installed.', function() {
   const element = document.querySelector('custom-element');

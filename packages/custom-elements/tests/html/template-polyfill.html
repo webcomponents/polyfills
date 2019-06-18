@@ -24,8 +24,8 @@
   </head>
   <body>
     <script type="module">
-      import {ensureCEPolyfill} from '../safari-11-gc-workaround.js';
-      suiteSetup(() => ensureCEPolyfill());
+      import {safariGCBugWorkaround} from '../safari-11-gc-workaround.js';
+      suiteSetup(() => safariGCBugWorkaround());
 
       suite('Template polyfill integration', function() {
         test('defined custom elements do not upgrade when setting innerHTML of a template', function() {

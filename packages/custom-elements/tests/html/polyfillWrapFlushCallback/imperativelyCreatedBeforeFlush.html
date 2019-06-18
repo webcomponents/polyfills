@@ -21,8 +21,8 @@
    * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
    */
 
-  import {ensureCEPolyfill} from "../../safari-gc-bug-workaround.js";
-  suiteSetup(() => ensureCEPolyfill());
+  import {safariGCBugWorkaround} from "../../safari-gc-bug-workaround.js";
+  suiteSetup(() => safariGCBugWorkaround());
 
   test('Elements are upgraded when created imperatively, even if the flush ' +
     'callback has not been called.', function() {

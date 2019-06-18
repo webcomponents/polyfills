@@ -19,8 +19,8 @@
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
-import {ensureCEPolyfill} from '../safari-11-gc-workaround.js';
-suiteSetup(() => ensureCEPolyfill());
+import {safariGCBugWorkaround} from '../safari-11-gc-workaround.js';
+suiteSetup(() => safariGCBugWorkaround());
 
 test('Installed flush callbacks are called with a function when `#define` is called.', function() {
   let callbackWasCalled = false;
