@@ -40,7 +40,7 @@
     <x-foo></x-foo>
 
     <script type="module">
-      import {safariGCBugWorkaround} from '../safari-11-gc-workaround.js';
+      import {safariGCBugWorkaround} from '../safari-gc-bug-workaround.js';
       suiteSetup(() => safariGCBugWorkaround());
 
       suite('HTML Imports Integration', function() {
