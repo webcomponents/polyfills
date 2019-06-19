@@ -19,11 +19,7 @@ import PatchElement from './Patch/Element.js';
 
 const priorCustomElements = window['customElements'];
 
-if (!priorCustomElements ||
-     priorCustomElements['forcePolyfill'] ||
-     (typeof priorCustomElements['define'] != 'function') ||
-     (typeof priorCustomElements['get'] != 'function')) {
-
+window['__CE_installPolyfill'] = function() {
   const noDocumentConstructionObserver = priorCustomElements && priorCustomElements['noDocumentConstructionObserver'];
   const shadyDomFastWalk = priorCustomElements && priorCustomElements['shadyDomFastWalk'];
 
@@ -50,4 +46,11 @@ if (!priorCustomElements ||
     enumerable: true,
     value: customElements,
   });
+};
+
+if (!priorCustomElements ||
+     priorCustomElements['forcePolyfill'] ||
+     (typeof priorCustomElements['define'] != 'function') ||
+     (typeof priorCustomElements['get'] != 'function')) {
+  window['__CE_installPolyfill']();
 }
