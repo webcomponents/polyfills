@@ -19,7 +19,7 @@ import PatchElement from './Patch/Element.js';
 
 const priorCustomElements = window['customElements'];
 
-window['__CE_installPolyfill'] = function() {
+function installPolyfill() {
   const noDocumentConstructionObserver = priorCustomElements && priorCustomElements['noDocumentConstructionObserver'];
   const shadyDomFastWalk = priorCustomElements && priorCustomElements['shadyDomFastWalk'];
 
@@ -52,5 +52,14 @@ if (!priorCustomElements ||
      priorCustomElements['forcePolyfill'] ||
      (typeof priorCustomElements['define'] != 'function') ||
      (typeof priorCustomElements['get'] != 'function')) {
-  window['__CE_installPolyfill']();
+  installPolyfill();
+}
+
+// This is NOT public API and is only meant to work around a GC bug in older
+// versions of Safari that randomly removes the polyfill during tests. Adding
+// "__CE_installPolyfill" to the search portion of the URL will cause the
+// polyfill installation function to be added to the global object. Ideally,
+// this would use URLSearchParams but IE11 does not support it.
+if (location.search.indexOf('__CE_installPolyfill') !== -1) {
+  window['__CE_installPolyfill'] = installPolyfill;
 }
