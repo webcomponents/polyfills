@@ -60,6 +60,9 @@ if (!priorCustomElements ||
 // "__CE_installPolyfill" to the search portion of the URL will cause the
 // polyfill installation function to be added to the global object. Ideally,
 // this would use URLSearchParams but IE11 does not support it.
+//
+// This behavior can't be triggered by a scoped flag on `customElements` (like
+// `forcePolyfill`) because the flag may be garbage collected by the same bug.
 if (location.search.indexOf('__CE_installPolyfill') !== -1) {
   window['__CE_installPolyfill'] = installPolyfill;
 }
