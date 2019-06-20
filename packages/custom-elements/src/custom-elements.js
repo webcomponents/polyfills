@@ -56,13 +56,5 @@ if (!priorCustomElements ||
 }
 
 // This is NOT public API and is only meant to work around a GC bug in older
-// versions of Safari that randomly removes the polyfill during tests. Adding
-// "__CE_installPolyfill" to the search portion of the URL will cause the
-// polyfill installation function to be added to the global object. Ideally,
-// this would use URLSearchParams but IE11 does not support it.
-//
-// This behavior can't be triggered by a scoped flag on `customElements` (like
-// `forcePolyfill`) because the flag may be garbage collected by the same bug.
-if (location.search.indexOf('__CE_installPolyfill') !== -1) {
-  window['__CE_installPolyfill'] = installPolyfill;
-}
+// versions of Safari that randomly removes the polyfill during tests.
+window['__CE_installPolyfill'] = installPolyfill;

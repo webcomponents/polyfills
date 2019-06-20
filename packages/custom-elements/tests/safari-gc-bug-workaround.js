@@ -15,8 +15,8 @@
 // the wrapper functions it attaches to other globals, like `Node.prototype`,
 // effectively removing the polyfill. To work around this, this function checks
 // if the polyfill is missing before running the tests. If so, it uses a
-// special global function added by the polyfill during tests (which doesn't
-// get collected) to reinstall it.
+// special global function added by the polyfill (which doesn't get collected)
+// to reinstall it.
 //
 // https://bugs.webkit.org/show_bug.cgi?id=172575
 export function safariGCBugWorkaround() {
