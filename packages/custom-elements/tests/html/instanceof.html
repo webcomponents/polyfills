@@ -1,3 +1,19 @@
+<!doctype html>
+<html>
+<head>
+<title>Built-in Element instanceof</title>
+<script>
+  (window.customElements = window.customElements || {}).forcePolyfill = true;
+</script>
+<script src="../../node_modules/es6-promise/dist/es6-promise.auto.min.js"></script>
+<script src="../../node_modules/wct-browser-legacy/browser.js"></script>
+<script src="../../custom-elements.min.js"></script>
+</head>
+<body>
+<script type="module">
+import {safariGCBugWorkaround} from "../safari-gc-bug-workaround.js";
+suiteSetup(() => safariGCBugWorkaround());
+
 /**
  * @license
  * Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
@@ -141,3 +157,6 @@ suite('Built-in Element instanceof', function() {
   });
 
 });
+</script>
+</body>
+</html>

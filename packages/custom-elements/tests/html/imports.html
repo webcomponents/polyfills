@@ -39,7 +39,10 @@
   <body>
     <x-foo></x-foo>
 
-    <script>
+    <script type="module">
+      import {safariGCBugWorkaround} from '../safari-gc-bug-workaround.js';
+      suiteSetup(() => safariGCBugWorkaround());
+
       suite('HTML Imports Integration', function() {
         suiteSetup(function() {
           // This element is used in the imports

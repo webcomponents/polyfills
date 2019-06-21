@@ -1,3 +1,20 @@
+<!doctype html>
+<html>
+<head>
+<title>Custom Element Reactions</title>
+<script src="../catchReportedErrors.js"></script>
+<script>
+  (window.customElements = window.customElements || {}).forcePolyfill = true;
+</script>
+<script src="../../node_modules/es6-promise/dist/es6-promise.auto.min.js"></script>
+<script src="../../node_modules/wct-browser-legacy/browser.js"></script>
+<script src="../../custom-elements.min.js"></script>
+</head>
+<body>
+<script type="module">
+import {safariGCBugWorkaround} from "../safari-gc-bug-workaround.js";
+suiteSetup(() => safariGCBugWorkaround());
+
 /**
  * @license
  * Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
@@ -174,6 +191,23 @@ suite('Custom Element Reactions', function() {
       var div = document.createElement('div');
       div.innerHTML = '<x-inner></x-inner>';
       assert.isTrue(passed);
+    });
+
+    test('constructor reports an error if it does not produce an HTMLElement', function() {
+      class XFail {}
+      customElements.define('x-fail-to-be-html-element', XFail);
+
+      const errors = [];
+      catchReportedErrors(() => {
+        assert.doesNotThrow(function() {
+          document.createElement('x-fail-to-be-html-element');
+        });
+      }, (e) => {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        errors.push(e);
+      });
+      assert.equal(errors.length, 1);
     });
 
   });
@@ -525,3 +559,6 @@ suite('Custom Element Reactions', function() {
   });
 
 });
+</script>
+</body>
+</html>
