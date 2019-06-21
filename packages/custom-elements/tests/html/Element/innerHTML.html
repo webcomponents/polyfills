@@ -22,7 +22,10 @@
 <script src="../../../custom-elements.min.js"></script>
 </head>
 <body>
-<script>
+<script type="module">
+import {safariGCBugWorkaround} from "../../safari-gc-bug-workaround.js";
+suiteSetup(() => safariGCBugWorkaround());
+
 function generateLocalName() {
   return 'test-element-' + Math.random().toString(32).substring(2);
 }
@@ -186,13 +189,14 @@ suite('Custom element descendants of the context element are disconnected when s
     if (NATIVE.innerHTML) {
       NATIVE.innerHTML.call(svg, circleText);
     } else {
-      if (Object.getOwnPropertyDescriptor(svg, 'innerHTML') === undefined) {
-        throw new Error('No local innerHTML descriptor was found.');
+      if (!('innerHTML' in svg)) {
+        throw new Error('No innerHTML property was found.');
       }
 
       // The `innerHTML` getter / setter is broken in this browser and should
       // be directly on each element instance. It's ok to call it directly here
-      // to check because the polyfill has not seen / patched it yet.
+      // to check if it works: the polyfill has not patched it yet because we
+      // created `svg` with the native `createElementNS`.
       svg.innerHTML = circleText;
     }
 
