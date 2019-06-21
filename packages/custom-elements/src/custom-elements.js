@@ -19,11 +19,7 @@ import PatchElement from './Patch/Element.js';
 
 const priorCustomElements = window['customElements'];
 
-if (!priorCustomElements ||
-     priorCustomElements['forcePolyfill'] ||
-     (typeof priorCustomElements['define'] != 'function') ||
-     (typeof priorCustomElements['get'] != 'function')) {
-
+function installPolyfill() {
   const noDocumentConstructionObserver = priorCustomElements && priorCustomElements['noDocumentConstructionObserver'];
   const shadyDomFastWalk = priorCustomElements && priorCustomElements['shadyDomFastWalk'];
 
@@ -50,4 +46,15 @@ if (!priorCustomElements ||
     enumerable: true,
     value: customElements,
   });
+};
+
+if (!priorCustomElements ||
+     priorCustomElements['forcePolyfill'] ||
+     (typeof priorCustomElements['define'] != 'function') ||
+     (typeof priorCustomElements['get'] != 'function')) {
+  installPolyfill();
 }
+
+// This is NOT public API and is only meant to work around a GC bug in older
+// versions of Safari that randomly removes the polyfill during tests.
+window['__CE_installPolyfill'] = installPolyfill;

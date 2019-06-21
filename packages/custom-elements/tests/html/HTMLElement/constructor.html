@@ -15,7 +15,10 @@
   <bad-custom-element-1></bad-custom-element-1>
 </template>
 
-<script>
+<script type="module">
+import {safariGCBugWorkaround} from "../../safari-gc-bug-workaround.js";
+suiteSetup(() => safariGCBugWorkaround());
+
 function generateLocalName() {
   return 'test-element-' + Math.random().toString(32).substring(2);
 }
