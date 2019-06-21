@@ -10,6 +10,7 @@
 
 import Native from './Native.js';
 import CustomElementInternals from '../CustomElementInternals.js';
+import CEState from '../CustomElementState.js';
 import * as Utilities from '../Utilities.js';
 
 import PatchParentNode from './Interface/ParentNode.js';
@@ -25,17 +26,7 @@ export default function(internals) {
      * @return {!Element}
      */
     function(localName) {
-      const element = /** @type {!HTMLElement} */
-        (Native.Document_createElement.call(this, localName));
-      internals.patchElement(element);
-
-      // Only create custom elements if this document is associated with the
-      // registry.
-      if (this.__CE_hasRegistry && internals.localNameToDefinition(localName)) {
-        internals.upgradeElement(element);
-      }
-
-      return element;
+      return internals.createAnElement(this, localName, null);
     });
 
   Utilities.setPropertyUnchecked(Document.prototype, 'importNode',
@@ -56,8 +47,6 @@ export default function(internals) {
       return clone;
     });
 
-  const NS_HTML = "http://www.w3.org/1999/xhtml";
-
   Utilities.setPropertyUnchecked(Document.prototype, 'createElementNS',
     /**
      * @this {Document}
@@ -66,19 +55,7 @@ export default function(internals) {
      * @return {!Element}
      */
     function(namespace, localName) {
-      const element =
-          Native.Document_createElementNS.call(this, namespace, localName);
-      internals.patchElement(element);
-
-      // Only create custom elements if this document is associated with the
-      // registry.
-      if (this.__CE_hasRegistry &&
-          (namespace === null || namespace === NS_HTML) &&
-          internals.localNameToDefinition(localName)) {
-        internals.upgradeElement(/** @type {!HTMLElement} */ (element));
-      }
-
-      return element;
+      return internals.createAnElement(this, localName, namespace);
     });
 
   PatchParentNode(internals, Document.prototype, {

@@ -8,8 +8,11 @@
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
+import Native from './Patch/Native.js';
 import * as Utilities from './Utilities.js';
 import CEState from './CustomElementState.js';
+
+const NS_HTML = 'http://www.w3.org/1999/xhtml';
 
 export default class CustomElementInternals {
 
@@ -183,7 +186,7 @@ export default class CustomElementInternals {
       if (element.__CE_state === CEState.custom) {
         this.connectedCallback(element);
       } else {
-        this.upgradeElement(element);
+        this.upgradeReaction(element);
       }
     }
   }
@@ -272,7 +275,7 @@ export default class CustomElementInternals {
    */
   patchAndUpgradeTree(root, options = {}) {
     const visitedImports = options.visitedImports;
-    const upgrade = options.upgrade || (element => this.upgradeElement(element));
+    const upgrade = options.upgrade || (element => this.upgradeReaction(element));
 
     const elements = [];
 
@@ -330,7 +333,20 @@ export default class CustomElementInternals {
   /**
    * @param {!HTMLElement} element
    */
-  upgradeElement(element) {
+  upgradeReaction(element) {
+    try {
+      this._upgradeAnElement(element);
+    } catch (e) {
+      this._reportTheException(e);
+    }
+  }
+
+  /**
+   * @private
+   * @param {!HTMLElement} element
+   * @see https://html.spec.whatwg.org/multipage/custom-elements.html#concept-upgrade-an-element
+   */
+  _upgradeAnElement(element) {
     const currentState = element.__CE_state;
     if (currentState !== undefined) return;
 
@@ -356,15 +372,17 @@ export default class CustomElementInternals {
     definition.constructionStack.push(element);
 
     try {
-      let result = new (definition.constructorFunction)();
-      if (result !== element) {
-        throw new Error('The custom element constructor did not produce the element being upgraded.');
+      try {
+        let result = new (definition.constructorFunction)();
+        if (result !== element) {
+          throw new Error('The custom element constructor did not produce the element being upgraded.');
+        }
+      } finally {
+        definition.constructionStack.pop();
       }
     } catch (e) {
       element.__CE_state = CEState.failed;
       throw e;
-    } finally {
-      definition.constructionStack.pop();
     }
 
     element.__CE_state = CEState.custom;
@@ -392,7 +410,11 @@ export default class CustomElementInternals {
   connectedCallback(element) {
     const definition = element.__CE_definition;
     if (definition.connectedCallback) {
-      definition.connectedCallback.call(element);
+      try {
+        definition.connectedCallback.call(element);
+      } catch (e) {
+        this._reportTheException(e);
+      }
     }
   }
 
@@ -402,7 +424,11 @@ export default class CustomElementInternals {
   disconnectedCallback(element) {
     const definition = element.__CE_definition;
     if (definition.disconnectedCallback) {
-      definition.disconnectedCallback.call(element);
+      try {
+        definition.disconnectedCallback.call(element);
+      } catch (e) {
+        this._reportTheException(e);
+      }
     }
   }
 
@@ -419,7 +445,161 @@ export default class CustomElementInternals {
       definition.attributeChangedCallback &&
       definition.observedAttributes.indexOf(name) > -1
     ) {
-      definition.attributeChangedCallback.call(element, name, oldValue, newValue, namespace);
+      try {
+        definition.attributeChangedCallback.call(element, name, oldValue, newValue, namespace);
+      } catch (e) {
+        this._reportTheException(e);
+      }
+    }
+  }
+
+  /**
+   * Runs the DOM's 'create an element'. If namespace is not null, then the
+   * native `createElementNS` is used. Otherwise, `createElement` is used.
+   *
+   * Note, the template polyfill only wraps `createElement`, preventing this
+   * function from using `createElementNS` in all cases.
+   *
+   * @param {!Document} doc
+   * @param {string} localName
+   * @param {string|null} namespace
+   * @return {!Element}
+   * @see https://dom.spec.whatwg.org/#concept-create-element
+   */
+  createAnElement(doc, localName, namespace) {
+    // Only create custom elements if the document is associated with the
+    // registry.
+    if (doc.__CE_hasRegistry && (namespace === null || namespace === NS_HTML)) {
+      const definition = this.localNameToDefinition(localName);
+      if (definition) {
+        try {
+          const result = new (definition.constructorFunction)();
+
+          // These conformance checks can't be performed when the user calls
+          // the element's constructor themselves. However, this also true in
+          // native implementations.
+
+          if (result.__CE_state === undefined ||
+              result.__CE_definition === undefined) {
+            throw new Error('Failed to construct \'' + localName + '\': ' +
+                'The returned value was not constructed with the HTMLElement ' +
+                'constructor.');
+          }
+
+          if (result.namespaceURI !== NS_HTML) {
+            throw new Error('Failed to construct \'' + localName + '\': ' +
+                'The constructed element\'s namespace must be the HTML ' +
+                'namespace.');
+          }
+
+          // The following Errors should be DOMExceptions but DOMException
+          // isn't constructible in all browsers.
+
+          if (result.hasAttributes()) {
+            throw new Error('Failed to construct \'' + localName + '\': ' +
+                'The constructed element must not have any attributes.');
+          }
+
+          // ShadyDOM doesn't wrap `#hasChildNodes`, so we check `#firstChild`
+          // instead.
+          if (result.firstChild !== null) {
+            throw new Error('Failed to construct \'' + localName + '\': ' +
+                'The constructed element must not have any children.');
+          }
+
+          if (result.parentNode !== null) {
+            throw new Error('Failed to construct \'' + localName + '\': ' +
+                'The constructed element must not have a parent node.');
+          }
+
+          if (result.ownerDocument !== doc) {
+            throw new Error('Failed to construct \'' + localName + '\': ' +
+                'The constructed element\'s owner document is incorrect.');
+          }
+
+          if (result.localName !== localName) {
+            throw new Error('Failed to construct \'' + localName + '\': ' +
+                'The constructed element\'s local name is incorrect.');
+          }
+
+          return result;
+        } catch (e) {
+          this._reportTheException(e);
+
+          // When construction fails, a new HTMLUnknownElement is produced.
+          // However, there's no direct way to create one, so we create a
+          // regular HTMLElement and replace its prototype.
+          const result = /** @type {!Element} */ (namespace === null ?
+              Native.Document_createElement.call(doc, localName) :
+              Native.Document_createElementNS.call(doc, namespace, localName));
+          Object.setPrototypeOf(result, HTMLUnknownElement.prototype);
+          result.__CE_state = CEState.failed;
+          result.__CE_definition = undefined;
+          this.patchElement(result);
+          return result;
+        }
+      }
+    }
+
+    const result = /** @type {!Element} */ (namespace === null ?
+        Native.Document_createElement.call(doc, localName) :
+        Native.Document_createElementNS.call(doc, namespace, localName));
+    this.patchElement(result);
+    return result;
+  }
+
+  /**
+   * Runs the DOM's 'report the exception' algorithm.
+   *
+   * @private
+   * @param {!Error} error
+   * @see https://html.spec.whatwg.org/multipage/webappapis.html#report-the-exception
+   */
+  _reportTheException(error) {
+    const message = error.message;
+    /** @type {string} */
+    const filename =
+        /* Safari */ error.sourceURL || /* Firefox */ error.fileName || "";
+    /** @type {number} */
+    const lineno =
+        /* Safari */ error.line || /* Firefox */ error.lineNumber || 0;
+    /** @type {number} */
+    const colno =
+        /* Safari */ error.column || /* Firefox */ error.columnNumber || 0;
+
+    let event = undefined;
+    if (ErrorEvent.prototype.initErrorEvent === undefined) {
+      event = new ErrorEvent('error',
+          {cancelable: true, message, filename, lineno, colno, error});
+    } else {
+      event = document.createEvent('ErrorEvent');
+      // initErrorEvent(type, bubbles, cancelable, message, filename, line)
+      event.initErrorEvent('error', false, true, message, filename, lineno);
+      // Hack for IE, where ErrorEvent#preventDefault does not set
+      // #defaultPrevented to true.
+      event.preventDefault = function() {
+        Object.defineProperty(this, 'defaultPrevented', {
+          configurable: true,
+          get: function() { return true; },
+        });
+      };
+    }
+
+    if (event.error === undefined) {
+      Object.defineProperty(event, 'error', {
+        configurable: true,
+        enumerable: true,
+        get: function() { return error; },
+      });
+    }
+
+    window.dispatchEvent(event);
+    if (!event.defaultPrevented) {
+      // In 'report the exception', UAs may optionally write errors to the
+      // console if their associated ErrorEvent isn't handled during dispatch
+      // (indicated by calling `preventDefault`). In practice, these errors are
+      // always displayed.
+      console.error(error);
     }
   }
 }
