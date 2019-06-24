@@ -290,9 +290,11 @@ export default class CustomElementInternals {
             // walk that import again, even if it was partially walked later
             // during the same `patchAndUpgradeTree` call.
             const clonedVisitedImports = new Set();
-            // IE11 does not support constructing a set using an iterable.
-            visitedImports.forEach(item => clonedVisitedImports.add(item));
-            clonedVisitedImports.delete(importNode);
+            if (visitedImports) {
+              // IE11 does not support constructing a set using an iterable.
+              visitedImports.forEach(item => clonedVisitedImports.add(item));
+              clonedVisitedImports.delete(importNode);
+            }
             this.patchAndUpgradeTree(importNode, {visitedImports: clonedVisitedImports, upgrade});
           });
         }
