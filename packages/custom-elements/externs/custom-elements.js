@@ -72,3 +72,10 @@ Element.prototype.__CE_shadowRoot;
 // Note, the closure type is incorrect here.
 /** @type {!HTMLCollection} */
 DocumentFragment.prototype.children;
+
+/**
+ * Used by IE to configure ErrorEvents.
+ * @see https://docs.microsoft.com/en-us/openspecs/ie_standards/ms-html5e/30b18240-7be6-4379-9e0a-262c99ed9529
+ * @type {undefined|!function(string, boolean, boolean, string, string, number)}
+ */
+ErrorEvent.prototype.initErrorEvent;

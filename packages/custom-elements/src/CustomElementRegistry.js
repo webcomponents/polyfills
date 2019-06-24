@@ -197,7 +197,7 @@ export default class CustomElementRegistry {
 
     // Upgrade elements with 'stable' definitions first.
     for (let i = 0; i < elementsWithStableDefinitions.length; i++) {
-      this._internals.upgradeElement(elementsWithStableDefinitions[i]);
+      this._internals.upgradeReaction(elementsWithStableDefinitions[i]);
     }
 
     // Upgrade elements with 'pending' definitions in the order they were defined.
@@ -208,7 +208,7 @@ export default class CustomElementRegistry {
       // Attempt to upgrade all applicable elements.
       const pendingUpgradableElements = elementsWithPendingDefinitions.get(definition.localName);
       for (let i = 0; i < pendingUpgradableElements.length; i++) {
-        this._internals.upgradeElement(pendingUpgradableElements[i]);
+        this._internals.upgradeReaction(pendingUpgradableElements[i]);
       }
 
       // Resolve any promises created by `whenDefined` for the definition.
