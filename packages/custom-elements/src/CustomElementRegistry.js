@@ -24,6 +24,18 @@ export default class CustomElementRegistry {
   constructor(internals) {
     /**
      * @private
+     * @type {!Map<string, !CustomElementDefinition>}
+     */
+    this._localNameToDefinition = new Map();
+
+    /**
+     * @private
+     * @type {!Map<!Function, !CustomElementDefinition>}
+     */
+    this._constructorToDefinition = new Map();
+
+    /**
+     * @private
      * @type {boolean}
      */
     this._elementDefinitionIsRunning = false;
@@ -80,7 +92,7 @@ export default class CustomElementRegistry {
       throw new SyntaxError(`The element name '${localName}' is not valid.`);
     }
 
-    if (this._internals.localNameToDefinition(localName)) {
+    if (this._localNameToDefinition.has(localName)) {
       throw new Error(`A custom element with name '${localName}' has already been defined.`);
     }
 
@@ -134,7 +146,8 @@ export default class CustomElementRegistry {
       constructionStack: [],
     };
 
-    this._internals.setDefinition(localName, definition);
+    this._localNameToDefinition.set(localName, definition);
+    this._constructorToDefinition.set(definition.constructorFunction, definition);
     this._pendingDefinitions.push(definition);
 
     // If we've already called the flush callback and it hasn't called back yet,
@@ -189,7 +202,7 @@ export default class CustomElementRegistry {
           pendingElements.push(element);
         // If there is *any other* applicable definition for the element, add it
         // to the list of elements with stable definitions that need to be upgraded.
-        } else if (this._internals.localNameToDefinition(localName)) {
+        } else if (this._localNameToDefinition.has(localName)) {
           elementsWithStableDefinitions.push(element);
         }
       },
@@ -224,7 +237,7 @@ export default class CustomElementRegistry {
    * @return {Function|undefined}
    */
   get(localName) {
-    const definition = this._internals.localNameToDefinition(localName);
+    const definition = this._localNameToDefinition.get(localName);
     if (definition) {
       return definition.constructorFunction;
     }
@@ -249,7 +262,7 @@ export default class CustomElementRegistry {
     const deferred = new Deferred();
     this._whenDefinedDeferred.set(localName, deferred);
 
-    const definition = this._internals.localNameToDefinition(localName);
+    const definition = this._localNameToDefinition.get(localName);
     // Resolve immediately only if the given local name has a definition *and*
     // the full document walk to upgrade elements with that local name has
     // already happened.
@@ -266,6 +279,22 @@ export default class CustomElementRegistry {
     }
     const inner = this._flushCallback;
     this._flushCallback = flush => outer(() => inner(flush));
+  }
+
+  /**
+   * @param {string} localName
+   * @return {!CustomElementDefinition|undefined}
+   */
+  internal_localNameToDefinition(localName) {
+    return this._localNameToDefinition.get(localName);
+  }
+
+  /**
+   * @param {!Function} constructor
+   * @return {!CustomElementDefinition|undefined}
+   */
+  internal_constructorToDefinition(constructor) {
+    return this._constructorToDefinition.get(constructor);
   }
 }
 
