@@ -14,7 +14,7 @@ import Deferred from './Deferred.js';
 import * as Utilities from './Utilities.js';
 
 /**
- * @unrestricted
+ * @extends {window.CustomElementRegistry}
  */
 export default class CustomElementRegistry {
 
@@ -234,7 +234,7 @@ export default class CustomElementRegistry {
 
   /**
    * @param {string} localName
-   * @return {Function|undefined}
+   * @return {function(new: HTMLElement)|undefined}
    */
   get(localName) {
     const definition = this._localNameToDefinition.get(localName);
