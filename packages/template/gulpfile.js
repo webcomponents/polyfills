@@ -29,7 +29,6 @@ gulp.task('default', () => {
       js_output_file: 'template.min.js',
       output_wrapper: '(function(){\n%output%\n}).call(self);',
       assume_function_wrapper: true,
-      new_type_inf: true,
       rewrite_polyfills: false
     }))
     .pipe(sourcemaps.write('/'))
