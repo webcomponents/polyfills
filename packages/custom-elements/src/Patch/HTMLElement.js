@@ -27,7 +27,9 @@ export default function(internals) {
       // prototype's `constructor` property, this is equivalent.
       const constructor = /** @type {!Function} */ (this.constructor);
 
-      const definition = internals.constructorToDefinition(constructor);
+      // Always look up the definition from the global registry.
+      const registry = document.__CE_registry;
+      const definition = registry.internal_constructorToDefinition(constructor);
       if (!definition) {
         throw new Error('Failed to construct a custom element: ' +
             'The constructor was not registered with `customElements`.');
