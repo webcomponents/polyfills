@@ -18,6 +18,9 @@ CustomElementRegistry.prototype.noDocumentConstructionObserver;
 /** @type {boolean|undefined} */
 CustomElementRegistry.prototype.shadyDomFastWalk;
 
+/** @type {!Function|undefined} */
+CustomElementRegistry.prototype.polyfillWrapFlushCallback;
+
 class AlreadyConstructedMarkerType {}
 
 /**
