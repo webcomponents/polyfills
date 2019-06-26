@@ -158,10 +158,16 @@ export default class CustomElementRegistry {
     }
   }
 
-  upgrade(element) {
-    this._internals.patchAndUpgradeTree(element);
+  /**
+   * @param {!Node} node
+   */
+  upgrade(node) {
+    this._internals.patchAndUpgradeTree(node);
   }
 
+  /**
+   * @private
+   */
   _flush() {
     // If no new definitions were defined, don't attempt to flush. This could
     // happen if a flush callback keeps the function it is given and calls it
