@@ -81,7 +81,7 @@ export default class CustomElementRegistry {
 
   /**
    * @param {string} localName
-   * @param {!Function} constructor
+   * @param {function(new: HTMLElement)} constructor
    */
   define(localName, constructor) {
     if (!(constructor instanceof Function)) {
@@ -158,10 +158,16 @@ export default class CustomElementRegistry {
     }
   }
 
-  upgrade(element) {
-    this._internals.patchAndUpgradeTree(element);
+  /**
+   * @param {!Node} node
+   */
+  upgrade(node) {
+    this._internals.patchAndUpgradeTree(node);
   }
 
+  /**
+   * @private
+   */
   _flush() {
     // If no new definitions were defined, don't attempt to flush. This could
     // happen if a flush callback keeps the function it is given and calls it
@@ -273,6 +279,9 @@ export default class CustomElementRegistry {
     return deferred.toPromise();
   }
 
+  /**
+   * @param {function(function())} outer
+   */
   polyfillWrapFlushCallback(outer) {
     if (this._documentConstructionObserver) {
       this._documentConstructionObserver.disconnect();
