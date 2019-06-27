@@ -142,6 +142,30 @@ suite('polyfillLazyDefine', function() {
       return customElements.whenDefined('x-when-defined-lazy');
     });
 
+    test('The promise resolves even if the definition eventually fails. The ' +
+        'failed definition reports an error.', function() {
+      const ctor = class extends HTMLElement {
+        static get observedAttributes() { throw new Error(); }
+        // Must exist for `observedAttributes` to be read.
+        attributeChangedCallback() {}
+      };
+      customElements.polyfillDefineLazy('x-when-defined-lazy-fail', () => ctor);
+
+      return customElements.whenDefined('x-when-defined-lazy-fail').then(() => {
+        const errors = [];
+        catchReportedErrors(() => {
+          assert.doesNotThrow(function() {
+            document.createElement('x-when-defined-lazy-fail');
+          });
+        }, (e) => {
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          errors.push(e);
+        });
+        assert.equal(errors.length, 1)
+      });
+    });
+
   });
 
   suite('upgrades', function() {
