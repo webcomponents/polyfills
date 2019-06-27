@@ -63,9 +63,20 @@ suite('CustomElementsRegistry', function() {
     });
 
     test('name must not be a reserved name', function() {
-      assert.throws(function() {
-        customElements.define('font-face', class extends HTMLElement {});
-      }, '', 'Failed to execute \'defineElement\' on \'Document\': Registration failed for type \'font-face\'. The type name is invalid.');
+      [
+        'annotation-xml',
+        'color-profile',
+        'font-face',
+        'font-face-src',
+        'font-face-uri',
+        'font-face-format',
+        'font-face-name',
+        'missing-glyph',
+      ].forEach(invalidName => {
+        assert.throws(function() {
+          customElements.define(invalidName, class extends HTMLElement {});
+        }, '', `Registration should fail for name '${invalidName}'.`);
+      });
     });
 
     test('name must be unique', function() {
