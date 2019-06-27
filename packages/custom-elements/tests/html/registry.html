@@ -58,14 +58,25 @@ suite('CustomElementsRegistry', function() {
 
     test('name must contain a dash', function() {
       assert.throws(function () {
-        customElements.define('xfoo', {prototype: Object.create(HTMLElement.prototype)});
+        customElements.define('xfoo', class extends HTMLElement {});
       }, '', 'customElements.define failed to throw when given no arguments');
     });
 
     test('name must not be a reserved name', function() {
-      assert.throws(function() {
-        customElements.define('font-face', {prototype: Object.create(HTMLElement.prototype)});
-      }, '', 'Failed to execute \'defineElement\' on \'Document\': Registration failed for type \'font-face\'. The type name is invalid.');
+      [
+        'annotation-xml',
+        'color-profile',
+        'font-face',
+        'font-face-src',
+        'font-face-uri',
+        'font-face-format',
+        'font-face-name',
+        'missing-glyph',
+      ].forEach(invalidName => {
+        assert.throws(function() {
+          customElements.define(invalidName, class extends HTMLElement {});
+        }, '', `Registration should fail for name '${invalidName}'.`);
+      });
     });
 
     test('name must be unique', function() {
