@@ -24,6 +24,12 @@ export default class CustomElementRegistry {
   constructor(internals) {
     /**
      * @private
+     * @type {!Map<string, function(): function(new: HTMLElement)>}
+     */
+    this._localNameToConstructorGetter = new Map();
+
+    /**
+     * @private
      * @type {!Map<string, !CustomElementDefinition>}
      */
     this._localNameToDefinition = new Map();
@@ -86,9 +92,62 @@ export default class CustomElementRegistry {
 
   /**
    * @param {string} localName
+   * @param {function(): function(new: HTMLElement)} constructorGetter
+   */
+  polyfillDefineLazy(localName, constructorGetter) {
+    if (!(constructorGetter instanceof Function)) {
+      throw new TypeError('Custom element constructor getters must be functions.');
+    }
+
+    if (!Utilities.isValidCustomElementName(localName)) {
+      throw new SyntaxError(`The element name '${localName}' is not valid.`);
+    }
+
+    if (this.internal_localNameToDefinition(localName)) {
+      throw new Error(`A custom element with name '${localName}' has already been defined.`);
+    }
+
+    if (this._elementDefinitionIsRunning) {
+      throw new Error('A custom element is already being defined.');
+    }
+
+    this._localNameToConstructorGetter.set(localName, constructorGetter);
+    this._elementsWithPendingDefinitions.set(localName, []);
+
+    // If we've already called the flush callback and it hasn't called back yet,
+    // don't call it again.
+    if (!this._flushPending) {
+      this._flushPending = true;
+      this._flushCallback(() => this._flush());
+    }
+  }
+
+  /**
+   * @param {string} localName
    * @param {function(new: HTMLElement)} constructor
    */
   define(localName, constructor) {
+    if (this.internal_localNameToDefinition(localName)) {
+      throw new Error(`A custom element with name '${localName}' has already been defined.`);
+    }
+
+    this.internal_reifyDefinition(localName, constructor);
+    this._elementsWithPendingDefinitions.set(localName, []);
+
+    // If we've already called the flush callback and it hasn't called back yet,
+    // don't call it again.
+    if (!this._flushPending) {
+      this._flushPending = true;
+      this._flushCallback(() => this._flush());
+    }
+  }
+
+  /**
+   * @param {string} localName
+   * @param {function(new: HTMLElement)} constructor
+   * @return {!CustomElementDefinition}
+   */
+  internal_reifyDefinition(localName, constructor) {
     if (!(constructor instanceof Function)) {
       throw new TypeError('Custom element constructors must be functions.');
     }
@@ -153,14 +212,8 @@ export default class CustomElementRegistry {
 
     this._localNameToDefinition.set(localName, definition);
     this._constructorToDefinition.set(definition.constructorFunction, definition);
-    this._elementsWithPendingDefinitions.set(localName, []);
 
-    // If we've already called the flush callback and it hasn't called back yet,
-    // don't call it again.
-    if (!this._flushPending) {
-      this._flushPending = true;
-      this._flushCallback(() => this._flush());
-    }
+    return definition;
   }
 
   /**
@@ -236,7 +289,7 @@ export default class CustomElementRegistry {
    * @return {function(new: HTMLElement)|undefined}
    */
   get(localName) {
-    const definition = this._localNameToDefinition.get(localName);
+    const definition = this.internal_localNameToDefinition(localName);
     if (definition) {
       return definition.constructorFunction;
     }
@@ -261,11 +314,20 @@ export default class CustomElementRegistry {
     const deferred = new Deferred();
     this._whenDefinedDeferred.set(localName, deferred);
 
-    const definition = this._localNameToDefinition.get(localName);
-    // Resolve immediately only if the given local name has a definition *and*
-    // the full document walk to upgrade elements with that local name has
-    // already happened.
-    if (definition && !this._elementsWithPendingDefinitions.has(localName)) {
+    // Resolve immediately if the given local name has a regular or lazy
+    // definition *and* the full document walk to upgrade elements with that
+    // local name has already happened.
+    //
+    // The behavior of the returned promise differs between the lazy and the
+    // non-lazy cases if the definition fails. Normally, the definition would
+    // fail synchronously and no pending promises would resolve. However, if
+    // the definition is lazy but has not yet been reified, the promise is
+    // resolved early here even though it might fail later when reified.
+    const anyDefinitionExists = this._localNameToDefinition.has(localName) ||
+        this._localNameToConstructorGetter.has(localName);
+    const definitionHasFlushed =
+        !this._elementsWithPendingDefinitions.has(localName);
+    if (anyDefinitionExists && definitionHasFlushed) {
       deferred.resolve(undefined);
     }
 
@@ -288,7 +350,22 @@ export default class CustomElementRegistry {
    * @return {!CustomElementDefinition|undefined}
    */
   internal_localNameToDefinition(localName) {
-    return this._localNameToDefinition.get(localName);
+    const existingDefinition = this._localNameToDefinition.get(localName);
+    if (existingDefinition) {
+      return existingDefinition;
+    }
+
+    const constructorGetter = this._localNameToConstructorGetter.get(localName);
+    if (constructorGetter) {
+      this._localNameToConstructorGetter.delete(localName);
+      try {
+        return this.internal_reifyDefinition(localName, constructorGetter());
+      } catch (e) {
+        this._internals.reportTheException(e);
+      }
+    }
+
+    return undefined;
   }
 
   /**
@@ -306,4 +383,5 @@ CustomElementRegistry.prototype['define'] = CustomElementRegistry.prototype.defi
 CustomElementRegistry.prototype['upgrade'] = CustomElementRegistry.prototype.upgrade;
 CustomElementRegistry.prototype['get'] = CustomElementRegistry.prototype.get;
 CustomElementRegistry.prototype['whenDefined'] = CustomElementRegistry.prototype.whenDefined;
+CustomElementRegistry.prototype['polyfillDefineLazy'] = CustomElementRegistry.prototype.polyfillDefineLazy;
 CustomElementRegistry.prototype['polyfillWrapFlushCallback'] = CustomElementRegistry.prototype.polyfillWrapFlushCallback;
