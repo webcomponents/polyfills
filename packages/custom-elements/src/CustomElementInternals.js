@@ -286,7 +286,12 @@ export default class CustomElementInternals {
    */
   upgradeReaction(element) {
     try {
-      this._upgradeAnElement(element);
+      const definition = this._lookupACustomElementDefinition(
+          /** @type {!Document} */ (element.ownerDocument),
+          element.namespaceURI, element.localName);
+      if (definition) {
+        this._upgradeAnElement(element, definition);
+      }
     } catch (e) {
       this._reportTheException(e);
     }
@@ -295,33 +300,12 @@ export default class CustomElementInternals {
   /**
    * @private
    * @param {!HTMLElement} element
+   * @param {!CustomElementDefinition} definition
    * @see https://html.spec.whatwg.org/multipage/custom-elements.html#concept-upgrade-an-element
    */
-  _upgradeAnElement(element) {
+  _upgradeAnElement(element, definition) {
     const currentState = element.__CE_state;
     if (currentState !== undefined) return;
-
-    const ownerDocument = element.ownerDocument;
-    const registry = ownerDocument.__CE_registry;
-    if (!registry) return;
-
-    // Prevent elements created in documents without a browsing context from
-    // upgrading.
-    //
-    // https://html.spec.whatwg.org/multipage/custom-elements.html#look-up-a-custom-element-definition
-    //   "If document does not have a browsing context, return null."
-    //
-    // https://html.spec.whatwg.org/multipage/window-object.html#dom-document-defaultview
-    //   "The defaultView IDL attribute of the Document interface, on getting,
-    //   must return this Document's browsing context's WindowProxy object, if
-    //   this Document has an associated browsing context, or null otherwise."
-    if (
-      !ownerDocument.defaultView &&
-      !(ownerDocument.__CE_isImportDocument && registry)
-    ) return;
-
-    const definition = registry.internal_localNameToDefinition(element.localName);
-    if (!definition) return;
 
     definition.constructionStack.push(element);
 
@@ -406,6 +390,39 @@ export default class CustomElementInternals {
         this._reportTheException(e);
       }
     }
+  }
+
+  /**
+   * Runs HTML's 'look up a custom element definition'.
+   *
+   * @private
+   * @param {!Document} doc
+   * @param {string} namespace
+   * @param {string} localName
+   * @return {!CustomElementDefinition|undefined}
+   * @see https://html.spec.whatwg.org/multipage/custom-elements.html#look-up-a-custom-element-definition
+   */
+  _lookupACustomElementDefinition(doc, namespace, localName) {
+    // The namespace must be the HTML namespace.
+    if (namespace !== NS_HTML) return;
+
+    // The document must be associated with a registry.
+    const registry = doc.__CE_registry;
+    if (!registry) return;
+
+    // Prevent elements created in documents without a browsing context from
+    // upgrading.
+    //
+    // https://html.spec.whatwg.org/multipage/custom-elements.html#look-up-a-custom-element-definition
+    //   "If document does not have a browsing context, return null."
+    //
+    // https://html.spec.whatwg.org/multipage/window-object.html#dom-document-defaultview
+    //   "The defaultView IDL attribute of the Document interface, on getting,
+    //   must return this Document's browsing context's WindowProxy object, if
+    //   this Document has an associated browsing context, or null otherwise."
+    if (!doc.defaultView && !(doc.__CE_isImportDocument && registry)) return;
+
+    return registry.internal_localNameToDefinition(localName);
   }
 
   /**
