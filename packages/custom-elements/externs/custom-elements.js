@@ -44,8 +44,8 @@ let CustomElementDefinition;
 // Used for both Documents and Nodes which represent documents in the HTML
 // Imports polyfill.
 
-/** @type {boolean|undefined} */
-Node.prototype.__CE_hasRegistry;
+/** @type {!CustomElementRegistry|undefined} */
+Node.prototype.__CE_registry;
 
 /** @type {boolean|undefined} */
 Node.prototype.__CE_isImportDocument;

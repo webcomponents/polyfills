@@ -23,12 +23,6 @@ export default class CustomElementInternals {
    * }} options
    */
   constructor(options) {
-    /** @type {!Map<string, !CustomElementDefinition>} */
-    this._localNameToDefinition = new Map();
-
-    /** @type {!Map<!Function, !CustomElementDefinition>} */
-    this._constructorToDefinition = new Map();
-
     /** @type {!Array<!function(!Node)>} */
     this._patchesNode = [];
 
@@ -43,31 +37,6 @@ export default class CustomElementInternals {
 
     /** @const {boolean} */
     this.useDocumentConstructionObserver = !options.noDocumentConstructionObserver;
-  }
-
-  /**
-   * @param {string} localName
-   * @param {!CustomElementDefinition} definition
-   */
-  setDefinition(localName, definition) {
-    this._localNameToDefinition.set(localName, definition);
-    this._constructorToDefinition.set(definition.constructorFunction, definition);
-  }
-
-  /**
-   * @param {string} localName
-   * @return {!CustomElementDefinition|undefined}
-   */
-  localNameToDefinition(localName) {
-    return this._localNameToDefinition.get(localName);
-  }
-
-  /**
-   * @param {!Function} constructor
-   * @return {!CustomElementDefinition|undefined}
-   */
-  constructorToDefinition(constructor) {
-    return this._constructorToDefinition.get(constructor);
   }
 
   /**
@@ -269,8 +238,8 @@ export default class CustomElementInternals {
 
         if (importNode instanceof Node) {
           importNode.__CE_isImportDocument = true;
-          // Connected links are associated with the registry.
-          importNode.__CE_hasRegistry = true;
+          // Connected links are associated with the global registry.
+          importNode.__CE_registry = document.__CE_registry;
         }
 
         if (importNode && importNode.readyState === 'complete') {
@@ -317,7 +286,12 @@ export default class CustomElementInternals {
    */
   upgradeReaction(element) {
     try {
-      this._upgradeAnElement(element);
+      const definition = this._lookupACustomElementDefinition(
+          /** @type {!Document} */ (element.ownerDocument),
+          element.namespaceURI, element.localName);
+      if (definition) {
+        this._upgradeAnElement(element, definition);
+      }
     } catch (e) {
       this._reportTheException(e);
     }
@@ -326,30 +300,12 @@ export default class CustomElementInternals {
   /**
    * @private
    * @param {!HTMLElement} element
+   * @param {!CustomElementDefinition} definition
    * @see https://html.spec.whatwg.org/multipage/custom-elements.html#concept-upgrade-an-element
    */
-  _upgradeAnElement(element) {
+  _upgradeAnElement(element, definition) {
     const currentState = element.__CE_state;
     if (currentState !== undefined) return;
-
-    // Prevent elements created in documents without a browsing context from
-    // upgrading.
-    //
-    // https://html.spec.whatwg.org/multipage/custom-elements.html#look-up-a-custom-element-definition
-    //   "If document does not have a browsing context, return null."
-    //
-    // https://html.spec.whatwg.org/multipage/window-object.html#dom-document-defaultview
-    //   "The defaultView IDL attribute of the Document interface, on getting,
-    //   must return this Document's browsing context's WindowProxy object, if
-    //   this Document has an associated browsing context, or null otherwise."
-    const ownerDocument = element.ownerDocument;
-    if (
-      !ownerDocument.defaultView &&
-      !(ownerDocument.__CE_isImportDocument && ownerDocument.__CE_hasRegistry)
-    ) return;
-
-    const definition = this._localNameToDefinition.get(element.localName);
-    if (!definition) return;
 
     definition.constructionStack.push(element);
 
@@ -437,6 +393,39 @@ export default class CustomElementInternals {
   }
 
   /**
+   * Runs HTML's 'look up a custom element definition'.
+   *
+   * @private
+   * @param {!Document} doc
+   * @param {string} namespace
+   * @param {string} localName
+   * @return {!CustomElementDefinition|undefined}
+   * @see https://html.spec.whatwg.org/multipage/custom-elements.html#look-up-a-custom-element-definition
+   */
+  _lookupACustomElementDefinition(doc, namespace, localName) {
+    // The namespace must be the HTML namespace.
+    if (namespace !== NS_HTML) return;
+
+    // The document must be associated with a registry.
+    const registry = doc.__CE_registry;
+    if (!registry) return;
+
+    // Prevent elements created in documents without a browsing context from
+    // upgrading.
+    //
+    // https://html.spec.whatwg.org/multipage/custom-elements.html#look-up-a-custom-element-definition
+    //   "If document does not have a browsing context, return null."
+    //
+    // https://html.spec.whatwg.org/multipage/window-object.html#dom-document-defaultview
+    //   "The defaultView IDL attribute of the Document interface, on getting,
+    //   must return this Document's browsing context's WindowProxy object, if
+    //   this Document has an associated browsing context, or null otherwise."
+    if (!doc.defaultView && !doc.__CE_isImportDocument) return;
+
+    return registry.internal_localNameToDefinition(localName);
+  }
+
+  /**
    * Runs the DOM's 'create an element'. If namespace is not null, then the
    * native `createElementNS` is used. Otherwise, `createElement` is used.
    *
@@ -450,10 +439,11 @@ export default class CustomElementInternals {
    * @see https://dom.spec.whatwg.org/#concept-create-element
    */
   createAnElement(doc, localName, namespace) {
-    // Only create custom elements if the document is associated with the
+    const registry = doc.__CE_registry;
+    // Only create custom elements if the document is associated with a
     // registry.
-    if (doc.__CE_hasRegistry && (namespace === null || namespace === NS_HTML)) {
-      const definition = this._localNameToDefinition.get(localName);
+    if (registry && (namespace === null || namespace === NS_HTML)) {
+      const definition = registry.internal_localNameToDefinition(localName);
       if (definition) {
         try {
           const result = new (definition.constructorFunction)();
