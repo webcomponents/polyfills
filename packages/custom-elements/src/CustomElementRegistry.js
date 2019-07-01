@@ -67,9 +67,9 @@ export default class CustomElementRegistry {
 
     /**
      * @private
-     * @type {!Array<string>}
+     * @type {!Set<string>}
      */
-    this._unflushedLocalNames = [];
+    this._unflushedLocalNames = new Set();
 
     /**
     * @private
@@ -148,7 +148,7 @@ export default class CustomElementRegistry {
 
     this._localNameToDefinition.set(localName, definition);
     this._constructorToDefinition.set(definition.constructorFunction, definition);
-    this._unflushedLocalNames.push(localName);
+    this._unflushedLocalNames.add(localName);
 
     // If we've already called the flush callback and it hasn't called back yet,
     // don't call it again.
@@ -190,8 +190,8 @@ export default class CustomElementRegistry {
      * @type {!Map<string, !Array<!HTMLElement>>}
      */
     const elementsWithPendingDefinitions = new Map();
-    for (let i = 0; i < unflushedLocalNames.length; i++) {
-      elementsWithPendingDefinitions.set(unflushedLocalNames[i], []);
+    for (const localName of unflushedLocalNames) {
+      elementsWithPendingDefinitions.set(localName, []);
     }
 
     this._internals.patchAndUpgradeTree(document, {
@@ -220,9 +220,7 @@ export default class CustomElementRegistry {
     }
 
     // Upgrade elements with 'pending' definitions in the order they were defined.
-    while (unflushedLocalNames.length > 0) {
-      const localName = unflushedLocalNames.shift();
-
+    for (const localName of unflushedLocalNames) {
       // Attempt to upgrade all applicable elements.
       const pendingUpgradableElements = elementsWithPendingDefinitions.get(localName);
       for (let i = 0; i < pendingUpgradableElements.length; i++) {
@@ -235,6 +233,8 @@ export default class CustomElementRegistry {
         deferred.resolve(undefined);
       }
     }
+
+    unflushedLocalNames.clear();
   }
 
   /**
@@ -271,7 +271,7 @@ export default class CustomElementRegistry {
     // Resolve immediately only if the given local name has a definition *and*
     // the full document walk to upgrade elements with that local name has
     // already happened.
-    if (definition && this._unflushedLocalNames.indexOf(localName) === -1) {
+    if (definition && this._unflushedLocalNames.has(localName)) {
       deferred.resolve(undefined);
     }
 
