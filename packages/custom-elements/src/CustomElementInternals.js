@@ -420,7 +420,7 @@ export default class CustomElementInternals {
     //   "The defaultView IDL attribute of the Document interface, on getting,
     //   must return this Document's browsing context's WindowProxy object, if
     //   this Document has an associated browsing context, or null otherwise."
-    if (!doc.defaultView && !(doc.__CE_isImportDocument && registry)) return;
+    if (!doc.defaultView && !doc.__CE_isImportDocument) return;
 
     return registry.internal_localNameToDefinition(localName);
   }
