@@ -187,11 +187,6 @@ export default class CustomElementRegistry {
      */
     const elementsWithStableDefinitions = [];
 
-    /**
-     * A map from `localName`s of definitions that were defined *after* the last
-     * flush to unupgraded elements matching that definition, in document order.
-     * @type {!Map<string, !Array<!HTMLElement>>}
-     */
     const elementsWithPendingDefinitions = this._elementsWithPendingDefinitions;
 
     this._internals.patchAndUpgradeTree(document, {
