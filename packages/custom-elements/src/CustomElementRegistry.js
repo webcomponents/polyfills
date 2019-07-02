@@ -190,9 +190,9 @@ export default class CustomElementRegistry {
      * @type {!Map<string, !Array<!HTMLElement>>}
      */
     const elementsWithPendingDefinitions = new Map();
-    for (const localName of unflushedLocalNames) {
+    unflushedLocalNames.forEach(localName => {
       elementsWithPendingDefinitions.set(localName, []);
-    }
+    });
 
     this._internals.patchAndUpgradeTree(document, {
       upgrade: element => {
@@ -220,7 +220,7 @@ export default class CustomElementRegistry {
     }
 
     // Upgrade elements with 'pending' definitions in the order they were defined.
-    for (const localName of unflushedLocalNames) {
+    unflushedLocalNames.forEach(localName => {
       // Attempt to upgrade all applicable elements.
       const pendingUpgradableElements = elementsWithPendingDefinitions.get(localName);
       for (let i = 0; i < pendingUpgradableElements.length; i++) {
@@ -232,7 +232,7 @@ export default class CustomElementRegistry {
       if (deferred) {
         deferred.resolve(undefined);
       }
-    }
+    });
 
     unflushedLocalNames.clear();
   }
