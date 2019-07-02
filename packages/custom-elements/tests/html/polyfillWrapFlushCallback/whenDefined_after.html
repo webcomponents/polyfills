@@ -54,11 +54,13 @@ test('`whenDefined` called after `define` does not resolve until its local name 
     done(err);
   });
 
-  assert(!element.upgraded);
-
-  flushFn();
-
-  assert(element.upgraded);
+  // Delay until the next task to give the promise the opportunity to
+  // potentially resolve incorrectly.
+  setTimeout(function() {
+    assert(!element.upgraded);
+    flushFn();
+    assert(element.upgraded);
+  }, 0);
 });
 </script>
 </body>

@@ -265,7 +265,7 @@ export default class CustomElementRegistry {
     // Resolve immediately only if the given local name has a definition *and*
     // the full document walk to upgrade elements with that local name has
     // already happened.
-    if (definition && this._elementsWithPendingDefinitions.has(localName)) {
+    if (definition && !this._elementsWithPendingDefinitions.has(localName)) {
       deferred.resolve(undefined);
     }
 
