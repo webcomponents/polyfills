@@ -293,7 +293,7 @@ export default class CustomElementInternals {
         this._upgradeAnElement(element, definition);
       }
     } catch (e) {
-      this._reportTheException(e);
+      this.reportTheException(e);
     }
   }
 
@@ -352,7 +352,7 @@ export default class CustomElementInternals {
       try {
         definition.connectedCallback.call(element);
       } catch (e) {
-        this._reportTheException(e);
+        this.reportTheException(e);
       }
     }
   }
@@ -366,7 +366,7 @@ export default class CustomElementInternals {
       try {
         definition.disconnectedCallback.call(element);
       } catch (e) {
-        this._reportTheException(e);
+        this.reportTheException(e);
       }
     }
   }
@@ -387,7 +387,7 @@ export default class CustomElementInternals {
       try {
         definition.attributeChangedCallback.call(element, name, oldValue, newValue, namespace);
       } catch (e) {
-        this._reportTheException(e);
+        this.reportTheException(e);
       }
     }
   }
@@ -497,7 +497,7 @@ export default class CustomElementInternals {
 
           return result;
         } catch (e) {
-          this._reportTheException(e);
+          this.reportTheException(e);
 
           // When construction fails, a new HTMLUnknownElement is produced.
           // However, there's no direct way to create one, so we create a
@@ -524,11 +524,10 @@ export default class CustomElementInternals {
   /**
    * Runs the DOM's 'report the exception' algorithm.
    *
-   * @private
    * @param {!Error} error
    * @see https://html.spec.whatwg.org/multipage/webappapis.html#report-the-exception
    */
-  _reportTheException(error) {
+  reportTheException(error) {
     const message = error.message;
     /** @type {string} */
     const filename =

@@ -37,7 +37,6 @@ test('`whenDefined` called before `define` does not resolve until its local name
   promise.then(function() {
     resolved = true;
     assert(element.upgraded);
-    done();
   }).catch(function(err) {
     done(err);
   });
@@ -54,11 +53,21 @@ test('`whenDefined` called before `define` does not resolve until its local name
     }
   });
 
-  assert(!element.upgraded);
+  // Delay until the next task to give the promise the opportunity to
+  // potentially resolve incorrectly.
+  setTimeout(function() {
+    assert(!element.upgraded);
+    flushFn();
+    assert(element.upgraded);
 
-  flushFn();
-
-  assert(element.upgraded);
+    // The promise resolves in the set of microtasks after the task that ran
+    // the flush.
+    assert(!resolved);
+    setTimeout(function() {
+      assert(resolved);
+      done();
+    }, 0);
+  }, 0);
 });
 </script>
 </body>
