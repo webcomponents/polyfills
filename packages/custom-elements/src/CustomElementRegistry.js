@@ -99,17 +99,7 @@ export default class CustomElementRegistry {
       throw new TypeError('Custom element constructor getters must be functions.');
     }
 
-    if (!Utilities.isValidCustomElementName(localName)) {
-      throw new SyntaxError(`The element name '${localName}' is not valid.`);
-    }
-
-    if (this.internal_localNameToDefinition(localName)) {
-      throw new Error(`A custom element with name '${localName}' has already been defined.`);
-    }
-
-    if (this._elementDefinitionIsRunning) {
-      throw new Error('A custom element is already being defined.');
-    }
+    this.internal_assertCanDefineLocalName(localName);
 
     this._localNameToConstructorGetter.set(localName, constructorGetter);
     this._elementsWithPendingDefinitions.set(localName, []);
@@ -127,9 +117,11 @@ export default class CustomElementRegistry {
    * @param {function(new: HTMLElement)} constructor
    */
   define(localName, constructor) {
-    if (this.internal_localNameToDefinition(localName)) {
-      throw new Error(`A custom element with name '${localName}' has already been defined.`);
+    if (!(constructor instanceof Function)) {
+      throw new TypeError('Custom element constructors must be functions.');
     }
+
+    this.internal_assertCanDefineLocalName(localName);
 
     this.internal_reifyDefinition(localName, constructor);
     this._elementsWithPendingDefinitions.set(localName, []);
@@ -144,25 +136,27 @@ export default class CustomElementRegistry {
 
   /**
    * @param {string} localName
-   * @param {function(new: HTMLElement)} constructor
-   * @return {!CustomElementDefinition}
    */
-  internal_reifyDefinition(localName, constructor) {
-    if (!(constructor instanceof Function)) {
-      throw new TypeError('Custom element constructors must be functions.');
-    }
-
+  internal_assertCanDefineLocalName(localName) {
     if (!Utilities.isValidCustomElementName(localName)) {
       throw new SyntaxError(`The element name '${localName}' is not valid.`);
     }
 
-    if (this._localNameToDefinition.has(localName)) {
+    if (this.internal_localNameToDefinition(localName)) {
       throw new Error(`A custom element with name '${localName}' has already been defined.`);
     }
 
     if (this._elementDefinitionIsRunning) {
       throw new Error('A custom element is already being defined.');
     }
+  }
+
+  /**
+   * @param {string} localName
+   * @param {function(new: HTMLElement)} constructor
+   * @return {!CustomElementDefinition}
+   */
+  internal_reifyDefinition(localName, constructor) {
     this._elementDefinitionIsRunning = true;
 
     let connectedCallback;
