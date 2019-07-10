@@ -9,13 +9,6 @@
  * Code distributed by Google as part of the polymer project is also
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
-var require;
-var global;
-var ES6Promise;
-var process;
-var define;
-var module;
-var exports;
 
 var ShadyDOM;
 var WebComponents;
