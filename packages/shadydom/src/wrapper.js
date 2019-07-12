@@ -98,6 +98,7 @@ class Wrapper {
    * patch mode both to consistently use ShadyDOM.wrap(document)._activeElement.
    * @override
    * @return {!Node|undefined}
+   * @suppress {checkTypes} overridden interface property is non-null.
    */
   get _activeElement() {
     return this.activeElement;
