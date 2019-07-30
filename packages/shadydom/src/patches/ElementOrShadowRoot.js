@@ -15,6 +15,11 @@ import {clearNode} from './Node.js';
 /** @type {!Document} */
 const inertDoc = document.implementation.createHTMLDocument('inert');
 
+// Make sure that the domains between the inertDoc and the 'real' document object match in order
+if (inertDoc.domain !== document.domain) {
+  inertDoc.domain = document.domain;
+}
+
 export const ElementOrShadowRootPatches = utils.getOwnPropertyDescriptors({
 
   /** @this {Element} */
