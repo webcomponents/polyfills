@@ -15,11 +15,6 @@ import {clearNode} from './Node.js';
 /** @type {!Document} */
 const inertDoc = document.implementation.createHTMLDocument('inert');
 
-// Make sure that the domains between the inertDoc and the 'real' document object match in order
-if (inertDoc.domain !== document.domain) {
-  inertDoc.domain = document.domain;
-}
-
 export const ElementOrShadowRootPatches = utils.getOwnPropertyDescriptors({
 
   /** @this {Element} */
@@ -42,6 +37,11 @@ export const ElementOrShadowRootPatches = utils.getOwnPropertyDescriptors({
       this[utils.NATIVE_PREFIX + 'innerHTML'] = value;
     } else {
       clearNode(this);
+      // Make sure that the domain attributes of inertDoc and the 'real' document object
+      // are the same in order to avoid WrongDocumentError in IE11.
+      if (inertDoc.domain !== document.domain) {
+        inertDoc.domain = document.domain;
+      }
       const containerName = this.localName || 'div';
       let htmlContainer;
       if (!this.namespaceURI || this.namespaceURI === inertDoc.namespaceURI) {
