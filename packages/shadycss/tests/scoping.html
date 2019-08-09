@@ -506,6 +506,18 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   </style>
 </template>
 
+<template id="x-minimal-shadowroot">
+  <slot></slot>
+</template>
+<template id="x-use-prop">
+  <style>
+    :host {
+      display: inline-block;
+      border: var(--prop) solid black;
+    }
+  </style>
+</template>
+
 <script>
 (function() {
   function assertComputed(element, value, property, pseudo) {
@@ -1099,6 +1111,56 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       assertComputed(inner, '10px');
       document.body.removeChild(p);
     })
+
+    test('Shadow root hosts do not prevent styles from flowing into their ' +
+        'light DOM descendants.', function() {
+      makeElement('x-minimal-shadowroot');
+      makeElement('x-use-prop');
+
+      // Assembles this tree:
+      //
+      // <x-minimal-shadowroot> <!-- `root` -->
+      //   #shadow
+      //     <slot></slot> <!-- (unused) -->
+      //     <x-minimal-shadowroot> <!-- `middleShadowHost` -->
+      //       #shadow
+      //         <slot></slot>
+      //       #/shadow
+      //       <x-use-prop> <!-- `subject` -->
+      //         #shadow
+      //           <style> :host { /* Uses `--prop`... */ } </style>
+      //         #/shadow
+      //       </x-use-prop>
+      //     </x-minimal-shadowroot>
+      //   #/shadow
+      // </x-minimal-shadowroot>
+
+      const root = document.createElement('x-minimal-shadowroot');
+      document.body.appendChild(root);
+
+      const middleShadowHost = document.createElement('x-minimal-shadowroot');
+      root.shadowRoot.appendChild(middleShadowHost);
+
+      const subject = document.createElement('x-use-prop');
+      middleShadowHost.appendChild(subject);
+
+      // These flushes are necessary to assert that this traversal is correct.
+      // Without it, ShadyCSS will not gather properties from ancestor scopes
+      // until after the `ShadyCSS.styleSubtree`, which is being used here with
+      // the intent to act as if it were potentially called in a later task
+      // (i.e. after the automatic flush waiting on the microtask queue).
+
+      flush();
+
+      // Properties applied to `root` should flow down to `subject` whether or
+      // not `middleShadowHost` hosts a shadow root.
+
+      ShadyCSS.styleSubtree(root, {'--prop': '10px'});
+      flush();
+      assertComputed(subject, '10px');
+
+      document.body.removeChild(root);
+    });
 
   });
 
