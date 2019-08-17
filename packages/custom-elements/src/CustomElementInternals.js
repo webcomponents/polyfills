@@ -287,8 +287,7 @@ export default class CustomElementInternals {
   upgradeReaction(element) {
     try {
       const definition = this._lookupACustomElementDefinition(
-          /** @type {!Document} */ (element.ownerDocument),
-          element.namespaceURI, element.localName);
+          /** @type {!Document} */ (element.ownerDocument), element.localName);
       if (definition) {
         this._upgradeAnElement(element, definition);
       }
@@ -393,19 +392,16 @@ export default class CustomElementInternals {
   }
 
   /**
-   * Runs HTML's 'look up a custom element definition'.
+   * Runs HTML's 'look up a custom element definition', excluding the namespace
+   * check.
    *
    * @private
    * @param {!Document} doc
-   * @param {string} namespace
    * @param {string} localName
    * @return {!CustomElementDefinition|undefined}
    * @see https://html.spec.whatwg.org/multipage/custom-elements.html#look-up-a-custom-element-definition
    */
-  _lookupACustomElementDefinition(doc, namespace, localName) {
-    // The namespace must be the HTML namespace.
-    if (namespace !== NS_HTML) return;
-
+  _lookupACustomElementDefinition(doc, localName) {
     // The document must be associated with a registry.
     const registry = doc.__CE_registry;
     if (!registry) return;
