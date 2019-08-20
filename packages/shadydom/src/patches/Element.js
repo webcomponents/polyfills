@@ -77,15 +77,6 @@ export const ElementPatches = utils.getOwnPropertyDescriptors({
     this[utils.SHADY_PREFIX + 'setAttribute']('slot', value);
   },
 
-  // Note: Can be patched on element prototype on all browsers.
-  // Must be patched on instance on browsers that support native Shadow DOM
-  // but do not have builtin accessors (old Chrome).
-  /** @this {Element} */
-  get shadowRoot() {
-    const nodeData = shadyDataForNode(this);
-    return nodeData && nodeData.publicRoot || null;
-  },
-
   /** @this {Element} */
   get className() {
     return this.getAttribute('class') || '';
@@ -127,14 +118,33 @@ export const ElementPatches = utils.getOwnPropertyDescriptors({
       // ensure that "class" attribute is fully removed if ShadyCSS does not keep scoping
       this[utils.NATIVE_PREFIX + 'removeAttribute'](attr);
     }
-  },
+  }
 
+});
+
+export const ElementShadowPatches = utils.getOwnPropertyDescriptors({
   /**
    * @this {Element}
    * @param {!{mode: string}} options
    */
   attachShadow(options) {
-    return attachShadow(this, options);
-  }
+    const root = attachShadow(this, options);
+    // TODO(sorvell): Workaround for CE not seeing shadowRoot in augmented
+    // noPatch mode. CE's attachShadow patch is overwritten by this patch
+    // and cannot set its own special tracking for shadowRoot. It does this
+    // to be able to see closed shadowRoots.
+    this['__CE_shadowRoot'] = root;
+    return root;
+  },
 
+  // Note: Can be patched on element prototype on all browsers.
+  // Must be patched on instance on browsers that support native Shadow DOM
+  // but do not have builtin accessors (old Chrome).
+  /** @this {Element} */
+  get shadowRoot() {
+    const nodeData = shadyDataForNode(this);
+    return nodeData && nodeData.publicRoot || null;
+  },
 });
+
+Object.assign(ElementPatches, ElementShadowPatches);

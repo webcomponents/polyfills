@@ -26,7 +26,7 @@ import {patchInsideElementAccessors, patchOutsideElementAccessors} from './patch
 import {patchEvents, patchClick, composedPath} from './patch-events.js';
 import {ShadyRoot} from './attach-shadow.js';
 import {wrap, Wrapper} from './wrapper.js';
-import {addShadyPrefixedProperties, applyPatches} from './patch-prototypes.js';
+import {addShadyPrefixedProperties, applyPatches, patchShadowOnElement} from './patch-prototypes.js';
 
 
 if (utils.settings.inUse) {
@@ -121,6 +121,9 @@ if (utils.settings.inUse) {
     applyPatches();
     // Patch click event behavior only if we're patching
     patchClick()
+  } else if (utils.settings.patchOnDemand) {
+    // in noPatch, do patch `attachShadow` and `shadowRoot`
+    patchShadowOnElement();
   }
 
   // For simplicity, patch events unconditionally.

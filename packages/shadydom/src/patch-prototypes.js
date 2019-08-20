@@ -13,7 +13,7 @@ import {EventTargetPatches} from './patches/EventTarget.js';
 import {NodePatches} from './patches/Node.js';
 import {SlotablePatches} from './patches/Slotable.js';
 import {ParentNodePatches, ParentNodeDocumentOrFragmentPatches} from './patches/ParentNode.js';
-import {ElementPatches} from './patches/Element.js';
+import {ElementPatches, ElementShadowPatches} from './patches/Element.js';
 import {ElementOrShadowRootPatches} from './patches/ElementOrShadowRoot.js';
 import {HTMLElementPatches} from './patches/HTMLElement.js';
 import {SlotPatches} from './patches/Slot.js';
@@ -71,14 +71,62 @@ const getPatchPrototype = (name) => window[name] && window[name].prototype;
 // CustomElements polyfill *only* cares about these accessors.
 const disallowedNativePatches = utils.settings.hasDescriptors ? null : ['innerHTML', 'textContent'];
 
+/**
+ * Patch a group of accessors on an object only if it exists or if the `force`
+ * argument is true.
+ * @param {!Object} proto
+ * @param {!Array<Object>} list
+ * @param {string=} prefix
+ * @param {Array=} disallowed
+ */
+function applyPatchList(proto, list, prefix, disallowed) {
+  list.forEach(patch => proto && patch &&
+    utils.patchProperties(proto, patch, prefix, disallowed));
+}
+
 /** @param {string=} prefix */
 export const applyPatches = (prefix) => {
   const disallowed = prefix ? null : disallowedNativePatches;
   for (let p in patchMap) {
     const proto = getPatchPrototype(p);
-    patchMap[p].forEach(patch => proto && patch &&
-        utils.patchProperties(proto, patch, prefix, disallowed));
+    applyPatchList(proto, patchMap[p], prefix, disallowed);
   }
+}
+
+const patchedProtos = new Map();
+const TextPatchedProto = Object.create(Text.prototype);
+TextPatchedProto[utils.SHADY_PREFIX + 'patchedProto'] = true;
+applyPatchList(TextPatchedProto, patchMap.EventTarget);
+applyPatchList(TextPatchedProto, patchMap.Node);
+applyPatchList(TextPatchedProto, patchMap.Text);
+patchedProtos.set(Text.prototype, TextPatchedProto);
+
+const patchElementProto = (proto) => {
+  applyPatchList(proto, patchMap.EventTarget);
+  applyPatchList(proto, patchMap.Node);
+  applyPatchList(proto, patchMap.Element);
+  applyPatchList(proto, patchMap.HTMLElement);
+  applyPatchList(proto, patchMap.HTMLSlotElement);
+}
+
+export const patchNodeProto = (node) => {
+  if (!utils.settings.patchOnDemand || node[utils.SHADY_PREFIX + 'patchedProto'] ||
+    utils.isShadyRoot(node)) {
+    return;
+  }
+  const nativeProto = Object.getPrototypeOf(node);
+  let proto = patchedProtos.get(nativeProto);
+  if (!proto) {
+    proto = Object.create(nativeProto);
+    proto[utils.SHADY_PREFIX + 'patchedProto'] = true;
+    patchElementProto(proto);
+    patchedProtos.set(nativeProto, proto);
+  }
+  Object.setPrototypeOf(node, proto);
+}
+
+export const patchShadowOnElement = () => {
+  utils.patchProperties(Element.prototype, ElementShadowPatches);
 }
 
 export const addShadyPrefixedProperties = () => {
