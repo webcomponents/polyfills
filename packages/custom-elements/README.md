@@ -28,7 +28,7 @@ import '@webcomponents/custom-elements'
 ```
 
 #### Via the webcomponents polyfill
-Alternatively, you can use this polyfill via the [webcomponentjs polyfills](https://github.com/WebComponents/webcomponentsjs).
+Alternatively, you can use this polyfill via the [webcomponentjs polyfills](https://github.com/webcomponents/webcomponentsjs).
 
 ## Developing
 
