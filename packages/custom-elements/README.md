@@ -229,6 +229,24 @@ customElements.define('c-e', class extends HTMLElement {});
 // The document is walked to attempt upgrades.
 ```
 
+### `customElements.polyfillDefineLazy`
+
+Allows defining an element with a constructor getter function that returns an
+element constructor. It provides a small optimization over using
+`customElements.define` when producing the element class is expensive. The
+constructor getter function is called only the first time the polyfill tries
+to upgrade the given element.
+
+```javascript
+customElements.polyfillDefineLazy('c-e', () => {
+  // do some expensive work then...
+  return class extends HTMLElement {};
+});
+```
+
+Note, this API is not included in the custom elements spec and therefore
+requires use of the polyfill to function correctly.
+
 ### Settings
 
 The polyfill provides a few settings to improve performance by tweaking behavior.
