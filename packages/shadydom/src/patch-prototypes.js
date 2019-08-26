@@ -93,32 +93,34 @@ export const applyPatches = (prefix) => {
   }
 }
 
+const PROTO_IS_PATCHED = utils.SHADY_PREFIX + 'patchedProto';
+
 const patchedProtos = new Map();
 const TextPatchedProto = Object.create(Text.prototype);
-TextPatchedProto[utils.SHADY_PREFIX + 'patchedProto'] = true;
+TextPatchedProto[PROTO_IS_PATCHED] = true;
 applyPatchList(TextPatchedProto, patchMap.EventTarget);
 applyPatchList(TextPatchedProto, patchMap.Node);
 applyPatchList(TextPatchedProto, patchMap.Text);
 patchedProtos.set(Text.prototype, TextPatchedProto);
 
-const patchElementProto = (proto) => {
+export const patchElementProto = (proto) => {
+  proto[PROTO_IS_PATCHED] = true;
   applyPatchList(proto, patchMap.EventTarget);
   applyPatchList(proto, patchMap.Node);
   applyPatchList(proto, patchMap.Element);
   applyPatchList(proto, patchMap.HTMLElement);
   applyPatchList(proto, patchMap.HTMLSlotElement);
+  return proto;
 }
 
 export const patchNodeProto = (node) => {
-  if (!utils.settings.patchOnDemand || node[utils.SHADY_PREFIX + 'patchedProto'] ||
-    utils.isShadyRoot(node)) {
+  if (node[PROTO_IS_PATCHED] || utils.isShadyRoot(node)) {
     return;
   }
   const nativeProto = Object.getPrototypeOf(node);
   let proto = patchedProtos.get(nativeProto);
   if (!proto) {
     proto = Object.create(nativeProto);
-    proto[utils.SHADY_PREFIX + 'patchedProto'] = true;
     patchElementProto(proto);
     patchedProtos.set(nativeProto, proto);
   }

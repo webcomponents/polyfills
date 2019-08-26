@@ -26,7 +26,7 @@ import {patchInsideElementAccessors, patchOutsideElementAccessors} from './patch
 import {patchEvents, patchClick, composedPath} from './patch-events.js';
 import {ShadyRoot} from './attach-shadow.js';
 import {wrap, Wrapper} from './wrapper.js';
-import {addShadyPrefixedProperties, applyPatches, patchShadowOnElement} from './patch-prototypes.js';
+import {addShadyPrefixedProperties, applyPatches, patchShadowOnElement, patchElementProto} from './patch-prototypes.js';
 
 
 if (utils.settings.inUse) {
@@ -83,8 +83,10 @@ if (utils.settings.inUse) {
     // This setting provides a small performance boost, but requires all DOM API
     // access that requires Shadow DOM behavior to be proxied via `ShadyDOM.wrap`.
     'noPatch': utils.settings.noPatch,
+    'patchOnDemand': utils.settings.patchOnDemand,
     'nativeMethods': nativeMethods,
-    'nativeTree': nativeTree
+    'nativeTree': nativeTree,
+    'patchElementProto': patchElementProto
   };
 
   window['ShadyDOM'] = ShadyDOM;
