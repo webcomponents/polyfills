@@ -10,6 +10,7 @@
 
 import Native from './Native.js';
 import CustomElementInternals from '../CustomElementInternals.js';
+import CustomElementRegistry from '../CustomElementRegistry.js';
 import CEState from '../CustomElementState.js';
 import AlreadyConstructedMarker from '../AlreadyConstructedMarker.js';
 
@@ -28,7 +29,8 @@ export default function(internals) {
       const constructor = /** @type {!Function} */ (this.constructor);
 
       // Always look up the definition from the global registry.
-      const registry = document.__CE_registry;
+      const registry = /** @type {!CustomElementRegistry|undefined} */
+          (document.__CE_registry);
       const definition = registry.internal_constructorToDefinition(constructor);
       if (!definition) {
         throw new Error('Failed to construct a custom element: ' +

@@ -22,7 +22,7 @@
     window.customElements === undefined ||
     // The webcomponentsjs custom elements polyfill doesn't require
     // ES2015-compatible construction (`super()` or `Reflect.construct`).
-    window.customElements.polyfillWrapFlushCallback
+    window.customElements['polyfillWrapFlushCallback'] !== undefined
   ) {
     return;
   }

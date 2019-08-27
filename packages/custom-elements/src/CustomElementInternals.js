@@ -10,12 +10,12 @@
 
 import Native from './Patch/Native.js';
 import * as Utilities from './Utilities.js';
+import CustomElementRegistry from './CustomElementRegistry.js';
 import CEState from './CustomElementState.js';
 
 const NS_HTML = 'http://www.w3.org/1999/xhtml';
 
 export default class CustomElementInternals {
-
   /**
    * @param {{
    *   shadyDomFastWalk: boolean,
@@ -403,7 +403,8 @@ export default class CustomElementInternals {
    */
   _lookupACustomElementDefinition(doc, localName) {
     // The document must be associated with a registry.
-    const registry = doc.__CE_registry;
+    const registry =
+        /** @type {!CustomElementRegistry|undefined} */ (doc.__CE_registry);
     if (!registry) return;
 
     // Prevent elements created in documents without a browsing context from
@@ -435,7 +436,8 @@ export default class CustomElementInternals {
    * @see https://dom.spec.whatwg.org/#concept-create-element
    */
   createAnElement(doc, localName, namespace) {
-    const registry = doc.__CE_registry;
+    const registry =
+        /** @type {!CustomElementRegistry|undefined} */ (doc.__CE_registry);
     // Only create custom elements if the document is associated with a
     // registry.
     if (registry && (namespace === null || namespace === NS_HTML)) {
@@ -535,16 +537,18 @@ export default class CustomElementInternals {
     const colno =
         /* Safari */ error.column || /* Firefox */ error.columnNumber || 0;
 
+    /** @type {!ErrorEvent|undefined} */
     let event = undefined;
     if (ErrorEvent.prototype.initErrorEvent === undefined) {
       event = new ErrorEvent('error',
           {cancelable: true, message, filename, lineno, colno, error});
     } else {
-      event = document.createEvent('ErrorEvent');
+      event = /** @type {!ErrorEvent} */ (document.createEvent('ErrorEvent'));
       // initErrorEvent(type, bubbles, cancelable, message, filename, line)
       event.initErrorEvent('error', false, true, message, filename, lineno);
       // Hack for IE, where ErrorEvent#preventDefault does not set
       // #defaultPrevented to true.
+      /** @this {!ErrorEvent} */
       event.preventDefault = function() {
         Object.defineProperty(this, 'defaultPrevented', {
           configurable: true,

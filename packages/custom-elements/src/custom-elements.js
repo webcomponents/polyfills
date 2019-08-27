@@ -17,6 +17,13 @@ import PatchDocumentFragment from './Patch/DocumentFragment.js';
 import PatchNode from './Patch/Node.js';
 import PatchElement from './Patch/Element.js';
 
+/**
+ * @type {!{
+ *   forcePolyfill: (boolean|undefined),
+ *   noDocumentConstructionObserver: (boolean|undefined),
+ *   shadyDomFastWalk: (boolean|undefined),
+ * }|undefined}
+ */
 const priorCustomElements = window['customElements'];
 
 function installPolyfill() {
@@ -35,7 +42,6 @@ function installPolyfill() {
   PatchNode(internals);
   PatchElement(internals);
 
-  /** @type {!CustomElementRegistry} */
   const customElements = new CustomElementRegistry(internals);
 
   // The main document is associated with the global registry.

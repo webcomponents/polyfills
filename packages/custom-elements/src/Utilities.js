@@ -117,7 +117,7 @@ export function walkDeepDescendantElements(root, callback, visitedImports) {
       if (localName === 'link' && element.getAttribute('rel') === 'import') {
         // If this import (polyfilled or not) has it's root node available,
         // walk it.
-        const importNode = /** @type {!Node} */ (element.import);
+        const importNode = /** @type {!HTMLLinkElement} */ (element).import;
         if (visitedImports === undefined) {
           visitedImports = new Set();
         }

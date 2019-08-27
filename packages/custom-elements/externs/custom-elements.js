@@ -9,18 +9,6 @@
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
-/** @type {boolean|undefined} */
-CustomElementRegistry.prototype.forcePolyfill;
-
-/** @type {boolean|undefined} */
-CustomElementRegistry.prototype.noDocumentConstructionObserver;
-
-/** @type {boolean|undefined} */
-CustomElementRegistry.prototype.shadyDomFastWalk;
-
-/** @type {!Function|undefined} */
-CustomElementRegistry.prototype.polyfillWrapFlushCallback;
-
 class AlreadyConstructedMarkerType {}
 
 /**
@@ -75,6 +63,18 @@ Element.prototype.__CE_shadowRoot;
 // Note, the closure type is incorrect here.
 /** @type {!HTMLCollection} */
 DocumentFragment.prototype.children;
+
+/** @type {string|undefined} */
+Error.prototype.sourceURL;
+
+/** @type {number|undefined} */
+Error.prototype.line;
+
+/** @type {number|undefined} */
+Error.prototype.column;
+
+/** @type {number|undefined} */
+Error.prototype.columnNumber;
 
 /**
  * Used by IE to configure ErrorEvents.
