@@ -9,6 +9,18 @@
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
+/** @type {boolean|undefined} */
+CustomElementRegistry.prototype.forcePolyfill;
+
+/** @type {boolean|undefined} */
+CustomElementRegistry.prototype.noDocumentConstructionObserver;
+
+/** @type {boolean|undefined} */
+CustomElementRegistry.prototype.shadyDomFastWalk;
+
+/** @type {!Function|undefined} */
+CustomElementRegistry.prototype.polyfillWrapFlushCallback;
+
 class AlreadyConstructedMarkerType {}
 
 /**

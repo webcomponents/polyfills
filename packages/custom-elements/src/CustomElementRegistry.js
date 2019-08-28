@@ -339,6 +339,7 @@ export default class CustomElementRegistry {
   }
 
   /**
+   * @override
    * @param {function(function())} outer
    */
   polyfillWrapFlushCallback(outer) {
