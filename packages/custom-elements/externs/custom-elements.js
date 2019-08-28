@@ -76,16 +76,28 @@ Element.prototype.__CE_shadowRoot;
 /** @type {!HTMLCollection} */
 DocumentFragment.prototype.children;
 
-/** @type {string|undefined} */
+/**
+ * Non-standard Safari property.
+ * @type {string|undefined}
+ */
 Error.prototype.sourceURL;
 
-/** @type {number|undefined} */
+/**
+ * Non-standard Safari property.
+ * @type {number|undefined}
+ */
 Error.prototype.line;
 
-/** @type {number|undefined} */
+/**
+ * Non-standard Safari property.
+ * @type {number|undefined}
+ */
 Error.prototype.column;
 
-/** @type {number|undefined} */
+/**
+ * Non-standard Firefox property.
+ * @type {number|undefined}
+ */
 Error.prototype.columnNumber;
 
 /**
