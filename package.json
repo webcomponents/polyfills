@@ -19,7 +19,7 @@
     "del": "^3.0.0",
     "eslint": "^5.9.0",
     "eslint-plugin-html": "^5.0.3",
-    "google-closure-compiler": "^20190618.0.0",
+    "google-closure-compiler": "^20190819.0.0",
     "gulp": "^4.0.0",
     "gulp-babel": "^7.0.1",
     "gulp-rename": "^1.4.0",

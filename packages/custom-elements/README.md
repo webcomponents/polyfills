@@ -68,7 +68,7 @@ and [HTML](https://html.spec.whatwg.org/) specifications are marked with the
     spec-compliant implementation of custom elements!*
 - The [requirements for custom element constructors](https://html.spec.whatwg.org/multipage/scripting.html#custom-element-conformance)
   are not enforced.
-  - These requirements are not generally enforcable in user script because of
+  - These requirements are not generally enforceable in user script because of
     the ability to use the `new` operator on a custom element constructor. This
     means there is no way to know when a call to a constructor has begun or
     finished.
@@ -76,7 +76,7 @@ and [HTML](https://html.spec.whatwg.org/) specifications are marked with the
   `DocumentFragment`s as arguments.
 - Your custom element constructor's prototype *must* have a property named
   `constructor` which is that constructor.
-  - By default, for every constructable function `F`, `F.prototype.constructor === F`.
+  - By default, for every constructible function `F`, `F.prototype.constructor === F`.
     If you replace the prototype of your constructor `F`, you must make sure
     that `F.prototype.constructor === F` remains true. Otherwise, the polyfill
     will not be able to create or upgrade your custom elements.
@@ -120,7 +120,7 @@ Note: Using `polyfillWrapFlushCallback` disconnects this `MutationObserver`.
 ### `customElements.polyfillWrapFlushCallback`
 
 tl;dr: The polyfill gets slower as the size of your page and number of custom
-element definitons increases. You can use `polyfillWrapFlushCallback` to prevent
+element definitions increases. You can use `polyfillWrapFlushCallback` to prevent
 redundant work.
 
 To avoid a potential memory leak, the polyfill does not maintain a list of upgrade
@@ -231,7 +231,7 @@ requires use of the polyfill to function correctly.
 ### Settings
 
 The polyfill provides a few settings to improve performance by tweaking behavior.
-These settings typically have correctness trade offs (noted below) and should be
+These settings typically have correctness trade-offs (noted below) and should be
 used with caution.
 
 * `customElements.noDocumentConstructionObserver`: Set this flag to true to
