@@ -21,7 +21,7 @@ settings.hasDescriptors = Boolean(desc && desc.configurable && desc.get);
 settings.inUse = settings['force'] || !settings.hasNativeShadowDOM;
 settings.noPatch = /** @type {string|boolean} */(settings['noPatch'] || false);
 settings.preferPerformance = settings['preferPerformance'];
-settings.patchOnDemand = (settings.noPatch === 'on-demand');
+settings.patchOnDemand = (settings.noPatch === 'on-demand') && settings.hasDescriptors;
 /* eslint-enable */
 
 const IS_IE = navigator.userAgent.match('Trident');
