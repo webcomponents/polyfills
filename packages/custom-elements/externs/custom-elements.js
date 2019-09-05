@@ -77,6 +77,30 @@ Element.prototype.__CE_shadowRoot;
 DocumentFragment.prototype.children;
 
 /**
+ * Non-standard Safari property.
+ * @type {string|undefined}
+ */
+Error.prototype.sourceURL;
+
+/**
+ * Non-standard Safari property.
+ * @type {number|undefined}
+ */
+Error.prototype.line;
+
+/**
+ * Non-standard Safari property.
+ * @type {number|undefined}
+ */
+Error.prototype.column;
+
+/**
+ * Non-standard Firefox property.
+ * @type {number|undefined}
+ */
+Error.prototype.columnNumber;
+
+/**
  * Used by IE to configure ErrorEvents.
  * @see https://docs.microsoft.com/en-us/openspecs/ie_standards/ms-html5e/30b18240-7be6-4379-9e0a-262c99ed9529
  * @type {undefined|!function(string, boolean, boolean, string, string, number)}

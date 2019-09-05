@@ -113,6 +113,7 @@ export default class CustomElementRegistry {
   }
 
   /**
+   * @override
    * @param {string} localName
    * @param {function(new: HTMLElement)} constructor
    */
@@ -211,6 +212,7 @@ export default class CustomElementRegistry {
   }
 
   /**
+   * @override
    * @param {!Node} node
    */
   upgrade(node) {
@@ -286,6 +288,7 @@ export default class CustomElementRegistry {
   }
 
   /**
+   * @override
    * @param {string} localName
    * @return {function(new: HTMLElement)|undefined}
    */
@@ -299,6 +302,7 @@ export default class CustomElementRegistry {
   }
 
   /**
+   * @override
    * @param {string} localName
    * @return {!Promise<undefined>}
    */
@@ -335,6 +339,7 @@ export default class CustomElementRegistry {
   }
 
   /**
+   * @override
    * @param {function(function())} outer
    */
   polyfillWrapFlushCallback(outer) {
