@@ -19,10 +19,6 @@ const InsideAcccessors = 2;
 const patchOnDemand = utils.settings.patchOnDemand;
 const hasDescriptors = utils.settings.hasDescriptors;
 
-/**
- *
- * @param {AccessorType} type
- */
 function patchNode(node, type) {
   if (patchOnDemand) {
     patchNodeProto(node);
