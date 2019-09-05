@@ -10,12 +10,12 @@
 
 import Native from './Patch/Native.js';
 import * as Utilities from './Utilities.js';
+import CustomElementRegistry from './CustomElementRegistry.js';
 import CEState from './CustomElementState.js';
 
 const NS_HTML = 'http://www.w3.org/1999/xhtml';
 
 export default class CustomElementInternals {
-
   /**
    * @param {{
    *   shadyDomFastWalk: boolean,
@@ -23,12 +23,6 @@ export default class CustomElementInternals {
    * }} options
    */
   constructor(options) {
-    /** @type {!Map<string, !CustomElementDefinition>} */
-    this._localNameToDefinition = new Map();
-
-    /** @type {!Map<!Function, !CustomElementDefinition>} */
-    this._constructorToDefinition = new Map();
-
     /** @type {!Array<!function(!Node)>} */
     this._patchesNode = [];
 
@@ -43,31 +37,6 @@ export default class CustomElementInternals {
 
     /** @const {boolean} */
     this.useDocumentConstructionObserver = !options.noDocumentConstructionObserver;
-  }
-
-  /**
-   * @param {string} localName
-   * @param {!CustomElementDefinition} definition
-   */
-  setDefinition(localName, definition) {
-    this._localNameToDefinition.set(localName, definition);
-    this._constructorToDefinition.set(definition.constructorFunction, definition);
-  }
-
-  /**
-   * @param {string} localName
-   * @return {!CustomElementDefinition|undefined}
-   */
-  localNameToDefinition(localName) {
-    return this._localNameToDefinition.get(localName);
-  }
-
-  /**
-   * @param {!Function} constructor
-   * @return {!CustomElementDefinition|undefined}
-   */
-  constructorToDefinition(constructor) {
-    return this._constructorToDefinition.get(constructor);
   }
 
   /**
@@ -269,8 +238,8 @@ export default class CustomElementInternals {
 
         if (importNode instanceof Node) {
           importNode.__CE_isImportDocument = true;
-          // Connected links are associated with the registry.
-          importNode.__CE_hasRegistry = true;
+          // Connected links are associated with the global registry.
+          importNode.__CE_registry = document.__CE_registry;
         }
 
         if (importNode && importNode.readyState === 'complete') {
@@ -289,8 +258,12 @@ export default class CustomElementInternals {
             // be added. Then, remove *this* link's import node so that we can
             // walk that import again, even if it was partially walked later
             // during the same `patchAndUpgradeTree` call.
-            const clonedVisitedImports = new Set(visitedImports);
-            clonedVisitedImports.delete(importNode);
+            const clonedVisitedImports = new Set();
+            if (visitedImports) {
+              // IE11 does not support constructing a set using an iterable.
+              visitedImports.forEach(item => clonedVisitedImports.add(item));
+              clonedVisitedImports.delete(importNode);
+            }
             this.patchAndUpgradeTree(importNode, {visitedImports: clonedVisitedImports, upgrade});
           });
         }
@@ -313,39 +286,25 @@ export default class CustomElementInternals {
    */
   upgradeReaction(element) {
     try {
-      this._upgradeAnElement(element);
+      const definition = this._lookupACustomElementDefinition(
+          /** @type {!Document} */ (element.ownerDocument), element.localName);
+      if (definition) {
+        this._upgradeAnElement(element, definition);
+      }
     } catch (e) {
-      this._reportTheException(e);
+      this.reportTheException(e);
     }
   }
 
   /**
    * @private
    * @param {!HTMLElement} element
+   * @param {!CustomElementDefinition} definition
    * @see https://html.spec.whatwg.org/multipage/custom-elements.html#concept-upgrade-an-element
    */
-  _upgradeAnElement(element) {
+  _upgradeAnElement(element, definition) {
     const currentState = element.__CE_state;
     if (currentState !== undefined) return;
-
-    // Prevent elements created in documents without a browsing context from
-    // upgrading.
-    //
-    // https://html.spec.whatwg.org/multipage/custom-elements.html#look-up-a-custom-element-definition
-    //   "If document does not have a browsing context, return null."
-    //
-    // https://html.spec.whatwg.org/multipage/window-object.html#dom-document-defaultview
-    //   "The defaultView IDL attribute of the Document interface, on getting,
-    //   must return this Document's browsing context's WindowProxy object, if
-    //   this Document has an associated browsing context, or null otherwise."
-    const ownerDocument = element.ownerDocument;
-    if (
-      !ownerDocument.defaultView &&
-      !(ownerDocument.__CE_isImportDocument && ownerDocument.__CE_hasRegistry)
-    ) return;
-
-    const definition = this._localNameToDefinition.get(element.localName);
-    if (!definition) return;
 
     definition.constructionStack.push(element);
 
@@ -392,7 +351,7 @@ export default class CustomElementInternals {
       try {
         definition.connectedCallback.call(element);
       } catch (e) {
-        this._reportTheException(e);
+        this.reportTheException(e);
       }
     }
   }
@@ -406,7 +365,7 @@ export default class CustomElementInternals {
       try {
         definition.disconnectedCallback.call(element);
       } catch (e) {
-        this._reportTheException(e);
+        this.reportTheException(e);
       }
     }
   }
@@ -427,9 +386,40 @@ export default class CustomElementInternals {
       try {
         definition.attributeChangedCallback.call(element, name, oldValue, newValue, namespace);
       } catch (e) {
-        this._reportTheException(e);
+        this.reportTheException(e);
       }
     }
+  }
+
+  /**
+   * Runs HTML's 'look up a custom element definition', excluding the namespace
+   * check.
+   *
+   * @private
+   * @param {!Document} doc
+   * @param {string} localName
+   * @return {!CustomElementDefinition|undefined}
+   * @see https://html.spec.whatwg.org/multipage/custom-elements.html#look-up-a-custom-element-definition
+   */
+  _lookupACustomElementDefinition(doc, localName) {
+    // The document must be associated with a registry.
+    const registry =
+        /** @type {!CustomElementRegistry|undefined} */ (doc.__CE_registry);
+    if (!registry) return;
+
+    // Prevent elements created in documents without a browsing context from
+    // upgrading.
+    //
+    // https://html.spec.whatwg.org/multipage/custom-elements.html#look-up-a-custom-element-definition
+    //   "If document does not have a browsing context, return null."
+    //
+    // https://html.spec.whatwg.org/multipage/window-object.html#dom-document-defaultview
+    //   "The defaultView IDL attribute of the Document interface, on getting,
+    //   must return this Document's browsing context's WindowProxy object, if
+    //   this Document has an associated browsing context, or null otherwise."
+    if (!doc.defaultView && !doc.__CE_isImportDocument) return;
+
+    return registry.internal_localNameToDefinition(localName);
   }
 
   /**
@@ -446,10 +436,12 @@ export default class CustomElementInternals {
    * @see https://dom.spec.whatwg.org/#concept-create-element
    */
   createAnElement(doc, localName, namespace) {
-    // Only create custom elements if the document is associated with the
+    const registry =
+        /** @type {!CustomElementRegistry|undefined} */ (doc.__CE_registry);
+    // Only create custom elements if the document is associated with a
     // registry.
-    if (doc.__CE_hasRegistry && (namespace === null || namespace === NS_HTML)) {
-      const definition = this._localNameToDefinition.get(localName);
+    if (registry && (namespace === null || namespace === NS_HTML)) {
+      const definition = registry.internal_localNameToDefinition(localName);
       if (definition) {
         try {
           const result = new (definition.constructorFunction)();
@@ -503,7 +495,7 @@ export default class CustomElementInternals {
 
           return result;
         } catch (e) {
-          this._reportTheException(e);
+          this.reportTheException(e);
 
           // When construction fails, a new HTMLUnknownElement is produced.
           // However, there's no direct way to create one, so we create a
@@ -530,11 +522,10 @@ export default class CustomElementInternals {
   /**
    * Runs the DOM's 'report the exception' algorithm.
    *
-   * @private
    * @param {!Error} error
    * @see https://html.spec.whatwg.org/multipage/webappapis.html#report-the-exception
    */
-  _reportTheException(error) {
+  reportTheException(error) {
     const message = error.message;
     /** @type {string} */
     const filename =
@@ -546,16 +537,18 @@ export default class CustomElementInternals {
     const colno =
         /* Safari */ error.column || /* Firefox */ error.columnNumber || 0;
 
+    /** @type {!ErrorEvent|undefined} */
     let event = undefined;
     if (ErrorEvent.prototype.initErrorEvent === undefined) {
       event = new ErrorEvent('error',
           {cancelable: true, message, filename, lineno, colno, error});
     } else {
-      event = document.createEvent('ErrorEvent');
+      event = /** @type {!ErrorEvent} */ (document.createEvent('ErrorEvent'));
       // initErrorEvent(type, bubbles, cancelable, message, filename, line)
       event.initErrorEvent('error', false, true, message, filename, lineno);
       // Hack for IE, where ErrorEvent#preventDefault does not set
       // #defaultPrevented to true.
+      /** @this {!ErrorEvent} */
       event.preventDefault = function() {
         Object.defineProperty(this, 'defaultPrevented', {
           configurable: true,

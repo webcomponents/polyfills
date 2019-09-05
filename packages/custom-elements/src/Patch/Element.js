@@ -73,7 +73,7 @@ export default function(internals) {
 
         // Only create custom elements if this element's owner document is
         // associated with the registry.
-        if (!this.ownerDocument.__CE_hasRegistry) {
+        if (!this.ownerDocument.__CE_registry) {
           internals.patchTree(this);
         } else {
           internals.patchAndUpgradeTree(this);

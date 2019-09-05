@@ -18,6 +18,9 @@ CustomElementRegistry.prototype.noDocumentConstructionObserver;
 /** @type {boolean|undefined} */
 CustomElementRegistry.prototype.shadyDomFastWalk;
 
+/** @type {!Function|undefined} */
+CustomElementRegistry.prototype.polyfillWrapFlushCallback;
+
 class AlreadyConstructedMarkerType {}
 
 /**
@@ -41,8 +44,8 @@ let CustomElementDefinition;
 // Used for both Documents and Nodes which represent documents in the HTML
 // Imports polyfill.
 
-/** @type {boolean|undefined} */
-Node.prototype.__CE_hasRegistry;
+/** @type {!CustomElementRegistry|undefined} */
+Node.prototype.__CE_registry;
 
 /** @type {boolean|undefined} */
 Node.prototype.__CE_isImportDocument;
@@ -72,6 +75,30 @@ Element.prototype.__CE_shadowRoot;
 // Note, the closure type is incorrect here.
 /** @type {!HTMLCollection} */
 DocumentFragment.prototype.children;
+
+/**
+ * Non-standard Safari property.
+ * @type {string|undefined}
+ */
+Error.prototype.sourceURL;
+
+/**
+ * Non-standard Safari property.
+ * @type {number|undefined}
+ */
+Error.prototype.line;
+
+/**
+ * Non-standard Safari property.
+ * @type {number|undefined}
+ */
+Error.prototype.column;
+
+/**
+ * Non-standard Firefox property.
+ * @type {number|undefined}
+ */
+Error.prototype.columnNumber;
 
 /**
  * Used by IE to configure ErrorEvents.

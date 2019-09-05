@@ -418,26 +418,17 @@ export default class ScopingShim {
    */
   styleSubtree(host, properties) {
     const wrappedHost = StyleUtil.wrap(host);
-    let root = wrappedHost.shadowRoot;
-    if (root || this._isRootOwner(host)) {
+    const root = wrappedHost.shadowRoot;
+    const isRootOwner = this._isRootOwner(host);
+    if (root || isRootOwner) {
       this.styleElement(host, properties);
     }
-    // process the shadowdom children of `host`
-    let shadowChildren =
-        root && (/** @type {!ParentNode} */ (root).children || root.childNodes);
-    if (shadowChildren) {
-      for (let i = 0; i < shadowChildren.length; i++) {
-        let c = /** @type {!HTMLElement} */(shadowChildren[i]);
-        this.styleSubtree(c);
-      }
-    } else {
-      // process the lightdom children of `host`
-      let children = wrappedHost.children || wrappedHost.childNodes;
-      if (children) {
-        for (let i = 0; i < children.length; i++) {
-          let c = /** @type {!HTMLElement} */(children[i]);
-          this.styleSubtree(c);
-        }
+    const descendantRoot = isRootOwner ? wrappedHost : root;
+    if (descendantRoot) {
+      const descendantHosts = Array.from(descendantRoot.querySelectorAll('*'))
+          .filter(x => StyleUtil.wrap(x).shadowRoot);
+      for (let i = 0; i < descendantHosts.length; i++) {
+        this.styleSubtree(descendantHosts[i]);
       }
     }
   }
