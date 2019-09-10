@@ -229,7 +229,7 @@ export default class ScopingShim {
       return;
     }
     if (!nativeCssVariables) {
-      this._validateCustomStyleOrder(customStyles);
+      this._reorderCustomStylesRules(customStyles);
       this._updateProperties(this._documentOwner, this._documentOwnerStyleInfo);
       this._applyCustomStyles(customStyles);
       if (this._elementsHaveApplied) {
@@ -242,10 +242,10 @@ export default class ScopingShim {
     this._customStyleInterface['enqueued'] = false;
   }
   /**
-   * Validate ordering of custom styles for Custom Property shim
+   * Reorder of custom styles for Custom Property shim
    * @param {!Array<!CustomStyleProvider>} customStyles
    */
-  _validateCustomStyleOrder(customStyles) {
+  _reorderCustomStylesRules(customStyles) {
     const styles = customStyles.map(c => this._customStyleInterface['getStyleForCustomStyle'](c));
     // sort styles in document order
     styles.sort((a, b) => {
