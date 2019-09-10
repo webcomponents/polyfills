@@ -25,7 +25,7 @@ WCT = {waitFor: function (cb) {HTMLImports.whenReady(cb)}}
 <script src="module/generated/make-element.js"></script>
 <script src="module/generated/custom-style-element.js"></script>
 
-<custom-style>
+<custom-style id="first">
   <style>
     html {
       --shared: rgb(255, 0, 0);
@@ -68,8 +68,9 @@ WCT = {waitFor: function (cb) {HTMLImports.whenReady(cb)}}
       }
       assertComputed(el, 'rgb(255, 0, 0)', 'background-color');
       const tmpl = document.querySelector('template#late-style');
-      // append style to head, before custom-style in body
-      document.head.appendChild(tmpl.content.cloneNode(true));
+      // append style before custom-style in body
+      const first = document.querySelector('custom-style#first');
+      first.parentNode.insertBefore(tmpl.content.cloneNode(true), first);
       // force style updates
       if (window.ShadyDOM) {
         ShadyDOM.flush();
