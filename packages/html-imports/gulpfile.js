@@ -21,7 +21,7 @@ const closureOptions = {
   externs: ['externs/html-imports.js'],
   js_output_file: 'html-imports.min.js',
   assume_function_wrapper: true,
-  new_type_inf: true,
+  isolation_mode: 'IIFE',
   rewrite_polyfills: false,
   dependency_mode: 'STRICT',
   entry_point: 'src/html-imports.js',
