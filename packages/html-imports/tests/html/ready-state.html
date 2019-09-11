@@ -23,18 +23,13 @@
       var link = document.querySelector('link[rel=import]');
       chai.assert.equal(window.readyStateAtExecTime, 'loading',
         'readyState ok at script exec time');
-      if (fromOnLoad) {
-        chai.assert.match(link.import.readyState, /complete|interactive/,
-          'readyState ok at load event time');
-      } else {
-        chai.assert.equal(link.import.readyState, 'complete',
-          'readyState ok after loading');
-      }
+      chai.assert.match(link.import.readyState, /complete|interactive/,
+        'readyState ok at load event time');
     };
   </script>
   <script src="../../html-imports.min.js"></script>
   <script src="../../node_modules/wct-browser-legacy/browser.js"></script>
-  <link rel="import" href="imports/ready-state-check-import.html" onload="window.checkReadyState(true)">
+  <link rel="import" href="imports/ready-state-check-import.html" onload="window.checkReadyState()">
 </head>
 
 <body>
