@@ -8,7 +8,10 @@
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
-const reservedTagList = new Set([
+/** @type {!Set<string>} */
+const reservedElementNameSet = new Set();
+// IE11 does not support constructing a set using an iterable.
+[
   'annotation-xml',
   'color-profile',
   'font-face',
@@ -17,14 +20,14 @@ const reservedTagList = new Set([
   'font-face-format',
   'font-face-name',
   'missing-glyph',
-]);
+].forEach(item => reservedElementNameSet.add(item));
 
 /**
  * @param {string} localName
  * @returns {boolean}
  */
 export function isValidCustomElementName(localName) {
-  const reserved = reservedTagList.has(localName);
+  const reserved = reservedElementNameSet.has(localName);
   const validForm = /^[a-z][.0-9_a-z]*-[\-.0-9_a-z]*$/.test(localName);
   return !reserved && validForm;
 }
@@ -114,7 +117,7 @@ export function walkDeepDescendantElements(root, callback, visitedImports) {
       if (localName === 'link' && element.getAttribute('rel') === 'import') {
         // If this import (polyfilled or not) has it's root node available,
         // walk it.
-        const importNode = /** @type {!Node} */ (element.import);
+        const importNode = /** @type {!HTMLLinkElement} */ (element).import;
         if (visitedImports === undefined) {
           visitedImports = new Set();
         }

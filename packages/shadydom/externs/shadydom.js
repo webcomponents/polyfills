@@ -16,7 +16,7 @@ Node.prototype.__shady;
 /** @interface */
 function IWrapper() {}
 
-/** @type {Object} */
+/** @type {!Node|undefined} */
 IWrapper.prototype._activeElement;
 
 // NOTE: For some reason, Closure likes to remove focus() from the IWrapper

@@ -8,11 +8,14 @@
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
+import Native from './Patch/Native.js';
 import * as Utilities from './Utilities.js';
+import CustomElementRegistry from './CustomElementRegistry.js';
 import CEState from './CustomElementState.js';
 
-export default class CustomElementInternals {
+const NS_HTML = 'http://www.w3.org/1999/xhtml';
 
+export default class CustomElementInternals {
   /**
    * @param {{
    *   shadyDomFastWalk: boolean,
@@ -20,12 +23,6 @@ export default class CustomElementInternals {
    * }} options
    */
   constructor(options) {
-    /** @type {!Map<string, !CustomElementDefinition>} */
-    this._localNameToDefinition = new Map();
-
-    /** @type {!Map<!Function, !CustomElementDefinition>} */
-    this._constructorToDefinition = new Map();
-
     /** @type {!Array<!function(!Node)>} */
     this._patchesNode = [];
 
@@ -40,31 +37,6 @@ export default class CustomElementInternals {
 
     /** @const {boolean} */
     this.useDocumentConstructionObserver = !options.noDocumentConstructionObserver;
-  }
-
-  /**
-   * @param {string} localName
-   * @param {!CustomElementDefinition} definition
-   */
-  setDefinition(localName, definition) {
-    this._localNameToDefinition.set(localName, definition);
-    this._constructorToDefinition.set(definition.constructorFunction, definition);
-  }
-
-  /**
-   * @param {string} localName
-   * @return {!CustomElementDefinition|undefined}
-   */
-  localNameToDefinition(localName) {
-    return this._localNameToDefinition.get(localName);
-  }
-
-  /**
-   * @param {!Function} constructor
-   * @return {!CustomElementDefinition|undefined}
-   */
-  constructorToDefinition(constructor) {
-    return this._constructorToDefinition.get(constructor);
   }
 
   /**
@@ -161,7 +133,7 @@ export default class CustomElementInternals {
       if (element.__CE_state === CEState.custom) {
         this.connectedCallback(element);
       } else {
-        this.upgradeElement(element);
+        this.upgradeReaction(element);
       }
     }
   }
@@ -250,7 +222,7 @@ export default class CustomElementInternals {
    */
   patchAndUpgradeTree(root, options = {}) {
     const visitedImports = options.visitedImports;
-    const upgrade = options.upgrade || (element => this.upgradeElement(element));
+    const upgrade = options.upgrade || (element => this.upgradeReaction(element));
 
     const elements = [];
 
@@ -266,8 +238,8 @@ export default class CustomElementInternals {
 
         if (importNode instanceof Node) {
           importNode.__CE_isImportDocument = true;
-          // Connected links are associated with the registry.
-          importNode.__CE_hasRegistry = true;
+          // Connected links are associated with the global registry.
+          importNode.__CE_registry = document.__CE_registry;
         }
 
         if (importNode && importNode.readyState === 'complete') {
@@ -286,8 +258,12 @@ export default class CustomElementInternals {
             // be added. Then, remove *this* link's import node so that we can
             // walk that import again, even if it was partially walked later
             // during the same `patchAndUpgradeTree` call.
-            const clonedVisitedImports = new Set(visitedImports);
-            clonedVisitedImports.delete(importNode);
+            const clonedVisitedImports = new Set();
+            if (visitedImports) {
+              // IE11 does not support constructing a set using an iterable.
+              visitedImports.forEach(item => clonedVisitedImports.add(item));
+              clonedVisitedImports.delete(importNode);
+            }
             this.patchAndUpgradeTree(importNode, {visitedImports: clonedVisitedImports, upgrade});
           });
         }
@@ -308,35 +284,33 @@ export default class CustomElementInternals {
   /**
    * @param {!HTMLElement} element
    */
-  upgradeElement(element) {
+  upgradeReaction(element) {
+    try {
+      const definition = this._lookupACustomElementDefinition(
+          /** @type {!Document} */ (element.ownerDocument), element.localName);
+      if (definition) {
+        this._upgradeAnElement(element, definition);
+      }
+    } catch (e) {
+      this.reportTheException(e);
+    }
+  }
+
+  /**
+   * @private
+   * @param {!HTMLElement} element
+   * @param {!CustomElementDefinition} definition
+   * @see https://html.spec.whatwg.org/multipage/custom-elements.html#concept-upgrade-an-element
+   */
+  _upgradeAnElement(element, definition) {
     const currentState = element.__CE_state;
     if (currentState !== undefined) return;
 
-    // Prevent elements created in documents without a browsing context from
-    // upgrading.
-    //
-    // https://html.spec.whatwg.org/multipage/custom-elements.html#look-up-a-custom-element-definition
-    //   "If document does not have a browsing context, return null."
-    //
-    // https://html.spec.whatwg.org/multipage/window-object.html#dom-document-defaultview
-    //   "The defaultView IDL attribute of the Document interface, on getting,
-    //   must return this Document's browsing context's WindowProxy object, if
-    //   this Document has an associated browsing context, or null otherwise."
-    const ownerDocument = element.ownerDocument;
-    if (
-      !ownerDocument.defaultView &&
-      !(ownerDocument.__CE_isImportDocument && ownerDocument.__CE_hasRegistry)
-    ) return;
-
-    const definition = this._localNameToDefinition.get(element.localName);
-    if (!definition) return;
-
     definition.constructionStack.push(element);
 
-    const constructor = definition.constructorFunction;
     try {
       try {
-        let result = new (constructor)();
+        let result = new (definition.constructorFunction)();
         if (result !== element) {
           throw new Error('The custom element constructor did not produce the element being upgraded.');
         }
@@ -374,7 +348,11 @@ export default class CustomElementInternals {
   connectedCallback(element) {
     const definition = element.__CE_definition;
     if (definition.connectedCallback) {
-      definition.connectedCallback.call(element);
+      try {
+        definition.connectedCallback.call(element);
+      } catch (e) {
+        this.reportTheException(e);
+      }
     }
   }
 
@@ -384,7 +362,11 @@ export default class CustomElementInternals {
   disconnectedCallback(element) {
     const definition = element.__CE_definition;
     if (definition.disconnectedCallback) {
-      definition.disconnectedCallback.call(element);
+      try {
+        definition.disconnectedCallback.call(element);
+      } catch (e) {
+        this.reportTheException(e);
+      }
     }
   }
 
@@ -401,7 +383,195 @@ export default class CustomElementInternals {
       definition.attributeChangedCallback &&
       definition.observedAttributes.indexOf(name) > -1
     ) {
-      definition.attributeChangedCallback.call(element, name, oldValue, newValue, namespace);
+      try {
+        definition.attributeChangedCallback.call(element, name, oldValue, newValue, namespace);
+      } catch (e) {
+        this.reportTheException(e);
+      }
+    }
+  }
+
+  /**
+   * Runs HTML's 'look up a custom element definition', excluding the namespace
+   * check.
+   *
+   * @private
+   * @param {!Document} doc
+   * @param {string} localName
+   * @return {!CustomElementDefinition|undefined}
+   * @see https://html.spec.whatwg.org/multipage/custom-elements.html#look-up-a-custom-element-definition
+   */
+  _lookupACustomElementDefinition(doc, localName) {
+    // The document must be associated with a registry.
+    const registry =
+        /** @type {!CustomElementRegistry|undefined} */ (doc.__CE_registry);
+    if (!registry) return;
+
+    // Prevent elements created in documents without a browsing context from
+    // upgrading.
+    //
+    // https://html.spec.whatwg.org/multipage/custom-elements.html#look-up-a-custom-element-definition
+    //   "If document does not have a browsing context, return null."
+    //
+    // https://html.spec.whatwg.org/multipage/window-object.html#dom-document-defaultview
+    //   "The defaultView IDL attribute of the Document interface, on getting,
+    //   must return this Document's browsing context's WindowProxy object, if
+    //   this Document has an associated browsing context, or null otherwise."
+    if (!doc.defaultView && !doc.__CE_isImportDocument) return;
+
+    return registry.internal_localNameToDefinition(localName);
+  }
+
+  /**
+   * Runs the DOM's 'create an element'. If namespace is not null, then the
+   * native `createElementNS` is used. Otherwise, `createElement` is used.
+   *
+   * Note, the template polyfill only wraps `createElement`, preventing this
+   * function from using `createElementNS` in all cases.
+   *
+   * @param {!Document} doc
+   * @param {string} localName
+   * @param {string|null} namespace
+   * @return {!Element}
+   * @see https://dom.spec.whatwg.org/#concept-create-element
+   */
+  createAnElement(doc, localName, namespace) {
+    const registry =
+        /** @type {!CustomElementRegistry|undefined} */ (doc.__CE_registry);
+    // Only create custom elements if the document is associated with a
+    // registry.
+    if (registry && (namespace === null || namespace === NS_HTML)) {
+      const definition = registry.internal_localNameToDefinition(localName);
+      if (definition) {
+        try {
+          const result = new (definition.constructorFunction)();
+
+          // These conformance checks can't be performed when the user calls
+          // the element's constructor themselves. However, this also true in
+          // native implementations.
+
+          if (result.__CE_state === undefined ||
+              result.__CE_definition === undefined) {
+            throw new Error('Failed to construct \'' + localName + '\': ' +
+                'The returned value was not constructed with the HTMLElement ' +
+                'constructor.');
+          }
+
+          if (result.namespaceURI !== NS_HTML) {
+            throw new Error('Failed to construct \'' + localName + '\': ' +
+                'The constructed element\'s namespace must be the HTML ' +
+                'namespace.');
+          }
+
+          // The following Errors should be DOMExceptions but DOMException
+          // isn't constructible in all browsers.
+
+          if (result.hasAttributes()) {
+            throw new Error('Failed to construct \'' + localName + '\': ' +
+                'The constructed element must not have any attributes.');
+          }
+
+          // ShadyDOM doesn't wrap `#hasChildNodes`, so we check `#firstChild`
+          // instead.
+          if (result.firstChild !== null) {
+            throw new Error('Failed to construct \'' + localName + '\': ' +
+                'The constructed element must not have any children.');
+          }
+
+          if (result.parentNode !== null) {
+            throw new Error('Failed to construct \'' + localName + '\': ' +
+                'The constructed element must not have a parent node.');
+          }
+
+          if (result.ownerDocument !== doc) {
+            throw new Error('Failed to construct \'' + localName + '\': ' +
+                'The constructed element\'s owner document is incorrect.');
+          }
+
+          if (result.localName !== localName) {
+            throw new Error('Failed to construct \'' + localName + '\': ' +
+                'The constructed element\'s local name is incorrect.');
+          }
+
+          return result;
+        } catch (e) {
+          this.reportTheException(e);
+
+          // When construction fails, a new HTMLUnknownElement is produced.
+          // However, there's no direct way to create one, so we create a
+          // regular HTMLElement and replace its prototype.
+          const result = /** @type {!Element} */ (namespace === null ?
+              Native.Document_createElement.call(doc, localName) :
+              Native.Document_createElementNS.call(doc, namespace, localName));
+          Object.setPrototypeOf(result, HTMLUnknownElement.prototype);
+          result.__CE_state = CEState.failed;
+          result.__CE_definition = undefined;
+          this.patchElement(result);
+          return result;
+        }
+      }
+    }
+
+    const result = /** @type {!Element} */ (namespace === null ?
+        Native.Document_createElement.call(doc, localName) :
+        Native.Document_createElementNS.call(doc, namespace, localName));
+    this.patchElement(result);
+    return result;
+  }
+
+  /**
+   * Runs the DOM's 'report the exception' algorithm.
+   *
+   * @param {!Error} error
+   * @see https://html.spec.whatwg.org/multipage/webappapis.html#report-the-exception
+   */
+  reportTheException(error) {
+    const message = error.message;
+    /** @type {string} */
+    const filename =
+        /* Safari */ error.sourceURL || /* Firefox */ error.fileName || "";
+    /** @type {number} */
+    const lineno =
+        /* Safari */ error.line || /* Firefox */ error.lineNumber || 0;
+    /** @type {number} */
+    const colno =
+        /* Safari */ error.column || /* Firefox */ error.columnNumber || 0;
+
+    /** @type {!ErrorEvent|undefined} */
+    let event = undefined;
+    if (ErrorEvent.prototype.initErrorEvent === undefined) {
+      event = new ErrorEvent('error',
+          {cancelable: true, message, filename, lineno, colno, error});
+    } else {
+      event = /** @type {!ErrorEvent} */ (document.createEvent('ErrorEvent'));
+      // initErrorEvent(type, bubbles, cancelable, message, filename, line)
+      event.initErrorEvent('error', false, true, message, filename, lineno);
+      // Hack for IE, where ErrorEvent#preventDefault does not set
+      // #defaultPrevented to true.
+      /** @this {!ErrorEvent} */
+      event.preventDefault = function() {
+        Object.defineProperty(this, 'defaultPrevented', {
+          configurable: true,
+          get: function() { return true; },
+        });
+      };
+    }
+
+    if (event.error === undefined) {
+      Object.defineProperty(event, 'error', {
+        configurable: true,
+        enumerable: true,
+        get: function() { return error; },
+      });
+    }
+
+    window.dispatchEvent(event);
+    if (!event.defaultPrevented) {
+      // In 'report the exception', UAs may optionally write errors to the
+      // console if their associated ErrorEvent isn't handled during dispatch
+      // (indicated by calling `preventDefault`). In practice, these errors are
+      // always displayed.
+      console.error(error);
     }
   }
 }

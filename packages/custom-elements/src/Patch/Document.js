@@ -10,6 +10,7 @@
 
 import Native from './Native.js';
 import CustomElementInternals from '../CustomElementInternals.js';
+import CEState from '../CustomElementState.js';
 import * as Utilities from '../Utilities.js';
 
 import PatchParentNode from './Interface/ParentNode.js';
@@ -25,18 +26,7 @@ export default function(internals) {
      * @return {!Element}
      */
     function(localName) {
-      // Only create custom elements if this document is associated with the registry.
-      if (this.__CE_hasRegistry) {
-        const definition = internals.localNameToDefinition(localName);
-        if (definition) {
-          return new (definition.constructorFunction)();
-        }
-      }
-
-      const result = /** @type {!Element} */
-        (Native.Document_createElement.call(this, localName));
-      internals.patchElement(result);
-      return result;
+      return internals.createAnElement(this, localName, null);
     });
 
   Utilities.setPropertyUnchecked(Document.prototype, 'importNode',
@@ -49,15 +39,13 @@ export default function(internals) {
     function(node, deep) {
       const clone = /** @type {!Node} */ (Native.Document_importNode.call(this, node, !!deep));
       // Only create custom elements if this document is associated with the registry.
-      if (!this.__CE_hasRegistry) {
+      if (!this.__CE_registry) {
         internals.patchTree(clone);
       } else {
         internals.patchAndUpgradeTree(clone);
       }
       return clone;
     });
-
-  const NS_HTML = "http://www.w3.org/1999/xhtml";
 
   Utilities.setPropertyUnchecked(Document.prototype, 'createElementNS',
     /**
@@ -67,18 +55,7 @@ export default function(internals) {
      * @return {!Element}
      */
     function(namespace, localName) {
-      // Only create custom elements if this document is associated with the registry.
-      if (this.__CE_hasRegistry && (namespace === null || namespace === NS_HTML)) {
-        const definition = internals.localNameToDefinition(localName);
-        if (definition) {
-          return new (definition.constructorFunction)();
-        }
-      }
-
-      const result = /** @type {!Element} */
-        (Native.Document_createElementNS.call(this, namespace, localName));
-      internals.patchElement(result);
-      return result;
+      return internals.createAnElement(this, localName, namespace);
     });
 
   PatchParentNode(internals, Document.prototype, {

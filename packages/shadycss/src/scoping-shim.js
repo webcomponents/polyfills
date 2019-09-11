@@ -22,7 +22,7 @@ import {flush as watcherFlush, getOwnerScope, getCurrentScope} from './document-
 import templateMap from './template-map.js';
 import * as ApplyShimUtils from './apply-shim-utils.js';
 import {updateNativeProperties, detectMixin} from './common-utils.js';
-import {CustomStyleInterfaceInterface} from './custom-style-interface.js'; // eslint-disable-line no-unused-vars
+import {CustomStyleInterfaceInterface, CustomStyleProvider} from './custom-style-interface.js'; // eslint-disable-line no-unused-vars
 
 /** @type {!Object<string, string>} */
 const adoptedCssTextMap = {};
@@ -229,6 +229,7 @@ export default class ScopingShim {
       return;
     }
     if (!nativeCssVariables) {
+      this._reorderCustomStylesRules(customStyles);
       this._updateProperties(this._documentOwner, this._documentOwnerStyleInfo);
       this._applyCustomStyles(customStyles);
       if (this._elementsHaveApplied) {
@@ -239,6 +240,29 @@ export default class ScopingShim {
       this._revalidateCustomStyleApplyShim(customStyles);
     }
     this._customStyleInterface['enqueued'] = false;
+  }
+  /**
+   * Reorder of custom styles for Custom Property shim
+   * @param {!Array<!CustomStyleProvider>} customStyles
+   */
+  _reorderCustomStylesRules(customStyles) {
+    const styles = customStyles.map(c => this._customStyleInterface['getStyleForCustomStyle'](c));
+    // sort styles in document order
+    styles.sort((a, b) => {
+      // use `b.compare(a)` to be more straightforward
+      const position = b.compareDocumentPosition(a);
+      if (position & Node.DOCUMENT_POSITION_FOLLOWING) {
+        // A is after B, A should be higher sorted
+        return 1;
+      } else if (position & Node.DOCUMENT_POSITION_PRECEDING) {
+        // A is before B, A should be lower sorted
+        return -1;
+      } else {
+        return 0;
+      }
+    });
+    // sort ast ordering for document
+    this._documentOwnerStyleInfo.styleRules['rules'] = styles.map(s => StyleUtil.rulesForStyle(s));
   }
   /**
    * Apply styles for the given element
@@ -418,26 +442,17 @@ export default class ScopingShim {
    */
   styleSubtree(host, properties) {
     const wrappedHost = StyleUtil.wrap(host);
-    let root = wrappedHost.shadowRoot;
-    if (root || this._isRootOwner(host)) {
+    const root = wrappedHost.shadowRoot;
+    const isRootOwner = this._isRootOwner(host);
+    if (root || isRootOwner) {
       this.styleElement(host, properties);
     }
-    // process the shadowdom children of `host`
-    let shadowChildren =
-        root && (/** @type {!ParentNode} */ (root).children || root.childNodes);
-    if (shadowChildren) {
-      for (let i = 0; i < shadowChildren.length; i++) {
-        let c = /** @type {!HTMLElement} */(shadowChildren[i]);
-        this.styleSubtree(c);
-      }
-    } else {
-      // process the lightdom children of `host`
-      let children = wrappedHost.children || wrappedHost.childNodes;
-      if (children) {
-        for (let i = 0; i < children.length; i++) {
-          let c = /** @type {!HTMLElement} */(children[i]);
-          this.styleSubtree(c);
-        }
+    const descendantRoot = isRootOwner ? wrappedHost : root;
+    if (descendantRoot) {
+      const descendantHosts = Array.from(descendantRoot.querySelectorAll('*'))
+          .filter(x => StyleUtil.wrap(x).shadowRoot);
+      for (let i = 0; i < descendantHosts.length; i++) {
+        this.styleSubtree(descendantHosts[i]);
       }
     }
   }
