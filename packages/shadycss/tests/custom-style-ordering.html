@@ -43,22 +43,24 @@ WCT = {waitFor: function (cb) {HTMLImports.whenReady(cb)}}
   </custom-style>
 </template>
 
-<template id="x-foo">
-  <style>
-    :host {
-      background-color: var(--shared);
-    }
-  </style>
-</template>
-
 <script>
   suite('Custom Style Ordering', function() {
     function assertComputed(node, expected, property = 'border-top-width', msg = undefined) {
       const actual = getComputedStyle(node).getPropertyValue(property).trim();
       assert.equal(expected, actual, msg);
     }
+    let tmpl;
     suiteSetup(function() {
       makeElement('x-foo');
+      tmpl = document.createElement('template');
+      tmpl.innerHTML = `
+      <custom-style>
+        <style>
+          html {
+            --shared: rgb(0, 0, 255);
+          }
+        </style>
+      </custom-style>`;
     })
     test('custom styles apply properties in document order', function() {
       const el = document.createElement('x-foo');
@@ -67,7 +69,6 @@ WCT = {waitFor: function (cb) {HTMLImports.whenReady(cb)}}
         ShadyDOM.flush();
       }
       assertComputed(el, 'rgb(255, 0, 0)', 'background-color');
-      const tmpl = document.querySelector('template#late-style');
       // append style before custom-style in body
       const first = document.querySelector('custom-style#first');
       first.parentNode.insertBefore(tmpl.content.cloneNode(true), first);
