@@ -33,14 +33,12 @@ WCT = {waitFor: function (cb) {HTMLImports.whenReady(cb)}}
   </style>
 </custom-style>
 
-<template id="late-style">
-  <custom-style>
-    <style>
-      html {
-        --shared: rgb(0, 0, 255);
-      }
-    </style>
-  </custom-style>
+<template id="x-foo">
+  <style>
+    :host {
+      background-color: var(--shared);
+    }
+  </style>
 </template>
 
 <script>
