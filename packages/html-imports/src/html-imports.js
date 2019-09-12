@@ -613,9 +613,11 @@
     if (element['__loaded']) {
       callback && callback();
     } else if ((element.localName === 'script' && !element.src) ||
-      (element.localName === 'style' && !element.firstChild)) {
-      // Inline scripts and empty styles don't trigger load/error events,
-      // consider them already loaded.
+      (element.localName === 'style' && !element.firstChild) ||
+      (element.localName === 'style' &&
+        element.namespaceURI === 'http://www.w3.org/2000/svg')) {
+      // Inline scripts,empty styles, and styles in <svg> don't trigger
+      // load/error events, consider them already loaded.
       element['__loaded'] = true;
       callback && callback();
     } else {
