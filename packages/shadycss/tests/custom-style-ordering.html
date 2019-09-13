@@ -77,5 +77,11 @@ WCT = {waitFor: function (cb) {HTMLImports.whenReady(cb)}}
       ShadyCSS.styleDocument();
       assertComputed(el, 'rgb(255, 0, 0)', 'background-color', 'late custom style should be processed in document order');
     });
+
+    test('empty custom-style is processed correctly', function() {
+      const empty = document.createElement('custom-style');
+      document.head.appendChild(empty);
+      ShadyCSS.flushCustomStyles();
+    });
   });
 </script>

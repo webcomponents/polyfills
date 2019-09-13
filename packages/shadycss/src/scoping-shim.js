@@ -246,7 +246,7 @@ export default class ScopingShim {
    * @param {!Array<!CustomStyleProvider>} customStyles
    */
   _reorderCustomStylesRules(customStyles) {
-    const styles = customStyles.map(c => this._customStyleInterface['getStyleForCustomStyle'](c));
+    const styles = customStyles.map(c => this._customStyleInterface['getStyleForCustomStyle'](c)).filter(s => !!s);
     // sort styles in document order
     styles.sort((a, b) => {
       // use `b.compare(a)` to be more straightforward
