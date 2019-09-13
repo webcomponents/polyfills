@@ -193,8 +193,9 @@
 
   /********************* importer *********************/
 
-  const isIE = /Trident/.test(navigator.userAgent) ||
-    /Edge\/\d./i.test(navigator.userAgent);
+  const isIE = /Trident/.test(navigator.userAgent);
+
+  const isEdge = /Edge\/\d./i.test(navigator.userAgent);
 
   const importSelector = 'link[rel=import]';
 
@@ -298,7 +299,7 @@
         return document.createDocumentFragment();
       }
 
-      if (isIE) {
+      if (isIE || isEdge) {
         // <link rel=stylesheet> should be appended to <head>. Not doing so
         // in IE/Edge breaks the cascading order. We disable the loading by
         // setting the type before setting innerHTML to avoid loading
@@ -340,9 +341,14 @@
       // For source map hints.
       let inlineScriptIndex = 0;
       forEach(n$, n => {
-        // Listen for load/error events, then fix urls.
         whenElementLoaded(n);
         Path.fixUrls(n, url);
+        if (n.localName === 'style' && this.styleNeedsCloning(n)) {
+          const clone = this.cloneStyle(n);
+          whenElementLoaded(clone);
+          n.parentNode.replaceChild(clone, n);
+          n = clone;
+        }
         // Mark for easier selectors.
         n.setAttribute(importDependencyAttr, '');
         // Generate source map hints for inline scripts.
@@ -360,6 +366,30 @@
         }
       });
       return content;
+    }
+
+    /**
+     * @param {!HTMLStyleElement} style
+     * @return {boolean}
+     */
+    styleNeedsCloning(style) {
+      return isEdge && style.textContent.indexOf('@import') > -1;
+    }
+
+    /**
+     * In Edge, styles with `@import` will not load if the text content is
+     * modified, or the style is moved.
+     *
+     * We must clone the style, but not with `cloneNode()` as that carries the
+     * implicit "loaded" state somehow.
+     * @param {!HTMLStyleElement} style
+     * @return {!HTMLStyleElement}
+     */
+    cloneStyle(style) {
+      const clone = /** @type {!HTMLStyleElement} */(style.ownerDocument.createElement('style'));
+      clone.textContent = style.textContent;
+      forEach(style.attributes, attr => clone.setAttribute(attr.name, attr.value));
+      return clone;
     }
 
     /**
@@ -479,9 +509,14 @@
       // https://developer.microsoft.com/en-us/microsoft-edge/platform/issues/10472273/
       // If there is one <link rel=stylesheet> imported, we must move all imported
       // links and styles to <head>.
-      const needsMove = isIE && !!document.querySelector(disabledLinkSelector);
+      const needsMove = (isIE || isEdge) && !!document.querySelector(disabledLinkSelector);
       forEach(s$, s => {
         // Listen for load/error events, remove selector once is done loading.
+        if (needsMove && this.styleNeedsCloning(s) && s.ownerDocument.defaultView !== window.top) {
+          // If a style is moved in Edge with an `@import` and there's a <link> in the page,
+          // and the style is in an iframe, the style won't fire a load event.
+          s['__loaded'] = true;
+        }
         whenElementLoaded(s, () => {
           s.removeAttribute(importDependencyAttr);
           if (--pending === 0) {
@@ -594,7 +629,7 @@
       // <style> with @import will fire error events for each failing @import,
       // and finally will trigger the load event when all @import are
       // finished (even if all fail).
-      if (!isIE || element.localName !== 'style') {
+      if (element.localName !== 'style' || (!isIE && !isEdge)) {
         element.addEventListener('error', onLoadingDone);
       }
     }

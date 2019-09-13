@@ -12,7 +12,6 @@
 <head>
   <meta charset="UTF-8">
   <title>HTMLImports Path Tests</title>
-  <script src="../../node_modules/@webcomponents/template/template.js"></script>
   <script src="../../html-imports.min.js"></script>
   <script>
     WCT = {
@@ -29,34 +28,29 @@
   <script>
 
   test('style-paths', function(done) {
-    if (navigator.userAgent.match('Edge')) {
-      // skip this test in Edge because the <style> with @import does not even try to fetch the subresources!
+    HTMLImports.whenReady(() => {
+      var red = document.querySelector('.red');
+      chai.assert.equal(getComputedStyle(red).backgroundColor, 'rgb(255, 0, 0)', 'style in @import applied');
+      var image = document.querySelector('.image');
+
+      // document relative image url
+      var a = document.createElement('a');
+      a.href = 'imports/google.png';
+      chai.assert.match(getComputedStyle(image).backgroundImage, new RegExp(a.href), 'url in style applied');
+
+      if (!HTMLImports.useNative) {
+        var styles = document.querySelectorAll('style');
+        var fontStyle = [].filter.call(styles, function(s) {
+          return s.textContent.indexOf('Source+Code+Pro') > -1;
+        })[0];
+        assert.ok(fontStyle);
+        chai.assert.ok(fontStyle.sheet);
+        chai.assert.equal(fontStyle.sheet.cssRules[2].href,
+            'http://fonts.googleapis.com/css?family=Open+Sans:300,300italic,600,800|Source+Code+Pro',
+            '@import url() form rule has proper url')
+      }
       done();
-    } else {
-      HTMLImports.whenReady(() => {
-        var red = document.querySelector('.red');
-        chai.assert.equal(getComputedStyle(red).backgroundColor, 'rgb(255, 0, 0)', 'style in @import applied');
-        var image = document.querySelector('.image');
-
-        // document relative image url
-        var a = document.createElement('a');
-        a.href = 'imports/google.png';
-        chai.assert.match(getComputedStyle(image).backgroundImage, new RegExp(a.href), 'url in style applied');
-
-        if (!HTMLImports.useNative) {
-          var styles = document.querySelectorAll('style');
-          var fontStyle = [].filter.call(styles, function(s) {
-            return s.textContent.indexOf('Source+Code+Pro') > -1;
-          })[0];
-          assert.ok(fontStyle);
-          chai.assert.ok(fontStyle.sheet);
-          chai.assert.equal(fontStyle.sheet.cssRules[2].href,
-              'http://fonts.googleapis.com/css?family=Open+Sans:300,300italic,600,800|Source+Code+Pro',
-              '@import url() form rule has proper url')
-        }
-        done();
-      });
-    }
+    });
   });
   </script>
 </body>

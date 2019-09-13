@@ -11,19 +11,17 @@
 <title>HTMLImports Tests</title>
 <meta charset="utf-8">
 
-<!-- HTMLImports -->
-<script src="../html-imports.min.js"></script>
 <script>
   WCT = {
     environmentImports: [],
     waitFor: function(callback) {
-      this.HTMLImports.whenReady(callback);
+      callback();
     }
   };
 </script>
 <script src="../node_modules/wct-browser-legacy/browser.js"></script>
 <script>
-  WCT.loadSuites([
+  const suites = [
     'html/HTMLImportsLoaded-native.html',
     'html/HTMLImports-lazy.html',
     'html/link-import.html',
@@ -41,7 +39,6 @@
     'html/dynamic-importer.html',
     'html/dynamic-all-imports-detail.html',
     'html/dynamic-errors-detail.html',
-    'html/csp.html',
     'html/encoding.html',
     'html/cloned-template-script.html',
     'html/dynamic-elements.html',
@@ -51,6 +48,12 @@
     'html/ready-state.html',
     'html/resolve-path.html',
     'html/load-imports.html',
-    'html/es-module.html'
-  ]);
+    'html/es-module.html',
+    'html/csp.html',
+  ];
+  if (navigator.userAgent.match(/Edge/)) {
+    // remove CSP check in Edge, newer versions don't like WCT's testing library
+    suites.pop();
+  }
+  WCT.loadSuites(suites);
 </script>

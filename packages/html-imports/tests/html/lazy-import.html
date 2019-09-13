@@ -17,7 +17,7 @@
     var ready;
     WCT = {
       waitFor: function(cb) {
-        HTMLImports.whenReady(cb);
+        cb();
       }
     };
   </script>
@@ -32,17 +32,20 @@
       if (HTMLImports.useNative) {
         done();
         return;
-      }
-      // Some time later..
-      setTimeout(function() {
-        var link = document.createElement('link');
-        link.setAttribute('rel', 'import');
-        link.setAttribute('href', 'imports/load-2.html');
-        link.addEventListener('load', function() {
-          done();
+      } else {
+        HTMLImports.whenReady(() => {
+          // Some time later..
+          setTimeout(function() {
+            var link = document.createElement('link');
+            link.setAttribute('rel', 'import');
+            link.setAttribute('href', 'imports/load-2.html');
+            link.addEventListener('load', function() {
+              done();
+            });
+            load1Link.import.appendChild(link);
+          });
         });
-        load1Link.import.appendChild(link);
-      });
+      }
     });
   </script>
 </body>
