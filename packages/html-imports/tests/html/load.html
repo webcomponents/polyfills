@@ -34,7 +34,7 @@
     <script>
       WCT = {
         waitFor: function(callback) {
-          HTMLImports.whenReady(callback);
+          callback();
         }
       };
     </script>
@@ -49,12 +49,15 @@
     <div id="test2" class="blue">Test</div>
     <div id="test3" class="image"></div>
     <script>
-      test('load', function() {
-        assert.equal(loadEvents, 4, 'expected # of load events');
-        var test1 = getComputedStyle(document.querySelector('#test1')).backgroundColor;
-        assert.equal(test1, 'rgb(255, 0, 0)', 'test1 red background-color ok');
-        var test2 = getComputedStyle(document.querySelector('#test2')).backgroundColor;
-        assert.equal(test2, 'rgb(0, 0, 255)', 'test2 blue background-color ok');
+      test('load', function(done) {
+        HTMLImports.whenReady(() => {
+          assert.equal(loadEvents, 4, 'expected # of load events');
+          var test1 = getComputedStyle(document.querySelector('#test1')).backgroundColor;
+          assert.equal(test1, 'rgb(255, 0, 0)', 'test1 red background-color ok');
+          var test2 = getComputedStyle(document.querySelector('#test2')).backgroundColor;
+          assert.equal(test2, 'rgb(0, 0, 255)', 'test2 blue background-color ok');
+          done();
+        });
       });
 
       test('synchronous execution of callback', function() {

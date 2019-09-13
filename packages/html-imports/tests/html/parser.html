@@ -14,9 +14,7 @@
     <script src="../../html-imports.min.js"></script>
     <script>
       WCT = {
-        waitFor: function(callback) {
-          HTMLImports.whenReady(callback);
-        }
+        waitFor: (cb) => cb()
       };
     </script>
     <script src="../../node_modules/wct-browser-legacy/browser.js"></script>
@@ -24,12 +22,15 @@
   </head>
   <body>
     <script>
-      test('parser', function() {
-        chai.assert.ok(window.inlineScriptParsed, 'inlineScriptParsed');
-        chai.assert.ok(window.externalScriptParsed, 'externalScriptParsed');
-        chai.assert.equal(window.uc, '\u2661 \u34A8', 'unicode matches');
-        chai.assert.ok(window.textJavascriptParsed, 'text/javascript');
-        chai.assert.ok(window.applicationJavascriptParsed, 'application/javascript');
+      test('parser', function(done) {
+        HTMLImports.whenReady(() => {
+          chai.assert.ok(window.inlineScriptParsed, 'inlineScriptParsed');
+          chai.assert.ok(window.externalScriptParsed, 'externalScriptParsed');
+          chai.assert.equal(window.uc, '\u2661 \u34A8', 'unicode matches');
+          chai.assert.ok(window.textJavascriptParsed, 'text/javascript');
+          chai.assert.ok(window.applicationJavascriptParsed, 'application/javascript');
+          done();
+        });
       });
     </script>
   </body>
