@@ -21,7 +21,7 @@
 </script>
 <script src="../node_modules/wct-browser-legacy/browser.js"></script>
 <script>
-  const suites = [
+  let suites = [
     'html/HTMLImportsLoaded-native.html',
     'html/HTMLImports-lazy.html',
     'html/link-import.html',
@@ -51,9 +51,16 @@
     'html/es-module.html',
     'html/csp.html',
   ];
-  if (navigator.userAgent.match(/Edge/)) {
+  const edgeDetect = navigator.userAgent.match(/Edge\/(\d+)/);
+  const edgeVersion = edgeDetect ? parseInt(edgeDetect[1], 10) : 0;
+  if (edgeVersion > 15) {
     // remove CSP check in Edge, newer versions don't like WCT's testing library
     suites.pop();
+  }
+  if (edgeVersion === 15) {
+    // edge 15 has a really hard time loading this test consistently
+    // the requests are made for the @import styles, but they never return...
+    suites = suites.filter(s => s.indexOf('style-paths') === -1);
   }
   WCT.loadSuites(suites);
 </script>
