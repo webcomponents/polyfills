@@ -18,13 +18,12 @@
   </head>
   <body>
     <script>
-      test('style in svg loads', function() {
-        let resolve;
-        const promise = new Promise((res) => {resolve = res});
-        HTMLImports.whenReady(() => {
-          resolve();
+      suite('style in svg', function() {
+        test('style in svg loads', function(done) {
+          HTMLImports.whenReady(() => {
+            done();
+          });
         });
-        return promise;
       });
     </script>
   </body>
