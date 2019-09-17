@@ -1,0 +1,23 @@
+{
+  "name": "@webcomponents/url",
+  "version": "0.7.2",
+  "main": "url.js",
+  "repository": "github:webcomponents/polyfills",
+  "bugs": "https://github.com/webcomponents/polyfills/issues",
+  "homepage": "https://github.com/webcomponents/polyfills/packages/url#readme",
+  "license": "SAX-PD",
+  "description": "URL parser in JavaScript",
+  "scripts": {
+    "build": "gulp",
+    "prepack": "npm run build"
+  },
+  "author": "Erik Arvidsson <arv@chromium.org>",
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "url.js",
+    "url.min.js*"
+  ],
+  "devDependencies": {}
+}

@@ -1,0 +1,443 @@
+<!doctype html>
+<!--
+@license
+Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<html>
+  <head>
+    <title>Template Test</title>
+    <script src="../template.js"></script>
+    <script src="../node_modules/wct-browser-legacy/browser.js"></script>
+  </head>
+  <body>
+    <style>
+      .container {
+        display: flex;
+      }
+      .container > *{
+        flex: 1;
+      }
+    </style>
+
+    <div class="container">
+      <template>
+        <span id="content">Hello World!</span>
+      </template>
+    </div>
+
+    <script>
+      suite('Template', function() {
+        var template;
+        suiteSetup(function() {
+          template = document.querySelector('template');
+        });
+
+        var canInnerHTML = (function() {
+          var el = document.createElement('div');
+          try {
+            Object.defineProperty(el, 'innerHTML', {
+              get: function(){}, // eslint-disable-line getter-return
+              set: function(){}
+            });
+            return true;
+          } catch(e) {
+            return false;
+          }
+        })();
+
+        function setupTemplate(template, string) {
+          if (canInnerHTML) {
+            template.innerHTML = string;
+          } else {
+            var el = document.createElement('div');
+            el.innerHTML = string;
+            var nodes = Array.prototype.slice.call(el.childNodes, 0);
+            for (var i = 0; i < nodes.length; i++) {
+              template.content.appendChild(nodes[i]);
+            }
+          }
+        }
+
+        test('No rendering', function() {
+          var bcr = template.getBoundingClientRect();
+          assert.equal(bcr.height, 0);
+          assert.equal(bcr.width, 0);
+        });
+
+        test('content', function() {
+          assert.equal(template.childNodes.length, 0, 'template children evacipated');
+          assert.isDefined(template.content, 'template content exists');
+          assert.equal(template.content.childNodes.length, 3, 'template content has expected number of nodes');
+          var content = document.querySelector('#content');
+          assert.isNull(content, 'template content not in document');
+        });
+
+        test('stamping', function() {
+          document.body.appendChild(document.importNode(template.content, true));
+          var content = document.querySelector('#content');
+          assert.isDefined(content, 'template content stamped into document');
+        });
+
+        test('innerHTML', function() {
+          if (!canInnerHTML) {
+            this.skip();
+          }
+          var imp = document.createElement('template');
+          assert.equal(imp.innerHTML, '');
+          var s = 'pre<div>Hi</div><div>Bye</div>post';
+          imp.innerHTML = s;
+          assert.equal(imp.innerHTML, s);
+          assert.equal(imp.content.childNodes.length, 4);
+          assert.equal(imp.content.firstChild.textContent, 'pre');
+          s = 'foo';
+          imp.innerHTML = s;
+          assert.equal(imp.innerHTML, s);
+          assert.equal(imp.content.childNodes.length, 1);
+          assert.equal(imp.content.firstChild.textContent, s);
+
+          s = '-<->-"-&-';
+          var escaped = '-&lt;-&gt;-"-&amp;-';
+          var div = document.createElement('div');
+          imp.innerHTML = s;
+          div.innerHTML = s;
+          // innerHTML is properly escaped
+          assert.equal(imp.innerHTML, escaped);
+          assert.equal(imp.content.textContent, div.textContent);
+        });
+
+        test('innerHTML (nested)', function() {
+          if (!canInnerHTML) {
+            this.skip();
+          }
+          var imp = document.createElement('template');
+          assert.equal(imp.innerHTML, '');
+          var s = 'pre<div><template>Hi</template></div><div><template>Bye</template></div>post';
+          imp.innerHTML = s;
+          assert.equal(imp.innerHTML, s);
+        });
+
+        test('innerHTML (comments)', function() {
+          if (!canInnerHTML) {
+            this.skip();
+          }
+          var imp = document.createElement('template');
+          assert.equal(imp.innerHTML, '');
+          var s = '<!-- This is a comment -->';
+          imp.innerHTML = s;
+          assert.equal(imp.innerHTML, s);
+        });
+
+        test('innerHTML (tr element)', function() {
+          if (!canInnerHTML) {
+            this.skip();
+          }
+          var imp = document.createElement('template');
+          assert.equal(imp.innerHTML, '');
+          var s = '<tr><td class="record"></td><td></td><td><span class="extra">nothing</span></td></tr>';
+          imp.innerHTML = s;
+          assert.equal(imp.innerHTML, s);
+        });
+
+        test('innerHTML (td element)', function() {
+          if (!canInnerHTML) {
+            this.skip();
+          }
+          var imp = document.createElement('template');
+          assert.equal(imp.innerHTML, '');
+          var s = '<td class="record"><span class="extra">nothing</span></td>';
+          imp.innerHTML = s;
+          assert.equal(imp.innerHTML, s);
+        });
+
+        test('innerHTML (th element)', function() {
+          if (!canInnerHTML) {
+            this.skip();
+          }
+          var imp = document.createElement('template');
+          assert.equal(imp.innerHTML, '');
+          var s = '<th class="record"><span class="extra">nothing</span></th>';
+          imp.innerHTML = s;
+          assert.equal(imp.innerHTML, s);
+        });
+
+        test('innerHTML (col element)', function() {
+          if (!canInnerHTML) {
+            this.skip();
+          }
+          var imp = document.createElement('template');
+          assert.equal(imp.innerHTML, '');
+          var s = '<col style="background-color: rgb(0, 0, 0);"><col span="2">';
+          imp.innerHTML = s;
+          assert.equal(imp.innerHTML, s);
+        });
+
+        test('innerHTML (thead element)', function() {
+          if (!canInnerHTML) {
+            this.skip();
+          }
+          var imp = document.createElement('template');
+          assert.equal(imp.innerHTML, '');
+          var s = '<thead><tr><th>Header content 1</th><th>Header content 2</th></tr></thead>';
+          imp.innerHTML = s;
+          assert.equal(imp.innerHTML, s);
+        });
+
+        test('innerHTML (option element)', function() {
+          if (!canInnerHTML) {
+            this.skip();
+          }
+          var imp = document.createElement('template');
+          assert.equal(imp.innerHTML, '');
+          var s = '<option value="one">One</option><option value="two">two</option>';
+          imp.innerHTML = s;
+          assert.equal(imp.innerHTML, s);
+        });
+
+        test('clone', function() {
+          var imp = document.createElement('template');
+          var s = '<div>Hi</div>';
+          setupTemplate(imp, s);
+          var clone = imp.cloneNode();
+          assert.notEqual(clone, imp, 'element is not cloned');
+          assert.isDefined(clone.content, 'cloned template content dne');
+          assert.equal(clone.content.childNodes.length, 0,
+              'non-deep cloned template.content is not empty');
+          var deepClone = imp.cloneNode(true);
+          assert.equal(deepClone.content.childNodes.length, 1,
+              'deep cloned template.content is empty');
+          assert.notEqual(imp.content.firstChild, deepClone.content.firstChild,
+              'cloned content is not different from source');
+        });
+
+        test('clone nested', function() {
+          var imp = document.createElement('template');
+          var s = 'a<template id="a">b<template id="b">c<template id="c">d</template></template></template>';
+          setupTemplate(imp, s);
+          var clone = imp.cloneNode(false);
+          assert.notEqual(clone, imp, 'element is not cloned');
+          assert.isDefined(clone.content, 'cloned template content dne');
+          assert.equal(clone.content.childNodes.length, 0,
+              'non-deep cloned template.content is not empty');
+          var deepClone = imp.cloneNode(true);
+          assert.equal(deepClone.content.childNodes.length, 2,
+              'deep cloned template.content is empty');
+          assert.notEqual(imp.content.firstChild, deepClone.content.firstChild,
+              'cloned content is not different from source');
+          var nested = deepClone.content.lastChild;
+          assert.isDefined(nested.content, 'nested cloned template content dne');
+          assert.equal(nested.content.childNodes.length, 2,
+              'deep cloned template.content is empty');
+          nested = nested.content.lastChild;
+          assert.isDefined(nested, 'nested cloned template content dne');
+          assert.equal(nested.content.childNodes.length, 2,
+              'deep cloned template.content is empty');
+          nested = nested.content.lastChild;
+          assert.isDefined(nested, 'nested cloned template content dne');
+          assert.equal(nested.content.childNodes.length, 1,
+              'deep cloned template.content is empty');
+        });
+
+        test('clone node containing templates', function() {
+          var imp = document.createElement('div');
+          var t = document.createElement('template');
+          var s = 'a<template id="a">b<template id="b">c<template id="c">d</template></template></template>';
+          setupTemplate(t, s);
+          imp.appendChild(t);
+          var impClone = imp.cloneNode(true);
+          imp = imp.firstChild;
+          var deepClone = impClone.firstChild;
+          assert.equal(deepClone.content.childNodes.length, 2,
+              'deep cloned template.content is empty');
+          assert.notEqual(imp.content.firstChild, deepClone.content.firstChild,
+              'cloned content is not different from source');
+          var nested = deepClone.content.lastChild;
+          assert.isDefined(nested.content, 'nested cloned template content dne');
+          assert.equal(nested.content.childNodes.length, 2,
+              'deep cloned template.content is empty');
+          nested = nested.content.lastChild;
+          assert.isDefined(nested, 'nested cloned template content dne');
+          assert.equal(nested.content.childNodes.length, 2,
+              'deep cloned template.content is empty');
+          nested = nested.content.lastChild;
+          assert.isDefined(nested, 'nested cloned template content dne');
+          assert.equal(nested.content.childNodes.length, 1,
+              'deep cloned template.content is empty');
+        });
+
+        test('importNode', function() {
+          var imp = document.createElement('template');
+          var s = '<div>Hi</div>';
+          setupTemplate(imp, s);
+          var clone = document.importNode(imp, false);
+          assert.notEqual(clone, imp, 'element is not cloned');
+          assert.isDefined(clone.content, 'cloned template content dne');
+          assert.equal(clone.content.childNodes.length, 0,
+              'non-deep cloned template.content is not empty');
+          var deepClone = document.importNode(imp, true);
+          assert.equal(deepClone.content.childNodes.length, 1,
+              'deep cloned template.content is empty');
+          assert.notEqual(imp.content.firstChild, deepClone.content.firstChild,
+              'cloned content is not different from source');
+        });
+
+        test('importNode: nested', function() {
+          var imp = document.createElement('template');
+          var s = 'a<template id="a">b<template id="b">c<template id="c">d</template></template></template>';
+          setupTemplate(imp, s);
+          var clone = document.importNode(imp, false);
+          assert.notEqual(clone, imp, 'element is not cloned');
+          assert.isDefined(clone.content, 'cloned template content dne');
+          assert.equal(clone.content.childNodes.length, 0,
+              'non-deep cloned template.content is not empty');
+          var deepClone = document.importNode(imp, true);
+          assert.equal(deepClone.content.childNodes.length, 2,
+              'deep cloned template.content is empty');
+          assert.notEqual(imp.content.firstChild, deepClone.content.firstChild,
+              'cloned content is not different from source');
+          var nested = deepClone.content.lastChild;
+          assert.isDefined(nested.content, 'nested cloned template content dne');
+          assert.equal(nested.content.childNodes.length, 2,
+              'deep cloned template.content is empty');
+          nested = nested.content.lastChild;
+          assert.isDefined(nested, 'nested cloned template content dne');
+          assert.equal(nested.content.childNodes.length, 2,
+              'deep cloned template.content is empty');
+          nested = nested.content.lastChild;
+          assert.isDefined(nested, 'nested cloned template content dne');
+          assert.equal(nested.content.childNodes.length, 1,
+              'deep cloned template.content is empty');
+        });
+
+        test('importNode: element containing nested templates', function() {
+          var imp = document.createElement('div');
+          var t = document.createElement('template');
+          var s = 'a<template id="a">b<template id="b">c<template id="c">d</template></template></template>';
+          setupTemplate(t, s);
+          imp.appendChild(t);
+          var impClone = document.importNode(imp, true);
+          imp = imp.firstChild;
+          var deepClone = impClone.firstChild;
+          assert.equal(deepClone.content.childNodes.length, 2,
+              'deep cloned template.content is empty');
+          assert.notEqual(imp.content.firstChild, deepClone.content.firstChild,
+              'cloned content is not different from source');
+          var nested = deepClone.content.lastChild;
+          assert.isDefined(nested.content, 'nested cloned template content dne');
+          assert.equal(nested.content.childNodes.length, 2,
+              'deep cloned template.content is empty');
+          nested = nested.content.lastChild;
+          assert.isDefined(nested, 'nested cloned template content dne');
+          assert.equal(nested.content.childNodes.length, 2,
+              'deep cloned template.content is empty');
+          nested = nested.content.lastChild;
+          assert.isDefined(nested, 'nested cloned template content dne');
+          assert.equal(nested.content.childNodes.length, 1,
+              'deep cloned template.content is empty');
+        });
+
+        test('importNode: templates have proper owner document', function() {
+          var doc = document.implementation.createHTMLDocument('');
+          var imp = doc.createElement('div');
+          var t = doc.createElement('template');
+          var s = 'a<template id="a">b<template id="b">c<template id="c">d</template></template></template>';
+          t.innerHTML = s;
+          imp.appendChild(t);
+          var impClone = document.importNode(imp, true);
+          imp = imp.firstChild;
+          var deepClone = impClone.firstChild;
+          assert.notEqual(imp.ownerDocument, document);
+          assert.equal(impClone.ownerDocument, document);
+          assert.equal(deepClone.ownerDocument, document);
+        });
+
+        test('outerHTML', function() {
+          var t = document.createElement('template');
+          setupTemplate(t, '<div>foo</div>');
+          assert.equal(t.outerHTML, '<template><div>foo</div></template>');
+          document.body.appendChild(t);
+          t.outerHTML = '<div>replaced</div>';
+          assert.equal(t.parentNode, null);
+          var replaced = document.body.lastElementChild;
+          assert.equal(replaced.outerHTML, '<div>replaced</div>');
+        });
+
+        test('scripts added to template execute when stamped', function() {
+          var t = document.createElement('template');
+          var script = document.createElement('script');
+          script.textContent = 'window.executedTemplateScript=true';
+          t.content.appendChild(script);
+
+          document.body.appendChild(document.importNode(t.content, true));
+
+          assert.isDefined(window.executedTemplateScript, 'script should have executed but did not');
+        });
+
+        test('importing empty template content works', function() {
+          var t = document.createElement('template');
+          document.importNode(t.content, true);
+        });
+
+        test('can work with nested templates in a svg context (importNode)', function() {
+          var svgNamespace = 'http://www.w3.org/2000/svg';
+          var doc = document.implementation.createHTMLDocument('');
+          var imp = doc.createElement('div');
+          var t = document.createElement('template');
+          t.innerHTML = '<svg><template><circle cx="150" cy="150" r="100" fill="blue" /></template></svg>';
+          imp.appendChild(t);
+
+          var impClone = document.importNode(imp, true);
+          imp = imp.firstChild;
+          var deepClone = impClone.firstChild;
+
+          var svg = deepClone.content.firstChild;
+          assert.equal(svg.namespaceURI, svgNamespace);
+
+          var svgTemplate = svg.firstChild;
+          assert.equal(svgTemplate.namespaceURI, svgNamespace);
+          assert.equal(svgTemplate.firstChild.namespaceURI, svgNamespace);
+        });
+
+        test('can work with nested templates in a svg context (cloneNode)', function() {
+          var svgNamespace = 'http://www.w3.org/2000/svg';
+          var doc = document.implementation.createHTMLDocument('');
+          var imp = doc.createElement('div');
+          var t = document.createElement('template');
+          t.innerHTML = '<svg><template><circle cx="150" cy="150" r="100" fill="blue" /></template></svg>';
+          imp.appendChild(t);
+
+          var impClone = imp.cloneNode(true);
+          imp = imp.firstChild;
+          var deepClone = impClone.firstChild;
+
+          var svg = deepClone.content.firstChild;
+          assert.equal(svg.namespaceURI, svgNamespace);
+
+          var svgTemplate = svg.firstChild;
+          assert.equal(svgTemplate.namespaceURI, svgNamespace);
+          assert.equal(svgTemplate.firstChild.namespaceURI, svgNamespace);
+        });
+
+        test('DOMParser constructs correct templates', function() {
+          var DOM = (new DOMParser).parseFromString("<template></template>", "text/html");
+          assert.isTrue(DOM.querySelector("template") instanceof HTMLTemplateElement);
+        });
+
+        test('innerHTML on regular HTMLElement upgrades nested template', function() {
+          var container = document.createElement('div');
+          assert.equal(container.innerHTML, '');
+          var innerHTML = "<template><span>In template</span></template>";
+          container.innerHTML = innerHTML;
+          assert.equal(container.innerHTML, innerHTML);
+          assert.isTrue(container.firstChild instanceof HTMLTemplateElement);
+          assert.isOk(container.firstChild.content);
+          assert.isTrue(container.firstChild.content.firstChild instanceof HTMLSpanElement);
+        });
+      });
+    </script>
+  </body>
+</html>

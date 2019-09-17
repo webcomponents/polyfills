@@ -1,0 +1,118 @@
+<!doctype html>
+<!--
+@license
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<html>
+<head>
+  <meta charset="utf-8">
+</head>
+<body>
+
+<script>
+
+var childrenCount = 250;
+
+function prepContainer() {
+  var container = document.createElement('div');
+  for (var i=0; i < childrenCount; i++) {
+    container.appendChild(document.createElement('div'));
+  }
+  return container;
+}
+
+var desc = Object.getOwnPropertyDescriptor(Node.prototype, 'childNodes');
+
+function patchContainer(container) {
+  if (!container.__patchProto) {
+    var patchProto = Object.create(container.__proto__);
+    container.__proto__.__patchProto = patchProto;
+    patchProto.__sourceProto = container.__proto__;
+    Object.defineProperty(patchProto, 'childNodes', {
+      get: function() {
+        return [];
+      },
+      configurable: true
+    })
+    container.__proto__ = container.__patchProto;
+  }
+  return container;
+}
+
+function unpatchContainer(container) {
+  if (container.__sourceProto) {
+    container.__proto__ = container.__sourceProto;
+  }
+}
+
+function prepPatchedContainer() {
+  return patchContainer(prepContainer());
+}
+
+function getChildNodes(container) {
+  return Array.prototype.slice.call(container.childNodes);
+}
+
+function getChildNodesWalk(container) {
+  var copy=[], i=0;
+  for (let n=container.firstElementChild; n; n=n.nextElementSibling) {
+    copy[i++] = n;
+  }
+  return copy;
+}
+
+function getChildNodesUnPatched(container) {
+  unpatchContainer(container);
+  var nodes = Array.prototype.slice.call(container.childNodes);
+  patchContainer(container);
+  return nodes;
+}
+
+var walker = document.createTreeWalker(document, NodeFilter.SHOW_ALL, null, false);
+function getTreeWalkerChildNodes(container) {
+  var nodes = [];
+  walker.currentNode = container;
+  var n = walker.firstChild();
+  while (n) {
+    nodes.push(n);
+    n = walker.nextSibling();
+  }
+  return nodes;
+}
+
+function test(name, setup, test, runs) {
+  var input = setup && setup();
+  console.time(name);
+  for (var i=0, r; i < (runs || 1); i++) {
+    r = test(input).length;
+    if (r !== childrenCount) {
+      console.warn('error', name, r);
+    }
+  }
+  console.timeEnd(name);
+}
+
+var count = 50;
+
+test('childNodes', prepContainer, getChildNodes, count);
+test('childNodes-walk', prepContainer, getChildNodesWalk, count);
+test('treewalker-childNodes', prepContainer, getTreeWalkerChildNodes, count);
+test('patched-treewalker-childNodes', prepPatchedContainer, getTreeWalkerChildNodes, count);
+test('patched-childNodes', prepPatchedContainer, getChildNodesUnPatched, count);
+console.log('****');
+test('childNodes', prepContainer, getChildNodes, count);
+test('childNodes-walk', prepContainer, getChildNodesWalk, count);
+test('treewalker-childNodes', prepContainer, getTreeWalkerChildNodes, count);
+test('patched-treewalker-childNodes', prepPatchedContainer, getTreeWalkerChildNodes, count);
+test('patched-childNodes', prepPatchedContainer, getChildNodesUnPatched, count);
+
+
+</script>
+
+</body>
+</html>

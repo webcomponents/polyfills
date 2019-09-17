@@ -1,54 +1,36 @@
 {
-  "name": "@webcomponents/custom-elements",
-  "version": "1.2.4",
-  "description": "HTML Custom Elements Polyfill",
-  "main": "custom-elements.min.js",
-  "keywords": [
-    "custom-elements",
-    "customelements",
-    "web-components",
-    "webcomponents",
-    "polyfill",
-    "shim"
-  ],
-  "directories": {
-    "test": "tests"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/webcomponents/custom-elements.git"
-  },
+  "name": "webcomponents-polyfills",
+  "private": true,
+  "description": "Webcomponents polyfills monorepo",
   "author": "The Polymer Authors",
   "license": "BSD-3-Clause",
-  "bugs": {
-    "url": "https://github.com/webcomponents/custom-elements/issues"
-  },
   "scripts": {
-    "build": "gulp",
-    "debug": "rollup -c",
-    "test": "wct",
-    "prepack": "npm run build"
+    "bootstrap": "lerna bootstrap --ci",
+    "build": "lerna run build --stream",
+    "lint": "lerna run lint --stream",
+    "test": "lerna run test --stream --concurrency 1 --no-bail",
+    "test-pack": "lerna exec \"npm pack\"",
+    "test-sauce": "lerna run test --stream --no-bail -- -- -s 'windows 10/microsoftedge@17' -s 'windows 10/microsoftedge@15' -s 'windows 8.1/internet explorer@11' -s 'macos 10.13/safari@12' -s 'macos 10.13/safari@11' -s 'os x 10.11/safari@10' -s 'os x 10.11/safari@9' -s 'Linux/chrome@41'",
+    "nuke": "rm -rf package-lock.json node_modules && npm install && lerna exec \"rm -f package-lock.json\" && lerna clean --yes && lerna bootstrap && lerna exec --stream -- \"test -f package-lock.json || npm install --package-lock-only\""
   },
-  "files": [
-    "custom-elements.min.js*",
-    "src/",
-    "externs/"
-  ],
-  "homepage": "https://webcomponents.org/polyfills",
   "devDependencies": {
-    "@webcomponents/html-imports": "^1.2.0",
-    "@webcomponents/shadydom": "^1.2.0",
-    "@webcomponents/template": "^1.4.0",
-    "@webcomponents/webcomponents-platform": "^1.0.0",
-    "es6-promise": "4.2.4",
-    "google-closure-compiler": "^20180805.0.0",
+    "@gulp-sourcemaps/sources-content": "^1.0.0",
+    "babel-core": "^6.26.3",
+    "del": "^3.0.0",
+    "eslint": "^5.9.0",
+    "eslint-plugin-html": "^5.0.3",
+    "google-closure-compiler": "^20190819.0.0",
     "gulp": "^4.0.0",
-    "gulp-sourcemaps": "^1.6.0",
+    "gulp-babel": "^7.0.1",
+    "gulp-rename": "^1.4.0",
+    "gulp-rollup": "^2.16.2",
+    "gulp-size": "^3.0.0",
+    "gulp-sourcemaps": "^2.6.4",
+    "lerna": "^3.13.3",
     "rollup": "^0.62.0",
-    "wct-browser-legacy": "^1.0.2",
-    "web-component-tester": "^6.9.0"
-  },
-  "publishConfig": {
-    "access": "public"
+    "rollup-plugin-babel": "^3.0.7",
+    "rollup-plugin-commonjs": "^9.2.0",
+    "rollup-plugin-license": "^0.8.1",
+    "web-component-tester": "^6.9.2"
   }
 }

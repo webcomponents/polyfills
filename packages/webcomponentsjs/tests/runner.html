@@ -1,0 +1,89 @@
+<!doctype html>
+<!--
+    @license
+    Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+    This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+    The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+    The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+    Code distributed by Google as part of the polymer project is also
+    subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<title>All WebComponents Tests</title>
+<meta charset="utf-8">
+
+<!-- WebComponents -->
+<script src="./wct-config.js"></script>
+<script src="../node_modules/wct-browser-legacy/browser.js"></script>
+
+<script>
+  window.suites = [
+    'template-and-CE.html',
+    'integration.html',
+    'integration-es5.html',
+    'load.html',
+    'force-polyfills.html',
+    'dev-loader.html',
+    'dev-loader-swizzled.html',
+    'promise.html',
+    'bundle-with-modules.html',
+    'loader-with-modules.html',
+    'loader-with-root-defined.html',
+    'url.html',
+    'symbol.html',
+    'bundle-after-load.html',
+    'loader-after-load.html',
+    'baseuri.html'
+  ];
+</script>
+<script>
+  try {
+    // include `async loader` if `import()` function is supported.
+    eval('import("").catch(function(){})');
+    window.suites.push('async-loader-with-modules.html');
+  } catch (e) {} // eslint-disable-line no-empty
+</script>
+<script>
+  // Include `async-loader-no-polyfills` test only for browsers that require no polyfills.
+  // Feature-detection tests are from `webcomponents-loader.js`.
+
+  var polyfills = [];
+  if (!('attachShadow' in Element.prototype && 'getRootNode' in Element.prototype) ||
+    (window.ShadyDOM && window.ShadyDOM.force)) {
+    polyfills.push('sd');
+  }
+  if (!window.customElements || window.customElements.forcePolyfill) {
+    polyfills.push('ce');
+  }
+
+  var needsTemplate = (function() {
+    // no real <template> because no `content` property (IE and older browsers)
+    var t = document.createElement('template');
+    if (!('content' in t)) {
+      return true;
+    }
+    // broken doc fragment (older Edge)
+    if (!(t.content.cloneNode() instanceof DocumentFragment)) {
+      return true;
+    }
+    // broken <template> cloning (Edge up to at least version 17)
+    var t2 = document.createElement('template');
+    t2.content.appendChild(document.createElement('div'));
+    t.content.appendChild(t2);
+    var clone = t.cloneNode(true);
+    return (clone.content.childNodes.length === 0 ||
+        clone.content.firstChild.content.childNodes.length === 0);
+  })();
+
+  // NOTE: any browser that does not have template or ES6 features
+  // must load the full suite of polyfills.
+  if (!window.Promise || !Array.from || !window.URL || !window.Symbol || needsTemplate) {
+    polyfills = ['sd-ce-pf'];
+  }
+
+  if (!polyfills.length) {
+    window.suites.push('async-loader-no-polyfills.html');
+  }
+</script>
+<script>
+  WCT.loadSuites(window.suites);
+</script>

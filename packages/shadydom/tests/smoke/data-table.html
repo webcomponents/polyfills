@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="description" content="Element Polymer 2.0">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+
+  <script>
+    ShadyDOM = {force: true};
+  </script>
+  <script src="../../shadydom.min.js"></script>
+
+  <script src="http://code.jquery.com/jquery-3.2.1.js"></script>
+
+  <!--jQuery Datatables-->
+  <link href="http://nightly.datatables.net/css/jquery.dataTables.css" rel="stylesheet" type="text/css" />
+  <script src="http://cdn.datatables.net/1.10.15/js/jquery.dataTables.js"></script>
+  <script src="http://cdn.datatables.net/select/1.2.2/js/dataTables.select.js"></script>
+
+</head>
+<body class="fullbleed vertical layout">
+  <table id="example" class="display" cellspacing="0" width="100%">
+      <thead>
+          <tr>
+              <th>Name</th>
+              <th>Position</th>
+              <th>Office</th>
+              <th>Age</th>
+              <th>Start date</th>
+              <th>Salary</th>
+          </tr>
+      </thead>
+      <tfoot>
+          <tr>
+              <th>Name</th>
+              <th>Position</th>
+              <th>Office</th>
+              <th>Age</th>
+              <th>Start date</th>
+              <th>Salary</th>
+          </tr>
+      </tfoot>
+      <tbody>
+          <tr>
+              <td>Tiger Nixon</td>
+              <td>System Architect</td>
+              <td>Edinburgh</td>
+              <td>61</td>
+              <td>2011/04/25</td>
+              <td>$320,800</td>
+          </tr>
+          <tr>
+              <td>Garrett Winters</td>
+              <td>Accountant</td>
+              <td>Tokyo</td>
+              <td>63</td>
+              <td>2011/07/25</td>
+              <td>$170,750</td>
+          </tr>
+
+      </tbody>
+  </table>
+
+
+  <script>
+    $(document).ready( function () {
+      var table = $('#example').DataTable({select: true});
+    } );
+  </script>
+
+</body>
+</html>
