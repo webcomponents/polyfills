@@ -680,7 +680,8 @@ suite('Patch of addEventListener/removeEventListener', function() {
 
   test('add listener with an object missing `handleEvent` function', function() {
     var obj = {};
-    ShadyDOM.wrapIfNeeded(el1).addEventListener('foo', obj);
+    // Note, FF natively throws here so ensure always wrapped to test ShadyDOM behavior only.
+    ShadyDOM.wrap(el1).addEventListener('foo', obj);
     assert.doesNotThrow(function() {
       ShadyDOM.wrapIfNeeded(el1).dispatchEvent(new Event('foo'))
     });
@@ -688,7 +689,8 @@ suite('Patch of addEventListener/removeEventListener', function() {
 
   test('add listener with an object with `handleEvent` that is not a function', function() {
     var obj = {handleEvent: true};
-    ShadyDOM.wrapIfNeeded(el1).addEventListener('zip', obj);
+    // Note, FF natively throws here so ensure always wrapped to test ShadyDOM behavior only.
+    ShadyDOM.wrap(el1).addEventListener('zip', obj);
     assert.doesNotThrow(function () {
       ShadyDOM.wrapIfNeeded(el1).dispatchEvent(new Event('zip'))
     });
