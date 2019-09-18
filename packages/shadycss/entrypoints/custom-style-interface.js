@@ -85,5 +85,5 @@ const waitForCustomElements = setInterval(() => {
     clearInterval(waitForCustomElements);
     createCustomStyleElement(customStyleInterface);
   }
-}, 10);
+}, 0);
 window.ShadyCSS.CustomStyleInterface = customStyleInterface;

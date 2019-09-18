@@ -3,17 +3,23 @@ function createCustomStyleElement(customStyleInterface) {
 
     constructor() {
       super();
+      /** @type {HTMLStyleElement} */
       this.styleElement = null;
       customStyleInterface.addCustomStyle(this);
     }
 
-    ['getStyle']() {
+    /**
+     * @return {HTMLStyleElement}
+     */
+    getStyle() {
       if (!this.styleElement) {
-        this.styleElement = this.querySelector('style');
+        this.styleElement = /** @type {HTMLStyleElement} */(this.querySelector('style'));
       }
       return this.styleElement;
     }
   }
+
+  CustomStyle.prototype['getStyle'] = CustomStyle.prototype.getStyle; // eslint-disable-line no-self-assign
   customElements.define('custom-style', CustomStyle);
 }
 
