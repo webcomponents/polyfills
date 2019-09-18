@@ -13,7 +13,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 import CustomStyleInterface from '../src/custom-style-interface.js';
 import {getComputedStyleValue, updateNativeProperties} from '../src/common-utils.js';
 import {nativeCssVariables, nativeShadow, cssBuild, disableRuntime} from '../src/style-settings.js';
-import CustomStyle from '../src/custom-style.js';
+import createCustomStyleElement from '../src/custom-style.js';
 
 const customStyleInterface = new CustomStyleInterface();
 
@@ -79,5 +79,11 @@ if (!window.ShadyCSS) {
     disableRuntime: disableRuntime,
   }
 }
-window.ShadyCss.CustomStyle = CustomStyle;
+// wait until customElements registry exists
+const waitForCustomElements = setInterval(() => {
+  if (window.customElements) {
+    clearInterval(waitForCustomElements);
+    createCustomStyleElement(customStyleInterface);
+  }
+}, 10);
 window.ShadyCSS.CustomStyleInterface = customStyleInterface;

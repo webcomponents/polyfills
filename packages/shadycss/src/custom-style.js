@@ -1,18 +1,20 @@
-import CustomStyleInterface from './custom-style-interface.js';
+function createCustomStyleElement(customStyleInterface) {
+  class CustomStyle extends HTMLElement {
 
-export default class CustomStyle extends HTMLElement {
-
-  constructor() {
-    super();
-    this.styleElement = null;
-    CustomStyleInterface.addCustomStyle(this);
-  }
-
-  getStyle() {
-    if (!this.styleElement) {
-      this.styleElement = this.querySelector('style');
+    constructor() {
+      super();
+      this.styleElement = null;
+      customStyleInterface.addCustomStyle(this);
     }
-    return this.styleElement;
+
+    ['getStyle']() {
+      if (!this.styleElement) {
+        this.styleElement = this.querySelector('style');
+      }
+      return this.styleElement;
+    }
   }
+  customElements.define('custom-style', CustomStyle);
 }
-customElements.define('custom-style', CustomStyle);
+
+export default createCustomStyleElement;
