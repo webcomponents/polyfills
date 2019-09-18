@@ -39,12 +39,13 @@ function installPolyfill() {
 
   // The main document is associated with the global registry.
   document.__CE_registry = customElements;
+
   Object.defineProperty(window, 'customElements', {
     configurable: true,
     enumerable: true,
     value: customElements,
   });
-}
+};
 
 if (!priorCustomElements ||
      priorCustomElements['forcePolyfill'] ||
