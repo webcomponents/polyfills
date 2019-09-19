@@ -513,14 +513,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       const fn = function(e) {
         path = e.composedPath();
       }
-      ShadyDOM.wrapIfNeeded(el).addEventListener('foo', fn);
+      ShadyDOM.wrap(el).addEventListener('foo', fn);
       const e = new Event('foo', {composed: true});
-      ShadyDOM.wrapIfNeeded(el).dispatchEvent(e);
+      ShadyDOM.wrap(el).dispatchEvent(e);
       assert.deepEqual([el, document.body, document.documentElement, document, window], path);
       path = null;
-      ShadyDOM.wrapIfNeeded(el).removeEventListener('foo', fn);
+      ShadyDOM.wrap(el).removeEventListener('foo', fn);
       const e2 = new Event('foo', {composed: true});
-      ShadyDOM.wrapIfNeeded(el).dispatchEvent(e2);
+      ShadyDOM.wrap(el).dispatchEvent(e2);
       assert.isNull(path);
     });
 
@@ -782,7 +782,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     test('capturing event listeners fire correctly for focus and blur', function() {
       let el = createEnabledElement('x-focus');
       let timeStamp;
-      ShadyDOM.wrapIfNeeded(el).addEventListener('focus', function(e) {
+      ShadyDOM.wrap(el).addEventListener('focus', function(e) {
         timeStamp = e.timeStamp;
       }, true);
       el.fireComposed();
@@ -817,7 +817,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         a.href = 'http://localhost/foo.html';
         ShadyDOM.wrapIfNeeded(a).textContent = 'link!';
         ShadyDOM.wrapIfNeeded(root).appendChild(a)
-        ShadyDOM.wrapIfNeeded(el).addEventListener('foo', function(event) {
+        ShadyDOM.wrap(el).addEventListener('foo', function(event) {
           let path = event.composedPath();
           pathCompare([a, root, el, document.body, document.documentElement, document, window], path);
         });

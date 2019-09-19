@@ -584,20 +584,20 @@ suite('Patch of addEventListener/removeEventListener', function() {
   });
 
   test('different events, same callback', function() {
-    ShadyDOM.wrapIfNeeded(el1).addEventListener('test-event-1', callback);
-    ShadyDOM.wrapIfNeeded(el1).addEventListener('test-event-2', callback);
-    ShadyDOM.wrapIfNeeded(el1).dispatchEvent(new CustomEvent('test-event-1'));
-    ShadyDOM.wrapIfNeeded(el1).dispatchEvent(new CustomEvent('test-event-2'));
+    ShadyDOM.wrap(el1).addEventListener('test-event-1', callback);
+    ShadyDOM.wrap(el1).addEventListener('test-event-2', callback);
+    ShadyDOM.wrap(el1).dispatchEvent(new CustomEvent('test-event-1'));
+    ShadyDOM.wrap(el1).dispatchEvent(new CustomEvent('test-event-2'));
     assert.equal(callback.callCount, 2, 'called twice');
-    ShadyDOM.wrapIfNeeded(el1).removeEventListener('test-event-1', callback);
-    ShadyDOM.wrapIfNeeded(el1).removeEventListener('test-event-2', callback);
-    ShadyDOM.wrapIfNeeded(el1).dispatchEvent(new CustomEvent('test-event-1'));
-    ShadyDOM.wrapIfNeeded(el1).dispatchEvent(new CustomEvent('test-event-2'));
+    ShadyDOM.wrap(el1).removeEventListener('test-event-1', callback);
+    ShadyDOM.wrap(el1).removeEventListener('test-event-2', callback);
+    ShadyDOM.wrap(el1).dispatchEvent(new CustomEvent('test-event-1'));
+    ShadyDOM.wrap(el1).dispatchEvent(new CustomEvent('test-event-2'));
     assert.equal(callback.callCount, 2, 'listeners removed (callCount did not increase)');
   });
 
   test('support `once` option', function() {
-    ShadyDOM.wrapIfNeeded(el1).addEventListener('click', callback, {once: true});
+    ShadyDOM.wrap(el1).addEventListener('click', callback, {once: true});
     el1.click();
     assert.equal(callback.callCount, 1, 'listener called once');
     el1.click();
@@ -605,57 +605,57 @@ suite('Patch of addEventListener/removeEventListener', function() {
   });
 
   test('same event, same callback, different options', function() {
-    ShadyDOM.wrapIfNeeded(el1).addEventListener('click', callback, {passive: true});
-    ShadyDOM.wrapIfNeeded(el1).addEventListener('click', callback, {capture: true});
+    ShadyDOM.wrap(el1).addEventListener('click', callback, {passive: true});
+    ShadyDOM.wrap(el1).addEventListener('click', callback, {capture: true});
     el1.click();
     assert.equal(callback.callCount, 2, 'called twice');
-    ShadyDOM.wrapIfNeeded(el1).removeEventListener('click', callback, {passive: true});
+    ShadyDOM.wrap(el1).removeEventListener('click', callback, {passive: true});
     el1.click();
     assert.equal(callback.callCount, 3, 'called by capturing listener');
-    ShadyDOM.wrapIfNeeded(el1).removeEventListener('click', callback, {capture: true});
+    ShadyDOM.wrap(el1).removeEventListener('click', callback, {capture: true});
     el1.click();
     assert.equal(callback.callCount, 3, 'listeners removed (callCount did not increase)');
   });
 
   test('add same listener twice, invoke callback once', function() {
-    ShadyDOM.wrapIfNeeded(el1).addEventListener('click', callback);
-    ShadyDOM.wrapIfNeeded(el1).addEventListener('click', callback);
+    ShadyDOM.wrap(el1).addEventListener('click', callback);
+    ShadyDOM.wrap(el1).addEventListener('click', callback);
     el1.click();
     assert.equal(callback.callCount, 1, 'called once');
-    ShadyDOM.wrapIfNeeded(el1).removeEventListener('click', callback);
+    ShadyDOM.wrap(el1).removeEventListener('click', callback);
     el1.click();
     assert.equal(callback.callCount, 1, 'listener removed (callCount did not increase)');
   });
 
   test('add same listener twice, invoke callback once (different useCapture notation)', function() {
-    ShadyDOM.wrapIfNeeded(el1).addEventListener('click', callback, true /* useCapture */);
-    ShadyDOM.wrapIfNeeded(el1).addEventListener('click', callback, {capture: true});
+    ShadyDOM.wrap(el1).addEventListener('click', callback, true /* useCapture */);
+    ShadyDOM.wrap(el1).addEventListener('click', callback, {capture: true});
     el1.click();
     assert.equal(callback.callCount, 1, 'listener called once');
-    ShadyDOM.wrapIfNeeded(el1).removeEventListener('click', callback, {capture: true});
+    ShadyDOM.wrap(el1).removeEventListener('click', callback, {capture: true});
     el1.click();
     assert.equal(callback.callCount, 1, 'listener removed (callCount did not increase)');
   });
 
   test('add same listener twice, different order of options keys', function() {
-    ShadyDOM.wrapIfNeeded(el1).addEventListener('click', callback, {capture: false, passive: true});
-    ShadyDOM.wrapIfNeeded(el1).addEventListener('click', callback, {passive: true, capture: false});
+    ShadyDOM.wrap(el1).addEventListener('click', callback, {capture: false, passive: true});
+    ShadyDOM.wrap(el1).addEventListener('click', callback, {passive: true, capture: false});
     el1.click();
     assert.equal(callback.callCount, 1, 'listener called once');
-    ShadyDOM.wrapIfNeeded(el1).removeEventListener('click', callback, {passive: true, capture: false});
+    ShadyDOM.wrap(el1).removeEventListener('click', callback, {passive: true, capture: false});
     el1.click();
     assert.equal(callback.callCount, 1, 'listener removed (callCount did not increase)');
   });
 
   test('add same listener on two different nodes', function() {
-    ShadyDOM.wrapIfNeeded(el1).addEventListener('click', callback);
-    ShadyDOM.wrapIfNeeded(el2).addEventListener('click', callback);
+    ShadyDOM.wrap(el1).addEventListener('click', callback);
+    ShadyDOM.wrap(el2).addEventListener('click', callback);
     el1.click();
     assert.equal(callback.callCount, 1, 'called once');
     el2.click();
     assert.equal(callback.callCount, 2, 'called twice');
-    ShadyDOM.wrapIfNeeded(el1).removeEventListener('click', callback);
-    ShadyDOM.wrapIfNeeded(el2).removeEventListener('click', callback);
+    ShadyDOM.wrap(el1).removeEventListener('click', callback);
+    ShadyDOM.wrap(el2).removeEventListener('click', callback);
     el1.click();
     el2.click();
     assert.equal(callback.callCount, 2, 'listeners removed (callCount did not increase)');
@@ -663,16 +663,16 @@ suite('Patch of addEventListener/removeEventListener', function() {
 
   test('add listener with `handleEvent` function', function() {
     var obj = {handleEvent: sinon.stub()};
-    ShadyDOM.wrapIfNeeded(el1).addEventListener('click', obj);
-    ShadyDOM.wrapIfNeeded(el2).addEventListener('click', obj);
+    ShadyDOM.wrap(el1).addEventListener('click', obj);
+    ShadyDOM.wrap(el2).addEventListener('click', obj);
     el1.click();
     assert.isTrue(obj.handleEvent.calledOn(obj), 'called on object listened');
     assert.isTrue(obj.handleEvent.args[0][0] instanceof Event, 'called with event argument');
     assert.equal(obj.handleEvent.callCount, 1, 'called once');
     el2.click();
     assert.equal(obj.handleEvent.callCount, 2, 'called twice');
-    ShadyDOM.wrapIfNeeded(el1).removeEventListener('click', obj);
-    ShadyDOM.wrapIfNeeded(el2).removeEventListener('click', obj);
+    ShadyDOM.wrap(el1).removeEventListener('click', obj);
+    ShadyDOM.wrap(el2).removeEventListener('click', obj);
     el1.click();
     el2.click();
     assert.equal(obj.handleEvent.callCount, 2, 'listeners removed (callCount did not increase)');
@@ -680,19 +680,17 @@ suite('Patch of addEventListener/removeEventListener', function() {
 
   test('add listener with an object missing `handleEvent` function', function() {
     var obj = {};
-    // Note, FF natively throws here so ensure always wrapped to test ShadyDOM behavior only.
     ShadyDOM.wrap(el1).addEventListener('foo', obj);
     assert.doesNotThrow(function() {
-      ShadyDOM.wrapIfNeeded(el1).dispatchEvent(new Event('foo'))
+      ShadyDOM.wrap(el1).dispatchEvent(new Event('foo'))
     });
   });
 
   test('add listener with an object with `handleEvent` that is not a function', function() {
     var obj = {handleEvent: true};
-    // Note, FF natively throws here so ensure always wrapped to test ShadyDOM behavior only.
     ShadyDOM.wrap(el1).addEventListener('zip', obj);
     assert.doesNotThrow(function () {
-      ShadyDOM.wrapIfNeeded(el1).dispatchEvent(new Event('zip'))
+      ShadyDOM.wrap(el1).dispatchEvent(new Event('zip'))
     });
   });
 

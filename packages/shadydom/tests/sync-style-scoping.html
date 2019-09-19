@@ -100,7 +100,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           window.ShadyCSS.styleElement(this);
           if (!ShadyDOM.wrapIfNeeded(this).shadowRoot) {
             ShadyDOM.wrapIfNeeded(this).attachShadow({mode: 'open'});
-            ShadyDOM.wrapIfNeeded(this).shadowRoot.appendChild(ShadyDOM.wrapIfNeeded(this.__template.content).cloneNode(true));
+            ShadyDOM.wrapIfNeeded(this).shadowRoot.appendChild(ShadyDOM.wrap(this.__template.content).cloneNode(true));
           }
         }
       }
@@ -144,7 +144,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         // NOTE: wrapping here is critical to avoid using native `innerHTML`
         // setter which, on IE11, nukes the DOM subtree and can cause
         // pending ShadyDOM renders to fail.
-        ShadyDOM.wrapIfNeeded(arena).innerHTML = '';
+        ShadyDOM.wrap(arena).innerHTML = '';
         // Ensure clean rendering state between tests
         ShadyDOM.flush();
       });
@@ -399,7 +399,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           assert.isTrue(ShadyDOM.wrapIfNeeded(host).shadowRoot.firstChild.classList.contains('style-scope'));
           assert.isTrue(ShadyDOM.wrapIfNeeded(host).shadowRoot.firstChild.classList.contains('x-host'));
         });
-      });
+       });
     });
   </script>
 </body>

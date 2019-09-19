@@ -713,16 +713,16 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
   test('disconnected node: isConnected, getRootNode', function() {
     let div = document.createElement('div');
-    assert.isFalse(ShadyDOM.wrapIfNeeded(div).isConnected);
-    assert.equal(ShadyDOM.wrapIfNeeded(div).getRootNode(), div);
+    assert.isFalse(ShadyDOM.wrap(div).isConnected);
+    assert.equal(ShadyDOM.wrap(div).getRootNode(), div);
   });
 
   test('slot, assignedSlot accessor', function() {
     let div = document.createElement('div');
-    ShadyDOM.wrapIfNeeded(div).slot = 'slot';
-    assert.equal(ShadyDOM.wrapIfNeeded(div).slot, 'slot');
+    ShadyDOM.wrap(div).slot = 'slot';
+    assert.equal(ShadyDOM.wrap(div).slot, 'slot');
     assert.equal(div.getAttribute('slot'), 'slot');
-    assert.equal(ShadyDOM.wrapIfNeeded(div).assignedSlot, null);
+    assert.equal(ShadyDOM.wrap(div).assignedSlot, null);
   });
 
   test('parentNode', function() {
@@ -1552,12 +1552,12 @@ suite('non-distributed elements', function() {
     var c2 = createEnabledElement('x-compose');
     ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(c1).shadowRoot).querySelector('#project')).appendChild(test);
     ShadyDOM.flush();
-    assert.equal(ShadyDOM.wrapIfNeeded(test).getRootNode(), ShadyDOM.wrapIfNeeded(c1).shadowRoot, 'getOwnerRoot incorrect for child added to element in root');
+    assert.equal(ShadyDOM.wrap(test).getRootNode(), ShadyDOM.wrapIfNeeded(c1).shadowRoot, 'getOwnerRoot incorrect for child added to element in root');
     ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(c2).shadowRoot).querySelector('#project')).appendChild(test);
     ShadyDOM.flush();
-    assert.equal(ShadyDOM.wrapIfNeeded(test).getRootNode(), ShadyDOM.wrapIfNeeded(c2).shadowRoot, 'getOwnerRoot not correctly reset when element moved to different root');
+    assert.equal(ShadyDOM.wrap(test).getRootNode(), ShadyDOM.wrapIfNeeded(c2).shadowRoot, 'getOwnerRoot not correctly reset when element moved to different root');
     ShadyDOM.wrapIfNeeded(c1).appendChild(test);
-    assert.equal(ShadyDOM.wrapIfNeeded(test).getRootNode(), c1, 'getOwnerRoot incorrect for child moved from a root to no root');
+    assert.equal(ShadyDOM.wrap(test).getRootNode(), c1, 'getOwnerRoot incorrect for child moved from a root to no root');
   });
 
   test('getRootNode into/out of shadowRoot', function() {
@@ -1565,68 +1565,68 @@ suite('non-distributed elements', function() {
     var c1 = createEnabledElement('x-compose');
     ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(c1).shadowRoot).querySelector('#project')).appendChild(test);
     ShadyDOM.flush();
-    assert.equal(ShadyDOM.wrapIfNeeded(test).getRootNode(), ShadyDOM.wrapIfNeeded(c1).shadowRoot, 'getOwnerRoot incorrect for child added to element in root');
+    assert.equal(ShadyDOM.wrap(test).getRootNode(), ShadyDOM.wrapIfNeeded(c1).shadowRoot, 'getOwnerRoot incorrect for child added to element in root');
     ShadyDOM.wrap(document.body).appendChild(test);
     ShadyDOM.flush();
-    assert.equal(ShadyDOM.wrapIfNeeded(test).getRootNode(), document, 'getOwnerRoot not correctly reset when element moved to different root');
+    assert.equal(ShadyDOM.wrap(test).getRootNode(), document, 'getOwnerRoot not correctly reset when element moved to different root');
     ShadyDOM.wrap(c1).appendChild(test);
     ShadyDOM.flush();
-    assert.equal(ShadyDOM.wrapIfNeeded(test).getRootNode(), c1, 'getOwnerRoot incorrect for child moved from a root to no root');
+    assert.equal(ShadyDOM.wrap(test).getRootNode(), c1, 'getOwnerRoot incorrect for child moved from a root to no root');
   });
 
 
   test('getRootNode when out of tree', function() {
     var test = document.createElement('div');
-    assert.equal(ShadyDOM.wrapIfNeeded(test).getRootNode(), test, 'getOwnerRoot incorrect when not in root');
+    assert.equal(ShadyDOM.wrap(test).getRootNode(), test, 'getOwnerRoot incorrect when not in root');
     var c1 = createEnabledElement('x-compose');
     var project = ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(c1).shadowRoot).querySelector('#project');
     ShadyDOM.wrapIfNeeded(project).appendChild(test);
     ShadyDOM.flush();
-    assert.equal(ShadyDOM.wrapIfNeeded(test).getRootNode(), ShadyDOM.wrapIfNeeded(c1).shadowRoot, 'getOwnerRoot incorrect for child added to element in root');
+    assert.equal(ShadyDOM.wrap(test).getRootNode(), ShadyDOM.wrapIfNeeded(c1).shadowRoot, 'getOwnerRoot incorrect for child added to element in root');
     ShadyDOM.wrapIfNeeded(project).removeChild(test);
     ShadyDOM.flush();
-    assert.equal(ShadyDOM.wrapIfNeeded(test).getRootNode(), test, 'getOwnerRoot incorrect for child moved from a root to no root');
+    assert.equal(ShadyDOM.wrap(test).getRootNode(), test, 'getOwnerRoot incorrect for child moved from a root to no root');
     ShadyDOM.wrapIfNeeded(project).appendChild(test);
     ShadyDOM.flush();
-    assert.equal(ShadyDOM.wrapIfNeeded(test).getRootNode(), ShadyDOM.wrapIfNeeded(c1).shadowRoot, 'getOwnerRoot incorrect for child added to element in root');
+    assert.equal(ShadyDOM.wrap(test).getRootNode(), ShadyDOM.wrapIfNeeded(c1).shadowRoot, 'getOwnerRoot incorrect for child added to element in root');
   });
 
   test('getRootNode when out of tree and adding subtree', function() {
     var container = document.createDocumentFragment();
     var test = document.createElement('div');
     ShadyDOM.wrapIfNeeded(container).appendChild(test);
-    assert.equal(ShadyDOM.wrapIfNeeded(test).getRootNode(), container, 'getOwnerRoot incorrect when not in root');
+    assert.equal(ShadyDOM.wrap(test).getRootNode(), container, 'getOwnerRoot incorrect when not in root');
     var c1 = createEnabledElement('x-compose');
     var project = ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(c1).shadowRoot).querySelector('#project');
     ShadyDOM.wrapIfNeeded(project).appendChild(container);
     ShadyDOM.flush();
-    assert.equal(ShadyDOM.wrapIfNeeded(test).getRootNode(), ShadyDOM.wrapIfNeeded(c1).shadowRoot, 'getOwnerRoot incorrect for child added to element in root');
+    assert.equal(ShadyDOM.wrap(test).getRootNode(), ShadyDOM.wrapIfNeeded(c1).shadowRoot, 'getOwnerRoot incorrect for child added to element in root');
     ShadyDOM.wrapIfNeeded(project).removeChild(test);
     ShadyDOM.flush();
-    assert.equal(ShadyDOM.wrapIfNeeded(test).getRootNode(), test, 'getOwnerRoot incorrect for child moved from a root to no root');
+    assert.equal(ShadyDOM.wrap(test).getRootNode(), test, 'getOwnerRoot incorrect for child moved from a root to no root');
     ShadyDOM.wrapIfNeeded(project).appendChild(test);
     ShadyDOM.flush();
-    assert.equal(ShadyDOM.wrapIfNeeded(test).getRootNode(), ShadyDOM.wrapIfNeeded(c1).shadowRoot, 'getOwnerRoot incorrect for child added to element in root');
+    assert.equal(ShadyDOM.wrap(test).getRootNode(), ShadyDOM.wrapIfNeeded(c1).shadowRoot, 'getOwnerRoot incorrect for child added to element in root');
   });
 
   test('getRootNode, subtree', function() {
     var test = document.createElement('div');
     var testChild = document.createElement('div');
     ShadyDOM.wrapIfNeeded(test).appendChild(testChild);
-    assert.equal(ShadyDOM.wrapIfNeeded(test).getRootNode(), test, 'getOwnerRoot incorrect when not in root');
+    assert.equal(ShadyDOM.wrap(test).getRootNode(), test, 'getOwnerRoot incorrect when not in root');
     var c1 = createEnabledElement('x-compose');
     var project = ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(c1).shadowRoot).querySelector('#project');
     ShadyDOM.wrapIfNeeded(project).appendChild(test);
     ShadyDOM.flush();
-    assert.equal(ShadyDOM.wrapIfNeeded(test).getRootNode(), ShadyDOM.wrapIfNeeded(c1).shadowRoot, 'getOwnerRoot incorrect for child added to element in root');
+    assert.equal(ShadyDOM.wrap(test).getRootNode(), ShadyDOM.wrapIfNeeded(c1).shadowRoot, 'getOwnerRoot incorrect for child added to element in root');
     assert.equal(ShadyDOM.wrap(testChild).getRootNode(), ShadyDOM.wrapIfNeeded(c1).shadowRoot, 'getOwnerRoot incorrect for sub-child added to element in root');
     ShadyDOM.wrapIfNeeded(project).removeChild(test);
     ShadyDOM.flush();
-    assert.equal(ShadyDOM.wrapIfNeeded(test).getRootNode(), test, 'getOwnerRoot incorrect for child moved from a root to no root');
-    assert.equal(ShadyDOM.wrapIfNeeded(testChild).getRootNode(), test, 'getOwnerRoot incorrect for sub-child moved from a root to no root');
+    assert.equal(ShadyDOM.wrap(test).getRootNode(), test, 'getOwnerRoot incorrect for child moved from a root to no root');
+    assert.equal(ShadyDOM.wrap(testChild).getRootNode(), test, 'getOwnerRoot incorrect for sub-child moved from a root to no root');
     ShadyDOM.wrapIfNeeded(project).appendChild(test);
     ShadyDOM.flush();
-    assert.equal(ShadyDOM.wrapIfNeeded(test).getRootNode(), ShadyDOM.wrapIfNeeded(c1).shadowRoot, 'getOwnerRoot incorrect for child added to element in root');
+    assert.equal(ShadyDOM.wrap(test).getRootNode(), ShadyDOM.wrapIfNeeded(c1).shadowRoot, 'getOwnerRoot incorrect for child added to element in root');
     assert.equal(ShadyDOM.wrap(testChild).getRootNode(), ShadyDOM.wrapIfNeeded(c1).shadowRoot, 'getOwnerRoot incorrect for sub-child added to element in root');
   });
 
@@ -1639,12 +1639,12 @@ suite('non-distributed elements', function() {
     var c2 = createEnabledElement('x-compose');
     ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(c1).shadowRoot).querySelector('#project')).appendChild(test);
     ShadyDOM.flush();
-    assert.equal(ShadyDOM.wrapIfNeeded(test).getRootNode(), ShadyDOM.wrapIfNeeded(c1).shadowRoot, 'getOwnerRoot incorrect for child added to element in root');
+    assert.equal(ShadyDOM.wrap(test).getRootNode(), ShadyDOM.wrapIfNeeded(c1).shadowRoot, 'getOwnerRoot incorrect for child added to element in root');
     ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(c2).shadowRoot).querySelector('#project')).appendChild(test);
     ShadyDOM.flush();
-    assert.equal(ShadyDOM.wrapIfNeeded(test).getRootNode(), ShadyDOM.wrapIfNeeded(c2).shadowRoot, 'getOwnerRoot not correctly reset when element moved to different root');
+    assert.equal(ShadyDOM.wrap(test).getRootNode(), ShadyDOM.wrapIfNeeded(c2).shadowRoot, 'getOwnerRoot not correctly reset when element moved to different root');
     ShadyDOM.wrapIfNeeded(c1).appendChild(test);
-    assert.equal(ShadyDOM.wrapIfNeeded(test).getRootNode(), c1, 'getOwnerRoot incorrect for child moved from a root to no root');
+    assert.equal(ShadyDOM.wrap(test).getRootNode(), c1, 'getOwnerRoot incorrect for child moved from a root to no root');
   });
 
   test('assignedNodes while distributing', function() {

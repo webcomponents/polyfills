@@ -85,7 +85,8 @@ if (utils.settings.inUse) {
     // `insertBefore` (when the node is being moved from a location where it
     // was logically positioned in the DOM); when setting `className`/`class`;
     // when calling `querySelector|All`; when setting `textContent` or
-    // `innerHTML`; `getRootNode`; `addEventListener`.
+    // `innerHTML`; `addEventListener`; and all scope specific API's like
+    // `getRootNode`, `isConnected`, `slot`, `assignedSlot`, `assignedNodes`.
     'wrapIfNeeded': utils.settings.noPatch === true ||
       (utils.settings.noPatch === 'on-demand' && !utils.settings.hasDescriptors) ?
       wrap : patch,

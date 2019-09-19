@@ -222,7 +222,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       var div = document.createElement('div');
       ShadyDOM.wrapIfNeeded(dist).appendChild(div);
       ShadyDOM.flush();
-      assert.equal(ShadyDOM.wrapIfNeeded(div).assignedSlot, ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(dist).shadowRoot).querySelector('#content'));
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(dist).shadowRoot).querySelector('#content'));
       // Append to distributed div
       var div2 = document.createElement('div');
       ShadyDOM.wrapIfNeeded(div).appendChild(div2);
@@ -230,7 +230,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       // Remove
       ShadyDOM.wrapIfNeeded(dist).removeChild(div);
       ShadyDOM.flush();
-      assert.equal(ShadyDOM.wrapIfNeeded(div).assignedSlot, null);
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, null);
       ShadyDOM.wrapIfNeeded(document.body).removeChild(dist);
     });
 
@@ -241,7 +241,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       var div = document.createElement('div');
       ShadyDOM.wrapIfNeeded(noDist).appendChild(div);
       ShadyDOM.flush();
-      assert.equal(ShadyDOM.wrapIfNeeded(div).assignedSlot, null);
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, null);
       // Append to distributed div
       var div2 = document.createElement('div');
       ShadyDOM.wrapIfNeeded(div).appendChild(div2);
@@ -325,7 +325,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       ShadyDOM.wrapIfNeeded(document.body).appendChild(noDist);
       // Append div to light dom
       var div = document.createElement('div');
-      ShadyDOM.wrapIfNeeded(div).slot = 'insert';
+      ShadyDOM.wrap(div).slot = 'insert';
       ShadyDOM.wrapIfNeeded(noDist).appendChild(div);
       ShadyDOM.flush();
       // Append slot to shady root
@@ -333,11 +333,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       ShadyDOM.wrapIfNeeded(slot).setAttribute('name', 'insert');
       ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(noDist).shadowRoot).appendChild(slot);
       ShadyDOM.flush();
-      assert.equal(ShadyDOM.wrapIfNeeded(div).assignedSlot, slot);
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, slot);
       // Remove
       ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(noDist).shadowRoot).removeChild(slot);
       ShadyDOM.flush();
-      assert.equal(ShadyDOM.wrapIfNeeded(div).assignedSlot, null);
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, null);
       ShadyDOM.wrapIfNeeded(document.body).removeChild(noDist);
     });
 
@@ -350,14 +350,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(noDist).shadowRoot).appendChild(slot);
       // Append div to light dom
       var div = document.createElement('div');
-      ShadyDOM.wrapIfNeeded(div).slot = 'insert';
+      ShadyDOM.wrap(div).slot = 'insert';
       ShadyDOM.wrapIfNeeded(noDist).appendChild(div);
       ShadyDOM.flush();
-      assert.equal(ShadyDOM.wrapIfNeeded(div).assignedSlot, slot);
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, slot);
       // Remove
       ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(noDist).shadowRoot).removeChild(slot);
       ShadyDOM.flush();
-      assert.equal(ShadyDOM.wrapIfNeeded(div).assignedSlot, null);
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, null);
       ShadyDOM.wrapIfNeeded(document.body).removeChild(noDist);
     });
 
@@ -366,20 +366,20 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       ShadyDOM.wrapIfNeeded(document.body).appendChild(noDist);
       // Append div to light dom
       var div = document.createElement('div');
-      ShadyDOM.wrapIfNeeded(div).slot = 'insert';
+      ShadyDOM.wrap(div).slot = 'insert';
       ShadyDOM.wrapIfNeeded(noDist).appendChild(div);
       ShadyDOM.flush();
-      assert.equal(ShadyDOM.wrapIfNeeded(div).assignedSlot, null);
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, null);
       // Append slot to shady root
       var slot = document.createElement('slot');
       ShadyDOM.wrapIfNeeded(slot).setAttribute('name', 'insert');
       ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(noDist).shadowRoot).querySelector('#static')).appendChild(slot);
       ShadyDOM.flush();
-      assert.equal(ShadyDOM.wrapIfNeeded(div).assignedSlot, slot);
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, slot);
       // Remove
       ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(noDist).shadowRoot).querySelector('#static')).removeChild(slot);
       ShadyDOM.flush();
-      assert.equal(ShadyDOM.wrapIfNeeded(div).assignedSlot, null);
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, null);
       ShadyDOM.wrapIfNeeded(document.body).removeChild(noDist);
     });
 
@@ -392,14 +392,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(noDist).shadowRoot).querySelector('#static')).appendChild(slot);
       // Append div to light dom
       var div = document.createElement('div');
-      ShadyDOM.wrapIfNeeded(div).slot = 'insert';
+      ShadyDOM.wrap(div).slot = 'insert';
       ShadyDOM.wrapIfNeeded(noDist).appendChild(div);
       ShadyDOM.flush();
-      assert.equal(ShadyDOM.wrapIfNeeded(div).assignedSlot, slot);
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, slot);
       // Remove
       ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(noDist).shadowRoot).querySelector('#static')).removeChild(slot);
       ShadyDOM.flush();
-      assert.equal(ShadyDOM.wrapIfNeeded(div).assignedSlot, null);
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, null);
       ShadyDOM.wrapIfNeeded(document.body).removeChild(noDist);
     });
 
@@ -408,10 +408,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       ShadyDOM.wrapIfNeeded(document.body).appendChild(noDist);
       // Append div to light dom
       var div = document.createElement('div');
-      ShadyDOM.wrapIfNeeded(div).slot = 'insert';
+      ShadyDOM.wrap(div).slot = 'insert';
       ShadyDOM.wrapIfNeeded(noDist).appendChild(div);
       ShadyDOM.flush();
-      assert.equal(ShadyDOM.wrapIfNeeded(div).assignedSlot, null);
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, null);
       // Append slot to shady root
       var frag = document.createDocumentFragment();
       var slot = document.createElement('slot');
@@ -419,11 +419,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       ShadyDOM.wrapIfNeeded(frag).appendChild(slot);
       ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(noDist).shadowRoot).appendChild(frag);
       ShadyDOM.flush();
-      assert.equal(ShadyDOM.wrapIfNeeded(div).assignedSlot, slot);
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, slot);
       // Remove
       ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(noDist).shadowRoot).removeChild(slot);
       ShadyDOM.flush();
-      assert.equal(ShadyDOM.wrapIfNeeded(div).assignedSlot, null);
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, null);
       ShadyDOM.wrapIfNeeded(document.body).removeChild(noDist);
     });
 
@@ -438,14 +438,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(noDist).shadowRoot).appendChild(frag);
       // Append div to light dom
       var div = document.createElement('div');
-      ShadyDOM.wrapIfNeeded(div).slot = 'insert';
+      ShadyDOM.wrap(div).slot = 'insert';
       ShadyDOM.wrapIfNeeded(noDist).appendChild(div);
       ShadyDOM.flush();
-      assert.equal(ShadyDOM.wrapIfNeeded(div).assignedSlot, slot);
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, slot);
       // Remove
       ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(noDist).shadowRoot).removeChild(slot);
       ShadyDOM.flush();
-      assert.equal(ShadyDOM.wrapIfNeeded(div).assignedSlot, null);
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, null);
       ShadyDOM.wrapIfNeeded(document.body).removeChild(noDist);
     });
 
@@ -454,10 +454,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       ShadyDOM.wrapIfNeeded(document.body).appendChild(noDist);
       // Append div to light dom
       var div = document.createElement('div');
-      ShadyDOM.wrapIfNeeded(div).slot = 'insert';
+      ShadyDOM.wrap(div).slot = 'insert';
       ShadyDOM.wrapIfNeeded(noDist).appendChild(div);
       ShadyDOM.flush();
-      assert.equal(ShadyDOM.wrapIfNeeded(div).assignedSlot, null);
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, null);
       // Append slot to shady root
       var frag = document.createDocumentFragment();
       var wrapper = document.createElement('div');
@@ -467,11 +467,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       ShadyDOM.wrapIfNeeded(frag).appendChild(wrapper);
       ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(noDist).shadowRoot).appendChild(frag);
       ShadyDOM.flush();
-      assert.equal(ShadyDOM.wrapIfNeeded(div).assignedSlot, slot);
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, slot);
       // Remove
       ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(noDist).shadowRoot).removeChild(wrapper);
       ShadyDOM.flush();
-      assert.equal(ShadyDOM.wrapIfNeeded(div).assignedSlot, null);
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, null);
       ShadyDOM.wrapIfNeeded(document.body).removeChild(noDist);
     });
 
@@ -488,14 +488,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(noDist).shadowRoot).appendChild(frag);
       // Append div to light dom
       var div = document.createElement('div');
-      ShadyDOM.wrapIfNeeded(div).slot = 'insert';
+      ShadyDOM.wrap(div).slot = 'insert';
       ShadyDOM.wrapIfNeeded(noDist).appendChild(div);
       ShadyDOM.flush();
-      assert.equal(ShadyDOM.wrapIfNeeded(div).assignedSlot, slot);
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, slot);
       // Remove
       ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(noDist).shadowRoot).removeChild(wrapper);
       ShadyDOM.flush();
-      assert.equal(ShadyDOM.wrapIfNeeded(div).assignedSlot, null);
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, null);
       ShadyDOM.wrapIfNeeded(document.body).removeChild(noDist);
     });
 
@@ -504,10 +504,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       ShadyDOM.wrapIfNeeded(document.body).appendChild(noDist);
       // Append div to light dom
       var div = document.createElement('div');
-      ShadyDOM.wrapIfNeeded(div).slot = 'insert';
+      ShadyDOM.wrap(div).slot = 'insert';
       ShadyDOM.wrapIfNeeded(noDist).appendChild(div);
       ShadyDOM.flush();
-      assert.equal(ShadyDOM.wrapIfNeeded(div).assignedSlot, null);
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, null);
       // Append slot to shady root
       var frag = document.createDocumentFragment();
       var wrapper = document.createElement('div');
@@ -517,12 +517,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       ShadyDOM.wrapIfNeeded(frag).appendChild(wrapper);
       ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(noDist).shadowRoot).querySelector('#static')).appendChild(frag);
       ShadyDOM.flush();
-      assert.equal(ShadyDOM.wrapIfNeeded(div).assignedSlot, slot);
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, slot);
       // Remove
       var s = ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(noDist).shadowRoot).querySelector('#static');
       ShadyDOM.wrapIfNeeded(s).removeChild(wrapper);
       ShadyDOM.flush();
-      assert.equal(ShadyDOM.wrapIfNeeded(div).assignedSlot, null);
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, null);
       ShadyDOM.wrapIfNeeded(document.body).removeChild(noDist);
     });
 
@@ -539,14 +539,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(noDist).shadowRoot).querySelector('#static')).appendChild(frag);
       // Append div to light dom
       var div = document.createElement('div');
-      ShadyDOM.wrapIfNeeded(div).slot = 'insert';
+      ShadyDOM.wrap(div).slot = 'insert';
       ShadyDOM.wrapIfNeeded(noDist).appendChild(div);
       ShadyDOM.flush();
-      assert.equal(ShadyDOM.wrapIfNeeded(div).assignedSlot, slot);
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, slot);
       // Remove
       ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(noDist).shadowRoot).querySelector('#static')).removeChild(wrapper);
       ShadyDOM.flush();
-      assert.equal(ShadyDOM.wrapIfNeeded(div).assignedSlot, null);
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, null);
       ShadyDOM.wrapIfNeeded(document.body).removeChild(noDist);
     });
 
@@ -555,20 +555,20 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       ShadyDOM.wrapIfNeeded(document.body).appendChild(compose);
       // Append slot to light DOM of non-distributing element
       var div = document.createElement('div');
-      ShadyDOM.wrapIfNeeded(div).slot = 'insert';
+      ShadyDOM.wrap(div).slot = 'insert';
       ShadyDOM.wrapIfNeeded(compose).appendChild(div);
       ShadyDOM.flush();
-      assert.equal(ShadyDOM.wrapIfNeeded(div).assignedSlot, null);
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, null);
       // Append slot to non-distributing element
       var slot = document.createElement('slot');
       ShadyDOM.wrapIfNeeded(slot).setAttribute('name', 'insert');
       ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(compose).shadowRoot).querySelector('#noDist')).appendChild(slot);
       ShadyDOM.flush();
-      assert.equal(ShadyDOM.wrapIfNeeded(div).assignedSlot, slot);
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, slot);
       // Remove
       ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(compose).shadowRoot).querySelector('#noDist')).removeChild(slot);
       ShadyDOM.flush();
-      assert.equal(ShadyDOM.wrapIfNeeded(div).assignedSlot, null);
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, null);
       ShadyDOM.wrapIfNeeded(document.body).removeChild(compose);
     });
 
@@ -581,14 +581,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(compose).shadowRoot).querySelector('#noDist')).appendChild(slot);
       // Append div to light dom
       var div = document.createElement('div');
-      ShadyDOM.wrapIfNeeded(div).slot = 'insert';
+      ShadyDOM.wrap(div).slot = 'insert';
       ShadyDOM.wrapIfNeeded(compose).appendChild(div);
       ShadyDOM.flush();
-      assert.equal(ShadyDOM.wrapIfNeeded(div).assignedSlot, slot);
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, slot);
       // Remove
       ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(compose).shadowRoot).querySelector('#noDist')).removeChild(slot);
       ShadyDOM.flush();
-      assert.equal(ShadyDOM.wrapIfNeeded(div).assignedSlot, null);
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, null);
       ShadyDOM.wrapIfNeeded(document.body).removeChild(compose);
     });
 
@@ -597,10 +597,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       ShadyDOM.wrapIfNeeded(document.body).appendChild(compose);
       // Append div to light dom
       var div = document.createElement('div');
-      ShadyDOM.wrapIfNeeded(div).slot = 'insert';
+      ShadyDOM.wrap(div).slot = 'insert';
       ShadyDOM.wrapIfNeeded(compose).appendChild(div);
       ShadyDOM.flush();
-      assert.equal(ShadyDOM.wrapIfNeeded(div).assignedSlot, null);
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, null);
       // Append slot to shady root
       var frag = document.createDocumentFragment();
       var wrapper = document.createElement('div');
@@ -610,11 +610,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       ShadyDOM.wrapIfNeeded(frag).appendChild(wrapper);
       ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(compose).shadowRoot).querySelector('#noDist')).appendChild(frag);
       ShadyDOM.flush();
-      assert.equal(ShadyDOM.wrapIfNeeded(div).assignedSlot, slot);
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, slot);
       // Remove
       ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(compose).shadowRoot).querySelector('#noDist')).removeChild(wrapper);
       ShadyDOM.flush();
-      assert.equal(ShadyDOM.wrapIfNeeded(div).assignedSlot, null);
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, null);
       ShadyDOM.wrapIfNeeded(document.body).removeChild(compose);
     });
 
@@ -631,14 +631,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(compose).shadowRoot).querySelector('#noDist')).appendChild(frag);
       // Append div to light dom
       var div = document.createElement('div');
-      ShadyDOM.wrapIfNeeded(div).slot = 'insert';
+      ShadyDOM.wrap(div).slot = 'insert';
       ShadyDOM.wrapIfNeeded(compose).appendChild(div);
       ShadyDOM.flush();
-      assert.equal(ShadyDOM.wrapIfNeeded(div).assignedSlot, slot);
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, slot);
       // Remove
       ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(compose).shadowRoot).querySelector('#noDist')).removeChild(wrapper);
       ShadyDOM.flush();
-      assert.equal(ShadyDOM.wrapIfNeeded(div).assignedSlot, null);
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, null);
       ShadyDOM.wrapIfNeeded(document.body).removeChild(compose);
     });
 
@@ -647,20 +647,20 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       ShadyDOM.wrapIfNeeded(document.body).appendChild(compose);
       // Append slot to light DOM of non-distributing element
       var div = document.createElement('div');
-      ShadyDOM.wrapIfNeeded(div).slot = 'insert';
+      ShadyDOM.wrap(div).slot = 'insert';
       ShadyDOM.wrapIfNeeded(compose).appendChild(div);
       ShadyDOM.flush();
-      assert.equal(ShadyDOM.wrapIfNeeded(div).assignedSlot, null);
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, null);
       // Append slot to non-distributing element
       var slot = document.createElement('slot');
       ShadyDOM.wrapIfNeeded(slot).setAttribute('name', 'insert');
       ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(compose).shadowRoot).querySelector('#dist')).appendChild(slot);
       ShadyDOM.flush();
-      assert.equal(ShadyDOM.wrapIfNeeded(div).assignedSlot, slot);
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, slot);
       // Remove
       ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(compose).shadowRoot).querySelector('#dist')).removeChild(slot);
       ShadyDOM.flush();
-      assert.equal(ShadyDOM.wrapIfNeeded(div).assignedSlot, null);
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, null);
       ShadyDOM.wrapIfNeeded(document.body).removeChild(compose);
     });
 
@@ -673,14 +673,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(compose).shadowRoot).querySelector('#dist')).appendChild(slot);
       // Append slot to light DOM of non-distributing element
       var div = document.createElement('div');
-      ShadyDOM.wrapIfNeeded(div).slot = 'insert';
+      ShadyDOM.wrap(div).slot = 'insert';
       ShadyDOM.wrapIfNeeded(compose).appendChild(div);
       ShadyDOM.flush();
-      assert.equal(ShadyDOM.wrapIfNeeded(div).assignedSlot, slot);
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, slot);
       // Remove
       ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(compose).shadowRoot).querySelector('#dist')).removeChild(slot);
       ShadyDOM.flush();
-      assert.equal(ShadyDOM.wrapIfNeeded(div).assignedSlot, null);
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, null);
       ShadyDOM.wrapIfNeeded(document.body).removeChild(compose);
     });
 
@@ -689,10 +689,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       ShadyDOM.wrapIfNeeded(document.body).appendChild(compose);
       // Append div to light dom
       var div = document.createElement('div');
-      ShadyDOM.wrapIfNeeded(div).slot = 'insert';
+      ShadyDOM.wrap(div).slot = 'insert';
       ShadyDOM.wrapIfNeeded(compose).appendChild(div);
       ShadyDOM.flush();
-      assert.equal(ShadyDOM.wrapIfNeeded(div).assignedSlot, null);
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, null);
       // Append slot to shady root
       var frag = document.createDocumentFragment();
       var wrapper = document.createElement('div');
@@ -702,11 +702,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       ShadyDOM.wrapIfNeeded(frag).appendChild(wrapper);
       ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(compose).shadowRoot).querySelector('#dist')).appendChild(frag);
       ShadyDOM.flush();
-      assert.equal(ShadyDOM.wrapIfNeeded(div).assignedSlot, slot);
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, slot);
       // Remove
       ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(compose).shadowRoot).querySelector('#dist')).removeChild(wrapper);
       ShadyDOM.flush();
-      assert.equal(ShadyDOM.wrapIfNeeded(div).assignedSlot, null);
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, null);
       ShadyDOM.wrapIfNeeded(document.body).removeChild(compose);
     });
 
@@ -723,14 +723,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(compose).shadowRoot).querySelector('#dist')).appendChild(frag);
       // Append div to light dom
       var div = document.createElement('div');
-      ShadyDOM.wrapIfNeeded(div).slot = 'insert';
+      ShadyDOM.wrap(div).slot = 'insert';
       ShadyDOM.wrapIfNeeded(compose).appendChild(div);
       ShadyDOM.flush();
-      assert.equal(ShadyDOM.wrapIfNeeded(div).assignedSlot, slot);
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, slot);
       // Remove
       ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(compose).shadowRoot).querySelector('#dist')).removeChild(wrapper);
       ShadyDOM.flush();
-      assert.equal(ShadyDOM.wrapIfNeeded(div).assignedSlot, null);
+      assert.equal(ShadyDOM.wrap(div).assignedSlot, null);
       ShadyDOM.wrapIfNeeded(document.body).removeChild(compose);
     });
 
