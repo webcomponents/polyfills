@@ -85,8 +85,10 @@ if (utils.settings.inUse) {
     // `insertBefore` (when the node is being moved from a location where it
     // was logically positioned in the DOM); when setting `className`/`class`;
     // when calling `querySelector|All`; when setting `textContent` or
-    // `innerHTML`.
-    'wrapIfNeeded': utils.settings.noPatch === true ? wrap : patch,
+    // `innerHTML`; `getRootNode`; `addEventListener`.
+    'wrapIfNeeded': utils.settings.noPatch === true ||
+      (utils.settings.noPatch === 'on-demand' && !utils.settings.hasDescriptors) ?
+      wrap : patch,
     'Wrapper': Wrapper,
     'composedPath': composedPath,
     // Set to true to avoid patching regular platform property names. When set,
