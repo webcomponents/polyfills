@@ -1,6 +1,6 @@
 {
   "name": "@webcomponents/url",
-  "version": "0.7.3",
+  "version": "0.7.4",
   "main": "url.js",
   "repository": "github:webcomponents/polyfills",
   "bugs": "https://github.com/webcomponents/polyfills/issues",
@@ -18,6 +18,5 @@
   "files": [
     "url.js",
     "url.min.js*"
-  ],
-  "devDependencies": {}
+  ]
 }
