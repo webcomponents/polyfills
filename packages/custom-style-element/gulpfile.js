@@ -17,13 +17,13 @@ const closureOptions = {
   warning_level: 'VERBOSE',
   language_in: 'ES6_STRICT',
   language_out: 'ES5_STRICT',
-  // externs: ['externs/html-imports.js'],
   js_output_file: 'custom-style-element.min.js',
   assume_function_wrapper: true,
   isolation_mode: 'IIFE',
   rewrite_polyfills: false,
   dependency_mode: 'STRICT',
   entry_point: 'src/custom-style-element.js',
+  externs: 'externs/shadycss-externs.js'
 };
 
 gulp.task('default', () => {

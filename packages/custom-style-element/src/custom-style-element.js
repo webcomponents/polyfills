@@ -18,28 +18,30 @@ Example:
   </style>
 </custom-style>
 */
+(() => {
+  const CustomStyleInterface = window.ShadyCSS && window.ShadyCSS.CustomStyleInterface;
 
-const CustomStyleInterface = window['ShadyCSS'] && window['ShadyCSS'].CustomStyleInterface;
+  class CustomStyle extends HTMLElement {
 
-export default class CustomStyle extends HTMLElement {
+    constructor() {
+      super();
+      /** @type {HTMLStyleElement} */
+      this._style = null;
+      if (CustomStyleInterface) {
+        CustomStyleInterface.addCustomStyle(this);
+      }
+    }
 
-  constructor() {
-    super();
-    /** @type {HTMLStyleElement} */
-    this._style = null;
-    if (CustomStyleInterface) {
-      CustomStyleInterface.addCustomStyle(this);
+    /** @return {HTMLStyleElement} */
+    getStyle() {
+      if (!this._style) {
+        this._style = /** @type {HTMLStyleElement} */ (this.querySelector('style'));
+      }
+      return this._style;
     }
   }
 
-  /** @return {HTMLStyleElement} */
-  getStyle() {
-    if (!this._style) {
-      this._style = /** @type {HTMLStyleElement} */ (this.querySelector('style'));
-    }
-    return this._style;
-  }
-}
-window.CustomStyle = CustomStyle;
-CustomStyle.prototype['getStyle'] = CustomStyle.prototype.getStyle;// eslint-disable-line no-self-assign
-window.customElements.define('custom-style', CustomStyle);
+  CustomStyle.prototype['getStyle'] = CustomStyle.prototype.getStyle;// eslint-disable-line no-self-assign
+  window.customElements.define('custom-style', CustomStyle);
+})();
+
