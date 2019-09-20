@@ -22,18 +22,7 @@
 <script src="../node_modules/wct-browser-legacy/browser.js"></script>
 <script>
   let suites = [
-    'custom-style.html',
+    'shady-css-scoped.html',
   ];
-  // const edgeDetect = navigator.userAgent.match(/Edge\/(\d+)/);
-  // const edgeVersion = edgeDetect ? parseInt(edgeDetect[1], 10) : 0;
-  // if (edgeVersion > 15) {
-  //   // remove CSP check in Edge, newer versions don't like WCT's testing library
-  //   suites.pop();
-  // }
-  // if (edgeVersion === 15) {
-  //   // edge 15 has a really hard time loading this test consistently
-  //   // the requests are made for the @import styles, but they never return...
-  //   suites = suites.filter(s => s.indexOf('style-paths') === -1);
-  // }
   WCT.loadSuites(suites);
 </script>

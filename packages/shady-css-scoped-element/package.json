@@ -1,8 +1,8 @@
 {
-  "name": "@webcomponents/custom-style-element",
+  "name": "@webcomponents/shady-css-scoped-element",
   "version": "0.0.1",
-  "description": "Custom Style element",
-  "main": "custom-style-element.min.js",
+  "description": "ShadyCSS scoped element",
+  "main": "shady-css-scoped.min.js",
   "repository": "github:webcomponents/polyfills",
   "bugs": "https://github.com/webcomponents/polyfills/issues",
   "homepage": "https://webcomponents.org/polyfills",
@@ -18,12 +18,12 @@
   "license": "BSD-3-Clause",
   "scripts": {
     "build": "gulp",
-    "debug": "cp src/custom-style-element.js custom-style-element.min.js",
+    "debug": "cp src/shady-css-scoped-element.js shady-css-scoped-element.min.js",
     "test": "wct",
     "prepack": "npm run build"
   },
   "files": [
-    "custom-style-element.min.js*",
+    "shady-css-scoped-element.min.js*",
     "src/"
   ],
   "devDependencies": {
