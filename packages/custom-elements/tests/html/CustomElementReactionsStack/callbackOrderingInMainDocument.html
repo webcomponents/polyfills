@@ -9,6 +9,16 @@
 <script src="../../../node_modules/wct-browser-legacy/browser.js"></script>
 <script src="../../../custom-elements.min.js"></script>
 <script>
+  // Inlined "../../safari-gc-bug-workaround.js". This workaround needs to be
+  // applied inside this classic script because this test determines if
+  // parser-created elements are constructed and have their reactions called in
+  // the correct order. Also, Safari 11's native custom elements implementation
+  // does not order these correctly.
+  if (customElements.polyfillWrapFlushCallback === undefined) {
+    window.__CE_installPolyfill();
+    console.warn('The custom elements polyfill was reinstalled.');
+  }
+
   window.LOG = [];
 
   window.addEventListener('custom-element:log', function(e) {
