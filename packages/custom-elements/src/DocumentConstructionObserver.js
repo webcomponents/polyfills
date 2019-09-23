@@ -32,7 +32,7 @@ export default class DocumentConstructionObserver {
 
     /**
      * @private
-     * @type {!Array<!Element|undefined>}
+     * @type {!Array<!HTMLElement>}
      */
     this._parserQueue = [];
 
@@ -85,18 +85,22 @@ export default class DocumentConstructionObserver {
       const addedNodes = mutations[i].addedNodes;
       for (let j = 0, addedNodesLength = addedNodes.length; j < addedNodesLength; j++) {
         const node = addedNodes[j];
-        if (node instanceof Element) {
+        // This is structured so that we only pay the `instanceof` check cost
+        // once in the common case, HTMLElement.
+        if (node instanceof HTMLElement) {
           internals.patchElement(node);
           parserQueue[addedElementsCount++] = node;
+        } else if (node instanceof Element) {
+          internals.patchElement(node);
         }
       }
     }
 
     for (let i = 0; i < addedElementsCount; i++) {
-      const element = /** @type {!Element} */ (parserQueue[i]);
+      const element = parserQueue[i];
 
       internals.pushCEReactionsQueue();
-      internals.upgradeReaction(element);
+      internals.upgradeSync(element);
       internals.popCEReactionsQueue();
     }
   }

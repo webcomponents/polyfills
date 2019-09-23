@@ -303,7 +303,7 @@ export default class CustomElementInternals {
   }
 
   /**
-   * @param {!Element} element
+   * @param {!HTMLElement} element
    */
   upgradeReaction(element) {
     const definition = this._lookupACustomElementDefinition(
@@ -311,11 +311,34 @@ export default class CustomElementInternals {
     if (definition) {
       this._reactionsStack.enqueueReaction(element, () => {
         try {
-          this._upgradeAnElement(element, definition);
+          // TODO: Why is this cast necessary? I think this might be a Closure
+          // bug: `definition` is const and we check `if (definition)`, so
+          // there's no way it can be undefined here.
+          this._upgradeAnElement(element,
+              /** @type {!CustomElementDefinition} */ (definition));
         } catch (e) {
           this.reportTheException(e);
         }
       });
+    }
+  }
+
+  /**
+   * @param {!HTMLElement} element
+   */
+  upgradeSync(element) {
+    const definition = this._lookupACustomElementDefinition(
+        /** @type {!Document} */ (element.ownerDocument), element.localName);
+    if (definition) {
+      try {
+        // TODO: Why is this cast necessary? I think this might be a Closure
+        // bug: `definition` is const and we check `if (definition)`, so
+        // there's no way it can be undefined here.
+        this._upgradeAnElement(element,
+            /** @type {!CustomElementDefinition} */ (definition));
+      } catch (e) {
+        this.reportTheException(e);
+      }
     }
   }
 

@@ -30,27 +30,30 @@ export default function(internals) {
       internals.pushCEReactionsQueue();
 
       if (node instanceof DocumentFragment) {
+        const insertedNodes = Utilities.childrenFromFragment(node);
+        const nativeResult = Native.Node_insertBefore.call(this, node, refNode);
+
         // DocumentFragments can't be connected, so `disconnectTree` will never
         // need to be called on a DocumentFragment's children after inserting it.
 
         if (Utilities.isConnected(this)) {
-          internals.connectTree(node);
+          for (let i = 0; i < insertedNodes.length; i++) {
+            internals.connectTree(insertedNodes[i]);
+          }
         }
 
-        const result = Native.Node_insertBefore.call(this, node, refNode);
         internals.popCEReactionsQueue();
-        return result;
+        return nativeResult;
       }
 
-      const nodeIsElement = node instanceof Element;
+      const nodeWasConnectedElement = node instanceof Element && Utilities.isConnected(node);
+      const nativeResult = Native.Node_insertBefore.call(this, node, refNode);
 
-      if (nodeIsElement && Utilities.isConnected(node)) {
+      if (nodeWasConnectedElement) {
         internals.disconnectTree(node);
       }
 
-      const nativeResult = Native.Node_insertBefore.call(this, node, refNode);
-
-      if (nodeIsElement && Utilities.isConnected(node)) {
+      if (Utilities.isConnected(this)) {
         internals.connectTree(node);
       }
 
@@ -68,27 +71,30 @@ export default function(internals) {
       internals.pushCEReactionsQueue();
 
       if (node instanceof DocumentFragment) {
+        const insertedNodes = Utilities.childrenFromFragment(node);
+        const nativeResult = Native.Node_appendChild.call(this, node);
+
         // DocumentFragments can't be connected, so `disconnectTree` will never
         // need to be called on a DocumentFragment's children after inserting it.
 
         if (Utilities.isConnected(this)) {
-          internals.connectTree(node);
+          for (let i = 0; i < insertedNodes.length; i++) {
+            internals.connectTree(insertedNodes[i]);
+          }
         }
 
-        const result = Native.Node_appendChild.call(this, node);
         internals.popCEReactionsQueue();
-        return result;
+        return nativeResult;
       }
 
-      const nodeIsElement = node instanceof Element;
+      const nodeWasConnectedElement = node instanceof Element && Utilities.isConnected(node);
+      const nativeResult = Native.Node_appendChild.call(this, node);
 
-      if (nodeIsElement && Utilities.isConnected(node)) {
+      if (nodeWasConnectedElement) {
         internals.disconnectTree(node);
       }
 
-      const nativeResult = Native.Node_appendChild.call(this, node);
-
-      if (nodeIsElement && Utilities.isConnected(node)) {
+      if (Utilities.isConnected(this)) {
         internals.connectTree(node);
       }
 
@@ -127,13 +133,15 @@ export default function(internals) {
     function(node) {
       internals.pushCEReactionsQueue();
 
-      if (node instanceof Element && Utilities.isConnected(node)) {
+      const nodeWasConnectedElement = node instanceof Element && Utilities.isConnected(node);
+      const nativeResult = Native.Node_removeChild.call(this, node);
+
+      if (nodeWasConnectedElement) {
         internals.disconnectTree(node);
       }
 
-      const result = Native.Node_removeChild.call(this, node);
       internals.popCEReactionsQueue();
-      return result;
+      return nativeResult;
     });
 
   Utilities.setPropertyUnchecked(Node.prototype, 'replaceChild',
@@ -146,41 +154,43 @@ export default function(internals) {
     function(nodeToInsert, nodeToRemove) {
       internals.pushCEReactionsQueue();
 
-      const thisIsConnected = Utilities.isConnected(this);
-
       if (nodeToInsert instanceof DocumentFragment) {
-        if (thisIsConnected) {
+        const insertedNodes = Utilities.childrenFromFragment(nodeToInsert);
+        const nativeResult = Native.Node_replaceChild.call(this, nodeToInsert, nodeToRemove);
+
+        // DocumentFragments can't be connected, so `disconnectTree` will never
+        // need to be called on a DocumentFragment's children after inserting it.
+
+        if (Utilities.isConnected(this)) {
           internals.disconnectTree(nodeToRemove);
-
-          // DocumentFragments can't be connected, so `disconnectTree` will
-          // never need to be called on a DocumentFragment's children after
-          // inserting it.
-
-          internals.connectTree(nodeToInsert);
+          for (let i = 0; i < insertedNodes.length; i++) {
+            internals.connectTree(insertedNodes[i]);
+          }
         }
 
-        const result = Native.Node_replaceChild.call(this, nodeToInsert, nodeToRemove);
         internals.popCEReactionsQueue();
-        return result;
+        return nativeResult;
       }
+
+      const nodeToInsertWasConnectedElement = nodeToInsert instanceof Element &&
+        Utilities.isConnected(nodeToInsert);
+      const nativeResult = Native.Node_replaceChild.call(this, nodeToInsert, nodeToRemove);
+      const thisIsConnected = Utilities.isConnected(this);
 
       if (thisIsConnected) {
         internals.disconnectTree(nodeToRemove);
       }
 
-      if (nodeToInsert instanceof Element) {
-        if (Utilities.isConnected(nodeToInsert)) {
-          internals.disconnectTree(nodeToInsert);
-        }
-
-        if (thisIsConnected) {
-          internals.connectTree(nodeToInsert);
-        }
+      if (nodeToInsertWasConnectedElement) {
+        internals.disconnectTree(nodeToInsert);
       }
 
-      const result = Native.Node_replaceChild.call(this, nodeToInsert, nodeToRemove);
+      if (thisIsConnected) {
+        internals.connectTree(nodeToInsert);
+      }
+
       internals.popCEReactionsQueue();
-      return result;
+      return nativeResult;
     });
 
 
@@ -199,14 +209,30 @@ export default function(internals) {
           return;
         }
 
-        if (Utilities.isConnected(this)) {
-          for (let child = this.firstChild; child; child = child.nextSibling) {
-            internals.disconnectTree(child);
+        let removedNodes = undefined;
+        // Checking for `firstChild` is faster than reading `childNodes.length`
+        // to compare with 0.
+        if (this.firstChild) {
+          // Using `childNodes` is faster than `children`, even though we only
+          // care about elements.
+          const childNodes = this.childNodes;
+          const childNodesLength = childNodes.length;
+          if (childNodesLength > 0 && Utilities.isConnected(this)) {
+            // Copying an array by iterating is faster than using slice.
+            removedNodes = new Array(childNodesLength);
+            for (let i = 0; i < childNodesLength; i++) {
+              removedNodes[i] = childNodes[i];
+            }
           }
         }
 
         baseDescriptor.set.call(this, assignedValue);
 
+        if (removedNodes) {
+          for (let i = 0; i < removedNodes.length; i++) {
+            internals.disconnectTree(removedNodes[i]);
+          }
+        }
         internals.popCEReactionsQueue();
       },
     });
