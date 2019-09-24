@@ -5,7 +5,13 @@
  * the single array and auto-generated backup queue ideas.
  */
 export default class CustomElementReactionsStack {
-  constructor() {
+  constructor(reportTheException) {
+    /**
+     * @private
+     * @type {function(!Error)}
+     */
+    this._reportTheException = reportTheException;
+
     /**
      * @private
      * @type {!Array<!Element|undefined>}
@@ -76,7 +82,11 @@ export default class CustomElementReactionsStack {
         // reaction may not actually point to the next reaction in the queue.
         const reaction = element.__CE_queueFront;
         element.__CE_queueFront = reaction.__CE_next;
-        reaction();
+        try {
+          reaction();
+        } catch (e) {
+          this._reportTheException(e);
+        }
       }
     }
 

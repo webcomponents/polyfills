@@ -40,7 +40,8 @@ export default class CustomElementInternals {
      * @private
      * @type {CustomElementReactionsStack}
      */
-    this._reactionsStack = new CustomElementReactionsStack();
+    this._reactionsStack =
+        new CustomElementReactionsStack(this.reportTheException.bind(this));
 
     /** @const {boolean} */
     this.shadyDomFastWalk = options.shadyDomFastWalk;
@@ -310,15 +311,11 @@ export default class CustomElementInternals {
         /** @type {!Document} */ (element.ownerDocument), element.localName);
     if (definition) {
       this._reactionsStack.enqueueReaction(element, () => {
-        try {
-          // TODO: Why is this cast necessary? I think this might be a Closure
-          // bug: `definition` is const and we check `if (definition)`, so
-          // there's no way it can be undefined here.
-          this._upgradeAnElement(element,
-              /** @type {!CustomElementDefinition} */ (definition));
-        } catch (e) {
-          this.reportTheException(e);
-        }
+        // TODO: Why is this cast necessary? I think this might be a Closure
+        // bug: `definition` is const and we check `if (definition)`, so
+        // there's no way it can be undefined here.
+        this._upgradeAnElement(element,
+            /** @type {!CustomElementDefinition} */ (definition));
       });
     }
   }
@@ -383,11 +380,7 @@ export default class CustomElementInternals {
           // iteration.
           ((element, name, value) => {
             this._reactionsStack.enqueueReaction(element, () => {
-              try {
-                definition.attributeChangedCallback.call(element, name, null, value, null);
-              } catch (e) {
-                this.reportTheException(e);
-              }
+              definition.attributeChangedCallback.call(element, name, null, value, null);
             });
           })(element, name, value);
         }
@@ -396,11 +389,7 @@ export default class CustomElementInternals {
 
     if (definition.connectedCallback && Utilities.isConnected(element)) {
       this._reactionsStack.enqueueReaction(element, () => {
-        try {
-          definition.connectedCallback.call(element);
-        } catch (e) {
-          this.reportTheException(e);
-        }
+        definition.connectedCallback.call(element);
       });
     }
   }
@@ -412,11 +401,7 @@ export default class CustomElementInternals {
     const definition = element.__CE_definition;
     if (definition.connectedCallback) {
       this._reactionsStack.enqueueReaction(element, () => {
-        try {
-          definition.connectedCallback.call(element);
-        } catch (e) {
-          this.reportTheException(e);
-        }
+        definition.connectedCallback.call(element);
       });
     }
   }
@@ -428,11 +413,7 @@ export default class CustomElementInternals {
     const definition = element.__CE_definition;
     if (definition.disconnectedCallback) {
       this._reactionsStack.enqueueReaction(element, () => {
-        try {
-          definition.disconnectedCallback.call(element);
-        } catch (e) {
-          this.reportTheException(e);
-        }
+        definition.disconnectedCallback.call(element);
       });
     }
   }
@@ -451,11 +432,7 @@ export default class CustomElementInternals {
       definition.observedAttributes.indexOf(name) > -1
     ) {
       this._reactionsStack.enqueueReaction(element, () => {
-        try {
-          definition.attributeChangedCallback.call(element, name, oldValue, newValue, namespace);
-        } catch (e) {
-          this.reportTheException(e);
-        }
+        definition.attributeChangedCallback.call(element, name, oldValue, newValue, namespace);
       });
     }
   }
