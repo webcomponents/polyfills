@@ -1,7 +1,7 @@
 <!doctype html>
 <!--
     @license
-    Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+    Copyright (c) 2019 The Polymer Project Authors. All rights reserved.
     This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
     The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
     The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
@@ -12,6 +12,7 @@
 <head>
   <title>HTML Imports Dynamic Elements</title>
   <script src="../node_modules/@webcomponents/webcomponentsjs/custom-elements-es5-adapter.js"></script>
+  <script src="../node_modules/@webcomponents/template/template.js"></script>
   <script src="../shady-css-scoped-element.min.js"></script>
   <script>WCT = {waitFor: function(cb){cb()}};</script>
   <script src="../node_modules/wct-browser-legacy/browser.js"></script>
@@ -36,7 +37,7 @@
 
   <script>
     suite('shady-css-scoped-element', function() {
-      setup(function() {
+      suiteSetup(function() {
         class MyElement extends HTMLElement {
 
           connectedCallback() {
@@ -47,7 +48,7 @@
         customElements.define('my-element', MyElement);
       });
       test('css vars are applied to custom elements', function() {
-        var myElement = document.querySelector('my-element');
+        const myElement = document.querySelector('my-element');
         const computed = getComputedStyle(myElement.shadowRoot.querySelector('div'));
         chai.assert.equal(computed.backgroundColor, 'rgb(51, 51, 51)', 'background color applied');
       });

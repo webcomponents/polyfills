@@ -28,6 +28,7 @@
   ],
   "devDependencies": {
     "@webcomponents/shadycss": "^1.9.1",
+    "@webcomponents/template": "^1.4.0",
     "@webcomponents/webcomponentsjs": "^2.2.10",
     "es6-promise": "4.2.4",
     "wct-browser-legacy": "^1.0.2"
