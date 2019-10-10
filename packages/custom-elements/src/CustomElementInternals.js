@@ -347,6 +347,18 @@ export default class CustomElementInternals {
    */
   connectedCallback(element) {
     const definition = element.__CE_definition;
+
+    if (element.__CE_callbackStateConnected && definition.disconnectedCallback) {
+      try {
+        definition.disconnectedCallback.call(element);
+      } catch (e) {
+        this.reportTheException(e);
+      }
+    }
+
+    // This state needs to be updated before calling into the reaction.
+    element.__CE_callbackStateConnected = true;
+
     if (definition.connectedCallback) {
       try {
         definition.connectedCallback.call(element);
@@ -361,6 +373,18 @@ export default class CustomElementInternals {
    */
   disconnectedCallback(element) {
     const definition = element.__CE_definition;
+
+    if (!element.__CE_callbackStateConnected && definition.connectedCallback) {
+      try {
+        definition.connectedCallback.call(element);
+      } catch (e) {
+        this.reportTheException(e);
+      }
+    }
+
+    // This state needs to be updated before calling into the reaction.
+    element.__CE_callbackStateConnected = false;
+
     if (definition.disconnectedCallback) {
       try {
         definition.disconnectedCallback.call(element);
