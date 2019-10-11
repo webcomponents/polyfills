@@ -80,7 +80,9 @@ function scheduleObserver(node, addedNode, removedNode) {
   if (observer) {
     if (addedNode) {
       if (addedNode.nodeType === Node.DOCUMENT_FRAGMENT_NODE) {
-        observer.addedNodes.push(...addedNode.childNodes);
+        for (let i = 0, l = addedNode.childNodes.length; i < l; i++) {
+          observer.addedNodes.push(addedNode.childNodes[i]);
+        }
       } else {
         observer.addedNodes.push(addedNode);
       }

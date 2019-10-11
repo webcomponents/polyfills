@@ -36,7 +36,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
   <script>
     window.defineTestElement = function(name, connected) {
-      var template = ShadyDOM.wrap(document).querySelector('#' + name);
+      var template = ShadyDOM.wrapIfNeeded(document).querySelector('#' + name);
       // es5 compat class
       function Klass() {
         const self = (window.Reflect && Reflect.construct)
@@ -60,8 +60,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             connected.call(this);
           }
           if (template) {
-            ShadyDOM.wrap(this).attachShadow({mode: 'open'});
-            ShadyDOM.wrap(ShadyDOM.wrap(this).shadowRoot).appendChild(ShadyDOM.wrap(document).importNode(template.content, true));
+            ShadyDOM.wrapIfNeeded(this).attachShadow({mode: 'open'});
+            ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(this).shadowRoot).appendChild(ShadyDOM.wrapIfNeeded(document).importNode(template.content, true));
           }
         }
       }
@@ -247,233 +247,233 @@ suite('activeElement', function() {
 
   suiteSetup(function() {
     // NOTE: need to patch document for `activeElement`
-    r = ShadyDOM.wrap(document).querySelector('x-shadow-host-root');
-      r_l = ShadyDOM.wrap(r).querySelector('x-shadow-host-root-light');
-      r_0 = ShadyDOM.wrap(ShadyDOM.wrap(r).shadowRoot).querySelector('x-shadow-host-root-0');
-        r_0_l = ShadyDOM.wrap(r_0).querySelector('x-shadow-host-root-0-light');
-        r_0_0 = ShadyDOM.wrap(ShadyDOM.wrap(r_0).shadowRoot).querySelector('x-shadow-host-root-0-0');
-          r_0_0_l = ShadyDOM.wrap(r_0_0).querySelector('x-shadow-host-root-0-0-light');
-            r_0_0_l_0 = ShadyDOM.wrap(ShadyDOM.wrap(r_0_0_l).shadowRoot).querySelector('x-shadow-host-root-0-0-light-0');
-        r_0_1 = ShadyDOM.wrap(ShadyDOM.wrap(r_0).shadowRoot).querySelector('x-shadow-host-root-0-1');
-          r_0_1_l = ShadyDOM.wrap(r_0_1).querySelector('x-shadow-host-root-0-1-light');
-      r_1 = ShadyDOM.wrap(ShadyDOM.wrap(r).shadowRoot).querySelector('x-shadow-host-root-1');
-        r_1_l = ShadyDOM.wrap(r_1).querySelector('x-shadow-host-root-1-light');
-          r_1_l_0 = ShadyDOM.wrap(ShadyDOM.wrap(r_1_l).shadowRoot).querySelector('x-shadow-host-root-1-light-0');
-        r_1_0 = ShadyDOM.wrap(ShadyDOM.wrap(r_1).shadowRoot).querySelector('x-shadow-host-root-1-0');
-          r_1_0_l = ShadyDOM.wrap(r_1_0).querySelector('x-shadow-host-root-1-0-light');
-        r_1_1 = ShadyDOM.wrap(ShadyDOM.wrap(r_1).shadowRoot).querySelector('x-shadow-host-root-1-1');
-          r_1_1_l = ShadyDOM.wrap(r_1_1).querySelector('x-shadow-host-root-1-1-light');
+    r = ShadyDOM.wrapIfNeeded(document).querySelector('x-shadow-host-root');
+      r_l = ShadyDOM.wrapIfNeeded(r).querySelector('x-shadow-host-root-light');
+      r_0 = ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r).shadowRoot).querySelector('x-shadow-host-root-0');
+        r_0_l = ShadyDOM.wrapIfNeeded(r_0).querySelector('x-shadow-host-root-0-light');
+        r_0_0 = ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0).shadowRoot).querySelector('x-shadow-host-root-0-0');
+          r_0_0_l = ShadyDOM.wrapIfNeeded(r_0_0).querySelector('x-shadow-host-root-0-0-light');
+            r_0_0_l_0 = ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0_0_l).shadowRoot).querySelector('x-shadow-host-root-0-0-light-0');
+        r_0_1 = ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0).shadowRoot).querySelector('x-shadow-host-root-0-1');
+          r_0_1_l = ShadyDOM.wrapIfNeeded(r_0_1).querySelector('x-shadow-host-root-0-1-light');
+      r_1 = ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r).shadowRoot).querySelector('x-shadow-host-root-1');
+        r_1_l = ShadyDOM.wrapIfNeeded(r_1).querySelector('x-shadow-host-root-1-light');
+          r_1_l_0 = ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1_l).shadowRoot).querySelector('x-shadow-host-root-1-light-0');
+        r_1_0 = ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1).shadowRoot).querySelector('x-shadow-host-root-1-0');
+          r_1_0_l = ShadyDOM.wrapIfNeeded(r_1_0).querySelector('x-shadow-host-root-1-0-light');
+        r_1_1 = ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1).shadowRoot).querySelector('x-shadow-host-root-1-1');
+          r_1_1_l = ShadyDOM.wrapIfNeeded(r_1_1).querySelector('x-shadow-host-root-1-1-light');
   });
 
   test('r.focus()', function() {
     r.focus();
 
-    assert.equal(ShadyDOM.wrap(document)._activeElement, r, 'document.activeElement === r');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r).shadowRoot).activeElement === null');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_0).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_0).shadowRoot).activeElement === null');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_0_0).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_0_0).shadowRoot).activeElement === null');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_0_1).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_0_1).shadowRoot).activeElement === null');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_1).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_1).shadowRoot).activeElement === null');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_1_0).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_1_0).shadowRoot).activeElement === null');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_1_1).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_1_1).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(document)._activeElement, r, 'document.activeElement === r');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0_0).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0_0).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0_1).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0_1).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1_0).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1_0).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1_1).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1_1).shadowRoot).activeElement === null');
   });
 
   test('r_l.focus()', function() {
     r_l.focus();
 
-    assert.equal(ShadyDOM.wrap(document)._activeElement, r_l, 'document.activeElement === r_l');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r).shadowRoot).activeElement === null');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_0).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_0).shadowRoot).activeElement === null');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_0_0).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_0_0).shadowRoot).activeElement === null');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_0_1).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_0_1).shadowRoot).activeElement === null');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_1).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_1).shadowRoot).activeElement === null');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_1_0).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_1_0).shadowRoot).activeElement === null');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_1_1).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_1_1).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(document)._activeElement, r_l, 'document.activeElement === r_l');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0_0).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0_0).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0_1).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0_1).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1_0).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1_0).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1_1).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1_1).shadowRoot).activeElement === null');
   });
 
   test('r_0.focus()', function() {
     r_0.focus();
 
-    assert.equal(ShadyDOM.wrap(document)._activeElement, r, 'document.activeElement === r');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r).shadowRoot).activeElement, r_0, 'ShadyDOM.wrap(ShadyDOM.wrap(r).shadowRoot).activeElement === r_0');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_0).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_0).shadowRoot).activeElement === null');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_0_0).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_0_0).shadowRoot).activeElement === null');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_0_1).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_0_1).shadowRoot).activeElement === null');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_1).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_1).shadowRoot).activeElement === null');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_1_0).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_1_0).shadowRoot).activeElement === null');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_1_1).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_1_1).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(document)._activeElement, r, 'document.activeElement === r');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r).shadowRoot).activeElement, r_0, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r).shadowRoot).activeElement === r_0');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0_0).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0_0).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0_1).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0_1).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1_0).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1_0).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1_1).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1_1).shadowRoot).activeElement === null');
   });
 
   test('r_0_l.focus()', function() {
     r_0_l.focus();
 
-    assert.equal(ShadyDOM.wrap(document)._activeElement, r, 'document.activeElement === r');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r).shadowRoot).activeElement, r_0_l, 'ShadyDOM.wrap(ShadyDOM.wrap(r).shadowRoot).activeElement === r_0_l');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_0).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_0).shadowRoot).activeElement === null');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_1).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_1).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(document)._activeElement, r, 'document.activeElement === r');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r).shadowRoot).activeElement, r_0_l, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r).shadowRoot).activeElement === r_0_l');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1).shadowRoot).activeElement === null');
 
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_0_0).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_0_0).shadowRoot).activeElement === null');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_0_1).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_0_1).shadowRoot).activeElement === null');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_1_0).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_1_0).shadowRoot).activeElement === null');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_1_1).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_1_1).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0_0).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0_0).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0_1).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0_1).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1_0).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1_0).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1_1).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1_1).shadowRoot).activeElement === null');
   });
 
   test('r_0_0.focus()', function() {
     r_0_0.focus();
 
-    assert.equal(ShadyDOM.wrap(document)._activeElement, r, 'document.activeElement === r');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r).shadowRoot).activeElement, r_0, 'ShadyDOM.wrap(ShadyDOM.wrap(r).shadowRoot).activeElement === r_0');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_0).shadowRoot).activeElement, r_0_0, 'ShadyDOM.wrap(ShadyDOM.wrap(r_0).shadowRoot).activeElement === r_0_0');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_0_0).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_0_0).shadowRoot).activeElement === null');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_0_1).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_0_1).shadowRoot).activeElement === null');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_1).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_1).shadowRoot).activeElement === null');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_1_0).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_1_0).shadowRoot).activeElement === null');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_1_1).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_1_1).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(document)._activeElement, r, 'document.activeElement === r');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r).shadowRoot).activeElement, r_0, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r).shadowRoot).activeElement === r_0');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0).shadowRoot).activeElement, r_0_0, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0).shadowRoot).activeElement === r_0_0');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0_0).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0_0).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0_1).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0_1).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1_0).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1_0).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1_1).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1_1).shadowRoot).activeElement === null');
   });
 
   test('r_0_0_l.focus()', function() {
     r_0_0_l.focus();
 
-    assert.equal(ShadyDOM.wrap(document)._activeElement, r, 'document.activeElement === r');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r).shadowRoot).activeElement, r_0, 'ShadyDOM.wrap(ShadyDOM.wrap(r).shadowRoot).activeElement === r_0');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_0).shadowRoot).activeElement, r_0_0_l, 'ShadyDOM.wrap(ShadyDOM.wrap(r_0).shadowRoot).activeElement === r_0_0_l');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_0_0).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_0_0).shadowRoot).activeElement === null');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_0_1).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_0_1).shadowRoot).activeElement === null');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_1).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_1).shadowRoot).activeElement === null');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_1_0).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_1_0).shadowRoot).activeElement === null');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_1_1).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_1_1).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(document)._activeElement, r, 'document.activeElement === r');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r).shadowRoot).activeElement, r_0, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r).shadowRoot).activeElement === r_0');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0).shadowRoot).activeElement, r_0_0_l, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0).shadowRoot).activeElement === r_0_0_l');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0_0).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0_0).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0_1).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0_1).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1_0).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1_0).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1_1).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1_1).shadowRoot).activeElement === null');
   });
 
   test('r_0_0_l_0.focus()', function() {
     r_0_0_l_0.focus();
 
-    assert.equal(ShadyDOM.wrap(document)._activeElement, r, 'document.activeElement === r');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r).shadowRoot).activeElement, r_0, 'ShadyDOM.wrap(ShadyDOM.wrap(r).shadowRoot).activeElement === r_0');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_0).shadowRoot).activeElement, r_0_0_l, 'ShadyDOM.wrap(ShadyDOM.wrap(r_0).shadowRoot).activeElement === r_0_0_l');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_0_0).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_0_0).shadowRoot).activeElement === null');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_0_0_l).shadowRoot).activeElement, r_0_0_l_0, 'ShadyDOM.wrap(ShadyDOM.wrap(r_0_0_l).shadowRoot).activeElement === r_0_0_l_0');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_0_1).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_0_1).shadowRoot).activeElement === null');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_1).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_1).shadowRoot).activeElement === null');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_1_0).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_1_0).shadowRoot).activeElement === null');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_1_1).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_1_1).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(document)._activeElement, r, 'document.activeElement === r');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r).shadowRoot).activeElement, r_0, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r).shadowRoot).activeElement === r_0');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0).shadowRoot).activeElement, r_0_0_l, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0).shadowRoot).activeElement === r_0_0_l');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0_0).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0_0).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0_0_l).shadowRoot).activeElement, r_0_0_l_0, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0_0_l).shadowRoot).activeElement === r_0_0_l_0');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0_1).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0_1).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1_0).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1_0).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1_1).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1_1).shadowRoot).activeElement === null');
   });
 
   test('r_0_1.focus()', function() {
     r_0_1.focus();
 
-    assert.equal(ShadyDOM.wrap(document)._activeElement, r, 'document.activeElement === r');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r).shadowRoot).activeElement, r_0, 'ShadyDOM.wrap(ShadyDOM.wrap(r).shadowRoot).activeElement === r_0');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_0).shadowRoot).activeElement, r_0_1, 'ShadyDOM.wrap(ShadyDOM.wrap(r_0).shadowRoot).activeElement === r_0_1');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_0_0).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_0_0).shadowRoot).activeElement === null');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_0_1).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_0_1).shadowRoot).activeElement === null');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_1).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_1).shadowRoot).activeElement === null');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_1_0).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_1_0).shadowRoot).activeElement === null');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_1_1).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_1_1).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(document)._activeElement, r, 'document.activeElement === r');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r).shadowRoot).activeElement, r_0, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r).shadowRoot).activeElement === r_0');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0).shadowRoot).activeElement, r_0_1, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0).shadowRoot).activeElement === r_0_1');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0_0).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0_0).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0_1).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0_1).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1_0).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1_0).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1_1).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1_1).shadowRoot).activeElement === null');
   });
 
   test('r_0_1_l.focus()', function() {
     r_0_1_l.focus();
 
-    assert.equal(ShadyDOM.wrap(document)._activeElement, r, 'document.activeElement === r');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r).shadowRoot).activeElement, r_0, 'ShadyDOM.wrap(ShadyDOM.wrap(r).shadowRoot).activeElement === r_0');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_0).shadowRoot).activeElement, r_0_1_l, 'ShadyDOM.wrap(ShadyDOM.wrap(r_0).shadowRoot).activeElement === r_0_1_l');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_0_0).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_0_0).shadowRoot).activeElement === null');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_0_1).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_0_1).shadowRoot).activeElement === null');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_1).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_1).shadowRoot).activeElement === null');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_1_0).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_1_0).shadowRoot).activeElement === null');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_1_1).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_1_1).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(document)._activeElement, r, 'document.activeElement === r');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r).shadowRoot).activeElement, r_0, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r).shadowRoot).activeElement === r_0');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0).shadowRoot).activeElement, r_0_1_l, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0).shadowRoot).activeElement === r_0_1_l');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0_0).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0_0).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0_1).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0_1).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1_0).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1_0).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1_1).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1_1).shadowRoot).activeElement === null');
   });
 
   test('r_1.focus()', function() {
     r_1.focus();
 
-    assert.equal(ShadyDOM.wrap(document)._activeElement, r, 'document.activeElement === r');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r).shadowRoot).activeElement, r_1, 'ShadyDOM.wrap(ShadyDOM.wrap(r).shadowRoot).activeElement === r_1');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_0).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_0).shadowRoot).activeElement === null');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_0_0).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_0_0).shadowRoot).activeElement === null');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_0_1).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_0_1).shadowRoot).activeElement === null');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_1).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_1).shadowRoot).activeElement === null');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_1_0).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_1_0).shadowRoot).activeElement === null');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_1_1).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_1_1).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(document)._activeElement, r, 'document.activeElement === r');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r).shadowRoot).activeElement, r_1, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r).shadowRoot).activeElement === r_1');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0_0).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0_0).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0_1).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0_1).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1_0).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1_0).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1_1).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1_1).shadowRoot).activeElement === null');
   });
 
   test('r_1_l.focus()', function() {
     r_1_l.focus();
 
-    assert.equal(ShadyDOM.wrap(document)._activeElement, r, 'document.activeElement === r');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r).shadowRoot).activeElement, r_1_l, 'ShadyDOM.wrap(ShadyDOM.wrap(r).shadowRoot).activeElement === r_1_l');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_0).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_0).shadowRoot).activeElement === null');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_0_0).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_0_0).shadowRoot).activeElement === null');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_0_1).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_0_1).shadowRoot).activeElement === null');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_1).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_1).shadowRoot).activeElement === null');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_1_0).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_1_0).shadowRoot).activeElement === null');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_1_1).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_1_1).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(document)._activeElement, r, 'document.activeElement === r');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r).shadowRoot).activeElement, r_1_l, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r).shadowRoot).activeElement === r_1_l');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0_0).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0_0).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0_1).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0_1).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1_0).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1_0).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1_1).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1_1).shadowRoot).activeElement === null');
   });
 
   test('r_1_l_0.focus()', function() {
     r_1_l_0.focus();
 
-    assert.equal(ShadyDOM.wrap(document)._activeElement, r, 'document.activeElement === r');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r).shadowRoot).activeElement, r_1_l, 'ShadyDOM.wrap(ShadyDOM.wrap(r).shadowRoot).activeElement === r_1_l');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_0).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_0).shadowRoot).activeElement === null');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_0_0).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_0_0).shadowRoot).activeElement === null');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_0_1).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_0_1).shadowRoot).activeElement === null');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_1).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_1).shadowRoot).activeElement === null');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_1_l).shadowRoot).activeElement, r_1_l_0, 'ShadyDOM.wrap(ShadyDOM.wrap(r_1).shadowRoot).activeElement === r_1_l_0');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_1_0).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_1_0).shadowRoot).activeElement === null');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_1_1).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_1_1).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(document)._activeElement, r, 'document.activeElement === r');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r).shadowRoot).activeElement, r_1_l, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r).shadowRoot).activeElement === r_1_l');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0_0).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0_0).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0_1).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0_1).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1_l).shadowRoot).activeElement, r_1_l_0, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1).shadowRoot).activeElement === r_1_l_0');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1_0).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1_0).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1_1).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1_1).shadowRoot).activeElement === null');
   });
 
   test('r_1_0.focus()', function() {
     r_1_0.focus();
 
-    assert.equal(ShadyDOM.wrap(document)._activeElement, r, 'document.activeElement === r');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r).shadowRoot).activeElement, r_1, 'ShadyDOM.wrap(ShadyDOM.wrap(r).shadowRoot).activeElement === r_1');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_0).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_0).shadowRoot).activeElement === null');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_0_0).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_0_0).shadowRoot).activeElement === null');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_0_1).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_0_1).shadowRoot).activeElement === null');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_1).shadowRoot).activeElement, r_1_0, 'ShadyDOM.wrap(ShadyDOM.wrap(r_1).shadowRoot).activeElement === r_1_0');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_1_0).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_1_0).shadowRoot).activeElement === null');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_1_1).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_1_1).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(document)._activeElement, r, 'document.activeElement === r');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r).shadowRoot).activeElement, r_1, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r).shadowRoot).activeElement === r_1');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0_0).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0_0).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0_1).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0_1).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1).shadowRoot).activeElement, r_1_0, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1).shadowRoot).activeElement === r_1_0');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1_0).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1_0).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1_1).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1_1).shadowRoot).activeElement === null');
   });
 
   test('r_1_0_l.focus()', function() {
     r_1_0_l.focus();
 
-    assert.equal(ShadyDOM.wrap(document)._activeElement, r, 'document.activeElement === r');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r).shadowRoot).activeElement, r_1, 'ShadyDOM.wrap(ShadyDOM.wrap(r).shadowRoot).activeElement === r_1');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_0).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_0).shadowRoot).activeElement === null');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_0_0).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_0_0).shadowRoot).activeElement === null');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_0_1).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_0_1).shadowRoot).activeElement === null');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_1).shadowRoot).activeElement, r_1_0_l, 'ShadyDOM.wrap(ShadyDOM.wrap(r_1).shadowRoot).activeElement === r_1_0_l');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_1_0).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_1_0).shadowRoot).activeElement === null');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_1_1).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_1_1).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(document)._activeElement, r, 'document.activeElement === r');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r).shadowRoot).activeElement, r_1, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r).shadowRoot).activeElement === r_1');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0_0).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0_0).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0_1).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0_1).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1).shadowRoot).activeElement, r_1_0_l, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1).shadowRoot).activeElement === r_1_0_l');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1_0).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1_0).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1_1).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1_1).shadowRoot).activeElement === null');
   });
 
   test('r_1_1.focus()', function() {
     r_1_1.focus();
 
-    assert.equal(ShadyDOM.wrap(document)._activeElement, r, 'document.activeElement === r');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r).shadowRoot).activeElement, r_1, 'ShadyDOM.wrap(ShadyDOM.wrap(r).shadowRoot).activeElement === r_1');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_0).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_0).shadowRoot).activeElement === null');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_0_0).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_0_0).shadowRoot).activeElement === null');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_0_1).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_0_1).shadowRoot).activeElement === null');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_1).shadowRoot).activeElement, r_1_1, 'ShadyDOM.wrap(ShadyDOM.wrap(r_1).shadowRoot).activeElement === r_1_1');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_1_0).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_1_0).shadowRoot).activeElement === null');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_1_1).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_1_1).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(document)._activeElement, r, 'document.activeElement === r');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r).shadowRoot).activeElement, r_1, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r).shadowRoot).activeElement === r_1');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0_0).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0_0).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0_1).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0_1).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1).shadowRoot).activeElement, r_1_1, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1).shadowRoot).activeElement === r_1_1');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1_0).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1_0).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1_1).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1_1).shadowRoot).activeElement === null');
   });
 
   test('r_1_1_l.focus()', function() {
     r_1_1_l.focus();
 
-    assert.equal(ShadyDOM.wrap(document)._activeElement, r, 'document.activeElement === r');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r).shadowRoot).activeElement, r_1, 'ShadyDOM.wrap(ShadyDOM.wrap(r).shadowRoot).activeElement === r_1');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_0).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_0).shadowRoot).activeElement === null');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_0_0).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_0_0).shadowRoot).activeElement === null');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_0_1).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_0_1).shadowRoot).activeElement === null');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_1).shadowRoot).activeElement, r_1_1_l, 'ShadyDOM.wrap(ShadyDOM.wrap(r_1).shadowRoot).activeElement === r_1_1_l');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_1_0).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_1_0).shadowRoot).activeElement === null');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_1_1).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_1_1).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(document)._activeElement, r, 'document.activeElement === r');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r).shadowRoot).activeElement, r_1, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r).shadowRoot).activeElement === r_1');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0_0).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0_0).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0_1).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0_1).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1).shadowRoot).activeElement, r_1_1_l, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1).shadowRoot).activeElement === r_1_1_l');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1_0).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1_0).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1_1).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1_1).shadowRoot).activeElement === null');
   });
 
   test('setting activeElement on document has no effect', function() {
@@ -481,35 +481,35 @@ suite('activeElement', function() {
     try {
       document.activeElement = "abc";
     } catch(e) {}
-    assert.equal(ShadyDOM.wrap(document)._activeElement, r, 'document.activeElement === r');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r).shadowRoot).activeElement, r_1, 'ShadyDOM.wrap(ShadyDOM.wrap(r).shadowRoot).activeElement === r_1');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_0).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_0).shadowRoot).activeElement === null');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_0_0).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_0_0).shadowRoot).activeElement === null');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_0_1).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_0_1).shadowRoot).activeElement === null');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_1).shadowRoot).activeElement, r_1_1, 'ShadyDOM.wrap(ShadyDOM.wrap(r_1).shadowRoot).activeElement === r_1_1');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_1_0).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_1_0).shadowRoot).activeElement === null');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_1_1).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_1_1).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(document)._activeElement, r, 'document.activeElement === r');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r).shadowRoot).activeElement, r_1, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r).shadowRoot).activeElement === r_1');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0_0).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0_0).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0_1).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0_1).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1).shadowRoot).activeElement, r_1_1, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1).shadowRoot).activeElement === r_1_1');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1_0).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1_0).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1_1).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1_1).shadowRoot).activeElement === null');
   });
 
   test('setting activeElement on a shadow root has no effect', function() {
     r_1_1.focus();
     try {
-      ShadyDOM.wrap(ShadyDOM.wrap(r_1).shadowRoot).activeElement = "abc";
+      ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1).shadowRoot).activeElement = "abc";
     } catch(e) {}
-    assert.equal(ShadyDOM.wrap(document)._activeElement, r, 'document.activeElement === r');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r).shadowRoot).activeElement, r_1, 'ShadyDOM.wrap(ShadyDOM.wrap(r).shadowRoot).activeElement === r_1');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_0).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_0).shadowRoot).activeElement === null');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_0_0).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_0_0).shadowRoot).activeElement === null');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_0_1).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_0_1).shadowRoot).activeElement === null');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_1).shadowRoot).activeElement, r_1_1, 'ShadyDOM.wrap(ShadyDOM.wrap(r_1).shadowRoot).activeElement === r_1_1');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_1_0).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_1_0).shadowRoot).activeElement === null');
-    assert.equal(ShadyDOM.wrap(ShadyDOM.wrap(r_1_1).shadowRoot).activeElement, null, 'ShadyDOM.wrap(ShadyDOM.wrap(r_1_1).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(document)._activeElement, r, 'document.activeElement === r');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r).shadowRoot).activeElement, r_1, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r).shadowRoot).activeElement === r_1');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0_0).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0_0).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0_1).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0_1).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1).shadowRoot).activeElement, r_1_1, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1).shadowRoot).activeElement === r_1_1');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1_0).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1_0).shadowRoot).activeElement === null');
+    assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1_1).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1_1).shadowRoot).activeElement === null');
   });
 
   test('activeElement correctly updated after it gets removed from the document', function() {
-    ShadyDOM.wrap(r).focus();
-    ShadyDOM.wrap(ShadyDOM.wrap(r).parentNode).removeChild(r);
-    assert.notEqual(ShadyDOM.wrap(document)._activeElement, r, 'document.activeElement !== r');
+    ShadyDOM.wrapIfNeeded(r).focus();
+    ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r).parentNode).removeChild(r);
+    assert.notEqual(ShadyDOM.wrapIfNeeded(document)._activeElement, r, 'document.activeElement !== r');
   });
 });
 

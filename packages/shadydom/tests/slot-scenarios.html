@@ -63,16 +63,16 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <script>
     suite('Slot distribution in various scenarios', function () {
       test('slot distribution is not interrupted by events', function (done) {
-        let innerTemplate = ShadyDOM.wrap(document).querySelector('template#inner');
-        let outerTemplate = ShadyDOM.wrap(document).querySelector('template#outer');
-        let failureTemplate = ShadyDOM.wrap(document).querySelector('template#failure');
+        let innerTemplate = ShadyDOM.wrapIfNeeded(document).querySelector('template#inner');
+        let outerTemplate = ShadyDOM.wrapIfNeeded(document).querySelector('template#outer');
+        let failureTemplate = ShadyDOM.wrapIfNeeded(document).querySelector('template#failure');
 
         class XInner extends HTMLElement {
           connectedCallback() {
             if (!this.shadowRoot) {
-              ShadyDOM.wrap(this).attachShadow({ mode: 'open' });
-              ShadyDOM.wrap(ShadyDOM.wrap(this).shadowRoot).appendChild(ShadyDOM.wrap(document).importNode(innerTemplate.content, true));
-              ShadyDOM.wrap(this).dispatchEvent(new Event('test', { bubbles: true, composed: true }));
+              ShadyDOM.wrapIfNeeded(this).attachShadow({ mode: 'open' });
+              ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(this).shadowRoot).appendChild(ShadyDOM.wrapIfNeeded(document).importNode(innerTemplate.content, true));
+              ShadyDOM.wrapIfNeeded(this).dispatchEvent(new Event('test', { bubbles: true, composed: true }));
             }
           }
         }
@@ -80,8 +80,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         class XOuter extends HTMLElement {
           connectedCallback() {
             if (!this.shadowRoot) {
-              ShadyDOM.wrap(this).attachShadow({ mode: 'open' });
-              ShadyDOM.wrap(ShadyDOM.wrap(this).shadowRoot).appendChild(ShadyDOM.wrap(document).importNode(outerTemplate.content, true));
+              ShadyDOM.wrapIfNeeded(this).attachShadow({ mode: 'open' });
+              ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(this).shadowRoot).appendChild(ShadyDOM.wrapIfNeeded(document).importNode(outerTemplate.content, true));
             }
           }
         }
@@ -90,27 +90,27 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         customElements.define('x-outer', XOuter);
 
         assert.doesNotThrow(() => {
-          ShadyDOM.wrap(document.body).appendChild(ShadyDOM.wrap(document).importNode(failureTemplate.content, true));
+          ShadyDOM.wrapIfNeeded(document.body).appendChild(ShadyDOM.wrapIfNeeded(document).importNode(failureTemplate.content, true));
           ShadyDOM.flush();
           done();
         });
       });
 
       suite('querying slots for assignedNodes in constructors', function () {
-        let innerTemplate = ShadyDOM.wrap(document).querySelector('template#innerTemplate');
-        let outerTemplate = ShadyDOM.wrap(document).querySelector('template#outerTemplate');
-        let outerWithChildTemplate = ShadyDOM.wrap(document).querySelector('template#outerWithChildTemplate');
+        let innerTemplate = ShadyDOM.wrapIfNeeded(document).querySelector('template#innerTemplate');
+        let outerTemplate = ShadyDOM.wrapIfNeeded(document).querySelector('template#outerTemplate');
+        let outerWithChildTemplate = ShadyDOM.wrapIfNeeded(document).querySelector('template#outerWithChildTemplate');
 
         let nodeLength = 0;
 
         class InnerElement extends HTMLElement {
           constructor() {
             super();
-            const clone = ShadyDOM.wrap(document).importNode(innerTemplate.content, true);
-            ShadyDOM.wrap(this).attachShadow({ mode: 'open' });
-            ShadyDOM.wrap(ShadyDOM.wrap(this).shadowRoot).appendChild(clone);
-            const slot = ShadyDOM.wrap(ShadyDOM.wrap(this).shadowRoot).querySelector('slot');
-            const nodes = ShadyDOM.wrap(slot).assignedNodes({ flatten: true });
+            const clone = ShadyDOM.wrapIfNeeded(document).importNode(innerTemplate.content, true);
+            ShadyDOM.wrapIfNeeded(this).attachShadow({ mode: 'open' });
+            ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(this).shadowRoot).appendChild(clone);
+            const slot = ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(this).shadowRoot).querySelector('slot');
+            const nodes = ShadyDOM.wrapIfNeeded(slot).assignedNodes({ flatten: true });
             nodeLength = nodes.length;
           }
         }
@@ -119,9 +119,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         class OuterElement extends HTMLElement {
           constructor() {
             super();
-            const clone = ShadyDOM.wrap(document).importNode(outerTemplate.content, true);
-            ShadyDOM.wrap(this).attachShadow({ mode: 'open' });
-            ShadyDOM.wrap(ShadyDOM.wrap(this).shadowRoot).appendChild(clone);
+            const clone = ShadyDOM.wrapIfNeeded(document).importNode(outerTemplate.content, true);
+            ShadyDOM.wrapIfNeeded(this).attachShadow({ mode: 'open' });
+            ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(this).shadowRoot).appendChild(clone);
           }
         }
         customElements.define('outer-element', OuterElement);
@@ -144,15 +144,15 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           if (!window.customElements.forcePolyfill) {
             this.skip();
           }
-          const dom = ShadyDOM.wrap(document).importNode(outerWithChildTemplate.content, true);
-          const outer = ShadyDOM.wrap(dom).querySelector('outer-element');
-          const inner = ShadyDOM.wrap(ShadyDOM.wrap(outer).shadowRoot).querySelector('inner-element')
-          const innerSlot = ShadyDOM.wrap(ShadyDOM.wrap(inner).shadowRoot).querySelector('slot');
+          const dom = ShadyDOM.wrapIfNeeded(document).importNode(outerWithChildTemplate.content, true);
+          const outer = ShadyDOM.wrapIfNeeded(dom).querySelector('outer-element');
+          const inner = ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(outer).shadowRoot).querySelector('inner-element')
+          const innerSlot = ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(inner).shadowRoot).querySelector('slot');
           assert.equal(nodeLength, 2);
           // NOTE: accessing assignedNodes here causes needs to flush the
           // rendering of the entire distribution tree. In this case, inner
           // is not dirty, but outer is.
-          assert.equal(ShadyDOM.wrap(innerSlot).assignedNodes({flatten: true}).length, 3);
+          assert.equal(ShadyDOM.wrapIfNeeded(innerSlot).assignedNodes({flatten: true}).length, 3);
         });
       });
 
@@ -167,9 +167,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             super();
             const template = document.createElement('template');
             template.innerHTML = '<slot></slot>';
-            const clone = ShadyDOM.wrap(document).importNode(template.content, true);
-            ShadyDOM.wrap(this).attachShadow({ mode: 'open' });
-            ShadyDOM.wrap(ShadyDOM.wrap(this).shadowRoot).appendChild(clone);
+            const clone = ShadyDOM.wrapIfNeeded(document).importNode(template.content, true);
+            ShadyDOM.wrapIfNeeded(this).attachShadow({ mode: 'open' });
+            ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(this).shadowRoot).appendChild(clone);
           }
         }
         customElements.define('inner-inline-element', InnerInlineElement);
@@ -178,17 +178,17 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           constructor() {
             super();
             const template = document.createElement('template');
-            ShadyDOM.wrap(template).innerHTML = '<inner-inline-element><slot></slot></inner-inline-element>';
-            const clone = ShadyDOM.wrap(document).importNode(template.content, true);
-            ShadyDOM.wrap(this).attachShadow({ mode: 'open' });
-            ShadyDOM.wrap(ShadyDOM.wrap(this).shadowRoot).appendChild(clone);
+            ShadyDOM.wrapIfNeeded(template).innerHTML = '<inner-inline-element><slot></slot></inner-inline-element>';
+            const clone = ShadyDOM.wrapIfNeeded(document).importNode(template.content, true);
+            ShadyDOM.wrapIfNeeded(this).attachShadow({ mode: 'open' });
+            ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(this).shadowRoot).appendChild(clone);
           }
         }
         customElements.define('outer-inline-element', OuterInlineElement);
 
         assert.doesNotThrow(() => {
           const outer = document.createElement('outer-inline-element');
-          ShadyDOM.wrap(outer).innerHTML = `<div>Hello</div>`;
+          ShadyDOM.wrapIfNeeded(outer).innerHTML = `<div>Hello</div>`;
           if (window.ShadyDOM) {
             window.ShadyDOM.flush();
           }
@@ -198,17 +198,17 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       test('slots can be modified before rendering', function() {
         const host = document.createElement('div');
         const child = document.createElement('span');
-        ShadyDOM.wrap(child).textContent = 'Hello!';
-        ShadyDOM.wrap(child).setAttribute('slot', 'foo');
-        ShadyDOM.wrap(host).appendChild(child);
-        ShadyDOM.wrap(host).attachShadow({mode: 'open'});
+        ShadyDOM.wrapIfNeeded(child).textContent = 'Hello!';
+        ShadyDOM.wrapIfNeeded(child).setAttribute('slot', 'foo');
+        ShadyDOM.wrapIfNeeded(host).appendChild(child);
+        ShadyDOM.wrapIfNeeded(host).attachShadow({mode: 'open'});
         const slot = document.createElement('slot');
-        ShadyDOM.wrap(ShadyDOM.wrap(host).shadowRoot).appendChild(slot);
+        ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(host).shadowRoot).appendChild(slot);
         assert.doesNotThrow(() => {
-          ShadyDOM.wrap(slot).setAttribute('name', 'foo');
+          ShadyDOM.wrapIfNeeded(slot).setAttribute('name', 'foo');
         });
         window.ShadyDOM.flush();
-        assert.equal(ShadyDOM.wrap(child).assignedSlot, slot, 'child should be assigned to slot');
+        assert.equal(ShadyDOM.wrapIfNeeded(child).assignedSlot, slot, 'child should be assigned to slot');
       });
     })
   </script>
