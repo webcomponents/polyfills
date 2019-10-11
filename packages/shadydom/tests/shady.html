@@ -453,7 +453,7 @@ suite('Mutate light DOM', function() {
       '<div></div>';
     ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(host).shadowRoot).lastElementChild).attachShadow({mode: 'open'});
     // force upgrade on polyfilled browsers
-        ShadyDOM.flush();
+    ShadyDOM.flush();
     var hostLocalMain = getComposedChildAtIndex(ShadyDOM.wrapIfNeeded(host).shadowRoot, 1);
     var child = getComposedChildAtIndex(ShadyDOM.wrapIfNeeded(host).shadowRoot, 100);
     ShadyDOM.wrapIfNeeded(child).innerHTML = '<div id="sub"></div>';

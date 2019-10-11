@@ -137,7 +137,7 @@ makeNonEnumerable(InsideDescriptors);
 makeNonEnumerable(TextContentInnerHTMLDescriptors);
 makeNonEnumerable(OutsideDescriptors);
 
-const noInstancePatching = utils.settings.hasDescriptors || utils.settings.noPatch;
+const noInstancePatching = utils.settings.hasDescriptors || (utils.settings.noPatch === true);
 
 // ensure an element has patched "outside" accessors; no-op when not needed
 export let patchOutsideElementAccessors = noInstancePatching ?

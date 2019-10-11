@@ -22,7 +22,8 @@ const hasDescriptors = utils.settings.hasDescriptors;
 function patchNode(node, type) {
   if (patchOnDemand) {
     patchNodeProto(node);
-  } else if (!hasDescriptors) {
+  }
+  if (!hasDescriptors) {
     if (type === OutsideAccessors) {
       patchOutsideElementAccessors(node);
     } else if (type === InsideAcccessors) {

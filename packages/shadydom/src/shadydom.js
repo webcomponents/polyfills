@@ -78,6 +78,7 @@ if (utils.settings.inUse) {
     'handlesDynamicScoping': true,
     // Ensure the node is wrapped. This should be used when `noPatch` is set
     // to ensure Shadow DOM compatible DOM operation.
+    // Note, wrap falls back to patch so that it ensures API "always just works"
     'wrap': utils.settings.noPatch ? wrap : patch,
     // When code should be compatible with `noPatch` `true` and `on-demand`
     // settings, `wrapIfNeeded` can be used for optimal performance (v. `wrap`)
@@ -87,9 +88,9 @@ if (utils.settings.inUse) {
     // when calling `querySelector|All`; when setting `textContent` or
     // `innerHTML`; `addEventListener`; and all scope specific API's like
     // `getRootNode`, `isConnected`, `slot`, `assignedSlot`, `assignedNodes`.
-    'wrapIfNeeded': utils.settings.noPatch === true ||
-      (utils.settings.noPatch === 'on-demand' && !utils.settings.hasDescriptors) ?
-      wrap : patch,
+    // Note, `wrapIfNeeded` falls back to a pass through to preserve optimal
+    // performance.
+    'wrapIfNeeded': utils.settings.noPatch === true ? wrap : n => n,
     'Wrapper': Wrapper,
     'composedPath': composedPath,
     // Set to true to avoid patching regular platform property names. When set,
