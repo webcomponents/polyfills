@@ -145,7 +145,7 @@ export let patchOutsideElementAccessors = noInstancePatching ?
     const sd = ensureShadyDataForNode(element);
     if (!sd.__outsideAccessors) {
       sd.__outsideAccessors = true;
-      utils.patchProperties(element, OutsideDescriptors);
+      utils.patchExistingProperties(element, OutsideDescriptors);
     }
   }
 
@@ -155,7 +155,7 @@ export let patchInsideElementAccessors = noInstancePatching ?
     const sd = ensureShadyDataForNode(element);
     if (!sd.__insideAccessors) {
       sd.__insideAccessors = true;
-      utils.patchProperties(element, InsideDescriptors);
+      utils.patchExistingProperties(element, InsideDescriptors);
       // NOTE: There are compatibility issues with patches for `textContent`
       // and `innerHTML` between CE and SD. Since SD patches are applied
       // via `ShadyDOM.patch` and CE patches are applied as the tree is walked,
@@ -170,7 +170,7 @@ export let patchInsideElementAccessors = noInstancePatching ?
       // If customElements is not loaded, then these accessors should be
       // patched so they work correctly.
       if (!window['customElements'] || utils.settings.noPatch) {
-        utils.patchProperties(element, TextContentInnerHTMLDescriptors);
+        utils.patchExistingProperties(element, TextContentInnerHTMLDescriptors);
       }
     }
   }

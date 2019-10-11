@@ -139,7 +139,9 @@ if (utils.settings.inUse) {
     // Patch click event behavior only if we're patching
     patchClick()
   } else if (utils.settings.patchOnDemand) {
-    // in noPatch, do patch `attachShadow` and `shadowRoot`
+    // In `on-demand` patching, do patch `attachShadow` and `shadowRoot`.
+    // These are the only patched properties in `on-demand` mode and these
+    // patches kick off patching "on-demand" for other nodes.
     patchShadowOnElement();
   }
 

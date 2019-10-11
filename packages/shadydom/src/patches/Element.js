@@ -129,10 +129,12 @@ export const ElementShadowPatches = utils.getOwnPropertyDescriptors({
    */
   attachShadow(options) {
     const root = attachShadow(this, options);
-    // TODO(sorvell): Workaround for CE not seeing shadowRoot in augmented
+    // TODO(sorvell): Workaround for CE not seeing shadowRoot in `on-demand`
     // noPatch mode. CE's attachShadow patch is overwritten by this patch
     // and cannot set its own special tracking for shadowRoot. It does this
     // to be able to see closed shadowRoots.
+    // This is necessary so that the CE polyfill can traverse into nodes
+    // with shadowRoot that will under `on-demand` have their childNodes patched.
     this['__CE_shadowRoot'] = root;
     return root;
   },

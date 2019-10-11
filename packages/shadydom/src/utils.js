@@ -151,34 +151,42 @@ export const childNodesArray = (parent) => {
   return result;
 }
 
+const patchProperty = (proto, name, descriptor) => {
+  descriptor.configurable = true;
+  // NOTE: we prefer writing directly because some browsers
+  // have descriptors that are writable but not configurable (e.g.
+  // `appendChild` on older browsers)
+  if (descriptor.value) {
+    proto[name] = descriptor.value;
+  } else {
+    try {
+      Object.defineProperty(proto, name, descriptor);
+    } catch(e) {
+      // this error is harmless so we just trap it.
+    }
+  }
+}
+
 /**
- * Patch a group of accessors on an object only if it exists or if the `force`
- * argument is true.
+ * Patch a group of accessors on an object. By default this overrides
  * @param {!Object} proto
  * @param {!Object} descriptors
  * @param {string=} prefix
  * @param {Array=} disallowedPatches
  */
 export const patchProperties = (proto, descriptors, prefix = '', disallowedPatches) => {
-  for (let p in descriptors) {
-    const newDescriptor = descriptors[p];
-    if (disallowedPatches && disallowedPatches.indexOf(p) >= 0) {
+  for (let name in descriptors) {
+    if (disallowedPatches && disallowedPatches.indexOf(name) >= 0) {
       continue;
     }
-    newDescriptor.configurable = true;
-    const name = prefix + p;
-    // NOTE: we prefer writing directly because some browsers
-    // have descriptors that are writable but not configurable (e.g.
-    // `appendChild` on older browsers)
-    if (newDescriptor.value) {
-      proto[name] = newDescriptor.value;
-    } else {
-      // NOTE: this can throw if 'force' is used so catch the error.
-      try {
-        Object.defineProperty(proto, name, newDescriptor);
-      } catch(e) {
-        // this error is harmless so we just trap it.
-      }
+    patchProperty(proto,  prefix + name, descriptors[name]);
+  }
+}
+
+export const patchExistingProperties = (proto, descriptors) => {
+  for (let name in descriptors) {
+    if (name in proto) {
+      patchProperty(proto,  name, descriptors[name]);
     }
   }
 }

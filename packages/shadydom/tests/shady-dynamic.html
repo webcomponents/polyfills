@@ -1739,6 +1739,24 @@ suite('renders roots', function() {
     assert.equal(ShadyDOM.wrapIfNeeded(c).shadowRoot._renderSelf.callCount, 2);
   });
 
+  test('non-element nodes are correctly patched', function() {
+    const d = document.createElement('div');
+    document.body.appendChild(d);
+    d.innerHTML = `
+      <x-echo> <!-- comment --><![CDATA[ data ]]><? processing ?></x-echo>
+    `;
+    ShadyDOM.flush();
+    const el = d.firstElementChild;
+    assert.equal(el.childNodes.length, 4);
+    const slot = (ShadyDOM.wrapIfNeeded(el).shadowRoot.querySelector('slot'));
+    for (let i=0; i < el.childNodes.length; i++) {
+      const child = el.childNodes[i];
+      assert.equal(ShadyDOM.wrapIfNeeded(child).parentNode, el);
+      assert.equal(ShadyDOM.wrapIfNeeded(child).assignedSlot, slot);
+    }
+    document.body.removeChild(d);
+  });
+
 
 });
 

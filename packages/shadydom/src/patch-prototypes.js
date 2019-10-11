@@ -54,6 +54,9 @@ const patchMap = {
   EventTarget: [EventTargetPatches],
   Node: [NodePatches, !window.EventTarget ? EventTargetPatches : null],
   Text: [SlotablePatches],
+  Comment: [SlotablePatches],
+  CDATASection: [SlotablePatches],
+  ProcessingInstruction: [SlotablePatches],
   Element: [ElementPatches, ParentNodePatches, SlotablePatches,
     ElementShouldHaveInnerHTML ? ElementOrShadowRootPatches : null,
     !window.HTMLSlotElement ? SlotPatches : null],
@@ -72,8 +75,7 @@ const getPatchPrototype = (name) => window[name] && window[name].prototype;
 const disallowedNativePatches = utils.settings.hasDescriptors ? null : ['innerHTML', 'textContent'];
 
 /**
- * Patch a group of accessors on an object only if it exists or if the `force`
- * argument is true.
+ * Patch a group of accessors on an object.
  * @param {!Object} proto
  * @param {!Array<Object>} list
  * @param {string=} prefix
@@ -96,12 +98,19 @@ export const applyPatches = (prefix) => {
 const PROTO_IS_PATCHED = utils.SHADY_PREFIX + 'patchedProto';
 
 const patchedProtos = new Map();
-const TextPatchedProto = Object.create(Text.prototype);
-TextPatchedProto[PROTO_IS_PATCHED] = true;
-applyPatchList(TextPatchedProto, patchMap.EventTarget);
-applyPatchList(TextPatchedProto, patchMap.Node);
-applyPatchList(TextPatchedProto, patchMap.Text);
-patchedProtos.set(Text.prototype, TextPatchedProto);
+
+// Patch non-element prototypes up front so that we don't have to check
+// the type of Node when patching an can always assume we're patching an element.
+[Text, Comment, CDATASection, ProcessingInstruction].forEach(ctor => {
+  const patchedProto = Object.create(ctor.prototype);
+  patchedProto[PROTO_IS_PATCHED] = true;
+  applyPatchList(patchedProto, patchMap.EventTarget);
+  applyPatchList(patchedProto, patchMap.Node);
+  if (patchMap[ctor.name]) {
+    applyPatchList(patchedProto, patchMap[ctor.name]);
+  }
+  patchedProtos.set(ctor.prototype, patchedProto);
+});
 
 export const patchElementProto = (proto) => {
   proto[PROTO_IS_PATCHED] = true;
