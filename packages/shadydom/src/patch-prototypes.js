@@ -101,7 +101,7 @@ const patchedProtos = new Map();
 
 // Patch non-element prototypes up front so that we don't have to check
 // the type of Node when patching an can always assume we're patching an element.
-[Text, Comment, CDATASection, ProcessingInstruction].forEach(ctor => {
+[window.Text, window.Comment, window.CDATASection, window.ProcessingInstruction].forEach(ctor => {
   const patchedProto = Object.create(ctor.prototype);
   patchedProto[PROTO_IS_PATCHED] = true;
   applyPatchList(patchedProto, patchMap.EventTarget);
