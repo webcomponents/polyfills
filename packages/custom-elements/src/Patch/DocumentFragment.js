@@ -14,10 +14,11 @@ import PatchParentNode from './Interface/ParentNode.js';
 
 /**
  * @param {!CustomElementInternals} internals
+ * @param {string} patchPrefix
  */
-export default function(internals) {
+export default function(internals, patchPrefix = '') {
   PatchParentNode(internals, DocumentFragment.prototype, {
     prepend: Native.DocumentFragment_prepend,
     append: Native.DocumentFragment_append,
-  });
+  }, patchPrefix);
 };

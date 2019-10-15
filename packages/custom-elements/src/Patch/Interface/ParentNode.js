@@ -23,8 +23,9 @@ let ParentNodeNativeMethods;
  * @param {!CustomElementInternals} internals
  * @param {!Object} destination
  * @param {!ParentNodeNativeMethods} builtIn
+ * @param {string} patchPrefix
  */
-export default function(internals, destination, builtIn) {
+export default function(internals, destination, builtIn, patchPrefix = '') {
   /**
    * @param {!function(...(!Node|string))} builtInMethod
    * @return {!function(...(!Node|string))}
@@ -77,10 +78,12 @@ export default function(internals, destination, builtIn) {
   }
 
   if (builtIn.prepend !== undefined) {
-    Utilities.setPropertyUnchecked(destination, 'prepend', appendPrependPatch(builtIn.prepend));
+    Utilities.setPropertyUnchecked(destination, patchPrefix + 'prepend',
+        appendPrependPatch(builtIn.prepend));
   }
 
   if (builtIn.append !== undefined) {
-    Utilities.setPropertyUnchecked(destination, 'append', appendPrependPatch(builtIn.append));
+    Utilities.setPropertyUnchecked(destination, patchPrefix + 'append',
+        appendPrependPatch(builtIn.append));
   }
 };

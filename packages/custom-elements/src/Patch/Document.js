@@ -17,9 +17,10 @@ import PatchParentNode from './Interface/ParentNode.js';
 
 /**
  * @param {!CustomElementInternals} internals
+ * @param {string} patchPrefix
  */
-export default function(internals) {
-  Utilities.setPropertyUnchecked(Document.prototype, 'createElement',
+export default function(internals, patchPrefix = '') {
+  Utilities.setPropertyUnchecked(Document.prototype, patchPrefix + 'createElement',
     /**
      * @this {Document}
      * @param {string} localName
@@ -29,7 +30,7 @@ export default function(internals) {
       return internals.createAnElement(this, localName, null);
     });
 
-  Utilities.setPropertyUnchecked(Document.prototype, 'importNode',
+  Utilities.setPropertyUnchecked(Document.prototype, patchPrefix + 'importNode',
     /**
      * @this {Document}
      * @param {!Node} node
@@ -47,7 +48,7 @@ export default function(internals) {
       return clone;
     });
 
-  Utilities.setPropertyUnchecked(Document.prototype, 'createElementNS',
+  Utilities.setPropertyUnchecked(Document.prototype, patchPrefix + 'createElementNS',
     /**
      * @this {Document}
      * @param {?string} namespace
@@ -61,5 +62,5 @@ export default function(internals) {
   PatchParentNode(internals, Document.prototype, {
     prepend: Native.Document_prepend,
     append: Native.Document_append,
-  });
+  }, patchPrefix);
 };

@@ -25,8 +25,9 @@ let ChildNodeNativeMethods;
  * @param {!CustomElementInternals} internals
  * @param {!Object} destination
  * @param {!ChildNodeNativeMethods} builtIn
+ * @param {string} patchPrefix
  */
-export default function(internals, destination, builtIn) {
+export default function(internals, destination, builtIn, patchPrefix = '') {
   /**
    * @param {!function(...(!Node|string))} builtInMethod
    * @return {!function(...(!Node|string))}
@@ -79,15 +80,17 @@ export default function(internals, destination, builtIn) {
   }
 
   if (builtIn.before !== undefined) {
-    Utilities.setPropertyUnchecked(destination, 'before', beforeAfterPatch(builtIn.before));
+    Utilities.setPropertyUnchecked(destination, patchPrefix + 'before',
+        beforeAfterPatch(builtIn.before));
   }
 
   if (builtIn.after !== undefined) {
-    Utilities.setPropertyUnchecked(destination, 'after', beforeAfterPatch(builtIn.after));
+    Utilities.setPropertyUnchecked(destination, patchPrefix + 'after',
+        beforeAfterPatch(builtIn.after));
   }
 
   if (builtIn.replaceWith !== undefined) {
-    Utilities.setPropertyUnchecked(destination, 'replaceWith',
+    Utilities.setPropertyUnchecked(destination, patchPrefix + 'replaceWith',
       /**
        * @param {...(!Node|string)} nodes
        * @this {!Node}
@@ -142,7 +145,7 @@ export default function(internals, destination, builtIn) {
     }
 
   if (builtIn.remove !== undefined) {
-    Utilities.setPropertyUnchecked(destination, 'remove',
+    Utilities.setPropertyUnchecked(destination, patchPrefix + 'remove',
       /** @this {!Node} */
       function() {
         const wasConnected = Utilities.isConnected(this);

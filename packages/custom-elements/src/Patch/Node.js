@@ -14,12 +14,13 @@ import * as Utilities from '../Utilities.js';
 
 /**
  * @param {!CustomElementInternals} internals
+ * @param {string} patchPrefix
  */
-export default function(internals) {
+export default function(internals, patchPrefix = '') {
   // `Node#nodeValue` is implemented on `Attr`.
   // `Node#textContent` is implemented on `Attr`, `Element`.
 
-  Utilities.setPropertyUnchecked(Node.prototype, 'insertBefore',
+  Utilities.setPropertyUnchecked(Node.prototype, patchPrefix + 'insertBefore',
     /**
      * @this {Node}
      * @param {!Node} node
@@ -57,7 +58,7 @@ export default function(internals) {
       return nativeResult;
     });
 
-  Utilities.setPropertyUnchecked(Node.prototype, 'appendChild',
+  Utilities.setPropertyUnchecked(Node.prototype, patchPrefix + 'appendChild',
     /**
      * @this {Node}
      * @param {!Node} node
@@ -94,7 +95,7 @@ export default function(internals) {
       return nativeResult;
     });
 
-  Utilities.setPropertyUnchecked(Node.prototype, 'cloneNode',
+  Utilities.setPropertyUnchecked(Node.prototype, patchPrefix + 'cloneNode',
     /**
      * @this {Node}
      * @param {boolean=} deep
@@ -112,7 +113,7 @@ export default function(internals) {
       return clone;
     });
 
-  Utilities.setPropertyUnchecked(Node.prototype, 'removeChild',
+  Utilities.setPropertyUnchecked(Node.prototype, patchPrefix + 'removeChild',
     /**
      * @this {Node}
      * @param {!Node} node
@@ -129,7 +130,7 @@ export default function(internals) {
       return nativeResult;
     });
 
-  Utilities.setPropertyUnchecked(Node.prototype, 'replaceChild',
+  Utilities.setPropertyUnchecked(Node.prototype, patchPrefix + 'replaceChild',
     /**
      * @this {Node}
      * @param {!Node} nodeToInsert
@@ -176,7 +177,7 @@ export default function(internals) {
 
 
   function patch_textContent(destination, baseDescriptor) {
-    Object.defineProperty(destination, 'textContent', {
+    Object.defineProperty(destination, patchPrefix + 'textContent', {
       enumerable: baseDescriptor.enumerable,
       configurable: true,
       get: baseDescriptor.get,

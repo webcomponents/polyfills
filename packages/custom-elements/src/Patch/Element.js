@@ -18,10 +18,11 @@ import PatchChildNode from './Interface/ChildNode.js';
 
 /**
  * @param {!CustomElementInternals} internals
+ * @param {string} patchPrefix
  */
-export default function(internals) {
+export default function(internals, patchPrefix = '') {
   if (Native.Element_attachShadow) {
-    Utilities.setPropertyUnchecked(Element.prototype, 'attachShadow',
+    Utilities.setPropertyUnchecked(Element.prototype, patchPrefix + 'attachShadow',
       /**
        * @this {Element}
        * @param {!{mode: string}} init
@@ -37,7 +38,7 @@ export default function(internals) {
 
 
   function patch_innerHTML(destination, baseDescriptor) {
-    Object.defineProperty(destination, 'innerHTML', {
+    Object.defineProperty(destination, patchPrefix + 'innerHTML', {
       enumerable: baseDescriptor.enumerable,
       configurable: true,
       get: baseDescriptor.get,
@@ -130,8 +131,7 @@ export default function(internals) {
     });
   }
 
-
-  Utilities.setPropertyUnchecked(Element.prototype, 'setAttribute',
+  Utilities.setPropertyUnchecked(Element.prototype, patchPrefix + 'setAttribute',
     /**
      * @this {Element}
      * @param {string} name
@@ -149,7 +149,7 @@ export default function(internals) {
       internals.attributeChangedCallback(this, name, oldValue, newValue, null);
     });
 
-  Utilities.setPropertyUnchecked(Element.prototype, 'setAttributeNS',
+  Utilities.setPropertyUnchecked(Element.prototype, patchPrefix + 'setAttributeNS',
     /**
      * @this {Element}
      * @param {?string} namespace
@@ -168,7 +168,7 @@ export default function(internals) {
       internals.attributeChangedCallback(this, name, oldValue, newValue, namespace);
     });
 
-  Utilities.setPropertyUnchecked(Element.prototype, 'removeAttribute',
+  Utilities.setPropertyUnchecked(Element.prototype, patchPrefix + 'removeAttribute',
     /**
      * @this {Element}
      * @param {string} name
@@ -186,7 +186,7 @@ export default function(internals) {
       }
     });
 
-  Utilities.setPropertyUnchecked(Element.prototype, 'removeAttributeNS',
+  Utilities.setPropertyUnchecked(Element.prototype, patchPrefix + 'removeAttributeNS',
     /**
      * @this {Element}
      * @param {?string} namespace
@@ -211,7 +211,7 @@ export default function(internals) {
 
 
   function patch_insertAdjacentElement(destination, baseMethod) {
-    Utilities.setPropertyUnchecked(destination, 'insertAdjacentElement',
+    Utilities.setPropertyUnchecked(destination, patchPrefix + 'insertAdjacentElement',
       /**
        * @this {Element}
        * @param {string} position
@@ -261,7 +261,7 @@ export default function(internals) {
       }
     }
 
-    Utilities.setPropertyUnchecked(destination, 'insertAdjacentHTML',
+    Utilities.setPropertyUnchecked(destination, patchPrefix + 'insertAdjacentHTML',
       /**
        * @this {Element}
        * @param {string} position
@@ -305,12 +305,12 @@ export default function(internals) {
   PatchParentNode(internals, Element.prototype, {
     prepend: Native.Element_prepend,
     append: Native.Element_append,
-  });
+  }, patchPrefix);
 
   PatchChildNode(internals, Element.prototype, {
     before: Native.Element_before,
     after: Native.Element_after,
     replaceWith: Native.Element_replaceWith,
     remove: Native.Element_remove,
-  });
+  }, patchPrefix);
 };
