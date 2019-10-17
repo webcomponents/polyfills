@@ -1,5 +1,6 @@
 [![Build Status](https://travis-ci.org/webcomponents/polyfills.svg?branch=master)](https://travis-ci.org/webcomponents/polyfills)
 [![Mentioned in Web Components the Right Way](https://awesome.re/mentioned-badge.svg)](https://github.com/mateusortiz/webcomponents-the-right-way)
+[![lerna](https://img.shields.io/badge/maintained%20with-lerna-cc00ff.svg)](https://lerna.js.org/)
 
 # Monorepository for WebComponents v1 polyfills
 
