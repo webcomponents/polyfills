@@ -12,45 +12,79 @@
 <head>
   <title>HTML Imports Dynamic Elements</title>
   <script src="../node_modules/@webcomponents/webcomponentsjs/custom-elements-es5-adapter.js"></script>
+  <script src="../node_modules/@webcomponents/webcomponents-platform/webcomponents-platform.js"></script>
+  <script src="../node_modules/es6-promise/dist/es6-promise.auto.min.js"></script>
   <script src="../node_modules/@webcomponents/template/template.js"></script>
+  <script src="../node_modules/@webcomponents/shadydom/shadydom.min.js"></script>
+  <script src="../node_modules/@webcomponents/custom-elements/custom-elements.min.js"></script>
+  <script src="../node_modules/@webcomponents/shadycss/scoping-shim.min.js"></script>
+  <script src="../node_modules/@webcomponents/shadycss/custom-style-interface.min.js"></script>
   <script src="../shady-css-scoped-element.min.js"></script>
   <script>WCT = {waitFor: function(cb){cb()}};</script>
   <script src="../node_modules/wct-browser-legacy/browser.js"></script>
+
+
 </head>
 <body>
   <shady-css-scoped>
     <style>
-      html{
-        --foo: #333333;
+      html {
+        --background: green;
+      }
+      div {
+        border-top: 1px solid red;
       }
     </style>
   </shady-css-scoped>
   <template>
     <style>
       div {
-        background-color: var(--foo);
+        border-bottom: 1px solid blue;
+        background-color: var(--background);
       }
     </style>
-    <div id="test-div"></div>
+    <div id="test-div">should be green with bottom blue border</div>
   </template>
+
+  <div>should be transparent with top red border</div>
+  <hr>
   <my-element></my-element>
 
   <script>
     suite('shady-css-scoped-element', function() {
       suiteSetup(function() {
+        const template = document.querySelector('template');
+        if (window.ShadyCSS) {
+          ShadyCSS.prepareTemplate(template, 'my-element');
+        }
         class MyElement extends HTMLElement {
-
           connectedCallback() {
+            window.ShadyCSS && ShadyCSS.styleElement(this);
             this.attachShadow({mode: 'open'});
-            this.shadowRoot.appendChild(document.querySelector('template').content.cloneNode(true));
+            this.shadowRoot.appendChild(template.content.cloneNode(true));
           }
         }
         customElements.define('my-element', MyElement);
       });
-      test('css vars are applied to custom elements', function() {
+      test('scoped style applies to shadow root', function() {
         const myElement = document.querySelector('my-element');
         const computed = getComputedStyle(myElement.shadowRoot.querySelector('div'));
-        chai.assert.equal(computed.backgroundColor, 'rgb(51, 51, 51)', 'background color applied');
+        chai.assert.notEqual(computed.borderTopColor, 'rgb(255, 0, 0)', 'top border not applied');
+        chai.assert.equal(computed.borderBottomColor, 'rgb(0, 0, 255)', 'bottom border applied');
+      });
+      test('scoped css vars are applied to shadow root', function() {
+        const myElement = document.querySelector('my-element');
+        const computed = getComputedStyle(myElement.shadowRoot.querySelector('div'));
+        chai.assert.equal(computed.backgroundColor, 'rgb(0, 128, 0)', 'background color applied');
+      });
+      test('scoped style does not apply to document element', function() {
+        const computed = getComputedStyle(document.querySelector('div'));
+        chai.assert.equal(computed.borderTopColor, 'rgb(255, 0, 0)', 'top border not applied');
+        chai.assert.notEqual(computed.borderBottomColor, 'rgb(0, 0, 255)', 'border applied');
+      });
+      test('scoped css vars are not applied to custom document element', function() {
+        const computed = getComputedStyle(document.querySelector('div'));
+        chai.assert.notEqual(computed.backgroundColor, 'rgb(0, 128, 0)', 'background color applied');
       });
     });
   </script>
