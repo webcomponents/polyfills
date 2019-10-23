@@ -59,13 +59,13 @@ npm install @webcomponents/html-imports
 
 # How to Develop
 ```
-npm install
-npm run bootstrap
-npm run build
+1.npm install
+2.npm run bootstrap
+3.npm run build
 ```
 
 # How to Test
 ```
-npm run build
-npm test
+1.npm run build
+2.npm test
 ```
