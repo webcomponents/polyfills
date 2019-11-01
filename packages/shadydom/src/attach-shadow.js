@@ -22,7 +22,6 @@ import {patchShadyRoot} from './patch-shadyRoot.js';
 const ShadyRootConstructionToken = {};
 
 const CATCHALL_NAME = '__catchall';
-const SHADYROOT_NAME = 'ShadyRoot';
 
 const MODE_CLOSED = 'closed';
 

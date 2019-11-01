@@ -578,7 +578,8 @@ function patchEvent(event) {
   // attempt to patch prototype (via cache)
   if (utils.settings.hasDescriptors) {
     const proto = Object.getPrototypeOf(event);
-    if (!Object.hasOwnProperty(proto, SHADY_PROTO)) {
+    // eslint-disable-next-line no-prototype-builtins
+    if (!proto.hasOwnProperty(SHADY_PROTO)) {
       const patchedProto = Object.create(proto);
       patchedProto[SHADY_SOURCE_PROTO] = proto;
       utils.patchProperties(patchedProto, EventPatchesDescriptors);
