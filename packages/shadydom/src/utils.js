@@ -35,7 +35,7 @@ export const isTrackingLogicalChildNodes = (node) => {
 }
 
 export const isShadyRoot = (obj) => {
-  return Boolean(obj._localName === 'ShadyRoot');
+  return Boolean(obj instanceof DocumentFragment && obj._localName === 'ShadyRoot');
 }
 
 export const hasShadowRootWithSlot = (node) => {
