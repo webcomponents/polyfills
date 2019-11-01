@@ -60,11 +60,6 @@ class ShadyRoot {
   }
 
   _init(host, options) {
-    // NOTE: set a fake local name so this element can be
-    // distinguished from a DocumentFragment when patching.
-    // FF doesn't allow this to be `localName`
-    /** @type {string} */
-    this._localName = SHADYROOT_NAME;
     // root <=> host
     this.host = host;
     /** @type {!string|undefined} */
