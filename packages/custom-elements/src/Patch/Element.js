@@ -238,8 +238,6 @@ export default function(internals) {
     patch_insertAdjacentElement(HTMLElement.prototype, Native.HTMLElement_insertAdjacentElement);
   } else if (Native.Element_insertAdjacentElement) {
     patch_insertAdjacentElement(Element.prototype, Native.Element_insertAdjacentElement);
-  } else {
-    console.warn('Custom Elements: `Element#insertAdjacentElement` was not patched.');
   }
 
 
@@ -297,8 +295,6 @@ export default function(internals) {
     patch_insertAdjacentHTML(HTMLElement.prototype, Native.HTMLElement_insertAdjacentHTML);
   } else if (Native.Element_insertAdjacentHTML) {
     patch_insertAdjacentHTML(Element.prototype, Native.Element_insertAdjacentHTML);
-  } else {
-    console.warn('Custom Elements: `Element#insertAdjacentHTML` was not patched.');
   }
 
 
