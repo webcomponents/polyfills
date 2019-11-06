@@ -34,9 +34,7 @@ export const isTrackingLogicalChildNodes = (node) => {
   return (nodeData && nodeData.firstChild !== undefined);
 }
 
-export const isShadyRoot = (obj) => {
-  return Boolean(obj._localName === 'ShadyRoot');
-}
+export const isShadyRoot = obj => obj instanceof ShadowRoot;
 
 export const hasShadowRootWithSlot = (node) => {
   const nodeData = shadyDataForNode(node);
