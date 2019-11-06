@@ -108,17 +108,7 @@ const PATCHED_PROTO = utils.SHADY_PREFIX + 'patchedProto';
 
 // Patch non-element prototypes up front so that we don't have to check
 // the type of Node when patching an can always assume we're patching an element.
-const nonElements = ['Text', 'Comment', 'ProcessingInstruction'];
-if (!utils.settings.IS_IE) {
-  // For some bizarre reason the WeakMap polyfill on some IE browser versions
-  // fails to work with CDATASection.prototype (the hasOwnProperty check on
-  // the WeakMap key fails despite it being properly defined); We won't properly
-  // patch CDATASection on IE, but a) that's a rare thing to use anyway, and
-  // b) it just means it'll get Element patches, which isn't the end of the
-  // world
-  nonElements.push('CDATASection');
-}
-nonElements.forEach(name => {
+['Text', 'Comment', 'CDATASection', 'ProcessingInstruction'].forEach(name => {
   const ctor = window[name];
   const patchedProto = Object.create(ctor.prototype);
   patchedProto[PROTO_IS_PATCHED] = true;
