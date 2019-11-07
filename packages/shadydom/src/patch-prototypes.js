@@ -95,23 +95,20 @@ export const applyPatches = (prefix) => {
   }
 }
 
-const PROTO_IS_PATCHED = utils.SHADY_PREFIX + 'patchedProto';
+const PROTO_IS_PATCHED = utils.SHADY_PREFIX + 'protoIsPatched';
 
-const patchedProtos = new Map();
+// This property is stored directly on these objects, rather than in a local
+// Map, because IE11 has a bug around `defineProperty`/`hasOwnProperty` which
+// breaks Closure Compiler's WeakMap polyfill when using both certain native
+// prototypes (e.g. of CDATASection) and their instances as keys - even if
+// they're isolated to different WeakMaps. Closure's WeakMap polyfill is used
+// transitively by its own Map and Set polyfills, so this bug applies to any
+// situation where either of Map or Set are polyfilled also.
+const PATCHED_PROTO = utils.SHADY_PREFIX + 'patchedProto';
 
 // Patch non-element prototypes up front so that we don't have to check
 // the type of Node when patching an can always assume we're patching an element.
-const nonElements = ['Text', 'Comment', 'ProcessingInstruction'];
-if (!utils.settings.IS_IE) {
-  // For some bizarre reason the WeakMap polyfill on some IE browser versions
-  // fails to work with CDATASection.prototype (the hasOwnProperty check on
-  // the WeakMap key fails despite it being properly defined); We won't properly
-  // patch CDATASection on IE, but a) that's a rare thing to use anyway, and
-  // b) it just means it'll get Element patches, which isn't the end of the
-  // world
-  nonElements.push('CDATASection');
-}
-nonElements.forEach(name => {
+['Text', 'Comment', 'CDATASection', 'ProcessingInstruction'].forEach(name => {
   const ctor = window[name];
   const patchedProto = Object.create(ctor.prototype);
   patchedProto[PROTO_IS_PATCHED] = true;
@@ -120,7 +117,7 @@ nonElements.forEach(name => {
   if (patchMap[name]) {
     applyPatchList(patchedProto, patchMap[name]);
   }
-  patchedProtos.set(ctor.prototype, patchedProto);
+  ctor.prototype[PATCHED_PROTO] = patchedProto;
 });
 
 export const patchElementProto = (proto) => {
@@ -138,11 +135,11 @@ export const patchNodeProto = (node) => {
     return;
   }
   const nativeProto = Object.getPrototypeOf(node);
-  let proto = patchedProtos.get(nativeProto);
+  let proto = nativeProto[PATCHED_PROTO];
   if (!proto) {
     proto = Object.create(nativeProto);
     patchElementProto(proto);
-    patchedProtos.set(nativeProto, proto);
+    nativeProto[PATCHED_PROTO] = proto;
   }
   Object.setPrototypeOf(node, proto);
 }
