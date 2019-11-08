@@ -13,6 +13,9 @@ import DocumentConstructionObserver from './DocumentConstructionObserver.js';
 import Deferred from './Deferred.js';
 import * as Utilities from './Utilities.js';
 
+const shadyDOMPatchCustomElementProto = window['ShadyDOM'] &&
+  window['ShadyDOM']['patchOnDemand'] && window['ShadyDOM']['patchCustomElementProto'];
+
 /**
  * @extends {window.CustomElementRegistry}
  */
@@ -170,6 +173,12 @@ export default class CustomElementRegistry {
       const prototype = constructor.prototype;
       if (!(prototype instanceof Object)) {
         throw new TypeError('The custom element constructor\'s prototype is not an object.');
+      }
+
+      // Pre-patch custom elements for use in ShadyDOM 'on-demand' mode.
+      // This ensures nodes cannot become "unpatched" by this polyfill.
+      if (shadyDOMPatchCustomElementProto) {
+        shadyDOMPatchCustomElementProto(prototype);
       }
 
       function getCallback(name) {

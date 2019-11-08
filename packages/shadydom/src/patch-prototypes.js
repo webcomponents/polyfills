@@ -130,25 +130,38 @@ export const patchElementProto = (proto) => {
   return proto;
 }
 
-export const hasPatchedProto = (node) => node[PROTO_IS_PATCHED] || utils.isShadyRoot(node);
+const HTMLElementPatchedProto = Object.create(HTMLElement.prototype);
+patchElementProto(HTMLElementPatchedProto);
 
-export const patchNodeProto = (node, isCustomElement = false) => {
-  if (hasPatchedProto(node)) {
+// Replaces the HTMLElement in the custom element's prototype chain
+// with a patched protoype. This ensures custom elements do not have to
+// be patched on-demand. Since custom elements typically have ShadowDOM,
+// they need to be patched. This is exported as an integration point with the
+// Custom Elements polyfill.
+export const patchCustomElementProto = (proto) => {
+  if (proto[PROTO_IS_PATCHED]) {
     return;
   }
-  let toPatch = node;
-  while (toPatch = Object.getPrototypeOf(toPatch)) {
-    if (!isCustomElement || toPatch === HTMLElement.prototype) {
-      break;
-    }
+  let nextProto = Object.getPrototypeOf(proto);
+  while (nextProto && nextProto !== HTMLElement.prototype) {
+    proto = nextProto;
+    nextProto = Object.getPrototypeOf(proto);
   }
-  let proto = toPatch[PATCHED_PROTO];
-  if (!proto) {
-    proto = Object.create(toPatch);
-    patchElementProto(proto);
-    toPatch[PATCHED_PROTO] = proto;
+  Object.setPrototypeOf(proto, HTMLElementPatchedProto);
+}
+
+export const patchNodeProto = (node) => {
+  if (node[PROTO_IS_PATCHED] || utils.isShadyRoot(node)) {
+    return;
   }
-  Object.setPrototypeOf(node, proto);
+  const proto = Object.getPrototypeOf(node);
+  let patchedProto = proto[PATCHED_PROTO];
+  if (!patchedProto) {
+    patchedProto = Object.create(proto);
+    patchElementProto(patchedProto);
+    proto[PATCHED_PROTO] = patchedProto;
+  }
+  Object.setPrototypeOf(node, patchedProto);
 }
 
 export const patchShadowOnElement = () => {

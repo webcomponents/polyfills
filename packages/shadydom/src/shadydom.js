@@ -26,8 +26,8 @@ import {patchInsideElementAccessors, patchOutsideElementAccessors} from './patch
 import {patchEvents, patchClick, composedPath} from './patch-events.js';
 import {ShadyRoot} from './attach-shadow.js';
 import {wrap, Wrapper} from './wrapper.js';
-import {addShadyPrefixedProperties, applyPatches, patchShadowOnElement, patchElementProto, patchNodeProto, hasPatchedProto} from './patch-prototypes.js';
-
+import {addShadyPrefixedProperties, applyPatches, patchShadowOnElement, patchElementProto,
+  patchCustomElementProto} from './patch-prototypes.js';
 
 if (utils.settings.inUse) {
 
@@ -103,8 +103,7 @@ if (utils.settings.inUse) {
     'nativeMethods': nativeMethods,
     'nativeTree': nativeTree,
     'patchElementProto': patchElementProto,
-    'patchNodeProto': patchNodeProto,
-    'hasPatchedProto': hasPatchedProto,
+    'patchCustomElementProto': patchCustomElementProto,
     'SHADY_PREFIX': utils.SHADY_PREFIX
   };
 
