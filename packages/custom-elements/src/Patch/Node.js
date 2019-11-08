@@ -253,12 +253,12 @@ export default function(internals, prefix = '') {
         },
         set: /** @this {Node} */ function(assignedValue) {
           while (this.firstChild) {
-            Native.Node_removeChild.call(this, this.firstChild);
+            nativeMethods.removeChild.call(this, this.firstChild);
           }
           // `textContent = null | undefined | ''` does not result in
           // a TextNode childNode
           if (assignedValue != null && assignedValue !== '') {
-            Native.Node_appendChild.call(this, document.createTextNode(assignedValue));
+            nativeMethods.appendChild.call(this, document.createTextNode(assignedValue));
           }
         },
       });
