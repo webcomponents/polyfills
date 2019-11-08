@@ -260,7 +260,7 @@ export default function(internals, prefix = '') {
   if (Native.HTMLElement_insertAdjacentElement) {
     patch_insertAdjacentElement(HTMLElement.prototype);
   } else if (Native.Element_insertAdjacentElement) {
-    patch_insertAdjacentElement(Element.prototype, Native.Element_insertAdjacentElement);
+    patch_insertAdjacentElement(Element.prototype);
   }
 
 
@@ -319,7 +319,7 @@ export default function(internals, prefix = '') {
   if (Native.HTMLElement_insertAdjacentHTML) {
     patch_insertAdjacentHTML(HTMLElement.prototype);
   } else if (Native.Element_insertAdjacentHTML) {
-    patch_insertAdjacentHTML(Element.prototype, Native.Element_insertAdjacentHTML);
+    patch_insertAdjacentHTML(Element.prototype);
   }
 
 

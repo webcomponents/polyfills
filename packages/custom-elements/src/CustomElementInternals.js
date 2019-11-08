@@ -305,10 +305,6 @@ export default class CustomElementInternals {
   _upgradeAnElement(element, definition) {
     const currentState = element.__CE_state;
     if (currentState !== undefined) return;
-    // Record if the ShadyDOM polyfill has patched the element so that
-    // it can be restored to a patched state post-upgrade.
-    const isShadyPatched = window['ShadyDOM'] &&
-      window['ShadyDOM']['hasPatchedProto'](element);
 
     definition.constructionStack.push(element);
 
@@ -328,11 +324,6 @@ export default class CustomElementInternals {
 
     element.__CE_state = CEState.custom;
     element.__CE_definition = definition;
-
-    // If needed, restore the upgraded element so that it is ShadyDOM patched.
-    if (isShadyPatched) {
-      window['ShadyDOM']['patchNodeProto'](element, true);
-    }
 
     // Check `hasAttributes` here to avoid iterating when it's not necessary.
     if (definition.attributeChangedCallback && element.hasAttributes()) {
