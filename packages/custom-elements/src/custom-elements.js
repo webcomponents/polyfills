@@ -35,6 +35,13 @@ function installPolyfill() {
   PatchNode(internals);
   PatchElement(internals);
 
+  if (window['ShadyDOM'] && window['ShadyDOM']['noPatch']) {
+    const SHADY_PREFIX = window['ShadyDOM']['SHADY_PREFIX'];
+    PatchDocument(internals, SHADY_PREFIX);
+    PatchNode(internals, SHADY_PREFIX);
+    PatchElement(internals, SHADY_PREFIX);
+  }
+
   const customElements = new CustomElementRegistry(internals);
 
   // The main document is associated with the global registry.

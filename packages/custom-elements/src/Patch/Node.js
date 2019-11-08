@@ -15,11 +15,14 @@ import * as Utilities from '../Utilities.js';
 /**
  * @param {!CustomElementInternals} internals
  */
-export default function(internals) {
+export default function(internals, prefix = '') {
   // `Node#nodeValue` is implemented on `Attr`.
   // `Node#textContent` is implemented on `Attr`, `Element`.
 
-  Utilities.setPropertyUnchecked(Node.prototype, 'insertBefore',
+  const nativeMethods = Utilities.findNativeMethods(Node.prototype, prefix,
+    ['insertBefore', 'appendChild', 'cloneNode', 'removeChild', 'replaceChild']);
+
+  Utilities.setPropertyUnchecked(Node.prototype, prefix + 'insertBefore',
     /**
      * @this {Node}
      * @param {!Node} node
@@ -29,7 +32,7 @@ export default function(internals) {
     function(node, refNode) {
       if (node instanceof DocumentFragment) {
         const insertedNodes = Utilities.childrenFromFragment(node);
-        const nativeResult = Native.Node_insertBefore.call(this, node, refNode);
+        const nativeResult = nativeMethods.insertBefore.call(this, node, refNode);
 
         // DocumentFragments can't be connected, so `disconnectTree` will never
         // need to be called on a DocumentFragment's children after inserting it.
@@ -44,7 +47,7 @@ export default function(internals) {
       }
 
       const nodeWasConnectedElement = node instanceof Element && Utilities.isConnected(node);
-      const nativeResult = Native.Node_insertBefore.call(this, node, refNode);
+      const nativeResult = nativeMethods.insertBefore.call(this, node, refNode);
 
       if (nodeWasConnectedElement) {
         internals.disconnectTree(node);
@@ -57,7 +60,7 @@ export default function(internals) {
       return nativeResult;
     });
 
-  Utilities.setPropertyUnchecked(Node.prototype, 'appendChild',
+  Utilities.setPropertyUnchecked(Node.prototype, prefix + 'appendChild',
     /**
      * @this {Node}
      * @param {!Node} node
@@ -66,7 +69,7 @@ export default function(internals) {
     function(node) {
       if (node instanceof DocumentFragment) {
         const insertedNodes = Utilities.childrenFromFragment(node);
-        const nativeResult = Native.Node_appendChild.call(this, node);
+        const nativeResult = nativeMethods.appendChild.call(this, node);
 
         // DocumentFragments can't be connected, so `disconnectTree` will never
         // need to be called on a DocumentFragment's children after inserting it.
@@ -81,7 +84,7 @@ export default function(internals) {
       }
 
       const nodeWasConnectedElement = node instanceof Element && Utilities.isConnected(node);
-      const nativeResult = Native.Node_appendChild.call(this, node);
+      const nativeResult = nativeMethods.appendChild.call(this, node);
 
       if (nodeWasConnectedElement) {
         internals.disconnectTree(node);
@@ -94,14 +97,14 @@ export default function(internals) {
       return nativeResult;
     });
 
-  Utilities.setPropertyUnchecked(Node.prototype, 'cloneNode',
+  Utilities.setPropertyUnchecked(Node.prototype, prefix + 'cloneNode',
     /**
      * @this {Node}
      * @param {boolean=} deep
      * @return {!Node}
      */
     function(deep) {
-      const clone = Native.Node_cloneNode.call(this, !!deep);
+      const clone = nativeMethods.cloneNode.call(this, !!deep);
       // Only create custom elements if this element's owner document is
       // associated with the registry.
       if (!this.ownerDocument.__CE_registry) {
@@ -112,7 +115,7 @@ export default function(internals) {
       return clone;
     });
 
-  Utilities.setPropertyUnchecked(Node.prototype, 'removeChild',
+  Utilities.setPropertyUnchecked(Node.prototype, prefix + 'removeChild',
     /**
      * @this {Node}
      * @param {!Node} node
@@ -120,7 +123,7 @@ export default function(internals) {
      */
     function(node) {
       const nodeWasConnectedElement = node instanceof Element && Utilities.isConnected(node);
-      const nativeResult = Native.Node_removeChild.call(this, node);
+      const nativeResult = nativeMethods.removeChild.call(this, node);
 
       if (nodeWasConnectedElement) {
         internals.disconnectTree(node);
@@ -129,7 +132,7 @@ export default function(internals) {
       return nativeResult;
     });
 
-  Utilities.setPropertyUnchecked(Node.prototype, 'replaceChild',
+  Utilities.setPropertyUnchecked(Node.prototype, prefix + 'replaceChild',
     /**
      * @this {Node}
      * @param {!Node} nodeToInsert
@@ -139,7 +142,7 @@ export default function(internals) {
     function(nodeToInsert, nodeToRemove) {
       if (nodeToInsert instanceof DocumentFragment) {
         const insertedNodes = Utilities.childrenFromFragment(nodeToInsert);
-        const nativeResult = Native.Node_replaceChild.call(this, nodeToInsert, nodeToRemove);
+        const nativeResult = nativeMethods.replaceChild.call(this, nodeToInsert, nodeToRemove);
 
         // DocumentFragments can't be connected, so `disconnectTree` will never
         // need to be called on a DocumentFragment's children after inserting it.
@@ -156,7 +159,7 @@ export default function(internals) {
 
       const nodeToInsertWasConnectedElement = nodeToInsert instanceof Element &&
         Utilities.isConnected(nodeToInsert);
-      const nativeResult = Native.Node_replaceChild.call(this, nodeToInsert, nodeToRemove);
+      const nativeResult = nativeMethods.replaceChild.call(this, nodeToInsert, nodeToRemove);
       const thisIsConnected = Utilities.isConnected(this);
 
       if (thisIsConnected) {
@@ -175,8 +178,16 @@ export default function(internals) {
     });
 
 
-  function patch_textContent(destination, baseDescriptor) {
-    Object.defineProperty(destination, 'textContent', {
+  function patch_textContent(destination, baseDescriptor = null) {
+
+    const textContentPrefix = /*baseDescriptor ? '' :*/ prefix;
+
+    if (!baseDescriptor) {
+      baseDescriptor = Object.getOwnPropertyDescriptor(destination,
+        textContentPrefix + 'textContent');
+    }
+
+    Object.defineProperty(destination, textContentPrefix + 'textContent', {
       enumerable: baseDescriptor.enumerable,
       configurable: true,
       get: baseDescriptor.get,
@@ -215,8 +226,11 @@ export default function(internals) {
     });
   }
 
-  if (Native.Node_textContent && Native.Node_textContent.get) {
-    patch_textContent(Node.prototype, Native.Node_textContent);
+  const textContentDescriptor =
+    Object.getOwnPropertyDescriptor(Node.prototype, prefix + 'textContent');
+
+  if (textContentDescriptor && textContentDescriptor.get) {
+    patch_textContent(Node.prototype);
   } else {
     internals.addNodePatch(function(element) {
       patch_textContent(element, {

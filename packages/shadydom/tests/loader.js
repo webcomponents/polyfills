@@ -22,8 +22,8 @@ const loadSD = () => loadScript('../shadydom.min.js');
 // on the wrong line, so avoid doing this.
 // script ordering must change based on patching.
 if (ShadyDOM.noPatch) {
-  loadCE();
   loadSD();
+  loadCE();
 } else {
   loadSD();
   loadCE();

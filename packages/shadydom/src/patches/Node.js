@@ -291,7 +291,10 @@ export const NodePatches = utils.getOwnPropertyDescriptors({
         // a document fragment that was previously scoped; the assumption is
         // that the user should only move correctly-scoped DOM back into it
         (preferPerformance && this['__noInsertionPoint'] !== undefined);
-      parentNode[utils.SHADY_PREFIX + 'removeChild'](node, skipUnscoping);
+      if (skipUnscoping) {
+        ensureShadyDataForNode(node).skipUnscoping = true;
+      }
+      parentNode[utils.SHADY_PREFIX + 'removeChild'](node);
     }
     // add to new parent
     let allowNativeInsert = true;
@@ -384,9 +387,13 @@ export const NodePatches = utils.getOwnPropertyDescriptors({
    * This method also performs dom composition.
    * @this {Node}
    * @param {Node} node
-   * @param {boolean=} skipUnscoping
    */
-  removeChild(node, skipUnscoping = false) {
+  removeChild(node) {
+    const nodeData = shadyDataForNode(node);
+    const skipUnscoping = nodeData && nodeData.skipUnscoping;
+    if (skipUnscoping) {
+      nodeData.skipUnscoping = false;
+    }
     if (this.ownerDocument !== doc) {
       return this[utils.NATIVE_PREFIX + 'removeChild'](node);
     }

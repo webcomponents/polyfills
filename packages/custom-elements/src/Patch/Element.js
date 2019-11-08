@@ -19,25 +19,40 @@ import PatchChildNode from './Interface/ChildNode.js';
 /**
  * @param {!CustomElementInternals} internals
  */
-export default function(internals) {
+export default function(internals, prefix = '') {
+
+  const nativeMethods = Utilities.findNativeMethods(Element.prototype, prefix,
+    ['attachShadow', 'setAttribute', 'getAttribute', 'setAttributeNS',
+    'getAttributeNS', 'removeAttribute', 'removeAttributeNS']);
+
+  const nodeNativeMethods = Utilities.findNativeMethods(Node.prototype, prefix,
+    ['appendChild', 'removeChild', 'cloneNode']);
+
   if (Native.Element_attachShadow) {
-    Utilities.setPropertyUnchecked(Element.prototype, 'attachShadow',
+
+    Utilities.setPropertyUnchecked(Element.prototype, prefix + 'attachShadow',
       /**
        * @this {Element}
        * @param {!{mode: string}} init
        * @return {ShadowRoot}
        */
       function(init) {
-        const shadowRoot = Native.Element_attachShadow.call(this, init);
+        const shadowRoot = nativeMethods.attachShadow.call(this, init);
         internals.patchNode(shadowRoot);
         this.__CE_shadowRoot = shadowRoot;
         return shadowRoot;
       });
   }
 
+  function patch_innerHTML(destination, baseDescriptor = null) {
 
-  function patch_innerHTML(destination, baseDescriptor) {
-    Object.defineProperty(destination, 'innerHTML', {
+    let innerHTMLPrefix = /*baseDescriptor ? '' :*/ prefix;
+
+    if (!baseDescriptor) {
+      baseDescriptor = Object.getOwnPropertyDescriptor(destination, innerHTMLPrefix + 'innerHTML');
+    }
+
+    Object.defineProperty(destination, innerHTMLPrefix + 'innerHTML', {
       enumerable: baseDescriptor.enumerable,
       configurable: true,
       get: baseDescriptor.get,
@@ -83,10 +98,16 @@ export default function(internals) {
     });
   }
 
-  if (Native.Element_innerHTML && Native.Element_innerHTML.get) {
-    patch_innerHTML(Element.prototype, Native.Element_innerHTML);
-  } else if (Native.HTMLElement_innerHTML && Native.HTMLElement_innerHTML.get) {
-    patch_innerHTML(HTMLElement.prototype, Native.HTMLElement_innerHTML);
+  const elementInnerHTMLDescriptor =
+    Object.getOwnPropertyDescriptor(Element.prototype, prefix + 'innerHTML');
+
+  const htmlElementInnerHTMLDescriptor =
+    Object.getOwnPropertyDescriptor(HTMLElement.prototype, prefix + 'innerHTML');
+
+  if (elementInnerHTMLDescriptor && elementInnerHTMLDescriptor.get) {
+    patch_innerHTML(Element.prototype);
+  } else if (htmlElementInnerHTMLDescriptor && htmlElementInnerHTMLDescriptor.get) {
+    patch_innerHTML(HTMLElement.prototype);
   } else {
     internals.addElementPatch(function(element) {
       patch_innerHTML(element, {
@@ -97,7 +118,7 @@ export default function(internals) {
         // TODO: Is this too expensive?
         get: /** @this {Element} */ function() {
           return /** @type {!Element} */ (
-                     Native.Node_cloneNode.call(this, true))
+                    Native.Node_cloneNode.call(this, true))
               .innerHTML;
         },
         // Implements setting `innerHTML` by creating an unpatched element,
@@ -130,8 +151,7 @@ export default function(internals) {
     });
   }
 
-
-  Utilities.setPropertyUnchecked(Element.prototype, 'setAttribute',
+  Utilities.setPropertyUnchecked(Element.prototype, prefix + 'setAttribute',
     /**
      * @this {Element}
      * @param {string} name
@@ -140,16 +160,16 @@ export default function(internals) {
     function(name, newValue) {
       // Fast path for non-custom elements.
       if (this.__CE_state !== CEState.custom) {
-        return Native.Element_setAttribute.call(this, name, newValue);
+        return nativeMethods.setAttribute.call(this, name, newValue);
       }
 
-      const oldValue = Native.Element_getAttribute.call(this, name);
-      Native.Element_setAttribute.call(this, name, newValue);
-      newValue = Native.Element_getAttribute.call(this, name);
+      const oldValue = nativeMethods.getAttribute.call(this, name);
+      nativeMethods.setAttribute.call(this, name, newValue);
+      newValue = nativeMethods.getAttribute.call(this, name);
       internals.attributeChangedCallback(this, name, oldValue, newValue, null);
     });
 
-  Utilities.setPropertyUnchecked(Element.prototype, 'setAttributeNS',
+  Utilities.setPropertyUnchecked(Element.prototype, prefix + 'setAttributeNS',
     /**
      * @this {Element}
      * @param {?string} namespace
@@ -159,16 +179,16 @@ export default function(internals) {
     function(namespace, name, newValue) {
       // Fast path for non-custom elements.
       if (this.__CE_state !== CEState.custom) {
-        return Native.Element_setAttributeNS.call(this, namespace, name, newValue);
+        return nativeMethods.setAttributeNS.call(this, namespace, name, newValue);
       }
 
-      const oldValue = Native.Element_getAttributeNS.call(this, namespace, name);
-      Native.Element_setAttributeNS.call(this, namespace, name, newValue);
-      newValue = Native.Element_getAttributeNS.call(this, namespace, name);
+      const oldValue = nativeMethods.getAttributeNS.call(this, namespace, name);
+      nativeMethods.setAttributeNS.call(this, namespace, name, newValue);
+      newValue = nativeMethods.getAttributeNS.call(this, namespace, name);
       internals.attributeChangedCallback(this, name, oldValue, newValue, namespace);
     });
 
-  Utilities.setPropertyUnchecked(Element.prototype, 'removeAttribute',
+  Utilities.setPropertyUnchecked(Element.prototype, prefix + prefix + 'removeAttribute',
     /**
      * @this {Element}
      * @param {string} name
@@ -176,17 +196,17 @@ export default function(internals) {
     function(name) {
       // Fast path for non-custom elements.
       if (this.__CE_state !== CEState.custom) {
-        return Native.Element_removeAttribute.call(this, name);
+        return nativeMethods.removeAttribute.call(this, name);
       }
 
-      const oldValue = Native.Element_getAttribute.call(this, name);
-      Native.Element_removeAttribute.call(this, name);
+      const oldValue = nativeMethods.getAttribute.call(this, name);
+      nativeMethods.removeAttribute.call(this, name);
       if (oldValue !== null) {
         internals.attributeChangedCallback(this, name, oldValue, null, null);
       }
     });
 
-  Utilities.setPropertyUnchecked(Element.prototype, 'removeAttributeNS',
+  Utilities.setPropertyUnchecked(Element.prototype, prefix + 'removeAttributeNS',
     /**
      * @this {Element}
      * @param {?string} namespace
@@ -195,23 +215,26 @@ export default function(internals) {
     function(namespace, name) {
       // Fast path for non-custom elements.
       if (this.__CE_state !== CEState.custom) {
-        return Native.Element_removeAttributeNS.call(this, namespace, name);
+        return nativeMethods.removeAttributeNS.call(this, namespace, name);
       }
 
-      const oldValue = Native.Element_getAttributeNS.call(this, namespace, name);
-      Native.Element_removeAttributeNS.call(this, namespace, name);
+      const oldValue = nativeMethods.getAttributeNS.call(this, namespace, name);
+      nativeMethods.removeAttributeNS.call(this, namespace, name);
       // In older browsers, `Element#getAttributeNS` may return the empty string
       // instead of null if the attribute does not exist. For details, see;
       // https://developer.mozilla.org/en-US/docs/Web/API/Element/getAttributeNS#Notes
-      const newValue = Native.Element_getAttributeNS.call(this, namespace, name);
+      const newValue = nativeMethods.getAttributeNS.call(this, namespace, name);
       if (oldValue !== newValue) {
         internals.attributeChangedCallback(this, name, oldValue, newValue, namespace);
       }
     });
 
 
-  function patch_insertAdjacentElement(destination, baseMethod) {
-    Utilities.setPropertyUnchecked(destination, 'insertAdjacentElement',
+  function patch_insertAdjacentElement(destination) {
+
+    const baseMethod = destination[prefix + 'insertAdjacentElement'];
+
+    Utilities.setPropertyUnchecked(destination, prefix + 'insertAdjacentElement',
       /**
        * @this {Element}
        * @param {string} position
@@ -235,13 +258,15 @@ export default function(internals) {
   }
 
   if (Native.HTMLElement_insertAdjacentElement) {
-    patch_insertAdjacentElement(HTMLElement.prototype, Native.HTMLElement_insertAdjacentElement);
+    patch_insertAdjacentElement(HTMLElement.prototype);
   } else if (Native.Element_insertAdjacentElement) {
     patch_insertAdjacentElement(Element.prototype, Native.Element_insertAdjacentElement);
   }
 
 
-  function patch_insertAdjacentHTML(destination, baseMethod) {
+  function patch_insertAdjacentHTML(destination) {
+
+    const baseMethod = destination[prefix + 'insertAdjacentHTML'];
     /**
      * Patches and upgrades all nodes which are siblings between `start`
      * (inclusive) and `end` (exclusive). If `end` is `null`, then all siblings
@@ -259,7 +284,7 @@ export default function(internals) {
       }
     }
 
-    Utilities.setPropertyUnchecked(destination, 'insertAdjacentHTML',
+    Utilities.setPropertyUnchecked(destination, prefix + 'insertAdjacentHTML',
       /**
        * @this {Element}
        * @param {string} position
@@ -292,7 +317,7 @@ export default function(internals) {
   }
 
   if (Native.HTMLElement_insertAdjacentHTML) {
-    patch_insertAdjacentHTML(HTMLElement.prototype, Native.HTMLElement_insertAdjacentHTML);
+    patch_insertAdjacentHTML(HTMLElement.prototype);
   } else if (Native.Element_insertAdjacentHTML) {
     patch_insertAdjacentHTML(Element.prototype, Native.Element_insertAdjacentHTML);
   }

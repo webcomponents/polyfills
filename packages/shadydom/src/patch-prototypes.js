@@ -130,16 +130,23 @@ export const patchElementProto = (proto) => {
   return proto;
 }
 
-export const patchNodeProto = (node) => {
-  if (node[PROTO_IS_PATCHED] || utils.isShadyRoot(node)) {
+export const hasPatchedProto = (node) => node[PROTO_IS_PATCHED] || utils.isShadyRoot(node);
+
+export const patchNodeProto = (node, isCustomElement = false) => {
+  if (hasPatchedProto(node)) {
     return;
   }
-  const nativeProto = Object.getPrototypeOf(node);
-  let proto = nativeProto[PATCHED_PROTO];
+  let toPatch = node;
+  while (toPatch = Object.getPrototypeOf(toPatch)) {
+    if (!isCustomElement || toPatch === HTMLElement.prototype) {
+      break;
+    }
+  }
+  let proto = toPatch[PATCHED_PROTO];
   if (!proto) {
-    proto = Object.create(nativeProto);
+    proto = Object.create(toPatch);
     patchElementProto(proto);
-    nativeProto[PATCHED_PROTO] = proto;
+    toPatch[PATCHED_PROTO] = proto;
   }
   Object.setPrototypeOf(node, proto);
 }

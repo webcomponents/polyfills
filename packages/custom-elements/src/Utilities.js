@@ -169,3 +169,12 @@ export function walkDeepDescendantElements(root, callback, visitedImports) {
 export function setPropertyUnchecked(destination, name, value) {
   destination[name] = value;
 }
+
+export function findNativeMethods(destination, prefix, names) {
+  const methods = {};
+  for (let i=0; i < names.length; i++) {
+    const name = names[i];
+    methods[name] = destination[prefix + name] || destination[name];
+  }
+  return methods;
+}

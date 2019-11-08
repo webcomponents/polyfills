@@ -10,7 +10,6 @@
 
 import Native from './Native.js';
 import CustomElementInternals from '../CustomElementInternals.js';
-import CEState from '../CustomElementState.js';
 import * as Utilities from '../Utilities.js';
 
 import PatchParentNode from './Interface/ParentNode.js';
@@ -18,8 +17,12 @@ import PatchParentNode from './Interface/ParentNode.js';
 /**
  * @param {!CustomElementInternals} internals
  */
-export default function(internals) {
-  Utilities.setPropertyUnchecked(Document.prototype, 'createElement',
+export default function(internals, prefix = '') {
+
+  const nativeMethods = Utilities.findNativeMethods(Document.prototype, prefix,
+    ['importNode']);
+
+  Utilities.setPropertyUnchecked(Document.prototype, prefix + 'createElement',
     /**
      * @this {Document}
      * @param {string} localName
@@ -29,7 +32,7 @@ export default function(internals) {
       return internals.createAnElement(this, localName, null);
     });
 
-  Utilities.setPropertyUnchecked(Document.prototype, 'importNode',
+  Utilities.setPropertyUnchecked(Document.prototype, prefix + 'importNode',
     /**
      * @this {Document}
      * @param {!Node} node
@@ -37,7 +40,7 @@ export default function(internals) {
      * @return {!Node}
      */
     function(node, deep) {
-      const clone = /** @type {!Node} */ (Native.Document_importNode.call(this, node, !!deep));
+      const clone = /** @type {!Node} */ (nativeMethods.importNode.call(this, node, !!deep));
       // Only create custom elements if this document is associated with the registry.
       if (!this.__CE_registry) {
         internals.patchTree(clone);
@@ -47,7 +50,7 @@ export default function(internals) {
       return clone;
     });
 
-  Utilities.setPropertyUnchecked(Document.prototype, 'createElementNS',
+  Utilities.setPropertyUnchecked(Document.prototype, prefix + 'createElementNS',
     /**
      * @this {Document}
      * @param {?string} namespace
