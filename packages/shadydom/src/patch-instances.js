@@ -163,10 +163,15 @@ export let patchInsideElementAccessors = noInstancePatching ?
       // * When SD is in patching mode, SD calls through to native
       // methods not patched by CE (since SD is at the bottom) and CE does not
       // upgrade, connect, or disconnect elements. Therefore do *not patch*
-      // these accessors in this case.
-      // * When SD is in `noPatch` mode, the SD patches call through to
-      // "native" methods that are patched by CE (since CE is at the bottom).
-      // Therefore continue to patch in this case.
+      // these accessors in this case. The CE patches call other methods
+      // which *are* patched by SD so the work both polyfills is done and
+      // the APIs work as expected.
+      // * When SD is in `noPatch` mode, the CE patches cannot be relied on
+      // because they do not call through to methods patched by SD. However,
+      // the CE polyfill patches the prefixed methods used by ShadyDOM in
+      // this mode so the ShadyDOM patches can be applied since they
+      // actually call CE and then SD, preserving the work both polyfills need
+      // to do.
       // If customElements is not loaded, then these accessors should be
       // patched so they work correctly.
       if (!window['customElements'] || utils.settings.noPatch) {
