@@ -155,6 +155,9 @@ export const patchNodeProto = (node) => {
     return;
   }
   const proto = Object.getPrototypeOf(node);
+  // Note, this hasOwnProperty check is critical to avoid seeing a patched
+  // prototype lower in the prototype chain, e.g. if an <s> element has been
+  // patched, without this check, an <input> element would get the wrong patch.
   let patchedProto = proto.hasOwnProperty(PATCHED_PROTO) && proto[PATCHED_PROTO];
   if (!patchedProto) {
     patchedProto = Object.create(proto);
