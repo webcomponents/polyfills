@@ -16,6 +16,7 @@
   ],
   "scripts": {
     "build": "gulp",
+    "build:link": "cd ../../ && npm run bootstrap && cd packages/webcomponentsjs/ && npm run build && npm link",
     "test": "wct",
     "lint": "eslint src tests",
     "regen-package-lock": "rm -rf node_modules package-lock.json; npm install",
