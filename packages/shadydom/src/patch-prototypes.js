@@ -155,7 +155,7 @@ export const patchNodeProto = (node) => {
     return;
   }
   const proto = Object.getPrototypeOf(node);
-  let patchedProto = proto[PATCHED_PROTO];
+  let patchedProto = proto.hasOwnProperty(PATCHED_PROTO) && proto[PATCHED_PROTO];
   if (!patchedProto) {
     patchedProto = Object.create(proto);
     patchElementProto(patchedProto);
