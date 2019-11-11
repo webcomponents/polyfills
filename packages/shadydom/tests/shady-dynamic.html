@@ -268,6 +268,15 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     });
   </script>
 
+  <template id="x-has-input">
+    <s>element with HTMLElement protoype</s>
+    <input value="hi">
+  </template>
+
+  <script>
+    defineTestElement('x-has-input');
+  </script>
+
   <template id="innerTemplate"><slot></slot></template>
 
   <template id="outerTemplate"><inner-element><slot></slot></inner-element></template>
@@ -986,6 +995,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     var innerSlot = ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(innerElement).shadowRoot).querySelector('slot');
     assert.deepEqual(ShadyDOM.wrapIfNeeded(outerSlot).assignedNodes(), [test]);
     assert.deepEqual(ShadyDOM.wrapIfNeeded(innerSlot).assignedNodes(), [outerSlot]);
+  });
+
+  test('non-basic elements ok regardless of patching mode', function() {
+    var e = document.createElement('x-has-input');
+    ShadyDOM.wrapIfNeeded(document.body).appendChild(e);
+    var input = ShadyDOM.wrapIfNeeded(e).shadowRoot.querySelector('input');
+    assert.equal(input.value, 'hi');
+    ShadyDOM.wrapIfNeeded(document.body).removeChild(e);
   });
 
 });
@@ -1756,7 +1773,6 @@ suite('renders roots', function() {
     }
     document.body.removeChild(d);
   });
-
 
 });
 

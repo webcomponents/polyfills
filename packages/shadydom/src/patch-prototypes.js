@@ -135,7 +135,10 @@ export const patchNodeProto = (node) => {
     return;
   }
   const nativeProto = Object.getPrototypeOf(node);
-  let proto = nativeProto[PATCHED_PROTO];
+  // Note, this hasOwnProperty check is critical to avoid seeing a patched
+  // prototype lower in the prototype chain, e.g. if an <s> element has been
+  // patched, without this check, an <input> element would get the wrong patch.
+  let proto = nativeProto.hasOwnProperty(PATCHED_PROTO) && nativeProto[PATCHED_PROTO];
   if (!proto) {
     proto = Object.create(nativeProto);
     patchElementProto(proto);
