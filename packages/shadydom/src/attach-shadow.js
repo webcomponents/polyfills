@@ -587,7 +587,7 @@ export const attachShadow = (host, options) => {
 }
 
 // Mitigate connect/disconnect spam by wrapping custom element classes.
-if (window['customElements'] && utils.settings.inUse && !utils.settings['preferPerformance']) {
+if (utils.settings.hasNativeCustomElements && utils.settings.inUse && !utils.settings['preferPerformance']) {
 
   // process connect/disconnect after roots have rendered to avoid
   // issues with reaction stack.

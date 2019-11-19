@@ -13,6 +13,10 @@ import {shadyDataForNode} from './shady-data.js';
 export const settings = window['ShadyDOM'] || {};
 
 settings.hasNativeShadowDOM = Boolean(Element.prototype.attachShadow && Node.prototype.getRootNode);
+// The user might need to pass the custom elements polyfill a flag by setting
+// an object to `window.customElements`, so check for
+// `window.CustomElementRegistry` instead.
+settings.hasNativeCustomElements = Boolean(window.CustomElementRegistry);
 
 const desc = Object.getOwnPropertyDescriptor(Node.prototype, 'firstChild');
 
