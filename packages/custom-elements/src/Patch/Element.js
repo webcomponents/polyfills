@@ -188,7 +188,7 @@ export default function(internals, prefix = '') {
       internals.attributeChangedCallback(this, name, oldValue, newValue, namespace);
     });
 
-  Utilities.setPropertyUnchecked(Element.prototype, prefix + prefix + 'removeAttribute',
+  Utilities.setPropertyUnchecked(Element.prototype, prefix + 'removeAttribute',
     /**
      * @this {Element}
      * @param {string} name

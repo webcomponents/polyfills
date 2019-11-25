@@ -27,7 +27,11 @@ settings.patchOnDemand = (settings.noPatch === 'on-demand');
 const IS_IE = navigator.userAgent.match('Trident');
 settings.IS_IE = IS_IE;
 
-export const canUpgrade = () => !settings.IS_IE;
+// Determines if a passed in `shadyUpgradeFragment` document fragment can be
+// upgraded into a ShadyRoot. Avoid this if on IE to avoid weird issues there,
+// and avoid if on-demand patching is used because the optimization bypasses
+// the custom-elements patch of prefixed patched methods.
+export const canUpgrade = () => !settings.IS_IE && !settings.patchOnDemand;
 
 export const isTrackingLogicalChildNodes = (node) => {
   const nodeData = shadyDataForNode(node);
@@ -186,6 +190,29 @@ export const patchExistingProperties = (proto, descriptors) => {
     if (name in proto) {
       patchProperty(proto,  name, descriptors[name]);
     }
+  }
+}
+
+export const patchNativeToPrefixedProperties = (proto, descriptors) => {
+  for (let name in descriptors) {
+    const descriptor = descriptors[name];
+    const nativeToShadyDescriptor = {configurable: true, enumerable: true};
+    if (descriptor.value && typeof descriptor.value === 'function') {
+      /** @this {Node} */
+      nativeToShadyDescriptor.value = function() {
+        return this[SHADY_PREFIX + name].apply(this, arguments);
+      }
+    } else {
+      /** @this {Node} */
+      nativeToShadyDescriptor.get = function() {
+        return this[SHADY_PREFIX + name];
+      }
+      /** @this {Node} */
+      nativeToShadyDescriptor.set = function(value) {
+        this[SHADY_PREFIX + name] = value;
+      }
+    }
+    patchProperty(proto, name, nativeToShadyDescriptor);
   }
 }
 

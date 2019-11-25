@@ -49,12 +49,29 @@ const patchShadyAccessors = (proto, prefix) => {
   }
 }
 
+const patchNativeToPrefixedShadyAccessors = (proto) => {
+  const patchList = [ShadowRootPatches, DocumentOrShadowRootPatches, ElementOrShadowRootPatches, ParentNodePatches, NodePatches, DocumentOrFragmentPatches];
+  if (!utils.settings.hasDescriptors) {
+    patchList.push(OutsideDescriptors, InsideDescriptors, TextContentInnerHTMLDescriptors);
+  }
+  patchList.forEach(patches =>
+    utils.patchNativeToPrefixedProperties(proto, patches));
+}
+
+const patchOnDemand = utils.settings.patchOnDemand;
+
 export const patchShadyRoot = (proto) => {
   proto.__proto__ = DocumentFragment.prototype;
 
   // patch both prefixed and not, even when noPatch == true.
   patchShadyAccessors(proto, utils.SHADY_PREFIX);
-  patchShadyAccessors(proto);
+  // When using on-demand, patch native accessors such that they call through
+  // to prefixed accessors. This is done so that CE can augment the prefixed patches.
+  if (patchOnDemand) {
+    patchNativeToPrefixedShadyAccessors(proto);
+  } else {
+    patchShadyAccessors(proto);
+  }
 
   // Ensure native properties are all safely wrapped since ShadowRoot is not an
   // actual DocumentFragment instance.

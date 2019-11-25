@@ -26,6 +26,8 @@ export function processUnscopedStyle(style) {
   if (!styleTextSet.has(text)) {
     styleTextSet.add(text);
     const newStyle = style.cloneNode(true);
+    // TODO(sorvell): fix IE/Edge in on-demand patching mode.
+    newStyle.textContent = newStyle.textContent;
     document.head.appendChild(newStyle);
   }
 }

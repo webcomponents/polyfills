@@ -280,7 +280,9 @@ export function gatherStyleText(element) {
     if (isUnscopedStyle(style)) {
       if (!nativeShadow) {
         processUnscopedStyle(style);
-        style.parentNode.removeChild(style);
+        if (style.parentNode !== document.head) {
+          style.parentNode.removeChild(style);
+        }
       }
     } else {
       styleTextParts.push(style.textContent);

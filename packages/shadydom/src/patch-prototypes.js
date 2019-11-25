@@ -95,6 +95,11 @@ export const applyPatches = (prefix) => {
   }
 }
 
+function applyShadyPatchList(proto, list) {
+  list.forEach(patch => proto && patch &&
+    utils.patchNativeToPrefixedProperties(proto, patch));
+}
+
 const PROTO_IS_PATCHED = utils.SHADY_PREFIX + 'protoIsPatched';
 
 // This property is stored directly on these objects, rather than in a local
@@ -112,21 +117,21 @@ const PATCHED_PROTO = utils.SHADY_PREFIX + 'patchedProto';
   const ctor = window[name];
   const patchedProto = Object.create(ctor.prototype);
   patchedProto[PROTO_IS_PATCHED] = true;
-  applyPatchList(patchedProto, patchMap.EventTarget);
-  applyPatchList(patchedProto, patchMap.Node);
+  applyShadyPatchList(patchedProto, patchMap.EventTarget);
+  applyShadyPatchList(patchedProto, patchMap.Node);
   if (patchMap[name]) {
-    applyPatchList(patchedProto, patchMap[name]);
+    applyShadyPatchList(patchedProto, patchMap[name]);
   }
   ctor.prototype[PATCHED_PROTO] = patchedProto;
 });
 
 export const patchElementProto = (proto) => {
   proto[PROTO_IS_PATCHED] = true;
-  applyPatchList(proto, patchMap.EventTarget);
-  applyPatchList(proto, patchMap.Node);
-  applyPatchList(proto, patchMap.Element);
-  applyPatchList(proto, patchMap.HTMLElement);
-  applyPatchList(proto, patchMap.HTMLSlotElement);
+  applyShadyPatchList(proto, patchMap.EventTarget);
+  applyShadyPatchList(proto, patchMap.Node);
+  applyShadyPatchList(proto, patchMap.Element);
+  applyShadyPatchList(proto, patchMap.HTMLElement);
+  applyShadyPatchList(proto, patchMap.HTMLSlotElement);
   return proto;
 }
 
@@ -139,7 +144,7 @@ patchElementProto(HTMLElementPatchedProto);
 // they need to be patched. This is exported as an integration point with the
 // Custom Elements polyfill.
 export const patchCustomElementProto = (proto) => {
-  if (proto[PROTO_IS_PATCHED]) {
+  if (proto[PROTO_IS_PATCHED] || proto === HTMLElement.prototype) {
     return;
   }
   let nextProto = Object.getPrototypeOf(proto);
@@ -164,11 +169,13 @@ export const patchNodeProto = (node) => {
     patchElementProto(patchedProto);
     proto[PATCHED_PROTO] = patchedProto;
   }
+  node.patchedNodeProto = true;
   Object.setPrototypeOf(node, patchedProto);
 }
 
 export const patchShadowOnElement = () => {
-  utils.patchProperties(Element.prototype, ElementShadowPatches);
+  applyShadyPatchList(Element.prototype, [ElementShadowPatches]);
+  //utils.patchProperties(Element.prototype, ElementShadowPatches);
 }
 
 export const addShadyPrefixedProperties = () => {
