@@ -169,17 +169,20 @@
       document.head.appendChild(newScript);
     }
   } else {
-    // if readyState is 'complete', script is loaded imperatively on a spec-compliant browser, so just fire WCR
-    if (document.readyState === 'complete') {
+    // script is loaded imperatively on a spec-compliant browser, so just fire WCR
+    var loadAnyways = function() {
       polyfillsLoaded = true;
       fireEvent();
+    };
+    if (document.readyState === 'complete' || document.readyState === 'interactive') {
+      loadAnyways();
     } else {
-      // this script may come between DCL and load, so listen for both, and cancel load listener if DCL fires
-      window.addEventListener('load', ready);
-      window.addEventListener('DOMContentLoaded', function() {
-        window.removeEventListener('load', ready);
-        ready();
-      })
+      window.addEventListener('readystatechange', function loadWhenReady() {
+        if (document.readyState === 'complete' || document.readyState === 'interactive') {
+          window.removeEventListener('readystatechange', loadWhenReady);
+          loadAnyways();
+        }
+      });
     }
   }
 })();
