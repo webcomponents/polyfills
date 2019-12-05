@@ -173,7 +173,7 @@
     if (document.readyState === 'complete' || document.readyState === 'interactive') {
       polyfillsLoaded = true;
       fireEvent();
-    } else { // readyState is loading
+    } else {
       window.addEventListener('readystatechange', function loadWhenInteractive(event) {
         if (event.target.readyState !== 'loading') {
           window.removeEventListener('readystatechange', loadWhenInteractive);
