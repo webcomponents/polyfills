@@ -170,16 +170,14 @@
     }
   } else {
     // script is loaded imperatively on a spec-compliant browser, so just fire WCR
-    if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    if (document.readyState === 'loading') {
+      document.addEventListener('readystatechange', function loadWhenInteractive() {
+        document.removeEventListener('readystatechange', loadWhenInteractive);
+        ready();
+      });
+    } else { // readyState is interactive or complete
       polyfillsLoaded = true;
       fireEvent();
-    } else {
-      window.addEventListener('readystatechange', function loadWhenInteractive(event) {
-        if (event.target.readyState !== 'loading') {
-          window.removeEventListener('readystatechange', loadWhenInteractive);
-          ready();
-        }
-      });
     }
   }
 })();
