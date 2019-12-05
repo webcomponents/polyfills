@@ -170,17 +170,14 @@
     }
   } else {
     // script is loaded imperatively on a spec-compliant browser, so just fire WCR
-    var loadAnyways = function() {
+    if (document.readyState === 'complete' || document.readyState === 'interactive') {
       polyfillsLoaded = true;
       fireEvent();
-    };
-    if (document.readyState === 'complete' || document.readyState === 'interactive') {
-      loadAnyways();
-    } else {
-      window.addEventListener('readystatechange', function loadWhenReady() {
-        if (document.readyState === 'complete' || document.readyState === 'interactive') {
-          window.removeEventListener('readystatechange', loadWhenReady);
-          loadAnyways();
+    } else { // readyState is loading
+      window.addEventListener('readystatechange', function loadWhenInteractive() {
+        if (document.readyState !== 'loading') {
+          window.removeEventListener('readystatechange', loadWhenInteractive);
+          ready();
         }
       });
     }
