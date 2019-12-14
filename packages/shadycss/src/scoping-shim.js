@@ -32,6 +32,28 @@ const adoptedCssTextMap = {};
  */
 const styleCache = new StyleCache();
 
+function parseExportParts(node) {
+  const attr = node.getAttribute('exportparts');
+  if (!attr || !attr.trim()) {
+    return [];
+  }
+  const parts = [];
+  for (const part of attr.split(/\s*,\s*/)) {
+    const split = part.split(/\s*:\s*/);
+    let inner, outer;
+    if (split.length === 1) {
+      inner = outer = split[0];
+    } else if (split.length === 2) {
+      inner = split[0];
+      outer = split[1];
+    } else {
+      continue;
+    }
+    parts.push({inner, outer});
+  }
+  return parts;
+}
+
 export default class ScopingShim {
   constructor() {
     this._scopeCounter = {};
@@ -114,8 +136,11 @@ export default class ScopingShim {
     }
     if (!ownPropertyNames.length || nativeCssVariables) {
       let root = nativeShadow ? template.content : null;
+
       let placeholder = getStylePlaceholder(elementName);
+
       let style = this._generateStaticStyle(info, template['_styleAst'], root, placeholder, cssBuild, optimalBuild ? cssText : '');
+
       template._style = style;
     }
     template._ownPropertyNames = ownPropertyNames;
@@ -282,6 +307,74 @@ export default class ScopingShim {
    * @param {Object=} overrideProps
    */
   styleElement(host, overrideProps) {
+    function nameOf(element) {
+      return element.tagName.toLowerCase();
+    }
+    function hostOf(element) {
+      const {host} = element.getRootNode();
+      return host;
+    }
+
+    function findExports(host) {
+      console.log(`  finding exports for ${host.tagName.toLowerCase()}`);
+      const exports = {};
+      const parentHost = host.getRootNode().host;
+      if (!parentHost) {
+        return exports;
+      }
+      const grandParentHost = parentHost.getRootNode().host;
+      if (!grandParentHost) {
+        return exports;
+      }
+      const scope = parentHost.tagName.toLowerCase();
+      const superScope = grandParentHost.tagName.toLowerCase();
+      const outerToInner = {};
+      console.log(`    parent is ${superScope}`);
+      for (const {inner, outer} of parseExportParts(host)) {
+        let arr = exports[inner];
+        if (arr === undefined) {
+          arr = [];
+          exports[inner] = arr;
+        }
+        console.log(`      ${superScope} exports ${inner} as ${outer}`)
+        arr.push({outer, scope, superScope});
+        outerToInner[outer] = inner;
+      }
+      for (const [inner, outers] of Object.entries(findExports(parentHost))) {
+        const realInner = outerToInner[inner];
+        let arr = exports[realInner];
+        if (arr === undefined) {
+          arr = [];
+          exports[realInner] = arr;
+        }
+        for (const {outer, scope, superScope} of outers) {
+          arr.push({inner: realInner, outer, scope, superScope});
+        }
+      }
+      return exports;
+    }
+
+    requestAnimationFrame(() => {
+      const hostName = nameOf(host);
+
+      console.log('RENDER', hostName);
+      const exports = findExports(host);
+
+      const parentHost = hostOf(host);
+      const parentHostName = parentHost ? nameOf(parentHost) : null;
+
+      for (const part of host.shadowRoot.querySelectorAll('[part]')) {
+        const inner = part.getAttribute('part');
+        const cls = `part_${parentHostName}_${hostName}_${inner}`;
+        console.log( `  adding [0] class ${cls} to ${inner}`);
+        part.classList.add(`part_${parentHostName}_${hostName}_${inner}`);
+        for (const {outer, scope, superScope} of exports[inner] || []) {
+          const cls = `part_${superScope}_${scope}_${outer}`;
+          console.log(`  adding [1] class ${cls} to ${inner}`);
+          part.classList.add(cls);
+        }
+      }
+    })
     if (disableRuntime) {
       if (overrideProps) {
         if (!StyleInfo.get(host)) {

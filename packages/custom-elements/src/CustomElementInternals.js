@@ -155,6 +155,7 @@ export default class CustomElementInternals {
   }
 
   /**
+   * Uncustomized?
    * Upgrades all uncustomized custom elements at and below a root node for
    * which there is a definition. When custom element reaction callbacks are
    * assumed to be called synchronously (which, by the current DOM / HTML spec
