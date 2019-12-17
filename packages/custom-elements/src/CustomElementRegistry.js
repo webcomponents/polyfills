@@ -158,9 +158,6 @@ export default class CustomElementRegistry {
    * @return {!CustomElementDefinition}
    */
   internal_reifyDefinition(localName, constructor) {
-    // Why do we have this _elementDefinitionIsRunning guard? Why would
-    // anything below yield? Getters on the prototype could call
-    // customElements.define?
     this._elementDefinitionIsRunning = true;
 
     let connectedCallback;

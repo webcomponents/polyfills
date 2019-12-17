@@ -36,8 +36,6 @@ import {nativeShadow} from './style-settings.js';
 */
 const SCOPE_NAME = 'style-scope';
 
-const exportTree = {};
-
 class StyleTransformer {
   get SCOPE_NAME() {
     return SCOPE_NAME;
@@ -64,18 +62,7 @@ class StyleTransformer {
    */
   domAddScope(node, scope) {
     const fn = (node) => {
-      const tagName = node.tagName ? node.tagName.toLowerCase() : null;
       this.element(node, scope || '');
-      if (node.hasAttribute('exportparts')) {
-        const attr = node.getAttribute('exportparts');
-        console.log(`${scope} -> ${tagName} has exportparts ${attr}`);
-        let children = exportTree[tagName];
-        if (children === undefined) {
-          children = [];
-          exportTree[tagName] = children;
-        }
-        children.push()
-      }
     };
     this._transformDom(node, fn);
   }
@@ -199,7 +186,6 @@ class StyleTransformer {
     scope = this._calcElementScope(scope);
     let self = this;
     return StyleUtil.toCssText(rules, function(/** StyleNode */rule) {
-      console.log({rule, scope});
       if (!rule.isScoped) {
         self.rule(rule, scope, hostScope);
         rule.isScoped = true;
@@ -366,10 +352,8 @@ class StyleTransformer {
       selector = this._transformPartSelector(selector, hostScope);
     // replace other selectors with scoping class
     } else if (slottedIndex !== 0) {
-      console.log({selector});
       selector = scope ? this._transformSimpleSelector(selector, scope) :
         selector;
-        console.log({selector});
     }
     // mark ::slotted() scope jump to replace with descendant selector + arg
     // also ignore left-side combinator
@@ -413,13 +397,8 @@ class StyleTransformer {
   }
 
   _transformPartSelector(selector, scope) {
-    console.log('before', {selector, scope});
-    //selector = selector.replace(/(.+?)::part\((.*)?\)/, (_, lhs, part) => `${lhs}.${scope} [part~=${part}]`);
-    // TODO(aomarks) Support LHS other than custom element name.
-    selector = selector.replace(/(.+?)::part\((.*)?\)/, (_, lhs, part) =>
-    //    `.${lhs}[part~=${part}].host-${scope}`);
-          `.part_${scope}_${lhs}_${part}`);
-    console.log('after', {selector, scope});
+    selector = selector.replace(/([a-z-_]+)(.*?)::part\((.*)?\)/, (_, ce, sel, part) =>
+          `${ce}${sel} .part_${scope}_${ce}_${part}`);
     return selector;
   }
 

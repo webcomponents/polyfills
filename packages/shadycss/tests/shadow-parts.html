@@ -1,0 +1,160 @@
+<!doctype html>
+<head>
+  <script>
+  ShadyDOM = { force: true }
+  WCT = {waitFor: function (cb) {HTMLImports.whenReady(cb)}}
+  </script>
+  <script src="./test-flags.js"></script>
+  <script src="../node_modules/wct-browser-legacy/browser.js"></script>
+  <script src="../node_modules/@webcomponents/webcomponents-platform/webcomponents-platform.js"></script>
+  <script src="../node_modules/es6-promise/dist/es6-promise.auto.min.js"></script>
+  <script src="../node_modules/@webcomponents/template/template.js"></script>
+  <script src="../node_modules/@webcomponents/html-imports/html-imports.min.js"></script>
+  <script src="../node_modules/@webcomponents/shadydom/shadydom.min.js"></script>
+  <script src="../node_modules/@webcomponents/custom-elements/custom-elements.min.js"></script>
+  <script src="../scoping-shim.min.js"></script>
+  <script src="../custom-style-interface.min.js"></script>
+  <script src="module/generated/make-element.js"></script>
+</head>
+<body>
+  <template id="x-parent">
+    <style>
+      x-child::part(part1) {
+        color: red;
+      }
+      x-child.green::part(part1) {
+        color: green;
+      }
+    </style>
+    <x-child class="red"></x-child>
+    <x-child class="green"></x-child>
+  </template>
+
+  <template id="x-child">
+    <style>
+      .localBlue {
+        color: blue;
+      }
+    </style>
+
+    <div part="part1">x-child part1</div>
+    <div part="part1" class="localBlue">x-child part1 with local style</div>
+    <x-gchild exportparts="part1,part2:part1"></x-gchild>
+    <x-gchild class="noexport"></x-gchild>
+  </template>
+
+  <template id="x-gchild">
+    <div part="part1">x-gchild part1</div>
+    <div part="part2">x-gchild part1</div>
+    <x-ggchild exportparts="part3:part2"></x-ggchild>
+  </template>
+
+  <template id="x-ggchild">
+    <div part="part3">x-ggchild part1</div>
+  </template>
+
+  <x-parent></x-parent>
+
+  <script>
+    const black = 'rgb(0, 0, 0)';
+    const red = 'rgb(255, 0, 0)';
+    const green = 'rgb(0, 128, 0)';
+
+    suite('shadow parts', function() {
+      suiteSetup(async function() {
+        makeElement('x-parent');
+        makeElement('x-child');
+        makeElement('x-gchild');
+        makeElement('x-ggchild');
+        await new Promise(r => requestAnimationFrame(r));
+      });
+
+      function color(...selectors) {
+        let node = document.body;
+        while (selectors.length > 0) {
+          const selector = selectors.shift();
+          node = (node.shadowRoot || node).querySelector(selector);
+          if (node === null) {
+            return null;
+          }
+        }
+        const style = getComputedStyle(node);
+        return style.color;
+      }
+
+      test('simplest case', function() {
+        assert.equal(
+          color('x-parent', 'x-child.red', '[part~=part1]'),
+          red);
+      });
+
+      test('precedence', function() {
+        assert.equal(
+          color('x-parent', 'x-child.red', '.localBlue'),
+          red);
+      });
+
+      test('exportparts same name', function() {
+        assert.equal(
+          color('x-parent', 'x-child', 'x-gchild', '[part~=part1]'),
+          red);
+      });
+
+      test('exportparts different name', function() {
+        assert.equal(
+          color('x-parent', 'x-child', 'x-gchild', '[part~=part2]'),
+          red);
+      });
+
+      test('exportparts different names two levels', function() {
+        assert.equal(
+          color('x-parent', 'x-child', 'x-gchild', 'x-ggchild', '[part~=part3]'),
+          red);
+      });
+
+      test('exportparts lower bounding', function() {
+        assert.equal(
+          color('x-parent', 'x-child', 'x-gchild.noexport', '[part~=part1]'),
+          black);
+      });
+
+      suite('dynamic', function() {
+        let parent;
+        let child;
+
+        suiteSetup(async function() {
+          parent = document.createElement('x-parent');
+          parent.className = 'dynamic';
+          document.body.appendChild(parent);
+          child = parent.shadowRoot.querySelector('x-child');
+          await new Promise(r => requestAnimationFrame(r));
+        });
+
+        suiteTeardown(function() {
+          document.body.removeChild(parent);
+        })
+
+        test('dynamic initial', function() {
+          assert.equal(
+            color('x-parent.dynamic', 'x-child', '[part~=part1]'),
+            red);
+        });
+
+        test('dynamic update 1', function() {
+          child.className = 'green';
+          assert.equal(
+            color('x-parent.dynamic', 'x-child', '[part~=part1]'),
+            green);
+        });
+
+        test('dynamic update 2', function() {
+          child.className = 'red';
+
+          assert.equal(
+            color('x-parent.dynamic', 'x-child', '[part~=part1]'),
+            red);
+        });
+      });
+    });
+  </script>
+</body>

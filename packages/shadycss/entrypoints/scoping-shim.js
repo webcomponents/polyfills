@@ -73,7 +73,6 @@ window.ShadyCSS = {
    * @param {Object=} properties
    */
   styleDocument(properties) {
-    console.log('styleDocument');
     scopingShim.flushCustomStyles();
     scopingShim.styleDocument(properties);
   },

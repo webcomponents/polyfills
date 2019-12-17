@@ -20,9 +20,7 @@ import PatchElement from './Patch/Element.js';
 const priorCustomElements = window['customElements'];
 
 function installPolyfill() {
-  // What is this?
   const noDocumentConstructionObserver = priorCustomElements && priorCustomElements['noDocumentConstructionObserver'];
-  // What is this?
   const shadyDomFastWalk = priorCustomElements && priorCustomElements['shadyDomFastWalk'];
 
   /** @type {!CustomElementInternals} */
@@ -42,8 +40,6 @@ function installPolyfill() {
   // The main document is associated with the global registry.
   document.__CE_registry = customElements;
 
-  // Why do we make window.customElements non-writable? That's
-  // the only thing this does vs property assignment, right?
   Object.defineProperty(window, 'customElements', {
     configurable: true,
     enumerable: true,
@@ -51,7 +47,6 @@ function installPolyfill() {
   });
 };
 
-// This forcePolyfill setting is not documented
 if (!priorCustomElements ||
      priorCustomElements['forcePolyfill'] ||
      (typeof priorCustomElements['define'] != 'function') ||
