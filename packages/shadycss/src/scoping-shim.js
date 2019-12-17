@@ -350,10 +350,15 @@ export default class ScopingShim {
     }
 
     requestAnimationFrame(() => {
-      const hostName = nameOf(host);
-      const exports = findExports(host);
       const parentHost = hostOf(host);
       const parentHostName = parentHost ? nameOf(parentHost) : null;
+      if (parentHostName === null) {
+        // TODO(aomarks) Support document-scoped styles with e.g. "document" as the
+        // parent host name?
+        return;
+      }
+      const hostName = nameOf(host);
+      const exports = findExports(host);
 
       for (const part of host.shadowRoot.querySelectorAll('[part]')) {
         const inner = part.getAttribute('part');
