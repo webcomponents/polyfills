@@ -20,3 +20,4 @@
 class AlreadyConstructedMarker {}
 
 export default new AlreadyConstructedMarker();
+export type AlreadyConstructedMarkerType = AlreadyConstructedMarker;

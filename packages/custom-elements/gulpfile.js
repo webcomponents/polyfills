@@ -26,7 +26,7 @@ gulp.task('default', () => {
       language_out: 'ECMASCRIPT5_STRICT',
       externs: ['externs/custom-elements.js'],
       dependency_mode: 'STRICT',
-      entry_point: ['/src/custom-elements'],
+      entry_point: ['/lib/custom-elements'],
       js_output_file: 'custom-elements.min.js',
       output_wrapper: '(function(){\n%output%\n}).call(self);',
       assume_function_wrapper: true,

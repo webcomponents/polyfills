@@ -9,52 +9,41 @@
  * rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
-import CustomElementRegistry from './CustomElementRegistry.js';
-import CEState from './CustomElementState.js';
-import Native from './Patch/Native.js';
+import './Externs.js';
+import {CustomElementState as CEState} from './CustomElementState.js';
+import {CustomElementDefinition, HTMLImportElement} from './Externs.js';
+import * as Native from './Patch/Native.js';
 import * as Utilities from './Utilities.js';
 
 const NS_HTML = 'http://www.w3.org/1999/xhtml';
 
 export default class CustomElementInternals {
-  /**
-   * @param {{
-   *   shadyDomFastWalk: boolean,
-   *   noDocumentConstructionObserver: boolean,
-   * }} options
-   */
-  constructor(options) {
-    /** @type {!Array<!function(!Node)>} */
-    this._patchesNode = [];
+  private readonly _patchesNode: Array<(node: Node) => void> = [];
+  private readonly _patchesElement: Array<(elem: Element) => void> = [];
+  private _hasPatches = false;
+  public readonly shadyDomFastWalk: boolean;
+  public readonly useDocumentConstructionObserver: boolean;
 
-    /** @type {!Array<!function(!Element)>} */
-    this._patchesElement = [];
-
-    /** @type {boolean} */
-    this._hasPatches = false;
-
-    /** @const {boolean} */
+  constructor(options: {
+    shadyDomFastWalk: boolean,
+    noDocumentConstructionObserver: boolean
+  }) {
     this.shadyDomFastWalk = options.shadyDomFastWalk;
-
-    /** @const {boolean} */
     this.useDocumentConstructionObserver =
-        !options.noDocumentConstructionObserver;
+        options.noDocumentConstructionObserver;
   }
 
-  /**
-   * @param {!Node} node
-   * @param {!function(!Element)} callback
-   * @param {!Set<!Node>=} visitedImports
-   */
-  forEachElement(node, callback, visitedImports) {
-    const sd = window['ShadyDOM'];
+  forEachElement(
+      node: Node, callback: (elem: Element) => void,
+      visitedImports?: Set<Node>) {
+    const sd = window['ShadyDom'];
     if (this.shadyDomFastWalk && sd && sd['inUse']) {
       if (node.nodeType === Node.ELEMENT_NODE) {
-        const element = /** @type {!Element} */ (node);
+        const element = node as Element;
         callback(element);
       }
       // most easily gets to document, element, documentFragment
-      if (node.querySelectorAll) {
+      if ((node as Element).querySelectorAll!) {
         const elements = sd['nativeMethods'].querySelectorAll.call(node, '*');
         for (let i = 0; i < elements.length; i++) {
           callback(elements[i]);
@@ -65,36 +54,24 @@ export default class CustomElementInternals {
     }
   }
 
-  /**
-   * @param {!function(!Node)} patch
-   */
-  addNodePatch(patch) {
+  addNodePatch(patch: (node: Node) => void) {
     this._hasPatches = true;
     this._patchesNode.push(patch);
   }
 
-  /**
-   * @param {!function(!Element)} patch
-   */
-  addElementPatch(patch) {
+  addElementPatch(patch: (element: Element) => void) {
     this._hasPatches = true;
     this._patchesElement.push(patch);
   }
 
-  /**
-   * @param {!Node} node
-   */
-  patchTree(node) {
+  patchTree(node: Node) {
     if (!this._hasPatches)
       return;
 
     this.forEachElement(node, element => this.patchElement(element));
   }
 
-  /**
-   * @param {!Node} node
-   */
-  patchNode(node) {
+  patchNode(node: Node) {
     if (!this._hasPatches)
       return;
 
@@ -107,10 +84,7 @@ export default class CustomElementInternals {
     }
   }
 
-  /**
-   * @param {!Element} element
-   */
-  patchElement(element) {
+  patchElement(element: Element) {
     if (!this._hasPatches)
       return;
 
@@ -127,11 +101,8 @@ export default class CustomElementInternals {
     }
   }
 
-  /**
-   * @param {!Node} root
-   */
-  connectTree(root) {
-    const elements = [];
+  connectTree(root: Node) {
+    const elements: Element[] = [];
 
     this.forEachElement(root, element => elements.push(element));
 
@@ -140,16 +111,13 @@ export default class CustomElementInternals {
       if (element.__CE_state === CEState.custom) {
         this.connectedCallback(element);
       } else {
-        this.upgradeReaction(element);
+        this.upgradeReaction(element as HTMLElement);
       }
     }
   }
 
-  /**
-   * @param {!Node} root
-   */
-  disconnectTree(root) {
-    const elements = [];
+  disconnectTree(root: Node) {
+    const elements: Element[] = [];
 
     this.forEachElement(root, element => elements.push(element));
 
@@ -169,19 +137,20 @@ export default class CustomElementInternals {
    * synchronously by the parser and elements being upgraded occur in the same
    * relative order.
    *
-   * NOTE: This function, when used to simulate the construction of a tree that
-   * is already created but not customized (i.e. by the parser), does *not*
-   * prevent the element from reading the 'final' (true) state of the tree. For
-   * example, the element, during truly synchronous parsing / construction would
-   * see that it contains no children as they have not yet been inserted.
-   * However, this function does not modify the tree, the element will
-   * (incorrectly) have children. Additionally, self-modification restrictions
-   * for custom element constructors imposed by the DOM spec are *not* enforced.
+   * NOTE: This function, when used to simulate the construction of a tree
+   * that is already created but not customized (i.e. by the parser), does
+   * *not* prevent the element from reading the 'final' (true) state of the
+   * tree. For example, the element, during truly synchronous parsing /
+   * construction would see that it contains no children as they have not yet
+   * been inserted. However, this function does not modify the tree, the
+   * element will (incorrectly) have children. Additionally, self-modification
+   * restrictions for custom element constructors imposed by the DOM spec are
+   * *not* enforced.
    *
    *
    * The following nested list shows the steps extending down from the HTML
-   * spec's parsing section that cause elements to be synchronously created and
-   * upgraded:
+   * spec's parsing section that cause elements to be synchronously created
+   * and upgraded:
    *
    * The "in body" insertion mode:
    * https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-inbody
@@ -227,22 +196,26 @@ export default class CustomElementInternals {
    *   upgrade: (!function(!Element)|undefined),
    * }=} options
    */
-  patchAndUpgradeTree(root, options = {}) {
+  patchAndUpgradeTree(root: Node, options: {
+    visitedImports?: Set<Node>,
+    upgrade?: (elem: HTMLElement) => void
+  } = {}) {
     const visitedImports = options.visitedImports;
     const upgrade =
         options.upgrade || (element => this.upgradeReaction(element));
 
-    const elements = [];
+    const elements: Element[] = [];
 
-    const gatherElements = element => {
+    const gatherElements = (element: Element) => {
       if (this._hasPatches) {
         this.patchElement(element);
       }
       if (element.localName === 'link' &&
           element.getAttribute('rel') === 'import') {
+        const importElem = element as HTMLImportElement;
         // The HTML Imports polyfill sets a descendant element of the link to
         // the `import` property, specifically this is *not* a Document.
-        const importNode = /** @type {?Node} */ (element.import);
+        const importNode = importElem.import;
 
         if (importNode instanceof Node) {
           importNode.__CE_isImportDocument = true;
@@ -253,21 +226,21 @@ export default class CustomElementInternals {
         if (importNode && importNode.readyState === 'complete') {
           importNode.__CE_documentLoadHandled = true;
         } else {
-          // If this link's import root is not available, its contents can't be
-          // walked. Wait for 'load' and walk it when it's ready.
+          // If this link's import root is not available, its contents can't
+          // be walked. Wait for 'load' and walk it when it's ready.
           element.addEventListener('load', () => {
-            const importNode = /** @type {!Node} */ (element.import);
+            const importNode = importElem.import!;
 
             if (importNode.__CE_documentLoadHandled)
               return;
             importNode.__CE_documentLoadHandled = true;
 
             // Clone the `visitedImports` set that was populated sync during
-            // the `patchAndUpgradeTree` call that caused this 'load' handler to
-            // be added. Then, remove *this* link's import node so that we can
-            // walk that import again, even if it was partially walked later
-            // during the same `patchAndUpgradeTree` call.
-            const clonedVisitedImports = new Set();
+            // the `patchAndUpgradeTree` call that caused this 'load' handler
+            // to be added. Then, remove *this* link's import node so that we
+            // can walk that import again, even if it was partially walked
+            // later during the same `patchAndUpgradeTree` call.
+            const clonedVisitedImports = new Set<Node>();
             if (visitedImports) {
               // IE11 does not support constructing a set using an iterable.
               visitedImports.forEach(item => clonedVisitedImports.add(item));
@@ -287,17 +260,14 @@ export default class CustomElementInternals {
     this.forEachElement(root, gatherElements, visitedImports);
 
     for (let i = 0; i < elements.length; i++) {
-      upgrade(elements[i]);
+      upgrade(elements[i] as HTMLElement);
     }
   }
 
-  /**
-   * @param {!HTMLElement} element
-   */
-  upgradeReaction(element) {
+  upgradeReaction(element: HTMLElement) {
     try {
       const definition = this._lookupACustomElementDefinition(
-          /** @type {!Document} */ (element.ownerDocument), element.localName);
+          element.ownerDocument!, element.localName);
       if (definition) {
         this._upgradeAnElement(element, definition);
       }
@@ -307,12 +277,10 @@ export default class CustomElementInternals {
   }
 
   /**
-   * @private
-   * @param {!HTMLElement} element
-   * @param {!CustomElementDefinition} definition
    * @see https://html.spec.whatwg.org/multipage/custom-elements.html#concept-upgrade-an-element
    */
-  _upgradeAnElement(element, definition) {
+  private _upgradeAnElement(
+      element: HTMLElement, definition: CustomElementDefinition) {
     const currentState = element.__CE_state;
     if (currentState !== undefined)
       return;
@@ -354,11 +322,8 @@ export default class CustomElementInternals {
     }
   }
 
-  /**
-   * @param {!Element} element
-   */
-  connectedCallback(element) {
-    const definition = element.__CE_definition;
+  connectedCallback(element: Element) {
+    const definition = element.__CE_definition!;
     if (definition.connectedCallback) {
       try {
         definition.connectedCallback.call(element);
@@ -368,11 +333,8 @@ export default class CustomElementInternals {
     }
   }
 
-  /**
-   * @param {!Element} element
-   */
-  disconnectedCallback(element) {
-    const definition = element.__CE_definition;
+  disconnectedCallback(element: Element) {
+    const definition = element.__CE_definition!;
     if (definition.disconnectedCallback) {
       try {
         definition.disconnectedCallback.call(element);
@@ -382,15 +344,10 @@ export default class CustomElementInternals {
     }
   }
 
-  /**
-   * @param {!Element} element
-   * @param {string} name
-   * @param {?string} oldValue
-   * @param {?string} newValue
-   * @param {?string} namespace
-   */
-  attributeChangedCallback(element, name, oldValue, newValue, namespace) {
-    const definition = element.__CE_definition;
+  attributeChangedCallback(
+      element: Element, name: string, oldValue?: string|null,
+      newValue?: string|null, namespace?: string|null) {
+    const definition = element.__CE_definition!;
     if (definition.attributeChangedCallback &&
         definition.observedAttributes.indexOf(name) > -1) {
       try {
@@ -406,13 +363,9 @@ export default class CustomElementInternals {
    * Runs HTML's 'look up a custom element definition', excluding the namespace
    * check.
    *
-   * @private
-   * @param {!Document} doc
-   * @param {string} localName
-   * @return {!CustomElementDefinition|undefined}
    * @see https://html.spec.whatwg.org/multipage/custom-elements.html#look-up-a-custom-element-definition
    */
-  _lookupACustomElementDefinition(doc, localName) {
+  private _lookupACustomElementDefinition(doc: Document, localName: string) {
     // The document must be associated with a registry.
     const registry =
         /** @type {!CustomElementRegistry|undefined} */ (doc.__CE_registry);
@@ -442,13 +395,9 @@ export default class CustomElementInternals {
    * Note, the template polyfill only wraps `createElement`, preventing this
    * function from using `createElementNS` in all cases.
    *
-   * @param {!Document} doc
-   * @param {string} localName
-   * @param {string|null} namespace
-   * @return {!Element}
    * @see https://dom.spec.whatwg.org/#concept-create-element
    */
-  createAnElement(doc, localName, namespace) {
+  createAnElement(doc: Document, localName: string, namespace: string|null) {
     const registry =
         /** @type {!CustomElementRegistry|undefined} */ (doc.__CE_registry);
     // Only create custom elements if the document is associated with a
@@ -548,7 +497,7 @@ export default class CustomElementInternals {
    * @param {!Error} error
    * @see https://html.spec.whatwg.org/multipage/webappapis.html#report-the-exception
    */
-  reportTheException(error) {
+  reportTheException(error: Error) {
     const message = error.message;
     /** @type {string} */
     const filename =
@@ -561,14 +510,14 @@ export default class CustomElementInternals {
         /* Safari */ error.column || /* Firefox */ error.columnNumber || 0;
 
     /** @type {!ErrorEvent|undefined} */
-    let event = undefined;
+    let event: ErrorEvent|undefined = undefined;
     if (ErrorEvent.prototype.initErrorEvent === undefined) {
       event = new ErrorEvent(
           'error', {cancelable: true, message, filename, lineno, colno, error});
     } else {
-      event = /** @type {!ErrorEvent} */ (document.createEvent('ErrorEvent'));
+      event = document.createEvent('ErrorEvent') as ErrorEvent;
       // initErrorEvent(type, bubbles, cancelable, message, filename, line)
-      event.initErrorEvent('error', false, true, message, filename, lineno);
+      event.initErrorEvent!('error', false, true, message, filename, lineno);
       // Hack for IE, where ErrorEvent#preventDefault does not set
       // #defaultPrevented to true.
       /** @this {!ErrorEvent} */

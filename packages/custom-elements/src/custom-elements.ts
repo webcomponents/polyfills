@@ -20,10 +20,11 @@ import PatchNode from './Patch/Node.js';
 const priorCustomElements = window['customElements'];
 
 function installPolyfill() {
-  const noDocumentConstructionObserver = priorCustomElements &&
-      priorCustomElements['noDocumentConstructionObserver'];
+  const noDocumentConstructionObserver =
+      !!(priorCustomElements &&
+         priorCustomElements['noDocumentConstructionObserver']);
   const shadyDomFastWalk =
-      priorCustomElements && priorCustomElements['shadyDomFastWalk'];
+      !!(priorCustomElements && priorCustomElements['shadyDomFastWalk']);
 
   /** @type {!CustomElementInternals} */
   const internals = new CustomElementInternals(
@@ -35,6 +36,7 @@ function installPolyfill() {
   PatchNode(internals);
   PatchElement(internals);
 
+  /** @type {!CustomElementRegistry} */
   const customElements = new CustomElementRegistry(internals);
 
   // The main document is associated with the global registry.
@@ -55,4 +57,4 @@ if (!priorCustomElements || priorCustomElements['forcePolyfill'] ||
 
 // This is NOT public API and is only meant to work around a GC bug in older
 // versions of Safari that randomly removes the polyfill during tests.
-window['__CE_installPolyfill'] = installPolyfill;
+(window as any)['__CE_installPolyfill'] = installPolyfill;

@@ -9,17 +9,10 @@
  * rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
-import CustomElementInternals from '../CustomElementInternals.js';
+export enum CustomElementState {
+  custom = 1,
+  failed = 2,
+}
+;
 
-import PatchParentNode from './Interface/ParentNode.js';
-import Native from './Native.js';
-
-/**
- * @param {!CustomElementInternals} internals
- */
-export default function(internals) {
-  PatchParentNode(internals, DocumentFragment.prototype, {
-    prepend: Native.DocumentFragment_prepend,
-    append: Native.DocumentFragment_append,
-  });
-};
+export default CustomElementState;

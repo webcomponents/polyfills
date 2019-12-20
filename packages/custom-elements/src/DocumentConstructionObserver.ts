@@ -12,22 +12,12 @@
 import CustomElementInternals from './CustomElementInternals.js';
 
 export default class DocumentConstructionObserver {
-  constructor(internals, doc) {
-    /**
-     * @type {!CustomElementInternals}
-     */
+  private readonly _internals: CustomElementInternals;
+  private readonly _document: Document;
+  private _observer: MutationObserver|undefined = undefined;
+  constructor(internals: CustomElementInternals, doc: Document) {
     this._internals = internals;
-
-    /**
-     * @type {!Document}
-     */
     this._document = doc;
-
-    /**
-     * @type {MutationObserver|undefined}
-     */
-    this._observer = undefined;
-
 
     // Simulate tree construction for all currently accessible nodes in the
     // document.
@@ -53,10 +43,7 @@ export default class DocumentConstructionObserver {
     }
   }
 
-  /**
-   * @param {!Array<!MutationRecord>} mutations
-   */
-  _handleMutations(mutations) {
+  private _handleMutations(mutations: ReadonlyArray<MutationRecord>) {
     // Once the document's `readyState` is 'interactive' or 'complete', all new
     // nodes created within that document will be the result of script and
     // should be handled by patching.

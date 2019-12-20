@@ -9,8 +9,9 @@
  * rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
-/** @type {!Set<string>} */
-const reservedElementNameSet = new Set();
+import {HTMLImportElement} from './Externs.js';
+
+const reservedElementNameSet = new Set<string>();
 // IE11 does not support constructing a set using an iterable.
 ['annotation-xml',
  'color-profile',
@@ -22,11 +23,7 @@ const reservedElementNameSet = new Set();
  'missing-glyph',
 ].forEach(item => reservedElementNameSet.add(item));
 
-/**
- * @param {string} localName
- * @returns {boolean}
- */
-export function isValidCustomElementName(localName) {
+export function isValidCustomElementName(localName: string) {
   const reserved = reservedElementNameSet.has(localName);
   const validForm = /^[a-z][.0-9_a-z]*-[\-.0-9_a-z]*$/.test(localName);
   return !reserved && validForm;
@@ -37,11 +34,7 @@ const nativeContains = document.contains ?
     document.contains.bind(document) :
     document.documentElement.contains.bind(document.documentElement);
 
-/**
- * @param {!Node} node
- * @return {boolean}
- */
-export function isConnected(node) {
+export function isConnected(node: Node) {
   // Use `Node#isConnected`, if defined.
   const nativeValue = node.isConnected;
   if (nativeValue !== undefined) {
@@ -52,8 +45,8 @@ export function isConnected(node) {
   if (nativeContains(node)) {
     return true;
   }
-  /** @type {?Node|undefined} */
-  let current = node;
+
+  let current: Node|undefined = node;
   while (current &&
          !(current.__CE_isImportDocument || current instanceof Document)) {
     current = current.parentNode ||
@@ -65,66 +58,49 @@ export function isConnected(node) {
       (current.__CE_isImportDocument || current instanceof Document));
 }
 
-/**
- * @param {!DocumentFragment} fragment
- * @return {!Array<!Element>}
- */
-export function childrenFromFragment(fragment) {
+export function childrenFromFragment(fragment: DocumentFragment): Element[] {
   // Note, IE doesn't have `children` on document fragments.
   const nativeChildren = fragment.children;
   if (nativeChildren) {
     return Array.prototype.slice.call(nativeChildren);
   }
-  const children = [];
+  const children: Element[] = [];
   for (let n = fragment.firstChild; n; n = n.nextSibling) {
     if (n.nodeType === Node.ELEMENT_NODE) {
-      children.push(n);
+      children.push(n as Element);
     }
   }
   return children;
 }
 
-/**
- * @param {!Node} root
- * @param {!Node} start
- * @return {?Node}
- */
-function nextSiblingOrAncestorSibling(root, start) {
-  let node = start;
+function nextSiblingOrAncestorSibling(root: Node, start: Node) {
+  let node: Node|null = start;
   while (node && node !== root && !node.nextSibling) {
     node = node.parentNode;
   }
   return (!node || node === root) ? null : node.nextSibling;
 }
 
-/**
- * @param {!Node} root
- * @param {!Node} start
- * @return {?Node}
- */
-function nextNode(root, start) {
+
+function nextNode(root: Node, start: Node) {
   return start.firstChild ? start.firstChild :
                             nextSiblingOrAncestorSibling(root, start);
 }
 
-/**
- * @param {!Node} root
- * @param {!function(!Element)} callback
- * @param {!Set<!Node>=} visitedImports
- */
-export function walkDeepDescendantElements(root, callback, visitedImports) {
-  let node = root;
+export function walkDeepDescendantElements(
+    root: Node, callback: (elem: Element) => void, visitedImports?: Set<Node>) {
+  let node: Node|null = root;
   while (node) {
     if (node.nodeType === Node.ELEMENT_NODE) {
-      const element = /** @type {!Element} */ (node);
+      const element = node as Element;
 
       callback(element);
 
       const localName = element.localName;
       if (localName === 'link' && element.getAttribute('rel') === 'import') {
-        // If this import (polyfilled or not) has it's root node available,
+        // If this import (polyfilled or not) has its root node available,
         // walk it.
-        const importNode = /** @type {!HTMLLinkElement} */ (element).import;
+        const importNode = (element as HTMLImportElement).import;
         if (visitedImports === undefined) {
           visitedImports = new Set();
         }

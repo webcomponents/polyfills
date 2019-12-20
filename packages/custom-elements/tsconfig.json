@@ -1,0 +1,29 @@
+{
+  "compilerOptions": {
+    "incremental": true,
+    "target": "esnext",
+    "tsBuildInfoFile": "./buildcache",
+    "module": "esnext",
+    "declaration": true,
+    "sourceMap": true,
+    "outDir": "./lib",
+    "importHelpers": true,
+    "downlevelIteration": true,
+    // "isolatedModules": true,
+
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "strictBindCallApply": true,
+    "strictPropertyInitialization": true,
+    "noImplicitThis": true,
+    "alwaysStrict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "moduleResolution": "node",
+  },
+  "include": ["src/"]
+}

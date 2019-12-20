@@ -12,7 +12,12 @@
 /**
  * @template T
  */
-export default class Deferred {
+export default class Deferred<T> {
+  private _value: T|undefined = undefined;
+
+  private _resolve!: (val: T) => void;
+
+  private readonly _promise: Promise<T>;
   constructor() {
     /**
      * @private
@@ -24,7 +29,7 @@ export default class Deferred {
      * @private
      * @type {Function|undefined}
      */
-    this._resolve = undefined;
+    this._resolve;
 
     /**
      * @private
@@ -32,26 +37,19 @@ export default class Deferred {
      */
     this._promise = new Promise(resolve => {
       this._resolve = resolve;
-
-      if (this._value) {
-        resolve(this._value);
-      }
     });
   }
 
   /**
    * @param {T} value
    */
-  resolve(value) {
+  resolve(value: T) {
     if (this._value) {
       throw new Error('Already resolved.');
     }
 
     this._value = value;
-
-    if (this._resolve) {
-      this._resolve(value);
-    }
+    this._resolve(value);
   }
 
   /**

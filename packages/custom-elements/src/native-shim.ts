@@ -8,6 +8,7 @@
  * Google as part of the polymer project is also subject to an additional IP
  * rights grant found at http://polymer.github.io/PATENTS.txt
  */
+import './Externs';
 
 /**
  * This shim allows elements written in, or compiled to, ES5 to work on native
@@ -26,6 +27,7 @@ if (
   return;
 }
 const BuiltInHTMLElement = HTMLElement;
+
 /**
  * With jscompiler's RECOMMENDED_FLAGS the function name will be optimized away.
  * However, if we declare the function as a property on an object literal, and
@@ -38,7 +40,8 @@ const wrapperForTheName = {
         BuiltInHTMLElement, [], /** @type {!Function} */ (this.constructor));
   }
 };
-window.HTMLElement = wrapperForTheName['HTMLElement'];
+window.HTMLElement =
+    wrapperForTheName['HTMLElement'] as unknown as typeof HTMLElement;
 HTMLElement.prototype = BuiltInHTMLElement.prototype;
 HTMLElement.prototype.constructor = HTMLElement;
 Object.setPrototypeOf(HTMLElement, BuiltInHTMLElement);

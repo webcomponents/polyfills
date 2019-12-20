@@ -12,37 +12,28 @@
 import CustomElementInternals from '../../CustomElementInternals.js';
 import * as Utilities from '../../Utilities.js';
 
-/**
- * @typedef {{
- *   prepend: !function(...(!Node|string)),
- *  append: !function(...(!Node|string)),
- * }}
- */
-let ParentNodeNativeMethods;
+type NativeMethod = (this: Node, ...args: Array<Node|string>) => void;
 
-/**
- * @param {!CustomElementInternals} internals
- * @param {!Object} destination
- * @param {!ParentNodeNativeMethods} builtIn
- */
-export default function(internals, destination, builtIn) {
-  /**
-   * @param {!function(...(!Node|string))} builtInMethod
-   * @return {!function(...(!Node|string))}
-   */
-  function appendPrependPatch(builtInMethod) {
-    return /** @this {!Node} */ function(...nodes) {
+interface ParentNodeNativeMethods {
+  prepend: NativeMethod;
+  append: NativeMethod;
+}
+
+export default function(
+    internals: CustomElementInternals,
+    destination: ParentNode,
+    builtIn: ParentNodeNativeMethods) {
+  function appendPrependPatch(builtInMethod: NativeMethod): NativeMethod {
+    return function(...nodes) {
       /**
        * A copy of `nodes`, with any DocumentFragment replaced by its children.
-       * @type {!Array<!Node>}
        */
-      const flattenedNodes = [];
+      const flattenedNodes: Array<Node|string> = [];
 
       /**
        * Elements in `nodes` that were connected before this call.
-       * @type {!Array<!Node>}
        */
-      const connectedElements = [];
+      const connectedElements: Node[] = [];
 
       for (var i = 0; i < nodes.length; i++) {
         const node = nodes[i];

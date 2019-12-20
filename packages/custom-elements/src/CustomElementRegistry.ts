@@ -12,102 +12,97 @@
 import CustomElementInternals from './CustomElementInternals.js';
 import Deferred from './Deferred.js';
 import DocumentConstructionObserver from './DocumentConstructionObserver.js';
+import {Constructor, CustomElementDefinition} from './Externs.js';
 import * as Utilities from './Utilities.js';
 
+interface ElementConstructor {
+  new(): HTMLElement;
+  observedAttributes?: string[];
+}
+type ConstructorGetter = () => ElementConstructor;
+
+
 /**
- * @extends {window.CustomElementRegistry}
+ * @unrestricted
  */
 export default class CustomElementRegistry {
   /**
-   * @param {!CustomElementInternals} internals
+   * @private
+   * @type {!Map<string, function(): function(new: HTMLElement)>}
    */
-  constructor(internals) {
-    /**
-     * @private
-     * @type {!Map<string, function(): function(new: HTMLElement)>}
-     */
-    this._localNameToConstructorGetter = new Map();
+  private readonly _localNameToConstructorGetter =
+      new Map<string, ConstructorGetter>();
+  /**
+   * @private
+   * @type {!Map<string, !CustomElementDefinition>}
+   */
+  private readonly _localNameToDefinition =
+      new Map<string, CustomElementDefinition>();
+  /**
+   * @private
+   * @type {!Map<!Function, !CustomElementDefinition>}
+   */
+  private readonly _constructorToDefinition =
+      new Map<Constructor<HTMLElement>, CustomElementDefinition>();
+  /**
+   * @private
+   * @type {boolean}
+   */
+  private _elementDefinitionIsRunning = false;
+  /**
+   * @private
+   * @type {!CustomElementInternals}
+   */
+  private readonly _internals: CustomElementInternals;
+  /**
+   * @private
+   * @type {!Map<string, !Deferred<undefined>>}
+   */
+  private readonly _whenDefinedDeferred =
+      new Map<string, Deferred<undefined>>();
 
-    /**
-     * @private
-     * @type {!Map<string, !CustomElementDefinition>}
-     */
-    this._localNameToDefinition = new Map();
+  /**
+   * The default flush callback triggers the document walk synchronously.
+   * @private
+   * @type {!Function}
+   */
+  private _flushCallback: (fn: () => void) => void = (fn) => fn();
+  private _flushPending = false;
 
-    /**
-     * @private
-     * @type {!Map<!Function, !CustomElementDefinition>}
-     */
-    this._constructorToDefinition = new Map();
+  /**
+   * A map from `localName`s of definitions that were defined *after* the
+   * last flush to unupgraded elements matching that definition, in document
+   * order. Entries are added to this map when a definition is registered,
+   * but the list of elements is only populated during a flush after which
+   * all of the entries are removed. DO NOT edit outside of `#_flush`.
+   */
+  private readonly _unflushedLocalNames: string[] = [];
 
-    /**
-     * @private
-     * @type {boolean}
-     */
-    this._elementDefinitionIsRunning = false;
+  /**
+   * @private
+   * @const {!DocumentConstructionObserver|undefined}
+   */
+  private readonly _documentConstructionObserver: DocumentConstructionObserver|
+      undefined;
 
-    /**
-     * @private
-     * @type {!CustomElementInternals}
-     */
+  constructor(internals: CustomElementInternals) {
     this._internals = internals;
-
-    /**
-     * @private
-     * @type {!Map<string, !Deferred<undefined>>}
-     */
-    this._whenDefinedDeferred = new Map();
-
-    /**
-     * The default flush callback triggers the document walk synchronously.
-     * @private
-     * @type {!Function}
-     */
-    this._flushCallback = fn => fn();
-
-    /**
-     * @private
-     * @type {boolean}
-     */
-    this._flushPending = false;
-
-    /**
-     * A map from `localName`s of definitions that were defined *after* the
-     * last flush to unupgraded elements matching that definition, in document
-     * order. Entries are added to this map when a definition is registered,
-     * but the list of elements is only populated during a flush after which
-     * all of the entries are removed. DO NOT edit outside of `#_flush`.
-     * @private
-     * @type {!Array<string>}
-     */
-    this._unflushedLocalNames = [];
-
-    /**
-     * @private
-     * @const {!DocumentConstructionObserver|undefined}
-     */
     this._documentConstructionObserver =
         internals.useDocumentConstructionObserver ?
         new DocumentConstructionObserver(internals, document) :
         undefined;
   }
 
-  /**
-   * @param {string} localName
-   * @param {function(): function(new: HTMLElement)} constructorGetter
-   */
-  polyfillDefineLazy(localName, constructorGetter) {
+  polyfillDefineLazy(localName: string, constructorGetter: ConstructorGetter) {
     if (!(constructorGetter instanceof Function)) {
       throw new TypeError(
           'Custom element constructor getters must be functions.');
     }
-
     this.internal_assertCanDefineLocalName(localName);
-
     this._localNameToConstructorGetter.set(localName, constructorGetter);
     this._unflushedLocalNames.push(localName);
-
-    // If we've already called the flush callback and it hasn't called back yet,
+    // If we've already called the flush callback and it hasn't called back
+    // yet,
     // don't call it again.
     if (!this._flushPending) {
       this._flushPending = true;
@@ -115,12 +110,7 @@ export default class CustomElementRegistry {
     }
   }
 
-  /**
-   * @override
-   * @param {string} localName
-   * @param {function(new: HTMLElement)} constructor
-   */
-  define(localName, constructor) {
+  define(localName: string, constructor: ElementConstructor) {
     if (!(constructor instanceof Function)) {
       throw new TypeError('Custom element constructors must be functions.');
     }
@@ -129,19 +119,15 @@ export default class CustomElementRegistry {
 
     this.internal_reifyDefinition(localName, constructor);
     this._unflushedLocalNames.push(localName);
-
-    // If we've already called the flush callback and it hasn't called back yet,
-    // don't call it again.
+    // If we've already called the flush callback and it hasn't called back
+    // yet, don't call it again.
     if (!this._flushPending) {
       this._flushPending = true;
       this._flushCallback(() => this._flush());
     }
   }
 
-  /**
-   * @param {string} localName
-   */
-  internal_assertCanDefineLocalName(localName) {
+  internal_assertCanDefineLocalName(localName: string) {
     if (!Utilities.isValidCustomElementName(localName)) {
       throw new SyntaxError(`The element name '${localName}' is not valid.`);
     }
@@ -156,28 +142,26 @@ export default class CustomElementRegistry {
     }
   }
 
-  /**
-   * @param {string} localName
-   * @param {function(new: HTMLElement)} constructor
-   * @return {!CustomElementDefinition}
-   */
-  internal_reifyDefinition(localName, constructor) {
+  internal_reifyDefinition(localName: string, constructor: ElementConstructor) {
     this._elementDefinitionIsRunning = true;
 
-    let connectedCallback;
-    let disconnectedCallback;
-    let adoptedCallback;
-    let attributeChangedCallback;
-    let observedAttributes;
+    let connectedCallback: CustomElementDefinition['connectedCallback'];
+    let disconnectedCallback: CustomElementDefinition['disconnectedCallback'];
+    let adoptedCallback: CustomElementDefinition['adoptedCallback'];
+    let attributeChangedCallback:
+        CustomElementDefinition['attributeChangedCallback'];
+    let observedAttributes: CustomElementDefinition['observedAttributes'];
     try {
-      /** @type {!Object} */
       const prototype = constructor.prototype;
       if (!(prototype instanceof Object)) {
         throw new TypeError(
             'The custom element constructor\'s prototype is not an object.');
       }
 
-      function getCallback(name) {
+      type CEReactionCallback = 'connectedCallback'|'disconnectedCallback'|
+          'adoptedCallback'|'attributeChangedCallback';
+      const getCallback =
+          function getCallback(name: CEReactionCallback) {
         const callbackValue = prototype[name];
         if (callbackValue !== undefined &&
             !(callbackValue instanceof Function)) {
@@ -218,18 +202,11 @@ export default class CustomElementRegistry {
     return definition;
   }
 
-  /**
-   * @override
-   * @param {!Node} node
-   */
-  upgrade(node) {
+  upgrade(node: Node) {
     this._internals.patchAndUpgradeTree(node);
   }
 
-  /**
-   * @private
-   */
-  _flush() {
+  private _flush() {
     // If no new definitions were defined, don't attempt to flush. This could
     // happen if a flush callback keeps the function it is given and calls it
     // multiple times.
@@ -240,12 +217,11 @@ export default class CustomElementRegistry {
     /**
      * Unupgraded elements with definitions that were defined *before* the last
      * flush, in document order.
-     * @type {!Array<!HTMLElement>}
      */
-    const elementsWithStableDefinitions = [];
+    const elementsWithStableDefinitions: HTMLElement[] = [];
 
     const unflushedLocalNames = this._unflushedLocalNames;
-    const elementsWithPendingDefinitions = new Map();
+    const elementsWithPendingDefinitions = new Map<string, HTMLElement[]>();
     for (let i = 0; i < unflushedLocalNames.length; i++) {
       elementsWithPendingDefinitions.set(unflushedLocalNames[i], []);
     }
@@ -282,7 +258,7 @@ export default class CustomElementRegistry {
     for (let i = 0; i < unflushedLocalNames.length; i++) {
       const localName = unflushedLocalNames[i];
       const pendingUpgradableElements =
-          elementsWithPendingDefinitions.get(localName);
+          elementsWithPendingDefinitions.get(localName)!;
 
       // Attempt to upgrade all applicable elements.
       for (let i = 0; i < pendingUpgradableElements.length; i++) {
@@ -299,12 +275,7 @@ export default class CustomElementRegistry {
     unflushedLocalNames.length = 0;
   }
 
-  /**
-   * @override
-   * @param {string} localName
-   * @return {function(new: HTMLElement)|undefined}
-   */
-  get(localName) {
+  get(localName: string) {
     const definition = this.internal_localNameToDefinition(localName);
     if (definition) {
       return definition.constructorFunction;
@@ -313,12 +284,7 @@ export default class CustomElementRegistry {
     return undefined;
   }
 
-  /**
-   * @override
-   * @param {string} localName
-   * @return {!Promise<undefined>}
-   */
-  whenDefined(localName) {
+  whenDefined(localName: string) {
     if (!Utilities.isValidCustomElementName(localName)) {
       return Promise.reject(new SyntaxError(
           `'${localName}' is not a valid custom element name.`));
@@ -329,7 +295,7 @@ export default class CustomElementRegistry {
       return prior.toPromise();
     }
 
-    const deferred = new Deferred();
+    const deferred = new Deferred<undefined>();
     this._whenDefinedDeferred.set(localName, deferred);
 
     // Resolve immediately if the given local name has a regular or lazy
@@ -352,11 +318,7 @@ export default class CustomElementRegistry {
     return deferred.toPromise();
   }
 
-  /**
-   * @override
-   * @param {function(function())} outer
-   */
-  polyfillWrapFlushCallback(outer) {
+  polyfillWrapFlushCallback(outer: (fn: () => void) => void) {
     if (this._documentConstructionObserver) {
       this._documentConstructionObserver.disconnect();
     }
@@ -368,7 +330,7 @@ export default class CustomElementRegistry {
    * @param {string} localName
    * @return {!CustomElementDefinition|undefined}
    */
-  internal_localNameToDefinition(localName) {
+  internal_localNameToDefinition(localName: string) {
     const existingDefinition = this._localNameToDefinition.get(localName);
     if (existingDefinition) {
       return existingDefinition;
@@ -391,13 +353,14 @@ export default class CustomElementRegistry {
    * @param {!Function} constructor
    * @return {!CustomElementDefinition|undefined}
    */
-  internal_constructorToDefinition(constructor) {
+  internal_constructorToDefinition(constructor: ElementConstructor) {
     return this._constructorToDefinition.get(constructor);
   }
 }
 
 // Closure compiler exports.
-window['CustomElementRegistry'] = CustomElementRegistry;
+window['CustomElementRegistry'] =
+    CustomElementRegistry as unknown as typeof window.CustomElementRegistry;
 CustomElementRegistry.prototype['define'] =
     CustomElementRegistry.prototype.define;
 CustomElementRegistry.prototype['upgrade'] =
