@@ -80,19 +80,15 @@ export default function(internals, destination, builtIn) {
   }
 
   if (builtIn.before !== undefined) {
-    Utilities.setPropertyUnchecked(
-        destination, 'before', beforeAfterPatch(builtIn.before));
+    destination.before = beforeAfterPatch(builtIn.before);
   }
 
   if (builtIn.after !== undefined) {
-    Utilities.setPropertyUnchecked(
-        destination, 'after', beforeAfterPatch(builtIn.after));
+    destination.after = beforeAfterPatch(builtIn.after);
   }
 
   if (builtIn.replaceWith !== undefined) {
-    Utilities.setPropertyUnchecked(
-        destination,
-        'replaceWith',
+    destination.replaceWith =
         /**
          * @param {...(!Node|string)} nodes
          * @this {!Node}
@@ -145,13 +141,11 @@ export default function(internals, destination, builtIn) {
               }
             }
           }
-        });
+        };
   }
 
   if (builtIn.remove !== undefined) {
-    Utilities.setPropertyUnchecked(
-        destination,
-        'remove',
+    destination.remove =
         /** @this {!Node} */
         function() {
           const wasConnected = Utilities.isConnected(this);
@@ -161,6 +155,6 @@ export default function(internals, destination, builtIn) {
           if (wasConnected) {
             internals.disconnectTree(this);
           }
-        });
+        };
   }
 };

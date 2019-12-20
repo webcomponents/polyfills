@@ -78,12 +78,10 @@ export default function(internals, destination, builtIn) {
   }
 
   if (builtIn.prepend !== undefined) {
-    Utilities.setPropertyUnchecked(
-        destination, 'prepend', appendPrependPatch(builtIn.prepend));
+    destination.prepend = appendPrependPatch(builtIn.prepend);
   }
 
   if (builtIn.append !== undefined) {
-    Utilities.setPropertyUnchecked(
-        destination, 'append', appendPrependPatch(builtIn.append));
+    destination.append = appendPrependPatch(builtIn.append);
   }
 };

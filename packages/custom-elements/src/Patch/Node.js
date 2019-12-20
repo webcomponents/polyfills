@@ -21,9 +21,7 @@ export default function(internals) {
   // `Node#nodeValue` is implemented on `Attr`.
   // `Node#textContent` is implemented on `Attr`, `Element`.
 
-  Utilities.setPropertyUnchecked(
-      Node.prototype,
-      'insertBefore',
+  Node.prototype.insertBefore =
       /**
        * @this {Node}
        * @param {!Node} node
@@ -62,11 +60,9 @@ export default function(internals) {
         }
 
         return nativeResult;
-      });
+      };
 
-  Utilities.setPropertyUnchecked(
-      Node.prototype,
-      'appendChild',
+  Node.prototype.appendChild =
       /**
        * @this {Node}
        * @param {!Node} node
@@ -103,11 +99,9 @@ export default function(internals) {
         }
 
         return nativeResult;
-      });
+      };
 
-  Utilities.setPropertyUnchecked(
-      Node.prototype,
-      'cloneNode',
+  Node.prototype.cloneNode =
       /**
        * @this {Node}
        * @param {boolean=} deep
@@ -123,11 +117,9 @@ export default function(internals) {
           internals.patchAndUpgradeTree(clone);
         }
         return clone;
-      });
+      };
 
-  Utilities.setPropertyUnchecked(
-      Node.prototype,
-      'removeChild',
+  Node.prototype.removeChild =
       /**
        * @this {Node}
        * @param {!Node} node
@@ -143,11 +135,9 @@ export default function(internals) {
         }
 
         return nativeResult;
-      });
+      };
 
-  Utilities.setPropertyUnchecked(
-      Node.prototype,
-      'replaceChild',
+  Node.prototype.replaceChild =
       /**
        * @this {Node}
        * @param {!Node} nodeToInsert
@@ -194,7 +184,7 @@ export default function(internals) {
         }
 
         return nativeResult;
-      });
+      };
 
 
   function patch_textContent(destination, baseDescriptor) {

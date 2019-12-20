@@ -20,9 +20,7 @@ import Native from './Native.js';
  * @param {!CustomElementInternals} internals
  */
 export default function(internals) {
-  Utilities.setPropertyUnchecked(
-      Document.prototype,
-      'createElement',
+  Document.prototype.createElement =
       /**
        * @this {Document}
        * @param {string} localName
@@ -30,11 +28,9 @@ export default function(internals) {
        */
       function(localName) {
         return internals.createAnElement(this, localName, null);
-      });
+      };
 
-  Utilities.setPropertyUnchecked(
-      Document.prototype,
-      'importNode',
+  Document.prototype.importNode =
       /**
        * @this {Document}
        * @param {!Node} node
@@ -52,11 +48,9 @@ export default function(internals) {
           internals.patchAndUpgradeTree(clone);
         }
         return clone;
-      });
+      };
 
-  Utilities.setPropertyUnchecked(
-      Document.prototype,
-      'createElementNS',
+  Document.prototype.createElementNS =
       /**
        * @this {Document}
        * @param {?string} namespace
@@ -65,7 +59,7 @@ export default function(internals) {
        */
       function(namespace, localName) {
         return internals.createAnElement(this, localName, namespace);
-      });
+      };
 
   PatchParentNode(internals, Document.prototype, {
     prepend: Native.Document_prepend,

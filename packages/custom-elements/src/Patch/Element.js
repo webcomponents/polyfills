@@ -22,9 +22,7 @@ import Native from './Native.js';
  */
 export default function(internals) {
   if (Native.Element_attachShadow) {
-    Utilities.setPropertyUnchecked(
-        Element.prototype,
-        'attachShadow',
+    Element.prototype.attachShadow =
         /**
          * @this {Element}
          * @param {!{mode: string}} init
@@ -35,7 +33,7 @@ export default function(internals) {
           internals.patchNode(shadowRoot);
           this.__CE_shadowRoot = shadowRoot;
           return shadowRoot;
-        });
+        };
   }
 
 
@@ -136,9 +134,8 @@ export default function(internals) {
   }
 
 
-  Utilities.setPropertyUnchecked(
-      Element.prototype,
-      'setAttribute',
+
+  Element.prototype.setAttribute =
       /**
        * @this {Element}
        * @param {string} name
@@ -155,11 +152,10 @@ export default function(internals) {
         newValue = Native.Element_getAttribute.call(this, name);
         internals.attributeChangedCallback(
             this, name, oldValue, newValue, null);
-      });
+      };
 
-  Utilities.setPropertyUnchecked(
-      Element.prototype,
-      'setAttributeNS',
+
+  Element.prototype.setAttributeNS =
       /**
        * @this {Element}
        * @param {?string} namespace
@@ -179,11 +175,10 @@ export default function(internals) {
         newValue = Native.Element_getAttributeNS.call(this, namespace, name);
         internals.attributeChangedCallback(
             this, name, oldValue, newValue, namespace);
-      });
+      };
 
-  Utilities.setPropertyUnchecked(
-      Element.prototype,
-      'removeAttribute',
+
+  Element.prototype.removeAttribute =
       /**
        * @this {Element}
        * @param {string} name
@@ -199,11 +194,9 @@ export default function(internals) {
         if (oldValue !== null) {
           internals.attributeChangedCallback(this, name, oldValue, null, null);
         }
-      });
+      };
 
-  Utilities.setPropertyUnchecked(
-      Element.prototype,
-      'removeAttributeNS',
+  Element.prototype.removeAttributeNS =
       /**
        * @this {Element}
        * @param {?string} namespace
@@ -228,13 +221,11 @@ export default function(internals) {
           internals.attributeChangedCallback(
               this, name, oldValue, newValue, namespace);
         }
-      });
+      };
 
 
   function patch_insertAdjacentElement(destination, baseMethod) {
-    Utilities.setPropertyUnchecked(
-        destination,
-        'insertAdjacentElement',
+    destination.insertAdjacentElement =
         /**
          * @this {Element}
          * @param {string} position
@@ -254,7 +245,7 @@ export default function(internals) {
             internals.connectTree(element);
           }
           return insertedElement;
-        });
+        };
   }
 
   if (Native.HTMLElement_insertAdjacentElement) {
@@ -284,9 +275,7 @@ export default function(internals) {
       }
     }
 
-    Utilities.setPropertyUnchecked(
-        destination,
-        'insertAdjacentHTML',
+    destination.insertAdjacentHTML =
         /**
          * @this {Element}
          * @param {string} position
@@ -320,7 +309,7 @@ export default function(internals) {
                 `The value provided (${String(position)}) is ` +
                 'not one of \'beforebegin\', \'afterbegin\', \'beforeend\', or \'afterend\'.');
           }
-        });
+        };
   }
 
   if (Native.HTMLElement_insertAdjacentHTML) {
