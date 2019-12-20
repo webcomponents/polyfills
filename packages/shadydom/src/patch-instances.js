@@ -167,9 +167,9 @@ export let patchInsideElementAccessors = noInstancePatching ?
       // * When SD is in `noPatch` mode, the SD patches call through to
       // "native" methods that are patched by CE (since CE is at the bottom).
       // Therefore continue to patch in this case.
-      // If customElements is not loaded, then these accessors should be
-      // patched so they work correctly.
-      if (!window['customElements'] || utils.settings.noPatch) {
+      // If the custom elements polyfill is not loaded, then these accessors
+      // should be patched so they work correctly.
+      if (!utils.hasPolyfilledCustomElements() || utils.settings.noPatch) {
         utils.patchExistingProperties(element, TextContentInnerHTMLDescriptors);
       }
     }

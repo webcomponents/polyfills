@@ -13,10 +13,14 @@ import {shadyDataForNode} from './shady-data.js';
 export const settings = window['ShadyDOM'] || {};
 
 settings.hasNativeShadowDOM = Boolean(Element.prototype.attachShadow && Node.prototype.getRootNode);
-// The user might need to pass the custom elements polyfill a flag by setting
-// an object to `window.customElements`, so check for
-// `window.CustomElementRegistry` instead.
-settings.hasNativeCustomElements = Boolean(window.CustomElementRegistry);
+
+export const hasCustomElements =
+    () => Boolean(window.customElements && window.customElements.define);
+// The custom elements polyfill is typically loaded after Shady DOM, so this
+// check isn't reliable during initial evaluation. However, because the
+// polyfills are loaded immediately after one another, it works at runtime.
+export const hasPolyfilledCustomElements =
+    () => Boolean(window.customElements && window.customElements['polyfillWrapFlushCallback']);
 
 const desc = Object.getOwnPropertyDescriptor(Node.prototype, 'firstChild');
 
