@@ -1,38 +1,41 @@
 /**
  * @license
  * Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
- * This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
- * The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
- * The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
- * Code distributed by Google as part of the polymer project is also
- * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+ * This code may only be used under the BSD style license found at
+ * http://polymer.github.io/LICENSE.txt The complete set of authors may be found
+ * at http://polymer.github.io/AUTHORS.txt The complete set of contributors may
+ * be found at http://polymer.github.io/CONTRIBUTORS.txt Code distributed by
+ * Google as part of the polymer project is also subject to an additional IP
+ * rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
-import Native from './Native.js';
 import CustomElementInternals from '../CustomElementInternals.js';
 import CEState from '../CustomElementState.js';
 import * as Utilities from '../Utilities.js';
 
-import PatchParentNode from './Interface/ParentNode.js';
 import PatchChildNode from './Interface/ChildNode.js';
+import PatchParentNode from './Interface/ParentNode.js';
+import Native from './Native.js';
 
 /**
  * @param {!CustomElementInternals} internals
  */
 export default function(internals) {
   if (Native.Element_attachShadow) {
-    Utilities.setPropertyUnchecked(Element.prototype, 'attachShadow',
-      /**
-       * @this {Element}
-       * @param {!{mode: string}} init
-       * @return {ShadowRoot}
-       */
-      function(init) {
-        const shadowRoot = Native.Element_attachShadow.call(this, init);
-        internals.patchNode(shadowRoot);
-        this.__CE_shadowRoot = shadowRoot;
-        return shadowRoot;
-      });
+    Utilities.setPropertyUnchecked(
+        Element.prototype,
+        'attachShadow',
+        /**
+         * @this {Element}
+         * @param {!{mode: string}} init
+         * @return {ShadowRoot}
+         */
+        function(init) {
+          const shadowRoot = Native.Element_attachShadow.call(this, init);
+          internals.patchNode(shadowRoot);
+          this.__CE_shadowRoot = shadowRoot;
+          return shadowRoot;
+        });
   }
 
 
@@ -110,10 +113,12 @@ export default function(internals) {
           const isTemplate = (this.localName === 'template');
           /** @type {!Node} */
           const content = isTemplate ? (/** @type {!HTMLTemplateElement} */
-            (this)).content : this;
+                                        (this))
+                                           .content :
+                                       this;
           /** @type {!Element} */
-          const rawElement = Native.Document_createElementNS.call(document,
-              this.namespaceURI, this.localName);
+          const rawElement = Native.Document_createElementNS.call(
+              document, this.namespaceURI, this.localName);
           rawElement.innerHTML = assignedValue;
 
           while (content.childNodes.length > 0) {
@@ -131,113 +136,133 @@ export default function(internals) {
   }
 
 
-  Utilities.setPropertyUnchecked(Element.prototype, 'setAttribute',
-    /**
-     * @this {Element}
-     * @param {string} name
-     * @param {string} newValue
-     */
-    function(name, newValue) {
-      // Fast path for non-custom elements.
-      if (this.__CE_state !== CEState.custom) {
-        return Native.Element_setAttribute.call(this, name, newValue);
-      }
+  Utilities.setPropertyUnchecked(
+      Element.prototype,
+      'setAttribute',
+      /**
+       * @this {Element}
+       * @param {string} name
+       * @param {string} newValue
+       */
+      function(name, newValue) {
+        // Fast path for non-custom elements.
+        if (this.__CE_state !== CEState.custom) {
+          return Native.Element_setAttribute.call(this, name, newValue);
+        }
 
-      const oldValue = Native.Element_getAttribute.call(this, name);
-      Native.Element_setAttribute.call(this, name, newValue);
-      newValue = Native.Element_getAttribute.call(this, name);
-      internals.attributeChangedCallback(this, name, oldValue, newValue, null);
-    });
+        const oldValue = Native.Element_getAttribute.call(this, name);
+        Native.Element_setAttribute.call(this, name, newValue);
+        newValue = Native.Element_getAttribute.call(this, name);
+        internals.attributeChangedCallback(
+            this, name, oldValue, newValue, null);
+      });
 
-  Utilities.setPropertyUnchecked(Element.prototype, 'setAttributeNS',
-    /**
-     * @this {Element}
-     * @param {?string} namespace
-     * @param {string} name
-     * @param {string} newValue
-     */
-    function(namespace, name, newValue) {
-      // Fast path for non-custom elements.
-      if (this.__CE_state !== CEState.custom) {
-        return Native.Element_setAttributeNS.call(this, namespace, name, newValue);
-      }
+  Utilities.setPropertyUnchecked(
+      Element.prototype,
+      'setAttributeNS',
+      /**
+       * @this {Element}
+       * @param {?string} namespace
+       * @param {string} name
+       * @param {string} newValue
+       */
+      function(namespace, name, newValue) {
+        // Fast path for non-custom elements.
+        if (this.__CE_state !== CEState.custom) {
+          return Native.Element_setAttributeNS.call(
+              this, namespace, name, newValue);
+        }
 
-      const oldValue = Native.Element_getAttributeNS.call(this, namespace, name);
-      Native.Element_setAttributeNS.call(this, namespace, name, newValue);
-      newValue = Native.Element_getAttributeNS.call(this, namespace, name);
-      internals.attributeChangedCallback(this, name, oldValue, newValue, namespace);
-    });
+        const oldValue =
+            Native.Element_getAttributeNS.call(this, namespace, name);
+        Native.Element_setAttributeNS.call(this, namespace, name, newValue);
+        newValue = Native.Element_getAttributeNS.call(this, namespace, name);
+        internals.attributeChangedCallback(
+            this, name, oldValue, newValue, namespace);
+      });
 
-  Utilities.setPropertyUnchecked(Element.prototype, 'removeAttribute',
-    /**
-     * @this {Element}
-     * @param {string} name
-     */
-    function(name) {
-      // Fast path for non-custom elements.
-      if (this.__CE_state !== CEState.custom) {
-        return Native.Element_removeAttribute.call(this, name);
-      }
+  Utilities.setPropertyUnchecked(
+      Element.prototype,
+      'removeAttribute',
+      /**
+       * @this {Element}
+       * @param {string} name
+       */
+      function(name) {
+        // Fast path for non-custom elements.
+        if (this.__CE_state !== CEState.custom) {
+          return Native.Element_removeAttribute.call(this, name);
+        }
 
-      const oldValue = Native.Element_getAttribute.call(this, name);
-      Native.Element_removeAttribute.call(this, name);
-      if (oldValue !== null) {
-        internals.attributeChangedCallback(this, name, oldValue, null, null);
-      }
-    });
+        const oldValue = Native.Element_getAttribute.call(this, name);
+        Native.Element_removeAttribute.call(this, name);
+        if (oldValue !== null) {
+          internals.attributeChangedCallback(this, name, oldValue, null, null);
+        }
+      });
 
-  Utilities.setPropertyUnchecked(Element.prototype, 'removeAttributeNS',
-    /**
-     * @this {Element}
-     * @param {?string} namespace
-     * @param {string} name
-     */
-    function(namespace, name) {
-      // Fast path for non-custom elements.
-      if (this.__CE_state !== CEState.custom) {
-        return Native.Element_removeAttributeNS.call(this, namespace, name);
-      }
+  Utilities.setPropertyUnchecked(
+      Element.prototype,
+      'removeAttributeNS',
+      /**
+       * @this {Element}
+       * @param {?string} namespace
+       * @param {string} name
+       */
+      function(namespace, name) {
+        // Fast path for non-custom elements.
+        if (this.__CE_state !== CEState.custom) {
+          return Native.Element_removeAttributeNS.call(this, namespace, name);
+        }
 
-      const oldValue = Native.Element_getAttributeNS.call(this, namespace, name);
-      Native.Element_removeAttributeNS.call(this, namespace, name);
-      // In older browsers, `Element#getAttributeNS` may return the empty string
-      // instead of null if the attribute does not exist. For details, see;
-      // https://developer.mozilla.org/en-US/docs/Web/API/Element/getAttributeNS#Notes
-      const newValue = Native.Element_getAttributeNS.call(this, namespace, name);
-      if (oldValue !== newValue) {
-        internals.attributeChangedCallback(this, name, oldValue, newValue, namespace);
-      }
-    });
+        const oldValue =
+            Native.Element_getAttributeNS.call(this, namespace, name);
+        Native.Element_removeAttributeNS.call(this, namespace, name);
+        // In older browsers, `Element#getAttributeNS` may return the empty
+        // string instead of null if the attribute does not exist. For details,
+        // see;
+        // https://developer.mozilla.org/en-US/docs/Web/API/Element/getAttributeNS#Notes
+        const newValue =
+            Native.Element_getAttributeNS.call(this, namespace, name);
+        if (oldValue !== newValue) {
+          internals.attributeChangedCallback(
+              this, name, oldValue, newValue, namespace);
+        }
+      });
 
 
   function patch_insertAdjacentElement(destination, baseMethod) {
-    Utilities.setPropertyUnchecked(destination, 'insertAdjacentElement',
-      /**
-       * @this {Element}
-       * @param {string} position
-       * @param {!Element} element
-       * @return {?Element}
-       */
-      function(position, element) {
-        const wasConnected = Utilities.isConnected(element);
-        const insertedElement = /** @type {!Element} */
-          (baseMethod.call(this, position, element));
+    Utilities.setPropertyUnchecked(
+        destination,
+        'insertAdjacentElement',
+        /**
+         * @this {Element}
+         * @param {string} position
+         * @param {!Element} element
+         * @return {?Element}
+         */
+        function(position, element) {
+          const wasConnected = Utilities.isConnected(element);
+          const insertedElement = /** @type {!Element} */
+              (baseMethod.call(this, position, element));
 
-        if (wasConnected) {
-          internals.disconnectTree(element);
-        }
+          if (wasConnected) {
+            internals.disconnectTree(element);
+          }
 
-        if (Utilities.isConnected(insertedElement)) {
-          internals.connectTree(element);
-        }
-        return insertedElement;
-      });
+          if (Utilities.isConnected(insertedElement)) {
+            internals.connectTree(element);
+          }
+          return insertedElement;
+        });
   }
 
   if (Native.HTMLElement_insertAdjacentElement) {
-    patch_insertAdjacentElement(HTMLElement.prototype, Native.HTMLElement_insertAdjacentElement);
+    patch_insertAdjacentElement(
+        HTMLElement.prototype, Native.HTMLElement_insertAdjacentElement);
   } else if (Native.Element_insertAdjacentElement) {
-    patch_insertAdjacentElement(Element.prototype, Native.Element_insertAdjacentElement);
+    patch_insertAdjacentElement(
+        Element.prototype, Native.Element_insertAdjacentElement);
   }
 
 
@@ -259,42 +284,51 @@ export default function(internals) {
       }
     }
 
-    Utilities.setPropertyUnchecked(destination, 'insertAdjacentHTML',
-      /**
-       * @this {Element}
-       * @param {string} position
-       * @param {string} text
-       */
-      function(position, text) {
-        position = position.toLowerCase();
+    Utilities.setPropertyUnchecked(
+        destination,
+        'insertAdjacentHTML',
+        /**
+         * @this {Element}
+         * @param {string} position
+         * @param {string} text
+         */
+        function(position, text) {
+          position = position.toLowerCase();
 
-        if (position === "beforebegin") {
-          const marker = this.previousSibling;
-          baseMethod.call(this, position, text);
-          upgradeNodesInRange(marker || /** @type {!Node} */ (this.parentNode.firstChild), this);
-        } else if (position === "afterbegin") {
-          const marker = this.firstChild;
-          baseMethod.call(this, position, text);
-          upgradeNodesInRange(/** @type {!Node} */ (this.firstChild), marker);
-        } else if (position === "beforeend") {
-          const marker = this.lastChild;
-          baseMethod.call(this, position, text);
-          upgradeNodesInRange(marker || /** @type {!Node} */ (this.firstChild), null);
-        } else if (position === "afterend") {
-          const marker = this.nextSibling;
-          baseMethod.call(this, position, text);
-          upgradeNodesInRange(/** @type {!Node} */ (this.nextSibling), marker);
-        } else {
-          throw new SyntaxError(`The value provided (${String(position)}) is ` +
-            "not one of 'beforebegin', 'afterbegin', 'beforeend', or 'afterend'.");
-        }
-      });
+          if (position === 'beforebegin') {
+            const marker = this.previousSibling;
+            baseMethod.call(this, position, text);
+            upgradeNodesInRange(
+                marker || /** @type {!Node} */ (this.parentNode.firstChild),
+                this);
+          } else if (position === 'afterbegin') {
+            const marker = this.firstChild;
+            baseMethod.call(this, position, text);
+            upgradeNodesInRange(/** @type {!Node} */ (this.firstChild), marker);
+          } else if (position === 'beforeend') {
+            const marker = this.lastChild;
+            baseMethod.call(this, position, text);
+            upgradeNodesInRange(
+                marker || /** @type {!Node} */ (this.firstChild), null);
+          } else if (position === 'afterend') {
+            const marker = this.nextSibling;
+            baseMethod.call(this, position, text);
+            upgradeNodesInRange(
+                /** @type {!Node} */ (this.nextSibling), marker);
+          } else {
+            throw new SyntaxError(
+                `The value provided (${String(position)}) is ` +
+                'not one of \'beforebegin\', \'afterbegin\', \'beforeend\', or \'afterend\'.');
+          }
+        });
   }
 
   if (Native.HTMLElement_insertAdjacentHTML) {
-    patch_insertAdjacentHTML(HTMLElement.prototype, Native.HTMLElement_insertAdjacentHTML);
+    patch_insertAdjacentHTML(
+        HTMLElement.prototype, Native.HTMLElement_insertAdjacentHTML);
   } else if (Native.Element_insertAdjacentHTML) {
-    patch_insertAdjacentHTML(Element.prototype, Native.Element_insertAdjacentHTML);
+    patch_insertAdjacentHTML(
+        Element.prototype, Native.Element_insertAdjacentHTML);
   }
 
 

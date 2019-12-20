@@ -1,18 +1,20 @@
 /**
  * @license
  * Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
- * This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
- * The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
- * The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
- * Code distributed by Google as part of the polymer project is also
- * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+ * This code may only be used under the BSD style license found at
+ * http://polymer.github.io/LICENSE.txt The complete set of authors may be found
+ * at http://polymer.github.io/AUTHORS.txt The complete set of contributors may
+ * be found at http://polymer.github.io/CONTRIBUTORS.txt Code distributed by
+ * Google as part of the polymer project is also subject to an additional IP
+ * rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
-import Native from './Native.js';
+import AlreadyConstructedMarker from '../AlreadyConstructedMarker.js';
 import CustomElementInternals from '../CustomElementInternals.js';
 import CustomElementRegistry from '../CustomElementRegistry.js';
 import CEState from '../CustomElementState.js';
-import AlreadyConstructedMarker from '../AlreadyConstructedMarker.js';
+
+import Native from './Native.js';
 
 /**
  * @param {!CustomElementInternals} internals
@@ -33,14 +35,16 @@ export default function(internals) {
           (document.__CE_registry);
       const definition = registry.internal_constructorToDefinition(constructor);
       if (!definition) {
-        throw new Error('Failed to construct a custom element: ' +
+        throw new Error(
+            'Failed to construct a custom element: ' +
             'The constructor was not registered with `customElements`.');
       }
 
       const constructionStack = definition.constructionStack;
 
       if (constructionStack.length === 0) {
-        const element = /** @type {!HTMLElement} */ (Native.Document_createElement.call(document, definition.localName));
+        const element = /** @type {!HTMLElement} */ (
+            Native.Document_createElement.call(document, definition.localName));
         Object.setPrototypeOf(element, constructor.prototype);
         element.__CE_state = CEState.custom;
         element.__CE_definition = definition;
@@ -52,7 +56,8 @@ export default function(internals) {
       const element = constructionStack[lastIndex];
       if (element === AlreadyConstructedMarker) {
         const localName = definition.localName;
-        throw new Error('Failed to construct \'' + localName + '\': ' +
+        throw new Error(
+            'Failed to construct \'' + localName + '\': ' +
             'This element was already constructed.');
       }
       const toConstructElement = /** @type {!HTMLElement} */ (element);

@@ -1,16 +1,18 @@
 /**
  * @license
  * Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
- * This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
- * The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
- * The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
- * Code distributed by Google as part of the polymer project is also
- * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+ * This code may only be used under the BSD style license found at
+ * http://polymer.github.io/LICENSE.txt The complete set of authors may be found
+ * at http://polymer.github.io/AUTHORS.txt The complete set of contributors may
+ * be found at http://polymer.github.io/CONTRIBUTORS.txt Code distributed by
+ * Google as part of the polymer project is also subject to an additional IP
+ * rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
-import Native from './Native.js';
 import CustomElementInternals from '../CustomElementInternals.js';
 import * as Utilities from '../Utilities.js';
+
+import Native from './Native.js';
 
 /**
  * @param {!CustomElementInternals} internals
@@ -19,160 +21,180 @@ export default function(internals) {
   // `Node#nodeValue` is implemented on `Attr`.
   // `Node#textContent` is implemented on `Attr`, `Element`.
 
-  Utilities.setPropertyUnchecked(Node.prototype, 'insertBefore',
-    /**
-     * @this {Node}
-     * @param {!Node} node
-     * @param {?Node} refNode
-     * @return {!Node}
-     */
-    function(node, refNode) {
-      if (node instanceof DocumentFragment) {
-        const insertedNodes = Utilities.childrenFromFragment(node);
+  Utilities.setPropertyUnchecked(
+      Node.prototype,
+      'insertBefore',
+      /**
+       * @this {Node}
+       * @param {!Node} node
+       * @param {?Node} refNode
+       * @return {!Node}
+       */
+      function(node, refNode) {
+        if (node instanceof DocumentFragment) {
+          const insertedNodes = Utilities.childrenFromFragment(node);
+          const nativeResult =
+              Native.Node_insertBefore.call(this, node, refNode);
+
+          // DocumentFragments can't be connected, so `disconnectTree` will
+          // never need to be called on a DocumentFragment's children after
+          // inserting it.
+
+          if (Utilities.isConnected(this)) {
+            for (let i = 0; i < insertedNodes.length; i++) {
+              internals.connectTree(insertedNodes[i]);
+            }
+          }
+
+          return nativeResult;
+        }
+
+        const nodeWasConnectedElement =
+            node instanceof Element && Utilities.isConnected(node);
         const nativeResult = Native.Node_insertBefore.call(this, node, refNode);
 
-        // DocumentFragments can't be connected, so `disconnectTree` will never
-        // need to be called on a DocumentFragment's children after inserting it.
+        if (nodeWasConnectedElement) {
+          internals.disconnectTree(node);
+        }
 
         if (Utilities.isConnected(this)) {
-          for (let i = 0; i < insertedNodes.length; i++) {
-            internals.connectTree(insertedNodes[i]);
-          }
+          internals.connectTree(node);
         }
 
         return nativeResult;
-      }
+      });
 
-      const nodeWasConnectedElement = node instanceof Element && Utilities.isConnected(node);
-      const nativeResult = Native.Node_insertBefore.call(this, node, refNode);
+  Utilities.setPropertyUnchecked(
+      Node.prototype,
+      'appendChild',
+      /**
+       * @this {Node}
+       * @param {!Node} node
+       * @return {!Node}
+       */
+      function(node) {
+        if (node instanceof DocumentFragment) {
+          const insertedNodes = Utilities.childrenFromFragment(node);
+          const nativeResult = Native.Node_appendChild.call(this, node);
 
-      if (nodeWasConnectedElement) {
-        internals.disconnectTree(node);
-      }
+          // DocumentFragments can't be connected, so `disconnectTree` will
+          // never need to be called on a DocumentFragment's children after
+          // inserting it.
 
-      if (Utilities.isConnected(this)) {
-        internals.connectTree(node);
-      }
+          if (Utilities.isConnected(this)) {
+            for (let i = 0; i < insertedNodes.length; i++) {
+              internals.connectTree(insertedNodes[i]);
+            }
+          }
 
-      return nativeResult;
-    });
+          return nativeResult;
+        }
 
-  Utilities.setPropertyUnchecked(Node.prototype, 'appendChild',
-    /**
-     * @this {Node}
-     * @param {!Node} node
-     * @return {!Node}
-     */
-    function(node) {
-      if (node instanceof DocumentFragment) {
-        const insertedNodes = Utilities.childrenFromFragment(node);
+        const nodeWasConnectedElement =
+            node instanceof Element && Utilities.isConnected(node);
         const nativeResult = Native.Node_appendChild.call(this, node);
 
-        // DocumentFragments can't be connected, so `disconnectTree` will never
-        // need to be called on a DocumentFragment's children after inserting it.
+        if (nodeWasConnectedElement) {
+          internals.disconnectTree(node);
+        }
 
         if (Utilities.isConnected(this)) {
-          for (let i = 0; i < insertedNodes.length; i++) {
-            internals.connectTree(insertedNodes[i]);
-          }
+          internals.connectTree(node);
         }
 
         return nativeResult;
-      }
+      });
 
-      const nodeWasConnectedElement = node instanceof Element && Utilities.isConnected(node);
-      const nativeResult = Native.Node_appendChild.call(this, node);
+  Utilities.setPropertyUnchecked(
+      Node.prototype,
+      'cloneNode',
+      /**
+       * @this {Node}
+       * @param {boolean=} deep
+       * @return {!Node}
+       */
+      function(deep) {
+        const clone = Native.Node_cloneNode.call(this, !!deep);
+        // Only create custom elements if this element's owner document is
+        // associated with the registry.
+        if (!this.ownerDocument.__CE_registry) {
+          internals.patchTree(clone);
+        } else {
+          internals.patchAndUpgradeTree(clone);
+        }
+        return clone;
+      });
 
-      if (nodeWasConnectedElement) {
-        internals.disconnectTree(node);
-      }
+  Utilities.setPropertyUnchecked(
+      Node.prototype,
+      'removeChild',
+      /**
+       * @this {Node}
+       * @param {!Node} node
+       * @return {!Node}
+       */
+      function(node) {
+        const nodeWasConnectedElement =
+            node instanceof Element && Utilities.isConnected(node);
+        const nativeResult = Native.Node_removeChild.call(this, node);
 
-      if (Utilities.isConnected(this)) {
-        internals.connectTree(node);
-      }
+        if (nodeWasConnectedElement) {
+          internals.disconnectTree(node);
+        }
 
-      return nativeResult;
-    });
+        return nativeResult;
+      });
 
-  Utilities.setPropertyUnchecked(Node.prototype, 'cloneNode',
-    /**
-     * @this {Node}
-     * @param {boolean=} deep
-     * @return {!Node}
-     */
-    function(deep) {
-      const clone = Native.Node_cloneNode.call(this, !!deep);
-      // Only create custom elements if this element's owner document is
-      // associated with the registry.
-      if (!this.ownerDocument.__CE_registry) {
-        internals.patchTree(clone);
-      } else {
-        internals.patchAndUpgradeTree(clone);
-      }
-      return clone;
-    });
+  Utilities.setPropertyUnchecked(
+      Node.prototype,
+      'replaceChild',
+      /**
+       * @this {Node}
+       * @param {!Node} nodeToInsert
+       * @param {!Node} nodeToRemove
+       * @return {!Node}
+       */
+      function(nodeToInsert, nodeToRemove) {
+        if (nodeToInsert instanceof DocumentFragment) {
+          const insertedNodes = Utilities.childrenFromFragment(nodeToInsert);
+          const nativeResult =
+              Native.Node_replaceChild.call(this, nodeToInsert, nodeToRemove);
 
-  Utilities.setPropertyUnchecked(Node.prototype, 'removeChild',
-    /**
-     * @this {Node}
-     * @param {!Node} node
-     * @return {!Node}
-     */
-    function(node) {
-      const nodeWasConnectedElement = node instanceof Element && Utilities.isConnected(node);
-      const nativeResult = Native.Node_removeChild.call(this, node);
+          // DocumentFragments can't be connected, so `disconnectTree` will
+          // never need to be called on a DocumentFragment's children after
+          // inserting it.
 
-      if (nodeWasConnectedElement) {
-        internals.disconnectTree(node);
-      }
+          if (Utilities.isConnected(this)) {
+            internals.disconnectTree(nodeToRemove);
+            for (let i = 0; i < insertedNodes.length; i++) {
+              internals.connectTree(insertedNodes[i]);
+            }
+          }
 
-      return nativeResult;
-    });
+          return nativeResult;
+        }
 
-  Utilities.setPropertyUnchecked(Node.prototype, 'replaceChild',
-    /**
-     * @this {Node}
-     * @param {!Node} nodeToInsert
-     * @param {!Node} nodeToRemove
-     * @return {!Node}
-     */
-    function(nodeToInsert, nodeToRemove) {
-      if (nodeToInsert instanceof DocumentFragment) {
-        const insertedNodes = Utilities.childrenFromFragment(nodeToInsert);
-        const nativeResult = Native.Node_replaceChild.call(this, nodeToInsert, nodeToRemove);
+        const nodeToInsertWasConnectedElement =
+            nodeToInsert instanceof Element &&
+            Utilities.isConnected(nodeToInsert);
+        const nativeResult =
+            Native.Node_replaceChild.call(this, nodeToInsert, nodeToRemove);
+        const thisIsConnected = Utilities.isConnected(this);
 
-        // DocumentFragments can't be connected, so `disconnectTree` will never
-        // need to be called on a DocumentFragment's children after inserting it.
-
-        if (Utilities.isConnected(this)) {
+        if (thisIsConnected) {
           internals.disconnectTree(nodeToRemove);
-          for (let i = 0; i < insertedNodes.length; i++) {
-            internals.connectTree(insertedNodes[i]);
-          }
+        }
+
+        if (nodeToInsertWasConnectedElement) {
+          internals.disconnectTree(nodeToInsert);
+        }
+
+        if (thisIsConnected) {
+          internals.connectTree(nodeToInsert);
         }
 
         return nativeResult;
-      }
-
-      const nodeToInsertWasConnectedElement = nodeToInsert instanceof Element &&
-        Utilities.isConnected(nodeToInsert);
-      const nativeResult = Native.Node_replaceChild.call(this, nodeToInsert, nodeToRemove);
-      const thisIsConnected = Utilities.isConnected(this);
-
-      if (thisIsConnected) {
-        internals.disconnectTree(nodeToRemove);
-      }
-
-      if (nodeToInsertWasConnectedElement) {
-        internals.disconnectTree(nodeToInsert);
-      }
-
-      if (thisIsConnected) {
-        internals.connectTree(nodeToInsert);
-      }
-
-      return nativeResult;
-    });
+      });
 
 
   function patch_textContent(destination, baseDescriptor) {
@@ -244,7 +266,8 @@ export default function(internals) {
           // `textContent = null | undefined | ''` does not result in
           // a TextNode childNode
           if (assignedValue != null && assignedValue !== '') {
-            Native.Node_appendChild.call(this, document.createTextNode(assignedValue));
+            Native.Node_appendChild.call(
+                this, document.createTextNode(assignedValue));
           }
         },
       });

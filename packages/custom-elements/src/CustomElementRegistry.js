@@ -1,23 +1,23 @@
 /**
  * @license
  * Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
- * This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
- * The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
- * The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
- * Code distributed by Google as part of the polymer project is also
- * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+ * This code may only be used under the BSD style license found at
+ * http://polymer.github.io/LICENSE.txt The complete set of authors may be found
+ * at http://polymer.github.io/AUTHORS.txt The complete set of contributors may
+ * be found at http://polymer.github.io/CONTRIBUTORS.txt Code distributed by
+ * Google as part of the polymer project is also subject to an additional IP
+ * rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
 import CustomElementInternals from './CustomElementInternals.js';
-import DocumentConstructionObserver from './DocumentConstructionObserver.js';
 import Deferred from './Deferred.js';
+import DocumentConstructionObserver from './DocumentConstructionObserver.js';
 import * as Utilities from './Utilities.js';
 
 /**
  * @extends {window.CustomElementRegistry}
  */
 export default class CustomElementRegistry {
-
   /**
    * @param {!CustomElementInternals} internals
    */
@@ -83,11 +83,13 @@ export default class CustomElementRegistry {
     this._unflushedLocalNames = [];
 
     /**
-    * @private
-    * @const {!DocumentConstructionObserver|undefined}
-    */
-    this._documentConstructionObserver = internals.useDocumentConstructionObserver ?
-      new DocumentConstructionObserver(internals, document) : undefined;
+     * @private
+     * @const {!DocumentConstructionObserver|undefined}
+     */
+    this._documentConstructionObserver =
+        internals.useDocumentConstructionObserver ?
+        new DocumentConstructionObserver(internals, document) :
+        undefined;
   }
 
   /**
@@ -96,7 +98,8 @@ export default class CustomElementRegistry {
    */
   polyfillDefineLazy(localName, constructorGetter) {
     if (!(constructorGetter instanceof Function)) {
-      throw new TypeError('Custom element constructor getters must be functions.');
+      throw new TypeError(
+          'Custom element constructor getters must be functions.');
     }
 
     this.internal_assertCanDefineLocalName(localName);
@@ -144,7 +147,8 @@ export default class CustomElementRegistry {
     }
 
     if (this.internal_localNameToDefinition(localName)) {
-      throw new Error(`A custom element with name '${localName}' has already been defined.`);
+      throw new Error(`A custom element with name '${
+          localName}' has already been defined.`);
     }
 
     if (this._elementDefinitionIsRunning) {
@@ -169,12 +173,14 @@ export default class CustomElementRegistry {
       /** @type {!Object} */
       const prototype = constructor.prototype;
       if (!(prototype instanceof Object)) {
-        throw new TypeError('The custom element constructor\'s prototype is not an object.');
+        throw new TypeError(
+            'The custom element constructor\'s prototype is not an object.');
       }
 
       function getCallback(name) {
         const callbackValue = prototype[name];
-        if (callbackValue !== undefined && !(callbackValue instanceof Function)) {
+        if (callbackValue !== undefined &&
+            !(callbackValue instanceof Function)) {
           throw new Error(`The '${name}' callback must be a function.`);
         }
         return callbackValue;
@@ -186,8 +192,8 @@ export default class CustomElementRegistry {
       attributeChangedCallback = getCallback('attributeChangedCallback');
       // `observedAttributes` should not be read unless an
       // `attributesChangedCallback` exists
-      observedAttributes = (attributeChangedCallback &&
-        constructor['observedAttributes']) || [];
+      observedAttributes =
+          (attributeChangedCallback && constructor['observedAttributes']) || [];
     } catch (e) {
       throw e;
     } finally {
@@ -206,7 +212,8 @@ export default class CustomElementRegistry {
     };
 
     this._localNameToDefinition.set(localName, definition);
-    this._constructorToDefinition.set(definition.constructorFunction, definition);
+    this._constructorToDefinition.set(
+        definition.constructorFunction, definition);
 
     return definition;
   }
@@ -226,7 +233,8 @@ export default class CustomElementRegistry {
     // If no new definitions were defined, don't attempt to flush. This could
     // happen if a flush callback keeps the function it is given and calls it
     // multiple times.
-    if (this._flushPending === false) return;
+    if (this._flushPending === false)
+      return;
     this._flushPending = false;
 
     /**
@@ -245,7 +253,8 @@ export default class CustomElementRegistry {
     this._internals.patchAndUpgradeTree(document, {
       upgrade: element => {
         // Ignore the element if it has already upgraded or failed to upgrade.
-        if (element.__CE_state !== undefined) return;
+        if (element.__CE_state !== undefined)
+          return;
 
         const localName = element.localName;
 
@@ -254,8 +263,9 @@ export default class CustomElementRegistry {
         const pendingElements = elementsWithPendingDefinitions.get(localName);
         if (pendingElements) {
           pendingElements.push(element);
-        // If there is *any other* applicable definition for the element, add it
-        // to the list of elements with stable definitions that need to be upgraded.
+          // If there is *any other* applicable definition for the element, add
+          // it to the list of elements with stable definitions that need to be
+          // upgraded.
         } else if (this._localNameToDefinition.has(localName)) {
           elementsWithStableDefinitions.push(element);
         }
@@ -267,10 +277,12 @@ export default class CustomElementRegistry {
       this._internals.upgradeReaction(elementsWithStableDefinitions[i]);
     }
 
-    // Upgrade elements with 'pending' definitions in the order they were defined.
+    // Upgrade elements with 'pending' definitions in the order they were
+    // defined.
     for (let i = 0; i < unflushedLocalNames.length; i++) {
       const localName = unflushedLocalNames[i];
-      const pendingUpgradableElements = elementsWithPendingDefinitions.get(localName);
+      const pendingUpgradableElements =
+          elementsWithPendingDefinitions.get(localName);
 
       // Attempt to upgrade all applicable elements.
       for (let i = 0; i < pendingUpgradableElements.length; i++) {
@@ -308,7 +320,8 @@ export default class CustomElementRegistry {
    */
   whenDefined(localName) {
     if (!Utilities.isValidCustomElementName(localName)) {
-      return Promise.reject(new SyntaxError(`'${localName}' is not a valid custom element name.`));
+      return Promise.reject(new SyntaxError(
+          `'${localName}' is not a valid custom element name.`));
     }
 
     const prior = this._whenDefinedDeferred.get(localName);
@@ -330,7 +343,8 @@ export default class CustomElementRegistry {
     // resolved early here even though it might fail later when reified.
     const anyDefinitionExists = this._localNameToDefinition.has(localName) ||
         this._localNameToConstructorGetter.has(localName);
-    const definitionHasFlushed = this._unflushedLocalNames.indexOf(localName) === -1;
+    const definitionHasFlushed =
+        this._unflushedLocalNames.indexOf(localName) === -1;
     if (anyDefinitionExists && definitionHasFlushed) {
       deferred.resolve(undefined);
     }
@@ -384,9 +398,14 @@ export default class CustomElementRegistry {
 
 // Closure compiler exports.
 window['CustomElementRegistry'] = CustomElementRegistry;
-CustomElementRegistry.prototype['define'] = CustomElementRegistry.prototype.define;
-CustomElementRegistry.prototype['upgrade'] = CustomElementRegistry.prototype.upgrade;
+CustomElementRegistry.prototype['define'] =
+    CustomElementRegistry.prototype.define;
+CustomElementRegistry.prototype['upgrade'] =
+    CustomElementRegistry.prototype.upgrade;
 CustomElementRegistry.prototype['get'] = CustomElementRegistry.prototype.get;
-CustomElementRegistry.prototype['whenDefined'] = CustomElementRegistry.prototype.whenDefined;
-CustomElementRegistry.prototype['polyfillDefineLazy'] = CustomElementRegistry.prototype.polyfillDefineLazy;
-CustomElementRegistry.prototype['polyfillWrapFlushCallback'] = CustomElementRegistry.prototype.polyfillWrapFlushCallback;
+CustomElementRegistry.prototype['whenDefined'] =
+    CustomElementRegistry.prototype.whenDefined;
+CustomElementRegistry.prototype['polyfillDefineLazy'] =
+    CustomElementRegistry.prototype.polyfillDefineLazy;
+CustomElementRegistry.prototype['polyfillWrapFlushCallback'] =
+    CustomElementRegistry.prototype.polyfillWrapFlushCallback;

@@ -1,17 +1,18 @@
 /**
  * @license
  * Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
- * This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
- * The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
- * The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
- * Code distributed by Google as part of the polymer project is also
- * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+ * This code may only be used under the BSD style license found at
+ * http://polymer.github.io/LICENSE.txt The complete set of authors may be found
+ * at http://polymer.github.io/AUTHORS.txt The complete set of contributors may
+ * be found at http://polymer.github.io/CONTRIBUTORS.txt Code distributed by
+ * Google as part of the polymer project is also subject to an additional IP
+ * rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
-import Native from './Patch/Native.js';
-import * as Utilities from './Utilities.js';
 import CustomElementRegistry from './CustomElementRegistry.js';
 import CEState from './CustomElementState.js';
+import Native from './Patch/Native.js';
+import * as Utilities from './Utilities.js';
 
 const NS_HTML = 'http://www.w3.org/1999/xhtml';
 
@@ -36,7 +37,8 @@ export default class CustomElementInternals {
     this.shadyDomFastWalk = options.shadyDomFastWalk;
 
     /** @const {boolean} */
-    this.useDocumentConstructionObserver = !options.noDocumentConstructionObserver;
+    this.useDocumentConstructionObserver =
+        !options.noDocumentConstructionObserver;
   }
 
   /**
@@ -48,7 +50,7 @@ export default class CustomElementInternals {
     const sd = window['ShadyDOM'];
     if (this.shadyDomFastWalk && sd && sd['inUse']) {
       if (node.nodeType === Node.ELEMENT_NODE) {
-        const element = /** @type {!Element} */(node);
+        const element = /** @type {!Element} */ (node);
         callback(element);
       }
       // most easily gets to document, element, documentFragment
@@ -83,7 +85,8 @@ export default class CustomElementInternals {
    * @param {!Node} node
    */
   patchTree(node) {
-    if (!this._hasPatches) return;
+    if (!this._hasPatches)
+      return;
 
     this.forEachElement(node, element => this.patchElement(element));
   }
@@ -92,9 +95,11 @@ export default class CustomElementInternals {
    * @param {!Node} node
    */
   patchNode(node) {
-    if (!this._hasPatches) return;
+    if (!this._hasPatches)
+      return;
 
-    if (node.__CE_patched) return;
+    if (node.__CE_patched)
+      return;
     node.__CE_patched = true;
 
     for (let i = 0; i < this._patchesNode.length; i++) {
@@ -106,9 +111,11 @@ export default class CustomElementInternals {
    * @param {!Element} element
    */
   patchElement(element) {
-    if (!this._hasPatches) return;
+    if (!this._hasPatches)
+      return;
 
-    if (element.__CE_patched) return;
+    if (element.__CE_patched)
+      return;
     element.__CE_patched = true;
 
     for (let i = 0; i < this._patchesNode.length; i++) {
@@ -222,7 +229,8 @@ export default class CustomElementInternals {
    */
   patchAndUpgradeTree(root, options = {}) {
     const visitedImports = options.visitedImports;
-    const upgrade = options.upgrade || (element => this.upgradeReaction(element));
+    const upgrade =
+        options.upgrade || (element => this.upgradeReaction(element));
 
     const elements = [];
 
@@ -250,7 +258,8 @@ export default class CustomElementInternals {
           element.addEventListener('load', () => {
             const importNode = /** @type {!Node} */ (element.import);
 
-            if (importNode.__CE_documentLoadHandled) return;
+            if (importNode.__CE_documentLoadHandled)
+              return;
             importNode.__CE_documentLoadHandled = true;
 
             // Clone the `visitedImports` set that was populated sync during
@@ -264,7 +273,8 @@ export default class CustomElementInternals {
               visitedImports.forEach(item => clonedVisitedImports.add(item));
               clonedVisitedImports.delete(importNode);
             }
-            this.patchAndUpgradeTree(importNode, {visitedImports: clonedVisitedImports, upgrade});
+            this.patchAndUpgradeTree(
+                importNode, {visitedImports: clonedVisitedImports, upgrade});
           });
         }
       } else {
@@ -304,7 +314,8 @@ export default class CustomElementInternals {
    */
   _upgradeAnElement(element, definition) {
     const currentState = element.__CE_state;
-    if (currentState !== undefined) return;
+    if (currentState !== undefined)
+      return;
 
     definition.constructionStack.push(element);
 
@@ -312,7 +323,8 @@ export default class CustomElementInternals {
       try {
         let result = new (definition.constructorFunction)();
         if (result !== element) {
-          throw new Error('The custom element constructor did not produce the element being upgraded.');
+          throw new Error(
+              'The custom element constructor did not produce the element being upgraded.');
         }
       } finally {
         definition.constructionStack.pop();
@@ -379,12 +391,11 @@ export default class CustomElementInternals {
    */
   attributeChangedCallback(element, name, oldValue, newValue, namespace) {
     const definition = element.__CE_definition;
-    if (
-      definition.attributeChangedCallback &&
-      definition.observedAttributes.indexOf(name) > -1
-    ) {
+    if (definition.attributeChangedCallback &&
+        definition.observedAttributes.indexOf(name) > -1) {
       try {
-        definition.attributeChangedCallback.call(element, name, oldValue, newValue, namespace);
+        definition.attributeChangedCallback.call(
+            element, name, oldValue, newValue, namespace);
       } catch (e) {
         this.reportTheException(e);
       }
@@ -405,7 +416,8 @@ export default class CustomElementInternals {
     // The document must be associated with a registry.
     const registry =
         /** @type {!CustomElementRegistry|undefined} */ (doc.__CE_registry);
-    if (!registry) return;
+    if (!registry)
+      return;
 
     // Prevent elements created in documents without a browsing context from
     // upgrading.
@@ -417,7 +429,8 @@ export default class CustomElementInternals {
     //   "The defaultView IDL attribute of the Document interface, on getting,
     //   must return this Document's browsing context's WindowProxy object, if
     //   this Document has an associated browsing context, or null otherwise."
-    if (!doc.defaultView && !doc.__CE_isImportDocument) return;
+    if (!doc.defaultView && !doc.__CE_isImportDocument)
+      return;
 
     return registry.internal_localNameToDefinition(localName);
   }
@@ -452,13 +465,15 @@ export default class CustomElementInternals {
 
           if (result.__CE_state === undefined ||
               result.__CE_definition === undefined) {
-            throw new Error('Failed to construct \'' + localName + '\': ' +
+            throw new Error(
+                'Failed to construct \'' + localName + '\': ' +
                 'The returned value was not constructed with the HTMLElement ' +
                 'constructor.');
           }
 
           if (result.namespaceURI !== NS_HTML) {
-            throw new Error('Failed to construct \'' + localName + '\': ' +
+            throw new Error(
+                'Failed to construct \'' + localName + '\': ' +
                 'The constructed element\'s namespace must be the HTML ' +
                 'namespace.');
           }
@@ -467,29 +482,34 @@ export default class CustomElementInternals {
           // isn't constructible in all browsers.
 
           if (result.hasAttributes()) {
-            throw new Error('Failed to construct \'' + localName + '\': ' +
+            throw new Error(
+                'Failed to construct \'' + localName + '\': ' +
                 'The constructed element must not have any attributes.');
           }
 
           // ShadyDOM doesn't wrap `#hasChildNodes`, so we check `#firstChild`
           // instead.
           if (result.firstChild !== null) {
-            throw new Error('Failed to construct \'' + localName + '\': ' +
+            throw new Error(
+                'Failed to construct \'' + localName + '\': ' +
                 'The constructed element must not have any children.');
           }
 
           if (result.parentNode !== null) {
-            throw new Error('Failed to construct \'' + localName + '\': ' +
+            throw new Error(
+                'Failed to construct \'' + localName + '\': ' +
                 'The constructed element must not have a parent node.');
           }
 
           if (result.ownerDocument !== doc) {
-            throw new Error('Failed to construct \'' + localName + '\': ' +
+            throw new Error(
+                'Failed to construct \'' + localName + '\': ' +
                 'The constructed element\'s owner document is incorrect.');
           }
 
           if (result.localName !== localName) {
-            throw new Error('Failed to construct \'' + localName + '\': ' +
+            throw new Error(
+                'Failed to construct \'' + localName + '\': ' +
                 'The constructed element\'s local name is incorrect.');
           }
 
@@ -500,9 +520,11 @@ export default class CustomElementInternals {
           // When construction fails, a new HTMLUnknownElement is produced.
           // However, there's no direct way to create one, so we create a
           // regular HTMLElement and replace its prototype.
-          const result = /** @type {!Element} */ (namespace === null ?
-              Native.Document_createElement.call(doc, localName) :
-              Native.Document_createElementNS.call(doc, namespace, localName));
+          const result = /** @type {!Element} */ (
+              namespace === null ?
+                  Native.Document_createElement.call(doc, localName) :
+                  Native.Document_createElementNS.call(
+                      doc, namespace, localName));
           Object.setPrototypeOf(result, HTMLUnknownElement.prototype);
           result.__CE_state = CEState.failed;
           result.__CE_definition = undefined;
@@ -512,9 +534,10 @@ export default class CustomElementInternals {
       }
     }
 
-    const result = /** @type {!Element} */ (namespace === null ?
-        Native.Document_createElement.call(doc, localName) :
-        Native.Document_createElementNS.call(doc, namespace, localName));
+    const result = /** @type {!Element} */ (
+        namespace === null ?
+            Native.Document_createElement.call(doc, localName) :
+            Native.Document_createElementNS.call(doc, namespace, localName));
     this.patchElement(result);
     return result;
   }
@@ -529,7 +552,7 @@ export default class CustomElementInternals {
     const message = error.message;
     /** @type {string} */
     const filename =
-        /* Safari */ error.sourceURL || /* Firefox */ error.fileName || "";
+        /* Safari */ error.sourceURL || /* Firefox */ error.fileName || '';
     /** @type {number} */
     const lineno =
         /* Safari */ error.line || /* Firefox */ error.lineNumber || 0;
@@ -540,8 +563,8 @@ export default class CustomElementInternals {
     /** @type {!ErrorEvent|undefined} */
     let event = undefined;
     if (ErrorEvent.prototype.initErrorEvent === undefined) {
-      event = new ErrorEvent('error',
-          {cancelable: true, message, filename, lineno, colno, error});
+      event = new ErrorEvent(
+          'error', {cancelable: true, message, filename, lineno, colno, error});
     } else {
       event = /** @type {!ErrorEvent} */ (document.createEvent('ErrorEvent'));
       // initErrorEvent(type, bubbles, cancelable, message, filename, line)
@@ -552,7 +575,9 @@ export default class CustomElementInternals {
       event.preventDefault = function() {
         Object.defineProperty(this, 'defaultPrevented', {
           configurable: true,
-          get: function() { return true; },
+          get: function() {
+            return true;
+          },
         });
       };
     }
@@ -561,7 +586,9 @@ export default class CustomElementInternals {
       Object.defineProperty(event, 'error', {
         configurable: true,
         enumerable: true,
-        get: function() { return error; },
+        get: function() {
+          return error;
+        },
       });
     }
 
