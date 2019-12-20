@@ -14,6 +14,8 @@ export const settings = window['ShadyDOM'] || {};
 
 settings.hasNativeShadowDOM = Boolean(Element.prototype.attachShadow && Node.prototype.getRootNode);
 
+// The user might need to pass the custom elements polyfill a flag by setting an
+// object to `customElements`, so check for `customElements.define` also.
 export const hasCustomElements =
     () => Boolean(window.customElements && window.customElements.define);
 // The custom elements polyfill is typically loaded after Shady DOM, so this
