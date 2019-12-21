@@ -20,7 +20,6 @@ declare global {
     __CE_isImportDocument?: boolean;
     __CE_documentLoadHandled?: boolean;
     __CE_patched?: boolean;
-    readyState: string;
   }
 
   interface Element {

@@ -25,7 +25,7 @@
   },
   "files": [
     "custom-elements.min.js*",
-    "src/",
+    "lib/",
     "externs/"
   ],
   "devDependencies": {
