@@ -189,12 +189,6 @@ export default class CustomElementInternals {
    *       (`connectedCallback` reactions enqueued.)
    *   - (Element queue popped from the custom element reactions stack.
    *     Reactions in the popped stack are invoked.)
-   *
-   * @param {!Node} root
-   * @param {{
-   *   visitedImports: (!Set<!Node>|undefined),
-   *   upgrade: (!function(!Element)|undefined),
-   * }=} options
    */
   patchAndUpgradeTree(root: Node, options: {
     visitedImports?: Set<Node>,
@@ -367,8 +361,7 @@ export default class CustomElementInternals {
    */
   private _lookupACustomElementDefinition(doc: Document, localName: string) {
     // The document must be associated with a registry.
-    const registry =
-        /** @type {!CustomElementRegistry|undefined} */ (doc.__CE_registry);
+    const registry = doc.__CE_registry;
     if (!registry)
       return;
 
@@ -398,8 +391,7 @@ export default class CustomElementInternals {
    * @see https://dom.spec.whatwg.org/#concept-create-element
    */
   createAnElement(doc: Document, localName: string, namespace: string|null) {
-    const registry =
-        /** @type {!CustomElementRegistry|undefined} */ (doc.__CE_registry);
+    const registry = doc.__CE_registry;
     // Only create custom elements if the document is associated with a
     // registry.
     if (registry && (namespace === null || namespace === NS_HTML)) {
@@ -469,11 +461,9 @@ export default class CustomElementInternals {
           // When construction fails, a new HTMLUnknownElement is produced.
           // However, there's no direct way to create one, so we create a
           // regular HTMLElement and replace its prototype.
-          const result = /** @type {!Element} */ (
-              namespace === null ?
-                  Native.Document_createElement.call(doc, localName) :
-                  Native.Document_createElementNS.call(
-                      doc, namespace, localName));
+          const result = namespace === null ?
+              Native.Document_createElement.call(doc, localName) :
+              Native.Document_createElementNS.call(doc, namespace, localName);
           Object.setPrototypeOf(result, HTMLUnknownElement.prototype);
           result.__CE_state = CEState.failed;
           result.__CE_definition = undefined;
@@ -483,10 +473,9 @@ export default class CustomElementInternals {
       }
     }
 
-    const result = /** @type {!Element} */ (
-        namespace === null ?
-            Native.Document_createElement.call(doc, localName) :
-            Native.Document_createElementNS.call(doc, namespace, localName));
+    const result = namespace === null ?
+        Native.Document_createElement.call(doc, localName) :
+        Native.Document_createElementNS.call(doc, namespace, localName);
     this.patchElement(result);
     return result;
   }
@@ -494,22 +483,17 @@ export default class CustomElementInternals {
   /**
    * Runs the DOM's 'report the exception' algorithm.
    *
-   * @param {!Error} error
    * @see https://html.spec.whatwg.org/multipage/webappapis.html#report-the-exception
    */
   reportTheException(error: Error) {
     const message = error.message;
-    /** @type {string} */
     const filename =
         /* Safari */ error.sourceURL || /* Firefox */ error.fileName || '';
-    /** @type {number} */
     const lineno =
         /* Safari */ error.line || /* Firefox */ error.lineNumber || 0;
-    /** @type {number} */
     const colno =
         /* Safari */ error.column || /* Firefox */ error.columnNumber || 0;
 
-    /** @type {!ErrorEvent|undefined} */
     let event: ErrorEvent|undefined = undefined;
     if (ErrorEvent.prototype.initErrorEvent === undefined) {
       event = new ErrorEvent(

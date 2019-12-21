@@ -36,8 +36,7 @@ const BuiltInHTMLElement = HTMLElement;
  */
 const wrapperForTheName = {
   'HTMLElement': /** @this {!Object} */ function HTMLElement() {
-    return Reflect.construct(
-        BuiltInHTMLElement, [], /** @type {!Function} */ (this.constructor));
+    return Reflect.construct(BuiltInHTMLElement, [], this.constructor);
   }
 };
 window.HTMLElement =

@@ -15,9 +15,6 @@ import CEState from '../CustomElementState.js';
 import {Constructor} from '../Externs.js';
 import * as Native from './Native.js';
 
-/**
- * @param {!CustomElementInternals} internals
- */
 export default function(internals: CustomElementInternals) {
   window['HTMLElement'] =
       (function() {

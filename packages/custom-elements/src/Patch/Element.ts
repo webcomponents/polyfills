@@ -43,7 +43,6 @@ export default function(internals: CustomElementInternals) {
         // their children removed as part of the set - the entire subtree is
         // 'disassembled'. This work around walks the subtree *before* using the
         // native setter.
-        /** @type {!Array<!Element>|undefined} */
         let removedElements: undefined|Element[] = undefined;
         if (isConnected) {
           removedElements = [];
@@ -184,26 +183,20 @@ export default function(internals: CustomElementInternals) {
   function patch_insertAdjacentElement(
       destination: Element|HTMLElement,
       baseMethod: Element['insertAdjacentElement']) {
-    destination.insertAdjacentElement =
-        /**
-         * @this {Element}
-         * @param {string} position
-         * @param {!Element} element
-         * @return {?Element}
-         */
-        function(position, element) {
-          const wasConnected = Utilities.isConnected(element);
-          const insertedElement = baseMethod.call(this, position, element)!;
+    destination.insertAdjacentElement = function(
+        this: Element, position, element) {
+      const wasConnected = Utilities.isConnected(element);
+      const insertedElement = baseMethod.call(this, position, element)!;
 
-          if (wasConnected) {
-            internals.disconnectTree(element);
-          }
+      if (wasConnected) {
+        internals.disconnectTree(element);
+      }
 
-          if (Utilities.isConnected(insertedElement)) {
-            internals.connectTree(element);
-          }
-          return insertedElement;
-        };
+      if (Utilities.isConnected(insertedElement)) {
+        internals.connectTree(element);
+      }
+      return insertedElement;
+    };
   }
 
   if (Native.HTMLElement_insertAdjacentElement) {

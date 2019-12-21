@@ -26,45 +26,19 @@ type ConstructorGetter = () => ElementConstructor;
  * @unrestricted
  */
 export default class CustomElementRegistry {
-  /**
-   * @private
-   * @type {!Map<string, function(): function(new: HTMLElement)>}
-   */
   private readonly _localNameToConstructorGetter =
       new Map<string, ConstructorGetter>();
-  /**
-   * @private
-   * @type {!Map<string, !CustomElementDefinition>}
-   */
   private readonly _localNameToDefinition =
       new Map<string, CustomElementDefinition>();
-  /**
-   * @private
-   * @type {!Map<!Function, !CustomElementDefinition>}
-   */
   private readonly _constructorToDefinition =
       new Map<Constructor<HTMLElement>, CustomElementDefinition>();
-  /**
-   * @private
-   * @type {boolean}
-   */
   private _elementDefinitionIsRunning = false;
-  /**
-   * @private
-   * @type {!CustomElementInternals}
-   */
   private readonly _internals: CustomElementInternals;
-  /**
-   * @private
-   * @type {!Map<string, !Deferred<undefined>>}
-   */
   private readonly _whenDefinedDeferred =
       new Map<string, Deferred<undefined>>();
 
   /**
    * The default flush callback triggers the document walk synchronously.
-   * @private
-   * @type {!Function}
    */
   private _flushCallback: (fn: () => void) => void = (fn) => fn();
   private _flushPending = false;
@@ -78,10 +52,6 @@ export default class CustomElementRegistry {
    */
   private readonly _unflushedLocalNames: string[] = [];
 
-  /**
-   * @private
-   * @const {!DocumentConstructionObserver|undefined}
-   */
   private readonly _documentConstructionObserver: DocumentConstructionObserver|
       undefined;
 
@@ -326,10 +296,6 @@ export default class CustomElementRegistry {
     this._flushCallback = flush => outer(() => inner(flush));
   }
 
-  /**
-   * @param {string} localName
-   * @return {!CustomElementDefinition|undefined}
-   */
   internal_localNameToDefinition(localName: string) {
     const existingDefinition = this._localNameToDefinition.get(localName);
     if (existingDefinition) {
@@ -349,10 +315,6 @@ export default class CustomElementRegistry {
     return undefined;
   }
 
-  /**
-   * @param {!Function} constructor
-   * @return {!CustomElementDefinition|undefined}
-   */
   internal_constructorToDefinition(constructor: ElementConstructor) {
     return this._constructorToDefinition.get(constructor);
   }

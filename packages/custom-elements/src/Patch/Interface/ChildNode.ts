@@ -27,17 +27,8 @@ export default function(
     builtIn: ChildNodeNativeMethods) {
   function beforeAfterPatch(builtInMethod: NativeMethod): NativeMethod {
     return function(this: ChildNode, ...nodes) {
-      /**
-       * A copy of `nodes`, with any DocumentFragment replaced by its children.
-       * @type {!Array<!Node>}
-       */
-      const flattenedNodes = [];
-
-      /**
-       * Elements in `nodes` that were connected before this call.
-       * @type {!Array<!Node>}
-       */
-      const connectedElements = [];
+      const flattenedNodes: Array<string|Node> = [];
+      const connectedElements: Node[] = [];
 
       for (var i = 0; i < nodes.length; i++) {
         const node = nodes[i];
@@ -85,15 +76,13 @@ export default function(
         this: ChildNode, ...nodes: Array<Node|string>) {
       /**
        * A copy of `nodes`, with any DocumentFragment replaced by its children.
-       * @type {!Array<!Node|string>}
        */
-      const flattenedNodes = [];
+      const flattenedNodes: Array<Node|string> = [];
 
       /**
        * Elements in `nodes` that were connected before this call.
-       * @type {!Array<!Node>}
        */
-      const connectedElements = [];
+      const connectedElements: Node[] = [];
 
       for (var i = 0; i < nodes.length; i++) {
         const node = nodes[i];

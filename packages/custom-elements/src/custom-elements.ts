@@ -26,7 +26,6 @@ function installPolyfill() {
   const shadyDomFastWalk =
       !!(priorCustomElements && priorCustomElements['shadyDomFastWalk']);
 
-  /** @type {!CustomElementInternals} */
   const internals = new CustomElementInternals(
       {noDocumentConstructionObserver, shadyDomFastWalk});
 
@@ -36,7 +35,6 @@ function installPolyfill() {
   PatchNode(internals);
   PatchElement(internals);
 
-  /** @type {!CustomElementRegistry} */
   const customElements = new CustomElementRegistry(internals);
 
   // The main document is associated with the global registry.

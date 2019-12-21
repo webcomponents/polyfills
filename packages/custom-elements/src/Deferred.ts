@@ -19,30 +19,11 @@ export default class Deferred<T> {
 
   private readonly _promise: Promise<T>;
   constructor() {
-    /**
-     * @private
-     * @type {T|undefined}
-     */
-    this._value = undefined;
-
-    /**
-     * @private
-     * @type {Function|undefined}
-     */
-    this._resolve;
-
-    /**
-     * @private
-     * @type {!Promise<T>}
-     */
     this._promise = new Promise(resolve => {
       this._resolve = resolve;
     });
   }
 
-  /**
-   * @param {T} value
-   */
   resolve(value: T) {
     if (this._value) {
       throw new Error('Already resolved.');
@@ -52,9 +33,6 @@ export default class Deferred<T> {
     this._resolve(value);
   }
 
-  /**
-   * @return {!Promise<T>}
-   */
   toPromise() {
     return this._promise;
   }
