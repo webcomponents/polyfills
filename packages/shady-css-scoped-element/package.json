@@ -1,6 +1,6 @@
 {
   "name": "@webcomponents/shady-css-scoped-element",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "private": true,
   "description": "ShadyCSS scoped element",
   "main": "shady-css-scoped.min.js",
@@ -28,7 +28,7 @@
     "src/"
   ],
   "devDependencies": {
-    "@webcomponents/shadycss": "^1.9.3",
+    "@webcomponents/shadycss": "^1.9.4",
     "@webcomponents/template": "^1.4.0",
     "@webcomponents/webcomponentsjs": "^2.4.0",
     "es6-promise": "4.2.4",
