@@ -326,6 +326,11 @@ export const NodePatches = utils.getOwnPropertyDescriptors({
         }
       });
     }
+    console.log({node, ref_node, this: this});
+    // TODO(aomarks) Around here is where we need to re-scope parts.
+    // Question: if currentScopeIsCorrect (meaning the node we are appending already
+    // has the right scope), then do we need to re-scope parts?
+
     // if a slot is added, must render containing root.
     if (slotsAdded.length) {
       ownerRoot._addSlots(slotsAdded);

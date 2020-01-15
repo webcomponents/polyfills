@@ -74,25 +74,25 @@
     const red = 'rgb(255, 0, 0)';
     const green = 'rgb(0, 128, 0)';
 
-    const recursiveTemplate = document.querySelector('template#x-recursive');
-    if (window.ShadyCSS) {
-      window.ShadyCSS.prepareTemplate(recursiveTemplate, 'x-recursive');
-    }
-    class XRecursive extends HTMLElement {
-      connectedCallback() {
-        window.ShadyCSS && window.ShadyCSS.styleElement(this);
-        this.attachShadow({mode: 'open'});
-        this.shadowRoot.appendChild(recursiveTemplate.content.cloneNode(true));
-        const depth = Number(this.getAttribute('depth'));
-        this.setAttribute('class', depth % 2 === 0 ? 'even' : 'odd');
-        if (depth > 1) {
-          const child = document.createElement('x-recursive');
-          child.setAttribute('depth', depth - 1);
-          this.shadowRoot.appendChild(child);
-        }
-      }
-    }
-    customElements.define('x-recursive', XRecursive);
+    // const recursiveTemplate = document.querySelector('template#x-recursive');
+    // if (window.ShadyCSS) {
+    //   window.ShadyCSS.prepareTemplate(recursiveTemplate, 'x-recursive');
+    // }
+    // class XRecursive extends HTMLElement {
+    //   connectedCallback() {
+    //     window.ShadyCSS && window.ShadyCSS.styleElement(this);
+    //     this.attachShadow({mode: 'open'});
+    //     this.shadowRoot.appendChild(recursiveTemplate.content.cloneNode(true));
+    //     const depth = Number(this.getAttribute('depth'));
+    //     this.setAttribute('class', depth % 2 === 0 ? 'even' : 'odd');
+    //     if (depth > 1) {
+    //       const child = document.createElement('x-recursive');
+    //       child.setAttribute('depth', depth - 1);
+    //       this.shadowRoot.appendChild(child);
+    //     }
+    //   }
+    // }
+    // customElements.define('x-recursive', XRecursive);
 
     suite('shadow parts', function() {
       suiteSetup(async function() {
@@ -122,6 +122,7 @@
           red);
       });
 
+      // known failing
       test('precedence', function() {
         assert.equal(
           color('x-parent', 'x-child.red', '.localBlue'),
@@ -152,11 +153,11 @@
           black);
       });
 
-      suite('dynamic', function() {
+      suite('dynamic rule matching', function() {
         let parent;
         let child;
 
-        suiteSetup(async function() {
+        setup(async function() {
           parent = document.createElement('x-parent');
           parent.className = 'dynamic';
           document.body.appendChild(parent);
@@ -164,7 +165,7 @@
           await new Promise(r => requestAnimationFrame(r));
         });
 
-        suiteTeardown(function() {
+        teardown(function() {
           document.body.removeChild(parent);
         })
 
@@ -190,8 +191,47 @@
         });
       });
 
+      suite('dynamic DOM mutation', function() {
+        let parent;
+        let child;
+
+        setup(async function() {
+          parent = document.createElement('x-parent');
+          parent.className = 'dynamic';
+          document.body.appendChild(parent);
+          child = parent.shadowRoot.querySelector('x-child');
+          await new Promise(r => requestAnimationFrame(r));
+        });
+
+        teardown(function() {
+          document.body.removeChild(parent);
+        })
+
+        test('initial', function() {
+          assert.equal(
+            color('x-parent.dynamic', 'x-child', '[part~=part1]'),
+            red);
+        });
+
+        test('add new part with appendChild', async function() {
+          debugger;
+          const newPart = document.createElement('div');
+          newPart.setAttribute('part', 'part1');
+          newPart.className = 'newPart';
+          newPart.textContent = 'newPart';
+          const s = child.shadowRoot;
+          s.appendChild(newPart);
+          debugger;
+          // Wait for async scoping shim work.
+          await new Promise(r => requestAnimationFrame(r));
+          await new Promise(r => requestAnimationFrame(r));
+          debugger;
+          assert.equal(color('x-parent.dynamic', 'x-child', '.newPart'), red);
+        });
+      });
+
+      // known failing (accepted limitation?)
       test('recursive', function() {
-        debugger;
         assert.equal(color('x-recursive', '[part]'), black);
         assert.equal(color('x-recursive', 'x-recursive', '[part]'), red);
         assert.equal(color('x-recursive', 'x-recursive', 'x-recursive', '[part]'), green);

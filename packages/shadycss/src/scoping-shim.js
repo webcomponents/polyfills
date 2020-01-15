@@ -23,6 +23,7 @@ import templateMap from './template-map.js';
 import * as ApplyShimUtils from './apply-shim-utils.js';
 import {updateNativeProperties, detectMixin} from './common-utils.js';
 import {CustomStyleInterfaceInterface, CustomStyleProvider} from './custom-style-interface.js'; // eslint-disable-line no-unused-vars
+import {parseExportParts} from './shadow-parts.js';
 
 /** @type {!Object<string, string>} */
 const adoptedCssTextMap = {};
@@ -31,28 +32,6 @@ const adoptedCssTextMap = {};
  * @const {StyleCache}
  */
 const styleCache = new StyleCache();
-
-function parseExportParts(node) {
-  const attr = node.getAttribute('exportparts');
-  if (!attr || !attr.trim()) {
-    return [];
-  }
-  const parts = [];
-  for (const part of attr.split(/\s*,\s*/)) {
-    const split = part.split(/\s*:\s*/);
-    let inner, outer;
-    if (split.length === 1) {
-      inner = outer = split[0];
-    } else if (split.length === 2) {
-      inner = split[0];
-      outer = split[1];
-    } else {
-      continue;
-    }
-    parts.push({inner, outer});
-  }
-  return parts;
-}
 
 export default class ScopingShim {
   constructor() {
@@ -298,6 +277,33 @@ export default class ScopingShim {
     // sort ast ordering for document
     this._documentOwnerStyleInfo.styleRules['rules'] = styles.map(s => StyleUtil.rulesForStyle(s));
   }
+
+  /**
+   * Return the classes (space-separated) that should be added to the given
+   * node in order for it to receive ShadyCSS rewritten ::part style rules.
+   * Returns undefined if the node does not have a part attribute.
+   *
+   * @param {!Node} node
+   * @param {!ShadyRoot} root
+   * @return {string|undefined}
+   */
+  _partClassForNode(node, root) {
+    console.log('_partClassForNode', node);
+    debugger;
+    // TODO(aomarks) Add optimization where we return undefined early if we
+    // know that we haven't seen any ::part styles yet.
+    if (!node.hasAttribute('part')) {
+      return;
+    }
+    const host = root.host;
+    if (!host) {
+      return;
+    }
+    const hostName = host.tagName.toLowerCase();
+    console.log({hostName});
+    return 'XXX_' + hostName;
+  }
+
   /**
    * Apply styles for the given element
    *
@@ -306,7 +312,7 @@ export default class ScopingShim {
    */
   styleElement(host, overrideProps) {
     function nameOf(element) {
-      return element.tagName.toLowerCase();
+      return element.localName;;
     }
     function hostOf(element) {
       const {host} = element.getRootNode();
@@ -326,7 +332,7 @@ export default class ScopingShim {
       const scope = parentHost.tagName.toLowerCase();
       const superScope = grandParentHost.tagName.toLowerCase();
       const outerToInner = {};
-      for (const {inner, outer} of parseExportParts(host)) {
+      for (const {inner, outer} of parseExportParts(host.getAttribute('exportparts'))) {
         let arr = exports[inner];
         if (arr === undefined) {
           arr = [];
