@@ -23,7 +23,7 @@ import templateMap from './template-map.js';
 import * as ApplyShimUtils from './apply-shim-utils.js';
 import {updateNativeProperties, detectMixin} from './common-utils.js';
 import {CustomStyleInterfaceInterface, CustomStyleProvider} from './custom-style-interface.js'; // eslint-disable-line no-unused-vars
-import {parseExportParts} from './shadow-parts.js';
+import {scopePartsInShadyRoot} from './shadow-parts.js';
 
 /** @type {!Object<string, string>} */
 const adoptedCssTextMap = {};
@@ -279,102 +279,14 @@ export default class ScopingShim {
   }
 
   /**
-   * Return the classes (space-separated) that should be added to the given
-   * node in order for it to receive ShadyCSS rewritten ::part style rules.
-   * Returns undefined if the node does not have a part attribute.
-   *
-   * @param {!Node} node
-   * @param {!ShadyRoot} root
-   * @return {string|undefined}
-   */
-  _partClassForNode(node, root) {
-    console.log('_partClassForNode', node);
-    debugger;
-    // TODO(aomarks) Add optimization where we return undefined early if we
-    // know that we haven't seen any ::part styles yet.
-    if (!node.hasAttribute('part')) {
-      return;
-    }
-    const host = root.host;
-    if (!host) {
-      return;
-    }
-    const hostName = host.tagName.toLowerCase();
-    console.log({hostName});
-    return 'XXX_' + hostName;
-  }
-
-  /**
    * Apply styles for the given element
    *
    * @param {!HTMLElement} host
    * @param {Object=} overrideProps
    */
   styleElement(host, overrideProps) {
-    function nameOf(element) {
-      return element.localName;;
-    }
-    function hostOf(element) {
-      const {host} = element.getRootNode();
-      return host;
-    }
-
-    function findExports(host) {
-      const exports = {};
-      const parentHost = host.getRootNode().host;
-      if (!parentHost) {
-        return exports;
-      }
-      const grandParentHost = parentHost.getRootNode().host;
-      if (!grandParentHost) {
-        return exports;
-      }
-      const scope = parentHost.tagName.toLowerCase();
-      const superScope = grandParentHost.tagName.toLowerCase();
-      const outerToInner = {};
-      for (const {inner, outer} of parseExportParts(host.getAttribute('exportparts'))) {
-        let arr = exports[inner];
-        if (arr === undefined) {
-          arr = [];
-          exports[inner] = arr;
-        }
-        arr.push({outer, scope, superScope});
-        outerToInner[outer] = inner;
-      }
-      for (const [inner, outers] of Object.entries(findExports(parentHost))) {
-        const realInner = outerToInner[inner];
-        let arr = exports[realInner];
-        if (arr === undefined) {
-          arr = [];
-          exports[realInner] = arr;
-        }
-        for (const {outer, scope, superScope} of outers) {
-          arr.push({inner: realInner, outer, scope, superScope});
-        }
-      }
-      return exports;
-    }
-
     requestAnimationFrame(() => {
-      const parentHost = hostOf(host);
-      const parentHostName = parentHost ? nameOf(parentHost) : null;
-      if (parentHostName === null) {
-        // TODO(aomarks) Support document-scoped styles with e.g. "document" as the
-        // parent host name?
-        return;
-      }
-      const hostName = nameOf(host);
-      const exports = findExports(host);
-
-      for (const part of host.shadowRoot.querySelectorAll('[part]')) {
-        const inner = part.getAttribute('part');
-        const cls = `part_${parentHostName}_${hostName}_${inner}`;
-        part.classList.add(`part_${parentHostName}_${hostName}_${inner}`);
-        for (const {outer, scope, superScope} of exports[inner] || []) {
-          const cls = `part_${superScope}_${scope}_${outer}`;
-          part.classList.add(cls);
-        }
-      }
+      scopePartsInShadyRoot(host);
     })
     if (disableRuntime) {
       if (overrideProps) {

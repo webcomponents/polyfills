@@ -13,6 +13,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 import {StyleNode} from './css-parse.js'; // eslint-disable-line no-unused-vars
 import * as StyleUtil from './style-util.js';
 import {nativeShadow} from './style-settings.js';
+import {formatPartScopeClassName} from './shadow-parts.js';
 
 /* Transforms ShadowDOM styling into ShadyDOM styling
 
@@ -398,7 +399,7 @@ class StyleTransformer {
 
   _transformPartSelector(selector, scope) {
     selector = selector.replace(/([a-z-_]+)(.*?)::part\((.*)?\)/, (_, ce, sel, part) =>
-          `${ce}${sel} .part_${scope}_${ce}_${part}`);
+          `${ce}${sel} .${formatPartScopeClassName(part, ce, scope)}`);
     return selector;
   }
 
