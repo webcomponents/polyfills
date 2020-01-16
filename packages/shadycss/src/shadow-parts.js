@@ -9,15 +9,34 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 */
 
 /**
+ * #document
+ *   <x-a exportparts="x">
+ *     #shadow-root
+ *       <div part="a1"
+ *            class="part_document_x-a_a1"></div>
+ *       <x-b exportparts="b1:a2,b2:a3">
+ *         #shadow-root
+ *           <div part="b1"
+ *                class="part_x-a_x-b_b1
+ *                       part_document_x-a_a2"></div>
+ *           <x-c exportparts="c1:b2">
+ *             #shadow-root
+ *               <div part="c1"
+ *                    class="part_x-b_x-c_c1
+ *                           part_x-a_x-b_b2
+ *                           part_document_x-a_a3"></div>
+ */
+
+/**
  * Parse a CSS Shadow Parts "part" attribute into an array of part names.
  *
  * Example:
  *   "foo bar" => ["foo", "bar"]
  *
  * @param {?string} attr The "part" attribute value.
- * @return {!Array<{inner: !string, outer: !string}>}
+ * @return {!Array<!string>}
  */
-export function parsePartAttribute(attr) {
+function parsePartAttribute(attr) {
   if (!attr) {
     return [];
   }
@@ -35,7 +54,7 @@ export function parsePartAttribute(attr) {
  * @param {?string} attr The "exportparts" attribute value.
  * @return {!Array<{inner: !string, outer: !string}>}
  */
-export function parseExportPartsAttribute(attr) {
+function parseExportPartsAttribute(attr) {
   if (!attr) {
     return [];
   }
@@ -59,16 +78,6 @@ export function parseExportPartsAttribute(attr) {
 /**
  * Format the ShadyCSS class name for a part node.
  *
- * Examples:
- *
- *   #document
- *     <x-1>
- *       #shady-root
- *         <div part="p1" class="part_document_x-1_p1"></div>
- *         <x-2>
- *           #shady-root
- *             <div part="p2" class="part_x-1_x-2_p2"></div>
- *
  * @param {!string} scope Lowercase custom element name of the part node's
  *     host.
  * @param {!string} hostScope Lowercase custom-element name of the part
@@ -81,11 +90,32 @@ export function formatPartScopeClassName(partName, scope, hostScope) {
 }
 
 /**
- * Add the appropriate "part_" class to any parts in the Shady root of the
+ * Return the name that identifies the given root. Either the lowercase name of
+ * the host element, or "document" if this is the document.
+ *
+ * @param {!ShadowRoot|!Document} host
+ * @return {!string|undefined}
+ */
+function scopeForRoot(root) {
+  if (root === document) {
+    // TODO(aomarks) Should this check host.ownerDocument instead?
+    return 'document';
+  }
+  if (root.host) {
+    return root.host.localName;
+  }
+}
+
+/**
+ * Add the appropriate "part_" class to all parts in the Shady root of the
  * given host.
+ *
  * @param {!HTMLElement} host
  */
 export function scopePartsInShadyRoot(host) {
+  if (!host.shadowRoot) {
+    return;
+  }
   const partNodes = host.shadowRoot.querySelectorAll('[part]');
   if (partNodes.length === 0) {
     return;
@@ -117,23 +147,11 @@ export function scopePartsInShadyRoot(host) {
   }
 }
 
-/**
- * TODO(aomarks) Description
- * @param {!ShadowRoot|!Document} host
- * @return {!string|undefined}
- */
-function scopeForRoot(root) {
-  if (root === document) {
-    // TODO(aomarks) Should this check host.ownerDocument instead?
-    return 'document';
-  }
-  if (root.host) {
-    return root.host.localName;
-  }
-}
+
 
 /**
  * TODO(aomarks) Description
+ *
  * @param {!HTMLElement} host
  * @return {!Object<!string, {
  *     partName: string,
@@ -187,23 +205,3 @@ function getExportPartsMap(host) {
 
   return map;
 }
-
-
-/**
- * #document
- *   <x-a exportparts="x">
- *     #shadow-root
- *       <div part="a1"
- *            class="part_document_x-a_a1"></div>
- *       <x-b exportparts="b1:a2,b2:a3">
- *         #shadow-root
- *           <div part="b1"
- *                class="part_x-a_x-b_b1
- *                       part_document_x-a_a2"></div>
- *           <x-c exportparts="c1:b2">
- *             #shadow-root
- *               <div part="c1"
- *                    class="part_x-b_x-c_c1
- *                           part_x-a_x-b_b2
- *                           part_document_x-a_a3"></div>
- */

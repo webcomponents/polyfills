@@ -1,0 +1,96 @@
+<!doctype html>
+<head>
+  <script>
+  ShadyDOM = { force: true }
+  WCT = {waitFor: function (cb) {HTMLImports.whenReady(cb)}}
+  </script>
+  <script src="../test-flags.js"></script>
+  <script src="../../node_modules/wct-browser-legacy/browser.js"></script>
+  <script src="../../node_modules/@webcomponents/webcomponents-platform/webcomponents-platform.js"></script>
+  <script src="../../node_modules/es6-promise/dist/es6-promise.auto.min.js"></script>
+  <script src="../../node_modules/@webcomponents/template/template.js"></script>
+  <script src="../../node_modules/@webcomponents/html-imports/html-imports.min.js"></script>
+  <script src="../../node_modules/@webcomponents/shadydom/shadydom.min.js"></script>
+  <script src="../../node_modules/@webcomponents/custom-elements/custom-elements.min.js"></script>
+  <script src="../../scoping-shim.min.js"></script>
+  <script src="../../custom-style-interface.min.js"></script>
+  <script src="../module/generated/make-element.js"></script>
+</head>
+<body>
+
+<template id="x-a">
+  <style>
+    x-b::part(b) {
+      color: red;
+    }
+  </style>
+  <x-b></x-b>
+</template>
+
+<template id="x-b">
+  <x-c exportparts="c:b"></x-c>
+</template>
+
+<template id="x-c">
+  <x-d exportparts="d:c"></x-d>
+</template>
+
+<template id="x-d">
+</template>
+
+<script>
+  const black = 'rgb(0, 0, 0)';
+  const red = 'rgb(255, 0, 0)';
+
+  function pierce(...selectors) {
+    let node = document.body;
+    while (selectors.length > 0) {
+      const selector = selectors.shift();
+      node = (node.shadowRoot || node).querySelector(selector);
+      if (node === null) {
+        return null;
+      }
+    }
+    return node;
+  }
+
+  function color(...selectors) {
+    const style = getComputedStyle(pierce(...selectors));
+    return style.color;
+  }
+
+  suite('shadow parts', function() {
+    suiteSetup(async function() {
+      ShadyCSS.style
+      makeElement('x-a');
+      makeElement('x-b');
+      makeElement('x-c');
+      makeElement('x-d');
+      await new Promise(r => requestAnimationFrame(r));
+    });
+
+    let a;
+
+    setup(async function() {
+      a = document.createElement('x-a');
+      document.body.appendChild(a);
+      await new Promise(r => requestAnimationFrame(r));
+    });
+
+    teardown(function() {
+      document.body.removeChild(a);
+    })
+
+    test('append a new part', async function() {
+      const d = pierce('x-a', 'x-b', 'x-c', 'x-d');
+      const part = document.createElement('div');
+      part.setAttribute('part', 'd');
+      part.textContent = 'red';
+      d.shadowRoot.appendChild(part);
+      assert.equal(
+        color('x-a', 'x-b', 'x-c', 'x-d', '[part~=d]'),
+        red);
+    });
+  });
+</script>
+</body>

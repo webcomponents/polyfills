@@ -326,9 +326,6 @@ export const NodePatches = utils.getOwnPropertyDescriptors({
         }
       });
     }
-    // TODO(aomarks) Around here is where we need to re-scope parts.
-    // Question: if currentScopeIsCorrect (meaning the node we are appending already
-    // has the right scope), then do we need to re-scope parts?
 
     // if a slot is added, must render containing root.
     if (slotsAdded.length) {
@@ -367,6 +364,16 @@ export const NodePatches = utils.getOwnPropertyDescriptors({
     } else if (node.ownerDocument !== this.ownerDocument) {
       this.ownerDocument.adoptNode(node);
     }
+
+    const scopingShim = getScopingShim();
+    if (scopingShim) {
+      const root = node.getRootNode();
+      // TODO(aomarks) We don't need to scope the whole root!!
+      if (root.host) {
+        scopingShim.scopeParts(root.host);
+      }
+    }
+
     return node;
   },
 
@@ -378,6 +385,7 @@ export const NodePatches = utils.getOwnPropertyDescriptors({
     // if this is a shadowRoot and the shadowRoot is passed as `node`
     // then an optimized append has already been performed, so do nothing.
     if (!(this == node && utils.isShadyRoot(node))) {
+      console.log('apendChild', node);
       return this[utils.SHADY_PREFIX + 'insertBefore'](node);
     }
   },

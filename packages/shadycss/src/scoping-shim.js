@@ -278,6 +278,10 @@ export default class ScopingShim {
     this._documentOwnerStyleInfo.styleRules['rules'] = styles.map(s => StyleUtil.rulesForStyle(s));
   }
 
+  scopeParts(node) {
+    scopePartsInShadyRoot(node);
+  }
+
   /**
    * Apply styles for the given element
    *
