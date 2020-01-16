@@ -220,9 +220,35 @@
           newPart.textContent = 'newPart';
           const s = child.shadowRoot;
           s.appendChild(newPart);
-          // Wait for async scoping shim work.
-          await new Promise(r => requestAnimationFrame(r));
-          await new Promise(r => requestAnimationFrame(r));
+          assert.equal(color('x-parent.dynamic', 'x-child', '.newPart'), red);
+        });
+
+        test('add new part with insertBefore', async function() {
+          const s = child.shadowRoot;
+          const sibling = document.createElement('div');
+          s.appendChild(sibling);
+          const newPart = document.createElement('div');
+          newPart.setAttribute('part', 'part1');
+          newPart.className = 'newPart';
+          newPart.textContent = 'newPart';
+          s.insertBefore(newPart, sibling)
+          assert.equal(color('x-parent.dynamic', 'x-child', '.newPart'), red);
+        });
+
+        test('add new part with replaceChild', async function() {
+          const s = child.shadowRoot;
+          const oldChild = document.createElement('div');
+          s.appendChild(oldChild);
+          const newPart = document.createElement('div');
+          newPart.setAttribute('part', 'part1');
+          newPart.className = 'newPart';
+          newPart.textContent = 'newPart';
+          s.replaceChild(newPart, oldChild);
+          assert.equal(color('x-parent.dynamic', 'x-child', '.newPart'), red);
+        });
+
+        test('add new part with innerHTML', async function() {
+          child.shadowRoot.innerHTML = '<div part="part1" class="newPart">newPart</div>';
           assert.equal(color('x-parent.dynamic', 'x-child', '.newPart'), red);
         });
       });
