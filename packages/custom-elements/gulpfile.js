@@ -17,7 +17,7 @@ const sourcemaps = require('gulp-sourcemaps');
 const closureCompiler = compilerPackage.gulp();
 
 gulp.task('default', () => {
-  return gulp.src('./src/**/*.js', {base: './'})
+  return gulp.src('./lib/**/*.js', {base: './'})
     .pipe(sourcemaps.init())
     .pipe(closureCompiler({
       compilation_level: 'ADVANCED',

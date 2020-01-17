@@ -14,4 +14,4 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
  * Used in: Safari 10
  */
 
-import '../../node_modules/@webcomponents/custom-elements/src/custom-elements.js';
+import '../../node_modules/@webcomponents/custom-elements/lib/custom-elements.js';

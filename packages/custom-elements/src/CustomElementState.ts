@@ -9,10 +9,11 @@
  * rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
-export enum CustomElementState {
-  custom = 1,
-  failed = 2,
-}
-;
+export const CustomElementState = {
+  custom: 1,
+  failed: 2,
+};
+export type CustomElementState =
+    typeof CustomElementState.custom|typeof CustomElementState.failed;
 
 export default CustomElementState;

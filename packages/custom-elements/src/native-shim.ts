@@ -8,7 +8,7 @@
  * Google as part of the polymer project is also subject to an additional IP
  * rights grant found at http://polymer.github.io/PATENTS.txt
  */
-import './Externs';
+import {} from './Externs';
 
 /**
  * This shim allows elements written in, or compiled to, ES5 to work on native
