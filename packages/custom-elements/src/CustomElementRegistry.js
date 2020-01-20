@@ -95,7 +95,7 @@ export default class CustomElementRegistry {
    * @param {function(): function(new: HTMLElement)} constructorGetter
    */
   polyfillDefineLazy(localName, constructorGetter) {
-    if (!(constructorGetter instanceof Function)) {
+    if (typeof constructorGetter !== 'function') {
       throw new TypeError('Custom element constructor getters must be functions.');
     }
 
@@ -118,7 +118,7 @@ export default class CustomElementRegistry {
    * @param {function(new: HTMLElement)} constructor
    */
   define(localName, constructor) {
-    if (!(constructor instanceof Function)) {
+    if (typeof constructor !== 'function') {
       throw new TypeError('Custom element constructors must be functions.');
     }
 
@@ -168,13 +168,13 @@ export default class CustomElementRegistry {
     try {
       /** @type {!Object} */
       const prototype = constructor.prototype;
-      if (!(prototype instanceof Object)) {
+      if (typeof prototype !== 'object') {
         throw new TypeError('The custom element constructor\'s prototype is not an object.');
       }
 
       function getCallback(name) {
         const callbackValue = prototype[name];
-        if (callbackValue !== undefined && !(callbackValue instanceof Function)) {
+        if (callbackValue !== undefined && typeof callbackValue !== 'function') {
           throw new Error(`The '${name}' callback must be a function.`);
         }
         return callbackValue;
