@@ -15,10 +15,11 @@
   <script src="../../scoping-shim.min.js"></script>
   <script src="../../custom-style-interface.min.js"></script>
   <script src="../module/generated/make-element.js"></script>
+  <script src="../../custom-style-interface.min.js"></script>
 </head>
 <body>
 
-<style>
+<style id="testDocumentStyle">
   x-a::part(a) {
     color: red;
   }
@@ -61,6 +62,8 @@
 
   suite('shadow parts', function() {
     suiteSetup(async function() {
+      window.ShadyCSS.CustomStyleInterface.addCustomStyle(
+          document.querySelector('#testDocumentStyle'));
       makeElement('x-a');
       makeElement('x-b');
       makeElement('x-c');
@@ -69,6 +72,8 @@
     });
 
     test('exportparts different name', function() {
+      // TODO(aomarks) This is failing because addCustomStyle translates our
+      // style to "x-a:not(.style-scope)::part(a) {  color: red; }".
       assert.equal(
         color('x-a', 'x-b', 'x-c', 'x-d', '[part~=d]'),
         red);
