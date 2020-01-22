@@ -42,8 +42,6 @@
   <div part="d">red</div>
 </template>
 
-<x-a></x-a>
-
 <script>
   suite('document export', function() {
     suiteSetup(async function() {
@@ -56,12 +54,23 @@
       await new Promise(r => requestAnimationFrame(r));
     });
 
-    test('exportparts different name', function() {
+    let a, d;
+
+    setup(async function() {
+      a = document.createElement('x-a');
+      document.body.appendChild(a);
+      await new Promise(r => requestAnimationFrame(r));
+      d = pierce('x-a', 'x-b', 'x-c', 'x-d');
+    });
+
+    teardown(function() {
+      document.body.removeChild(a);
+    })
+
+    test('document style is applied', function() {
       // TODO(aomarks) This is failing because addCustomStyle translates our
       // style to "x-a:not(.style-scope)::part(a) {  color: red; }".
-      assert.equal(
-        color('x-a', 'x-b', 'x-c', 'x-d', '[part~=d]'),
-        red);
+      assert.equal(color(d, '[part~=d]'), red);
     });
   });
 </script>

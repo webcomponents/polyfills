@@ -464,6 +464,8 @@ class StyleTransformer {
       return '';
     } else if (selector.match(SLOTTED)) {
       return this._transformComplexSelector(selector, SCOPE_DOC_SELECTOR)
+    } else if (selector.match(PART)) {
+      return this._transformPartSelector(selector, 'document');
     } else {
       return this._transformSimpleSelector(selector.trim(), SCOPE_DOC_SELECTOR);
     }

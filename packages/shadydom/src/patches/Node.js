@@ -385,7 +385,6 @@ export const NodePatches = utils.getOwnPropertyDescriptors({
     // if this is a shadowRoot and the shadowRoot is passed as `node`
     // then an optimized append has already been performed, so do nothing.
     if (!(this == node && utils.isShadyRoot(node))) {
-      console.log('apendChild', node);
       return this[utils.SHADY_PREFIX + 'insertBefore'](node);
     }
   },
