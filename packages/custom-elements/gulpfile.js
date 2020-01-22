@@ -14,6 +14,7 @@ const compilerPackage = require('google-closure-compiler');
 const gulp = require('gulp');
 const sourcemaps = require('gulp-sourcemaps');
 
+
 const closureCompiler = compilerPackage.gulp();
 
 gulp.task('default', () => {
