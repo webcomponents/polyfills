@@ -191,68 +191,6 @@
         });
       });
 
-      suite('dynamic DOM mutation', function() {
-        let parent;
-        let child;
-
-        setup(async function() {
-          parent = document.createElement('x-parent');
-          parent.className = 'dynamic';
-          document.body.appendChild(parent);
-          child = parent.shadowRoot.querySelector('x-child');
-          await new Promise(r => requestAnimationFrame(r));
-        });
-
-        teardown(function() {
-          document.body.removeChild(parent);
-        })
-
-        test('initial', function() {
-          assert.equal(
-            color('x-parent.dynamic', 'x-child', '[part~=part1]'),
-            red);
-        });
-
-        test('add new part with appendChild', async function() {
-          const newPart = document.createElement('div');
-          newPart.setAttribute('part', 'part1');
-          newPart.className = 'newPart';
-          newPart.textContent = 'newPart';
-          const s = child.shadowRoot;
-          s.appendChild(newPart);
-          assert.equal(color('x-parent.dynamic', 'x-child', '.newPart'), red);
-        });
-
-        test('add new part with insertBefore', async function() {
-          const s = child.shadowRoot;
-          const sibling = document.createElement('div');
-          s.appendChild(sibling);
-          const newPart = document.createElement('div');
-          newPart.setAttribute('part', 'part1');
-          newPart.className = 'newPart';
-          newPart.textContent = 'newPart';
-          s.insertBefore(newPart, sibling)
-          assert.equal(color('x-parent.dynamic', 'x-child', '.newPart'), red);
-        });
-
-        test('add new part with replaceChild', async function() {
-          const s = child.shadowRoot;
-          const oldChild = document.createElement('div');
-          s.appendChild(oldChild);
-          const newPart = document.createElement('div');
-          newPart.setAttribute('part', 'part1');
-          newPart.className = 'newPart';
-          newPart.textContent = 'newPart';
-          s.replaceChild(newPart, oldChild);
-          assert.equal(color('x-parent.dynamic', 'x-child', '.newPart'), red);
-        });
-
-        test('add new part with innerHTML', async function() {
-          child.shadowRoot.innerHTML = '<div part="part1" class="newPart">newPart</div>';
-          assert.equal(color('x-parent.dynamic', 'x-child', '.newPart'), red);
-        });
-      });
-
       // known failing (accepted limitation?)
       test('recursive', function() {
         assert.equal(color('x-recursive', '[part]'), black);

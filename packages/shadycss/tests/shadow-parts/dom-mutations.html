@@ -15,6 +15,7 @@
   <script src="../../scoping-shim.min.js"></script>
   <script src="../../custom-style-interface.min.js"></script>
   <script src="../module/generated/make-element.js"></script>
+  <script src="./utils.js"></script>
 </head>
 <body>
 
@@ -39,57 +40,62 @@
 </template>
 
 <script>
-  const black = 'rgb(0, 0, 0)';
-  const red = 'rgb(255, 0, 0)';
-
-  function pierce(...selectors) {
-    let node = document.body;
-    while (selectors.length > 0) {
-      const selector = selectors.shift();
-      node = (node.shadowRoot || node).querySelector(selector);
-      if (node === null) {
-        return null;
-      }
-    }
-    return node;
-  }
-
-  function color(...selectors) {
-    const style = getComputedStyle(pierce(...selectors));
-    return style.color;
-  }
-
-  suite('shadow parts', function() {
+  suite('dom mutations', function() {
     suiteSetup(async function() {
-      ShadyCSS.style
       makeElement('x-a');
       makeElement('x-b');
       makeElement('x-c');
       makeElement('x-d');
-      await new Promise(r => requestAnimationFrame(r));
     });
 
-    let a;
+    let a, d;
 
     setup(async function() {
       a = document.createElement('x-a');
       document.body.appendChild(a);
       await new Promise(r => requestAnimationFrame(r));
+      d = pierce('x-a', 'x-b', 'x-c', 'x-d');
     });
 
     teardown(function() {
       document.body.removeChild(a);
     })
 
-    test('append a new part', async function() {
-      const d = pierce('x-a', 'x-b', 'x-c', 'x-d');
+    test('new part with appendChild', async function() {
       const part = document.createElement('div');
       part.setAttribute('part', 'd');
       part.textContent = 'red';
       d.shadowRoot.appendChild(part);
-      assert.equal(
-        color('x-a', 'x-b', 'x-c', 'x-d', '[part~=d]'),
-        red);
+      assert.equal(color(d, '[part~=d]'), red);
+    });
+
+    test('new part with insertBefore', async function() {
+      const sibling = document.createElement('div');
+      d.shadowRoot.appendChild(sibling);
+
+      const part = document.createElement('div');
+      part.setAttribute('part', 'd');
+      part.textContent = 'red';
+      d.shadowRoot.insertBefore(part, sibling)
+
+      assert.equal(color(d, '[part~=d]'), red);
+    });
+
+    test('new part with replaceChild', async function() {
+      const replacee = document.createElement('div');
+      d.shadowRoot.appendChild(replacee);
+
+      const part = document.createElement('div');
+      part.setAttribute('part', 'd');
+      part.textContent = 'red';
+      d.shadowRoot.replaceChild(part, replacee);
+
+      assert.equal(color(d, '[part~=d]'), red);
+    });
+
+    test('new part with innerHTML', async function() {
+      d.shadowRoot.innerHTML = `<div part='d'>red</div>`;
+      assert.equal(color(d, '[part~=d]'), red);
     });
   });
 </script>

@@ -15,6 +15,7 @@
   <script src="../../scoping-shim.min.js"></script>
   <script src="../../custom-style-interface.min.js"></script>
   <script src="../module/generated/make-element.js"></script>
+  <script src="./utils.js"></script>
 </head>
 <body>
 
@@ -42,23 +43,7 @@
 <x-a></x-a>
 
 <script>
-  const black = 'rgb(0, 0, 0)';
-  const red = 'rgb(255, 0, 0)';
-
-  function color(...selectors) {
-    let node = document.body;
-    while (selectors.length > 0) {
-      const selector = selectors.shift();
-      node = (node.shadowRoot || node).querySelector(selector);
-      if (node === null) {
-        return null;
-      }
-    }
-    const style = getComputedStyle(node);
-    return style.color;
-  }
-
-  suite('shadow parts', function() {
+  suite('simple exports', function() {
     suiteSetup(async function() {
       makeElement('x-a');
       makeElement('x-b');
