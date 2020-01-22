@@ -9,8 +9,49 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 */
 
 /**
+ * The general strategy for CSS Shadow Parts support in Shady CSS is
+ * illustrated by this example:
+ *
  * #document
- *   <x-a exportparts="x">
+ *   <style>
+ *     x-a::part(a1) {
+ *       color: red;
+ *     }
+ *     x-a::part(a2) {
+ *       color: green;
+ *     }
+ *     x-a::part(a3) {
+ *       color: blue;
+ *     }
+ *   </style>
+ *   <x-a>
+ *     #shadow-root
+ *       <div part="a1"></div>
+ *       <x-b exportparts="b1:a2,b2:a3">
+ *         #shadow-root
+ *           <div part="b1"></div>
+ *           <x-c exportparts="c1:b2">
+ *             #shadow-root
+ *               <div part="c1"></div>
+ *           </x-c>
+ *       </x-b>
+ *   </x-a>
+ *
+ * Becomes:
+ *
+ * #document
+ *   <style>
+ *     .part_document_x-a_a1 {
+ *       color: red;
+ *     }
+ *     .part_document_x-a_a2 {
+ *       color: green;
+ *     }
+ *     .part_document_x-a_a3 {
+ *       color: blue;
+ *     }
+ *   </style>
+ *   <x-a exportparts>
  *     #shadow-root
  *       <div part="a1"
  *            class="part_document_x-a_a1"></div>
@@ -25,6 +66,27 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
  *                    class="part_x-b_x-c_c1
  *                           part_x-a_x-b_b2
  *                           part_document_x-a_a3"></div>
+ *           </x-c>
+ *       </x-b>
+ *   </x-a>
+ *
+ * Limitations:
+ *
+ * [1] ::part rules must include a custom-element name.
+ *
+ *    (A) x-a::part(foo)      OK
+ *    (B) .clz x-a::part(foo) OK (TODO(aomarks) But could be wrong, right?)
+ *    (C) x-a.bar::part(foo)  OK (except recursive patterns, see [3])
+ *    (D) ::part(foo)         UNSUPPORTED
+ *    (E) .bar::part(foo)     UNSUPPORTED
+ *
+ * [2] Recursive patterns are not supported.
+ *
+ *     TODO(aomarks) Example
+ *
+ * [3] Part style rules cannot change. If dynamism is needed, write a ::part
+ *     rule for each state, predicated on some class or other attribute, and
+ *     toggle that class or attribute on the dynamic element.
  */
 
 /**
@@ -146,8 +208,6 @@ export function scopePartsInShadyRoot(host) {
     }
   }
 }
-
-
 
 /**
  * TODO(aomarks) Description
