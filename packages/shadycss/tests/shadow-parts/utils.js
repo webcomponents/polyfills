@@ -2,6 +2,7 @@
 window.black = 'rgb(0, 0, 0)';
 window.red = 'rgb(255, 0, 0)';
 window.green = 'rgb(0, 128, 0)';
+window.blue = 'rgb(0, 0, 255)';
 
 window.pierce = (...selectors) => {
   let node = document.body;

@@ -28,29 +28,41 @@
   .greenContainer x-a::part(a) {
     color: green;
   }
+
+  .blueContainer x-a.blue::part(a) {
+    color: blue;
+  }
 </style>
 
 <template id="x-a">
-  <x-b exportparts="b:a"></x-b>
+  <x-b exportparts="b:a"><slot></slot></x-b>
 </template>
 
 <template id="x-b">
-  <x-c exportparts="c:b"></x-c>
+  <x-c exportparts="c:b"><slot></slot></x-c>
 </template>
 
 <template id="x-c">
-  <x-d exportparts="d:c"></x-d>
+  <x-d exportparts="d:c"><slot></slot></x-d>
 </template>
 
 <template id="x-d">
-  <div part="d">red</div>
+  <div part="d"><slot></slot></div>
 </template>
 
-<x-a class="black"></x-a>
-<x-a class="red"></x-a>
+<x-a class="black">black</x-a>
+
+<x-a class="red">red</x-a>
+
 <div class="greenContainer">
-  <x-a></x-a>
+  <x-a>green</x-a>
 </div>
+
+<div class="blueContainer">
+  <x-a class="blue">blue</x-a>
+  <x-a class="notBlue1">black</x-a>
+</div>
+<x-a class="blue notBlue2">black</x-a>
 
 <script>
   suite('dynamic match', function() {
@@ -77,14 +89,19 @@
       document.body.removeChild(a);
     })
 
-    test('match on class', function() {
+    test('x-el.class::part(part)', function() {
       assert.equal(color('x-a.black', 'x-b', 'x-c', 'x-d', '[part~=d]'), black);
       assert.equal(color('x-a.red', 'x-b', 'x-c', 'x-d', '[part~=d]'), red);
     });
 
-    test('match based on parent', function() {
-      debugger;
+    test('.class x-el::part(part)', function() {
       assert.equal(color('.greenContainer x-a', 'x-b', 'x-c', 'x-d', '[part~=d]'), green);
+    });
+
+    test('.class x-el.class::part(part)', function() {
+      assert.equal(color('x-a.blue', 'x-b', 'x-c', 'x-d', '[part~=d]'), blue);
+      assert.equal(color('x-a.notBlue1', 'x-b', 'x-c', 'x-d', '[part~=d]'), black);
+      assert.equal(color('x-a.notBlue2', 'x-b', 'x-c', 'x-d', '[part~=d]'), black);
     });
   });
 </script>
