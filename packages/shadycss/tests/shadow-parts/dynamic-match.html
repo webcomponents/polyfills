@@ -32,6 +32,10 @@
   .blueContainer x-a.blue::part(a) {
     color: blue;
   }
+
+  .orangeContainer > x-a::part(a) {
+    color: orange;
+  }
 </style>
 
 <template id="x-a">
@@ -64,6 +68,13 @@
 </div>
 <x-a class="blue notBlue2">black</x-a>
 
+<div class="orangeContainer">
+  <div>
+    <x-a class="notOrange">black</x-a>
+  </div>
+  <x-a class="orange">orange</x-a>
+</div>
+
 <script>
   suite('dynamic match', function() {
     suiteSetup(async function() {
@@ -75,19 +86,6 @@
       makeElement('x-d');
       await new Promise(r => requestAnimationFrame(r));
     });
-
-    let a, d;
-
-    setup(async function() {
-      a = document.createElement('x-a');
-      document.body.appendChild(a);
-      await new Promise(r => requestAnimationFrame(r));
-      d = pierce('x-a', 'x-b', 'x-c', 'x-d');
-    });
-
-    teardown(function() {
-      document.body.removeChild(a);
-    })
 
     test('x-el.class::part(part)', function() {
       assert.equal(color('x-a.black', 'x-b', 'x-c', 'x-d', '[part~=d]'), black);
@@ -102,6 +100,23 @@
       assert.equal(color('x-a.blue', 'x-b', 'x-c', 'x-d', '[part~=d]'), blue);
       assert.equal(color('x-a.notBlue1', 'x-b', 'x-c', 'x-d', '[part~=d]'), black);
       assert.equal(color('x-a.notBlue2', 'x-b', 'x-c', 'x-d', '[part~=d]'), black);
+    });
+
+    test('.class > x-el.class::part(part)', function() {
+      assert.equal(color('x-a.orange', 'x-b', 'x-c', 'x-d', '[part~=d]'), orange);
+      assert.equal(color('x-a.notOrange', 'x-b', 'x-c', 'x-d', '[part~=d]'), black);
+    });
+
+    test('class added and removed', async function() {
+      const a = document.createElement('x-a');
+      document.body.appendChild(a);
+      await new Promise(r => requestAnimationFrame(r));
+      assert.equal(color(a, 'x-b', 'x-c', 'x-d', '[part~=d]'), black);
+      a.classList.add('red');
+      assert.equal(color(a, 'x-b', 'x-c', 'x-d', '[part~=d]'), red);
+      a.classList.remove('red');
+      assert.equal(color(a, 'x-b', 'x-c', 'x-d', '[part~=d]'), black);
+      document.body.removeChild(a);
     });
   });
 </script>
