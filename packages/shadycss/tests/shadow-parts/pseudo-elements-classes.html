@@ -15,19 +15,20 @@
   <script src="../../scoping-shim.min.js"></script>
   <script src="../../custom-style-interface.min.js"></script>
   <script src="../module/generated/make-element.js"></script>
-  <script src="../../custom-style-interface.min.js"></script>
   <script src="./utils.js"></script>
 </head>
 <body>
 
-<style id="testDocumentStyle">
-  x-a::part(a) {
-    color: red;
-  }
-</style>
-
 <template id="x-a">
-  <x-b exportparts="b:a"></x-b>
+  <style>
+    x-b::part(b)::before {
+      content: "before";
+    }
+    x-b::part(b)::after {
+      content: "after";
+    }
+  </style>
+  <x-b></x-b>
 </template>
 
 <template id="x-b">
@@ -39,38 +40,33 @@
 </template>
 
 <template id="x-d">
-  <div part="d">red</div>
+  <div part="d"></div>
 </template>
 
+<x-a></x-a>
+
 <script>
-  suite('document t', function() {
+  suite('pseudo-elements-classes', function() {
+    let a, part;
+
     suiteSetup(async function() {
-      window.ShadyCSS.CustomStyleInterface.addCustomStyle(
-          document.querySelector('#testDocumentStyle'));
       makeElement('x-a');
       makeElement('x-b');
       makeElement('x-c');
       makeElement('x-d');
       await new Promise(r => requestAnimationFrame(r));
+      a = document.querySelector('x-a');
+      part = pierce(a, 'x-b', 'x-c', 'x-d', '[part~=d]')
     });
 
-    let a, d;
-
-    setup(async function() {
-      a = document.createElement('x-a');
-      document.body.appendChild(a);
-      await new Promise(r => requestAnimationFrame(r));
-      d = pierce('x-a', 'x-b', 'x-c', 'x-d');
+    test('::before', function() {
+      const style = getComputedStyle(part, '::before');
+      assert.equal(style.content, '"before"');
     });
 
-    teardown(function() {
-      document.body.removeChild(a);
-    })
-
-    test('document style is applied', function() {
-      // TODO(aomarks) This is failing because addCustomStyle translates our
-      // style to "x-a:not(.style-scope)::part(a) {  color: red; }".
-      assert.equal(color(d, '[part~=d]'), red);
+    test('::after', function() {
+      const style = getComputedStyle(part, '::after');
+      assert.equal(style.content, '"after"');
     });
   });
 </script>
