@@ -398,8 +398,13 @@ class StyleTransformer {
   }
 
   _transformPartSelector(selector, scope) {
-    selector = selector.replace(/([a-z-_]+)(.*?)::part\((.*)?\)/, (_, ce, sel, part) =>
-          `${ce}${sel} .${formatPartScopeClassName(part, ce, scope)}`);
+    const old = selector;
+    selector = selector.replace(/([a-z-_]+)(.*?)::part\((.*)?\)/, (_, ce, sel, part) => {
+      // TODO(aomarks) This is wrong.
+      const newx = `${ce}${sel} .${formatPartScopeClassName(part, ce, scope)}`;
+      console.log({newx, ce, sel, part, old, selector, scope});
+      return newx;
+    });
     return selector;
   }
 

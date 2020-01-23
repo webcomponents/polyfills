@@ -1,0 +1,91 @@
+<!doctype html>
+<head>
+  <script>
+  ShadyDOM = { force: true }
+  WCT = {waitFor: function (cb) {HTMLImports.whenReady(cb)}}
+  </script>
+  <script src="../test-flags.js"></script>
+  <script src="../../node_modules/wct-browser-legacy/browser.js"></script>
+  <script src="../../node_modules/@webcomponents/webcomponents-platform/webcomponents-platform.js"></script>
+  <script src="../../node_modules/es6-promise/dist/es6-promise.auto.min.js"></script>
+  <script src="../../node_modules/@webcomponents/template/template.js"></script>
+  <script src="../../node_modules/@webcomponents/html-imports/html-imports.min.js"></script>
+  <script src="../../node_modules/@webcomponents/shadydom/shadydom.min.js"></script>
+  <script src="../../node_modules/@webcomponents/custom-elements/custom-elements.min.js"></script>
+  <script src="../../scoping-shim.min.js"></script>
+  <script src="../../custom-style-interface.min.js"></script>
+  <script src="../module/generated/make-element.js"></script>
+  <script src="../../custom-style-interface.min.js"></script>
+  <script src="./utils.js"></script>
+</head>
+<body>
+
+<style id="testDocumentStyle">
+  x-a.red::part(a) {
+    color: red;
+  }
+
+  .greenContainer x-a::part(a) {
+    color: green;
+  }
+</style>
+
+<template id="x-a">
+  <x-b exportparts="b:a"></x-b>
+</template>
+
+<template id="x-b">
+  <x-c exportparts="c:b"></x-c>
+</template>
+
+<template id="x-c">
+  <x-d exportparts="d:c"></x-d>
+</template>
+
+<template id="x-d">
+  <div part="d">red</div>
+</template>
+
+<x-a class="black"></x-a>
+<x-a class="red"></x-a>
+<div class="greenContainer">
+  <x-a></x-a>
+</div>
+
+<script>
+  suite('dynamic match', function() {
+    suiteSetup(async function() {
+      window.ShadyCSS.CustomStyleInterface.addCustomStyle(
+          document.querySelector('#testDocumentStyle'));
+      makeElement('x-a');
+      makeElement('x-b');
+      makeElement('x-c');
+      makeElement('x-d');
+      await new Promise(r => requestAnimationFrame(r));
+    });
+
+    let a, d;
+
+    setup(async function() {
+      a = document.createElement('x-a');
+      document.body.appendChild(a);
+      await new Promise(r => requestAnimationFrame(r));
+      d = pierce('x-a', 'x-b', 'x-c', 'x-d');
+    });
+
+    teardown(function() {
+      document.body.removeChild(a);
+    })
+
+    test('match on class', function() {
+      assert.equal(color('x-a.black', 'x-b', 'x-c', 'x-d', '[part~=d]'), black);
+      assert.equal(color('x-a.red', 'x-b', 'x-c', 'x-d', '[part~=d]'), red);
+    });
+
+    test('match based on parent', function() {
+      debugger;
+      assert.equal(color('.greenContainer x-a', 'x-b', 'x-c', 'x-d', '[part~=d]'), green);
+    });
+  });
+</script>
+</body>

@@ -61,7 +61,7 @@
       document.body.removeChild(a);
     })
 
-    test('new part with appendChild', async function() {
+    test('new part with appendChild', function() {
       const part = document.createElement('div');
       part.setAttribute('part', 'd');
       part.textContent = 'red';
@@ -69,7 +69,7 @@
       assert.equal(color(d, '[part~=d]'), red);
     });
 
-    test('new part with insertBefore', async function() {
+    test('new part with insertBefore', function() {
       const sibling = document.createElement('div');
       d.shadowRoot.appendChild(sibling);
 
@@ -81,7 +81,7 @@
       assert.equal(color(d, '[part~=d]'), red);
     });
 
-    test('new part with replaceChild', async function() {
+    test('new part with replaceChild', function() {
       const replacee = document.createElement('div');
       d.shadowRoot.appendChild(replacee);
 
@@ -93,9 +93,31 @@
       assert.equal(color(d, '[part~=d]'), red);
     });
 
-    test('new part with innerHTML', async function() {
+    test('new part with innerHTML', function() {
       d.shadowRoot.innerHTML = `<div part='d'>red</div>`;
       assert.equal(color(d, '[part~=d]'), red);
+    });
+
+    test.skip('change part with setAttribute', function() {
+      const part = document.createElement('div');
+      part.setAttribute('part', 'x');
+      part.textContent = 'red';
+      d.shadowRoot.appendChild(part);
+      assert.equal(color(d, '[part~=x]'), black);
+
+      part.setAttribute('part', 'd');
+      assert.equal(color(d, '[part~=d]'), red);
+    });
+
+    test.skip('remove part with removeAttribute', function() {
+      const part = document.createElement('div');
+      part.setAttribute('part', 'd');
+      part.textContent = 'red';
+      d.shadowRoot.appendChild(part);
+      assert.equal(color(d, '[part~=d]'), red);
+
+      part.removeAttribute('part');
+      assert.equal(color(d, '[part~=x]'), black);
     });
   });
 </script>

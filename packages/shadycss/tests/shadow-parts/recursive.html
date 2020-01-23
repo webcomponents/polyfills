@@ -1,0 +1,75 @@
+<!doctype html>
+<head>
+  <script>
+  ShadyDOM = { force: true }
+  WCT = {waitFor: function (cb) {HTMLImports.whenReady(cb)}}
+  </script>
+  <script src="../test-flags.js"></script>
+  <script src="../../node_modules/wct-browser-legacy/browser.js"></script>
+  <script src="../../node_modules/@webcomponents/webcomponents-platform/webcomponents-platform.js"></script>
+  <script src="../../node_modules/es6-promise/dist/es6-promise.auto.min.js"></script>
+  <script src="../../node_modules/@webcomponents/template/template.js"></script>
+  <script src="../../node_modules/@webcomponents/html-imports/html-imports.min.js"></script>
+  <script src="../../node_modules/@webcomponents/shadydom/shadydom.min.js"></script>
+  <script src="../../node_modules/@webcomponents/custom-elements/custom-elements.min.js"></script>
+  <script src="../../scoping-shim.min.js"></script>
+  <script src="../../custom-style-interface.min.js"></script>
+  <script src="../module/generated/make-element.js"></script>
+  <script src="./utils.js"></script>
+</head>
+<body>
+
+<template id="x-recursive">
+  <style>
+    x-recursive.even::part(recursive-part) {
+      color: green;
+    }
+    x-recursive.odd::part(recursive-part) {
+      color: red;
+    }
+  </style>
+  <div part="recursive-part">x-recursive</div>
+</template>
+
+<script>
+  const recursiveTemplate = document.querySelector('template#x-recursive');
+  if (window.ShadyCSS) {
+    window.ShadyCSS.prepareTemplate(recursiveTemplate, 'x-recursive');
+  }
+
+  // TODO(aomarks) Is there a simpler example to use instead?
+  class XRecursive extends HTMLElement {
+    connectedCallback() {
+      if (window.ShadyCSS) {
+        window.ShadyCSS.styleElement(this);
+      }
+      this.attachShadow({mode: 'open'});
+      this.shadowRoot.appendChild(recursiveTemplate.content.cloneNode(true));
+      const depth = Number(this.getAttribute('depth'));
+      this.setAttribute('class', depth % 2 === 0 ? 'even' : 'odd');
+      if (depth > 1) {
+        const child = document.createElement('x-recursive');
+        child.setAttribute('depth', depth - 1);
+        this.shadowRoot.appendChild(child);
+      }
+    }
+  }
+  customElements.define('x-recursive', XRecursive);
+
+  suite('recursive', function() {
+    suiteSetup(async function() {
+      const recursive = document.createElement('x-recursive');
+      recursive.setAttribute('depth', 4);
+      document.body.appendChild(recursive);
+      await new Promise(r => requestAnimationFrame(r));
+    });
+
+    test.skip('recursive', function() {
+      assert.equal(color('x-recursive', '[part]'), black);
+      assert.equal(color('x-recursive', 'x-recursive', '[part]'), red);
+      assert.equal(color('x-recursive', 'x-recursive', 'x-recursive', '[part]'), green);
+      assert.equal(color('x-recursive', 'x-recursive', 'x-recursive', 'x-recursive', '[part]'), red);
+    });
+  });
+</script>
+</body>
