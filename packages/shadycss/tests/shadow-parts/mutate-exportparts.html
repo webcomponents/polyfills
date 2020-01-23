@@ -1,0 +1,85 @@
+<!doctype html>
+<head>
+  <script>
+  ShadyDOM = { force: true }
+  WCT = {waitFor: function (cb) {HTMLImports.whenReady(cb)}}
+  </script>
+  <script src="../test-flags.js"></script>
+  <script src="../../node_modules/wct-browser-legacy/browser.js"></script>
+  <script src="../../node_modules/@webcomponents/webcomponents-platform/webcomponents-platform.js"></script>
+  <script src="../../node_modules/es6-promise/dist/es6-promise.auto.min.js"></script>
+  <script src="../../node_modules/@webcomponents/template/template.js"></script>
+  <script src="../../node_modules/@webcomponents/html-imports/html-imports.min.js"></script>
+  <script src="../../node_modules/@webcomponents/shadydom/shadydom.min.js"></script>
+  <script src="../../node_modules/@webcomponents/custom-elements/custom-elements.min.js"></script>
+  <script src="../../scoping-shim.min.js"></script>
+  <script src="../../custom-style-interface.min.js"></script>
+  <script src="../module/generated/make-element.js"></script>
+  <script src="./utils.js"></script>
+</head>
+<body>
+
+<template id="x-a">
+  <style>
+    x-b::part(b) {
+      color: red;
+    }
+  </style>
+  <x-b></x-b>
+</template>
+
+<template id="x-b">
+  <x-c exportparts="c1:b"></x-c>
+</template>
+
+<template id="x-c">
+  <x-d exportparts="d:c1"></x-d>
+  <x-d exportparts="d:c2"></x-d>
+</template>
+
+<template id="x-d">
+  <div part="d"></div>
+</template>
+
+<script>
+  suite('dom mutations', function() {
+    suiteSetup(async function() {
+      makeElement('x-a');
+      makeElement('x-b');
+      makeElement('x-c');
+      makeElement('x-d');
+    });
+
+    let a, b, c, d1, d2;
+
+    setup(async function() {
+      a = document.createElement('x-a');
+      document.body.appendChild(a);
+      await new Promise(r => requestAnimationFrame(r));
+      b = pierce(a, 'x-b');
+      c = pierce(b, 'x-c');
+      d1 = pierce(c, 'x-d:nth-child(1)');
+      d2 = pierce(c, 'x-d:nth-child(2)');
+    });
+
+    teardown(function() {
+      document.body.removeChild(a);
+    })
+
+    test.skip('change exportparts', function() {
+      assert.equal(color(d1, '[part]'), red);
+      assert.equal(color(d2, '[part]'), black);
+
+      c.setAttribute('exportparts', 'c2:b');
+      assert.equal(color(d1, '[part]'), black);
+      assert.equal(color(d2, '[part]'), red);
+    });
+
+    test.skip('remove exportparts', function() {
+      c.removeAttribute('exportparts');
+      assert.equal(color(d1, '[part]'), black);
+      assert.equal(color(d2, '[part]'), black);
+    });
+  });
+</script>
+</body>

@@ -43,7 +43,6 @@ function distributeAttributeChange(node, name) {
         scopingShim.scopeParts(root.host);
       }
     }
-
   }
 }
 
