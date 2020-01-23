@@ -21,6 +21,9 @@
 
 <template id="x-a">
   <style>
+    x-b::part(d) {
+      color: green;
+    }
     x-b::part(b) {
       color: red;
     }
@@ -48,13 +51,15 @@
       makeElement('x-d');
     });
 
-    let a, d;
+    let a, b, c, d;
 
     setup(async function() {
       a = document.createElement('x-a');
       document.body.appendChild(a);
       await new Promise(r => requestAnimationFrame(r));
-      d = pierce('x-a', 'x-b', 'x-c', 'x-d');
+      b = pierce(a, 'x-b');
+      c = pierce(b, 'x-c');
+      d = pierce(c, 'x-d');
     });
 
     teardown(function() {
@@ -103,7 +108,7 @@
       part.setAttribute('part', 'x');
       part.textContent = 'red';
       d.shadowRoot.appendChild(part);
-      assert.equal(color(d, '[part~=x]'), black);
+      assert.equal(color(part), black);
 
       part.setAttribute('part', 'd');
       assert.equal(color(part), red);
@@ -114,10 +119,24 @@
       part.setAttribute('part', 'd');
       part.textContent = 'red/black';
       d.shadowRoot.appendChild(part);
-      assert.equal(color(d, '[part~=d]'), red);
+      assert.equal(color(part), red);
 
       part.removeAttribute('part');
       assert.equal(color(part), black);
+    });
+
+    test('move part to different shadow root', function() {
+      const part = document.createElement('div');
+      part.setAttribute('part', 'd');
+      part.textContent = 'red/green';
+      d.shadowRoot.appendChild(part);
+      assert.equal(color(part), red);
+
+      // Note that the green rule has lower precendence than the red rule, so
+      // this test fails both if we neglect to add new classes, and if we
+      // neglect to remove old classes.
+      b.shadowRoot.appendChild(part);
+      assert.equal(color(part), green);
     });
   });
 </script>

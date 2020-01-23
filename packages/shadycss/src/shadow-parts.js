@@ -152,6 +152,22 @@ export function formatPartScopeClassName(partName, scope, hostScope) {
 }
 
 /**
+ * Remove all part classes from the given element.
+ *
+ * @param {!Element}
+ * @return {void}
+ */
+export function removePartScopeClasses(element) {
+  const list = element.classList;
+  for (let i = list.length - 1; i >= 0; i--) {
+    const cls = list[i];
+    if (cls.startsWith('part_')) {
+      list.remove(cls);
+    }
+  }
+}
+
+/**
  * Return the name that identifies the given root. Either the lowercase name of
  * the host element, or "document" if this is the document.
  *
@@ -193,6 +209,7 @@ export function scopePartsInShadyRoot(host) {
   const exportPartsMap = getExportPartsMap(host);
 
   for (const partNode of partNodes) {
+    removePartScopeClasses(partNode);
     const partAttr = partNode.getAttribute('part');
     for (const partName of parsePartAttribute(partAttr)) {
       const className = formatPartScopeClassName(partName, scope, hostScope);
