@@ -1129,6 +1129,16 @@ suite('insertBefore', function() {
     });
   });
 
+  test('insertBefore with a `<slot>` as refNode not in a shadowRoot', function() {
+    var e = document.createElement('div');
+    var slot = document.createElement('slot');
+    e.appendChild(slot);
+    var div = document.createElement('div');
+    e.insertBefore(div, slot);
+    var composed = Array.from(ShadyDOM.nativeTree.childNodes(e));
+    assert.deepEqual(composed, [div, slot]);
+  });
+
   test('contains', function() {
     var e = document.createElement('x-simple');
     ShadyDOM.wrapIfNeeded(document.body).appendChild(e);

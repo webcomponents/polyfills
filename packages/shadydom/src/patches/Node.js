@@ -351,7 +351,7 @@ export const NodePatches = utils.getOwnPropertyDescriptors({
         /** @type {ShadowRoot} */(this).host : this;
       // if ref_node, get the ref_node that's actually in composed dom.
       if (ref_node) {
-        ref_node = firstComposedNode(ref_node);
+        ref_node = ownerRoot ? firstComposedNode(ref_node) : ref_node;
         container[utils.NATIVE_PREFIX + 'insertBefore'](node, ref_node);
       } else {
         container[utils.NATIVE_PREFIX + 'appendChild'](node);
