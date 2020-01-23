@@ -9,7 +9,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 */
 
 import * as utils from '../utils.js';
-import {scopeClassAttribute} from '../style-scoping.js';
+import {getScopingShim, scopeClassAttribute} from '../style-scoping.js';
 import {shadyDataForNode} from '../shady-data.js';
 import {attachShadow, ownerShadyRootForNode} from '../attach-shadow.js';
 
@@ -34,6 +34,16 @@ function distributeAttributeChange(node, name) {
       root._updateSlotName(node);
       root._asyncRender();
     }
+  } else if (name === 'part') {
+    const scopingShim = getScopingShim();
+    if (scopingShim) {
+      const root = ownerShadyRootForNode(node);
+      if (root && root.host) {
+        // TODO(aomarks) We don't need to scope the whole root!!
+        scopingShim.scopeParts(root.host);
+      }
+    }
+
   }
 }
 
@@ -109,6 +119,16 @@ export const ElementPatches = utils.getOwnPropertyDescriptors({
    * @param {string} attr
    */
   removeAttribute(attr) {
+    if (attr === 'part') {
+      // TODO(aomarks) Should this logic be in the scoping shim?
+      const classList = this.classList;
+      for (let i = classList.length - 1; i >= 0; i--) {
+        const cls = classList[i];
+        if (cls.startsWith('part_')) {
+          classList.remove(cls);
+        }
+      }
+    }
     if (this.ownerDocument !== doc) {
       this[utils.NATIVE_PREFIX + 'removeAttribute'](attr);
     } else if (!scopeClassAttribute(this, attr, '')) {
