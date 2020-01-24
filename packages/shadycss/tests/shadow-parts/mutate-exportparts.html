@@ -38,7 +38,7 @@
 </template>
 
 <template id="x-d">
-  <div part="d"></div>
+  <div part="d">partd</div>
 </template>
 
 <script>
@@ -66,7 +66,7 @@
       document.body.removeChild(a);
     })
 
-    test.skip('change exportparts', function() {
+    test('change exportparts', function() {
       assert.equal(color(d1, '[part]'), red);
       assert.equal(color(d2, '[part]'), black);
 
@@ -75,7 +75,7 @@
       assert.equal(color(d2, '[part]'), red);
     });
 
-    test.skip('remove exportparts', function() {
+    test('remove exportparts', function() {
       c.removeAttribute('exportparts');
       assert.equal(color(d1, '[part]'), black);
       assert.equal(color(d2, '[part]'), black);

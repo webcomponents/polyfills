@@ -23,7 +23,7 @@ import templateMap from './template-map.js';
 import * as ApplyShimUtils from './apply-shim-utils.js';
 import {updateNativeProperties, detectMixin} from './common-utils.js';
 import {CustomStyleInterfaceInterface, CustomStyleProvider} from './custom-style-interface.js'; // eslint-disable-line no-unused-vars
-import {scopePartsInShadyRoot} from './shadow-parts.js';
+import {scopePartsInShadyRoot, onPartAttributeChanged, onExportPartsAttributeChanged} from './shadow-parts.js';
 
 /** @type {!Object<string, string>} */
 const adoptedCssTextMap = {};
@@ -282,6 +282,14 @@ export default class ScopingShim {
     scopePartsInShadyRoot(node);
   }
 
+  onExportPartsAttributeChanged(element, newValue) {
+    onExportPartsAttributeChanged(element, newValue);
+  }
+
+  onPartAttributeChanged(element, newValue) {
+    onPartAttributeChanged(element, newValue);
+  }
+
   /**
    * Apply styles for the given element
    *
@@ -291,7 +299,7 @@ export default class ScopingShim {
   styleElement(host, overrideProps) {
     requestAnimationFrame(() => {
       scopePartsInShadyRoot(host);
-    })
+    });
     if (disableRuntime) {
       if (overrideProps) {
         if (!StyleInfo.get(host)) {

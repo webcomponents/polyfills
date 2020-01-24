@@ -34,15 +34,6 @@ function distributeAttributeChange(node, name) {
       root._updateSlotName(node);
       root._asyncRender();
     }
-  } else if (name === 'part') {
-    const scopingShim = getScopingShim();
-    if (scopingShim) {
-      const root = ownerShadyRootForNode(node);
-      if (root && root.host) {
-        // TODO(aomarks) We don't need to scope the whole root!!
-        scopingShim.scopeParts(root.host);
-      }
-    }
   }
 }
 
@@ -107,6 +98,16 @@ export const ElementPatches = utils.getOwnPropertyDescriptors({
   setAttribute(attr, value) {
     if (this.ownerDocument !== doc) {
       this[utils.NATIVE_PREFIX + 'setAttribute'](attr, value);
+    } else if (attr === 'part' || attr === 'exportparts') {
+      this[utils.NATIVE_PREFIX + 'setAttribute'](attr, value);
+      const shim = getScopingShim();
+      if (shim) {
+        if (attr === 'part') {
+          shim.onPartAttributeChanged(this, value);
+        } else {
+          shim.onExportPartsAttributeChanged(this, value);
+        }
+      }
     } else if (!scopeClassAttribute(this, attr, value)) {
       this[utils.NATIVE_PREFIX + 'setAttribute'](attr, value);
       distributeAttributeChange(this, attr);
@@ -118,18 +119,18 @@ export const ElementPatches = utils.getOwnPropertyDescriptors({
    * @param {string} attr
    */
   removeAttribute(attr) {
-    if (attr === 'part') {
-      // TODO(aomarks) Should this logic be in the scoping shim?
-      const classList = this.classList;
-      for (let i = classList.length - 1; i >= 0; i--) {
-        const cls = classList[i];
-        if (cls.startsWith('part_')) {
-          classList.remove(cls);
-        }
-      }
-    }
     if (this.ownerDocument !== doc) {
       this[utils.NATIVE_PREFIX + 'removeAttribute'](attr);
+    } else if (attr === 'part' || attr === 'exportparts') {
+      this[utils.NATIVE_PREFIX + 'removeAttribute'](attr);
+      const shim = getScopingShim();
+      if (shim) {
+        if (attr === 'part') {
+          shim.onPartAttributeChanged(this, null);
+        } else {
+          shim.onExportPartsAttributeChanged(this, null);
+        }
+      }
     } else if (!scopeClassAttribute(this, attr, '')) {
       this[utils.NATIVE_PREFIX + 'removeAttribute'](attr);
       distributeAttributeChange(this, attr);

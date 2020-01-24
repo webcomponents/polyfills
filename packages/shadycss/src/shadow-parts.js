@@ -87,6 +87,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
  * [3] Part style rules cannot change. If dynamism is needed, write a ::part
  *     rule for each state, predicated on some class or other attribute, and
  *     toggle that class or attribute on the dynamic element.
+ *
+ * [4] Part rules must appear inside a <template> or document-level <style>
+ *     that has been prepared by ShadyCSS.
  */
 
 /**
@@ -298,4 +301,40 @@ function getExportPartsMap(host) {
   }
 
   return map;
+}
+
+/**
+ * Update a node whose "part" attribute has changed.
+ *
+ * @param {!HTMLElement} element
+ * @param {?string} newValue
+ */
+export function onPartAttributeChanged(element, newValue) {
+  if (!newValue) {
+    removePartScopeClasses(element);
+  } else {
+    // TODO(aomarks) Optimize. Only this one node needs to change.
+    const root = element.getRootNode();
+    if (root && root.host) {
+      scopePartsInShadyRoot(root.host);
+    }
+  }
+}
+
+/**
+ * Update a node whose "exportparts" attribute has changed.
+ *
+ * @param {!HTMLElement} element
+ * @param {?string} newValue
+ */
+export function onExportPartsAttributeChanged(element, newValue) {
+  // TODO(aomarks) Optimize. We only need to recompute the parts that
+  // actually changed.
+  element.shadyCssExportPartsMap = undefined;
+  scopePartsInShadyRoot(element);
+  const exports = element.shadowRoot.querySelectorAll('[exportparts]');
+  for (const child of exports) {
+    child.shadyCssExportPartsMap = undefined;
+    onExportPartsAttributeChanged(child, newValue);
+  }
 }
