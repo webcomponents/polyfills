@@ -13,7 +13,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 import {StyleNode} from './css-parse.js'; // eslint-disable-line no-unused-vars
 import * as StyleUtil from './style-util.js';
 import {nativeShadow} from './style-settings.js';
-import {formatPartScopeClassName} from './shadow-parts.js';
+import {formatPartSelector} from './shadow-parts.js';
 
 /* Transforms ShadowDOM styling into ShadyDOM styling
 
@@ -314,6 +314,12 @@ class StyleTransformer {
       selector = selector.replace(NTH, (m, type, inner) => `:${type}(${inner.replace(/\s/g, '')})`)
       selector = this._twiddleNthPlus(selector);
     }
+    if (PART.test(selector)) {
+      // Hacky transform "::part(foo bar)" to "::part(foo,bar)" so that
+      // SIMPLE_SELECTOR_SEP isn't confused by the spaces.
+      // TODO(aomarks) Can we make SIMPLE_SELECTOR_SEP smarter instead?
+      selector = selector.replace(PART, (m) => m.replace(' ', ','));
+    }
     // Preserve selectors like `:-webkit-any` so that SIMPLE_SELECTOR_SEP does
     // not get confused by spaces inside the pseudo selector
     const isMatches = MATCHES.test(selector);
@@ -323,6 +329,7 @@ class StyleTransformer {
       ({selector, matches} = this._preserveMatchesPseudo(selector));
     }
     selector = selector.replace(SLOTTED_START, `${HOST} $1`);
+    //selector = this._transformPartSelector(selector, scope.replace(/^\./, ''));
     selector = selector.replace(SIMPLE_SELECTOR_SEP, (m, c, s) => {
       if (!stop) {
         let info = this._transformCompoundSelector(s, c, scope, hostScope);
@@ -349,7 +356,7 @@ class StyleTransformer {
     let slottedIndex = selector.indexOf(SLOTTED);
     if (selector.indexOf(HOST) >= 0) {
       selector = this._transformHostSelector(selector, hostScope);
-    } else if (selector.indexOf(PART) >= 0) {
+    } else if (PART.test(selector) >= 0) {
       selector = this._transformPartSelector(selector, hostScope);
     // replace other selectors with scoping class
     } else if (slottedIndex !== 0) {
@@ -398,13 +405,14 @@ class StyleTransformer {
   }
 
   _transformPartSelector(selector, scope) {
-    const old = selector;
-    selector = selector.replace(/(.*?)([a-z-_]+)([^\s]*?)::part\((.*)?\)/, (_, pre, ce, post, part) => {
-      const transformed = `${pre}${ce}${post} ` +
-          `.${formatPartScopeClassName(part, ce, scope)}`;
-      return transformed;
-    });
-    return selector;
+    return selector.replace(/(.*?)([a-z-_]+)([^\s]*?)::part\((.*)?\)/,
+      (_, pre, ce, post, partList) => {
+        // Earlier we did a hacky transform from "part(foo bar)"" to
+        // "part(foo,bar)" so that the SIMPLE_SELECTOR regex didn't get confused
+        // by spaces.
+        partList = partList.replace(',', ' ');
+        return `${pre}${ce}${post} ` + formatPartSelector(partList, ce, scope);
+      });
   }
 
   // :host(...) -> scopeName...
@@ -483,7 +491,7 @@ const SIMPLE_SELECTOR_SEP = /(^|[\s>+~]+)((?:\[.+?\]|[^\s>+~=[])+)/g;
 const SIMPLE_SELECTOR_PREFIX = /[[.:#*]/;
 const HOST = ':host';
 const ROOT = ':root';
-const PART = '::part';
+const PART = /::part\([^\)]*\)/;
 const SLOTTED = '::slotted';
 const SLOTTED_START = new RegExp(`^(${SLOTTED})`);
 // NOTE: this supports 1 nested () pair for things like

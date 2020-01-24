@@ -138,17 +138,34 @@ function parseExportPartsAttribute(attr) {
 }
 
 /**
- * Format the ShadyCSS class name for a part node.
+ * Format the ShadyCSS class name for a part.
  *
+ * @param {!string} partName Name of the part.
  * @param {!string} scope Lowercase custom element name of the part node's
  *     host.
  * @param {!string} hostScope Lowercase custom-element name of the part
  *     node's host's host, or "document" if the host is in the main document.
- * @param {!string} partName Name of the part.
- * @return {!string} Class name.
+ * @return {!string} CSS class name.
  */
 export function formatPartScopeClassName(partName, scope, hostScope) {
-  return `part_${hostScope}_${scope}_${partName}`;
+  const p = `part_${hostScope}_${scope}_${partName}`;
+  return p;
+}
+
+/**
+ * Format the ShadyCSS selector for a part rule.
+ *
+ * @param {!string} parts Whitespace-separated part list.
+ * @param {!string} scope Lowercase custom element name of the part node's
+ *     host.
+ * @param {!string} hostScope Lowercase custom-element name of the part
+ *     node's host's host, or "document" if the host is in the main document.
+ * @return {!string} CSS class selector.
+ */
+export function formatPartSelector(parts, scope, hostScope) {
+  return parsePartAttribute(parts).map(
+      (part) => '.' + formatPartScopeClassName(part, scope, hostScope))
+    .join('');
 }
 
 /**
