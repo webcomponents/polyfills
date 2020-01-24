@@ -1,0 +1,86 @@
+<!doctype html>
+<head>
+  <script>
+  ShadyDOM = { force: true }
+  WCT = {waitFor: function (cb) {HTMLImports.whenReady(cb)}}
+  </script>
+  <script src="../test-flags.js"></script>
+  <script src="../../node_modules/wct-browser-legacy/browser.js"></script>
+  <script src="../../node_modules/@webcomponents/webcomponents-platform/webcomponents-platform.js"></script>
+  <script src="../../node_modules/es6-promise/dist/es6-promise.auto.min.js"></script>
+  <script src="../../node_modules/@webcomponents/template/template.js"></script>
+  <script src="../../node_modules/@webcomponents/html-imports/html-imports.min.js"></script>
+  <script src="../../node_modules/@webcomponents/shadydom/shadydom.min.js"></script>
+  <script src="../../node_modules/@webcomponents/custom-elements/custom-elements.min.js"></script>
+  <script src="../../scoping-shim.min.js"></script>
+  <script src="../../custom-style-interface.min.js"></script>
+  <script src="../module/generated/make-element.js"></script>
+  <script src="./utils.js"></script>
+</head>
+<body>
+
+<template id="x-red">
+  <style>
+    x-green::part(part) {
+      background-color: red;
+    }
+  </style>
+  <x-green></x-green>
+</template>
+
+<template id="x-green">
+  <style>
+    x-blue::part(part) {
+      color: green;
+      background-color: green;
+      border-top-color: green;
+      border-right-color: green !important;
+    }
+  </style>
+  <x-blue exportparts="part"></x-blue>
+</template>
+
+<template id="x-blue">
+  <style>
+    div {
+      color: blue;
+      border-top-color: blue !important;
+      border-right-color: blue !important;
+    }
+  </style>
+  <div id="part" part="part">part</div>
+</template>
+
+<x-red></x-red>
+
+<script>
+  suite('specificity', function() {
+
+    let style;
+    suiteSetup(async function() {
+      makeElement('x-red');
+      makeElement('x-green');
+      makeElement('x-blue');
+      await new Promise(r => requestAnimationFrame(r));
+      const part = pierce('x-red', 'x-green', 'x-blue', '[part]');
+      style = getComputedStyle(part);
+    });
+
+    test.skip('part rule wins over non-important local rule', function() {
+      assert.equal(style.color, green);
+    });
+
+    test.skip('outer part rule wins over inner part rule', function() {
+      assert.equal(style.backgroundColor, red);
+    });
+
+    test('important local rule wins over non-important part rule', function() {
+      assert.equal(style.borderTopColor, blue);
+    });
+
+    test('important local rule wins over important part rule', function() {
+      assert.equal(style.borderRightColor, blue);
+    });
+  });
+</script>
+</body>
