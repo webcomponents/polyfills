@@ -331,10 +331,12 @@ export function onExportPartsAttributeChanged(element, newValue) {
   // TODO(aomarks) Optimize. We only need to recompute the parts that
   // actually changed.
   element.shadyCssExportPartsMap = undefined;
-  scopePartsInShadyRoot(element);
-  const exports = element.shadowRoot.querySelectorAll('[exportparts]');
-  for (const child of exports) {
-    child.shadyCssExportPartsMap = undefined;
-    onExportPartsAttributeChanged(child, newValue);
+  if (element.shadowRoot) {
+    scopePartsInShadyRoot(element);
+    const exports = element.shadowRoot.querySelectorAll('[exportparts]');
+    for (const child of exports) {
+      child.shadyCssExportPartsMap = undefined;
+      onExportPartsAttributeChanged(child, newValue);
+    }
   }
 }
