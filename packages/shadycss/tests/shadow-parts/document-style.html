@@ -21,54 +21,58 @@
 <body>
 
 <style id="testDocumentStyle">
-  x-a::part(a) {
+  x-a::part(p1 p2) {
     color: red;
+  }
+  x-a::part(p1) {
+    font-style: italic;
+  }
+  x-a::part(p2) {
+    background-color: blue;
   }
 </style>
 
 <template id="x-a">
-  <x-b exportparts="b:a"></x-b>
+  <x-b exportparts="p1,p2"></x-b>
 </template>
 
 <template id="x-b">
-  <x-c exportparts="c:b"></x-c>
+  <x-c exportparts="p1,p2"></x-c>
 </template>
 
 <template id="x-c">
-  <x-d exportparts="d:c"></x-d>
+  <div part="p1">italic</div>
+  <div part="p2">blue bg</div>
+  <div part="p1 p2">red italic blue bg</div>
 </template>
 
-<template id="x-d">
-  <div part="d">red</div>
-</template>
+<x-a></x-a>
 
 <script>
   suite('document style', function() {
+    let p1, p2, p1p2;
     suiteSetup(async function() {
       window.ShadyCSS.CustomStyleInterface.addCustomStyle(
           document.querySelector('#testDocumentStyle'));
       makeElement('x-a');
       makeElement('x-b');
       makeElement('x-c');
-      makeElement('x-d');
       await new Promise(r => requestAnimationFrame(r));
+      const c = pierce('x-a', 'x-b', 'x-c');
+      p1 = pierce(c, '[part=p1]');
+      p2 = pierce(c, '[part=p2]');
+      p1p2 = pierce(c, '[part="p1 p2"]');
     });
 
-    let a, d;
-
-    setup(async function() {
-      a = document.createElement('x-a');
-      document.body.appendChild(a);
-      await new Promise(r => requestAnimationFrame(r));
-      d = pierce('x-a', 'x-b', 'x-c', 'x-d');
+    test('selector with 2 parts only matches elements with both parts', function() {
+      assert.equal(getComputedStyle(p1).color, black);
+      assert.equal(getComputedStyle(p2).color, black);
+      assert.equal(getComputedStyle(p1p2).color, red);
     });
 
-    teardown(function() {
-      document.body.removeChild(a);
-    })
-
-    test('document style is applied', function() {
-      assert.equal(color(d, '[part~=d]'), red);
+    test('element with 2 parts receives styles for both parts', function() {
+      assert.equal(getComputedStyle(p1p2).fontStyle, 'italic');
+      assert.equal(getComputedStyle(p1p2).backgroundColor, blue);
     });
   });
 </script>
