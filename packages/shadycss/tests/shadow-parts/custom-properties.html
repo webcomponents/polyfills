@@ -1,0 +1,86 @@
+<!doctype html>
+<head>
+  <script>
+  ShadyDOM = { force: true };
+  ShadyCSS = { shimcssproperties: true };
+
+  WCT = {waitFor: function (cb) {HTMLImports.whenReady(cb)}}
+  </script>
+  <script src="../test-flags.js"></script>
+  <script src="../../node_modules/wct-browser-legacy/browser.js"></script>
+  <script src="../../node_modules/@webcomponents/webcomponents-platform/webcomponents-platform.js"></script>
+  <script src="../../node_modules/es6-promise/dist/es6-promise.auto.min.js"></script>
+  <script src="../../node_modules/@webcomponents/template/template.js"></script>
+  <script src="../../node_modules/@webcomponents/html-imports/html-imports.min.js"></script>
+  <script src="../../node_modules/@webcomponents/shadydom/shadydom.min.js"></script>
+  <script src="../../node_modules/@webcomponents/custom-elements/custom-elements.min.js"></script>
+  <script src="../../scoping-shim.min.js"></script>
+  <script src="../../custom-style-interface.min.js"></script>
+  <script src="../module/generated/make-element.js"></script>
+  <script src="./utils.js"></script>
+</head>
+<body>
+
+<template id="x-a">
+  <style>
+    x-b {
+      --custom-color: red;
+    }
+  </style>
+  <x-b></x-b>
+</template>
+
+<template id="x-b">
+  <style>
+    x-c::part(p1) {
+      color: var(--custom-color);
+
+      --custom-background-color: blue;
+      background-color: var(--custom-background-color);
+
+      font-style: var(--custom-font-style);
+    }
+  </style>
+  <x-c exportparts="p1"></x-c>
+</template>
+
+<template id="x-c">
+  <style>
+    :host {
+      --custom-font-style: italic;
+    }
+  </style>
+  <div part="p1">italic red on blue</div>
+</template>
+
+<x-a></x-a>
+
+<script>
+  suite('CSS Custom Properties', function() {
+    let p1;
+    suiteSetup(async function() {
+      makeElement('x-a');
+      makeElement('x-b');
+      makeElement('x-c');
+      await new Promise(r => requestAnimationFrame(r));
+      p1 = pierce('x-a', 'x-b', 'x-c', '[part=p1]');
+    });
+
+    test('property set above rule', function() {
+      assert.equal(getComputedStyle(p1).color, red);
+    });
+
+    test.skip('property set in rule', function() {
+      // This case is unsupported because custom properties are evaluated at
+      // the rule definition site, not at the consumption site.
+      assert.equal(getComputedStyle(p1).backgroundColor, blue);
+    });
+
+    test.skip('property set below rule', function() {
+      // This case is unsupported because custom properties are evaluated at
+      // the rule definition site, not at the consumption site.
+      assert.equal(getComputedStyle(p1).fontStyle, 'italic');
+    });
+  });
+</script>
+</body>
