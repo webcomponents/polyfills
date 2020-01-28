@@ -24,6 +24,12 @@
     x-b::part(p1 p2) {
       color: red;
     }
+    x-b::part(p1) {
+      font-style: italic;
+    }
+    x-b::part(p2) {
+      background-color: blue;
+    }
   </style>
   <x-b></x-b>
 </template>
@@ -33,27 +39,36 @@
 </template>
 
 <template id="x-c">
-  <div part="p1">black</div>
-  <div part="p2">black</div>
-  <div part="p1 p2">red</div>
+  <div part="p1">italic</div>
+  <div part="p2">blue bg</div>
+  <div part="p1 p2">red italic blue bg</div>
 </template>
 
 <x-a></x-a>
 
 <script>
-  suite('multiple parts', function() {
+  suite('multiple parts selector', function() {
+    let p1, p2, p1p2;
     suiteSetup(async function() {
       makeElement('x-a');
       makeElement('x-b');
       makeElement('x-c');
       await new Promise(r => requestAnimationFrame(r));
+      const c = pierce('x-a', 'x-b', 'x-c');
+      p1 = pierce(c, '[part=p1]');
+      p2 = pierce(c, '[part=p2]');
+      p1p2 = pierce(c, '[part="p1 p2"]');
     });
 
-    test('multiple parts match as intersection', function() {
-      const c = pierce('x-a', 'x-b', 'x-c');
-      assert.equal(color(c, '[part=p1]'), black);
-      assert.equal(color(c, '[part=p2]'), black);
-      assert.equal(color(c, '[part="p1 p2"]'), red);
+    test('selector with 2 parts only matches elements with both parts', function() {
+      assert.equal(getComputedStyle(p1).color, black);
+      assert.equal(getComputedStyle(p2).color, black);
+      assert.equal(getComputedStyle(p1p2).color, red);
+    });
+
+    test('element with 2 parts receives styles for both parts', function() {
+      assert.equal(getComputedStyle(p1p2).fontStyle, 'italic');
+      assert.equal(getComputedStyle(p1p2).backgroundColor, blue);
     });
   });
 </script>

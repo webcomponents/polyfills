@@ -68,8 +68,6 @@
     })
 
     test('document style is applied', function() {
-      // TODO(aomarks) This is failing because addCustomStyle translates our
-      // style to "x-a:not(.style-scope)::part(a) {  color: red; }".
       assert.equal(color(d, '[part~=d]'), red);
     });
   });
