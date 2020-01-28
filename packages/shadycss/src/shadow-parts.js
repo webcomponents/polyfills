@@ -247,6 +247,22 @@ export function scopePartsInShadyRoot(host) {
 }
 
 /**
+ * TODO
+ * @param {*} element
+ */
+function rescopeRecursive(element) {
+  element.shadyCssExportPartsMap = undefined;
+  if (element.shadowRoot) {
+    scopePartsInShadyRoot(element);
+    const exports = element.shadowRoot.querySelectorAll('[exportparts]');
+    for (const child of exports) {
+      child.shadyCssExportPartsMap = undefined;
+      rescopeRecursive(child);
+    }
+  }
+}
+
+/**
  * TODO(aomarks) Description
  *
  * @param {!HTMLElement} host
@@ -305,13 +321,10 @@ function getExportPartsMap(host) {
 
 /**
  * TODO
- * @param {*} node
+ * @param {*} element
  */
-export function onAfterStyleElement(node) {
-  const root = node.getRootNode();
-  if (root.host) {
-    scopePartsInShadyRoot(node);
-  }
+export function onAfterStyleElement(element) {
+  scopePartsInShadyRoot(element);
 }
 
 /**
@@ -323,7 +336,8 @@ export function onAfterStyleElement(node) {
 export function onInsertBefore(parentNode, newNode, referenceNode) {
   const root = newNode.getRootNode();
   if (root.host) {
-    scopePartsInShadyRoot(root.host);
+    // TODO(aomarks) Optimize.
+    rescopeRecursive(root.host);
   }
 }
 
@@ -354,13 +368,5 @@ export function onPartAttributeChanged(element, newValue) {
 export function onExportPartsAttributeChanged(element, newValue) {
   // TODO(aomarks) Optimize. We only need to recompute the parts that
   // actually changed.
-  element.shadyCssExportPartsMap = undefined;
-  if (element.shadowRoot) {
-    scopePartsInShadyRoot(element);
-    const exports = element.shadowRoot.querySelectorAll('[exportparts]');
-    for (const child of exports) {
-      child.shadyCssExportPartsMap = undefined;
-      onExportPartsAttributeChanged(child, newValue);
-    }
-  }
+  rescopeRecursive(element);
 }
