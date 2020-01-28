@@ -304,6 +304,30 @@ function getExportPartsMap(host) {
 }
 
 /**
+ * TODO
+ * @param {*} node
+ */
+export function onAfterStyleElement(node) {
+  const root = node.getRootNode();
+  if (root.host) {
+    scopePartsInShadyRoot(node);
+  }
+}
+
+/**
+ * TODO
+ * @param {TODO} parentNode
+ * @param {*} newNode
+ * @param {*} referenceNode
+ */
+export function onInsertBefore(parentNode, newNode, referenceNode) {
+  const root = newNode.getRootNode();
+  if (root.host) {
+    scopePartsInShadyRoot(root.host);
+  }
+}
+
+/**
  * Update a node whose "part" attribute has changed.
  *
  * @param {!HTMLElement} element

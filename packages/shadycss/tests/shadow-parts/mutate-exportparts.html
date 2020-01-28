@@ -69,7 +69,7 @@
       document.body.removeChild(a);
     })
 
-    test.skip('add exportparts node', async function() {
+    test('add exportparts node', async function() {
       const newC = document.createElement('x-c');
       newC.setAttribute('exportparts', 'c1:b2');
       b.shadowRoot.appendChild(newC);

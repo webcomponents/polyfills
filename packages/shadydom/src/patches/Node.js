@@ -367,11 +367,7 @@ export const NodePatches = utils.getOwnPropertyDescriptors({
 
     const scopingShim = getScopingShim();
     if (scopingShim) {
-      const root = node.getRootNode();
-      // TODO(aomarks) We don't need to scope the whole root!!
-      if (root.host) {
-        scopingShim.scopeParts(root.host);
-      }
+      scopingShim.onInsertBefore(this, node, ref_node);
     }
 
     return node;
