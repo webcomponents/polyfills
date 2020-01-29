@@ -150,9 +150,8 @@ function parseExportPartsAttribute(attr) {
  *     node's host's host, or "document" if the host is in the main document.
  * @return {!string} CSS class name.
  */
-export function formatPartScopeClassName(partName, scope, hostScope) {
-  const p = `part_${hostScope}_${scope}_${partName}`;
-  return p;
+export function formatPartSpecifier(partName, scope, hostScope) {
+  return `${hostScope}_${scope}_${partName}`;
 }
 
 /**
@@ -167,8 +166,23 @@ export function formatPartScopeClassName(partName, scope, hostScope) {
  */
 export function formatPartSelector(parts, scope, hostScope) {
   return parsePartAttribute(parts).map(
-      (part) => '.' + formatPartScopeClassName(part, scope, hostScope))
+      (part) => `[shady-part~=${formatPartSpecifier(part, scope, hostScope)}]`)
     .join('');
+}
+
+/**
+ * TODO
+ *
+ * @param {!Element}
+ * @return {void}
+ */
+export function addPartSpecifier(element, specifier) {
+  const existing = element.getAttribute('shady-part');
+  if (existing === null) {
+    element.setAttribute('shady-part', specifier);
+  } else {
+    element.setAttribute('shady-part', existing + ' ' + specifier);
+  }
 }
 
 /**
@@ -177,14 +191,8 @@ export function formatPartSelector(parts, scope, hostScope) {
  * @param {!Element}
  * @return {void}
  */
-export function removePartScopeClasses(element) {
-  const list = element.classList;
-  for (let i = list.length - 1; i >= 0; i--) {
-    const cls = list[i];
-    if (cls.startsWith('part_')) {
-      list.remove(cls);
-    }
-  }
+export function removeAllPartSpecifiers(element) {
+  element.removeAttribute('shady-part');
 }
 
 /**
@@ -229,17 +237,14 @@ export function scopePartsInShadyRoot(host) {
   const exportPartsMap = getExportPartsMap(host);
 
   for (const partNode of partNodes) {
-    removePartScopeClasses(partNode);
+    removeAllPartSpecifiers(partNode);
     const partAttr = partNode.getAttribute('part');
     for (const partName of parsePartAttribute(partAttr)) {
-      const className = formatPartScopeClassName(partName, scope, hostScope);
-      partNode.classList.add(className);
-
+      addPartSpecifier(partNode, formatPartSpecifier(partName, scope, hostScope));
       const exportParts = exportPartsMap[partName];
       if (exportParts !== undefined) {
         for (const {partName, scope, hostScope} of exportParts) {
-          const className = formatPartScopeClassName(partName, scope, hostScope);
-          partNode.classList.add(className);
+          addPartSpecifier(partNode, formatPartSpecifier(partName, scope, hostScope));
         }
       }
     }
@@ -323,8 +328,10 @@ function getExportPartsMap(host) {
  * TODO
  * @param {*} element
  */
-export function onAfterStyleElement(element) {
-  scopePartsInShadyRoot(element);
+export function onStyleElement(element) {
+  requestAnimationFrame(() => {
+    scopePartsInShadyRoot(element);
+  });
 }
 
 /**
@@ -349,7 +356,7 @@ export function onInsertBefore(parentNode, newNode, referenceNode) {
  */
 export function onPartAttributeChanged(element, newValue) {
   if (!newValue) {
-    removePartScopeClasses(element);
+    removeAllPartSpecifiers(element);
   } else {
     // TODO(aomarks) Optimize. Only this one node needs to change.
     const root = element.getRootNode();

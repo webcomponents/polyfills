@@ -23,7 +23,7 @@ import templateMap from './template-map.js';
 import * as ApplyShimUtils from './apply-shim-utils.js';
 import {updateNativeProperties, detectMixin} from './common-utils.js';
 import {CustomStyleInterfaceInterface, CustomStyleProvider} from './custom-style-interface.js'; // eslint-disable-line no-unused-vars
-import {onAfterStyleElement, onInsertBefore, onPartAttributeChanged, onExportPartsAttributeChanged} from './shadow-parts.js';
+import * as parts from './shadow-parts.js'
 
 /** @type {!Object<string, string>} */
 const adoptedCssTextMap = {};
@@ -279,15 +279,15 @@ export default class ScopingShim {
   }
 
   onInsertBefore(parentNode, newNode, referenceNode) {
-    onInsertBefore(parentNode, newNode, referenceNode);
+    parts.onInsertBefore(parentNode, newNode, referenceNode);
   }
 
   onExportPartsAttributeChanged(element, newValue) {
-    onExportPartsAttributeChanged(element, newValue);
+    parts.onExportPartsAttributeChanged(element, newValue);
   }
 
   onPartAttributeChanged(element, newValue) {
-    onPartAttributeChanged(element, newValue);
+    parts.onPartAttributeChanged(element, newValue);
   }
 
   /**
@@ -297,9 +297,7 @@ export default class ScopingShim {
    * @param {Object=} overrideProps
    */
   styleElement(host, overrideProps) {
-    requestAnimationFrame(() => {
-      onAfterStyleElement(host);
-    });
+    parts.onStyleElement(host);
     if (disableRuntime) {
       if (overrideProps) {
         if (!StyleInfo.get(host)) {
