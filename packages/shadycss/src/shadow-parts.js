@@ -218,7 +218,7 @@ function scopeForRoot(root) {
  *
  * @param {!HTMLElement} host
  */
-export function scopePartsInShadyRoot(host) {
+export function scopeAllHostParts(host) {
   if (!host.shadowRoot) {
     return;
   }
@@ -252,13 +252,43 @@ export function scopePartsInShadyRoot(host) {
 }
 
 /**
+ * @param {!HTMLElement} element
+ * @param {!Array<!string>} partNames
+ */
+function addPartSpecifiersToElement(element, partNames) {
+  const root = element.getRootNode();
+  if (root === element || root === document) {
+    // Not yet in a shadow root or in the document, in which case parts can't
+    // possibly be applied.
+    return;
+  }
+  const host = root.host;
+  const scope = host.localName;
+  const superRoot = host.getRootNode();
+  const superScope = (superRoot === document)
+      ? 'document' : superRoot.host.localName;
+
+  const exportPartsMap = getExportPartsMap(host);
+
+  for (const partName of partNames) {
+    addPartSpecifier(element, formatPartSpecifier(partName, scope, superScope));
+    const exportParts = exportPartsMap[partName];
+    if (exportParts !== undefined) {
+      for (const {partName, scope, hostScope} of exportParts) {
+        addPartSpecifier(element, formatPartSpecifier(partName, scope, hostScope));
+      }
+    }
+  }
+}
+
+/**
  * TODO
  * @param {*} element
  */
 function rescopeRecursive(element) {
   element.shadyCssExportPartsMap = undefined;
   if (element.shadowRoot) {
-    scopePartsInShadyRoot(element);
+    scopeAllHostParts(element);
     const exports = element.shadowRoot.querySelectorAll('[exportparts]');
     for (const child of exports) {
       child.shadyCssExportPartsMap = undefined;
@@ -326,11 +356,11 @@ function getExportPartsMap(host) {
 
 /**
  * TODO
- * @param {*} element
+ * @param {!HTMLElement} element
  */
 export function onStyleElement(element) {
   requestAnimationFrame(() => {
-    scopePartsInShadyRoot(element);
+    scopeAllHostParts(element);
   });
 }
 
@@ -358,11 +388,7 @@ export function onPartAttributeChanged(element, newValue) {
   if (!newValue) {
     removeAllPartSpecifiers(element);
   } else {
-    // TODO(aomarks) Optimize. Only this one node needs to change.
-    const root = element.getRootNode();
-    if (root && root.host) {
-      scopePartsInShadyRoot(root.host);
-    }
+    addPartSpecifiersToElement(element, parsePartAttribute(newValue));
   }
 }
 
@@ -373,7 +399,6 @@ export function onPartAttributeChanged(element, newValue) {
  * @param {?string} newValue
  */
 export function onExportPartsAttributeChanged(element, newValue) {
-  // TODO(aomarks) Optimize. We only need to recompute the parts that
-  // actually changed.
+  // TODO(aomarks) Optimize.
   rescopeRecursive(element);
 }
