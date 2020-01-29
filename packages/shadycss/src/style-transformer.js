@@ -405,7 +405,7 @@ class StyleTransformer {
   }
 
   _transformPartSelector(selector, scope) {
-    return selector.replace(/(.*?)([a-z-_]+)([^\s]*?)::part\((.*)?\)/,
+    return selector.replace(/(.*?)([a-z]-\w+)([^\s]*?)::part\((.*)?\)/,
       (_, pre, ce, post, partList) => {
         // Earlier we did a hacky transform from "part(foo bar)"" to
         // "part(foo,bar)" so that the SIMPLE_SELECTOR regex didn't get confused
