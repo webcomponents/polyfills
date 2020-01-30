@@ -369,7 +369,8 @@ export default class CustomElementInternals {
    *
    * @see https://html.spec.whatwg.org/multipage/custom-elements.html#look-up-a-custom-element-definition
    */
-  private _lookupACustomElementDefinition(doc: Document, localName: string) {
+  private _lookupACustomElementDefinition(doc: Document, localName: string):
+      CustomElementDefinition|undefined {
     // The document must be associated with a registry.
     const registry = doc.__CE_registry;
     if (!registry) {

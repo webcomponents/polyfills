@@ -9,8 +9,7 @@
     "outDir": "./lib",
     "importHelpers": true,
     "downlevelIteration": true,
-    // "isolatedModules": true,
-
+    "isolatedModules": true,
     "strict": true,
     "noImplicitAny": true,
     "strictNullChecks": true,
@@ -25,5 +24,7 @@
     "noFallthroughCasesInSwitch": true,
     "moduleResolution": "node",
   },
-  "include": ["src/"]
+  "include": [
+    "src/"
+  ]
 }

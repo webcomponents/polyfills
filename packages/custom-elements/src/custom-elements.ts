@@ -21,10 +21,8 @@ const priorCustomElements = window['customElements'];
 
 function installPolyfill() {
   const noDocumentConstructionObserver =
-      !!(priorCustomElements &&
-         priorCustomElements['noDocumentConstructionObserver']);
-  const shadyDomFastWalk =
-      !!(priorCustomElements && priorCustomElements['shadyDomFastWalk']);
+      !!(priorCustomElements?.['noDocumentConstructionObserver']);
+  const shadyDomFastWalk = !!(priorCustomElements?.['shadyDomFastWalk']);
 
   const internals = new CustomElementInternals(
       {noDocumentConstructionObserver, shadyDomFastWalk});
