@@ -586,8 +586,10 @@ export const attachShadow = (host, options) => {
   return root;
 }
 
-// Mitigate connect/disconnect spam by wrapping custom element classes.
-if (window['customElements'] && utils.settings.inUse && !utils.settings['preferPerformance']) {
+// Mitigate connect/disconnect spam by wrapping custom element classes. This
+// should happen if custom elements are available in any capacity, polyfilled or
+// not.
+if (utils.hasCustomElements() && utils.settings.inUse && !utils.settings['preferPerformance']) {
 
   // process connect/disconnect after roots have rendered to avoid
   // issues with reaction stack.
