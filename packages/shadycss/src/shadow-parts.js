@@ -368,9 +368,8 @@ export function onStyleElement(element) {
  * TODO
  * @param {TODO} parentNode
  * @param {*} newNode
- * @param {*} referenceNode
  */
-export function onInsertBefore(parentNode, newNode, referenceNode) {
+export function onInsertBefore(parentNode, newNode) {
   const root = newNode.getRootNode();
   if (root.host) {
     // TODO(aomarks) Optimize.
@@ -396,9 +395,8 @@ export function onPartAttributeChanged(element, newValue) {
  * Update a node whose "exportparts" attribute has changed.
  *
  * @param {!HTMLElement} element
- * @param {?string} newValue
  */
-export function onExportPartsAttributeChanged(element, oldValue, newValue) {
+export function onExportPartsAttributeChanged(element) {
   // TODO(aomarks) Optimize.
   rescopeRecursive(element);
 }

@@ -490,7 +490,7 @@ const SIMPLE_SELECTOR_SEP = /(^|[\s>+~]+)((?:\[.+?\]|[^\s>+~=[])+)/g;
 const SIMPLE_SELECTOR_PREFIX = /[[.:#*]/;
 const HOST = ':host';
 const ROOT = ':root';
-const PART = /::part\([^\)]*\)/;
+const PART = /::part\([^)]*\)/;
 const SLOTTED = '::slotted';
 const SLOTTED_START = new RegExp(`^(${SLOTTED})`);
 // NOTE: this supports 1 nested () pair for things like

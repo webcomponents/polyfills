@@ -21,7 +21,7 @@ window.pierce = (...selectors) => {
 };
 
 window.color = (...selectors) => {
-  const node = pierce(...selectors);
+  const node = window.pierce(...selectors);
   if (node === null) {
     return null;
   }
