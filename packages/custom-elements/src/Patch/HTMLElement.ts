@@ -80,4 +80,4 @@ export default function(internals: CustomElementInternals) {
 
         return PatchedHTMLElement;
       })() as unknown as typeof HTMLElement;
-};
+}

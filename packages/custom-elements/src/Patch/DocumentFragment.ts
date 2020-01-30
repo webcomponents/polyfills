@@ -19,4 +19,4 @@ export default function(internals: CustomElementInternals) {
     prepend: Native.DocumentFragment_prepend,
     append: Native.DocumentFragment_append,
   });
-};
+}

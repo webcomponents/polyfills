@@ -65,18 +65,21 @@ export default class CustomElementInternals {
   }
 
   patchTree(node: Node) {
-    if (!this._hasPatches)
+    if (!this._hasPatches) {
       return;
+    }
 
     this.forEachElement(node, element => this.patchElement(element));
   }
 
   patchNode(node: Node) {
-    if (!this._hasPatches)
+    if (!this._hasPatches) {
       return;
+    }
 
-    if (node.__CE_patched)
+    if (node.__CE_patched) {
       return;
+    }
     node.__CE_patched = true;
 
     for (let i = 0; i < this._patchesNode.length; i++) {
@@ -85,11 +88,13 @@ export default class CustomElementInternals {
   }
 
   patchElement(element: Element) {
-    if (!this._hasPatches)
+    if (!this._hasPatches) {
       return;
+    }
 
-    if (element.__CE_patched)
+    if (element.__CE_patched) {
       return;
+    }
     element.__CE_patched = true;
 
     for (let i = 0; i < this._patchesNode.length; i++) {
@@ -228,8 +233,9 @@ export default class CustomElementInternals {
           element.addEventListener('load', () => {
             const importNode = importElem.import!;
 
-            if (importNode.__CE_documentLoadHandled)
+            if (importNode.__CE_documentLoadHandled) {
               return;
+            }
             importNode.__CE_documentLoadHandled = true;
 
             // Clone the `visitedImports` set that was populated sync during
@@ -279,14 +285,15 @@ export default class CustomElementInternals {
   private _upgradeAnElement(
       element: HTMLElement, definition: CustomElementDefinition) {
     const currentState = element.__CE_state;
-    if (currentState !== undefined)
+    if (currentState !== undefined) {
       return;
+    }
 
     definition.constructionStack.push(element);
 
     try {
       try {
-        let result = new (definition.constructorFunction)();
+        const result = new (definition.constructorFunction)();
         if (result !== element) {
           throw new Error(
               'The custom element constructor did not produce the element being upgraded.');
@@ -365,8 +372,9 @@ export default class CustomElementInternals {
   private _lookupACustomElementDefinition(doc: Document, localName: string) {
     // The document must be associated with a registry.
     const registry = doc.__CE_registry;
-    if (!registry)
+    if (!registry) {
       return;
+    }
 
     // Prevent elements created in documents without a browsing context from
     // upgrading.
@@ -378,8 +386,9 @@ export default class CustomElementInternals {
     //   "The defaultView IDL attribute of the Document interface, on getting,
     //   must return this Document's browsing context's WindowProxy object, if
     //   this Document has an associated browsing context, or null otherwise."
-    if (!doc.defaultView && !doc.__CE_isImportDocument)
+    if (!doc.defaultView && !doc.__CE_isImportDocument) {
       return;
+    }
 
     return registry.internal_localNameToDefinition(localName);
   }

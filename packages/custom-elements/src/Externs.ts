@@ -65,6 +65,7 @@ declare global {
             void;
   }
 
+  // eslint-disable-next-line no-var
   var ShadyDom: undefined|{
     inUse: boolean,
     nativeMethods: {querySelectorAll: typeof document.querySelectorAll}

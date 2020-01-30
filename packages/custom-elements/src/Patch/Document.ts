@@ -42,4 +42,4 @@ export default function(internals: CustomElementInternals) {
     prepend: Native.Document_prepend,
     append: Native.Document_append,
   });
-};
+}

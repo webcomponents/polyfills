@@ -227,7 +227,7 @@ export default function(internals: CustomElementInternals) {
     }
 
     destination.insertAdjacentHTML = function(this: Element, position, text) {
-      let strPosition = position.toLowerCase();
+      const strPosition = position.toLowerCase();
 
       if (strPosition === 'beforebegin') {
         const marker = this.previousSibling;
@@ -273,4 +273,4 @@ export default function(internals: CustomElementInternals) {
     replaceWith: Native.Element_replaceWith,
     remove: Native.Element_remove,
   });
-};
+}

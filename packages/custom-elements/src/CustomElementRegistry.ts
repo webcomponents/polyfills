@@ -72,8 +72,7 @@ export default class CustomElementRegistry {
     this._localNameToConstructorGetter.set(localName, constructorGetter);
     this._unflushedLocalNames.push(localName);
     // If we've already called the flush callback and it hasn't called back
-    // yet,
-    // don't call it again.
+    // yet, don't call it again.
     if (!this._flushPending) {
       this._flushPending = true;
       this._flushCallback(() => this._flush());
@@ -180,8 +179,9 @@ export default class CustomElementRegistry {
     // If no new definitions were defined, don't attempt to flush. This could
     // happen if a flush callback keeps the function it is given and calls it
     // multiple times.
-    if (this._flushPending === false)
+    if (this._flushPending === false) {
       return;
+    }
     this._flushPending = false;
 
     /**
@@ -199,8 +199,9 @@ export default class CustomElementRegistry {
     this._internals.patchAndUpgradeTree(document, {
       upgrade: element => {
         // Ignore the element if it has already upgraded or failed to upgrade.
-        if (element.__CE_state !== undefined)
+        if (element.__CE_state !== undefined) {
           return;
+        }
 
         const localName = element.localName;
 

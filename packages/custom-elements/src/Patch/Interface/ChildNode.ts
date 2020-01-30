@@ -30,7 +30,7 @@ export default function(
       const flattenedNodes: Array<string|Node> = [];
       const connectedElements: Node[] = [];
 
-      for (var i = 0; i < nodes.length; i++) {
+      for (let i = 0; i < nodes.length; i++) {
         const node = nodes[i];
 
         if (node instanceof Element && Utilities.isConnected(node)) {
@@ -84,7 +84,7 @@ export default function(
        */
       const connectedElements: Node[] = [];
 
-      for (var i = 0; i < nodes.length; i++) {
+      for (let i = 0; i < nodes.length; i++) {
         const node = nodes[i];
 
         if (node instanceof Element && Utilities.isConnected(node)) {
@@ -131,4 +131,4 @@ export default function(
       }
     };
   }
-};
+}

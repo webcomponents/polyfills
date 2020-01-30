@@ -45,7 +45,7 @@ function installPolyfill() {
     enumerable: true,
     value: customElements,
   });
-};
+}
 
 if (!priorCustomElements || priorCustomElements['forcePolyfill'] ||
     (typeof priorCustomElements['define'] != 'function') ||

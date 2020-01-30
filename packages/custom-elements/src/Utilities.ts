@@ -25,7 +25,7 @@ const reservedElementNameSet = new Set<string>();
 
 export function isValidCustomElementName(localName: string) {
   const reserved = reservedElementNameSet.has(localName);
-  const validForm = /^[a-z][.0-9_a-z]*-[\-.0-9_a-z]*$/.test(localName);
+  const validForm = /^[a-z][.0-9_a-z]*-[-.0-9_a-z]*$/.test(localName);
   return !reserved && validForm;
 }
 
