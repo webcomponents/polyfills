@@ -282,8 +282,8 @@ export default class ScopingShim {
     parts.onInsertBefore(parentNode, newNode, referenceNode);
   }
 
-  onExportPartsAttributeChanged(element, newValue) {
-    parts.onExportPartsAttributeChanged(element, newValue);
+  onExportPartsAttributeChanged(element, oldValue, newValue) {
+    parts.onExportPartsAttributeChanged(element, oldValue, newValue);
   }
 
   onPartAttributeChanged(element, newValue) {

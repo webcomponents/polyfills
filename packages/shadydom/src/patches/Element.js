@@ -99,13 +99,15 @@ export const ElementPatches = utils.getOwnPropertyDescriptors({
     if (this.ownerDocument !== doc) {
       this[utils.NATIVE_PREFIX + 'setAttribute'](attr, value);
     } else if (attr === 'part' || attr === 'exportparts') {
-      this[utils.NATIVE_PREFIX + 'setAttribute'](attr, value);
       const shim = getScopingShim();
       if (shim) {
         if (attr === 'part') {
+          this[utils.NATIVE_PREFIX + 'setAttribute'](attr, value);
           shim.onPartAttributeChanged(this, value);
         } else {
-          shim.onExportPartsAttributeChanged(this, value);
+          const oldValue = this.getAttribute('exportparts');
+          this[utils.NATIVE_PREFIX + 'setAttribute'](attr, value);
+          shim.onExportPartsAttributeChanged(this, oldValue, value);
         }
       }
     } else if (!scopeClassAttribute(this, attr, value)) {

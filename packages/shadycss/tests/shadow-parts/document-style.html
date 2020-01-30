@@ -1,7 +1,6 @@
 <!doctype html>
 <head>
   <script>
-  ShadyDOM = { force: true }
   WCT = {waitFor: function (cb) {HTMLImports.whenReady(cb)}}
   </script>
   <script src="../test-flags.js"></script>
@@ -65,6 +64,13 @@
     });
 
     test('selector with 2 parts only matches elements with both parts', function() {
+      if (navigator.userAgent.includes('Chrome') &&
+            (!window.ShadyDOM || !window.ShadyDOM.inUse)) {
+        // Multiple parts is not supported natively as of Chrome 79.0.3945.130,
+        // but should be in the next release, see
+        // https://bugs.chromium.org/p/chromium/issues/detail?id=955897#c4
+        this.skip();
+      }
       assert.equal(getComputedStyle(p1).color, black);
       assert.equal(getComputedStyle(p2).color, black);
       assert.equal(getComputedStyle(p1p2).color, red);

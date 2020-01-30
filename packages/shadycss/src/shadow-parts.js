@@ -398,7 +398,7 @@ export function onPartAttributeChanged(element, newValue) {
  * @param {!HTMLElement} element
  * @param {?string} newValue
  */
-export function onExportPartsAttributeChanged(element, newValue) {
+export function onExportPartsAttributeChanged(element, oldValue, newValue) {
   // TODO(aomarks) Optimize.
   rescopeRecursive(element);
 }
