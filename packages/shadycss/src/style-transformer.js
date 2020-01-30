@@ -329,7 +329,6 @@ class StyleTransformer {
       ({selector, matches} = this._preserveMatchesPseudo(selector));
     }
     selector = selector.replace(SLOTTED_START, `${HOST} $1`);
-    //selector = this._transformPartSelector(selector, scope.replace(/^\./, ''));
     selector = selector.replace(SIMPLE_SELECTOR_SEP, (m, c, s) => {
       if (!stop) {
         let info = this._transformCompoundSelector(s, c, scope, hostScope);

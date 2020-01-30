@@ -117,7 +117,6 @@ export default class ScopingShim {
       let root = nativeShadow ? template.content : null;
       let placeholder = getStylePlaceholder(elementName);
       let style = this._generateStaticStyle(info, template['_styleAst'], root, placeholder, cssBuild, optimalBuild ? cssText : '');
-
       template._style = style;
     }
     template._ownPropertyNames = ownPropertyNames;
