@@ -63,8 +63,13 @@ function firstComposedNode(node) {
   if (node && node.localName === 'slot') {
     const nodeData = shadyDataForNode(node);
     const flattened = nodeData && nodeData.flattenedNodes;
-    composed = flattened && flattened.length ? flattened[0] :
-      firstComposedNode(node[utils.SHADY_PREFIX + 'nextSibling']);
+    // Note, if `flattened` is falsey, it means that the containing shadowRoot
+    // has not rendered and therefore the `<slot>` is still in the composed
+    // DOM. If that's the case the `<slot>` is the first composed node.
+    if (flattened) {
+      composed = flattened.length ? flattened[0] :
+        firstComposedNode(node[utils.SHADY_PREFIX + 'nextSibling']);
+    }
   }
   return composed;
 }
