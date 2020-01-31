@@ -355,7 +355,7 @@ class StyleTransformer {
     let slottedIndex = selector.indexOf(SLOTTED);
     if (selector.indexOf(HOST) >= 0) {
       selector = this._transformHostSelector(selector, hostScope);
-    } else if (PART.test(selector) >= 0) {
+    } else if (selector.match(PART)) {
       selector = this._transformPartSelector(selector, hostScope);
     // replace other selectors with scoping class
     } else if (slottedIndex !== 0) {
