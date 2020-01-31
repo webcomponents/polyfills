@@ -543,7 +543,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(testElement).shadowRoot).querySelector('#added2'), s);
   });
 
-  test('insertBefore before a <slot> in light', function() {
+  test('insertBefore/removeChild before a <slot> in lightDOM causes no exception', function() {
     var template = ShadyDOM.wrapIfNeeded(document).querySelector('template#insertBeforeSlot');
     var frag = ShadyDOM.wrapIfNeeded(template.content).cloneNode(true);
     var div = ShadyDOM.wrapIfNeeded(frag).querySelector('div#slotHost');
