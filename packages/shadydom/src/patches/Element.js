@@ -103,11 +103,17 @@ export const ElementPatches = utils.getOwnPropertyDescriptors({
       if (shim) {
         if (attr === 'part') {
           this[utils.NATIVE_PREFIX + 'setAttribute'](attr, value);
-          shim.onPartAttributeChanged(this, value);
+          // TODO(aomarks) Extra method checks because unit tests don't use
+          // local dependencies.
+          if (shim.onPartAttributeChanged) {
+            shim.onPartAttributeChanged(this, value);
+          }
         } else {
           const oldValue = this.getAttribute('exportparts');
           this[utils.NATIVE_PREFIX + 'setAttribute'](attr, value);
-          shim.onExportPartsAttributeChanged(this, oldValue, value);
+          if (shim.onExportPartsAttributeChanged) {
+            shim.onExportPartsAttributeChanged(this, oldValue, value);
+          }
         }
       }
     } else if (!scopeClassAttribute(this, attr, value)) {
@@ -127,9 +133,11 @@ export const ElementPatches = utils.getOwnPropertyDescriptors({
       this[utils.NATIVE_PREFIX + 'removeAttribute'](attr);
       const shim = getScopingShim();
       if (shim) {
-        if (attr === 'part') {
+        // TODO(aomarks) Extra method checks because unit tests don't use local
+        // dependencies.
+        if (attr === 'part' && shim.onPartAttributeChanged) {
           shim.onPartAttributeChanged(this, null);
-        } else {
+        } else if (shim.onExportPartsAttributeChanged) {
           shim.onExportPartsAttributeChanged(this, null);
         }
       }
