@@ -64,7 +64,7 @@ jobs:
     - name: Build
       run: npm run build
 
-    - name: WCT sauce (Safar/Edge/IE11/Chrome 41)
+    - name: WCT sauce (Safari/Edge/IE11/Chrome 41)
       env:
         SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
         SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
