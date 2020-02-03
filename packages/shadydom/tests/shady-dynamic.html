@@ -543,7 +543,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(testElement).shadowRoot).querySelector('#added2'), s);
   });
 
-  test('insertBefore before a <slot> in light', function() {
+  test('insertBefore/removeChild before a <slot> in lightDOM causes no exception', function() {
     var template = ShadyDOM.wrapIfNeeded(document).querySelector('template#insertBeforeSlot');
     var frag = ShadyDOM.wrapIfNeeded(template.content).cloneNode(true);
     var div = ShadyDOM.wrapIfNeeded(frag).querySelector('div#slotHost');
@@ -1127,6 +1127,32 @@ suite('insertBefore', function() {
     assert.throws(function() {
       ShadyDOM.wrapIfNeeded(e).insertBefore(div1, div2);
     });
+  });
+
+  test('insertBefore with a `<slot>` as refNode not in a shadowRoot', function() {
+    var e = document.createElement('div');
+    var slot = document.createElement('slot');
+    ShadyDOM.wrapIfNeeded(e).appendChild(slot);
+    var div = document.createElement('div');
+    ShadyDOM.wrapIfNeeded(e).insertBefore(div, slot);
+    var composed = Array.from(ShadyDOM.nativeTree.childNodes(e));
+    assert.deepEqual(composed, [div, slot]);
+  });
+
+  test('insertBefore with a `<slot>` as refNode in a shadowRoot that hasn\'t rendered', function() {
+    var e = document.createElement('div');
+    ShadyDOM.wrapIfNeeded(e).attachShadow({mode: 'open'});
+    var last = document.createElement('div');
+    var slot = document.createElement('slot');
+    ShadyDOM.wrapIfNeeded(e).shadowRoot.appendChild(slot);
+    ShadyDOM.wrapIfNeeded(e).shadowRoot.appendChild(last);
+    var first = document.createElement('div');
+    ShadyDOM.wrapIfNeeded(e).shadowRoot.insertBefore(first, slot);
+    var composed = Array.from(ShadyDOM.nativeTree.childNodes(e));
+    assert.deepEqual(composed, [first, slot, last]);
+    ShadyDOM.flush();
+    composed = Array.from(ShadyDOM.nativeTree.childNodes(e));
+    assert.deepEqual(composed, [first, last]);
   });
 
   test('contains', function() {
