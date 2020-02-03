@@ -135,10 +135,14 @@ export const ElementPatches = utils.getOwnPropertyDescriptors({
       if (shim) {
         // TODO(aomarks) Extra method checks because unit tests don't use local
         // dependencies.
-        if (attr === 'part' && shim.onPartAttributeChanged) {
-          shim.onPartAttributeChanged(this, null);
-        } else if (shim.onExportPartsAttributeChanged) {
-          shim.onExportPartsAttributeChanged(this, null);
+        if (attr === 'part') {
+          if (shim.onPartAttributeChanged) {
+            shim.onPartAttributeChanged(this, null);
+          }
+        } else {
+          if (shim.onExportPartsAttributeChanged) {
+            shim.onExportPartsAttributeChanged(this, null);
+          }
         }
       }
     } else if (!scopeClassAttribute(this, attr, '')) {
