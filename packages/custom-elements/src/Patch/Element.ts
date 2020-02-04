@@ -30,7 +30,7 @@ export default function(internals: CustomElementInternals) {
 
 
   function patch_innerHTML(
-      destination: Element|HTMLElement, baseDescriptor: PropertyDescriptor) {
+      destination: Element, baseDescriptor: PropertyDescriptor) {
     Object.defineProperty(destination, 'innerHTML', {
       enumerable: baseDescriptor.enumerable,
       configurable: true,
@@ -94,7 +94,7 @@ export default function(internals: CustomElementInternals) {
         // Implements setting `innerHTML` by creating an unpatched element,
         // setting `innerHTML` of that element and replacing the target
         // element's children with those of the unpatched element.
-        set: /** @this {Element} */ function(this: Element, assignedValue) {
+        set: function(this: Element, assignedValue) {
           // NOTE: re-route to `content` for `template` elements.
           // We need to do this because `template.appendChild` does not
           // route into `template.content`.
@@ -181,8 +181,7 @@ export default function(internals: CustomElementInternals) {
 
 
   function patch_insertAdjacentElement(
-      destination: Element|HTMLElement,
-      baseMethod: Element['insertAdjacentElement']) {
+      destination: Element, baseMethod: Element['insertAdjacentElement']) {
     destination.insertAdjacentElement = function(
         this: Element, position, element) {
       const wasConnected = Utilities.isConnected(element);
@@ -209,8 +208,7 @@ export default function(internals: CustomElementInternals) {
 
 
   function patch_insertAdjacentHTML(
-      destination: Element|HTMLElement,
-      baseMethod: Element['insertAdjacentHTML']) {
+      destination: Element, baseMethod: Element['insertAdjacentHTML']) {
     /**
      * Patches and upgrades all nodes which are siblings between `start`
      * (inclusive) and `end` (exclusive). If `end` is `null`, then all siblings

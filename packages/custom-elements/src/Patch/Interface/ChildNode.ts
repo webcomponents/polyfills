@@ -18,7 +18,7 @@ interface ChildNodeNativeMethods {
   before: NativeMethod;
   after: NativeMethod;
   replaceWith: NativeMethod;
-  remove: NativeMethod;
+  remove: (this: ChildNode) => void;
 }
 
 export default function(

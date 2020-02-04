@@ -12,7 +12,7 @@
 export const CustomElementState = {
   custom: 1,
   failed: 2,
-};
+} as const;
 export type CustomElementState =
     typeof CustomElementState.custom|typeof CustomElementState.failed;
 

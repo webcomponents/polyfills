@@ -79,14 +79,14 @@ export default class CustomElementRegistry {
     }
   }
 
-  define(localName: string, constructor: ElementConstructor) {
+  define(localName: string, constructor: Function) {
     if (!(constructor instanceof Function)) {
       throw new TypeError('Custom element constructors must be functions.');
     }
 
     this.internal_assertCanDefineLocalName(localName);
 
-    this.internal_reifyDefinition(localName, constructor);
+    this.internal_reifyDefinition(localName, constructor as ElementConstructor);
     this._unflushedLocalNames.push(localName);
     // If we've already called the flush callback and it hasn't called back
     // yet, don't call it again.
@@ -102,8 +102,9 @@ export default class CustomElementRegistry {
     }
 
     if (this.internal_localNameToDefinition(localName)) {
-      throw new Error(`A custom element with name '${
-          localName}' has already been defined.`);
+      throw new Error(
+          `A custom element with name ` +
+          `'${localName}' has already been defined.`);
     }
 
     if (this._elementDefinitionIsRunning) {
@@ -171,7 +172,7 @@ export default class CustomElementRegistry {
     return definition;
   }
 
-  upgrade(node: Node) {
+  upgrade(node: Node): void {
     this._internals.patchAndUpgradeTree(node);
   }
 
@@ -246,7 +247,7 @@ export default class CustomElementRegistry {
     unflushedLocalNames.length = 0;
   }
 
-  get(localName: string) {
+  get(localName: string): undefined|{new(): HTMLElement} {
     const definition = this.internal_localNameToDefinition(localName);
     if (definition) {
       return definition.constructorFunction;
@@ -255,7 +256,7 @@ export default class CustomElementRegistry {
     return undefined;
   }
 
-  whenDefined(localName: string) {
+  whenDefined(localName: string): Promise<void> {
     if (!Utilities.isValidCustomElementName(localName)) {
       return Promise.reject(new SyntaxError(
           `'${localName}' is not a valid custom element name.`));
@@ -297,7 +298,8 @@ export default class CustomElementRegistry {
     this._flushCallback = flush => outer(() => inner(flush));
   }
 
-  internal_localNameToDefinition(localName: string) {
+  internal_localNameToDefinition(localName: string): CustomElementDefinition
+      |undefined {
     const existingDefinition = this._localNameToDefinition.get(localName);
     if (existingDefinition) {
       return existingDefinition;
@@ -316,14 +318,15 @@ export default class CustomElementRegistry {
     return undefined;
   }
 
-  internal_constructorToDefinition(constructor: ElementConstructor) {
+  internal_constructorToDefinition(constructor: ElementConstructor):
+      CustomElementDefinition|undefined {
     return this._constructorToDefinition.get(constructor);
   }
 }
 
 // Closure compiler exports.
 window['CustomElementRegistry'] =
-    CustomElementRegistry as unknown as typeof window.CustomElementRegistry;
+    CustomElementRegistry as unknown as typeof window['CustomElementRegistry'];
 CustomElementRegistry.prototype['define'] =
     CustomElementRegistry.prototype.define;
 CustomElementRegistry.prototype['upgrade'] =

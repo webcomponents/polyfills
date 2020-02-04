@@ -18,7 +18,8 @@ export default function(internals: CustomElementInternals) {
   // `Node#nodeValue` is implemented on `Attr`.
   // `Node#textContent` is implemented on `Attr`, `Element`.
 
-  Node.prototype.insertBefore = function(this: Node, node, refNode) {
+  Node.prototype.insertBefore = function<T extends Node>(
+      this: Node, node: T, refNode: Node|null) {
     if (node instanceof DocumentFragment) {
       const insertedNodes = Utilities.childrenFromFragment(node);
       const nativeResult = Native.Node_insertBefore.call(this, node, refNode);
@@ -32,12 +33,13 @@ export default function(internals: CustomElementInternals) {
         }
       }
 
-      return nativeResult;
+      return nativeResult as T;
     }
 
     const nodeWasConnectedElement =
         node instanceof Element && Utilities.isConnected(node);
-    const nativeResult = Native.Node_insertBefore.call(this, node, refNode);
+    const nativeResult =
+        Native.Node_insertBefore.call(this, node, refNode) as T;
 
     if (nodeWasConnectedElement) {
       internals.disconnectTree(node);
@@ -48,12 +50,12 @@ export default function(internals: CustomElementInternals) {
     }
 
     return nativeResult;
-  } as typeof Node.prototype.insertBefore;
+  };
 
-  Node.prototype.appendChild = function(this: Node, node) {
+  Node.prototype.appendChild = function<T extends Node>(this: Node, node: T) {
     if (node instanceof DocumentFragment) {
       const insertedNodes = Utilities.childrenFromFragment(node);
-      const nativeResult = Native.Node_appendChild.call(this, node);
+      const nativeResult = Native.Node_appendChild.call(this, node) as T;
 
       // DocumentFragments can't be connected, so `disconnectTree` will never
       // need to be called on a DocumentFragment's children after inserting it.
@@ -69,7 +71,7 @@ export default function(internals: CustomElementInternals) {
 
     const nodeWasConnectedElement =
         node instanceof Element && Utilities.isConnected(node);
-    const nativeResult = Native.Node_appendChild.call(this, node);
+    const nativeResult = Native.Node_appendChild.call(this, node) as T;
 
     if (nodeWasConnectedElement) {
       internals.disconnectTree(node);
@@ -80,7 +82,7 @@ export default function(internals: CustomElementInternals) {
     }
 
     return nativeResult;
-  } as typeof Node.prototype.appendChild;
+  };
 
   Node.prototype.cloneNode = function(this: Node, deep) {
     const clone = Native.Node_cloneNode.call(this, !!deep);
@@ -94,24 +96,24 @@ export default function(internals: CustomElementInternals) {
     return clone;
   };
 
-  Node.prototype.removeChild = function(this: Node, node) {
+  Node.prototype.removeChild = function<T extends Node>(this: Node, node: T) {
     const nodeWasConnectedElement =
         node instanceof Element && Utilities.isConnected(node);
-    const nativeResult = Native.Node_removeChild.call(this, node);
+    const nativeResult = Native.Node_removeChild.call(this, node) as T;
 
     if (nodeWasConnectedElement) {
       internals.disconnectTree(node);
     }
 
     return nativeResult;
-  } as typeof Node.prototype.removeChild;
+  };
 
-  Node.prototype.replaceChild = function(
-                                    this: Node, nodeToInsert, nodeToRemove) {
+  Node.prototype.replaceChild = function<T extends Node>(
+      this: Node, nodeToInsert: Node, nodeToRemove: T) {
     if (nodeToInsert instanceof DocumentFragment) {
       const insertedNodes = Utilities.childrenFromFragment(nodeToInsert);
       const nativeResult =
-          Native.Node_replaceChild.call(this, nodeToInsert, nodeToRemove);
+          Native.Node_replaceChild.call(this, nodeToInsert, nodeToRemove) as T;
 
       // DocumentFragments can't be connected, so `disconnectTree` will never
       // need to be called on a DocumentFragment's children after inserting it.
@@ -129,7 +131,7 @@ export default function(internals: CustomElementInternals) {
     const nodeToInsertWasConnectedElement =
         nodeToInsert instanceof Element && Utilities.isConnected(nodeToInsert);
     const nativeResult =
-        Native.Node_replaceChild.call(this, nodeToInsert, nodeToRemove);
+        Native.Node_replaceChild.call(this, nodeToInsert, nodeToRemove) as T;
     const thisIsConnected = Utilities.isConnected(this);
 
     if (thisIsConnected) {
@@ -145,7 +147,7 @@ export default function(internals: CustomElementInternals) {
     }
 
     return nativeResult;
-  } as typeof Node.prototype.replaceChild;
+  };
 
 
   function patch_textContent(
@@ -154,7 +156,7 @@ export default function(internals: CustomElementInternals) {
       enumerable: baseDescriptor.enumerable,
       configurable: true,
       get: baseDescriptor.get,
-      set: /** @this {Node} */ function(assignedValue) {
+      set: function(this: Node, assignedValue) {
         // If this is a text node then there are no nodes to disconnect.
         if (this.nodeType === Node.TEXT_NODE) {
           baseDescriptor.set!.call(this, assignedValue);

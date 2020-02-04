@@ -9,9 +9,6 @@
  * rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
-/**
- * @template T
- */
 export default class Deferred<T> {
   private _value: T|undefined = undefined;
 

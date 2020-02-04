@@ -8,7 +8,6 @@
  * Google as part of the polymer project is also subject to an additional IP
  * rights grant found at http://polymer.github.io/PATENTS.txt
  */
-import {} from './Externs';
 
 /**
  * This shim allows elements written in, or compiled to, ES5 to work on native
@@ -35,7 +34,7 @@ const BuiltInHTMLElement = HTMLElement;
  * which is enough for the JS VM to correctly set Function.prototype.name.
  */
 const wrapperForTheName = {
-  'HTMLElement': /** @this {!Object} */ function HTMLElement() {
+  'HTMLElement': function HTMLElement(this: HTMLElement) {
     return Reflect.construct(BuiltInHTMLElement, [], this.constructor);
   }
 };

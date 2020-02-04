@@ -403,7 +403,8 @@ export default class CustomElementInternals {
    *
    * @see https://dom.spec.whatwg.org/#concept-create-element
    */
-  createAnElement(doc: Document, localName: string, namespace: string|null) {
+  createAnElement(doc: Document, localName: string, namespace: string|null):
+      Element {
     const registry = doc.__CE_registry;
     // Only create custom elements if the document is associated with a
     // registry.
@@ -517,11 +518,10 @@ export default class CustomElementInternals {
       event.initErrorEvent!('error', false, true, message, filename, lineno);
       // Hack for IE, where ErrorEvent#preventDefault does not set
       // #defaultPrevented to true.
-      /** @this {!ErrorEvent} */
-      event.preventDefault = function() {
+      event.preventDefault = function(this: ErrorEvent) {
         Object.defineProperty(this, 'defaultPrevented', {
           configurable: true,
-          get: function() {
+          get: function(this: ErrorEvent) {
             return true;
           },
         });
