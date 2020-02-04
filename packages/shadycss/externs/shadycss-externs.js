@@ -16,6 +16,9 @@
  * nativeShadow: boolean,
  * cssBuild: (string | undefined),
  * disableRuntime: boolean,
+ * onInsertBefore: function(!HTMLElement, !HTMLElement, ?HTMLElement): void,
+ * onExportPartsAttributeChanged: function(!HTMLElement, ?string, ?string): void,
+ * onPartAttributeChanged: function(!HTMLElement, ?string, ?string): void,
  * }}
  */
 let ShadyCSSInterface; //eslint-disable-line no-unused-vars

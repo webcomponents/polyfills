@@ -277,14 +277,32 @@ export default class ScopingShim {
     this._documentOwnerStyleInfo.styleRules['rules'] = styles.map(s => StyleUtil.rulesForStyle(s));
   }
 
+  /**
+   * @param {!HTMLElement} parentNode
+   * @param {!HTMLElement} newNode
+   * @param {?HTMLElement} referenceNode
+   * @return {void}
+   */
   onInsertBefore(parentNode, newNode, referenceNode) {
     parts.onInsertBefore(parentNode, newNode, referenceNode);
   }
 
+  /**
+   * @param {!HTMLElement} element
+   * @param {?string} oldValue
+   * @param {?string} newValue
+   * @return {void}
+   */
   onExportPartsAttributeChanged(element, oldValue, newValue) {
     parts.onExportPartsAttributeChanged(element, oldValue, newValue);
   }
 
+  /**
+   * @param {!HTMLElement} element
+   * @param {?string} oldValue
+   * @param {?string} newValue
+   * @return {void}
+   */
   onPartAttributeChanged(element, oldValue, newValue) {
     parts.onPartAttributeChanged(element, oldValue, newValue);
   }
