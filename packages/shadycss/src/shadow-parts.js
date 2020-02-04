@@ -287,13 +287,13 @@ function addPartSpecifiersToElement(element, partNames) {
  * @param {!HTMLElement} element
  */
 function rescopeRecursive(element) {
-  element.shadyCssExportPartsMap = undefined;
+  // element.shadyCssExportPartsMap = undefined;
   if (element.shadowRoot) {
     scopeAllHostParts(element);
     const exports = /** @type {!NodeList<!HTMLElement>} */ (
         element.shadowRoot.querySelectorAll('[exportparts]'));
     for (const child of exports) {
-      child.shadyCssExportPartsMap = undefined;
+      // child.shadyCssExportPartsMap = undefined;
       rescopeRecursive(child);
     }
   }
@@ -311,11 +311,11 @@ function rescopeRecursive(element) {
  */
 function getExportPartsMap(host) {
   // TODO(aomarks) Add to externs (or move).
-  if (host.shadyCssExportPartsMap !== undefined) {
-    return host.shadyCssExportPartsMap;
-  }
+  // if (host.shadyCssExportPartsMap !== undefined) {
+  //   return host.shadyCssExportPartsMap;
+  // }
   const map = {};
-  host.shadyCssExportPartsMap = map;
+  // host.shadyCssExportPartsMap = map;
 
   const attr = host.getAttribute('exportparts');
   if (attr === null) {
