@@ -173,7 +173,8 @@ export function formatPartSelector(parts, scope, hostScope) {
 /**
  * TODO
  *
- * @param {!Element}
+ * @param {!Element} element
+ * @param {!string} specifier
  * @return {void}
  */
 export function addPartSpecifier(element, specifier) {
@@ -188,7 +189,7 @@ export function addPartSpecifier(element, specifier) {
 /**
  * Remove all part classes from the given element.
  *
- * @param {!Element}
+ * @param {!Element} element
  * @return {void}
  */
 export function removeAllPartSpecifiers(element) {
@@ -199,7 +200,7 @@ export function removeAllPartSpecifiers(element) {
  * Return the name that identifies the given root. Either the lowercase name of
  * the host element, or "document" if this is the document.
  *
- * @param {!ShadowRoot|!Document} host
+ * @param {!Node} root
  * @return {!string|undefined}
  */
 function scopeForRoot(root) {
@@ -283,13 +284,14 @@ function addPartSpecifiersToElement(element, partNames) {
 
 /**
  * TODO
- * @param {*} element
+ * @param {!HTMLElement} element
  */
 function rescopeRecursive(element) {
   element.shadyCssExportPartsMap = undefined;
   if (element.shadowRoot) {
     scopeAllHostParts(element);
-    const exports = element.shadowRoot.querySelectorAll('[exportparts]');
+    const exports = /** @type {!NodeList<!HTMLElement>} */ (
+        element.shadowRoot.querySelectorAll('[exportparts]'));
     for (const child of exports) {
       child.shadyCssExportPartsMap = undefined;
       rescopeRecursive(child);
@@ -301,11 +303,11 @@ function rescopeRecursive(element) {
  * TODO(aomarks) Description
  *
  * @param {!HTMLElement} host
- * @return {!Object<!string, {
+ * @return {!Object<!string, !Array<{
  *     partName: string,
  *     scope: string,
  *     hostScope: string
- *   }>}
+ *   }>>}
  */
 function getExportPartsMap(host) {
   // TODO(aomarks) Add to externs (or move).
@@ -366,10 +368,12 @@ export function onStyleElement(element) {
 
 /**
  * TODO
- * @param {TODO} parentNode
- * @param {*} newNode
+ * @param {!HTMLElement} parentNode
+ * @param {!HTMLElement} newNode
+ * @param {?HTMLElement} referenceNode
  */
-export function onInsertBefore(parentNode, newNode) {
+export function onInsertBefore(parentNode, newNode, referenceNode) {
+  console.log(referenceNode); // TODO(aomarks) Remove.
   const root = newNode.getRootNode();
   if (root.host) {
     // TODO(aomarks) Optimize.
@@ -381,9 +385,11 @@ export function onInsertBefore(parentNode, newNode) {
  * Update a node whose "part" attribute has changed.
  *
  * @param {!HTMLElement} element
+ * @param {?string} oldValue
  * @param {?string} newValue
  */
-export function onPartAttributeChanged(element, newValue) {
+export function onPartAttributeChanged(element, oldValue, newValue) {
+  console.log(oldValue); // TODO(aomarks) Remove.
   if (!newValue) {
     removeAllPartSpecifiers(element);
   } else {
@@ -395,8 +401,11 @@ export function onPartAttributeChanged(element, newValue) {
  * Update a node whose "exportparts" attribute has changed.
  *
  * @param {!HTMLElement} element
+ * @param {?string} oldValue
+ * @param {?string} newValue
  */
-export function onExportPartsAttributeChanged(element) {
+export function onExportPartsAttributeChanged(element, oldValue, newValue) {
+  console.log(oldValue, newValue); // TODO(aomarks) Remove.
   // TODO(aomarks) Optimize.
   rescopeRecursive(element);
 }

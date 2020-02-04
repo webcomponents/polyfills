@@ -99,18 +99,17 @@ export const ElementPatches = utils.getOwnPropertyDescriptors({
     if (this.ownerDocument !== doc) {
       this[utils.NATIVE_PREFIX + 'setAttribute'](attr, value);
     } else if (attr === 'part' || attr === 'exportparts') {
+      const oldValue = this.getAttribute('exportparts');
+      this[utils.NATIVE_PREFIX + 'setAttribute'](attr, value);
       const shim = getScopingShim();
       if (shim) {
         if (attr === 'part') {
-          this[utils.NATIVE_PREFIX + 'setAttribute'](attr, value);
           // TODO(aomarks) Extra method checks because unit tests don't use
           // local dependencies.
           if (shim.onPartAttributeChanged) {
-            shim.onPartAttributeChanged(this, value);
+            shim.onPartAttributeChanged(this, oldValue, value);
           }
         } else {
-          const oldValue = this.getAttribute('exportparts');
-          this[utils.NATIVE_PREFIX + 'setAttribute'](attr, value);
           if (shim.onExportPartsAttributeChanged) {
             shim.onExportPartsAttributeChanged(this, oldValue, value);
           }
@@ -130,6 +129,7 @@ export const ElementPatches = utils.getOwnPropertyDescriptors({
     if (this.ownerDocument !== doc) {
       this[utils.NATIVE_PREFIX + 'removeAttribute'](attr);
     } else if (attr === 'part' || attr === 'exportparts') {
+      const oldValue = this.getAttribute('exportparts');
       this[utils.NATIVE_PREFIX + 'removeAttribute'](attr);
       const shim = getScopingShim();
       if (shim) {
@@ -137,11 +137,11 @@ export const ElementPatches = utils.getOwnPropertyDescriptors({
         // dependencies.
         if (attr === 'part') {
           if (shim.onPartAttributeChanged) {
-            shim.onPartAttributeChanged(this, null);
+            shim.onPartAttributeChanged(this, oldValue, null);
           }
         } else {
           if (shim.onExportPartsAttributeChanged) {
-            shim.onExportPartsAttributeChanged(this, null);
+            shim.onExportPartsAttributeChanged(this, oldValue, null);
           }
         }
       }
