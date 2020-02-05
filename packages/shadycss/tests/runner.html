@@ -130,10 +130,6 @@
   suites = suites.filter((url) => {
     if (url.indexOf('shadow-parts/') === 0) {
       const forceShady = url.indexOf('wc-shadydom') !== -1;
-      const forceProps = url.indexOf('wc-shimcssproperties') !== -1;
-      if (!forceShady || !forceProps) {
-        return false;
-      }
 
       if (hasNativeShadowDom && !hasNativeShadowParts && !forceShady) {
         // Browsers that support shadow DOM but not shadow parts are not
