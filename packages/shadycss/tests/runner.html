@@ -38,6 +38,16 @@
     'wc-1.html',
     'scoping-api.html',
     'mixin-fallbacks.html',
+    'shadow-parts/custom-properties.html',
+    'shadow-parts/document-style.html',
+    'shadow-parts/dynamic-match.html',
+    'shadow-parts/multiple-parts.html',
+    'shadow-parts/mutate-exportparts.html',
+    'shadow-parts/mutate-part.html',
+    'shadow-parts/pseudo-elements-classes.html',
+    'shadow-parts/recursive.html',
+    'shadow-parts/simple-export.html',
+    'shadow-parts/specificity.html',
   ];
 
   // http://eddmann.com/posts/cartesian-product-in-javascript/
@@ -70,7 +80,9 @@
     webcomponents = 'wc-register=true';
   }
   // if native is available, make sure to test polyfill
-  if (Element.prototype.attachShadow && document.documentElement.getRootNode) {
+  const hasNativeShadowDom = Element.prototype.attachShadow !== undefined
+      && document.documentElement.getRootNode !== undefined;
+  if (hasNativeShadowDom) {
     webcomponents = addUrlOption(webcomponents, 'wc-shadydom=true');
   }
   // ce + sd becomes a single test iteration.
@@ -108,6 +120,39 @@
       'no-applyshim/custom-style-late.html'
     ]);
   }
+
+  const hasNativeShadowParts = 'part' in Element.prototype;
+
+  // TODO(aomarks) Make this more precise.
+  const supportsMultipleShadowParts =
+      hasNativeShadowParts && !navigator.userAgent.includes('Chrome');
+
+  suites = suites.filter((url) => {
+    if (url.indexOf('shadow-parts/') === 0) {
+      const forceShady = url.indexOf('wc-shadydom') !== -1;
+      const forceProps = url.indexOf('wc-shimcssproperties') !== -1;
+      if (!forceShady || !forceProps) {
+        return false;
+      }
+
+      if (hasNativeShadowDom && !hasNativeShadowParts && !forceShady) {
+        // Browsers that support shadow DOM but not shadow parts are not
+        // currently supported unless the full shady polyfill is loaded.
+        return false;
+      }
+
+      if (url.indexOf('shadow-parts/multiple-parts.html') === 0 ||
+          url.indexOf('shadow-parts/document-style.html') === 0) {
+        // Multiple parts is not supported natively as of Chrome 79.0.3945.130,
+        // but should be in the next release, see
+        // https://bugs.chromium.org/p/chromium/issues/detail?id=955897#c4
+        if (hasNativeShadowParts && !supportsMultipleShadowParts && !forceShady) {
+          return false;
+        }
+      }
+    }
+    return true;
+  });
 
   WCT.loadSuites(suites);
 })();

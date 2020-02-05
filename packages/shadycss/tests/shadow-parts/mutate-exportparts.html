@@ -68,13 +68,6 @@
       document.body.removeChild(a);
     })
 
-    test('add exportparts node', async function() {
-      const newC = document.createElement('x-c');
-      newC.setAttribute('exportparts', 'c1:b2');
-      b.shadowRoot.appendChild(newC);
-      assert.equal(color(newC, 'x-d', '[part]'), green);
-    });
-
     test('change exportparts', function() {
       assert.equal(color(d1, '[part]'), red);
       assert.equal(color(d2, '[part]'), black);
