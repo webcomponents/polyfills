@@ -25,7 +25,8 @@ gulp.task('default', () => {
   return gulp.src('./src/**/*.js', {base: '.'})
     .pipe(sourcemaps.init())
     .pipe(closureCompiler({
-      compilation_level: 'ADVANCED',
+      // TODO(aomarks) Restore this when compilation errors fixed!
+      compilation_level: 'SIMPLE_OPTIMIZATIONS',
       language_in: 'ES6_STRICT',
       language_out: 'ES5_STRICT',
       isolation_mode: 'IIFE',
