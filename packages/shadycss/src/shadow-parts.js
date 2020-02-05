@@ -373,7 +373,6 @@ export function onStyleElement(element) {
  * @param {?HTMLElement} referenceNode
  */
 export function onInsertBefore(parentNode, newNode, referenceNode) {
-  console.log(referenceNode); // TODO(aomarks) Remove.
   const root = newNode.getRootNode();
   if (root.host) {
     // TODO(aomarks) Optimize.
@@ -389,7 +388,6 @@ export function onInsertBefore(parentNode, newNode, referenceNode) {
  * @param {?string} newValue
  */
 export function onPartAttributeChanged(element, oldValue, newValue) {
-  console.log(oldValue); // TODO(aomarks) Remove.
   if (!newValue) {
     removeAllPartSpecifiers(element);
   } else {
@@ -405,7 +403,6 @@ export function onPartAttributeChanged(element, oldValue, newValue) {
  * @param {?string} newValue
  */
 export function onExportPartsAttributeChanged(element, oldValue, newValue) {
-  console.log(oldValue, newValue); // TODO(aomarks) Remove.
   // TODO(aomarks) Optimize.
   rescopeRecursive(element);
 }
