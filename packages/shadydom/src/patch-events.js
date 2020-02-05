@@ -10,7 +10,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 import * as utils from './utils.js';
 import {flush} from './flush.js';
-import {shadyDataForNode} from './shady-data.js';
+import {shadyDataForNode, ensureShadyDataForNode} from './shady-data.js';
 
 /*
 Make this name unique so it is unlikely to conflict with properties on objects passed to `addEventListener`
@@ -624,6 +624,33 @@ export function patchClick() {
   }
 }
 
+export const eventPropertyNamesForElement =
+    Object.getOwnPropertyNames(Element.prototype)
+    .filter(name => name.substring(0,2) === 'on');
+
 export const eventPropertyNamesForHTMLElement =
     Object.getOwnPropertyNames(HTMLElement.prototype)
     .filter(name => name.substring(0,2) === 'on');
+
+/** @template T */
+export const wrappedDescriptorForEventProperty = (property) => {
+  return {
+    /** @this {T} */
+    set: function(fn) {
+      const shadyData = ensureShadyDataForNode(this);
+      const eventName = property.substring(2);
+      if (!shadyData.__onCallbackListeners) {
+        shadyData.__onCallbackListeners = {};
+      }
+      shadyData.__onCallbackListeners[property] && this.removeEventListener(eventName, shadyData.__onCallbackListeners[property]);
+      this[utils.SHADY_PREFIX + 'addEventListener'](eventName, fn);
+      shadyData.__onCallbackListeners[property] = fn;
+    },
+    /** @this {T} */
+    get() {
+      const shadyData = shadyDataForNode(this);
+      return shadyData && shadyData.__onCallbackListeners && shadyData.__onCallbackListeners[property];
+    },
+    configurable: true
+  };
+};
