@@ -72,6 +72,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         assert(spy.notCalled, 'placeholder was created but should not have been');
       });
       test('no scoping occurs', function() {
+        // https://github.com/webcomponents/polyfills/issues/260
+        this.skip();
         makeElement('no-scope');
         const template = document.querySelector('template#no-scope');
         assert.deepEqual(template.content.querySelectorAll('.style-scope'), [], 'no DOM should be scoped');
