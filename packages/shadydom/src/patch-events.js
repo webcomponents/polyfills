@@ -632,7 +632,10 @@ export const eventPropertyNamesForHTMLElement =
     Object.getOwnPropertyNames(HTMLElement.prototype)
     .filter(name => name.substring(0,2) === 'on');
 
-/** @template T */
+/**
+ * @template T
+ * @return {!ObjectPropertyDescriptor<T>}
+ */
 export const wrappedDescriptorForEventProperty = (property) => {
   return {
     /** @this {T} */
