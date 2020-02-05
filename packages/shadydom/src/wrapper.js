@@ -9,7 +9,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 */
 
 import * as utils from './utils.js';
-import {eventPropertyNames} from './patch-events.js';
+import {eventPropertyNamesForHTMLElement} from './patch-events.js';
 
 /** @implements {IWrapper} */
 class Wrapper {
@@ -247,7 +247,7 @@ class Wrapper {
 
 }
 
-eventPropertyNames.forEach(name => {
+eventPropertyNamesForHTMLElement.forEach(name => {
   Object.defineProperty(Wrapper.prototype, name, {
     /** @this {Wrapper} */
     get() {

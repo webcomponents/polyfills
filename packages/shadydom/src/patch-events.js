@@ -624,5 +624,6 @@ export function patchClick() {
   }
 }
 
-export const eventPropertyNames = Object.getOwnPropertyNames(Document.prototype)
+export const eventPropertyNamesForHTMLElement =
+    Object.getOwnPropertyNames(HTMLElement.prototype)
     .filter(name => name.substring(0,2) === 'on');

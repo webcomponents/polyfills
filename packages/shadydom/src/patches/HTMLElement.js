@@ -9,7 +9,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 */
 
 import * as utils from '../utils.js';
-import {eventPropertyNames} from '../patch-events.js';
+import {eventPropertyNamesForHTMLElement} from '../patch-events.js';
 import {shadyDataForNode, ensureShadyDataForNode} from '../shady-data.js';
 
 export const HTMLElementPatches = utils.getOwnPropertyDescriptors({
@@ -30,7 +30,7 @@ export const HTMLElementPatches = utils.getOwnPropertyDescriptors({
 
 if (!utils.settings.preferPerformance) {
 
-  eventPropertyNames.forEach(property => {
+  eventPropertyNamesForHTMLElement.forEach(property => {
     HTMLElementPatches[property] = {
       /** @this {HTMLElement} */
       set: function(fn) {
