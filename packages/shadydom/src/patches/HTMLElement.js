@@ -10,7 +10,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 import * as utils from '../utils.js';
 import {eventPropertyNamesForHTMLElement, wrappedDescriptorForEventProperty} from '../patch-events.js';
-import {shadyDataForNode, ensureShadyDataForNode} from '../shady-data.js';
+import {shadyDataForNode} from '../shady-data.js';
 
 export const HTMLElementPatches = utils.getOwnPropertyDescriptors({
 
