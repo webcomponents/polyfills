@@ -213,3 +213,15 @@ export const getOwnPropertyDescriptors = (obj) => {
   });
   return descriptors;
 };
+
+export const assign = (target, source) => {
+  const names = Object.getOwnPropertyNames(source);
+  for (let i = 0, p; i < names.length; i++) {
+    p = names[i];
+    target[p] = source[p];
+  }
+};
+
+export const arrayFrom = (object) => {
+  return [].slice.call(/** @type {IArrayLike} */(object));
+};

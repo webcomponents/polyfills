@@ -149,4 +149,4 @@ export const ElementShadowPatches = utils.getOwnPropertyDescriptors({
   },
 });
 
-Object.assign(ElementPatches, ElementShadowPatches);
+utils.assign(ElementPatches, ElementShadowPatches);
