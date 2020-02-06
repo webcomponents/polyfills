@@ -370,10 +370,8 @@ export const NodePatches = utils.getOwnPropertyDescriptors({
     }
 
     const scopingShim = getScopingShim();
-    // TODO(aomarks) Extra check is here because unit test sources aren't linked
-    // for some reason.
-    if (scopingShim && scopingShim.onInsertBefore) {
-      scopingShim.onInsertBefore(this, node, ref_node);
+    if (scopingShim) {
+      scopingShim['onInsertBefore'](this, node, ref_node);
     }
 
     return node;
