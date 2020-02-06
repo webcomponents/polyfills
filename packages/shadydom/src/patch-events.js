@@ -633,12 +633,12 @@ export const eventPropertyNamesForHTMLElement =
     .filter(name => name.substring(0,2) === 'on');
 
 /**
- * @template T
- * @return {!ObjectPropertyDescriptor<T>}
+ * @param {string} property
+ * @return {!ObjectPropertyDescriptor<Element>}
  */
 export const wrappedDescriptorForEventProperty = (property) => {
   return {
-    /** @this {T} */
+    /** @this {Element} */
     set: function(fn) {
       const shadyData = ensureShadyDataForNode(this);
       const eventName = property.substring(2);
@@ -649,7 +649,7 @@ export const wrappedDescriptorForEventProperty = (property) => {
       this[utils.SHADY_PREFIX + 'addEventListener'](eventName, fn);
       shadyData.__onCallbackListeners[property] = fn;
     },
-    /** @this {T} */
+    /** @this {Element} */
     get() {
       const shadyData = shadyDataForNode(this);
       return shadyData && shadyData.__onCallbackListeners && shadyData.__onCallbackListeners[property];
