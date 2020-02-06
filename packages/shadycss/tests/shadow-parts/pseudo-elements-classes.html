@@ -21,10 +21,10 @@
 <template id="x-a">
   <style>
     x-b::part(b)::before {
-      content: "before";
+      content: "beforetext";
     }
     x-b::part(b)::after {
-      content: "after";
+      content: "aftertext";
     }
   </style>
   <x-b></x-b>
@@ -60,12 +60,12 @@
 
     test('::before', function() {
       const style = getComputedStyle(part, '::before');
-      assert.equal(style.content, '"before"');
+      assert.include(style.content, 'beforetext');
     });
 
     test('::after', function() {
       const style = getComputedStyle(part, '::after');
-      assert.equal(style.content, '"after"');
+      assert.include(style.content, 'aftertext');
     });
   });
 </script>
