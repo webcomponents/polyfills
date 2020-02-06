@@ -140,6 +140,6 @@ export const QueryPatches = utils.getOwnPropertyDescriptors({
 // ensure the query API is available on the wrapper
 export const ParentNodeDocumentOrFragmentPatches =
   (utils.settings.preferPerformance && !utils.settings.noPatch) ?
-  Object.assign({}, ParentNodePatches) : ParentNodePatches;
+  utils.assign({}, ParentNodePatches) : ParentNodePatches;
 
-Object.assign(ParentNodePatches, QueryPatches);
+utils.assign(ParentNodePatches, QueryPatches);
