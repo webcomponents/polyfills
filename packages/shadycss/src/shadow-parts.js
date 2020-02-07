@@ -373,6 +373,11 @@ export function onStyleElement(element) {
  * @param {?HTMLElement} referenceNode
  */
 export function onInsertBefore(parentNode, newNode, referenceNode) {
+  if (!newNode.getRootNode) {
+    // TODO(aomarks) Why is it in noPatch mode on Chrome 41 and other older
+    // browsers that getRootNode is undefined?
+    return;
+  }
   const root = newNode.getRootNode();
   if (root.host) {
     // TODO(aomarks) Optimize.
