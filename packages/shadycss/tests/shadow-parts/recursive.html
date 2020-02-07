@@ -31,32 +31,32 @@
 </template>
 
 <script>
-  const recursiveTemplate = document.querySelector('template#x-recursive');
-  if (window.ShadyCSS) {
-    window.ShadyCSS.prepareTemplate(recursiveTemplate, 'x-recursive');
-  }
-
-  // TODO(aomarks) Is there a simpler example to use instead?
-  class XRecursive extends HTMLElement {
-    connectedCallback() {
-      if (window.ShadyCSS) {
-        window.ShadyCSS.styleElement(this);
-      }
-      this.attachShadow({mode: 'open'});
-      this.shadowRoot.appendChild(recursiveTemplate.content.cloneNode(true));
-      const depth = Number(this.getAttribute('depth'));
-      this.setAttribute('class', depth % 2 === 0 ? 'even' : 'odd');
-      if (depth > 1) {
-        const child = document.createElement('x-recursive');
-        child.setAttribute('depth', depth - 1);
-        this.shadowRoot.appendChild(child);
-      }
-    }
-  }
-  customElements.define('x-recursive', XRecursive);
 
   suite('recursive', function() {
     suiteSetup(async function() {
+      // TODO(aomarks) Is there a simpler example to use instead?
+      const recursiveTemplate = document.querySelector('template#x-recursive');
+      if (window.ShadyCSS) {
+        window.ShadyCSS.prepareTemplate(recursiveTemplate, 'x-recursive');
+      }
+      class XRecursive extends HTMLElement {
+        connectedCallback() {
+          if (window.ShadyCSS) {
+            window.ShadyCSS.styleElement(this);
+          }
+          this.attachShadow({mode: 'open'});
+          this.shadowRoot.appendChild(recursiveTemplate.content.cloneNode(true));
+          const depth = Number(this.getAttribute('depth'));
+          this.setAttribute('class', depth % 2 === 0 ? 'even' : 'odd');
+          if (depth > 1) {
+            const child = document.createElement('x-recursive');
+            child.setAttribute('depth', depth - 1);
+            this.shadowRoot.appendChild(child);
+          }
+        }
+      }
+      customElements.define('x-recursive', XRecursive);
+
       const recursive = document.createElement('x-recursive');
       recursive.setAttribute('depth', 4);
       document.body.appendChild(recursive);
