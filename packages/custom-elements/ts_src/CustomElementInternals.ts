@@ -107,7 +107,7 @@ export default class CustomElementInternals {
   }
 
   connectTree(root: Node) {
-    const elements: Element[] = [];
+    const elements: Array<Element> = [];
 
     this.forEachElement(root, element => elements.push(element));
 
@@ -122,7 +122,7 @@ export default class CustomElementInternals {
   }
 
   disconnectTree(root: Node) {
-    const elements: Element[] = [];
+    const elements: Array<Element> = [];
 
     this.forEachElement(root, element => elements.push(element));
 
@@ -203,7 +203,7 @@ export default class CustomElementInternals {
     const upgrade =
         options.upgrade || (element => this.upgradeReaction(element));
 
-    const elements: Element[] = [];
+    const elements: Array<Element> = [];
 
     const gatherElements = (element: Element) => {
       if (this._hasPatches) {

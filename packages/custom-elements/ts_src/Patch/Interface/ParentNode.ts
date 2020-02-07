@@ -33,7 +33,7 @@ export default function(
       /**
        * Elements in `nodes` that were connected before this call.
        */
-      const connectedElements: Node[] = [];
+      const connectedElements: Array<Node> = [];
 
       for (let i = 0; i < nodes.length; i++) {
         const node = nodes[i];

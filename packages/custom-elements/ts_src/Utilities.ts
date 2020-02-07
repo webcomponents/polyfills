@@ -58,13 +58,13 @@ export function isConnected(node: Node) {
       (current.__CE_isImportDocument || current instanceof Document));
 }
 
-export function childrenFromFragment(fragment: DocumentFragment): Element[] {
+export function childrenFromFragment(fragment: DocumentFragment): Array<Element> {
   // Note, IE doesn't have `children` on document fragments.
   const nativeChildren = fragment.children;
   if (nativeChildren) {
     return Array.prototype.slice.call(nativeChildren);
   }
-  const children: Element[] = [];
+  const children: Array<Element> = [];
   for (let n = fragment.firstChild; n; n = n.nextSibling) {
     if (n.nodeType === Node.ELEMENT_NODE) {
       children.push(n as Element);

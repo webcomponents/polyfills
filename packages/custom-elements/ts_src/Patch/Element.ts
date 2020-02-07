@@ -43,7 +43,7 @@ export default function(internals: CustomElementInternals) {
         // their children removed as part of the set - the entire subtree is
         // 'disassembled'. This work around walks the subtree *before* using the
         // native setter.
-        let removedElements: undefined|Element[] = undefined;
+        let removedElements: undefined|Array<Element> = undefined;
         if (isConnected) {
           removedElements = [];
           internals.forEachElement(this, element => {

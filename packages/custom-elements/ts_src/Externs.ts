@@ -85,7 +85,7 @@ export interface CustomElementDefinition {
   attributeChangedCallback?
       (name: string, oldValue?: string|null, newValue?: string|null,
        namespace?: string|null): void;
-  observedAttributes: string[];
+  observedAttributes: Array<string>;
   constructionStack: Array<HTMLElement|AlreadyConstructedMarkerType>;
 }
 

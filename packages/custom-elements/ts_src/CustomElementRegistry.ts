@@ -9,6 +9,7 @@
  * rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
+import {AlreadyConstructedMarkerType} from './AlreadyConstructedMarker.js';
 import CustomElementInternals from './CustomElementInternals.js';
 import Deferred from './Deferred.js';
 import DocumentConstructionObserver from './DocumentConstructionObserver.js';
@@ -17,7 +18,7 @@ import * as Utilities from './Utilities.js';
 
 interface ElementConstructor {
   new(): HTMLElement;
-  observedAttributes?: string[];
+  observedAttributes?: Array<string>;
 }
 type ConstructorGetter = () => ElementConstructor;
 
@@ -50,7 +51,7 @@ export default class CustomElementRegistry {
    * but the list of elements is only populated during a flush after which
    * all of the entries are removed. DO NOT edit outside of `#_flush`.
    */
-  private readonly _unflushedLocalNames: string[] = [];
+  private readonly _unflushedLocalNames: Array<string> = [];
 
   private readonly _documentConstructionObserver: DocumentConstructionObserver|
       undefined;
@@ -162,7 +163,7 @@ export default class CustomElementRegistry {
       adoptedCallback,
       attributeChangedCallback,
       observedAttributes,
-      constructionStack: [],
+      constructionStack: [] as Array<HTMLElement|AlreadyConstructedMarkerType>,
     };
 
     this._localNameToDefinition.set(localName, definition);
@@ -189,10 +190,11 @@ export default class CustomElementRegistry {
      * Unupgraded elements with definitions that were defined *before* the last
      * flush, in document order.
      */
-    const elementsWithStableDefinitions: HTMLElement[] = [];
+    const elementsWithStableDefinitions: Array<HTMLElement> = [];
 
     const unflushedLocalNames = this._unflushedLocalNames;
-    const elementsWithPendingDefinitions = new Map<string, HTMLElement[]>();
+    const elementsWithPendingDefinitions =
+        new Map<string, Array<HTMLElement>>();
     for (let i = 0; i < unflushedLocalNames.length; i++) {
       elementsWithPendingDefinitions.set(unflushedLocalNames[i], []);
     }
