@@ -121,7 +121,11 @@
     ]);
   }
 
-  const hasNativeShadowParts = 'part' in Element.prototype;
+  const hasNativeShadowParts = 'part' in Element.prototype
+    // TODO(aomarks) Firefox 72.0.0 supports Shadow Parts, but had a serious
+    // bug that was fixed in 72.0.2
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=1604989.
+    && !navigator.userAgent.includes('Firefox');
 
   // TODO(aomarks) Make this more precise.
   const supportsMultipleShadowParts =
