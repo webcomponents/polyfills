@@ -14,11 +14,10 @@ const compilerPackage = require('google-closure-compiler');
 const gulp = require('gulp');
 const sourcemaps = require('gulp-sourcemaps');
 
-
 const closureCompiler = compilerPackage.gulp();
 
 gulp.task('default', () => {
-  return gulp.src('./lib/**/*.js', {base: './'})
+  return gulp.src('./src/**/*.js', {base: './'})
     .pipe(sourcemaps.init())
     .pipe(closureCompiler({
       compilation_level: 'ADVANCED',
@@ -27,7 +26,7 @@ gulp.task('default', () => {
       language_out: 'ECMASCRIPT5_STRICT',
       externs: ['externs/custom-elements.js'],
       dependency_mode: 'STRICT',
-      entry_point: ['/lib/custom-elements'],
+      entry_point: ['/src/custom-elements'],
       js_output_file: 'custom-elements.min.js',
       output_wrapper: '(function(){\n%output%\n}).call(self);',
       assume_function_wrapper: true,

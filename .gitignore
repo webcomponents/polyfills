@@ -1,5 +1,5 @@
 packages/*/node_modules/
-packages/custom-elements/lib/
+packages/custom-elements/src/
 packages/custom-elements/buildcache
 node_modules/
 lerna-debug.log

@@ -6,7 +6,7 @@
     "module": "esnext",
     "declaration": true,
     "sourceMap": true,
-    "outDir": "./lib",
+    "outDir": "./src",
     "importHelpers": true,
     "downlevelIteration": true,
     "strict": true,
@@ -24,6 +24,6 @@
     "moduleResolution": "node"
   },
   "include": [
-    "src/"
+    "ts_src/"
   ]
 }
