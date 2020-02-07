@@ -366,6 +366,8 @@ export function onStyleElement(element) {
   });
 }
 
+/* eslint-disable no-unused-vars */
+
 /**
  * TODO
  * @param {!HTMLElement} parentNode
@@ -411,3 +413,5 @@ export function onExportPartsAttributeChanged(element, oldValue, newValue) {
   // TODO(aomarks) Optimize.
   rescopeRecursive(element);
 }
+
+/* eslint-enable no-unused-vars */
