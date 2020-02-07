@@ -15,8 +15,7 @@
  *
  * https://html.spec.whatwg.org/#concept-already-constructed-marker
  */
-const alreadyConstructedMarker: unique symbol =
-    Symbol('AlreadyConstructedMarker');
+const alreadyConstructedMarker = {} as {_alreadyConstructedMarker: never};
 
 export default alreadyConstructedMarker;
 export type AlreadyConstructedMarkerType = typeof alreadyConstructedMarker;
