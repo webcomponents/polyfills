@@ -349,6 +349,12 @@ export const NodePatches = utils.getOwnPropertyDescriptors({
       } else if (parentData.root) {
         allowNativeInsert = false;
       }
+      // when inserting into a slot inside a shadowRoot, must render the
+      // containing shadowRoot to update fallback content.
+      if (ownerRoot && this.localName === 'slot') {
+        ownerRoot._asyncRender();
+        allowNativeInsert = false;
+      }
     }
     if (allowNativeInsert) {
       // if adding to a shadyRoot, add to host instead
@@ -423,7 +429,7 @@ export const NodePatches = utils.getOwnPropertyDescriptors({
     removeOwnerShadyRoot(node);
     // if removing slot, must render containing root
     if (ownerRoot) {
-      let changeSlotContent = this && this.localName === 'slot';
+      let changeSlotContent = this.localName === 'slot';
       if (changeSlotContent) {
         preventNativeRemove = true;
       }
