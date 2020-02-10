@@ -338,22 +338,23 @@ export const NodePatches = utils.getOwnPropertyDescriptors({
     }
     if (utils.isTrackingLogicalChildNodes(this)) {
       recordInsertBefore(node, this, ref_node);
-      // when inserting into a host with a shadowRoot with slot, use
-      // `shadowRoot._asyncRender()` via `attach-shadow` module
       const parentData = shadyDataForNode(this);
-      if (utils.hasShadowRootWithSlot(this)) {
-        parentData.root._asyncRender();
+      // if the node being inserted into has a shadowRoot, do not perform
+      // a native insertion
+      if (parentData.root) {
         allowNativeInsert = false;
-      // when inserting into a host with shadowRoot with NO slot, do nothing
-      // as the node should not be added to composed dome anywhere.
-      } else if (parentData.root) {
-        allowNativeInsert = false;
-      }
-      // when inserting into a slot inside a shadowRoot, must render the
+        // when inserting into a host with a shadowRoot with slot, use
+        // `shadowRoot._asyncRender()` via `attach-shadow` module
+        // when inserting into a host with shadowRoot with NO slot, do nothing
+        // as the node should not be added to composed DOM anywhere.
+        if (utils.hasShadowRootWithSlot(this)) {
+          parentData.root._asyncRender();
+        }
+      // when inserting into a slot inside a shadowRoot, render the
       // containing shadowRoot to update fallback content.
-      if (ownerRoot && this.localName === 'slot') {
-        ownerRoot._asyncRender();
+      } else if (ownerRoot && this.localName === 'slot') {
         allowNativeInsert = false;
+        ownerRoot._asyncRender();
       }
     }
     if (allowNativeInsert) {
