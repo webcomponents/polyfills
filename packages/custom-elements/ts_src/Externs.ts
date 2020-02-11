@@ -61,8 +61,8 @@ declare global {
      * @see https://docs.microsoft.com/en-us/openspecs/ie_standards/ms-html5e/30b18240-7be6-4379-9e0a-262c99ed9529
      */
     initErrorEvent?
-        (a: string, b: boolean, c: boolean, d: string, e: string, f: number):
-            void;
+        (type: string, canBubble: boolean, cancelable: boolean, message: string,
+         filename: string, lineno: number): void;
   }
 
   // eslint-disable-next-line no-var

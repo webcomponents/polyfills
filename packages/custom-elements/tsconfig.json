@@ -8,7 +8,6 @@
     "sourceMap": true,
     "outDir": "./src",
     "importHelpers": true,
-    "downlevelIteration": true,
     "strict": true,
     "noImplicitAny": true,
     "strictNullChecks": true,
