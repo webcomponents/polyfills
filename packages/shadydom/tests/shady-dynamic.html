@@ -1155,6 +1155,25 @@ suite('insertBefore', function() {
     assert.deepEqual(composed, [first, last]);
   });
 
+  test('insertBefore with a `<slot>` child as refNode in a shadowRoot that has rendered', function() {
+    var e = document.createElement('div');
+    ShadyDOM.wrapIfNeeded(e).attachShadow({mode: 'open'});
+    var ref = document.createElement('div');
+    var slot = document.createElement('slot');
+    ShadyDOM.wrapIfNeeded(slot).appendChild(ref);
+    ShadyDOM.wrapIfNeeded(e).shadowRoot.appendChild(slot);
+    ShadyDOM.flush();
+    var fallback = document.createElement('div');
+    ShadyDOM.wrapIfNeeded(slot).insertBefore(fallback, ref);
+    ShadyDOM.flush();
+    var composed = Array.from(ShadyDOM.nativeTree.childNodes(e));
+    assert.deepEqual(composed, [fallback, ref]);
+    ShadyDOM.wrapIfNeeded(slot).removeChild(fallback);
+    ShadyDOM.flush();
+    var composed = Array.from(ShadyDOM.nativeTree.childNodes(e));
+    assert.deepEqual(composed, [ref]);
+  });
+
   test('contains', function() {
     var e = document.createElement('x-simple');
     ShadyDOM.wrapIfNeeded(document.body).appendChild(e);
