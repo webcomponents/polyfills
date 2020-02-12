@@ -45,7 +45,7 @@ jobs:
   wct-sauce:
     # Skip if this is from a forked repository because we can't access Sauce
     # secrets.
-    if: github.repository == 'webcomponents/polyfills'
+    if: github.event.pull_request.base.repo.id == github.event.pull_request.head.repo.id
 
     runs-on: ubuntu-latest
 
