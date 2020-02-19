@@ -26,10 +26,16 @@ import {patchInsideElementAccessors, patchOutsideElementAccessors} from './patch
 import {patchEvents, patchClick, composedPath} from './patch-events.js';
 import {ShadyRoot} from './attach-shadow.js';
 import {wrap, Wrapper} from './wrapper.js';
-import {addShadyPrefixedProperties, applyPatches} from './patch-prototypes.js';
+import {addShadyPrefixedProperties, applyPatches, patchShadowOnElement, patchElementProto} from './patch-prototypes.js';
 
 
 if (utils.settings.inUse) {
+
+  const patch = utils.settings.hasDescriptors ? n => n : (node) => {
+    patchInsideElementAccessors(node);
+    patchOutsideElementAccessors(node);
+    return node;
+  };
 
   let ShadyDOM = {
     // TODO(sorvell): remove when Polymer does not depend on this.
@@ -41,11 +47,7 @@ if (utils.settings.inUse) {
     // (2) does not have special (slot) children itself
     // (3) and setting the property needs to provoke distribution (because
     // a nested slot is added/removed)
-    'patch': (node) => {
-      patchInsideElementAccessors(node);
-      patchOutsideElementAccessors(node);
-      return node;
-    },
+    'patch': patch,
     'isShadyRoot': utils.isShadyRoot,
     'enqueue': enqueue,
     'flush': flush,
@@ -74,7 +76,21 @@ if (utils.settings.inUse) {
     // Integration point with ShadyCSS to disable styling MutationObserver,
     // as ShadyDOM will now handle dynamic scoping.
     'handlesDynamicScoping': true,
-    'wrap': utils.settings.noPatch ? wrap : (n) => n,
+    // Ensure the node is wrapped. This should be used when `noPatch` is set
+    // to ensure Shadow DOM compatible DOM operation.
+    // Note, wrap falls back to patch so that it ensures API "always just works"
+    'wrap': utils.settings.noPatch ? wrap : patch,
+    // When code should be compatible with `noPatch` `true` and `on-demand`
+    // settings, `wrapIfNeeded` can be used for optimal performance (v. `wrap`)
+    // for all DOM operations except the following: `appendChild` and
+    // `insertBefore` (when the node is being moved from a location where it
+    // was logically positioned in the DOM); when setting `className`/`class`;
+    // when calling `querySelector|All`; when setting `textContent` or
+    // `innerHTML`; `addEventListener`; and all scope specific API's like
+    // `getRootNode`, `isConnected`, `slot`, `assignedSlot`, `assignedNodes`.
+    // Note, `wrapIfNeeded` falls back to a pass through to preserve optimal
+    // performance.
+    'wrapIfNeeded': utils.settings.noPatch === true ? wrap : n => n,
     'Wrapper': Wrapper,
     'composedPath': composedPath,
     // Set to true to avoid patching regular platform property names. When set,
@@ -83,8 +99,10 @@ if (utils.settings.inUse) {
     // This setting provides a small performance boost, but requires all DOM API
     // access that requires Shadow DOM behavior to be proxied via `ShadyDOM.wrap`.
     'noPatch': utils.settings.noPatch,
+    'patchOnDemand': utils.settings.patchOnDemand,
     'nativeMethods': nativeMethods,
-    'nativeTree': nativeTree
+    'nativeTree': nativeTree,
+    'patchElementProto': patchElementProto
   };
 
   window['ShadyDOM'] = ShadyDOM;
@@ -121,6 +139,11 @@ if (utils.settings.inUse) {
     applyPatches();
     // Patch click event behavior only if we're patching
     patchClick()
+  } else if (utils.settings.patchOnDemand) {
+    // In `on-demand` patching, do patch `attachShadow` and `shadowRoot`.
+    // These are the only patched properties in `on-demand` mode and these
+    // patches kick off patching "on-demand" for other nodes.
+    patchShadowOnElement();
   }
 
   // For simplicity, patch events unconditionally.

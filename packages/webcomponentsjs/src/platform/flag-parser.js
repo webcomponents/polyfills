@@ -55,6 +55,8 @@ let forceShady = flags['shadydom'];
 if (forceShady) {
   window['ShadyDOM'] = window['ShadyDOM'] || {};
   window['ShadyDOM']['force'] = forceShady;
+  const noPatch = flags['noPatch'];
+  window['ShadyDOM']['noPatch'] = noPatch === 'true' ? true : noPatch;
 }
 
 let forceCE = flags['register'] || flags['ce'];

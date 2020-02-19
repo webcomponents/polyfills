@@ -1,6 +1,6 @@
 ShadyDOM = {
   force: true,
-  noPatch: !!window.location.search.match('noPatch'),
+  noPatch: window.location.search.match('noPatch=on-demand') ? 'on-demand' : !!window.location.search.match('noPatch'),
   preferPerformance: !!window.location.search.match('preferPerformance')
 };
 
@@ -28,5 +28,3 @@ if (ShadyDOM.noPatch) {
   loadSD();
   loadCE();
 }
-
-

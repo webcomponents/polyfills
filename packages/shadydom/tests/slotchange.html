@@ -14,7 +14,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <script src="wct-browser-config.js"></script>
   <script src="../node_modules/@webcomponents/webcomponents-platform/webcomponents-platform.js"></script>
   <script>
-    ShadyDOM = {force: true, noPatch: window.location.search.match('noPatch')};
+    ShadyDOM = {force: true, noPatch: window.location.search.match('noPatch=on-demand') ? 'on-demand' : !!window.location.search.match('noPatch')};
   </script>
   <script src="../shadydom.min.js"></script>
 
@@ -30,8 +30,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   suite('slotchange', function() {
 
   function makeShadowRootWithSlot(element) {
-    ShadyDOM.wrap(element).attachShadow({mode: 'open'});
-    ShadyDOM.wrap(ShadyDOM.wrap(element).shadowRoot).appendChild(document.createElement('slot'));
+    ShadyDOM.wrapIfNeeded(element).attachShadow({mode: 'open'});
+    ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(element).shadowRoot).appendChild(document.createElement('slot'));
   }
 
   function afterFlush(fn) {
@@ -46,12 +46,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   test('slotchange fires when node added', function(done) {
     var d = document.createElement('div');
     makeShadowRootWithSlot(d);
-    var slot = ShadyDOM.wrap(ShadyDOM.wrap(d).shadowRoot).firstChild;
+    var slot = ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(d).shadowRoot).firstChild;
     var slotChangeFired = false;
-    ShadyDOM.wrap(slot).addEventListener('slotchange', function(e) {
+    ShadyDOM.wrapIfNeeded(slot).addEventListener('slotchange', function(e) {
       slotChangeFired = true;
     });
-    ShadyDOM.wrap(d).appendChild(document.createElement('div'));
+    ShadyDOM.wrapIfNeeded(d).appendChild(document.createElement('div'));
     afterFlush(function() {
       assert.isTrue(slotChangeFired, 'slotchange did not fire');
       done();
@@ -61,16 +61,16 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   test('slotchange fires when node removed', function(done) {
     var d = document.createElement('div');
     makeShadowRootWithSlot(d);
-    var slot = ShadyDOM.wrap(ShadyDOM.wrap(d).shadowRoot).firstChild;
+    var slot = ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(d).shadowRoot).firstChild;
     var slotChangeFired = false;
-    ShadyDOM.wrap(slot).addEventListener('slotchange', function(e) {
+    ShadyDOM.wrapIfNeeded(slot).addEventListener('slotchange', function(e) {
       slotChangeFired = true;
     });
     var e = document.createElement('div');
-    ShadyDOM.wrap(d).appendChild(e);
+    ShadyDOM.wrapIfNeeded(d).appendChild(e);
     afterFlush(function() {
       assert.isTrue(slotChangeFired, 'slotchange did not fire');
-      ShadyDOM.wrap(d).removeChild(e);
+      ShadyDOM.wrapIfNeeded(d).removeChild(e);
       slotChangeFired = false;
       afterFlush(function() {
         assert.isTrue(slotChangeFired, 'slotchange did not fire');
@@ -82,10 +82,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   test('slotchange fires via fallback added', function(done) {
     var d = document.createElement('div');
     makeShadowRootWithSlot(d);
-    var slot = ShadyDOM.wrap(ShadyDOM.wrap(d).shadowRoot).firstChild;
-    ShadyDOM.wrap(slot).appendChild(document.createElement('div'));
+    var slot = ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(d).shadowRoot).firstChild;
+    ShadyDOM.wrapIfNeeded(slot).appendChild(document.createElement('div'));
     var slotChangeFired = false;
-    ShadyDOM.wrap(slot).addEventListener('slotchange', function(e) {
+    ShadyDOM.wrapIfNeeded(slot).addEventListener('slotchange', function(e) {
       slotChangeFired = true;
     });
     afterFlush(function() {
@@ -98,17 +98,17 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   test('slotchange does not fire when unused fallback changes', function(done) {
     var d = document.createElement('div');
     makeShadowRootWithSlot(d);
-    var slot = ShadyDOM.wrap(ShadyDOM.wrap(d).shadowRoot).firstChild;
+    var slot = ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(d).shadowRoot).firstChild;
     var slotChangeFired = false;
-    ShadyDOM.wrap(slot).addEventListener('slotchange', function(e) {
+    ShadyDOM.wrapIfNeeded(slot).addEventListener('slotchange', function(e) {
       slotChangeFired = true;
     });
     var e = document.createElement('div');
-    ShadyDOM.wrap(d).appendChild(e);
+    ShadyDOM.wrapIfNeeded(d).appendChild(e);
     afterFlush(function() {
       assert.isTrue(slotChangeFired, 'slotchange did not fire');
       slotChangeFired = false;
-      ShadyDOM.wrap(slot).appendChild(document.createElement('div'));
+      ShadyDOM.wrapIfNeeded(slot).appendChild(document.createElement('div'));
       afterFlush(function() {
         assert.isFalse(slotChangeFired, 'slotchange fired when unused fallback changed');
         done();
@@ -120,42 +120,42 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     var d = document.createElement('div');
     d.id = 'host';
     makeShadowRootWithSlot(d);
-    var slot = ShadyDOM.wrap(ShadyDOM.wrap(d).shadowRoot).firstChild;
+    var slot = ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(d).shadowRoot).firstChild;
     slot.id = 'slot';
     var inner = document.createElement('div');
     inner.id = 'innerHost';
     makeShadowRootWithSlot(inner);
-    var innerSlot = ShadyDOM.wrap(ShadyDOM.wrap(inner).shadowRoot).firstChild;
+    var innerSlot = ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(inner).shadowRoot).firstChild;
     innerSlot.id = 'innerSlot';
-    ShadyDOM.wrap(ShadyDOM.wrap(d).shadowRoot).appendChild(inner);
-    ShadyDOM.wrap(inner).appendChild(slot);
+    ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(d).shadowRoot).appendChild(inner);
+    ShadyDOM.wrapIfNeeded(inner).appendChild(slot);
     var innerInner = document.createElement('div');
     innerInner.id = 'innerInnerHost';
     makeShadowRootWithSlot(innerInner);
-    var innerInnerSlot = ShadyDOM.wrap(ShadyDOM.wrap(innerInner).shadowRoot).firstChild;
+    var innerInnerSlot = ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(innerInner).shadowRoot).firstChild;
     innerInnerSlot.id = 'innerInnerSlot';
-    ShadyDOM.wrap(ShadyDOM.wrap(inner).shadowRoot).appendChild(innerInner);
-    ShadyDOM.wrap(innerInner).appendChild(innerSlot);
+    ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(inner).shadowRoot).appendChild(innerInner);
+    ShadyDOM.wrapIfNeeded(innerInner).appendChild(innerSlot);
     afterFlush(function() {
       var slotChangeFired = 0;
-      ShadyDOM.wrap(slot).addEventListener('slotchange', function(e) {
+      ShadyDOM.wrapIfNeeded(slot).addEventListener('slotchange', function(e) {
         if (e.eventPhase !== Event.BUBBLING_PHASE) {
           slotChangeFired++;
         }
       });
       var innerSlotChangeFired = 0;
-      ShadyDOM.wrap(innerSlot).addEventListener('slotchange', function(e) {
+      ShadyDOM.wrapIfNeeded(innerSlot).addEventListener('slotchange', function(e) {
         if (e.eventPhase !== Event.BUBBLING_PHASE) {
           innerSlotChangeFired++;
         }
       });
       var innerInnerSlotChangeFired = 0;
-      ShadyDOM.wrap(innerInnerSlot).addEventListener('slotchange', function(e) {
+      ShadyDOM.wrapIfNeeded(innerInnerSlot).addEventListener('slotchange', function(e) {
         if (e.eventPhase !== Event.BUBBLING_PHASE) {
           innerInnerSlotChangeFired++;
         }
       });
-      ShadyDOM.wrap(d).appendChild(document.createElement('div'));
+      ShadyDOM.wrapIfNeeded(d).appendChild(document.createElement('div'));
       afterFlush(function() {
         assert.equal(slotChangeFired, 1, 'slotchange did not fire 1x based on distribution');
         assert.equal(innerSlotChangeFired, 1, 'inner did not fire 1x based on distribution');

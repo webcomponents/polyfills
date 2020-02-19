@@ -95,7 +95,7 @@ export function filterMutations(mutations, target) {
     /** @const {boolean} */
     const mutationInScope = (targetRootNode === mutation.target.getRootNode());
     if (mutationInScope && mutation.addedNodes) {
-      let nodes = Array.from(mutation.addedNodes).filter(function(n) {
+      let nodes = utils.arrayFrom(mutation.addedNodes).filter(function(n) {
         return (targetRootNode === n.getRootNode());
       });
       if (nodes.length) {

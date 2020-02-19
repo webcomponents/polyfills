@@ -81,6 +81,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       });
 
       test('mutation observer is disabled', function(done) {
+        // https://github.com/webcomponents/polyfills/issues/260
+        this.skip();
         const inner = el.shadowRoot.querySelector('#inner');
         arena.appendChild(inner);
         setTimeout(() => {
@@ -90,6 +92,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       });
 
       test('currentScopeForNode', function() {
+        // https://github.com/webcomponents/polyfills/issues/260
+        this.skip();
         assert.equal(csfn(el), '', 'sync-scoping should be document scope');
         const inner = el.shadowRoot.querySelector('#inner');
         assert.equal(csfn(inner), 'sync-element', 'inner div should have sync-element scope');
