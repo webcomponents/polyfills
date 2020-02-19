@@ -1,0 +1,40 @@
+{
+  "name": "@webcomponents/shady-css-scoped-element",
+  "version": "0.0.4",
+  "private": true,
+  "description": "ShadyCSS scoped element",
+  "main": "shady-css-scoped.min.js",
+  "repository": "github:webcomponents/polyfills",
+  "bugs": "https://github.com/webcomponents/polyfills/issues",
+  "homepage": "https://webcomponents.org/polyfills",
+  "author": "The Polymer Project Authors (https://polymer.github.io/AUTHORS.txt)",
+  "keywords": [
+    "custom-elements",
+    "customelements",
+    "web-components",
+    "webcomponents",
+    "polyfill",
+    "shim"
+  ],
+  "license": "BSD-3-Clause",
+  "scripts": {
+    "build": "gulp",
+    "debug": "cp src/shady-css-scoped-element.js shady-css-scoped-element.min.js",
+    "test": "wct",
+    "prepack": "npm run build"
+  },
+  "files": [
+    "shady-css-scoped-element.min.js*",
+    "src/"
+  ],
+  "devDependencies": {
+    "@webcomponents/shadycss": "^1.9.4",
+    "@webcomponents/template": "^1.4.0",
+    "@webcomponents/webcomponentsjs": "^2.4.1",
+    "es6-promise": "4.2.4",
+    "wct-browser-legacy": "^1.0.2"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

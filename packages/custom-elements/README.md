@@ -171,12 +171,13 @@ has been defined.
 let flush;
 customElements.polyfillWrapFlushCallback(f => flush = f);
 
-const p = customElements.whenDefined('c-e', () => console.log('c-e defined'));
+const p = customElements.whenDefined('c-e');
+p.then(() => console.log('c-e defined'));
 
 customElements.define('c-e', class extends HTMLElement {});
 // `p` is not yet resolved; `flush` is now a function.
 
-flush(); // Resolves `p`.
+flush(); // Resolves `p`; 'c-e defined' is logged.
 ```
 
 You can't remove a callback given to `polyfillWrapFlushCallback`. If the

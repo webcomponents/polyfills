@@ -11,9 +11,29 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 import * as utils from './utils.js';
 import {shadyDataForNode, ensureShadyDataForNode} from './shady-data.js';
 import {patchInsideElementAccessors, patchOutsideElementAccessors} from './patch-instances.js';
+import {patchNodeProto} from './patch-prototypes.js';
+
+const OutsideAccessors = 1;
+const InsideAcccessors = 2;
+
+const patchOnDemand = utils.settings.patchOnDemand;
+const hasDescriptors = utils.settings.hasDescriptors;
+
+function patchNode(node, type) {
+  if (patchOnDemand) {
+    patchNodeProto(node);
+  }
+  if (!hasDescriptors) {
+    if (type === OutsideAccessors) {
+      patchOutsideElementAccessors(node);
+    } else if (type === InsideAcccessors) {
+      patchInsideElementAccessors(node);
+    }
+  }
+}
 
 function linkNode(node, container, containerData, ref_node) {
-  patchOutsideElementAccessors(node);
+  patchNode(node, OutsideAccessors);
   ref_node = ref_node || null;
   const nodeData = ensureShadyDataForNode(node);
   const ref_nodeData = ref_node ? ensureShadyDataForNode(ref_node) : null;
@@ -46,7 +66,7 @@ function linkNode(node, container, containerData, ref_node) {
 }
 
 export const recordInsertBefore = (node, container, ref_node) => {
-  patchInsideElementAccessors(container);
+  patchNode(container, InsideAcccessors);
   const containerData = ensureShadyDataForNode(container);
   if (containerData.firstChild !== undefined) {
     containerData.childNodes = null;
@@ -106,13 +126,13 @@ export const recordChildNodes = (node, adoptedParent) => {
   nodeData.childNodes = null;
   const first = nodeData.firstChild = node[utils.NATIVE_PREFIX + 'firstChild'];
   nodeData.lastChild = node[utils.NATIVE_PREFIX + 'lastChild'];
-  patchInsideElementAccessors(node);
+  patchNode(node, InsideAcccessors);
   for (let n = first, previous; n; (n = n[utils.NATIVE_PREFIX + 'nextSibling'])) {
     const sd = ensureShadyDataForNode(n);
     sd.parentNode = adoptedParent || node;
     sd.nextSibling = n[utils.NATIVE_PREFIX + 'nextSibling'];
     sd.previousSibling = previous || null;
     previous = n;
-    patchOutsideElementAccessors(n);
+    patchNode(n, OutsideAccessors);
   }
 }

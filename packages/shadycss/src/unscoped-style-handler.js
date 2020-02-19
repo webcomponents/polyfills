@@ -25,7 +25,9 @@ export function processUnscopedStyle(style) {
   const text = style.textContent;
   if (!styleTextSet.has(text)) {
     styleTextSet.add(text);
-    const newStyle = style.cloneNode(true);
+    const newStyle = document.createElement('style');
+    newStyle.setAttribute('shady-unscoped', '');
+    newStyle.textContent = text;
     document.head.appendChild(newStyle);
   }
 }

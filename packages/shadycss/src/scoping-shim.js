@@ -180,13 +180,18 @@ export default class ScopingShim {
     StyleInfo.set(host, styleInfo);
     return styleInfo;
   }
+  /**
+   * Returns a boolean that indicates if styles need to be reprocessed because
+   * the apply shim is now available.
+   * @return {boolean}
+   */
   _ensureApplyShim() {
-    if (this._applyShim) {
-      return;
-    } else if (window.ShadyCSS && window.ShadyCSS.ApplyShim) {
+    if (!this._applyShim && window.ShadyCSS && window.ShadyCSS.ApplyShim) {
       this._applyShim = /** @type {!Object} */ (window.ShadyCSS.ApplyShim);
       this._applyShim['invalidCallback'] = ApplyShimUtils.invalidate;
+      return true;
     }
+    return false;
   }
   _ensureCustomStyleInterface() {
     if (this._customStyleInterface) {
@@ -204,9 +209,15 @@ export default class ScopingShim {
       };
     }
   }
+  /**
+   * Returns a boolean that indicates if styles need to be reprocessed because
+   * the apply shim is now available.
+   * @return {boolean}
+   */
   _ensure() {
-    this._ensureApplyShim();
+    const needsApplyShimUpdate = this._ensureApplyShim();
     this._ensureCustomStyleInterface();
+    return needsApplyShimUpdate;
   }
   /**
    * Flush and apply custom styles to document
@@ -215,13 +226,13 @@ export default class ScopingShim {
     if (disableRuntime) {
       return;
     }
-    this._ensure();
+    const needsApplyShimUpdate = this._ensure();
     if (!this._customStyleInterface) {
       return;
     }
     let customStyles = this._customStyleInterface['processStyles']();
     // early return if custom-styles don't need validation
-    if (!this._customStyleInterface['enqueued']) {
+    if (!needsApplyShimUpdate && !this._customStyleInterface['enqueued']) {
       return;
     }
     // bail if custom styles are built optimally

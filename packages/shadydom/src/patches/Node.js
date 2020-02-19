@@ -63,8 +63,13 @@ function firstComposedNode(node) {
   if (node && node.localName === 'slot') {
     const nodeData = shadyDataForNode(node);
     const flattened = nodeData && nodeData.flattenedNodes;
-    composed = flattened && flattened.length ? flattened[0] :
-      firstComposedNode(node[utils.SHADY_PREFIX + 'nextSibling']);
+    // Note, if `flattened` is falsey, it means that the containing shadowRoot
+    // has not rendered and therefore the `<slot>` is still in the composed
+    // DOM. If that's the case the `<slot>` is the first composed node.
+    if (flattened) {
+      composed = flattened.length ? flattened[0] :
+        firstComposedNode(node[utils.SHADY_PREFIX + 'nextSibling']);
+    }
   }
   return composed;
 }
@@ -80,7 +85,9 @@ function scheduleObserver(node, addedNode, removedNode) {
   if (observer) {
     if (addedNode) {
       if (addedNode.nodeType === Node.DOCUMENT_FRAGMENT_NODE) {
-        observer.addedNodes.push(...addedNode.childNodes);
+        for (let i = 0, l = addedNode.childNodes.length; i < l; i++) {
+          observer.addedNodes.push(addedNode.childNodes[i]);
+        }
       } else {
         observer.addedNodes.push(addedNode);
       }
@@ -331,16 +338,23 @@ export const NodePatches = utils.getOwnPropertyDescriptors({
     }
     if (utils.isTrackingLogicalChildNodes(this)) {
       recordInsertBefore(node, this, ref_node);
-      // when inserting into a host with a shadowRoot with slot, use
-      // `shadowRoot._asyncRender()` via `attach-shadow` module
       const parentData = shadyDataForNode(this);
-      if (utils.hasShadowRootWithSlot(this)) {
-        parentData.root._asyncRender();
+      // if the node being inserted into has a shadowRoot, do not perform
+      // a native insertion
+      if (parentData.root) {
         allowNativeInsert = false;
-      // when inserting into a host with shadowRoot with NO slot, do nothing
-      // as the node should not be added to composed dome anywhere.
-      } else if (parentData.root) {
+        // when inserting into a host with a shadowRoot with slot, use
+        // `shadowRoot._asyncRender()` via `attach-shadow` module
+        // when inserting into a host with shadowRoot with NO slot, do nothing
+        // as the node should not be added to composed DOM anywhere.
+        if (utils.hasShadowRootWithSlot(this)) {
+          parentData.root._asyncRender();
+        }
+      // when inserting into a slot inside a shadowRoot, render the
+      // containing shadowRoot to update fallback content.
+      } else if (ownerRoot && this.localName === 'slot') {
         allowNativeInsert = false;
+        ownerRoot._asyncRender();
       }
     }
     if (allowNativeInsert) {
@@ -416,7 +430,7 @@ export const NodePatches = utils.getOwnPropertyDescriptors({
     removeOwnerShadyRoot(node);
     // if removing slot, must render containing root
     if (ownerRoot) {
-      let changeSlotContent = this && this.localName === 'slot';
+      let changeSlotContent = this.localName === 'slot';
       if (changeSlotContent) {
         preventNativeRemove = true;
       }

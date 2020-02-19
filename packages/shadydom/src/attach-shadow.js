@@ -22,7 +22,6 @@ import {patchShadyRoot} from './patch-shadyRoot.js';
 const ShadyRootConstructionToken = {};
 
 const CATCHALL_NAME = '__catchall';
-const SHADYROOT_NAME = 'ShadyRoot';
 
 const MODE_CLOSED = 'closed';
 
@@ -60,11 +59,6 @@ class ShadyRoot {
   }
 
   _init(host, options) {
-    // NOTE: set a fake local name so this element can be
-    // distinguished from a DocumentFragment when patching.
-    // FF doesn't allow this to be `localName`
-    /** @type {string} */
-    this._localName = SHADYROOT_NAME;
     // root <=> host
     this.host = host;
     /** @type {!string|undefined} */
@@ -592,8 +586,10 @@ export const attachShadow = (host, options) => {
   return root;
 }
 
-// Mitigate connect/disconnect spam by wrapping custom element classes.
-if (window['customElements'] && utils.settings.inUse && !utils.settings['preferPerformance']) {
+// Mitigate connect/disconnect spam by wrapping custom element classes. This
+// should happen if custom elements are available in any capacity, polyfilled or
+// not.
+if (utils.hasCustomElements() && utils.settings.inUse && !utils.settings['preferPerformance']) {
 
   // process connect/disconnect after roots have rendered to avoid
   // issues with reaction stack.
