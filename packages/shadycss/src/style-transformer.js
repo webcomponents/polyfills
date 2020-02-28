@@ -13,7 +13,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 import {StyleNode} from './css-parse.js'; // eslint-disable-line no-unused-vars
 import * as StyleUtil from './style-util.js';
 import {nativeShadow} from './style-settings.js';
-import {formatPartSelector} from './shadow-parts.js';
+import {parsePartSelector, formatPartSelector} from './shadow-parts.js';
 
 /* Transforms ShadowDOM styling into ShadyDOM styling
 
@@ -404,14 +404,16 @@ class StyleTransformer {
   }
 
   _transformPartSelector(selector, scope) {
-    return selector.replace(/(.*?)([a-z]+-\w+)([^\s]*?)::part\((.*)?\)/,
-      (_, pre, ce, post, partList) => {
-        // Earlier we did a hacky transform from "part(foo bar)"" to
-        // "part(foo,bar)" so that the SIMPLE_SELECTOR regex didn't get confused
-        // by spaces.
-        partList = partList.replace(',', ' ');
-        return `${pre}${ce}${post} ` + formatPartSelector(partList, ce, scope);
-      });
+    const parsed = parsePartSelector(selector);
+    if (parsed === null) {
+      return selector;
+    }
+    const {pre, ce, post, partList, pseudo} = parsed;
+    // Earlier we did a hacky transform from "part(foo bar)"" to "part(foo,bar)"
+    // so that the SIMPLE_SELECTOR regex didn't get confused by spaces.
+    const partSelector =
+        formatPartSelector(partList.replace(',', ' '), ce, scope);
+    return `${pre}${ce}${post} ${partSelector}${pseudo}`;
   }
 
   // :host(...) -> scopeName...

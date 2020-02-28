@@ -140,6 +140,27 @@ function parseExportPartsAttribute(attr) {
   return parts;
 }
 
+const PART_REGEX = /(.*?)([a-z]+-\w+)([^\s]*?)::part\((.*)?\)(::.*)?/;
+
+/**
+ * @param {!string} selector The selector.
+ * @return {?{
+ *   pre: !string,
+ *   ce: !string,
+ *   post: !string,
+ *   partList:!string,
+ *   pseudo:!string
+ * }}
+ */
+export function parsePartSelector(selector) {
+  const match = selector.match(PART_REGEX);
+  if (match === null) {
+    return null;
+  }
+  const [, pre, ce, post, partList, pseudo] = match;
+  return {pre, ce, post, partList, pseudo: pseudo || ''};
+}
+
 /**
  * Format the ShadyCSS class name for a part.
  *
