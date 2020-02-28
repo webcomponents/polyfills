@@ -108,6 +108,7 @@ export default class ScopingShim {
         this._applyShim['transformRules'](ast, elementName);
       }
       template['_styleAst'] = ast;
+      parts.prepareTemplate(elementName, ast);
     }
     let ownPropertyNames = [];
     if (!nativeCssVariables) {

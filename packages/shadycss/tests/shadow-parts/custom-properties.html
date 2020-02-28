@@ -67,15 +67,11 @@
       assert.equal(getComputedStyle(p1).color, red);
     });
 
-    test.skip('property set in rule', function() {
-      // This case is unsupported because custom properties are evaluated at
-      // the rule definition site, not at the consumption site.
+    test('property set in part rule', function() {
       assert.equal(getComputedStyle(p1).backgroundColor, blue);
     });
 
-    test.skip('property set below rule', function() {
-      // This case is unsupported because custom properties are evaluated at
-      // the rule definition site, not at the consumption site.
+    test('property set below rule', function() {
       assert.equal(getComputedStyle(p1).fontStyle, 'italic');
     });
   });
