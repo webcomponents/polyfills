@@ -95,12 +95,14 @@ export function forEachRule(node, styleRuleCallback, keyframesRuleCallback, only
   }
 }
 
-// add a string of cssText to the document.
 /**
- * @param {string} cssText
- * @param {string} moniker
- * @param {Node} target
- * @param {Node} contextNode
+ * Create a new scoped <style> element and insert it into the document.
+ * @param {string} cssText The CSS string.
+ * @param {string} moniker Name of the scope ("scope" attribute);
+ * @param {Node} target Parent node to contain the new style element. If null
+ *     or undefined, defaults to document.head.
+ * @param {Node} contextNode Insert the new style elemetn after this node. If
+ *     null or undefined, the style is inserted as the first child of target.
  * @return {HTMLStyleElement}
  */
 export function applyCss(cssText, moniker, target, contextNode) {
@@ -110,8 +112,9 @@ export function applyCss(cssText, moniker, target, contextNode) {
 }
 
 /**
- * @param {string} cssText
- * @param {string} moniker
+ * Create a new scoped <style> element.
+ * @param {string} cssText The CSS string.
+ * @param {string} moniker Name of the scope ("scope" attribute).
  * @return {HTMLStyleElement}
  */
 export function createScopeStyle(cssText, moniker) {
@@ -129,9 +132,9 @@ export function createScopeStyle(cssText, moniker) {
  */
 let lastHeadApplyNode = null;
 
-// insert a comment node as a styling position placeholder.
 /**
- * @param {string} moniker
+ * Insert a comment node as a styling position placeholder.
+ * @param {string} moniker Name of the scope.
  * @return {!Comment}
  */
 export function applyStylePlaceHolder(moniker) {
@@ -146,9 +149,12 @@ export function applyStylePlaceHolder(moniker) {
 }
 
 /**
- * @param {HTMLStyleElement} style
- * @param {?Node} target
- * @param {?Node} contextNode
+ * Insert a <style> element into the document.
+ * @param {HTMLStyleElement} style The style element.
+ * @param {?Node} target Parent node. If null or undefined, defaults to
+ *     document.head.
+ * @param {?Node} contextNode Insert the style element after this node. If null
+ *     or undefined, will insert as the first child of target.
  */
 export function applyStyle(style, target, contextNode) {
   target = target || document.head;
