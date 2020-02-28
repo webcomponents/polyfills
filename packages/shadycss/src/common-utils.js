@@ -51,6 +51,9 @@ export function getComputedStyleValue(element, property) {
  * @return {boolean}
  */
 export function detectMixin(cssText) {
+  // TODO(aomarks) This function returns true for every use of a CSS custom
+  // property. That seems wrong, but is this function just confusingly
+  // named/factored?
   const has = MIXIN_MATCH.test(cssText) || VAR_ASSIGN.test(cssText);
   // reset state of the regexes
   MIXIN_MATCH.lastIndex = 0;
