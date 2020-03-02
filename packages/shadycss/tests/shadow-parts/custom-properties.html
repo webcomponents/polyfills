@@ -18,10 +18,19 @@
 </head>
 <body>
 
-<template id="x-a">
+<template id="x-a1">
   <style>
     x-b {
       --custom-color: red;
+    }
+  </style>
+  <x-b></x-b>
+</template>
+
+<template id="x-a2">
+  <style>
+    x-b {
+      --custom-color: green;
     }
   </style>
   <x-b></x-b>
@@ -47,24 +56,28 @@
       --custom-font-style: italic;
     }
   </style>
-  <div part="p1">italic red on blue</div>
+  <div part="p1">italic red or green on blue</div>
 </template>
 
-<x-a></x-a>
+<x-a1></x-a1>
+<x-a2></x-a2>
 
 <script>
   suite('CSS Custom Properties', function() {
-    let p1;
+    let a1part, a2part;
     suiteSetup(async function() {
-      makeElement('x-a');
+      makeElement('x-a1');
+      makeElement('x-a2');
       makeElement('x-b');
       makeElement('x-c');
       await new Promise(r => requestAnimationFrame(r));
-      p1 = pierce('x-a', 'x-b', 'x-c', '[part=p1]');
+      a1part = pierce('x-a1', 'x-b', 'x-c', '[part=p1]');
+      a2part = pierce('x-a2', 'x-b', 'x-c', '[part=p1]');
     });
 
     test('property set above rule', function() {
-      assert.equal(getComputedStyle(p1).color, red);
+      assert.equal(getComputedStyle(a1part).color, red);
+      assert.equal(getComputedStyle(a2part).color, green);
     });
 
     test.skip('property set in part rule', function() {
@@ -72,11 +85,13 @@
       // property values and create the style, we aren't taking into account
       // properties being set in the part rule itself. We could add special
       // handling for this. What would the right priority be vs other rules?
-      assert.equal(getComputedStyle(p1).backgroundColor, blue);
+      assert.equal(getComputedStyle(a1part).backgroundColor, blue);
+      assert.equal(getComputedStyle(a2part).backgroundColor, blue);
     });
 
     test('property set below rule', function() {
-      assert.equal(getComputedStyle(p1).fontStyle, 'italic');
+      assert.equal(getComputedStyle(a1part).fontStyle, 'italic');
+      assert.equal(getComputedStyle(a2part).fontStyle, 'italic');
     });
   });
 </script>

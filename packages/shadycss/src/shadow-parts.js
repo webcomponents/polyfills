@@ -199,6 +199,11 @@ export function formatPartSelector(parts, scope, hostScope) {
 
 const partRuleCustomProperties = new Map();
 
+function consumedCustomProperties(cssText) {
+  const obj = {};
+  StyleProperties.collectPropertiesInCssText(cssText, obj);
+  return Object.getOwnPropertyNames(obj);
+}
 
 /**
  * @param {!string} elementName Lower-case tag name of the element whose
@@ -220,11 +225,7 @@ export function prepareTemplate(elementName, styleAst) {
     if (!selector || selector.indexOf('::part') === -1) {
       continue;
     }
-    const consumedPropertiesObj = {};
-    StyleProperties.collectPropertiesInCssText(
-        rule['cssText'], consumedPropertiesObj);
-    const consumedProperties =
-        Object.getOwnPropertyNames(consumedPropertiesObj);
+    const consumedProperties = consumedCustomProperties(rule['cssText']);
     if (consumedProperties.length > 0) {
       const parsed = parsePartSelector(selector);
       if (parsed === null) {
@@ -233,6 +234,8 @@ export function prepareTemplate(elementName, styleAst) {
       const {ce, partList} = parsed;
       const key = [elementName, ce, partList].join(':');
       let rules = partRuleCustomProperties.get(key);
+      // Note when we are seeing this rule, "selector" has not yet been
+      // transformed but later it will have been.
       if (rules === undefined) {
         rules = [];
         partRuleCustomProperties.set(key, rules);
@@ -301,10 +304,10 @@ const partCache = new StyleCache();
 
 let partNumber = 0;
 
-function getPartId(partName, parentScope, childScope, styleInfo) {
+function getPartId(partName, parentScope, childScope, propertiesConsumed, styleInfo) {
   const key = partName + ':' + parentScope + ':' + childScope;
   const entry = partCache.fetch(
-      key, styleInfo.styleProperties, styleInfo.ownStylePropertyNames);
+      key, styleInfo.styleProperties, propertiesConsumed);
   if (entry !== undefined) {
     return entry.scopeSelector;
   } else {
@@ -347,18 +350,26 @@ export function scopeAllHostParts(host) {
           customPropertyRulesForPart(hostScope, scope, partName);
       if (customPropertyRules.length > 0) {
         const styleInfo = StyleInfo.get(host);
-        const partId = getPartId(partName, hostScope, scope, styleInfo);
         for (const rule of customPropertyRules) {
+          const propertiesConsumed = consumedCustomProperties(rule['parsedCssText']);
+          const partId = getPartId(partName, hostScope, scope, propertiesConsumed, styleInfo);
           if (styleInfo.styleProperties) {
             StyleProperties.applyProperties(rule, styleInfo.styleProperties);
           }
-          const s = rule['selector'].replace(']', `_${partId}]`);
+          // Note that StyleNode selectors are transformed in-place, so the
+          // selector here is going to be transformed for the most recent
+          // instance that was created.
+          // TODO(aomarks) This is pretty hacky. We have e.g.:
+          //   .xb-2 x-c [shady-part~=x-b_x-c_p1]
+          //     and we are transforming it to:
+          //   [shady-part~=x-b_x-c_p1_0]
+          const s = rule['selector'].replace(/.*\[/, '[').replace(']', `_${partId}]`);
           const css = `${s} { ${rule['cssText']} }`;
           applyCss(css, 'TODO', /* head */ null, /* first child */ null);
+          addPartSpecifier(
+              partNode,
+              formatPartSpecifier(partName + '_' + partId, scope, hostScope));
         }
-        addPartSpecifier(
-            partNode,
-            formatPartSpecifier(partName + '_' + partId, scope, hostScope));
       } else {
         addPartSpecifier(
             partNode, formatPartSpecifier(partName, scope, hostScope));
