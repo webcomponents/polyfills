@@ -198,6 +198,7 @@ export function formatPartSelector(parts, scope, hostScope) {
 
 const partRuleCustomProperties = new Map();
 
+
 /**
  * @param {!string} elementName Lower-case tag name of the element whose
  *     template this is.
@@ -208,16 +209,20 @@ export function prepareTemplate(elementName, styleAst) {
     return;
   }
   for (const rule of styleAst.rules) {
-    if (!rule.selector || !rule.selector.includes('::part')) {
+    // TODO(aomarks) We should not have to use literal indexing here because
+    // there is a strong type. But other ShadyCSS code sets it with literal
+    // indexing, so we have to read it that way too.
+    const selector = rule['selector'];
+    if (!selector || !selector.includes('::part')) {
       continue;
     }
     const consumedPropertiesObj = {};
     StyleProperties.collectPropertiesInCssText(
-        rule.cssText, consumedPropertiesObj);
+        rule['cssText'], consumedPropertiesObj);
     const consumedProperties =
         Object.getOwnPropertyNames(consumedPropertiesObj);
     if (consumedProperties.length > 0) {
-      const parsed = parsePartSelector(rule.selector);
+      const parsed = parsePartSelector(selector);
       if (parsed === null) {
         continue;
       }
@@ -342,8 +347,8 @@ export function scopeAllHostParts(host) {
         const partId = getPartId(partName, hostScope, scope, styleInfo);
         for (const rule of customPropertyRules) {
           StyleProperties.applyProperties(rule, styleInfo.styleProperties);
-          const s = rule.selector.replace(']', `_${partId}]`);
-          const css = `${s} { ${rule.cssText} }`;
+          const s = rule['selector'].replace(']', `_${partId}]`);
+          const css = `${s} { ${rule['cssText']} }`;
           applyCss(css, 'TODO', /* head */ null, /* first child */ null);
         }
         addPartSpecifier(
