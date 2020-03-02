@@ -217,7 +217,7 @@ export function prepareTemplate(elementName, styleAst) {
     // there is a strong type. But other ShadyCSS code sets it with literal
     // indexing, so we have to read it that way too.
     const selector = rule['selector'];
-    if (!selector || !selector.includes('::part')) {
+    if (!selector || selector.indexOf('::part') === -1) {
       continue;
     }
     const consumedPropertiesObj = {};
