@@ -96,6 +96,7 @@ import StyleCache from './style-cache.js';
 import StyleInfo from './style-info.js';
 import StyleProperties from './style-properties.js';
 import {applyCss} from './style-util.js';
+import {nativeCssVariables} from './style-settings.js';
 
 /**
  * Parse a CSS Shadow Parts "part" attribute into an array of part names.
@@ -205,6 +206,9 @@ const partRuleCustomProperties = new Map();
  * @param {!StyleNode} styleAst Parsed CSS for this template.
  */
 export function prepareTemplate(elementName, styleAst) {
+  if (nativeCssVariables) {
+    return;
+  }
   if (!styleAst.rules) {
     return;
   }
@@ -228,7 +232,6 @@ export function prepareTemplate(elementName, styleAst) {
       }
       const {ce, partList} = parsed;
       const key = [elementName, ce, partList].join(':');
-      // partRuleCustomProperties.set(key, consumedProperties);
       let rules = partRuleCustomProperties.get(key);
       if (rules === undefined) {
         rules = [];
@@ -346,7 +349,9 @@ export function scopeAllHostParts(host) {
         const styleInfo = StyleInfo.get(host);
         const partId = getPartId(partName, hostScope, scope, styleInfo);
         for (const rule of customPropertyRules) {
-          StyleProperties.applyProperties(rule, styleInfo.styleProperties);
+          if (styleInfo.styleProperties) {
+            StyleProperties.applyProperties(rule, styleInfo.styleProperties);
+          }
           const s = rule['selector'].replace(']', `_${partId}]`);
           const css = `${s} { ${rule['cssText']} }`;
           applyCss(css, 'TODO', /* head */ null, /* first child */ null);
