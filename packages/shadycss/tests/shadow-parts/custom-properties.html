@@ -22,6 +22,7 @@
   <style>
     x-b {
       --custom-color: red;
+      --custom-text-decoration-line: underline;
     }
   </style>
   <x-b></x-b>
@@ -31,6 +32,7 @@
   <style>
     x-b {
       --custom-color: green;
+      --custom-text-decoration-line: line-through;
     }
   </style>
   <x-b></x-b>
@@ -45,6 +47,10 @@
       background-color: var(--custom-background-color);
 
       font-style: var(--custom-font-style);
+    }
+    /** Note we have two part rules here to check that we handle multiple. */
+    x-c::part(p1) {
+      text-decoration-line: var(--custom-text-decoration-line);
     }
   </style>
   <x-c exportparts="p1"></x-c>
@@ -78,6 +84,8 @@
     test('property set above rule', function() {
       assert.equal(getComputedStyle(a1part).color, red);
       assert.equal(getComputedStyle(a2part).color, green);
+      assert.equal(getComputedStyle(a1part).textDecorationLine, 'underline');
+      assert.equal(getComputedStyle(a2part).textDecorationLine, 'line-through');
     });
 
     test.skip('property set in part rule', function() {
