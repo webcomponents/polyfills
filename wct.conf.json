@@ -4,7 +4,7 @@
     "packages/tests/html-imports/index.html",
     "packages/tests/shadycss/runner.html",
     "packages/tests/shadydom/runner.html",
-    "packages/template/tests/runner.html",
+    "packages/tests/template/runner.html",
     "packages/webcomponentsjs/tests/runner.html"
   ],
   "npm": true,
