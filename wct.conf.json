@@ -1,6 +1,6 @@
 {
   "suites": [
-    "packages/custom-elements/tests/index.html",
+    "packages/tests/custom-elements/index.html",
     "packages/html-imports/tests/index.html",
     "packages/shadycss/tests/runner.html",
     "packages/shadydom/tests/runner.html",
