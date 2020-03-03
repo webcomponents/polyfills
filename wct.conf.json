@@ -1,7 +1,7 @@
 {
   "suites": [
     "packages/tests/custom-elements/index.html",
-    "packages/html-imports/tests/index.html",
+    "packages/tests/html-imports/index.html",
     "packages/shadycss/tests/runner.html",
     "packages/shadydom/tests/runner.html",
     "packages/template/tests/runner.html",
