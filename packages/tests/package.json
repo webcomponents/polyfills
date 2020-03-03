@@ -8,10 +8,11 @@
   "devDependencies": {
     "@webcomponents/custom-elements": "^1.4.0",
     "@webcomponents/html-imports": "^1.2.3",
-    "@webcomponents/shadydom": "^1.7.2",
     "@webcomponents/shadycss": "^1.9.5",
+    "@webcomponents/shadydom": "^1.7.2",
     "@webcomponents/template": "^1.4.1",
     "@webcomponents/webcomponents-platform": "^1.0.0",
+    "@webcomponents/webcomponentsjs": "^2.4.2",
     "del": "^3.0.0",
     "es6-promise": "4.2.4",
     "gulp": "^4.0.0",

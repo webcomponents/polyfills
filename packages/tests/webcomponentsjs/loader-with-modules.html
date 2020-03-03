@@ -13,9 +13,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <head>
   <title>Test full bundle and modules</title>
   <meta charset="UTF-8">
+  <script src="../node_modules/@webcomponents/webcomponentsjs/webcomponents-loader.js"></script>
   <script src="./wct-config.js"></script>
-  <script>window.callback = null; WCT.waitFor = (cb) => { window.callback = cb; }</script>
   <script src="../node_modules/wct-browser-legacy/browser.js"></script>
+  <script type="module" src="modules/module-a.js"></script>
 </head>
 
 <body>
@@ -24,24 +25,23 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     function assertComputed(element, expected, prop = 'border-top-width') {
       assert.equal(getComputedStyle(element).getPropertyValue(prop).trim(), expected);
     }
-    suite('late everything', function () {
-      test('element upgraded', function () {
+    suite('Modules and Bundle', function () {
+      test('parsed element upgraded', function() {
         let el = document.querySelector('#parsed');
         let moduleA = customElements.get('module-a');
         assert.instanceOf(el, moduleA);
+        assertComputed(el, '5px');
+        assertComputed(el.shadowRoot.querySelector('module-a-sub'), '2px');
+      });
+      test('dynamic elements upgrade', function () {
+        let el = document.createElement('module-a');
+        document.body.appendChild(el);
+        let moduleA = customElements.get('module-a');
+        assert.instanceOf(el, moduleA);
+        assertComputed(el, '5px');
+        assertComputed(el.shadowRoot.querySelector('module-a-sub'), '2px');
       });
     });
-  </script>
-  <script>
-    addEventListener('load', () => {
-      const script = document.createElement('script');
-      script.src = '../webcomponents-loader.js';
-      addEventListener('WebComponentsReady', () => {
-        customElements.define('module-a', class extends HTMLElement { });
-        window.callback();
-      });
-      document.body.appendChild(script);
-    })
   </script>
 </body>
 

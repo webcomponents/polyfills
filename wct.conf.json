@@ -5,7 +5,7 @@
     "packages/tests/shadycss/runner.html",
     "packages/tests/shadydom/runner.html",
     "packages/tests/template/runner.html",
-    "packages/webcomponentsjs/tests/runner.html"
+    "packages/tests/webcomponentsjs/runner.html"
   ],
   "npm": true,
   "plugins": {
