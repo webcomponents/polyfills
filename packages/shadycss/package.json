@@ -21,7 +21,7 @@
   "scripts": {
     "build": "gulp",
     "debug": "gulp debug",
-    "lint": "eslint src tests entrypoints",
+    "lint": "eslint src entrypoints",
     "prepack": "npm run build"
   },
   "files": [
