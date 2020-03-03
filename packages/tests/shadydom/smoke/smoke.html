@@ -12,9 +12,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <head>
   <meta charset="utf-8">
   <script>
-    ShadyDOM = {force: true, noPatch: true};
+    ShadyDOM = {force: true};
   </script>
-  <script src="../../shadydom.min.js"></script>
+  <script src="../../node_modules/@webcomponents/shadydom/shadydom.min.js"></script>
 </head>
 <body>
 
@@ -28,24 +28,23 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <hr>
 
 <script>
-  const simpleWrapper = ShadyDOM.wrap(window.simple);
-  simpleWrapper.attachShadow({mode: 'open'});
+  simple.attachShadow({mode: 'open'});
   var d = document.createElement('div');
   d.textContent = 'shadowRoot!';
-  simpleWrapper.shadowRoot.appendChild(d);
+  simple.shadowRoot.appendChild(d);
 
-  const distWrapper = ShadyDOM.wrap(window.dist);
-  distWrapper.attachShadow({mode: 'open'});
-  distWrapper.shadowRoot.innerHTML = 'before [<slot></slot>] after';
+  dist.attachShadow({mode: 'open'});
+  //dist.shadowRoot.appendChild(document.createElement('slot'));
+  dist.shadowRoot.innerHTML = 'before [<slot></slot>] after';
 
   var host = document.createElement('div');
   host.id = 'host';
-  const hostWrapper = ShadyDOM.wrap(host);
-  hostWrapper.attachShadow({mode: 'open'});
+  host.attachShadow({mode: 'open'});
   // Populate the initial pool of light DOM children.
-  hostWrapper.innerHTML = 'abc';
+  host.innerHTML = 'abc';
   document.body.appendChild(host);
-  hostWrapper.shadowRoot.innerHTML = '<slot>fallback</slot>';
+  host.shadowRoot.innerHTML = '<slot>fallback</slot>';
+  ShadyDOM.flush();
 </script>
 
 </body>

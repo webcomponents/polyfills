@@ -15,7 +15,7 @@ const loadScript = (src) => {
 }
 
 const loadCE = () => loadScript('../node_modules/@webcomponents/custom-elements/custom-elements.min.js');
-const loadSD = () => loadScript('../shadydom.min.js');
+const loadSD = () => loadScript('../node_modules/@webcomponents/shadydom/shadydom.min.js');
 
 // NOTE: Would be better to install the polyfillFlushCallback here, but
 // Chrome's debugger gets confused by writing an inline script and breaks
