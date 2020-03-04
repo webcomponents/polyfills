@@ -184,6 +184,18 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 <use-inner-html>A</use-inner-html>
 
+  <template id="x-slotted-simple"><slot></slot></template>
+  <script>
+    defineTestElement('x-slotted-simple');
+  </script>
+
+  <template id="x-slotted-container"><x-slotted-simple><slot></slot></x-slotted-simple></template>
+  <script>
+    defineTestElement('x-slotted-container');
+  </script>
+
+<x-compose-lazy-no-dist><span>Child</span></x-compose-lazy-no-dist>
+
 <script>
   defineTestElement('inner-html', function() {
     ShadyDOM.wrapIfNeeded(this).attachShadow({mode: 'open'});
@@ -1395,6 +1407,47 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       ShadyDOM.wrapIfNeeded(d).dispatchEvent(new Event('foo', {bubbles: true}));
       assert.isTrue(heardEvent);
       document.body.removeChild(el);
+    });
+
+    test('re-targeting on slotted elements', function() {
+      var x = document.createElement('x-slotted-container');
+      var b = document.createElement('button');
+      // slotting the button in the first tier
+      x.appendChild(b);
+      document.body.appendChild(x);
+      ShadyDOM.flush();
+      var currentTargetFromShadowRoot;
+      var targetFromShadowRoot;
+      // listening for the click in the shadow of the first tier's shadow
+      var root = x.shadowRoot;
+      root.addEventListener('click', function (e) {
+        currentTargetFromShadowRoot = e.currentTarget;
+        targetFromShadowRoot = e.target;
+      });
+      var slot = root.querySelector('slot');
+      var currentTargetFromSlot;
+      var targetFromSlot;
+      // listening for the click in the slot inside the first tier's shadow
+      slot.addEventListener('click', function (e) {
+        currentTargetFromSlot = e.currentTarget;
+        targetFromSlot = e.target;
+      });
+      var root2 = x.shadowRoot.querySelector('x-slotted-simple').shadowRoot;
+      var slot2 = root.querySelector('slot');
+      var currentTargetFromSlot2;
+      var targetFromSlot2;
+      // listening for the click in the slot inside the second tier's shadow
+      slot2.addEventListener('click', function (e) {
+        currentTargetFromSlot2 = e.currentTarget;
+        targetFromSlot2 = e.target;
+      });
+      b.click();
+      assert.equal(currentTargetFromShadowRoot, x.shadowRoot);
+      assert.equal(targetFromShadowRoot, b);
+      assert.equal(currentTargetFromSlot, slot);
+      assert.equal(targetFromSlot, b);
+      assert.equal(currentTargetFromSlot2, slot2);
+      assert.equal(targetFromSlot2, b);
     });
 
   });
