@@ -318,6 +318,8 @@ function getPartId(partName, parentScope, childScope, propertiesConsumed, styleI
   }
 }
 
+const initialized = new Set();
+
 /**
  * Add the appropriate "part_" class to all parts in the Shady root of the
  * given host.
@@ -341,35 +343,56 @@ export function scopeAllHostParts(host) {
 
   const scope = host.localName;
   const exportPartsMap = getExportPartsMap(host);
+  const styleInfo = StyleInfo.get(host);
+  const partRulesApplied = styleInfo.partRulesApplied;
+  const styleRules = styleInfo.styleRules.rules;
+  for (const rule of partRulesApplied) {
+    partRulesApplied.pop();
+    styleRules.splice(styleRules.indexOf(rule), 1);
+  }
+  // TODO(aomarks) Clear out existing part rules from the main list too.
+  let hasAnyPartStylesWithCustomProperties = false;
 
   for (const partNode of partNodes) {
     removeAllPartSpecifiers(partNode);
     const partAttr = partNode.getAttribute('part');
     for (const partName of parsePartAttribute(partAttr)) {
+      // TODO(aomarks) What about exportparts?
       const customPropertyRules =
           customPropertyRulesForPart(hostScope, scope, partName);
       if (customPropertyRules.length > 0) {
-        const styleInfo = StyleInfo.get(host);
+        hasAnyPartStylesWithCustomProperties = true;
         for (const rule of customPropertyRules) {
+          partRulesApplied.push(rule);
+          styleRules.push(rule);
           const propertiesConsumed = consumedCustomProperties(rule['parsedCssText']);
-          const partId = getPartId(partName, hostScope, scope, propertiesConsumed, styleInfo);
-          if (styleInfo.styleProperties) {
-            StyleProperties.applyProperties(rule, styleInfo.styleProperties);
+          for (const property of propertiesConsumed) {
+            if (styleInfo.ownStylePropertyNames.indexOf(property) === -1) {
+              styleInfo.ownStylePropertyNames.push(property);
+            }
           }
-          // Note that StyleNode selectors are transformed in-place, so the
-          // selector here is going to be transformed for the most recent
-          // instance that was created.
-          // TODO(aomarks) This is pretty hacky. We have e.g.:
-          //   .xb-2 x-c [shady-part~=x-b_x-c_p1]
-          //     and we are transforming it to:
-          //   [shady-part~=x-b_x-c_p1_0]
-          const s = rule['selector'].replace(/.*\[/, '[').replace(']', `_${partId}]`);
-          const css = `${s} { ${rule['cssText']} }`;
-          applyCss(css, 'TODO', /* head */ null, /* first child */ null);
-          addPartSpecifier(
-              partNode,
-              formatPartSpecifier(partName + '_' + partId, scope, hostScope));
         }
+
+        //const propertiesConsumed = consumedCustomProperties(rule['parsedCssText']);
+        //const partId = getPartId(partName, hostScope, scope, propertiesConsumed, styleInfo);
+        //if (styleInfo.styleProperties) {
+          //StyleProperties.applyProperties(rule, styleInfo.styleProperties);
+        // Note that StyleNode selectors are transformed in-place, so the
+        // selector here is going to be transformed for the most recent
+        // instance that was created.
+        // TODO(aomarks) This is pretty hacky. We have e.g.:
+        //   .xb-2 x-c [shady-part~=x-b_x-c_p1]
+        //     and we are transforming it to:
+        //   [shady-part~=x-b_x-c_p1_0]
+        //const s = rule['selector'].replace(/.*\[/, '[').replace(']', `_${partId}]`);
+        //const css = `${s} { ${rule['cssText']} }`;
+        //applyCss(css, 'TODO', /* head */ null, /* first child */ null);
+        //addPartSpecifier(
+        //    partNode,
+        //    formatPartSpecifier(partName + '_' + partId, scope, hostScope));
+        addPartSpecifier(
+            partNode, formatPartSpecifier(partName, scope, hostScope));
+
       } else {
         addPartSpecifier(
             partNode, formatPartSpecifier(partName, scope, hostScope));
@@ -385,7 +408,15 @@ export function scopeAllHostParts(host) {
       }
     }
   }
+
+  if (hasAnyPartStylesWithCustomProperties && initialized.has(host) === false) {
+    initialized.add(host);
+    foo = true;
+    window['ShadyCSS'].styleElement(host);
+  }
 }
+
+let foo = false;
 
 /**
  * @param {!HTMLElement} element
@@ -496,9 +527,20 @@ function getExportPartsMap(host) {
  * @param {!HTMLElement} element
  */
 export function onStyleElement(element) {
-  requestAnimationFrame(() => {
+  if (foo) {
+    foo = false;
+    return;
+  }
+  console.log('parts.onStyleElement', {name: element.localName, element});
+  if (element.shadowRoot) {
     scopeAllHostParts(element);
-  });
+  } else {
+    // This is in a RAF because we need to wait for the template to render the
+    // first time.
+    requestAnimationFrame(() => {
+      scopeAllHostParts(element);
+    });
+  }
 }
 
 /* eslint-disable no-unused-vars */
@@ -513,11 +555,13 @@ export function onInsertBefore(parentNode, newNode, referenceNode) {
   if (!newNode.getRootNode) {
     // TODO(aomarks) Why is it in noPatch mode on Chrome 41 and other older
     // browsers that getRootNode is undefined?
+    console.log('parts.onInsertBefore (no root)', {parentNode, newNode, referenceNode});
     return;
   }
   const root = newNode.getRootNode();
   if (root.host) {
     // TODO(aomarks) Optimize.
+    console.log('parts.onInsertBefore', {newNodeRootHostName: root.host.localName, parentNode, newNode, referenceNode});
     rescopeRecursive(root.host);
   }
 }
@@ -530,6 +574,7 @@ export function onInsertBefore(parentNode, newNode, referenceNode) {
  * @param {?string} newValue
  */
 export function onPartAttributeChanged(element, oldValue, newValue) {
+  console.log('parts.onPartsAttributeChanged', {name: element.localName, element, oldValue, newValue});
   if (!newValue) {
     removeAllPartSpecifiers(element);
   } else {
@@ -545,6 +590,7 @@ export function onPartAttributeChanged(element, oldValue, newValue) {
  * @param {?string} newValue
  */
 export function onExportPartsAttributeChanged(element, oldValue, newValue) {
+  console.log('parts.onExportPartsAttributeChanged', {name: element.localName, element, oldValue, newValue});
   // TODO(aomarks) Optimize.
   rescopeRecursive(element);
 }

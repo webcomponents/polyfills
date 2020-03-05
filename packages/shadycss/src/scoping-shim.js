@@ -315,6 +315,7 @@ export default class ScopingShim {
    * @param {Object=} overrideProps
    */
   styleElement(host, overrideProps) {
+    console.log('styleElement', {name: host.localName, host});
     parts.onStyleElement(host);
     if (disableRuntime) {
       if (overrideProps) {
@@ -421,7 +422,7 @@ export default class ScopingShim {
   }
   _applyStyleProperties(host, styleInfo) {
     let is = StyleUtil.getIsExtends(host).is;
-    let cacheEntry = styleCache.fetch(is, styleInfo.styleProperties, styleInfo.ownStylePropertyNames);
+    let cacheEntry = styleCache.fetch(is, styleInfo.styleProperties, styleInfo.ownStylePropertyNames, styleInfo.partRulesApplied);
     let cachedScopeSelector = cacheEntry && cacheEntry.scopeSelector;
     let cachedStyle = cacheEntry ? cacheEntry.styleElement : null;
     let oldScopeSelector = styleInfo.scopeSelector;
@@ -432,7 +433,7 @@ export default class ScopingShim {
       StyleProperties.applyElementScopeSelector(host, styleInfo.scopeSelector, oldScopeSelector);
     }
     if (!cacheEntry) {
-      styleCache.store(is, styleInfo.styleProperties, style, styleInfo.scopeSelector);
+      styleCache.store(is, styleInfo.styleProperties, style, styleInfo.scopeSelector, styleInfo.partRulesApplied);
     }
     return style;
   }

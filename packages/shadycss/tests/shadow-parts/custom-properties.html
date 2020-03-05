@@ -24,8 +24,12 @@
       --custom-color: red;
       --custom-text-decoration-line: underline;
     }
+    x-b.alt {
+      --custom-color: black;
+    }
   </style>
   <x-b></x-b>
+  <x-b class="alt"></x-b>
 </template>
 
 <template id="x-a2">
@@ -40,6 +44,9 @@
 
 <template id="x-b">
   <style>
+    :host {
+      color: var(--custom-color);
+    }
     x-c::part(p1) {
       color: var(--custom-color);
 
@@ -100,6 +107,17 @@
     test('property set below rule', function() {
       assert.equal(getComputedStyle(a1part).fontStyle, 'italic');
       assert.equal(getComputedStyle(a2part).fontStyle, 'italic');
+    });
+
+    test('dynamic class', async function() {
+      const a1 = pierce('x-a1');
+      const b = pierce(a1, 'x-b.alt');
+      const part = pierce(b, 'x-c', '[part=p1]');
+      assert.equal(getComputedStyle(part).color, black);
+      b.classList.remove('alt');
+      ShadyCSS.styleSubtree(b);
+      await new Promise(r => requestAnimationFrame(r));
+      assert.equal(getComputedStyle(part).color, red);
     });
   });
 </script>

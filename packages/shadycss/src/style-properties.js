@@ -492,6 +492,8 @@ class StyleProperties {
       parts[i] = p.match(hostRx) ?
         p.replace(hostSelector, scope) :
         scope + ' ' + p;
+      // TODO(aomarks) Hacky
+      //parts[i] = parts[i].replace(hostSelector + '_', scopeId + '_');
     }
     rule['selector'] = parts.join(',');
   }
