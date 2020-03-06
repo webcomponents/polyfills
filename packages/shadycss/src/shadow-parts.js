@@ -92,7 +92,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
  *     that has been prepared by ShadyCSS.
  */
 
-import StyleCache from './style-cache.js';
 import StyleInfo from './style-info.js';
 import StyleProperties from './style-properties.js';
 import {applyCss} from './style-util.js';
@@ -146,16 +145,35 @@ function parseExportPartsAttribute(attr) {
   return parts;
 }
 
+// Regular expression to de-compose a ::part rule into interesting pieces.
+//
+// [0] Optional selectors constraining which host the part rules applies to.
+// [1] The custom element name of the host. Note that ShadyCSS part support
+//     requires there to be an explicit custom-element name here, unlike native
+//     parts.
+// [3] The part name or names.
+// [4] Optional pseudo-classor pseudo-element.
+//     TODO(aomarks) Actually only "non-structural" pseudo-classes and
+//     pseudo-elements are supported here. We should validate them to be
+//     more spec-compliant.
+//
+// Example:
+//   [0       ][1      ][2   ]       [3    ] [4    ]
+//   #parent > my-button.fancy::part(foo bar)::hover
+//
+//                  [0  ][1         ][2      ]        [3 ]   [4   ]
 const PART_REGEX = /(.*?)([a-z]+-\w+)([^\s]*?)::part\((.*)?\)(::.*)?/;
 
 /**
+ * De-compose a ::part rule into interesting pieces.
+ *
  * @param {!string} selector The selector.
  * @return {?{
  *   pre: !string,
  *   ce: !string,
  *   post: !string,
- *   partList:!string,
- *   pseudo:!string
+ *   partList: !string,
+ *   pseudo: !string
  * }}
  */
 export function parsePartSelector(selector) {
@@ -171,14 +189,15 @@ export function parsePartSelector(selector) {
  * Format the ShadyCSS class name for a part.
  *
  * @param {!string} partName Name of the part.
- * @param {!string} scope Lowercase custom element name of the part node's
- *     host.
- * @param {!string} hostScope Lowercase custom-element name of the part
- *     node's host's host, or "document" if the host is in the main document.
- * @return {!string} CSS class name.
+ * @param {!string} consumerScope Lowercase name of the custom element that
+ *     receives the part style.
+ * @param {!string} providerScope Lowercase name of the custom element that
+ *     provides the part style, or "document" if the style comes from the main
+ *     document.
+ * @return {!string} Value for the shady-part attribute.
  */
-export function formatPartSpecifier(partName, scope, hostScope) {
-  return `${hostScope}_${scope}_${partName}`;
+export function formatPartSpecifier(partName, consumerScope, providerScope) {
+  return `${consumerScope}_${providerScope}_${partName}`;
 }
 
 /**
@@ -300,24 +319,6 @@ function scopeForRoot(root) {
   }
 }
 
-const partCache = new StyleCache();
-
-let partNumber = 0;
-
-function getPartId(partName, parentScope, childScope, propertiesConsumed, styleInfo) {
-  const key = partName + ':' + parentScope + ':' + childScope;
-  const entry = partCache.fetch(
-      key, styleInfo.styleProperties, propertiesConsumed);
-  if (entry !== undefined) {
-    return entry.scopeSelector;
-  } else {
-    const id = String(partNumber++);
-    partCache.store(
-        key, styleInfo.styleProperties, /* styleElement */ null, id);
-    return id;
-  }
-}
-
 const initialized = new Set();
 
 /**
@@ -372,24 +373,6 @@ export function scopeAllHostParts(host) {
             }
           }
         }
-
-        //const propertiesConsumed = consumedCustomProperties(rule['parsedCssText']);
-        //const partId = getPartId(partName, hostScope, scope, propertiesConsumed, styleInfo);
-        //if (styleInfo.styleProperties) {
-          //StyleProperties.applyProperties(rule, styleInfo.styleProperties);
-        // Note that StyleNode selectors are transformed in-place, so the
-        // selector here is going to be transformed for the most recent
-        // instance that was created.
-        // TODO(aomarks) This is pretty hacky. We have e.g.:
-        //   .xb-2 x-c [shady-part~=x-b_x-c_p1]
-        //     and we are transforming it to:
-        //   [shady-part~=x-b_x-c_p1_0]
-        //const s = rule['selector'].replace(/.*\[/, '[').replace(']', `_${partId}]`);
-        //const css = `${s} { ${rule['cssText']} }`;
-        //applyCss(css, 'TODO', /* head */ null, /* first child */ null);
-        //addPartSpecifier(
-        //    partNode,
-        //    formatPartSpecifier(partName + '_' + partId, scope, hostScope));
         addPartSpecifier(
             partNode, formatPartSpecifier(partName, scope, hostScope));
 
@@ -400,8 +383,6 @@ export function scopeAllHostParts(host) {
       const exportParts = exportPartsMap[partName];
       if (exportParts !== undefined) {
         for (const {partName, scope, hostScope} of exportParts) {
-          // const props = customPropertiesForPartRule(hostScope, scope,
-          // partName);
           addPartSpecifier(
               partNode, formatPartSpecifier(partName, scope, hostScope));
         }
@@ -427,7 +408,7 @@ function addPartSpecifiersToElement(element, partNames) {
   if (root === element || root === document) {
     // Not yet in a shadow root or in the document, in which case parts can't
     // possibly be applied.
-    return;
+     return;
   }
   const host = root.host;
   const scope = host.localName;
