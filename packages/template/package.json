@@ -10,16 +10,12 @@
   "license": "BSD-3-Clause",
   "scripts": {
     "build": "gulp",
-    "test": "wct",
-    "lint": "eslint template.js tests/**/*.html",
+    "lint": "eslint template.js",
     "prepack": "npm run build"
   },
   "files": [
     "template.min.js*"
   ],
-  "devDependencies": {
-    "wct-browser-legacy": "^1.0.2"
-  },
   "publishConfig": {
     "access": "public"
   }

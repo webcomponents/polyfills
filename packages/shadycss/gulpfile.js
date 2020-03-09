@@ -15,40 +15,12 @@
 
 const gulp = require('gulp');
 const sourcemaps = require('gulp-sourcemaps');
-const del = require('del');
 const rename = require('gulp-rename');
 const rollup = require('rollup-stream');
 const buffer = require('vinyl-buffer');
 const source = require('vinyl-source-stream');
 const closure = require('google-closure-compiler').gulp();
 const size = require('gulp-size');
-
-const modules = [
-  'css-parse',
-  'custom-style-element',
-  'make-element',
-  'svg-in-shadow',
-  'style-util',
-  'style-transformer',
-  'style-settings'
-];
-
-const moduleTasks = modules.map((m) => {
-  gulp.task(`test-module-${m}`, () => {
-    return rollup({
-      entry: `tests/module/${m}.js`,
-      format: 'iife',
-      moduleName: m.replace(/-/g, '_')
-    })
-    .pipe(source(`${m}.js`, 'tests/module'))
-    .pipe(gulp.dest('./tests/module/generated'))
-  });
-  return `test-module-${m}`;
-});
-
-gulp.task('clean-test-modules', () => del(['tests/module/generated']));
-
-gulp.task('test-modules', gulp.series(['clean-test-modules', ...moduleTasks]));
 
 function closurify(entry) {
   gulp.task(`closure-${entry}`, () => {
@@ -100,8 +72,6 @@ const entrypoints = [
 let closureTasks = entrypoints.map((e) => closurify(e));
 let debugTasks = entrypoints.map((e) => debugify(e));
 
-gulp.task('closure', gulp.series([...closureTasks]));
-
-gulp.task('default', gulp.series('closure', 'test-modules'));
+gulp.task('default', gulp.series([...closureTasks]));
 
 gulp.task('debug', gulp.series([...debugTasks]));

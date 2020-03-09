@@ -1,0 +1,281 @@
+<!doctype html>
+<html>
+<head>
+<title>Element#outerHTML</title>
+<script>
+  (window.customElements = window.customElements || {}).forcePolyfill = true;
+  // Capture these before loading the custom elements polyfill so that their
+  // behavior can be checked before running tests for `outerHTML`.
+  window.NATIVE = {
+    createElement:
+        Document.prototype.createElement,
+    createElementNS:
+        Document.prototype.createElementNS,
+    appendChild:
+        Node.prototype.appendChild,
+    insertBefore:
+        Node.prototype.insertBefore,
+  };
+</script>
+<script src="../../../node_modules/es6-promise/dist/es6-promise.auto.min.js"></script>
+<script src="../../../node_modules/@webcomponents/template/template.js"></script>
+<script src="../../../node_modules/wct-browser-legacy/browser.js"></script>
+<script src="../../../node_modules/@webcomponents/custom-elements/custom-elements.min.js"></script>
+</head>
+<body>
+<script>
+function generateLocalName() {
+  return 'test-element-' + Math.random().toString(32).substring(2);
+}
+
+function defineWithLocalName(localName) {
+  customElements.define(localName, class extends HTMLElement {
+    constructor() {
+      super();
+      this.constructed = true;
+      this.connectedCallbackCount = 0;
+      this.disconnectedCallbackCount = 0;
+    }
+
+    connectedCallback() {
+      this.connectedCallbackCount++;
+    }
+
+    disconnectedCallback() {
+      this.disconnectedCallbackCount++;
+    }
+  });
+}
+
+suite('Custom elements in the assigned string are created when setting `outerHTML`.', function() {
+  let localName1;
+  let localName2;
+
+  setup(function() {
+    localName1 = generateLocalName();
+    defineWithLocalName(localName1);
+    localName2 = generateLocalName();
+    defineWithLocalName(localName2);
+  });
+
+  test('get/set innerHTML on elements with parsing rules', function() {
+    const container = document.createElement('div');
+    const div = document.createElement('div');
+    container.appendChild(div);
+    const html = '<span>A</span>';
+    div.outerHTML = html;
+    assert.equal(container.innerHTML, html);
+    assert.equal(container.childNodes.length, 1);
+  });
+
+  test('Disconnected context element', function() {
+    const container = document.createElement('div');
+    const div = document.createElement('div');
+    container.appendChild(div);
+    div.outerHTML = `<${localName1}><${localName2}></${localName2}></${localName1}>`;
+
+    assert.equal(container.childNodes.length, 1);
+    assert.equal(container.childNodes[0].localName, localName1);
+    assert.equal(container.childNodes[0].connectedCallbackCount, 0);
+    assert.equal(container.childNodes[0].disconnectedCallbackCount, 0);
+    assert.equal(container.childNodes[0].childNodes.length, 1);
+    assert.equal(container.childNodes[0].childNodes[0].localName, localName2);
+    assert.equal(container.childNodes[0].childNodes[0].connectedCallbackCount, 0);
+    assert.equal(container.childNodes[0].childNodes[0].disconnectedCallbackCount, 0);
+    assert.equal(container.childNodes[0].childNodes[0].childNodes.length, 0);
+  });
+
+  test('Connected context element', function() {
+    const container = document.createElement('div');
+    const div = document.createElement('div');
+    container.appendChild(div);
+    document.body.appendChild(container);
+
+    div.outerHTML = `<${localName1}><${localName2}></${localName2}></${localName1}>`;
+
+    assert.equal(container.childNodes.length, 1);
+    assert.equal(container.childNodes[0].localName, localName1);
+    assert.equal(container.childNodes[0].connectedCallbackCount, 1);
+    assert.equal(container.childNodes[0].disconnectedCallbackCount, 0);
+    assert.equal(container.childNodes[0].childNodes.length, 1);
+    assert.equal(container.childNodes[0].childNodes[0].localName, localName2);
+    assert.equal(container.childNodes[0].childNodes[0].connectedCallbackCount, 1);
+    assert.equal(container.childNodes[0].childNodes[0].disconnectedCallbackCount, 0);
+    assert.equal(container.childNodes[0].childNodes[0].childNodes.length, 0);
+
+    document.body.removeChild(container);
+  });
+
+});
+
+suite('Corner cases', function() {
+  test('Throws error when parentNode does not exist', function() {
+    const div = document.createElement('div');
+
+    assert.throws(() => div.outerHTML = `<div></div>`);
+  });
+
+  const canOuterHTMLSVGElements = (function() {
+    const svg = window.NATIVE.createElementNS.call(document, 'http://www.w3.org/2000/svg', 'svg');
+    const circle = window.NATIVE.createElementNS.call(document, 'http://www.w3.org/2000/svg', 'circle');
+    svg.appendChild(circle);
+    document.body.appendChild(svg);
+
+    try {
+      circle.outerHTML = `<g></g>`;
+      return svg.firstChild instanceof SVGGElement;
+    } catch (e) {
+      return false;
+    }
+  })();
+
+  test('Creates SVG elements in correct namespace', function() {
+    // Safari 10 can not `outerHTML` with regular SVG elements, so disregard this test.
+    // Edge 14 does not crash, but creates `HTMLUnknownElement`s instead.
+    if (!canOuterHTMLSVGElements) {
+      this.skip();
+    }
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    svg.appendChild(circle);
+    document.body.appendChild(svg);
+
+    circle.outerHTML = `<g></g>`;
+
+    assert.isTrue(svg.firstChild instanceof SVGGElement);
+  });
+});
+
+suite('Siblings of the element are not incorrectly upgraded when setting `outerHTML`', function() {
+
+  let customName;
+  let CEInserted;
+
+  setup(function() {
+    customName = generateLocalName();
+    CEInserted = class extends HTMLElement {};
+    customElements.define(customName, CEInserted);
+  });
+
+  test('Does not upgrade previous sibling', function() {
+    const container = document.createElement('div');
+    const div = document.createElement('div');
+    container.appendChild(div);
+    document.body.appendChild(container);
+    window.NATIVE.insertBefore.call(container, window.NATIVE.createElement.call(document, customName), div);
+
+    div.outerHTML = `<div></div>`;
+
+    assert.isFalse(container.firstChild instanceof CEInserted);
+
+    document.body.removeChild(container);
+  });
+
+  test('Does not upgrade next sibling', function() {
+    const container = document.createElement('div');
+    const div = document.createElement('div');
+    container.appendChild(div);
+    document.body.appendChild(container);
+    window.NATIVE.appendChild.call(container, window.NATIVE.createElement.call(document, customName));
+
+    div.outerHTML = `<div></div>`;
+
+    assert.isFalse(container.lastChild instanceof CEInserted);
+
+    document.body.removeChild(container);
+  });
+
+  test('Does not upgrade previous and next sibling', function() {
+    const container = document.createElement('div');
+    const div = document.createElement('div');
+    container.appendChild(div);
+    document.body.appendChild(container);
+    window.NATIVE.appendChild.call(container, window.NATIVE.createElement.call(document, customName));
+    window.NATIVE.insertBefore.call(container, window.NATIVE.createElement.call(document, customName), div);
+
+    div.outerHTML = `<div></div>`;
+
+    assert.isFalse(container.firstChild instanceof CEInserted);
+    assert.isFalse(container.lastChild instanceof CEInserted);
+
+    document.body.removeChild(container);
+  });
+});
+
+suite('Custom element descendants of the context element are disconnected when setting `outerHTML`.', function() {
+  let localName1;
+  let localName2;
+  let container;
+  let div;
+  let element1;
+  let element2;
+
+  setup(function() {
+    localName1 = generateLocalName();
+    localName2 = generateLocalName();
+    defineWithLocalName(localName1);
+    defineWithLocalName(localName2);
+
+    container = document.createElement('div');
+    div = document.createElement('div');
+    element1 = document.createElement(localName1);
+    element2 = document.createElement(localName2);
+    container.appendChild(div);
+    div.appendChild(element1);
+    element1.appendChild(element2);
+
+    assert.equal(div.childNodes.length, 1);
+
+    assert.equal(element1.connectedCallbackCount, 0);
+    assert.equal(element1.disconnectedCallbackCount, 0);
+    assert.equal(element1.childNodes.length, 1);
+
+    assert.equal(element2.connectedCallbackCount, 0);
+    assert.equal(element2.disconnectedCallbackCount, 0);
+    assert.equal(element2.childNodes.length, 0);
+  });
+
+  test('Disconnected context element', function() {
+    div.outerHTML = "";
+
+    // `div` no longer has children.
+    assert.equal(container.childNodes.length, 0);
+
+    // `div` was disconnected, no callbacks were called.
+    assert.equal(element1.localName, localName1);
+    assert.equal(element1.connectedCallbackCount, 0);
+    assert.equal(element1.disconnectedCallbackCount, 0);
+
+    assert.equal(element2.localName, localName2);
+    assert.equal(element2.connectedCallbackCount, 0);
+    assert.equal(element2.disconnectedCallbackCount, 0);
+  });
+
+  test('Connected context element', function() {
+    document.body.appendChild(container);
+
+    assert.equal(div.childNodes.length, 1);
+    // `element1` was connected.
+    assert.equal(element1.connectedCallbackCount, 1);
+    assert.equal(element1.disconnectedCallbackCount, 0);
+    // `element2` was connected.
+    assert.equal(element2.connectedCallbackCount, 1);
+    assert.equal(element2.disconnectedCallbackCount, 0);
+
+    div.outerHTML = "";
+
+    // `div` no longer has children.
+    assert.equal(container.childNodes.length, 0);
+    // `element1` was disconnected.
+    assert.equal(element1.connectedCallbackCount, 1);
+    assert.equal(element1.disconnectedCallbackCount, 1);
+    // `element2` was disconnected.
+    assert.equal(element2.connectedCallbackCount, 1);
+    assert.equal(element2.disconnectedCallbackCount, 1);
+
+    document.body.removeChild(container);
+  });
+});
+</script>
+</body>
+</html>

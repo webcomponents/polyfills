@@ -20,7 +20,6 @@
   ],
   "scripts": {
     "build": "gulp",
-    "test": "wct",
     "debug": "rollup -c",
     "lint": "eslint src",
     "regen-package-lock": "rm -rf node_modules package-lock.json; npm install",
@@ -33,14 +32,6 @@
     "LICENSE.md",
     "README.md"
   ],
-  "devDependencies": {
-    "@webcomponents/custom-elements": "^1.4.0",
-    "@webcomponents/shadycss": "^1.9.5",
-    "@webcomponents/template": "^1.4.1",
-    "@webcomponents/webcomponents-platform": "^1.0.0",
-    "promise-polyfill": "^8.0.0",
-    "wct-browser-legacy": "^1.0.2"
-  },
   "publishConfig": {
     "access": "public"
   }
