@@ -404,7 +404,6 @@ class StyleTransformer {
   }
 
   _transformPartSelector(selector, scope) {
-    console.log('_transformPartSelector', {selector, scope});
     const parsed = parsePartSelector(selector);
     if (parsed === null) {
       return selector;

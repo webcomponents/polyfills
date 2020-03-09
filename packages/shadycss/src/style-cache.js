@@ -36,13 +36,6 @@ export default class StyleCache {
   }
 
   store(tagname, properties, styleElement, scopeSelector, partRulesApplied) {
-    console.log('store', {
-      tagname,
-      properties: properties,
-      styleElement,
-      scopeSelector,
-      partRulesApplied: partRulesApplied.slice(),
-    });
     let list = this.cache[tagname] || [];
     list.push({properties, styleElement, scopeSelector, partRulesApplied: partRulesApplied.slice()});
     if (list.length > this.typeMax) {
@@ -52,12 +45,6 @@ export default class StyleCache {
   }
 
   fetch(tagname, properties, ownPropertyNames, partRulesApplied) {
-    console.log('fetch', {
-      tagname,
-      properties: properties,
-      ownPropertyNames: ownPropertyNames.slice(),
-      partRulesApplied: partRulesApplied.slice(),
-    });
     let list = this.cache[tagname];
     if (!list) {
       return;

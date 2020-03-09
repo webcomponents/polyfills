@@ -315,7 +315,6 @@ export default class ScopingShim {
    * @param {Object=} overrideProps
    */
   styleElement(host, overrideProps) {
-    console.log('styleElement', {name: host.localName, host});
     parts.onStyleElement(host);
     if (disableRuntime) {
       if (overrideProps) {

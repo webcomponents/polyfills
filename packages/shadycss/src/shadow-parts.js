@@ -94,7 +94,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 import StyleInfo from './style-info.js';
 import StyleProperties from './style-properties.js';
-import {applyCss} from './style-util.js';
 import {nativeCssVariables} from './style-settings.js';
 
 /**
@@ -518,7 +517,6 @@ export function onStyleElement(element) {
     foo = false;
     return;
   }
-  console.log('parts.onStyleElement', {name: element.localName, element});
   if (element.shadowRoot) {
     scopeAllHostParts(element);
   } else {
@@ -542,13 +540,11 @@ export function onInsertBefore(parentNode, newNode, referenceNode) {
   if (!newNode.getRootNode) {
     // TODO(aomarks) Why is it in noPatch mode on Chrome 41 and other older
     // browsers that getRootNode is undefined?
-    console.log('parts.onInsertBefore (no root)', {parentNode, newNode, referenceNode});
     return;
   }
   const root = newNode.getRootNode();
   if (root.host) {
     // TODO(aomarks) Optimize.
-    console.log('parts.onInsertBefore', {newNodeRootHostName: root.host.localName, parentNode, newNode, referenceNode});
     rescopeRecursive(root.host);
   }
 }
@@ -561,7 +557,6 @@ export function onInsertBefore(parentNode, newNode, referenceNode) {
  * @param {?string} newValue
  */
 export function onPartAttributeChanged(element, oldValue, newValue) {
-  console.log('parts.onPartsAttributeChanged', {name: element.localName, element, oldValue, newValue});
   if (!newValue) {
     removeAllPartSpecifiers(element);
   } else {
@@ -577,7 +572,6 @@ export function onPartAttributeChanged(element, oldValue, newValue) {
  * @param {?string} newValue
  */
 export function onExportPartsAttributeChanged(element, oldValue, newValue) {
-  console.log('parts.onExportPartsAttributeChanged', {name: element.localName, element, oldValue, newValue});
   // TODO(aomarks) Optimize.
   rescopeRecursive(element);
 }
