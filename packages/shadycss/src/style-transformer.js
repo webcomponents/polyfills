@@ -409,12 +409,12 @@ class StyleTransformer {
     if (parsed === null) {
       return selector;
     }
-    const {pre, ce, post, partList, pseudo} = parsed;
+    const {combinators, elementName, selectors, parts, pseudos} = parsed;
     // Earlier we did a hacky transform from "part(foo bar)"" to "part(foo,bar)"
     // so that the SIMPLE_SELECTOR regex didn't get confused by spaces.
     const partSelector =
-        formatPartSelector(partList.replace(',', ' '), ce, scope);
-    return `${pre}${ce}${post} ${partSelector}${pseudo}`;
+        formatPartSelector(parts.replace(',', ' '), elementName, scope);
+    return `${combinators}${elementName}${selectors} ${partSelector}${pseudos}`;
   }
 
   // :host(...) -> scopeName...

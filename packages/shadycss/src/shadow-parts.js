@@ -145,35 +145,41 @@ function parseExportPartsAttribute(attr) {
   return parts;
 }
 
-// Regular expression to de-compose a ::part rule into interesting pieces.
-//
-// [0] Optional selectors constraining which host the part rules applies to.
-// [1] The custom element name of the host. Note that ShadyCSS part support
-//     requires there to be an explicit custom-element name here, unlike native
-//     parts.
-// [3] The part name or names.
-// [4] Optional pseudo-classor pseudo-element.
-//     TODO(aomarks) Actually only "non-structural" pseudo-classes and
-//     pseudo-elements are supported here. We should validate them to be
-//     more spec-compliant.
-//
-// Example:
-//   [0       ][1      ][2   ]       [3    ] [4    ]
-//   #parent > my-button.fancy::part(foo bar)::hover
-//
-//                  [0  ][1         ][2      ]        [3 ]   [4   ]
+/**
+ * Regular expression to de-compose a ::part rule into interesting pieces. See
+ * parsePartSelector for description of pieces.
+ *                  [0  ][1         ][2      ]        [3 ]   [4   ]
+ */
 const PART_REGEX = /(.*?)([a-z]+-\w+)([^\s]*?)::part\((.*)?\)(::.*)?/;
 
 /**
  * De-compose a ::part rule into interesting pieces.
  *
+ * [0] combinators: Optional combinator selectors constraining the receiving
+ *     host.
+ * [1] elementName: Required custom element name of the receiving host. Note
+ *     that ShadyCSS part support requires there to be an explicit custom
+ *     element name here, unlike native parts.
+ * [2] selectors: Optional additional selectors constraining the receiving host.
+ * [3] parts: The part name or names (whitespace-separated, this function does
+ *     not split them).
+ * [4] pseudos: Optional pseudo-classes or pseudo-elements of the part.
+ *
+ *     TODO(aomarks) Actually only "non-structural" pseudo-classes and
+ *     pseudo-elements are supported here. We should validate them to be more
+ *     spec-compliant.
+ *
+ * Example:
+ *   [0       ][1      ][2   ]       [3    ] [4    ]
+ *   #parent > my-button.fancy::part(foo bar)::hover
+ *
  * @param {!string} selector The selector.
  * @return {?{
- *   pre: !string,
- *   ce: !string,
- *   post: !string,
- *   partList: !string,
- *   pseudo: !string
+ *   combinators: !string,
+ *   elementName: !string,
+ *   selectors: !string,
+ *   parts: !string,
+ *   pseudos: !string
  * }}
  */
 export function parsePartSelector(selector) {
@@ -181,8 +187,8 @@ export function parsePartSelector(selector) {
   if (match === null) {
     return null;
   }
-  const [, pre, ce, post, partList, pseudo] = match;
-  return {pre, ce, post, partList, pseudo: pseudo || ''};
+  const [, combinators, elementName, selectors, parts, pseudos] = match;
+  return {combinators, elementName, selectors, parts, pseudos: pseudos || ''};
 }
 
 /**
@@ -225,11 +231,11 @@ function consumedCustomProperties(cssText) {
 }
 
 /**
- * @param {!string} elementName Lower-case tag name of the element whose
+ * @param {!string} providerElementName Lower-case tag name of the element whose
  *     template this is.
  * @param {!StyleNode} styleAst Parsed CSS for this template.
  */
-export function prepareTemplate(elementName, styleAst) {
+export function prepareTemplate(providerElementName, styleAst) {
   if (nativeCssVariables) {
     return;
   }
@@ -250,8 +256,8 @@ export function prepareTemplate(elementName, styleAst) {
       if (parsed === null) {
         continue;
       }
-      const {ce, partList} = parsed;
-      const key = [elementName, ce, partList].join(':');
+      const {elementName: receiverElementName, parts} = parsed;
+      const key = [providerElementName, receiverElementName, parts].join(':');
       let rules = partRuleCustomProperties.get(key);
       // Note when we are seeing this rule, "selector" has not yet been
       // transformed but later it will have been.
