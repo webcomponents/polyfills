@@ -49,7 +49,7 @@ class StyleProperties {
  * decorates styles with rule info and returns an array of used style property names
  *
  * @param {StyleNode} rules
- * @return {Array<string>}
+ * @return {!Array<string>}
  */
   decorateStyles(rules) {
     let self = this, props = {}, keyframes = [], ruleIndex = 0;
@@ -361,7 +361,7 @@ class StyleProperties {
  * @param {Element} scope
  * @param {StyleNode} rules
  * @param {string} cssBuild
- * @return {Object}
+ * @return {!Object}
  */
   hostAndRootPropertiesForScope(scope, rules, cssBuild) {
     let hostProps = {}, rootProps = {};
@@ -417,7 +417,7 @@ class StyleProperties {
    * @param {Element} element
    * @param {StyleNode} rules
    * @param {string} scopeSelector
-   * @return {Object}
+   * @return {!Object}
    */
   _elementKeyframeTransforms(element, rules, scopeSelector) {
     let keyframesRules = rules._keyframes;
