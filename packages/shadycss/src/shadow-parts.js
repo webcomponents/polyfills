@@ -348,7 +348,7 @@ const initialized = new Set();
 /**
  * The data comprising a ShadyCSS emulated ::part selector.
  *
- * @struct
+ * @record
  */
  class ShadyPartSelector {
    constructor() {
