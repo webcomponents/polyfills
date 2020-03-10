@@ -112,7 +112,7 @@ export function applyCss(cssText, moniker, target, contextNode) {
 /**
  * @param {string} cssText
  * @param {string} moniker
- * @return {HTMLStyleElement}
+ * @return {!HTMLStyleElement}
  */
 export function createScopeStyle(cssText, moniker) {
   let style = /** @type {HTMLStyleElement} */(document.createElement('style'));
