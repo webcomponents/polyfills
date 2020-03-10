@@ -25,12 +25,18 @@
     }
     x-b::part(b) {
       color: red;
+      background-color: var(--custom-color);
     }
   </style>
   <x-b></x-b>
 </template>
 
 <template id="x-b">
+  <style>
+    :host {
+      --custom-color: blue;
+    }
+  </style>
   <x-c exportparts="c:b"></x-c>
 </template>
 
@@ -71,6 +77,7 @@
       part.textContent = 'red';
       d.shadowRoot.appendChild(part);
       assert.equal(color(part), red);
+      assert.equal(getComputedStyle(part).backgroundColor, blue);
     });
 
     test('new part with insertBefore', function() {
@@ -130,6 +137,8 @@
       part.textContent = 'red/green';
       d.shadowRoot.appendChild(part);
       assert.equal(color(part), red);
+
+      // Move this part one shadow root up.
 
       // Note that the green rule has lower precendence than the red rule, so
       // this test fails both if we neglect to add new classes, and if we

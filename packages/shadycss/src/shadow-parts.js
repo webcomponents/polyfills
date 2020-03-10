@@ -9,6 +9,25 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 */
 
 /**
+ * Terminology:
+ *
+ * x-a [0]
+ *   #shadow-root
+ *     <style>
+ *       x-b::part(foo) { ... } [3]
+ *     </style>
+ *
+ *     x-b [1]
+ *       #shadow-root
+ *         <div part="foo"></div> [2]
+ *
+ * [0] provider host
+ * [1] receiver host
+ * [2] consumer part node
+ * [3] part rule
+ */
+
+/**
  * The general strategy for CSS Shadow Parts support in Shady CSS is
  * illustrated by this example:
  *
@@ -327,6 +346,89 @@ function scopeForRoot(root) {
 const initialized = new Set();
 
 /**
+ * The data comprising a ShadyCSS emulated ::part selector.
+ *
+ * @struct
+ */
+ class ShadyPartSelector {
+   constructor() {
+     /**
+      * Name of the part.
+      * @type {!string}
+      */
+     this.partName;
+
+     /**
+      * Custom element name of the host that provides a part style rule.
+      * @type {!string}
+      */
+     this.providerScope;
+
+     /**
+      * Custom element name of the host that receives a part style rule.
+      * @type {!string}
+      */
+     this.receiverScope;
+   }
+ }
+
+/**
+ * Find all of the part nodes in the shadow root of the given element, along
+ * with the data needed to apply emulated part rule styles to that node,
+ * accounting for exported parts.
+ *
+ * @param {!HTMLElement} element
+ * @return {!Array<!{
+ *   partNode: !HTMLElement,
+ *   selectors: !ShadyPartSelector
+ * >}
+ */
+function findPartsWithShadySelectors(element) {
+  if (!element.shadowRoot) {
+    return [];
+  }
+  const partNodes = element.shadowRoot.querySelectorAll('[part]');
+  if (partNodes.length === 0) {
+    return [];
+  }
+  const root = element.getRootNode();
+  const parentScope = scopeForRoot(root);
+  if (parentScope === undefined) {
+    return [];
+  }
+  const elementScope = element.localName;
+  const exportPartsMap = getExportPartsMap(element);
+  const parts = [];
+  for (const partNode of partNodes) {
+    const partAttr = partNode.getAttribute('part');
+    const partNames = parsePartAttribute(partAttr);
+    const selectors = [];
+    for (const partName of partNames) {
+      // Selector for ::part rules provided by our direct parent.
+      selectors.push({
+        partName,
+        providerScope: parentScope,
+        receiverScope: elementScope,
+      });
+      // Walk up the exportparts tree to find selectors for ::part rules
+      // provided by our grandparent and above,
+      const exportParts = exportPartsMap[partName];
+      if (exportParts !== undefined) {
+        for (const {hostScope, scope, partName} of exportParts) {
+          selectors.push({
+            partName,
+            providerScope: hostScope,
+            receiverScope: scope,
+          });
+        }
+      }
+    }
+    parts.push({partNode, selectors});
+  }
+  return parts;
+}
+
+/**
  * Add the appropriate "part_" class to all parts in the Shady root of the
  * given host.
  *
@@ -351,7 +453,10 @@ export function scopeAllHostParts(host) {
   const exportPartsMap = getExportPartsMap(host);
   const styleInfo = StyleInfo.get(host);
   const partRulesApplied = styleInfo.partRulesApplied;
-  const styleRules = styleInfo.styleRules.rules;
+  let styleRules = styleInfo.styleRules.rules;
+  if (styleRules === null) {
+    styleRules = styleInfo.styleRules.rules = [];
+  }
   for (const rule of partRulesApplied) {
     partRulesApplied.pop();
     styleRules.splice(styleRules.indexOf(rule), 1);
@@ -359,13 +464,13 @@ export function scopeAllHostParts(host) {
   // TODO(aomarks) Clear out existing part rules from the main list too.
   let hasAnyPartStylesWithCustomProperties = false;
 
-  for (const partNode of partNodes) {
+  for (const {partNode, selectors} of findPartsWithShadySelectors(host)) {
     removeAllPartSpecifiers(partNode);
-    const partAttr = partNode.getAttribute('part');
-    for (const partName of parsePartAttribute(partAttr)) {
-      // TODO(aomarks) What about exportparts?
+    for (const {partName, providerScope, receiverScope} of selectors) {
+      addPartSpecifier(
+          partNode, formatPartSpecifier(partName, receiverScope, providerScope));
       const customPropertyRules =
-          customPropertyRulesForPart(hostScope, scope, partName);
+          customPropertyRulesForPart(providerScope, receiverScope, partName);
       if (customPropertyRules.length > 0) {
         hasAnyPartStylesWithCustomProperties = true;
         for (const rule of customPropertyRules) {
@@ -377,19 +482,6 @@ export function scopeAllHostParts(host) {
               styleInfo.ownStylePropertyNames.push(property);
             }
           }
-        }
-        addPartSpecifier(
-            partNode, formatPartSpecifier(partName, scope, hostScope));
-
-      } else {
-        addPartSpecifier(
-            partNode, formatPartSpecifier(partName, scope, hostScope));
-      }
-      const exportParts = exportPartsMap[partName];
-      if (exportParts !== undefined) {
-        for (const {partName, scope, hostScope} of exportParts) {
-          addPartSpecifier(
-              partNode, formatPartSpecifier(partName, scope, hostScope));
         }
       }
     }

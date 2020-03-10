@@ -413,7 +413,8 @@ class StyleTransformer {
     // so that the SIMPLE_SELECTOR regex didn't get confused by spaces.
     const partSelector =
         formatPartSelector(parts.replace(',', ' '), elementName, scope);
-    return `${combinators}${elementName}${selectors} ${partSelector}${pseudos}`;
+    return (scope === 'document' ? '' : scope + ' ') +
+        `${combinators}${elementName}${selectors} ${partSelector}${pseudos}`;
   }
 
   // :host(...) -> scopeName...
