@@ -11,20 +11,28 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 /**
  * Terminology:
  *
- * x-a [0]
- *   #shadow-root
- *     <style>
- *       x-b::part(foo) { ... } [3]
- *     </style>
+ * [0] provider
+ * [1] part rule
+ * [2] receiver
+ * [3] reciever
+ * [4] part node
  *
- *     x-b [1]
+ * Example:
+ *
+ * [0] <x-a>
  *       #shadow-root
- *         <div part="foo"></div> [2]
+ *         <style>
+ * [1]       x-b::part(greeting) { ... }
+ *         </style>
  *
- * [0] provider host
- * [1] receiver host
- * [2] consumer part node
- * [3] part rule
+ * [2]     <x-b>
+ *           #shadow-root
+ * [3]         <x-c exportparts="greeting">
+ *               #shadow-root
+ * [4]             <div part="greeting">hello</div>
+ *             </x-c>
+ *         </x-b>
+ *     </x-a>
  */
 
 /**
@@ -242,6 +250,12 @@ export function formatPartSelector(parts, scope, hostScope) {
 
 const partRuleCustomProperties = new Map();
 
+/**
+ * Find the CSS Custom Properties that are consumed by the given CSS text.
+ *
+ * @param {!string} cssText The CSS text.
+ * @return {!Array<string>} The CSS Custom Property names.
+ */
 function consumedCustomProperties(cssText) {
   const obj = {};
   StyleProperties.collectPropertiesInCssText(cssText, obj);
@@ -249,21 +263,23 @@ function consumedCustomProperties(cssText) {
 }
 
 /**
- * @param {!string} providerElementName Lower-case tag name of the element whose
+ * Do template preparation work.
+ *
+ * @param {!string} providerScope Lower-case tag name of the element whose
  *     template this is.
  * @param {!StyleNode} styleAst Parsed CSS for this template.
  */
-export function prepareTemplate(providerElementName, styleAst) {
+export function prepareTemplate(templateScope, styleAst) {
   if (nativeCssVariables) {
+    // The only thing this function does is check for ::part rules that have CSS
+    // Custom Properties so that we can shim them correctly. No need to do
+    // anything if we have native support.
     return;
   }
   if (!styleAst.rules) {
     return;
   }
   for (const rule of styleAst.rules) {
-    // TODO(aomarks) We should not have to use literal indexing here because
-    // there is a strong type. But other ShadyCSS code sets it with literal
-    // indexing, so we have to read it that way too.
     const selector = rule['selector'];
     if (!selector || selector.indexOf('::part') === -1) {
       continue;
@@ -274,11 +290,9 @@ export function prepareTemplate(providerElementName, styleAst) {
       if (parsed === null) {
         continue;
       }
-      const {elementName: receiverElementName, parts} = parsed;
-      const key = [providerElementName, receiverElementName, parts].join(':');
+      const {elementName: receiverScope, parts} = parsed;
+      const key = [templateScope, receiverScope, parts].join(':');
       let rules = partRuleCustomProperties.get(key);
-      // Note when we are seeing this rule, "selector" has not yet been
-      // transformed but later it will have been.
       if (rules === undefined) {
         rules = [];
         partRuleCustomProperties.set(key, rules);
@@ -287,12 +301,6 @@ export function prepareTemplate(providerElementName, styleAst) {
     }
   }
 }
-
-// function customPropertiesForPartRule(parentScope, childScope, partName) {
-//  const key = [parentScope, childScope, partName].join(':');
-//  const properties = partRuleCustomProperties.get(key);
-//  return properties === undefined ? [] : properties;
-//}
 
 function customPropertyRulesForPart(parentScope, childScope, partName) {
   const key = [parentScope, childScope, partName].join(':');
