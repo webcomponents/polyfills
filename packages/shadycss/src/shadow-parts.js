@@ -130,7 +130,7 @@ import {nativeCssVariables} from './style-settings.js';
  *   "foo bar" => ["foo", "bar"]
  *
  * @param {?string} attr The "part" attribute value.
- * @return {!Array<!string>}
+ * @return {!Array<!string>} The part names. Order and duplicates are preserved.
  */
 function parsePartAttribute(attr) {
   if (!attr) {
@@ -291,6 +291,10 @@ export function prepareTemplate(templateScope, styleAst) {
         continue;
       }
       const {elementName: receiverScope, parts} = parsed;
+      // TODO(aomarks) If a rule requires multiple parts, then this will only
+      // work if the part attribute on the part node is exactly identical.
+      // Instead we should probably key by scope, and then check each part,
+      // similar to how the other cache works.
       const key = [templateScope, receiverScope, parts].join(':');
       let rules = partRuleCustomProperties.get(key);
       if (rules === undefined) {
@@ -358,27 +362,54 @@ const initialized = new Set();
  *
  * @record
  */
- class ShadyPartSelector {
-   constructor() {
-     /**
-      * Name of the part.
-      * @type {!string}
-      */
-     this.partName;
+class ShadyPartSelector {
+ constructor() {
+   /**
+    * Name of the part.
+    * @type {!string}
+    */
+   this.partName;
 
-     /**
-      * Custom element name of the host that provides a part style rule.
-      * @type {!string}
-      */
-     this.providerScope;
+   /**
+    * Custom element name of the host that provides a part style rule.
+    * @type {!string}
+    */
+   this.providerScope;
 
-     /**
-      * Custom element name of the host that receives a part style rule.
-      * @type {!string}
-      */
-     this.receiverScope;
-   }
+   /**
+    * Custom element name of the host that receives a part style rule.
+    * @type {!string}
+    */
+   this.receiverScope;
  }
+}
+
+/**
+ * The data comprising a ShadyCSS emulated ::part selector.
+ *
+ * @record
+ */
+class ShadyPartSelectors {
+ constructor() {
+   /**
+    * Name of the part.
+    * @type {!Array<!string>}
+    */
+   this.partNames;
+
+   /**
+    * Custom element name of the host that provides a part style rule.
+    * @type {!string}
+    */
+   this.providerScope;
+
+   /**
+    * Custom element name of the host that receives a part style rule.
+    * @type {!string}
+    */
+   this.receiverScope;
+ }
+}
 
 /**
  * Find all of the part nodes in the shadow root of the given element, along
@@ -388,7 +419,7 @@ const initialized = new Set();
  * @param {!HTMLElement} element
  * @return {!Array<!{
  *   partNode: !HTMLElement,
- *   selectors: !ShadyPartSelector
+ *   selectors: !Array<!ShadyPartSelectors>
  * >}
  */
 function findPartsWithShadySelectors(element) {
@@ -396,6 +427,7 @@ function findPartsWithShadySelectors(element) {
     return [];
   }
   const partNodes = element.shadowRoot.querySelectorAll('[part]');
+  console.log({element, partNodes});
   if (partNodes.length === 0) {
     return [];
   }
@@ -405,36 +437,108 @@ function findPartsWithShadySelectors(element) {
     return [];
   }
   const elementScope = element.localName;
-  const exportPartsMap = getExportPartsMap(element);
+  const exportTree = getExportPartsMap(element);
   const parts = [];
+  console.log({elementScope, exportTree});
+
   for (const partNode of partNodes) {
     const partAttr = partNode.getAttribute('part');
     const partNames = parsePartAttribute(partAttr);
     const selectors = [];
+
+    // ::part rules that could match from our immediate parent.
+    selectors.push({
+      providerScope: parentScope,
+      receiverScope: elementScope,
+      partNames,
+    });
+
+    // ::part rules that could match from our grandparent and above via the
+    // exportparts tree.
+    const scopeMap = {};
     for (const partName of partNames) {
-      // Selector for ::part rules provided by our direct parent.
-      selectors.push({
-        partName,
-        providerScope: parentScope,
-        receiverScope: elementScope,
-      });
-      // Walk up the exportparts tree to find selectors for ::part rules
-      // provided by our grandparent and above,
-      const exportParts = exportPartsMap[partName];
-      if (exportParts !== undefined) {
-        for (const {hostScope, scope, partName} of exportParts) {
-          selectors.push({
-            partName,
-            providerScope: hostScope,
-            receiverScope: scope,
-          });
+      const exportedNames = exportTree[partName];
+      if (exportedNames === undefined) {
+        continue;
+      }
+      for (const {hostScope: providerScope, scope: receiverScope, partName} of exportedNames) {
+        const scopeKey = providerScope + ':' + receiverScope;
+        let scopeObj = scopeMap[scopeKey];
+        if (scopeObj === undefined) {
+          scopeObj = scopeMap[scopeKey] = {
+            providerScope,
+            receiverScope,
+            partNames: [],
+          };
+          selectors.push(scopeObj);
         }
+        scopeObj.partNames.push(partName);
       }
     }
-    parts.push({partNode, selectors});
+
+    parts.push({
+      partNode,
+      selectors,
+    });
   }
+
   return parts;
 }
+
+/**
+ * <x-a>
+ *   <style>
+ *     x-b::part(foo baz qux) { color: red; }
+ *   </style>
+ *   <x-b>
+ *     <x-c exportparts="foo,bar:baz,foo:qux,bloop:scoop">
+ *       <div part="foo bar">
+ *
+ * WANT WE WANT PER INSTANCE:
+ * {
+ *   partNode: <div>
+ *   selectors: [
+ *     x-b:x-c [foo, bar]
+ *     x-a:x-b [foo, baz, qux]
+ *   ]
+ * }
+ *
+ * EXPORTS OPTION 1:
+ * {
+ *   foo: {
+ *     x-a:x-b [foo, qux]
+ *   }
+ *   bar: {
+ *     x-a:x-b [baz]
+ *   }
+ *   bloop: {
+ *     x-a:x-b [scoop]
+ *   }
+ * }
+ *
+ * EXPORTS OPTION 2:
+ * {
+ *   x-a:x-b {
+ *     foo: [foo, qux]
+ *     bar: [baz]
+ *     bloop: [scoop]
+ *   }
+ * }
+ *
+ * EXPORTS WHAT WE GET NOW:
+ * {
+ *   foo: [
+ *     x-a:x-b foo
+ *     x-a:x-b qux
+ *   ]
+ *   bar: [
+ *     x-a:x-b baz
+ *   ]
+ *   bloop: [
+ *     x-a:x-b scoop
+ *   ]
+ * }
+ */
 
 /**
  * Add the appropriate "part_" class to all parts in the Shady root of the
@@ -472,22 +576,29 @@ export function scopeAllHostParts(host) {
   // TODO(aomarks) Clear out existing part rules from the main list too.
   let hasAnyPartStylesWithCustomProperties = false;
 
+  const partsWithSelectors = findPartsWithShadySelectors(host);
+  console.log(-1, {host, partsWithSelectors});
   for (const {partNode, selectors} of findPartsWithShadySelectors(host)) {
+    console.log(0, {partNode, selectors});
     removeAllPartSpecifiers(partNode);
-    for (const {partName, providerScope, receiverScope} of selectors) {
-      addPartSpecifier(
-          partNode, formatPartSpecifier(partName, receiverScope, providerScope));
-      const customPropertyRules =
-          customPropertyRulesForPart(providerScope, receiverScope, partName);
-      if (customPropertyRules.length > 0) {
-        hasAnyPartStylesWithCustomProperties = true;
-        for (const rule of customPropertyRules) {
-          partRulesApplied.push(rule);
-          styleRules.push(rule);
-          const propertiesConsumed = consumedCustomProperties(rule['parsedCssText']);
-          for (const property of propertiesConsumed) {
-            if (styleInfo.ownStylePropertyNames.indexOf(property) === -1) {
-              styleInfo.ownStylePropertyNames.push(property);
+    for (const {providerScope, receiverScope, partNames} of selectors) {
+      console.log(1, {providerScope, receiverScope, partNames});
+      for (const partName of partNames) {
+        console.log(2, {partName});
+        addPartSpecifier(
+            partNode, formatPartSpecifier(partName, receiverScope, providerScope));
+        const customPropertyRules =
+            customPropertyRulesForPart(providerScope, receiverScope, partName);
+        if (customPropertyRules.length > 0) {
+          hasAnyPartStylesWithCustomProperties = true;
+          for (const rule of customPropertyRules) {
+            partRulesApplied.push(rule);
+            styleRules.push(rule);
+            const propertiesConsumed = consumedCustomProperties(rule['parsedCssText']);
+            for (const property of propertiesConsumed) {
+              if (styleInfo.ownStylePropertyNames.indexOf(property) === -1) {
+                styleInfo.ownStylePropertyNames.push(property);
+              }
             }
           }
         }
@@ -562,22 +673,17 @@ function rescopeRecursive(element) {
  *   }>>}
  */
 function getExportPartsMap(host) {
-  // TODO(aomarks) Add to externs (or move).
-  // if (host.shadyCssExportPartsMap !== undefined) {
-  //   return host.shadyCssExportPartsMap;
-  // }
-  const map = {};
-  // host.shadyCssExportPartsMap = map;
+  // TODO(aomarks) Add caching
 
   const attr = host.getAttribute('exportparts');
   if (attr === null) {
-    return map;
+    return {};
   }
 
   const root = host.getRootNode();
   if (root === document) {
-    // TODO(aomarks) Document why.
-    return map;
+    // There's nowhere to export parts to above the main document.
+    return {};
   }
 
   const superHost = root.host;
@@ -585,9 +691,10 @@ function getExportPartsMap(host) {
   const superRoot = superHost.getRootNode();
   const hostScope = scopeForRoot(superRoot);
   if (hostScope === undefined) {
-    return map;
+    return {};
   }
 
+  const map = {};
   const superExports = getExportPartsMap(superHost);
 
   for (const {inner, outer} of parseExportPartsAttribute(attr)) {
