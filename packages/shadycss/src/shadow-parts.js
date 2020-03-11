@@ -129,14 +129,14 @@ import {nativeCssVariables} from './style-settings.js';
  * Example:
  *   "foo bar" => ["foo", "bar"]
  *
- * @param {?string} attr The "part" attribute value.
+ * @param {?string} str The "part" attribute value.
  * @return {!Array<!string>} The part names. Order and duplicates are preserved.
  */
-function parsePartAttribute(attr) {
-  if (!attr) {
+function splitPartString(str) {
+  if (!str) {
     return [];
   }
-  return attr.trim().split(/\s+/);
+  return str.trim().split(/\s+/);
 }
 
 /**
@@ -243,7 +243,7 @@ export function formatPartSpecifier(partName, consumerScope, providerScope) {
  * @return {!string} CSS class selector.
  */
 export function formatPartSelector(parts, scope, hostScope) {
-  return parsePartAttribute(parts).map(
+  return splitPartString(parts).map(
       (part) => `[shady-part~=${formatPartSpecifier(part, scope, hostScope)}]`)
     .join('');
 }
@@ -290,26 +290,46 @@ export function prepareTemplate(templateScope, styleAst) {
       if (parsed === null) {
         continue;
       }
+      console.log({parsed});
       const {elementName: receiverScope, parts} = parsed;
-      // TODO(aomarks) If a rule requires multiple parts, then this will only
-      // work if the part attribute on the part node is exactly identical.
-      // Instead we should probably key by scope, and then check each part,
-      // similar to how the other cache works.
-      const key = [templateScope, receiverScope, parts].join(':');
-      let rules = partRuleCustomProperties.get(key);
-      if (rules === undefined) {
-        rules = [];
-        partRuleCustomProperties.set(key, rules);
+      if (parts.length > 0) {
+        const key = [templateScope, receiverScope].join(':');
+        let entries = partRuleCustomProperties.get(key);
+        if (entries === undefined) {
+          entries = [];
+          partRuleCustomProperties.set(key, entries);
+        }
+        entries.push({rule, requiredParts: splitPartString(parts)});
       }
-      rules.push(rule);
     }
   }
 }
 
-function customPropertyRulesForPart(parentScope, childScope, partName) {
-  const key = [parentScope, childScope, partName].join(':');
-  const properties = partRuleCustomProperties.get(key);
-  return properties === undefined ? [] : properties;
+/**
+ * TODO
+ */
+function customPropertyRulesForPart(providerScope, receiverScope, partNames) {
+  const key = [providerScope, receiverScope].join(':');
+  const entries = partRuleCustomProperties.get(key);
+  if (entries === undefined) {
+    return [];
+  }
+  const rules = [];
+  for (const {rule, requiredParts} of entries) {
+    console.log({rule, requiredParts});
+    let matches = true;
+    for (const requiredPart of requiredParts) {
+      console.log({requiredPart, partNames});
+      if (partNames.indexOf(requiredPart) === -1) {
+        matches = false;
+        break;
+      }
+    }
+    if (matches === true) {
+      rules.push(rule);
+    }
+  }
+  return rules;
 }
 
 /**
@@ -441,7 +461,7 @@ function findPartsWithShadySelectors(element) {
 
   for (const partNode of partNodes) {
     const partAttr = partNode.getAttribute('part');
-    const partNames = parsePartAttribute(partAttr);
+    const partNames = splitPartString(partAttr);
     const selectors = [];
 
     // ::part rules that could match from our immediate parent.
@@ -581,18 +601,18 @@ export function scopeAllHostParts(host) {
       for (const partName of partNames) {
         addPartSpecifier(
             partNode, formatPartSpecifier(partName, receiverScope, providerScope));
-        const customPropertyRules =
-            customPropertyRulesForPart(providerScope, receiverScope, partName);
-        if (customPropertyRules.length > 0) {
-          hasAnyPartStylesWithCustomProperties = true;
-          for (const rule of customPropertyRules) {
-            partRulesApplied.push(rule);
-            styleRules.push(rule);
-            const propertiesConsumed = consumedCustomProperties(rule['parsedCssText']);
-            for (const property of propertiesConsumed) {
-              if (styleInfo.ownStylePropertyNames.indexOf(property) === -1) {
-                styleInfo.ownStylePropertyNames.push(property);
-              }
+      }
+      const customPropertyRules =
+          customPropertyRulesForPart(providerScope, receiverScope, partNames);
+      if (customPropertyRules.length > 0) {
+        hasAnyPartStylesWithCustomProperties = true;
+        for (const rule of customPropertyRules) {
+          partRulesApplied.push(rule);
+          styleRules.push(rule);
+          const propertiesConsumed = consumedCustomProperties(rule['parsedCssText']);
+          for (const property of propertiesConsumed) {
+            if (styleInfo.ownStylePropertyNames.indexOf(property) === -1) {
+              styleInfo.ownStylePropertyNames.push(property);
             }
           }
         }
@@ -761,7 +781,7 @@ export function onPartAttributeChanged(element, oldValue, newValue) {
   if (!newValue) {
     removeAllPartSpecifiers(element);
   } else {
-    addPartSpecifiersToElement(element, parsePartAttribute(newValue));
+    addPartSpecifiersToElement(element, splitPartString(newValue));
   }
 }
 

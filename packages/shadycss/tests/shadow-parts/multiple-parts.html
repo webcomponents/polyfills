@@ -66,7 +66,7 @@
       p1p2 = pierce(c, '[part~=p1][part~=p2]');
     });
 
-    test.skip('selector with 2 parts only matches elements with both parts', function() {
+    test('selector with 2 parts only matches elements with both parts', function() {
       assert.equal(getComputedStyle(p1).color, black);
       assert.equal(getComputedStyle(p2).color, black);
       assert.equal(getComputedStyle(p1p2).color, red);
