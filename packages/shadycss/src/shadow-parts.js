@@ -427,7 +427,6 @@ function findPartsWithShadySelectors(element) {
     return [];
   }
   const partNodes = element.shadowRoot.querySelectorAll('[part]');
-  console.log({element, partNodes});
   if (partNodes.length === 0) {
     return [];
   }
@@ -439,7 +438,6 @@ function findPartsWithShadySelectors(element) {
   const elementScope = element.localName;
   const exportTree = getExportPartsMap(element);
   const parts = [];
-  console.log({elementScope, exportTree});
 
   for (const partNode of partNodes) {
     const partAttr = partNode.getAttribute('part');
@@ -577,14 +575,10 @@ export function scopeAllHostParts(host) {
   let hasAnyPartStylesWithCustomProperties = false;
 
   const partsWithSelectors = findPartsWithShadySelectors(host);
-  console.log(-1, {host, partsWithSelectors});
   for (const {partNode, selectors} of findPartsWithShadySelectors(host)) {
-    console.log(0, {partNode, selectors});
     removeAllPartSpecifiers(partNode);
     for (const {providerScope, receiverScope, partNames} of selectors) {
-      console.log(1, {providerScope, receiverScope, partNames});
       for (const partName of partNames) {
-        console.log(2, {partName});
         addPartSpecifier(
             partNode, formatPartSpecifier(partName, receiverScope, providerScope));
         const customPropertyRules =
