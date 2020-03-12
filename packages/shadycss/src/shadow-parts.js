@@ -374,33 +374,7 @@ function scopeForRoot(root) {
 
 const initialized = new Set();
 
-/**
- * The data comprising a ShadyCSS emulated ::part selector.
- *
- * @record
- */
-class ShadyPartSelector {
- constructor() {
-   /**
-    * Name of the part.
-    * @type {!string}
-    */
-   this.partName;
-
-   /**
-    * Custom element name of the host that provides a part style rule.
-    * @type {!string}
-    */
-   this.providerScope;
-
-   /**
-    * Custom element name of the host that receives a part style rule.
-    * @type {!string}
-    */
-   this.receiverScope;
- }
-}
-
+/* eslint-disable no-unused-vars */
 /**
  * The data comprising a ShadyCSS emulated ::part selector.
  *
@@ -427,6 +401,7 @@ class ShadyPartSelectors {
    this.receiverScope;
  }
 }
+/* eslint-enable no-unused-vars */
 
 /**
  * Find all of the part nodes in the shadow root of the given element, along
