@@ -1,0 +1,344 @@
+<!doctype html>
+<!--
+@license
+Copyright (c) 2019 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also subject to an additional IP
+rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<html>
+<head>
+<title>HTMLElement</title>
+<script src="../../catchReportedErrors.js"></script>
+<script>
+  (window.customElements = window.customElements || {}).forcePolyfill = true;
+</script>
+<script src="../../../node_modules/es6-promise/dist/es6-promise.auto.min.js"></script>
+<script src="../../../node_modules/wct-browser-legacy/browser.js"></script>
+<script src="../../../node_modules/@webcomponents/custom-elements/custom-elements.min.js"></script>
+</head>
+<body>
+
+<script type="module">
+import {safariGCBugWorkaround} from "../../safari-gc-bug-workaround.js";
+suiteSetup(() => safariGCBugWorkaround());
+
+function generateLocalName() {
+  return 'test-element-' + Math.random().toString(32).substring(2);
+}
+
+function cancelAndReturnReportedErrors(fn) {
+  const errors = [];
+  catchReportedErrors(fn, (e) => {
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    errors.push(e);
+  });
+  return errors;
+}
+
+suite('Constructing elements', function() {
+  let localName;
+
+  setup(function() {
+    localName = generateLocalName();
+  });
+
+  test('Custom elements can be constructed from their constructor.', function() {
+    class CustomElement extends HTMLElement {
+      constructor() {
+        super();
+        this.constructed = true;
+        this.connectedCallbackCount = 0;
+        this.disconnectedCallbackCount = 0;
+      }
+
+      connectedCallback() {
+        this.connectedCallbackCount++;
+      }
+
+      disconnectedCallback() {
+        this.disconnectedCallbackCount++;
+      }
+    }
+    customElements.define(localName, CustomElement);
+
+    const element = new CustomElement();
+
+    assert(element instanceof CustomElement);
+    assert(element instanceof HTMLElement);
+    // The native `Element` function is not replaced, only patched; check that the
+    // prototype chain is correctly connected.
+    assert(element instanceof Element);
+    assert.equal(element.localName, localName);
+  });
+
+  test('Custom element constructors must be given to `customElements.define` ' +
+    'to be constructed.', function() {
+      class CustomElement extends HTMLElement {}
+
+      assert.throws(function() {
+        new CustomElement();
+      });
+    });
+
+  test('Non-conformant custom element constructors that attempt to construct ' +
+    'more instances of themselves using `new` before calling into ' +
+    '`HTMLElement` (e.g. via `super()`) DO NOT throw or cause an error to be ' +
+    'reported when they are constructed.',
+    function() {
+      let createSelf = true;
+      class NonConformantCustomElement extends HTMLElement {
+        constructor() {
+          if (createSelf) {
+            createSelf = false;
+            new NonConformantCustomElement();
+          }
+
+          super();
+        }
+      }
+      customElements.define(localName, NonConformantCustomElement);
+
+      const errors1 = cancelAndReturnReportedErrors(() => {
+        assert.doesNotThrow(function() {
+          createSelf = true;
+          document.createElement(localName);
+        });
+      });
+      assert.equal(errors1.length, 0);
+
+      const errors2 = cancelAndReturnReportedErrors(() => {
+        assert.doesNotThrow(function() {
+          createSelf = true;
+          new NonConformantCustomElement();
+        });
+      });
+      assert.equal(errors1.length, 0);
+    });
+
+  test('Non-conformant custom element constructors that attempt to construct ' +
+    'more instances of themselves using `new` before calling into ' +
+    '`HTMLElement` (e.g. via `super()`) DO cause an error to be reported ' +
+    'when they are upgraded.',
+    function() {
+      const element = document.createElement(localName);
+      document.body.appendChild(element);
+
+      let createSelf = true;
+      class NonConformantCustomElement extends HTMLElement {
+        constructor() {
+          if (createSelf) {
+            createSelf = false;
+            new NonConformantCustomElement();
+          }
+
+          super();
+        }
+      }
+
+      const errors = cancelAndReturnReportedErrors(() => {
+        assert.doesNotThrow(() => {
+          customElements.define(localName, NonConformantCustomElement);
+        });
+      });
+      assert.equal(errors.length, 1);
+
+      document.body.removeChild(element);
+    });
+
+  test('Non-conformant custom element constructors that attempt to create ' +
+    'more instances of themselves using `Document#createElement` before ' +
+    'calling into `HTMLElement` (e.g. via `super()`) DO NOT throw or cause ' +
+    'an error to be reported when they are constructed.', function() {
+      let createSelf = true;
+      class NonConformantCustomElement extends HTMLElement {
+        constructor() {
+          if (createSelf) {
+            createSelf = false;
+            document.createElement(localName);
+          }
+
+          super();
+        }
+      }
+      customElements.define(localName, NonConformantCustomElement);
+
+      const errors1 = cancelAndReturnReportedErrors(() => {
+        assert.doesNotThrow(function() {
+          createSelf = true;
+          document.createElement(localName);
+        });
+      });
+      assert.equal(errors1.length, 0);
+
+      const errors2 = cancelAndReturnReportedErrors(() => {
+        assert.doesNotThrow(function() {
+          createSelf = true;
+          new NonConformantCustomElement();
+        });
+      });
+      assert.equal(errors2.length, 0);
+    });
+
+  test('Non-conformant custom element constructors that attempt to create ' +
+    'more instances of themselves using `Document#createElement` before ' +
+    'calling into `HTMLElement` (e.g. via `super()`) DO cause an error to be ' +
+    'to be reported when they are upgraded.', function() {
+      const element = document.createElement(localName);
+      document.body.appendChild(element);
+
+      let createSelf = true;
+      class NonConformantCustomElement extends HTMLElement {
+        constructor() {
+          if (createSelf) {
+            createSelf = false;
+            // When this inner constructor calls into HTMLElement, it will pop
+            // the element that the polyfill is attempting to upgrade with the
+            // outer call. That element will never have had its state set,
+            // causing `createAnElement` to report an error.
+            document.createElement(localName);
+          }
+
+          // Then, the outer constructor's call into HTMLElement sees the
+          // AlreadyConstructedMarker on the stack instead of the expected
+          // element (because the inner call removed it) and also reports an
+          // error.
+          super();
+        }
+      }
+
+      const errors = cancelAndReturnReportedErrors(() => {
+        assert.doesNotThrow(() => {
+          customElements.define(localName, NonConformantCustomElement);
+        });
+      });
+      assert.equal(errors.length, 2);
+
+      document.body.removeChild(element);
+    });
+
+  test('Non-conformant custom element constructors that return an element ' +
+    'other than the one being constructed DO report an error when ' +
+    'constructed by `Document#createElement`, but not by direct construction.',
+    function() {
+      class NonConformantCustomElement extends HTMLElement {
+        constructor() {
+          return document.createElement('div');
+        }
+      }
+      customElements.define(localName, NonConformantCustomElement);
+
+      const errors1 = cancelAndReturnReportedErrors(() => {
+        assert.doesNotThrow(function() {
+          document.createElement(localName);
+        });
+      });
+      assert.equal(errors1.length, 1);
+
+      const errors2 = cancelAndReturnReportedErrors(() => {
+        assert.doesNotThrow(function() {
+          new NonConformantCustomElement();
+        });
+      });
+      assert.equal(errors2.length, 0);
+    });
+
+  test('Non-conformant custom element constructors that return an element ' +
+    'other than the one being constructed DO report an error when upgraded.',
+    function() {
+      const element = document.createElement(localName);
+      document.body.appendChild(element);
+
+      class NonConformantCustomElement extends HTMLElement {
+        constructor() {
+          return document.createElement('div');
+        }
+      }
+
+      const errors = cancelAndReturnReportedErrors(() => {
+        assert.doesNotThrow(function() {
+          customElements.define(localName, NonConformantCustomElement);
+        });
+      });
+      assert.equal(errors.length, 1);
+
+      document.body.removeChild(element);
+    });
+
+  test('Constructor errors do not halt upgrades in a tree.', function() {
+    const goodElementLocalName = generateLocalName();
+    const badElementLocalName = generateLocalName();
+
+    const container = document.createElement('div');
+    container.appendChild(document.createElement(goodElementLocalName));
+    container.appendChild(document.createElement(badElementLocalName));
+    container.appendChild(document.createElement(goodElementLocalName));
+
+    customElements.define(goodElementLocalName, class extends HTMLElement {
+      constructor() {
+        super();
+        this.didUpgrade = true;
+      }
+    });
+
+    customElements.define(badElementLocalName, class extends HTMLElement {
+      constructor() {
+        super();
+        throw new Error("Oh no!");
+      }
+    });
+
+    const errors = cancelAndReturnReportedErrors(() => {
+      assert.doesNotThrow(function() {
+        document.body.appendChild(container);
+      });
+    });
+    assert.equal(errors.length, 1);
+
+    assert.isOk(container.childNodes[0].didUpgrade);
+    assert.isOk(container.childNodes[2].didUpgrade);
+
+    document.body.removeChild(container);
+  });
+
+  test('Callback errors do not halt upgrades in a tree.', function() {
+    const goodElementLocalName = generateLocalName();
+    const badElementLocalName = generateLocalName();
+
+    const container = document.createElement('div');
+    container.appendChild(document.createElement(goodElementLocalName));
+    container.appendChild(document.createElement(badElementLocalName));
+    container.appendChild(document.createElement(goodElementLocalName));
+
+    customElements.define(goodElementLocalName, class extends HTMLElement {
+      constructor() {
+        super();
+        this.didUpgrade = true;
+      }
+    });
+
+    customElements.define(badElementLocalName, class extends HTMLElement {
+      connectedCallback() {
+        throw new Error("Oh no!");
+      }
+    });
+
+    const errors = cancelAndReturnReportedErrors(() => {
+      assert.doesNotThrow(function() {
+        document.body.appendChild(container);
+      });
+    });
+    assert.equal(errors.length, 1);
+
+    assert.isOk(container.childNodes[0].didUpgrade);
+    assert.isOk(container.childNodes[2].didUpgrade);
+
+    document.body.removeChild(container);
+  });
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,218 @@
+<!doctype html>
+<html>
+<head>
+<title>Element#innerHTML</title>
+<script>
+  (window.customElements = window.customElements || {}).forcePolyfill = true;
+
+  // Capture these before loading the custom elements polyfill so that their
+  // behavior can be checked before running tests for `svg.innerHTML`.
+  (function() {
+    const innerHTML =
+        Object.getOwnPropertyDescriptor(window.Element.prototype, 'innerHTML') ||
+        Object.getOwnPropertyDescriptor(window.HTMLElement.prototype, 'innerHTML');
+    window.NATIVE = {
+      createElementNS: Document.prototype.createElementNS,
+      innerHTML: innerHTML ? innerHTML.set : undefined,
+    };
+  })();
+</script>
+<script src="../../../node_modules/es6-promise/dist/es6-promise.auto.min.js"></script>
+<script src="../../../node_modules/wct-browser-legacy/browser.js"></script>
+<script src="../../../node_modules/@webcomponents/custom-elements/custom-elements.min.js"></script>
+</head>
+<body>
+<script type="module">
+import {safariGCBugWorkaround} from "../../safari-gc-bug-workaround.js";
+suiteSetup(() => safariGCBugWorkaround());
+
+function generateLocalName() {
+  return 'test-element-' + Math.random().toString(32).substring(2);
+}
+
+function defineWithLocalName(localName) {
+  customElements.define(localName, class extends HTMLElement {
+    constructor() {
+      super();
+      this.constructed = true;
+      this.connectedCallbackCount = 0;
+      this.disconnectedCallbackCount = 0;
+    }
+
+    connectedCallback() {
+      this.connectedCallbackCount++;
+    }
+
+    disconnectedCallback() {
+      this.disconnectedCallbackCount++;
+    }
+  });
+}
+
+suite('Custom elements in the assigned string are created when setting `innerHTML`.', function() {
+  let localName1;
+  let localName2;
+
+  setup(function() {
+    localName1 = generateLocalName();
+    defineWithLocalName(localName1);
+    localName2 = generateLocalName();
+    defineWithLocalName(localName2);
+  });
+
+  test('get/set innerHTML on elements with parsing rules', function() {
+    const div = document.createElement('div');
+    const html = '<span>A</span>';
+    div.innerHTML = html;
+    assert.equal(div.innerHTML, html);
+    assert.equal(div.childNodes.length, 1);
+    const table = document.createElement('table');
+    const tableHtml = '<tbody></tbody>';
+    table.innerHTML = tableHtml;
+    assert.equal(table.innerHTML, tableHtml);
+    assert.equal(table.childNodes.length, 1);
+  });
+
+  test('Disconnected context element', function() {
+    const div = document.createElement('div');
+    div.innerHTML = `<${localName1}><${localName2}></${localName2}></${localName1}>`;
+
+    assert.equal(div.childNodes.length, 1);
+    assert.equal(div.childNodes[0].localName, localName1);
+    assert.equal(div.childNodes[0].connectedCallbackCount, 0);
+    assert.equal(div.childNodes[0].disconnectedCallbackCount, 0);
+    assert.equal(div.childNodes[0].childNodes.length, 1);
+    assert.equal(div.childNodes[0].childNodes[0].localName, localName2);
+    assert.equal(div.childNodes[0].childNodes[0].connectedCallbackCount, 0);
+    assert.equal(div.childNodes[0].childNodes[0].disconnectedCallbackCount, 0);
+    assert.equal(div.childNodes[0].childNodes[0].childNodes.length, 0);
+  });
+
+  test('Connected context element', function() {
+    const div = document.createElement('div');
+    document.body.appendChild(div);
+
+    div.innerHTML = `<${localName1}><${localName2}></${localName2}></${localName1}>`;
+
+    assert.equal(div.childNodes.length, 1);
+    assert.equal(div.childNodes[0].localName, localName1);
+    assert.equal(div.childNodes[0].connectedCallbackCount, 1);
+    assert.equal(div.childNodes[0].disconnectedCallbackCount, 0);
+    assert.equal(div.childNodes[0].childNodes.length, 1);
+    assert.equal(div.childNodes[0].childNodes[0].localName, localName2);
+    assert.equal(div.childNodes[0].childNodes[0].connectedCallbackCount, 1);
+    assert.equal(div.childNodes[0].childNodes[0].disconnectedCallbackCount, 0);
+    assert.equal(div.childNodes[0].childNodes[0].childNodes.length, 0);
+
+    document.body.removeChild(div);
+  });
+});
+
+suite('Custom element descendants of the context element are disconnected when setting `innerHTML`.', function() {
+  let localName1;
+  let localName2;
+  let div;
+  let element1;
+  let element2;
+
+  setup(function() {
+    localName1 = generateLocalName();
+    localName2 = generateLocalName();
+    defineWithLocalName(localName1);
+    defineWithLocalName(localName2);
+
+    div = document.createElement('div');
+    element1 = document.createElement(localName1);
+    element2 = document.createElement(localName2);
+    div.appendChild(element1);
+    element1.appendChild(element2);
+
+    assert.equal(div.childNodes.length, 1);
+
+    assert.equal(element1.connectedCallbackCount, 0);
+    assert.equal(element1.disconnectedCallbackCount, 0);
+    assert.equal(element1.childNodes.length, 1);
+
+    assert.equal(element2.connectedCallbackCount, 0);
+    assert.equal(element2.disconnectedCallbackCount, 0);
+    assert.equal(element2.childNodes.length, 0);
+  });
+
+  test('Disconnected context element', function() {
+    div.innerHTML = "";
+
+    // `div` no longer has children.
+    assert.equal(div.childNodes.length, 0);
+
+    // `div` was disconnected, no callbacks were called.
+    assert.equal(element1.localName, localName1);
+    assert.equal(element1.connectedCallbackCount, 0);
+    assert.equal(element1.disconnectedCallbackCount, 0);
+
+    assert.equal(element2.localName, localName2);
+    assert.equal(element2.connectedCallbackCount, 0);
+    assert.equal(element2.disconnectedCallbackCount, 0);
+  });
+
+  test('Connected context element', function() {
+    document.body.appendChild(div);
+
+    assert.equal(div.childNodes.length, 1);
+    // `element1` was connected.
+    assert.equal(element1.connectedCallbackCount, 1);
+    assert.equal(element1.disconnectedCallbackCount, 0);
+    // `element2` was connected.
+    assert.equal(element2.connectedCallbackCount, 1);
+    assert.equal(element2.disconnectedCallbackCount, 0);
+
+    div.innerHTML = "";
+
+    // `div` no longer has children.
+    assert.equal(div.childNodes.length, 0);
+    // `element1` was disconnected.
+    assert.equal(element1.connectedCallbackCount, 1);
+    assert.equal(element1.disconnectedCallbackCount, 1);
+    // `element2` was disconnected.
+    assert.equal(element2.connectedCallbackCount, 1);
+    assert.equal(element2.disconnectedCallbackCount, 1);
+
+    document.body.removeChild(div);
+  });
+
+  const SVG_NAMESPACE = 'http://www.w3.org/2000/svg';
+  const circleText = '<circle cx="50" cy="50" r="40" stroke="black" stroke-width="3" fill="red" />';
+
+  const canSVGInnerHTML = (function() {
+    // Edge 14 svg.innerHTML is broken even without the polyfill
+    const svg = NATIVE.createElementNS.call(document, SVG_NAMESPACE, 'svg');
+
+    if (NATIVE.innerHTML) {
+      NATIVE.innerHTML.call(svg, circleText);
+    } else {
+      if (!('innerHTML' in svg)) {
+        throw new Error('No innerHTML property was found.');
+      }
+
+      // The `innerHTML` getter / setter is broken in this browser and should
+      // be directly on each element instance. It's ok to call it directly here
+      // to check if it works: the polyfill has not patched it yet because we
+      // created `svg` with the native `createElementNS`.
+      svg.innerHTML = circleText;
+    }
+
+    return svg.querySelector('circle') instanceof SVGCircleElement;
+  })();
+
+  test('svg innerHTML', function() {
+    if (!canSVGInnerHTML) {
+      this.skip();
+    }
+    const svg = document.createElementNS(SVG_NAMESPACE, 'svg');
+    svg.innerHTML = circleText;
+    const circle = svg.querySelector('circle');
+    assert.isTrue(circle instanceof SVGCircleElement, `Expected ${circle} to be a circle, but was "${typeof circle}" instead`);
+  });
+});
+</script>
+</body>
+</html>
