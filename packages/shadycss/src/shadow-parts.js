@@ -504,67 +504,11 @@ function findPartsWithShadySelectors(element) {
 }
 
 /**
- * <x-a>
- *   <style>
- *     x-b::part(foo baz qux) { color: red; }
- *   </style>
- *   <x-b>
- *     <x-c exportparts="foo,bar:baz,foo:qux,bloop:scoop">
- *       <div part="foo bar">
- *
- * WANT WE WANT PER INSTANCE:
- * {
- *   partNode: <div>
- *   selectors: [
- *     x-b:x-c [foo, bar]
- *     x-a:x-b [foo, baz, qux]
- *   ]
- * }
- *
- * EXPORTS OPTION 1:
- * {
- *   foo: {
- *     x-a:x-b [foo, qux]
- *   }
- *   bar: {
- *     x-a:x-b [baz]
- *   }
- *   bloop: {
- *     x-a:x-b [scoop]
- *   }
- * }
- *
- * EXPORTS OPTION 2:
- * {
- *   x-a:x-b {
- *     foo: [foo, qux]
- *     bar: [baz]
- *     bloop: [scoop]
- *   }
- * }
- *
- * EXPORTS WHAT WE GET NOW:
- * {
- *   foo: [
- *     x-a:x-b foo
- *     x-a:x-b qux
- *   ]
- *   bar: [
- *     x-a:x-b baz
- *   ]
- *   bloop: [
- *     x-a:x-b scoop
- *   ]
- * }
- */
-
-/**
- * Add the appropriate "part_" class to all parts in the Shady root of the
- * given host.
+ * Apply ::part styles to all part nodes in the given host element.
  *
  * @param {!HTMLElement} host
  */
-export function scopeAllHostParts(host) {
+export function applyStylesToPartNodes(host) {
   if (!host.shadowRoot) {
     return;
   }
@@ -579,37 +523,55 @@ export function scopeAllHostParts(host) {
     return;
   }
 
-  const scope = host.localName;
-  const exportPartsMap = getExportPartsMap(host);
   const styleInfo = StyleInfo.get(host);
   const partRulesApplied = styleInfo.partRulesApplied;
   let styleRules = styleInfo.styleRules.rules;
   if (styleRules === null) {
     styleRules = styleInfo.styleRules.rules = [];
   }
+  // TODO(aomarks) We should also clear out any properties from
+  // ownStylePropertyNames that we're no longer using (though it's probably
+  // safe for them to stick around, it just might not be optimal).
   for (const rule of partRulesApplied) {
     partRulesApplied.pop();
     styleRules.splice(styleRules.indexOf(rule), 1);
   }
-  // TODO(aomarks) Clear out existing part rules from the main list too.
   let hasAnyPartStylesWithCustomProperties = false;
 
-  const partsWithSelectors = findPartsWithShadySelectors(host);
   for (const {partNode, selectors} of findPartsWithShadySelectors(host)) {
     removeAllPartSpecifiers(partNode);
     for (const {providerScope, receiverScope, partNames} of selectors) {
+      // The simple case works for ::part rules that do not consume a CSS Custom
+      // Property.
       for (const partName of partNames) {
         addPartSpecifier(
             partNode, formatPartSpecifier(partName, receiverScope, providerScope));
       }
-      const customPropertyRules =
+
+      // For ::part rules that do consume a CSS Custom Property, we need to
+      // switch to per-instance styles, because the value of those properties
+      // will change depending on where the host is in the tree. If we don't do
+      // this, then custom property values would be set from the position of the
+      // providing host, instead of the receiving one.
+      const customPropertyPartRules =
           customPropertyRulesForPart(providerScope, receiverScope, partNames);
-      if (customPropertyRules.length > 0) {
+      if (customPropertyPartRules.length > 0) {
         hasAnyPartStylesWithCustomProperties = true;
-        for (const rule of customPropertyRules) {
-          partRulesApplied.push(rule);
+        for (const rule of customPropertyPartRules) {
+          // Transplant this ::part rule into the array of style rules managed
+          // by this instance. This way, the normal mechanism for evaluating
+          // per-instance styles will take over and substitute the correct
+          // custom property values.
           styleRules.push(rule);
-          const propertiesConsumed = consumedCustomProperties(rule['parsedCssText']);
+          // We also need to explicitly enumerate the active part rules on the
+          // styleInfo, because that will be used as part of the per-instance
+          // style cache lookup.
+          partRulesApplied.push(rule);
+          // Augment the array of CSS Custom Properties consumed by this
+          // instance, since that is also used in the per-instance style cache
+          // lookup.
+          const propertiesConsumed =
+              consumedCustomProperties(rule['parsedCssText']);
           for (const property of propertiesConsumed) {
             if (styleInfo.ownStylePropertyNames.indexOf(property) === -1) {
               styleInfo.ownStylePropertyNames.push(property);
@@ -666,7 +628,7 @@ function addPartSpecifiersToElement(element, partNames) {
 function rescopeRecursive(element) {
   // element.shadyCssExportPartsMap = undefined;
   if (element.shadowRoot) {
-    scopeAllHostParts(element);
+    applyStylesToPartNodes(element);
     const exports = /** @type {!NodeList<!HTMLElement>} */ (
         element.shadowRoot.querySelectorAll('[exportparts]'));
     for (const child of exports) {
@@ -739,12 +701,12 @@ export function onStyleElement(element) {
     return;
   }
   if (element.shadowRoot) {
-    scopeAllHostParts(element);
+    applyStylesToPartNodes(element);
   } else {
     // This is in a RAF because we need to wait for the template to render the
     // first time.
     requestAnimationFrame(() => {
-      scopeAllHostParts(element);
+      applyStylesToPartNodes(element);
     });
   }
 }
