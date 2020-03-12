@@ -21,7 +21,7 @@
 <template id="x-a">
   <style>
     x-b::part(b) {
-      color: red;
+      color: var(--red-prop);
     }
     x-b::part(b2) {
       color: green;
@@ -30,8 +30,24 @@
   <x-b></x-b>
 </template>
 
+<template id="x-a2">
+  <style>
+    x-b::part(b) {
+      color: blue;
+    }
+  </style>
+</template>
+
 <template id="x-b">
-  <x-c exportparts="c1:b"></x-c>
+  <style>
+    :host {
+      --red-prop: red;
+      --blue-prop: blue;
+    }
+  </style>
+  <div>
+    <x-c exportparts="c1:b"></x-c>
+  </div>
 </template>
 
 <template id="x-c">
@@ -47,6 +63,7 @@
   suite('mutate exportparts', function() {
     suiteSetup(async function() {
       makeElement('x-a');
+      makeElement('x-a2');
       makeElement('x-b');
       makeElement('x-c');
       makeElement('x-d');
@@ -68,7 +85,7 @@
       document.body.removeChild(a);
     })
 
-    test('change exportparts', function() {
+    test('change exportparts attribute', function() {
       assert.equal(color(d1, '[part]'), red);
       assert.equal(color(d2, '[part]'), black);
 
@@ -77,14 +94,26 @@
       assert.equal(color(d2, '[part]'), red);
     });
 
-    test('remove exportparts', function() {
+    test('remove exportparts attribute', function() {
       c.removeAttribute('exportparts');
       assert.equal(color(d1, '[part]'), black);
       assert.equal(color(d2, '[part]'), black);
     });
 
-    test.skip('move exportparts to new shadow root', function() {
-      // TODO(aomarks) Implement this test.
+    test('remove exportparts node', function() {
+      a.shadowRoot.removeChild(b);
+      // There's actually nothing we need to do for a remove, but at least
+      // we'll know we don't crash.
+      assert.equal(pierce(a, 'x-b'), undefined);
+    });
+
+    test('move exportparts to new shadow root', function() {
+      const a2 = document.createElement('x-a2');
+      // TODO(aomarks) Make a container that we can reset.
+      document.body.appendChild(a2);
+      a2.shadowRoot.appendChild(b);
+      assert.equal(color(d1, '[part]'), blue);
+      assert.equal(color(d2, '[part]'), black);
     });
   });
 </script>

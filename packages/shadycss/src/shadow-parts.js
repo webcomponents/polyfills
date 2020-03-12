@@ -290,7 +290,6 @@ export function prepareTemplate(templateScope, styleAst) {
       if (parsed === null) {
         continue;
       }
-      console.log({parsed});
       const {elementName: receiverScope, parts} = parsed;
       if (parts.length > 0) {
         const key = [templateScope, receiverScope].join(':');
@@ -316,10 +315,8 @@ function customPropertyRulesForPart(providerScope, receiverScope, partNames) {
   }
   const rules = [];
   for (const {rule, requiredParts} of entries) {
-    console.log({rule, requiredParts});
     let matches = true;
     for (const requiredPart of requiredParts) {
-      console.log({requiredPart, partNames});
       if (partNames.indexOf(requiredPart) === -1) {
         matches = false;
         break;
@@ -714,12 +711,15 @@ export function onStyleElement(element) {
 /* eslint-disable no-unused-vars */
 
 /**
- * TODO
+ * Update part styles in response to an insertBefore operation.
+ *
  * @param {!HTMLElement} parentNode
  * @param {!HTMLElement} newNode
  * @param {?HTMLElement} referenceNode
  */
 export function onInsertBefore(parentNode, newNode, referenceNode) {
+  // Note this function is called after other ShadyDOM and ShadyCSS operations
+  // have finished (so the node is already inserted).
   if (!newNode.getRootNode) {
     // TODO(aomarks) Why is it in noPatch mode on Chrome 41 and other older
     // browsers that getRootNode is undefined?
@@ -727,7 +727,6 @@ export function onInsertBefore(parentNode, newNode, referenceNode) {
   }
   const root = newNode.getRootNode();
   if (root.host) {
-    // TODO(aomarks) Optimize.
     rescopeRecursive(root.host);
   }
 }
