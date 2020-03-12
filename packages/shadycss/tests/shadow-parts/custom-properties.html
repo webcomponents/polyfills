@@ -22,7 +22,7 @@
   <style>
     x-b {
       --custom-color: red;
-      --custom-text-decoration-line: underline;
+      --custom-text-decoration: underline;
     }
     x-b.alt {
       --custom-color: black;
@@ -36,7 +36,7 @@
   <style>
     x-b {
       --custom-color: green;
-      --custom-text-decoration-line: line-through;
+      --custom-text-decoration: line-through;
     }
   </style>
   <x-b></x-b>
@@ -57,7 +57,7 @@
     }
     /** Note we have two part rules here to check that we handle multiple. */
     x-c::part(p1) {
-      text-decoration-line: var(--custom-text-decoration-line);
+      text-decoration: var(--custom-text-decoration);
     }
   </style>
   <x-c exportparts="p1"></x-c>
@@ -91,8 +91,8 @@
     test('property set above rule', function() {
       assert.equal(getComputedStyle(a1part).color, red);
       assert.equal(getComputedStyle(a2part).color, green);
-      assert.equal(getComputedStyle(a1part).textDecorationLine, 'underline');
-      assert.equal(getComputedStyle(a2part).textDecorationLine, 'line-through');
+      assert.include(getComputedStyle(a1part).textDecoration, 'underline');
+      assert.include(getComputedStyle(a2part).textDecoration, 'line-through');
     });
 
     test.skip('property set in part rule', function() {
