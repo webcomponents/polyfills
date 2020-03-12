@@ -1,0 +1,47 @@
+<!doctype html>
+<html>
+<head>
+<title>DocumentConstructionObserver</title>
+<script>
+  (window.customElements = window.customElements || {}).forcePolyfill = true;
+</script>
+<script src="../../node_modules/es6-promise/dist/es6-promise.auto.min.js"></script>
+<script src="../../node_modules/wct-browser-legacy/browser.js"></script>
+<script src="../../node_modules/@webcomponents/custom-elements/custom-elements.min.js"></script>
+<script>
+  // This needs to be a classic script so that it runs before the parser gets
+  // to <body>.
+
+  // This snippet is copied from '../safari-gc-bug-workaround.js' because this
+  // test suite can't use the Safari GC workaround script as a module: it
+  // specifically tests behavior of a definition provided before the document's
+  // body has begun to be parsed.
+  if (customElements.polyfillWrapFlushCallback === undefined) {
+    window.__CE_installPolyfill();
+    console.warn('The custom elements polyfill was reinstalled.');
+  }
+
+  class DCOCreated extends HTMLElement {
+    constructor() {
+      super();
+      this.wasConstructed = true;
+    }
+  }
+  customElements.define('dco-created', DCOCreated);
+</script>
+<script type="module">
+  // Safari GC bug workaround applied earlier.
+
+  suite('DocumentConstructionObserver', function() {
+    test('The DocumentConstructionObserver constructs parser-created ' +
+        'elements in the document body.', function() {
+      const parserCreatedElement = document.body.querySelector('dco-created');
+      assert(parserCreatedElement.wasConstructed);
+    });
+  });
+</script>
+</head>
+<body>
+  <dco-created></dco-created>
+</body>
+</html>
