@@ -99,10 +99,10 @@ represented as shown below, thus there is no "resetting" after the second rule
 has matched an ancestor:
 
 ```css
-x-a x-a.odd[shady-part~=x-a:x-a:num] {
+x-a x-a.odd[shady-part~="x-a:x-a:num"] {
   color: red;
 }
-x-a x-a.even[shady-part~=x-a:x-a:num] {
+x-a x-a.even[shady-part~="x-a:x-a:num"] {
   color: green;
 }
 ```
@@ -138,7 +138,7 @@ ShadyCSS:
 
 ```html
 <style>
-  x-a x-b [shady-part~=x-a:x-b:greeting] {
+  x-a x-b [shady-part~="x-a:x-b:greeting"] {
     color: red;
   }
 </style>
@@ -176,7 +176,7 @@ x-b::part(foo bar) {
 ShadyCSS:
 
 ```css
-x-a x-b [shady-part~=x-a:x-b:foo][shady-part~=x-a:x-b:bar] {
+x-a x-b [shady-part~="x-a:x-b:foo"][shady-part~="x-a:x-b:bar"] {
   color: red;
 }
 ```
@@ -222,10 +222,10 @@ ShadyCSS:
 
 ```html
 <style>
-  x-a x-b [shady-part~=x-a:x-b:salutation] {
+  x-a x-b [shady-part~="x-a:x-b:salutation"] {
     color: red;
   }
-  x-b x-c [shady-part~=x-b:x-c:greeting] {
+  x-b x-c [shady-part~="x-b:x-c:greeting"] {
     font-weight: bold;
   }
 </style>
@@ -289,10 +289,10 @@ ShadyCSS:
 
 ```html
 <style>
-  x-a .x-b-1 [shady-part~=x-a:x-b:greeting] {
+  x-a .x-b-1 [shady-part~="x-a:x-b:greeting"] {
     color: red;
   }
-  x-a .x-b-2 [shady-part~=x-a:x-b:greeting] {
+  x-a .x-b-2 [shady-part~="x-a:x-b:greeting"] {
     color: blue;
   }
 </style>

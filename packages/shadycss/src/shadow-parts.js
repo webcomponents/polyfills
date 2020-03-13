@@ -8,117 +8,6 @@ Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 */
 
-/**
- * Terminology:
- *
- * [0] provider
- * [1] part rule
- * [2] receiver
- * [3] reciever
- * [4] part node
- *
- * Example:
- *
- * [0] <x-a>
- *       #shadow-root
- *         <style>
- * [1]       x-b::part(greeting) { ... }
- *         </style>
- *
- * [2]     <x-b>
- *           #shadow-root
- * [3]         <x-c exportparts="greeting">
- *               #shadow-root
- * [4]             <div part="greeting">hello</div>
- *             </x-c>
- *         </x-b>
- *     </x-a>
- */
-
-/**
- * The general strategy for CSS Shadow Parts support in Shady CSS is
- * illustrated by this example:
- *
- * #document
- *   <style>
- *     x-a::part(a1) {
- *       color: red;
- *     }
- *     x-a::part(a2) {
- *       color: green;
- *     }
- *     x-a::part(a3) {
- *       color: blue;
- *     }
- *   </style>
- *   <x-a>
- *     #shadow-root
- *       <div part="a1"></div>
- *       <x-b exportparts="b1:a2,b2:a3">
- *         #shadow-root
- *           <div part="b1"></div>
- *           <x-c exportparts="c1:b2">
- *             #shadow-root
- *               <div part="c1"></div>
- *           </x-c>
- *       </x-b>
- *   </x-a>
- *
- * Becomes:
- *
- * #document
- *   <style>
- *     .part_document_x-a_a1 {
- *       color: red;
- *     }
- *     .part_document_x-a_a2 {
- *       color: green;
- *     }
- *     .part_document_x-a_a3 {
- *       color: blue;
- *     }
- *   </style>
- *   <x-a exportparts>
- *     #shadow-root
- *       <div part="a1"
- *            class="part_document_x-a_a1"></div>
- *       <x-b exportparts="b1:a2,b2:a3">
- *         #shadow-root
- *           <div part="b1"
- *                class="part_x-a_x-b_b1
- *                       part_document_x-a_a2"></div>
- *           <x-c exportparts="c1:b2">
- *             #shadow-root
- *               <div part="c1"
- *                    class="part_x-b_x-c_c1
- *                           part_x-a_x-b_b2
- *                           part_document_x-a_a3"></div>
- *           </x-c>
- *       </x-b>
- *   </x-a>
- *
- * Limitations:
- *
- * [1] ::part rules must include a custom-element name.
- *
- *    (A) x-a::part(foo)      OK
- *    (B) .clz x-a::part(foo) OK (TODO(aomarks) But could be wrong, right?)
- *    (C) x-a.bar::part(foo)  OK (except recursive patterns, see [3])
- *    (D) ::part(foo)         UNSUPPORTED
- *    (E) .bar::part(foo)     UNSUPPORTED
- *
- * [2] Recursive patterns are not supported.
- *
- *     TODO(aomarks) Example
- *
- * [3] Part style rules cannot change. If dynamism is needed, write a ::part
- *     rule for each state, predicated on some class or other attribute, and
- *     toggle that class or attribute on the dynamic element.
- *
- * [4] Part rules must appear inside a <template> or document-level <style>
- *     that has been prepared by ShadyCSS.
- */
-
 import StyleInfo from './style-info.js';
 import StyleProperties from './style-properties.js';
 import {nativeCssVariables} from './style-settings.js';
@@ -218,34 +107,36 @@ export function parsePartSelector(selector) {
 }
 
 /**
- * Format the ShadyCSS class name for a part.
+ * Format the shady-part attribute value for a part.
  *
- * @param {!string} partName Name of the part.
- * @param {!string} consumerScope Lowercase name of the custom element that
- *     receives the part style.
  * @param {!string} providerScope Lowercase name of the custom element that
  *     provides the part style, or "document" if the style comes from the main
  *     document.
+ * @param {!string} receiverScope Lowercase name of the custom element that
+ *     receives the part style.
+ * @param {!string} partName Name of the part.
  * @return {!string} Value for the shady-part attribute.
  */
-export function formatPartSpecifier(partName, consumerScope, providerScope) {
-  return `${consumerScope}_${providerScope}_${partName}`;
+export function formatShadyPartAttribute(providerScope, receiverScope, partName) {
+  return `${providerScope}:${receiverScope}:${partName}`;
 }
 
 /**
- * Format the ShadyCSS selector for a part rule.
+ * Format the shady-part attribute CSS selector for a part rule.
  *
- * @param {!string} parts Whitespace-separated part list.
- * @param {!string} scope Lowercase custom element name of the part node's
- *     host.
- * @param {!string} hostScope Lowercase custom-element name of the part
- *     node's host's host, or "document" if the host is in the main document.
- * @return {!string} CSS class selector.
+ * @param {!string} providerScope Lowercase name of the custom element that
+ *     provides the part style, or "document" if the style comes from the main
+ *     document.
+ * @param {!string} receiverScope Lowercase name of the custom element that
+ *     receives the part style.
+ * @param {!string} partNames Whitespace-separated part list.
+ * @return {!string} CSS shady-part attribute selector.
  */
-export function formatPartSelector(parts, scope, hostScope) {
-  return splitPartString(parts).map(
-      (part) => `[shady-part~=${formatPartSpecifier(part, scope, hostScope)}]`)
-    .join('');
+export function formatShadyPartSelector(providerScope, receiverScope, partNames) {
+  return splitPartString(partNames).map((partName) => {
+    const attr = formatShadyPartAttribute(providerScope, receiverScope, partName);
+    return `[shady-part~="${attr}"]`;
+  }).join('');
 }
 
 const partRuleCustomProperties = new Map();
@@ -517,7 +408,7 @@ export function applyStylesToPartNodes(host) {
       // Property.
       for (const partName of partNames) {
         addPartSpecifier(
-            partNode, formatPartSpecifier(partName, receiverScope, providerScope));
+            partNode, formatShadyPartAttribute(providerScope, receiverScope, partName));
       }
 
       // For ::part rules that do consume a CSS Custom Property, we need to
@@ -583,11 +474,11 @@ function addPartSpecifiersToElement(element, partNames) {
   const exportPartsMap = getExportPartsMap(host);
 
   for (const partName of partNames) {
-    addPartSpecifier(element, formatPartSpecifier(partName, scope, superScope));
+    addPartSpecifier(element, formatShadyPartAttribute(superScope, scope, partName));
     const exportParts = exportPartsMap[partName];
     if (exportParts !== undefined) {
       for (const {partName, scope, hostScope} of exportParts) {
-        addPartSpecifier(element, formatPartSpecifier(partName, scope, hostScope));
+        addPartSpecifier(element, formatShadyPartAttribute(hostScope, scope, partName));
       }
     }
   }

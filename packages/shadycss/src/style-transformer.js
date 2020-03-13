@@ -13,7 +13,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 import {StyleNode} from './css-parse.js'; // eslint-disable-line no-unused-vars
 import * as StyleUtil from './style-util.js';
 import {nativeShadow} from './style-settings.js';
-import {parsePartSelector, formatPartSelector} from './shadow-parts.js';
+import {parsePartSelector, formatShadyPartSelector} from './shadow-parts.js';
 
 /* Transforms ShadowDOM styling into ShadyDOM styling
 
@@ -412,7 +412,7 @@ class StyleTransformer {
     // Earlier we did a hacky transform from "part(foo bar)"" to "part(foo,bar)"
     // so that the SIMPLE_SELECTOR regex didn't get confused by spaces.
     const partSelector =
-        formatPartSelector(parts.replace(',', ' '), elementName, scope);
+        formatShadyPartSelector(scope, elementName, parts.replace(',', ' '));
     return (scope === 'document' ? '' : scope + ' ') +
         `${combinators}${elementName}${selectors} ${partSelector}${pseudos}`;
   }
