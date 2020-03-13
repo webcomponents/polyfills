@@ -39,12 +39,12 @@ spec. `::part` rules are transformed to be `!important`, and otherwise there is
 no guarantee about precedence (actual behavior will depend largely on the order
 in which templates are processed).
 
-ShadyCSS cascade (high to low):
+ShadyCSS rank (high to low):
 
 1. parent, grandparent, etc. scopes (no guarantee about order)
 2. local scope (if marked `!important`, local rules join group above)
 
-Spec cascade (high to low):
+Spec rank (high to low):
 
 1. `!important` grandparent scope
 2. `!important` parent scope
@@ -242,10 +242,15 @@ ShadyCSS:
 
 ### Custom properties
 
-If a `::part` rule consumes a CSS custom property, then ShadyCSS switches to
-per-instance styling for any node that receives that rule, whereby each host is
-given a class that is unique for each set of CSS custom property values. This
-matches the existing behavior of ShadyCSS for custom properties.
+The spec behavior is that when a `::part` rule consumes a CSS Custom Property,
+the value of that property is determined at each site where that rule is
+_consumed_, not where the rule was _defined_.
+
+ShadyCSS emulates this behavior by switching to per-instance styling for any
+node that receives a `::part` rule that consumes a CSS Custom Property. This is
+identical to the behavior already used for normal custom property consumption in
+ShadyCSS, where each such host is given a class that is unique for its set of
+property values.
 
 Native:
 
