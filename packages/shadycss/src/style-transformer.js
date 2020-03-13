@@ -37,6 +37,7 @@ import {nativeShadow} from './style-settings.js';
 const SCOPE_NAME = 'style-scope';
 
 class StyleTransformer {
+  /** @return {string} */
   get SCOPE_NAME() {
     return SCOPE_NAME;
   }
@@ -69,11 +70,11 @@ class StyleTransformer {
 
   /**
    * @param {!Node} startNode
-   * @param {!function(!Node)} transformer
+   * @param {function(!Node)} transformer
    */
   _transformDom(startNode, transformer) {
     if (startNode.nodeType === Node.ELEMENT_NODE) {
-      transformer(startNode)
+      transformer(startNode);
     }
     let c$;
     if (startNode.localName === 'template') {
@@ -185,8 +186,8 @@ class StyleTransformer {
     let hostScope = this._calcHostScope(scope, ext);
     scope = this._calcElementScope(scope);
     let self = this;
-    return StyleUtil.toCssText(rules, function(/** StyleNode */rule) {
-      if (!rule.isScoped) {
+    return StyleUtil.toCssText(rules, function(/** StyleNode */ rule) {
+      if (!/** @type {?} */ (rule.isScoped)) {
         self.rule(rule, scope, hostScope);
         rule.isScoped = true;
       }
@@ -224,8 +225,8 @@ class StyleTransformer {
   _transformRule(rule, transformer, scope, hostScope) {
     // NOTE: save transformedSelector for subsequent matching of elements
     // against selectors (e.g. when calculating style properties)
-    rule['selector'] = rule.transformedSelector =
-      this._transformRuleCss(rule, transformer, scope, hostScope);
+    rule['selector'] = /** @type {?} */ (rule).transformedSelector =
+        this._transformRuleCss(rule, transformer, scope, hostScope);
   }
 
   /**
@@ -277,7 +278,7 @@ class StyleTransformer {
       const start = match.index;
       const end = StyleUtil.findMatchingParen(selector, start);
       if (end === -1) {
-        throw new Error(`${match.input} selector missing ')'`)
+        throw new Error(`${match.input} selector missing ')'`);
       }
       const part = selector.slice(start, end + 1);
       selector = selector.replace(part, MATCHES_REPLACEMENT);
@@ -310,7 +311,8 @@ class StyleTransformer {
     // Remove spaces inside of selectors like `:nth-of-type` because it confuses SIMPLE_SELECTOR_SEP
     let isNth = NTH.test(selector);
     if (isNth) {
-      selector = selector.replace(NTH, (m, type, inner) => `:${type}(${inner.replace(/\s/g, '')})`)
+      selector = selector.replace(
+          NTH, (m, type, inner) => `:${type}(${inner.replace(/\s/g, '')})`);
       selector = this._twiddleNthPlus(selector);
     }
     // Preserve selectors like `:-webkit-any` so that SIMPLE_SELECTOR_SEP does
@@ -454,7 +456,7 @@ class StyleTransformer {
       // remove ':host' type selectors in document rules
       return '';
     } else if (selector.match(SLOTTED)) {
-      return this._transformComplexSelector(selector, SCOPE_DOC_SELECTOR)
+      return this._transformComplexSelector(selector, SCOPE_DOC_SELECTOR);
     } else {
       return this._transformSimpleSelector(selector.trim(), SCOPE_DOC_SELECTOR);
     }
@@ -484,4 +486,4 @@ const SELECTOR_NO_MATCH = 'should_not_match';
 const MATCHES = /:(?:matches|any|-(?:webkit|moz)-any)/;
 const MATCHES_REPLACEMENT = '\u{e000}';
 
-export default new StyleTransformer()
+export default new StyleTransformer();
