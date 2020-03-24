@@ -1,4 +1,4 @@
-![tests](https://github.com/webcomponents/polyfills/workflows/tests/badge.svg?branch=master)
+[![tests](https://github.com/webcomponents/polyfills/workflows/tests/badge.svg?branch=master)](https://github.com/webcomponents/polyfills/actions?query=branch%3Amaster+workflow%3Atests)
 [![Mentioned in Web Components the Right Way](https://awesome.re/mentioned-badge.svg)](https://github.com/mateusortiz/webcomponents-the-right-way)
 
 # Monorepository for WebComponents v1 polyfills
