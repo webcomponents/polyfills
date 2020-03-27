@@ -193,6 +193,17 @@
 
   /********************* importer *********************/
 
+  const supportsDynamicImport = () => {
+    try {
+      new Function('import("")');
+      return true;
+    } catch (err) {
+      return false;
+    }
+  };
+
+  const isModernBrowser = supportsDynamicImport();
+
   const isIE = /Trident/.test(navigator.userAgent);
 
   const isEdge = /Edge\/\d./i.test(navigator.userAgent);
@@ -204,8 +215,9 @@
 
   const disabledLinkSelector = `link[rel=stylesheet][href][type=${importDisableType}]`;
 
-  const scriptsSelector = `script:not([type]),script[type="application/javascript"],` +
-    `script[type="text/javascript"],script[type="module"]`;
+  const scriptsSelector = isModernBrowser
+      ? `script:not([type]):not([nomodule]),script[type="application/javascript"],script[type="text/javascript"],script[type="module"]`
+      : `script:not([type]),script[type="application/javascript"],script[type="text/javascript"],script[nomodule]`;
 
   const importDependenciesSelector = `${importSelector},${disabledLinkSelector},` +
     `style:not([type]),link[rel=stylesheet][href]:not([type]),` + scriptsSelector;
