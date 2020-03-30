@@ -24,7 +24,7 @@ export default function(
     destination: ParentNode,
     builtIn: ParentNodeNativeMethods) {
   function appendPrependPatch(builtInMethod: NativeMethod): NativeMethod {
-    return function(...nodes) {
+    return function(this: Node, ...nodes) {
       /**
        * A copy of `nodes`, with any DocumentFragment replaced by its children.
        */
