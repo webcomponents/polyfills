@@ -14,13 +14,24 @@ export const settings = window['ShadyDOM'] || {};
 
 settings.hasNativeShadowDOM = Boolean(Element.prototype.attachShadow && Node.prototype.getRootNode);
 
+// The user might need to pass the custom elements polyfill a flag by setting an
+// object to `customElements`, so check for `customElements.define` also.
+export const hasCustomElements =
+    () => Boolean(window.customElements && window.customElements.define);
+// The custom elements polyfill is typically loaded after Shady DOM, so this
+// check isn't reliable during initial evaluation. However, because the
+// polyfills are loaded immediately after one another, it works at runtime.
+export const hasPolyfilledCustomElements =
+    () => Boolean(window.customElements && window.customElements['polyfillWrapFlushCallback']);
+
 const desc = Object.getOwnPropertyDescriptor(Node.prototype, 'firstChild');
 
 /* eslint-disable */
 settings.hasDescriptors = Boolean(desc && desc.configurable && desc.get);
 settings.inUse = settings['force'] || !settings.hasNativeShadowDOM;
-settings.noPatch = settings['noPatch'] || false;
+settings.noPatch = /** @type {string|boolean} */(settings['noPatch'] || false);
 settings.preferPerformance = settings['preferPerformance'];
+settings.patchOnDemand = (settings.noPatch === 'on-demand');
 /* eslint-enable */
 
 const IS_IE = navigator.userAgent.match('Trident');
@@ -33,9 +44,7 @@ export const isTrackingLogicalChildNodes = (node) => {
   return (nodeData && nodeData.firstChild !== undefined);
 }
 
-export const isShadyRoot = (obj) => {
-  return Boolean(obj._localName === 'ShadyRoot');
-}
+export const isShadyRoot = obj => obj instanceof ShadowRoot;
 
 export const hasShadowRootWithSlot = (node) => {
   const nodeData = shadyDataForNode(node);
@@ -150,34 +159,42 @@ export const childNodesArray = (parent) => {
   return result;
 }
 
+const patchProperty = (proto, name, descriptor) => {
+  descriptor.configurable = true;
+  // NOTE: we prefer writing directly because some browsers
+  // have descriptors that are writable but not configurable (e.g.
+  // `appendChild` on older browsers)
+  if (descriptor.value) {
+    proto[name] = descriptor.value;
+  } else {
+    try {
+      Object.defineProperty(proto, name, descriptor);
+    } catch(e) {
+      // this error is harmless so we just trap it.
+    }
+  }
+}
+
 /**
- * Patch a group of accessors on an object only if it exists or if the `force`
- * argument is true.
+ * Patch a group of accessors on an object. By default this overrides
  * @param {!Object} proto
  * @param {!Object} descriptors
  * @param {string=} prefix
  * @param {Array=} disallowedPatches
  */
 export const patchProperties = (proto, descriptors, prefix = '', disallowedPatches) => {
-  for (let p in descriptors) {
-    const newDescriptor = descriptors[p];
-    if (disallowedPatches && disallowedPatches.indexOf(p) >= 0) {
+  for (let name in descriptors) {
+    if (disallowedPatches && disallowedPatches.indexOf(name) >= 0) {
       continue;
     }
-    newDescriptor.configurable = true;
-    const name = prefix + p;
-    // NOTE: we prefer writing directly because some browsers
-    // have descriptors that are writable but not configurable (e.g.
-    // `appendChild` on older browsers)
-    if (newDescriptor.value) {
-      proto[name] = newDescriptor.value;
-    } else {
-      // NOTE: this can throw if 'force' is used so catch the error.
-      try {
-        Object.defineProperty(proto, name, newDescriptor);
-      } catch(e) {
-        // this error is harmless so we just trap it.
-      }
+    patchProperty(proto,  prefix + name, descriptors[name]);
+  }
+}
+
+export const patchExistingProperties = (proto, descriptors) => {
+  for (let name in descriptors) {
+    if (name in proto) {
+      patchProperty(proto,  name, descriptors[name]);
     }
   }
 }
@@ -195,4 +212,16 @@ export const getOwnPropertyDescriptors = (obj) => {
     descriptors[name] = Object.getOwnPropertyDescriptor(obj, name);
   });
   return descriptors;
+};
+
+export const assign = (target, source) => {
+  const names = Object.getOwnPropertyNames(source);
+  for (let i = 0, p; i < names.length; i++) {
+    p = names[i];
+    target[p] = source[p];
+  }
+};
+
+export const arrayFrom = (object) => {
+  return [].slice.call(/** @type {IArrayLike} */(object));
 };

@@ -137,7 +137,7 @@ makeNonEnumerable(InsideDescriptors);
 makeNonEnumerable(TextContentInnerHTMLDescriptors);
 makeNonEnumerable(OutsideDescriptors);
 
-const noInstancePatching = utils.settings.hasDescriptors || utils.settings.noPatch;
+const noInstancePatching = utils.settings.hasDescriptors || (utils.settings.noPatch === true);
 
 // ensure an element has patched "outside" accessors; no-op when not needed
 export let patchOutsideElementAccessors = noInstancePatching ?
@@ -145,7 +145,7 @@ export let patchOutsideElementAccessors = noInstancePatching ?
     const sd = ensureShadyDataForNode(element);
     if (!sd.__outsideAccessors) {
       sd.__outsideAccessors = true;
-      utils.patchProperties(element, OutsideDescriptors);
+      utils.patchExistingProperties(element, OutsideDescriptors);
     }
   }
 
@@ -155,7 +155,7 @@ export let patchInsideElementAccessors = noInstancePatching ?
     const sd = ensureShadyDataForNode(element);
     if (!sd.__insideAccessors) {
       sd.__insideAccessors = true;
-      utils.patchProperties(element, InsideDescriptors);
+      utils.patchExistingProperties(element, InsideDescriptors);
       // NOTE: There are compatibility issues with patches for `textContent`
       // and `innerHTML` between CE and SD. Since SD patches are applied
       // via `ShadyDOM.patch` and CE patches are applied as the tree is walked,
@@ -167,10 +167,10 @@ export let patchInsideElementAccessors = noInstancePatching ?
       // * When SD is in `noPatch` mode, the SD patches call through to
       // "native" methods that are patched by CE (since CE is at the bottom).
       // Therefore continue to patch in this case.
-      // If customElements is not loaded, then these accessors should be
-      // patched so they work correctly.
-      if (!window['customElements'] || utils.settings.noPatch) {
-        utils.patchProperties(element, TextContentInnerHTMLDescriptors);
+      // If the custom elements polyfill is not loaded, then these accessors
+      // should be patched so they work correctly.
+      if (!utils.hasPolyfilledCustomElements() || utils.settings.noPatch) {
+        utils.patchExistingProperties(element, TextContentInnerHTMLDescriptors);
       }
     }
   }

@@ -1,0 +1,85 @@
+<!doctype html>
+<!--
+    @license
+    Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+    This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+    The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+    The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+    Code distributed by Google as part of the polymer project is also
+    subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<title>ShadyDOM Tests</title>
+<meta charset="utf-8">
+
+<script src="wct-browser-config.js"></script>
+<script src="../node_modules/wct-browser-legacy/browser.js"></script>
+
+<script>
+  var suites = [
+    'shady.html',
+    'shady.html?noPatch=true',
+    'shady.html?noPatch=on-demand',
+
+    'shady-dynamic.html',
+    'shady-dynamic.html?noPatch=true',
+    'shady-dynamic.html?noPatch=on-demand',
+    'shady-dynamic.html?forceCustomElements=true',
+    'shady-dynamic.html?noPatch=true&forceCustomElements=true',
+    'shady-dynamic.html?noPatch=on-demand&forceCustomElements=true',
+
+    'shady-content.html',
+    'shady-content.html?noPatch=true',
+    'shady-content.html?noPatch=on-demand',
+    'shady-content.html?forceCustomElements=true',
+    'shady-content.html?noPatch=true&forceCustomElements=true',
+    'shady-content.html?noPatch=on-demand&forceCustomElements=true',
+
+    'slotchange.html',
+    'slotchange.html?noPatch=true',
+    'slotchange.html?noPatch=on-demand',
+
+    'observeChildren.html',
+    'observeChildren.html?noPatch=true',
+    'observeChildren.html?noPatch=on-demand',
+
+    'event-path.html',
+    'event-path.html?noPatch=true',
+    'event-path.html?noPatch=on-demand',
+    'event-path.html?forceCustomElements=true',
+    'event-path.html?noPatch=true&forceCustomElements=true',
+    'event-path.html?noPatch=on-demand&forceCustomElements=true',
+
+    'slot-scenarios.html?forceCustomElements=true',
+    'slot-scenarios.html?noPatch=true&forceCustomElements=true',
+    'slot-scenarios.html?noPatch=on-demand&forceCustomElements=true',
+
+    'sync-style-scoping.html',
+    'sync-style-scoping.html?preferPerformance=true',
+    'sync-style-scoping.html?noPatch=true',
+    'sync-style-scoping.html?noPatch=on-demand',
+    'sync-style-scoping.html?noPatch=true&preferPerformance=true',
+    'sync-style-scoping.html?noPatch=on-demand&preferPerformance=true',
+    'sync-style-scoping.html?forceCustomElements=true',
+    'sync-style-scoping.html?noPatch=true&forceCustomElements=true',
+    'sync-style-scoping.html?noPatch=on-demand&forceCustomElements=true',
+
+    'active-element.html',
+    'active-element.html?noPatch=true',
+    'active-element.html?noPatch=on-demand',
+    'active-element.html?forceCustomElements=true',
+    'active-element.html?noPatch=true&forceCustomElements=true',
+    'active-element.html?noPatch=on-demand&forceCustomElements=true',
+
+    'attach-while-loading.html',
+    'filter-mutations.html',
+    'native-access.html',
+    'prefer-performance.html'
+  ];
+
+  // test only under native custom elements.
+  if (window.customElements) {
+    suites.push('connect-disconnect.html');
+  }
+
+  WCT.loadSuites(suites);
+</script>
