@@ -15,7 +15,7 @@
     "shim"
   ],
   "scripts": {
-    "build": "gulp",
+    "build": "tsc && gulp",
     "test": "wct",
     "lint": "eslint src tests",
     "regen-package-lock": "rm -rf node_modules package-lock.json; npm install",
@@ -32,7 +32,8 @@
     "babel-preset-minify": "^0.4.3",
     "get-own-property-symbols": "^0.9.2",
     "promise-polyfill": "^8.0.0",
-    "wct-browser-legacy": "^1.0.2"
+    "wct-browser-legacy": "^1.0.2",
+    "typescript": "^3.8.3"
   },
   "publishConfig": {
     "access": "public"
