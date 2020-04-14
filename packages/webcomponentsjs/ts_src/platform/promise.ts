@@ -9,17 +9,7 @@ part of the polymer project is also subject to an additional IP rights grant
 found at http://polymer.github.io/PATENTS.txt
 */
 
-// No easy way to provide typings for a file imported this way from
-// node modules. So we'll just ignore the import and cast locally.
-// @ts-ignore
-import PromisePolyfillRaw from '../../node_modules/promise-polyfill/src/index.js';
-
-type PromiseConstructor = typeof Promise;
-interface PromisePolyfill extends PromiseConstructor {
-  _immediateFn(callback: () => void): void;
-}
-
-const PromisePolyfill: PromisePolyfill = PromisePolyfillRaw;
+import PromisePolyfill from 'promise-polyfill/src/index.js';
 
 /*
 Assign the ES6 promise polyfill to window ourselves instead of using the "auto"
