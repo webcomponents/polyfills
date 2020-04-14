@@ -66,11 +66,10 @@ if (!window.CustomEvent || isIE && (typeof window.CustomEvent !== 'function')) {
   window['CustomEvent'] =
       (<T extends unknown>(inType: string, params?: CustomEventInit<T>) => {
         params = params || {};
-        const e =
-            /** @type {!CustomEvent} */ (document.createEvent('CustomEvent'));
+        const e: CustomEvent<T> = document.createEvent('CustomEvent');
         e.initCustomEvent(
             inType, Boolean(params.bubbles), Boolean(params.cancelable),
-            params.detail);
+            params.detail!);
         return e;
       }) as unknown as typeof CustomEvent;
   window['CustomEvent'].prototype = window.Event.prototype as CustomEvent;
