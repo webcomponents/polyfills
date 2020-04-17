@@ -1,0 +1,349 @@
+<!doctype html>
+<!--
+@license
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="wct-browser-config.js"></script>
+  <script src="../node_modules/@webcomponents/webcomponents-platform/webcomponents-platform.js"></script>
+  <script src="../node_modules/@webcomponents/template/template.js"></script>
+  <script>
+    ShadyDOM = {force: true};
+  </script>
+  <script src="../node_modules/@webcomponents/shadydom/shadydom.min.js"></script>
+  <script src="../node_modules/wct-browser-legacy/browser.js"></script>
+</head>
+<body>
+
+  <script>
+    window.connectedList = [];
+    window.disconnectedList = [];
+
+    window.shouldFireConnectEvent;
+
+    window.defineTestElement = function(name, connected) {
+      var template = document.querySelector('#' + name);
+      // es5 compat class
+      function Klass() {
+        const self = (window.Reflect && Reflect.construct)
+          ? Reflect.construct(HTMLElement, [], this.constructor || Klass)
+          : HTMLElement.call(this);
+        self._constructed = true;
+        return self;
+      }
+
+      Klass.prototype = Object.create(HTMLElement.prototype, {
+        'constructor': {
+          value: Klass,
+          configurable: true,
+          writable: true
+        }
+      });
+
+      Klass.prototype.connectedCallback = function() {
+        window.connectedList.push(this.id);
+        const total = window.connectedList.length;
+        if (!ShadyDOM.nativeMethods.contains.call(document.documentElement, this) && this.assignedSlot) {
+          throw new Error('not in document when connected');
+        }
+        if (!this._initialized) {
+          this._initialized = true;
+          if (template) {
+            this.attachShadow({mode: 'open'});
+            this.shadowRoot.appendChild(document.importNode(template.content, true));
+          }
+        }
+        if (connected) {
+          connected.call(this);
+        }
+        if (window.shouldFireConnectEvent) {
+          this.dispatchEvent(new Event('e', {composed: true, bubbles: true}));
+        }
+        this.connectedList = window.connectedList.slice(total);
+      }
+
+      Klass.prototype.disconnectedCallback = function() {
+        window.disconnectedList.push(this.id);
+        if (!this._initialized) {
+          this._initialized = true;
+          if (connected) {
+            connected.call(this);
+          }
+          if (template) {
+            this.attachShadow({mode: 'open'});
+            this.shadowRoot.appendChild(document.importNode(template.content, true));
+          }
+        }
+      }
+
+      addEventListener('DOMContentLoaded', function() {
+        customElements.define(name, Klass);
+      });
+    }
+
+  </script>
+
+  <template id="x-simple">simple</template>
+  <script>
+    defineTestElement('x-simple');
+  </script>
+
+  <template id="x-slot">
+    <div><slot></slot></div>
+  </template>
+
+  <script>
+    defineTestElement('x-slot');
+  </script>
+
+  <template id="x-conditional-slot">
+    <div><slot name="foo"></slot></div>
+    <div><slot name="bar"></slot></div>
+  </template>
+
+  <script>
+    defineTestElement('x-conditional-slot');
+  </script>
+
+  <template id="x-nested">
+    <div>
+      <x-simple id="x0"></x-simple>
+    </div>
+    <x-slot id="x1">
+      <x-slot id="x2">
+        <x-simple id="x3"></x-simple>
+      </x-slot>
+    </x-slot>
+    <x-slot id="x4">
+      <div><x-simple id="x5"></x-simple></div>
+    </x-slot>
+  </template>
+
+  <script>
+    defineTestElement('x-nested');
+  </script>
+
+  <template id="test-0">
+    <x-slot id="slot-0">
+      <x-slot id="slot-1">
+        <x-slot id="slot-2">
+          <x-slot id="slot-3">
+            <x-slot id="slot-4">
+              <x-simple id="simple-0"></x-simple>
+            </x-slot>
+          </x-slot>
+        </x-slot>
+      </x-slot>
+    </x-slot>
+  </template>
+
+  <x-slot id="parsedXSlot">
+    <x-simple id="parsedXSimple"></x-simple>
+  </x-slot>
+
+<script>
+
+  'use strict';
+
+  suite('parsed elements', function() {
+    test('connect order and no spurious disconnect', function() {
+      assert.deepEqual(window.connectedList, ['parsedXSimple', 'parsedXSlot']);
+      assert.equal(window.disconnectedList.length, 0);
+    });
+
+    test('disconnect / re-connect order', function() {
+      window.connectedList.length = 0;
+      window.disconnectedList.length = 0;
+      const e = window.parsedXSlot;
+      document.body.removeChild(e);
+      document.body.appendChild(e);
+      ShadyDOM.flush();
+      assert.deepEqual(window.connectedList, ['parsedXSlot', 'parsedXSimple']);
+      assert.deepEqual(window.disconnectedList, ['parsedXSlot', 'parsedXSimple']);
+    });
+  });
+
+  suite('imperative elements', function() {
+
+    setup(function() {
+      window.connectedList.length = 0;
+      window.disconnectedList.length = 0;
+    })
+
+    test('connect order, simple imperative created distribution', function() {
+      const xSlot = document.createElement('x-slot');
+      xSlot.id = 'imperativeXSlot';
+      const xSimple = document.createElement('x-simple');
+      xSimple.id = 'imperativeXSimple';
+      xSlot.appendChild(xSimple);
+      document.body.appendChild(xSlot);
+      ShadyDOM.flush();
+      assert.deepEqual(window.connectedList, ['imperativeXSlot', 'imperativeXSimple']);
+      document.body.removeChild(xSlot);
+      assert.deepEqual(window.disconnectedList, ['imperativeXSlot', 'imperativeXSimple']);
+    });
+
+    test('connect order undistributed element, simple imperative created distribution', function() {
+      const xSlot = document.createElement('x-conditional-slot');
+      xSlot.id = 'imperativeXSlot';
+      const xSimple = document.createElement('x-simple');
+      xSimple.id = 'imperativeXSimple';
+      xSlot.appendChild(xSimple);
+      document.body.appendChild(xSlot);
+      ShadyDOM.flush();
+      assert.deepEqual(window.connectedList, ['imperativeXSlot', 'imperativeXSimple']);
+      document.body.removeChild(xSlot);
+      // note: disconnected does not catch undistributed element until these are left in tree
+      assert.deepEqual(window.disconnectedList, ['imperativeXSlot']);
+    });
+
+    test('connect without spurious disconnect when switching slots', function() {
+      const xSlot = document.createElement('x-conditional-slot');
+      xSlot.id = 'imperativeXSlot';
+      const xSimple = document.createElement('x-simple');
+      xSimple.id = 'imperativeXSimple';
+      xSimple.slot = 'foo';
+      xSlot.appendChild(xSimple);
+      document.body.appendChild(xSlot);
+      ShadyDOM.flush();
+      assert.deepEqual(window.connectedList, ['imperativeXSlot', 'imperativeXSimple']);
+      assert.equal(window.disconnectedList.length, 0);
+      xSimple.slot = 'bar';
+      ShadyDOM.flush();
+      assert.deepEqual(window.connectedList, ['imperativeXSlot', 'imperativeXSimple']);
+      assert.equal(window.disconnectedList.length, 0);
+    });
+
+    test('connect order, deep tree without spurious disconnect', function() {
+      const t = window['test-0'];
+      document.body.appendChild(document.importNode(t.content, true));
+      ShadyDOM.flush();
+      assert.deepEqual(window.connectedList, ['slot-0', 'slot-1', 'slot-2', 'slot-3', 'slot-4', 'simple-0']);
+      assert.equal(window.disconnectedList.length, 0);
+      document.body.removeChild(window['slot-0']);
+      assert.deepEqual(window.disconnectedList, ['slot-0', 'slot-1', 'slot-2', 'slot-3', 'slot-4', 'simple-0']);
+    });
+
+    test('elements actually connected when connected callback called', function() {
+      const t = window['test-0'];
+      document.body.appendChild(document.importNode(t.content, true));
+      ShadyDOM.flush();
+      assert.deepEqual(window.connectedList, ['slot-0', 'slot-1', 'slot-2', 'slot-3', 'slot-4', 'simple-0']);
+      assert.equal(window.disconnectedList.length, 0);
+      document.body.removeChild(window['slot-0']);
+      assert.deepEqual(window.disconnectedList, ['slot-0', 'slot-1', 'slot-2', 'slot-3', 'slot-4', 'simple-0']);
+    });
+
+    test('connect order properly nested when elements attached in shadowRoot', function() {
+      const e = document.createElement('x-nested');
+      e.id = 'host';
+      document.body.appendChild(e);
+      ShadyDOM.flush();
+      assert.deepEqual(window.connectedList, ['host', 'x0', 'x1', 'x2', 'x3', 'x4', 'x5']);
+      assert.deepEqual(e.connectedList, ['x0', 'x1', 'x2', 'x3', 'x4', 'x5']);
+      const e2 = e.shadowRoot.querySelector('#x3');
+      assert.deepEqual(e2.connectedList, []);
+      document.body.removeChild(e);
+    });
+
+  });
+
+  suite('fire event in connnect: imperative elements', function() {
+
+    suiteSetup(function() {
+      window.shouldFireConnectEvent = true;
+    });
+
+    setup(function() {
+      window.connectedList.length = 0;
+      window.disconnectedList.length = 0;
+    })
+
+    test('connect order, simple imperative created distribution', function() {
+      const xSlot = document.createElement('x-slot');
+      xSlot.id = 'imperativeXSlot';
+      const xSimple = document.createElement('x-simple');
+      xSimple.id = 'imperativeXSimple';
+      xSlot.appendChild(xSimple);
+      document.body.appendChild(xSlot);
+      ShadyDOM.flush();
+      assert.deepEqual(window.connectedList, ['imperativeXSlot', 'imperativeXSimple']);
+      document.body.removeChild(xSlot);
+      assert.deepEqual(window.disconnectedList, ['imperativeXSlot', 'imperativeXSimple']);
+    });
+
+    test('connect order undistributed element, simple imperative created distribution', function() {
+      const xSlot = document.createElement('x-conditional-slot');
+      xSlot.id = 'imperativeXSlot';
+      const xSimple = document.createElement('x-simple');
+      xSimple.id = 'imperativeXSimple';
+      xSlot.appendChild(xSimple);
+      document.body.appendChild(xSlot);
+      ShadyDOM.flush();
+      assert.deepEqual(window.connectedList, ['imperativeXSlot', 'imperativeXSimple']);
+      document.body.removeChild(xSlot);
+      // note: disconnected does not catch undistributed element until these are left in tree
+      assert.deepEqual(window.disconnectedList, ['imperativeXSlot']);
+    });
+
+    test('connect without spurious disconnect when switching slots', function() {
+      const xSlot = document.createElement('x-conditional-slot');
+      xSlot.id = 'imperativeXSlot';
+      const xSimple = document.createElement('x-simple');
+      xSimple.id = 'imperativeXSimple';
+      xSimple.slot = 'foo';
+      xSlot.appendChild(xSimple);
+      document.body.appendChild(xSlot);
+      ShadyDOM.flush();
+      assert.deepEqual(window.connectedList, ['imperativeXSlot', 'imperativeXSimple']);
+      assert.equal(window.disconnectedList.length, 0);
+      xSimple.slot = 'bar';
+      ShadyDOM.flush();
+      assert.deepEqual(window.connectedList, ['imperativeXSlot', 'imperativeXSimple']);
+      assert.equal(window.disconnectedList.length, 0);
+    });
+
+    test('connect order, deep tree without spurious disconnect', function() {
+      const t = window['test-0'];
+      document.body.appendChild(document.importNode(t.content, true));
+      ShadyDOM.flush();
+      assert.deepEqual(window.connectedList, ['slot-0', 'slot-1', 'slot-2', 'slot-3', 'slot-4', 'simple-0']);
+      assert.equal(window.disconnectedList.length, 0);
+      document.body.removeChild(window['slot-0']);
+      assert.deepEqual(window.disconnectedList, ['slot-0', 'slot-1', 'slot-2', 'slot-3', 'slot-4', 'simple-0']);
+    });
+
+    test('elements actually connected when connected callback called', function() {
+      const t = window['test-0'];
+      document.body.appendChild(document.importNode(t.content, true));
+      ShadyDOM.flush();
+      assert.deepEqual(window.connectedList, ['slot-0', 'slot-1', 'slot-2', 'slot-3', 'slot-4', 'simple-0']);
+      assert.equal(window.disconnectedList.length, 0);
+      document.body.removeChild(window['slot-0']);
+      assert.deepEqual(window.disconnectedList, ['slot-0', 'slot-1', 'slot-2', 'slot-3', 'slot-4', 'simple-0']);
+    });
+
+    test('connect order properly nested when elements attached in shadowRoot', function() {
+      const e = document.createElement('x-nested');
+      e.id = 'host';
+      document.body.appendChild(e);
+      ShadyDOM.flush();
+      assert.deepEqual(window.connectedList, ['host', 'x0', 'x1', 'x2', 'x3', 'x4', 'x5']);
+      assert.deepEqual(e.connectedList, ['x0', 'x1', 'x2', 'x3', 'x4', 'x5']);
+      const e2 = e.shadowRoot.querySelector('#x3');
+      assert.deepEqual(e2.connectedList, []);
+      document.body.removeChild(e);
+    });
+
+  });
+</script>
+
+</body>
+</html>

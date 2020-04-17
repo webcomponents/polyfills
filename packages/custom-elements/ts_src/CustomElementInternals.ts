@@ -30,7 +30,7 @@ export default class CustomElementInternals {
   }) {
     this.shadyDomFastWalk = options.shadyDomFastWalk;
     this.useDocumentConstructionObserver =
-        options.noDocumentConstructionObserver;
+        !options.noDocumentConstructionObserver;
   }
 
   forEachElement(

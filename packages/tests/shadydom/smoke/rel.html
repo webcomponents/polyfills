@@ -1,0 +1,19 @@
+<!doctype html>
+<html>
+  <head>
+    <script>
+      ShadyDOM = {force: true};
+    </script>
+    <script src="../../node_modules/@webcomponents/shadydom/shadydom.min.js"></script>
+  </head>
+  <body>
+    <script>
+        var logger = function(event) { console.log('clicked!', event) };
+        var el = document.createElement('div');
+        el.attachShadow({mode: 'open'}).innerHTML = '<div>click me</div>';
+        document.body.appendChild(el);
+        el.shadowRoot.addEventListener('click', logger);
+        el.shadowRoot.removeEventListener('click', logger);
+      </script>
+  </body>
+</html>

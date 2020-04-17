@@ -5,7 +5,7 @@
   "author": "The Polymer Authors",
   "license": "BSD-3-Clause",
   "scripts": {
-    "bootstrap": "lerna bootstrap --ci",
+    "bootstrap": "lerna bootstrap --ci --reject-cycles",
     "build": "lerna run build --stream",
     "lint": "lerna run lint --stream",
     "test": "wct",
