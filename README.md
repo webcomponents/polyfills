@@ -100,7 +100,6 @@ Polyfill for Shadow DOM ([MDN](https://developer.mozilla.org/en-US/docs/Web/Web_
 Polyfill for Scoped CSS ([MDN](https://developer.mozilla.org/en-US/docs/Web/Web_Components/Using_shadow_DOM), [Spec](https://drafts.csswg.org/css-scoping))
 
 ### [![Published on npm](https://img.shields.io/npm/v/@webcomponents/html-imports.svg)](https://www.npmjs.com/package/@webcomponents/html-imports) [html-imports](https://github.com/webcomponents/polyfills/tree/master/packages/shadycss) ([Issues](https://github.com/webcomponents/polyfills/issues?q=is%3Aissue+is%3Aopen+label%3A%22Package%3A+shadycss%22))
-
 Polyfill for HTML Imports ([Spec](https://w3c.github.io/webcomponents/spec/imports/))
 
 Note that HTML Imports are
@@ -114,13 +113,13 @@ recommended to install `@webcomponents/html-imports` and load it separately.
 
 ## Roadmap
 
-The following APIs are on the roadmap for 2020.
+The following APIs are on the roadmap for 2020:
 
 - **CSS Shadow Parts**
   ([MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/::part),
   [Spec](https://www.w3.org/TR/css-shadow-parts-1/)). Follow Issue [#252](https://github.com/webcomponents/polyfills/issues/252).
 
-- **Constructable & Adopted Stylesheets** ([Spec](https://wicg.github.io/construct-stylesheets/), [Explainer](https://github.com/WICG/construct-stylesheets/blob/gh-pages/explainer.md), [Article](https://developers.google.com/web/updates/2019/02/constructable-stylesheets")). Follow Issue [#44](https://github.com/webcomponents/polyfills/issues/44).
+- **Constructable & Adopted Stylesheets** ([Spec](https://wicg.github.io/construct-stylesheets/), [Explainer](https://github.com/WICG/construct-stylesheets/blob/gh-pages/explainer.md), [Article](https://developers.google.com/web/updates/2019/02/constructable-stylesheets)). Follow Issue [#44](https://github.com/webcomponents/polyfills/issues/44).
 
 - **FormData event** ([Spec](https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#the-formdataevent-interface), [Explainer](https://docs.google.com/document/d/1JO8puctCSpW-ZYGU8lF-h4FWRIDQNDVexzHoOQ2iQmY/edit#heading=h.veshh4ug726u)). Follow Issue [#172](https://github.com/webcomponents/polyfills/issues/172).
 
