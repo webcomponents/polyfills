@@ -19,7 +19,7 @@ interface ExtendedWindow extends Window {
   };
 }
 
-type Flags = Record<string, string|boolean>;
+type Flags = Record<string, string|boolean|Record<string, boolean>>;
 
 
 // Establish scope.
@@ -63,7 +63,7 @@ if (!flags['noOpts']) {
       log[f] = true;
     });
   }
-  (flags['log'] as unknown as Record<string, boolean>) = log;
+  flags['log'] = log;
 }
 
 // exports
@@ -71,12 +71,12 @@ extendedWindow['WebComponents']['flags'] = flags;
 let forceShady = flags['shadydom'];
 if (forceShady) {
   extendedWindow['ShadyDOM'] = extendedWindow['ShadyDOM'] || {};
-  extendedWindow['ShadyDOM']['force'] = forceShady;
+  extendedWindow['ShadyDOM']['force'] = Boolean(forceShady);
   const noPatch = flags['noPatch'];
-  extendedWindow['ShadyDOM']['noPatch'] = noPatch === 'true' ? true : noPatch;
+  extendedWindow['ShadyDOM']['noPatch'] = Boolean(noPatch === 'true' ? true : noPatch);
 }
 
 let forceCE = flags['register'] || flags['ce'];
 if (forceCE && window['customElements']) {
-  extendedWindow['customElements']['forcePolyfill'] = forceCE;
+  extendedWindow['customElements']['forcePolyfill'] = Boolean(forceCE);
 }
