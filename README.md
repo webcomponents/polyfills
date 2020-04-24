@@ -1,6 +1,6 @@
 # Web Components Polyfills
 
- ![tests](https://github.com/webcomponents/polyfills/workflows/tests/badge.svg?branch=master)
+[![Test Status](https://github.com/webcomponents/polyfills/workflows/tests/badge.svg?branch=master)](https://github.com/webcomponents/polyfills/actions?query=workflow%3Atests+branch%3Amaster+event%3Apush)
 
 ##### [Getting Started](#getting-started) | [Usage](#usage) | [Packages](#packages) | [Roadmap](#roadmap)
 
@@ -97,7 +97,7 @@ Polyfill for Shadow DOM ([MDN](https://developer.mozilla.org/en-US/docs/Web/Web_
 
 ### [![Published on npm](https://img.shields.io/npm/v/@webcomponents/shadycss.svg)](https://www.npmjs.com/package/@webcomponents/shadycss) [shadycss](https://github.com/webcomponents/polyfills/tree/master/packages/shadycss) ([Issues](https://github.com/webcomponents/polyfills/issues?q=is%3Aissue+is%3Aopen+label%3A%22Package%3A+shadycss%22))
 
-Polyfill for Scoped CSS ([MDN](https://developer.mozilla.org/en-US/docs/Web/Web_Components/Using_shadow_DOM), [Spec](https://drafts.csswg.org/css-scoping))
+Polyfill for Scoped CSS ([Spec](https://drafts.csswg.org/css-scoping))
 
 ### [![Published on npm](https://img.shields.io/npm/v/@webcomponents/html-imports.svg)](https://www.npmjs.com/package/@webcomponents/html-imports) [html-imports](https://github.com/webcomponents/polyfills/tree/master/packages/shadycss) ([Issues](https://github.com/webcomponents/polyfills/issues?q=is%3Aissue+is%3Aopen+label%3A%22Package%3A+shadycss%22))
 Polyfill for HTML Imports ([Spec](https://w3c.github.io/webcomponents/spec/imports/))
