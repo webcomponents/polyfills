@@ -89,7 +89,7 @@ Polyfill for Custom Elements ([MDN](https://developer.mozilla.org/en-US/docs/Web
 ### [![Published on npm](https://img.shields.io/npm/v/@webcomponents/template.svg)](https://www.npmjs.com/package/@webcomponents/template) [template](https://github.com/webcomponents/polyfills/tree/master/packages/template) ([Issues](https://github.com/webcomponents/polyfills/issues?q=is%3Aissue+is%3Aopen+label%3A%22Package%3A+template%22))
 
 
-Polyfill for Template Element ([MDN](https://developer.mozilla.org/en-US/docs/Web/API/HTMLTemplateElement), [Spec](https://developer.mozilla.org/en-US/docs/Web/Web_Components/Using_custom_elements))
+Polyfill for Template Element ([MDN](https://developer.mozilla.org/en-US/docs/Web/API/HTMLTemplateElement), [Spec](https://html.spec.whatwg.org/multipage/scripting.html#the-template-element))
 
 ### [![Published on npm](https://img.shields.io/npm/v/@webcomponents/shadydom.svg)](https://www.npmjs.com/package/@webcomponents/shadydom) [shadydom](https://github.com/webcomponents/polyfills/tree/master/packages/shadydom) ([Issues](https://github.com/webcomponents/polyfills/issues?q=is%3Aissue+is%3Aopen+label%3A%22Package%3A+shadydom%22))
 
@@ -99,7 +99,7 @@ Polyfill for Shadow DOM ([MDN](https://developer.mozilla.org/en-US/docs/Web/Web_
 
 Polyfill for Scoped CSS ([Spec](https://drafts.csswg.org/css-scoping))
 
-### [![Published on npm](https://img.shields.io/npm/v/@webcomponents/html-imports.svg)](https://www.npmjs.com/package/@webcomponents/html-imports) [html-imports](https://github.com/webcomponents/polyfills/tree/master/packages/shadycss) ([Issues](https://github.com/webcomponents/polyfills/issues?q=is%3Aissue+is%3Aopen+label%3A%22Package%3A+shadycss%22))
+### [![Published on npm](https://img.shields.io/npm/v/@webcomponents/html-imports.svg)](https://www.npmjs.com/package/@webcomponents/html-imports) [html-imports](https://github.com/webcomponents/polyfills/tree/master/packages/html-imports) ([Issues](https://github.com/webcomponents/polyfills/issues?q=is%3Aissue+is%3Aopen+label%3A%22Package%3A+html-imports%22))
 Polyfill for HTML Imports ([Spec](https://w3c.github.io/webcomponents/spec/imports/))
 
 Note that HTML Imports are
