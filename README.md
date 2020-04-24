@@ -4,10 +4,18 @@
 
 ##### [Getting Started](#getting-started) | [Usage](#usage) | [Packages](#packages) | [Roadmap](#roadmap)
 
-The Web Components polyfills are a suite of JavaScript libraries that allow
-[Web Components](https://developer.mozilla.org/en-US/docs/Web/Web_Components)
-to work in older browsers like IE11, and that bring the very latest new Web
-Components APIs to all browsers.
+The Web Components polyfills are a suite of JavaScript libraries that implement
+[Web Components](https://developer.mozilla.org/en-US/docs/Web/Web_Components) APIs
+for browsers that don't have built-in support.
+
+If you use Custom Elements, Shadow DOM, or the `<template>` element, either
+directly or through a library like
+[LitElement](https://lit-element.polymer-project.org), then you can use these
+polyfills to make your app work in older browsers like IE11.
+
+We're also working on polyfills for cutting edge new APIs for Web Components
+that aren't built into all modern browsers yet, like Shadow Parts and Adopted
+Stylesheets.
 
 ## Getting Started
 
