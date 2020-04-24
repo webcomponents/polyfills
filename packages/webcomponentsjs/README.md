@@ -11,16 +11,16 @@ see the [v1 branch](https://github.com/webcomponents/webcomponentsjs/tree/v1).
 
 A suite of polyfills supporting the [Web Components](http://webcomponents.org) specs:
 
-- **Custom Elements v1**: allows authors to define their own custom tags ([spec](https://w3c.github.io/webcomponents/spec/custom/), [tutorial](https://developers.google.com/web/fundamentals/getting-started/primers/customelements), [polyfill](https://github.com/webcomponents/custom-elements)).
+- **Custom Elements v1**: allows authors to define their own custom tags ([spec](https://w3c.github.io/webcomponents/spec/custom/), [tutorial](https://developers.google.com/web/fundamentals/getting-started/primers/customelements), [polyfill](https://github.com/webcomponents/polyfills/tree/master/packages/custom-elements)).
 - **Shadow DOM v1**: provides encapsulation by hiding DOM subtrees under shadow roots ([spec](https://w3c.github.io/webcomponents/spec/shadow/), [tutorial](https://developers.google.com/web/fundamentals/getting-started/primers/shadowdom),
-[shadydom polyfill](https://github.com/webcomponents/shadydom), [shadycss polyfill](https://github.com/webcomponents/shadycss)).
+[shadydom polyfill](https://github.com/webcomponents/polyfills/tree/master/packages/shadydom), [shadycss polyfill](https://github.com/webcomponents/polyfills/tree/master/packages/shadycss)).
 
 For browsers that need it, there are also some minor polyfills included:
-- [`HTMLTemplateElement`](https://github.com/webcomponents/template)
+- [`HTMLTemplateElement`](https://github.com/webcomponents/polyfills/tree/master/packages/template)
 - [`Promise`](https://github.com/taylorhakes/promise-polyfill)
 - `Event`, `CustomEvent`, `MouseEvent` constructors and `Object.assign`, `Array.from`
 (see [webcomponents-platform](https://github.com/webcomponents/webcomponents-platform))
-- [`URL constructor`](https://github.com/webcomponents/URL)
+- [`URL constructor`](https://github.com/webcomponents/polyfills/tree/master/packages/url)
 
 ## How to use
 ### Install polyfills
