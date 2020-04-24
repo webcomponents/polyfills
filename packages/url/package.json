@@ -4,7 +4,7 @@
   "main": "url.js",
   "repository": "github:webcomponents/polyfills",
   "bugs": "https://github.com/webcomponents/polyfills/issues",
-  "homepage": "https://github.com/webcomponents/polyfills/packages/url#readme",
+  "homepage": "https://github.com/webcomponents/polyfills/tree/master/packages/url#readme",
   "license": "SAX-PD",
   "description": "URL parser in JavaScript",
   "scripts": {
