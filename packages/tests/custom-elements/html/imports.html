@@ -1,0 +1,111 @@
+<!doctype html>
+<!--
+    @license
+    Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
+    This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+    The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+    The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+    Code distributed by Google as part of the polymer project is also
+    subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<html>
+  <head>
+    <title>Custom Elements: imports integration</title>
+    <script>
+      (window.customElements = window.customElements || {}).forcePolyfill = true;
+    </script>
+    <script src="../../node_modules/@webcomponents/webcomponents-platform/webcomponents-platform.js"></script>
+    <script src="../../node_modules/es6-promise/dist/es6-promise.auto.min.js"></script>
+    <script src="../../node_modules/@webcomponents/html-imports/html-imports.min.js"></script>
+    <script src="../../node_modules/@webcomponents/custom-elements/custom-elements.min.js"></script>
+    <script>
+      window.WCT = {
+        waitFor: function(cb) {
+          HTMLImports.whenReady(cb);
+        },
+      };
+    </script>
+    <script src="../../node_modules/wct-browser-legacy/browser.js"></script>
+
+    <script>
+      window.elementsCreated = 0;
+      window.connectedCount = 0;
+    </script>
+
+    <link rel="import" href="sub-import.html" id="sub-import">
+    <link rel="import" href="imported-doc.html" id="import">
+    <link rel="not-import" href="incorrectly-imported-doc.html" id="not-import">
+  </head>
+  <body>
+    <x-foo></x-foo>
+
+    <script type="module">
+      import {safariGCBugWorkaround} from '../safari-gc-bug-workaround.js';
+      suiteSetup(() => safariGCBugWorkaround());
+
+      suite('HTML Imports Integration', function() {
+        suiteSetup(function() {
+          // This element is used in the imports
+          class XFoo extends HTMLElement {
+            constructor() {
+              super();
+              elementsCreated++;
+            }
+
+            connectedCallback() {
+              connectedCount++;
+            }
+          }
+          customElements.define('x-foo', XFoo);
+        });
+
+        test('CustomElements upgrade', function() {
+          chai.assert.equal(elementsCreated, 2);
+        });
+
+        test('CustomElements do have connectedCallback called', function() {
+          // Elements with any document as their root node are considered
+          // connected. This includes elements inside imported and script-created
+          // documents.
+          chai.assert.equal(connectedCount, 2);
+        });
+
+        test('CustomElements only attempt to upgrade <link rel=import>', function() {
+          var nonImportLink = document.querySelector('#not-import');
+          // The above test, which checks that only two XFoos were connected,
+          // should be sufficient to test that link elements without
+          // `rel='import'` are not upgraded. If the incorrect link were
+          // imported / upgraded, there would be a third XFoo created and
+          // connected.
+          assert(!nonImportLink.__CE_importDocument);
+        });
+
+        test('CustomElements instance can depend on custom element instance in async loaded import', function(done) {
+          let dependencySatisfied = false;
+
+          customElements.define('x-dependency', class extends HTMLElement {
+            constructor() {
+              super();
+              dependencySatisfied = true;
+            }
+          });
+
+          var el = document.createElement('x-dependent');
+          document.body.appendChild(el);
+
+          var l = document.createElement('link');
+          l.rel = "import";
+          l.href = "async-import.html";
+
+          customElements.whenDefined('x-dependent').then(function() {
+            chai.assert.isTrue(dependencySatisfied, 'element instance cannot depend on element instance in HTMLImport');
+            document.body.removeChild(el);
+            done();
+          });
+
+          document.head.appendChild(l);
+        });
+      });
+    </script>
+  </body>
+</html>

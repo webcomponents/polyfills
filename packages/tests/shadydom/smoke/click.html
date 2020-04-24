@@ -1,0 +1,62 @@
+<!doctype html>
+<html>
+  <head>
+    <script src="../../node_modules/@webcomponents/webcomponents-platform/webcomponents-platform.js"></script>
+    <script src="../../node_modules/@webcomponents/template/template.js"></script>
+    <script>
+      ShadyDOM = {force: true};
+      if (window.customElements) {
+        customElements.forcePolyfill = true;
+      }
+    </script>
+    <script src="../../node_modules/@webcomponents/shadydom/shadydom.min.js"></script>
+    <script src="../../node_modules/@webcomponents/custom-elements/custom-elements.min.js"></script>
+    <script src="../../node_modules/@webcomponents/shadycss/scoping-shim.min.js"></script>
+  </head>
+  <body>
+    <script>
+      function log(str) {
+        output.textContent += str + '\n';
+      }
+    </script>
+    <template id="x-click">
+      <style>
+        :host{
+          display: inline-block;
+          border: 10px solid black;
+        }
+        #child{
+          height: 50px; width: 50px; background: blue;
+        }
+      </style>
+      <div id="child"></div>
+    </template>
+    <script>
+      var template = document.querySelector('template#x-click');
+      ShadyCSS.prepareTemplate(template, 'x-click');
+      class XClick extends HTMLElement {
+        constructor() {
+          super();
+          this.attachShadow({mode: 'open'});
+          this.shadowRoot.appendChild(template.content.cloneNode(true));
+        }
+        connectedCallback(){
+          ShadyCSS.styleElement(this);
+        }
+      }
+      customElements.define('x-click', XClick);
+    </script>
+    <h3>addEventListener()</h3>
+    <x-click id="ael"></x-click>
+
+    <script>
+    ael.addEventListener('click', function() { log('addEventListener') });
+    </script>
+
+    <h3>onclick=</h3>
+    <x-click onclick="log('onclick')"></x-click>
+    <code>
+      <pre id="output"></pre>
+    </code>
+  </body>
+</html>

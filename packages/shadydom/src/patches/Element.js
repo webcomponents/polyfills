@@ -12,6 +12,7 @@ import * as utils from '../utils.js';
 import {scopeClassAttribute} from '../style-scoping.js';
 import {shadyDataForNode} from '../shady-data.js';
 import {attachShadow, ownerShadyRootForNode} from '../attach-shadow.js';
+import {eventPropertyNamesForElement, wrappedDescriptorForEventProperty} from '../patch-events.js';
 
 const doc = window.document;
 
@@ -122,6 +123,12 @@ export const ElementPatches = utils.getOwnPropertyDescriptors({
 
 });
 
+if (!utils.settings.preferPerformance) {
+  eventPropertyNamesForElement.forEach(property => {
+    ElementPatches[property] = wrappedDescriptorForEventProperty(property);
+  });
+}
+
 export const ElementShadowPatches = utils.getOwnPropertyDescriptors({
   /**
    * @this {Element}
@@ -149,4 +156,4 @@ export const ElementShadowPatches = utils.getOwnPropertyDescriptors({
   },
 });
 
-Object.assign(ElementPatches, ElementShadowPatches);
+utils.assign(ElementPatches, ElementShadowPatches);

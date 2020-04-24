@@ -1,0 +1,87 @@
+<!doctype html>
+<!--
+@license
+Copyright (c) 2019 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<script>
+WCT = {waitFor: function (cb) {HTMLImports.whenReady(cb)}}
+</script>
+<script src="./test-flags.js"></script>
+<script src="../node_modules/wct-browser-legacy/browser.js"></script>
+<script src="../node_modules/@webcomponents/webcomponents-platform/webcomponents-platform.js"></script>
+<script src="../node_modules/es6-promise/dist/es6-promise.auto.min.js"></script>
+<script src="../node_modules/@webcomponents/template/template.js"></script>
+<script src="../node_modules/@webcomponents/html-imports/html-imports.min.js"></script>
+<script src="../node_modules/@webcomponents/shadydom/shadydom.min.js"></script>
+<script src="../node_modules/@webcomponents/custom-elements/custom-elements.min.js"></script>
+<script src="../node_modules/@webcomponents/shadycss/scoping-shim.min.js"></script>
+<script src="../node_modules/@webcomponents/shadycss/apply-shim.min.js"></script>
+<script src="../node_modules/@webcomponents/shadycss/custom-style-interface.min.js"></script>
+<script src="module/generated/make-element.js"></script>
+<script src="module/generated/custom-style-element.js"></script>
+
+<custom-style id="first">
+  <style>
+    html {
+      --shared: rgb(255, 0, 0);
+    }
+  </style>
+</custom-style>
+
+<template id="x-foo">
+  <style>
+    :host {
+      background-color: var(--shared);
+    }
+  </style>
+</template>
+
+<script>
+  suite('Custom Style Ordering', function() {
+    function assertComputed(node, expected, property = 'border-top-width', msg = undefined) {
+      const actual = getComputedStyle(node).getPropertyValue(property).trim();
+      assert.equal(expected, actual, msg);
+    }
+    let tmpl;
+    suiteSetup(function() {
+      makeElement('x-foo');
+      tmpl = document.createElement('template');
+      tmpl.innerHTML = `
+      <custom-style>
+        <style>
+          html {
+            --shared: rgb(0, 0, 255);
+          }
+        </style>
+      </custom-style>`;
+    })
+    test('custom styles apply properties in document order', function() {
+      const el = document.createElement('x-foo');
+      document.body.appendChild(el);
+      if (window.ShadyDOM) {
+        ShadyDOM.flush();
+      }
+      assertComputed(el, 'rgb(255, 0, 0)', 'background-color');
+      // append style before custom-style in body
+      const first = document.querySelector('custom-style#first');
+      first.parentNode.insertBefore(tmpl.content.cloneNode(true), first);
+      // force style updates
+      if (window.ShadyDOM) {
+        ShadyDOM.flush();
+      }
+      ShadyCSS.styleDocument();
+      assertComputed(el, 'rgb(255, 0, 0)', 'background-color', 'late custom style should be processed in document order');
+    });
+
+    test('empty custom-style is processed correctly', function() {
+      const empty = document.createElement('custom-style');
+      document.head.appendChild(empty);
+      ShadyCSS.flushCustomStyles();
+    });
+  });
+</script>

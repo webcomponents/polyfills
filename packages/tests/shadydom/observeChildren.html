@@ -1,0 +1,174 @@
+<!doctype html>
+<!--
+@license
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="wct-browser-config.js"></script>
+  <script src="../node_modules/@webcomponents/webcomponents-platform/webcomponents-platform.js"></script>
+  <script>
+    ShadyDOM = {force: true, noPatch: window.location.search.match('noPatch=on-demand') ? 'on-demand' : !!window.location.search.match('noPatch')};
+  </script>
+  <script src="../node_modules/@webcomponents/shadydom/shadydom.min.js"></script>
+
+  <script src="../node_modules/wct-browser-legacy/browser.js"></script>
+</head>
+<body>
+
+<script>
+
+  'use strict';
+
+
+  suite('observeChildren', function() {
+
+  function makeShadowRootWithSlot(element) {
+    ShadyDOM.wrapIfNeeded(element).attachShadow({mode: 'open'});
+    ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(element).shadowRoot).appendChild(document.createElement('slot'));
+  }
+
+  test('observeChildren on element without shadowRoot', function() {
+    var d = document.createElement('div');
+    var recorded = [];
+    function handler(info) {
+      recorded = info;
+    }
+    var observer = ShadyDOM.observeChildren(d, handler);
+    var child1 = document.createElement('div');
+    ShadyDOM.wrap(d).appendChild(child1);
+    handler(observer.takeRecords());
+    assert.equal(recorded[0].addedNodes.length, 1);
+    assert.equal(recorded[0].addedNodes[0], child1);
+    recorded = [];
+    var child2 = document.createElement('div');
+    ShadyDOM.wrap(d).appendChild(child2);
+    handler(observer.takeRecords());
+    assert.equal(recorded[0].addedNodes.length, 1);
+    assert.equal(recorded[0].addedNodes[0], child2);
+    recorded = [];
+    ShadyDOM.wrap(d).removeChild(child1);
+    ShadyDOM.wrap(d).removeChild(child2);
+    handler(observer.takeRecords());
+    assert.equal(recorded[0].removedNodes.length, 2);
+    assert.deepEqual(recorded[0].removedNodes, [child1, child2]);
+    recorded = [];
+    ShadyDOM.unobserveChildren(observer);
+    ShadyDOM.wrap(d).appendChild(child1);
+    handler(observer.takeRecords());
+    assert.deepEqual(recorded, []);
+  });
+
+  test('observeChildren via takeRecords', function() {
+    var d = document.createElement('div');
+    makeShadowRootWithSlot(d);
+    var recorded = [];
+    function handler(info) {
+      recorded = info;
+    }
+    var observer = ShadyDOM.observeChildren(d, handler);
+    var child1 = document.createElement('div');
+    ShadyDOM.wrapIfNeeded(d).appendChild(child1);
+    handler(observer.takeRecords());
+    assert.equal(recorded[0].addedNodes.length, 1);
+    assert.equal(recorded[0].addedNodes[0], child1);
+    recorded = [];
+    var child2 = document.createElement('div');
+    ShadyDOM.wrapIfNeeded(d).appendChild(child2);
+    handler(observer.takeRecords());
+    assert.equal(recorded[0].addedNodes.length, 1);
+    assert.equal(recorded[0].addedNodes[0], child2);
+    recorded = [];
+    ShadyDOM.wrapIfNeeded(d).removeChild(child1);
+    ShadyDOM.wrapIfNeeded(d).removeChild(child2);
+    handler(observer.takeRecords());
+    assert.equal(recorded[0].removedNodes.length, 2);
+    assert.deepEqual(recorded[0].removedNodes, [child1, child2]);
+    recorded = [];
+    ShadyDOM.unobserveChildren(observer);
+    ShadyDOM.wrapIfNeeded(d).appendChild(child1);
+    handler(observer.takeRecords());
+    assert.deepEqual(recorded, []);
+  });
+
+  test('observeChildren via takeRecords aborts notification', function() {
+    var d = document.createElement('div');
+    makeShadowRootWithSlot(d);
+    var recorded = null;
+    var observer = ShadyDOM.observeChildren(d, function(info) {
+      recorded = info;
+    });
+    var child1 = document.createElement('div');
+    ShadyDOM.wrapIfNeeded(d).appendChild(child1);
+    observer.takeRecords();
+    assert.equal(recorded, null);
+  });
+
+  test('observeChildren async', function(done) {
+    var d = document.createElement('div');
+    makeShadowRootWithSlot(d);
+    var recorded = null;
+    var observer = ShadyDOM.observeChildren(d, function(info) {
+      recorded = info;
+    });
+    var child1 = document.createElement('div');
+    ShadyDOM.wrapIfNeeded(d).appendChild(child1);
+    setTimeout(function() {
+      assert.equal(recorded[0].addedNodes.length, 1);
+      assert.equal(recorded[0].addedNodes[0], child1);
+      recorded = null;
+      var child2 = document.createElement('div');
+      ShadyDOM.wrapIfNeeded(d).appendChild(child2);
+      setTimeout(function() {
+        assert.equal(recorded[0].addedNodes.length, 1);
+        assert.equal(recorded[0].addedNodes[0], child2);
+        recorded = null;
+        ShadyDOM.wrapIfNeeded(d).removeChild(child1);
+        ShadyDOM.wrapIfNeeded(d).removeChild(child2);
+        setTimeout(function() {
+          assert.equal(recorded[0].removedNodes.length, 2);
+          assert.deepEqual(recorded[0].removedNodes, [child1, child2]);
+          recorded = null;
+          ShadyDOM.unobserveChildren(observer);
+          ShadyDOM.wrapIfNeeded(d).appendChild(child1);
+          setTimeout(function() {
+            assert.equal(recorded, null);
+            done();
+          });
+        });
+      });
+    });
+  });
+
+  test('appending a DocumentFragment causes the children of the fragment to ' +
+      'appear in addedNodes, not the fragment itself', function(done) {
+    var fragment = document.createDocumentFragment();
+    var fragmentChild0 = document.createElement('div');
+    fragment.appendChild(fragmentChild0);
+    var fragmentChild1 = document.createElement('div');
+    fragment.appendChild(fragmentChild1);
+    var target = document.createElement('div');
+    var observer = ShadyDOM.observeChildren(target, function(info) {
+      assert.equal(info.length, 1);
+      assert.isArray(info[0].addedNodes);
+      assert.equal(info[0].addedNodes.length, 2);
+      assert.equal(info[0].addedNodes[0], fragmentChild0);
+      assert.equal(info[0].addedNodes[1], fragmentChild1);
+      assert.isArray(info[0].removedNodes);
+      assert.equal(info[0].removedNodes.length, 0);
+      done();
+    });
+    ShadyDOM.wrap(target).appendChild(fragment);
+  });
+});
+
+</script>
+
+</body>
+</html>
