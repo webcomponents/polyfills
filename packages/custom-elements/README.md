@@ -4,12 +4,31 @@ A polyfill for the [custom elements](https://html.spec.whatwg.org/multipage/scri
 v1 spec.
 
 ## Using
+#### Standalone script tag
+Include a script tag at the beginning of your page, *before* any code that
+manipulates the DOM. The custom-elements.min.js can be loaded from a CDN:
+```html
+<script src="https://unpkg.com/@webcomponents/custom-elements"></script>
+```
 
-Include `custom-elements.min.js` at the beginning of your page, *before* any code that
-manipulates the DOM:
+Or you can build it yourself and then load it:
 ```html
 <script src="custom-elements.min.js"></script>
 ```
+
+#### Via npm:
+If you're using npm, webpack, or similar tools, this package can be installed and imported:
+```bash
+npm install @webcomponents/custom-elements
+```
+
+```js
+// Do this import before any code that manipulates the DOM.
+import '@webcomponents/custom-elements'
+```
+
+#### Via the webcomponents polyfill
+Alternatively, you can use this polyfill via the [webcomponentjs polyfills](https://github.com/webcomponents/webcomponentsjs).
 
 ## Developing
 
