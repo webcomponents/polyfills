@@ -68,15 +68,15 @@ if (!flags['noOpts']) {
 
 // exports
 extendedWindow['WebComponents']['flags'] = flags;
-let forceShady = flags['shadydom'];
+let forceShady = flags['shadydom'] as boolean|string;
 if (forceShady) {
   extendedWindow['ShadyDOM'] = extendedWindow['ShadyDOM'] || {};
-  extendedWindow['ShadyDOM']['force'] = Boolean(forceShady);
-  const noPatch = flags['noPatch'];
-  extendedWindow['ShadyDOM']['noPatch'] = Boolean(noPatch === 'true' ? true : noPatch);
+  extendedWindow['ShadyDOM']['force'] = forceShady;
+  const noPatch = flags['noPatch'] as boolean|string;
+  extendedWindow['ShadyDOM']['noPatch'] = noPatch === 'true' ? true : noPatch;
 }
 
-let forceCE = flags['register'] || flags['ce'];
+let forceCE = (flags['register'] || flags['ce']) as boolean|string;
 if (forceCE && window['customElements']) {
-  extendedWindow['customElements']['forcePolyfill'] = Boolean(forceCE);
+  extendedWindow['customElements']['forcePolyfill'] = forceCE;
 }
