@@ -72,10 +72,10 @@ becomes:
 my-element {
   display: block;
 }
-#container.my-element > * {
+my-element#container > * {
   color: gray;
 }
-#foo.my-element {
+my-element#foo {
   color: black;
 }
 </style>

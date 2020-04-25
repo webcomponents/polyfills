@@ -1,6 +1,6 @@
 {
   "name": "@webcomponents/shady-css-scoped-element",
-  "version": "0.0.4",
+  "version": "0.0.6",
   "private": true,
   "description": "ShadyCSS scoped element",
   "main": "shady-css-scoped.min.js",
@@ -20,20 +20,12 @@
   "scripts": {
     "build": "gulp",
     "debug": "cp src/shady-css-scoped-element.js shady-css-scoped-element.min.js",
-    "test": "wct",
     "prepack": "npm run build"
   },
   "files": [
     "shady-css-scoped-element.min.js*",
     "src/"
   ],
-  "devDependencies": {
-    "@webcomponents/shadycss": "^1.9.4",
-    "@webcomponents/template": "^1.4.0",
-    "@webcomponents/webcomponentsjs": "^2.4.1",
-    "es6-promise": "4.2.4",
-    "wct-browser-legacy": "^1.0.2"
-  },
   "publishConfig": {
     "access": "public"
   }

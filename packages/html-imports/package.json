@@ -1,6 +1,6 @@
 {
   "name": "@webcomponents/html-imports",
-  "version": "1.2.2",
+  "version": "1.2.4",
   "description": "HTML Imports polyfill",
   "main": "html-imports.min.js",
   "repository": "github:webcomponents/polyfills",
@@ -19,7 +19,6 @@
   "scripts": {
     "build": "gulp",
     "debug": "cp src/html-imports.js html-imports.min.js",
-    "test": "wct",
     "prepack": "npm run build"
   },
   "files": [
@@ -27,10 +26,6 @@
     "src/",
     "externs/"
   ],
-  "devDependencies": {
-    "@webcomponents/template": "^1.4.1",
-    "wct-browser-legacy": "^1.0.2"
-  },
   "publishConfig": {
     "access": "public"
   }

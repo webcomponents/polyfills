@@ -69,7 +69,7 @@ function clean(cssText) {
 // super simple {...} lexer that returns a node tree
 /**
  * @param {string} text
- * @return {StyleNode}
+ * @return {!StyleNode}
  */
 function lex(text) {
   let root = new StyleNode();
@@ -100,7 +100,7 @@ function lex(text) {
 /**
  * @param {StyleNode} node
  * @param {string} text
- * @return {StyleNode}
+ * @return {!StyleNode}
  */
 function parseCss(node, text) {
   let t = text.substring(node['start'], node['end'] - 1);
