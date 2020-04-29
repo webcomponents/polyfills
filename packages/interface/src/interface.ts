@@ -1,0 +1,165 @@
+/**
+ * @license
+ * Copyright (c) 2020 The Polymer Project Authors. All rights reserved.
+ * This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+ * The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+ * The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+ * Code distributed by Google as part of the polymer project is also
+ * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+ */
+
+interface PolyfillsWindow extends Window {
+  ShadyCSS?: ShadyCSS;
+}
+
+interface ShadyCSS {
+  nativeShadow: boolean;
+  nativeCss: boolean;
+
+  prepareTemplate(template: HTMLTemplateElement, elementName: string): void;
+  styleElement(element: HTMLElement, properties?: CustomPropertyValues): void;
+  styleSubtree(element: HTMLElement, properties?: CustomPropertyValues): void;
+  styleDocument(properties: CustomPropertyValues): void;
+
+  CustomStyleInterface?: CustomStyleInterface;
+}
+
+interface CustomStyleInterface {
+  addCustomStyle(style: HTMLStyleElement): void;
+}
+
+type CustomPropertyValues = { [property: string]: string };
+
+const polyfillsWindow = window as PolyfillsWindow;
+
+function setProperties(
+  element: HTMLElement,
+  properties: CustomPropertyValues
+): void {
+  const style = element.style;
+  for (const [propertyName, value] of Object.entries(properties)) {
+    style.setProperty(propertyName, value);
+  }
+}
+
+/**
+ * True if the ShadyCSS scoped style polyfill is loaded and active.
+ *
+ * Note that the other functions in this module are safe to call even if the
+ * polyfills are not loaded.
+ */
+export function scopedStylesArePolyfilled(): boolean {
+  return (
+    polyfillsWindow.ShadyCSS !== undefined &&
+    polyfillsWindow.ShadyCSS.nativeShadow === false
+  );
+}
+
+/**
+ * True if the ShadyCSS custom properties polyfill is loaded and active.
+ *
+ * Note that the other functions in this module are safe to call even if the
+ * polyfills are not loaded.
+ */
+export function customPropertiesArePolyfilled(): boolean {
+  return (
+    polyfillsWindow.ShadyCSS !== undefined &&
+    polyfillsWindow.ShadyCSS.nativeCss === false
+  );
+}
+
+/**
+ * Prepare the given custom element template for use with the ShadyCSS style
+ * scoping polyfill. You only need to do this once per template.
+ *
+ * If ShadyCSS is not active, then this function does nothing.
+ *
+ * If ShadyCSS is active, then after styleElement is called on the first
+ * instance of this element, <style> tags within this template will be moved to
+ * the <head> and re-written to use globally scoped rules that emulate scoped
+ * behavior.
+ *
+ * Note that LitElement and Polymer Library users do not typically need to call
+ * this function, because it is called automatically.
+ */
+export function prepareTemplate(
+  template: HTMLTemplateElement,
+  customElementName: string
+): void {
+  if (scopedStylesArePolyfilled()) {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    polyfillsWindow.ShadyCSS!.prepareTemplate(template, customElementName);
+  }
+}
+
+/**
+ * Activate scoped styles for the given element instance. This function should
+ * typically be called inside connectedCallback. The template of this element
+ * class must already have been registered with prepareTemplate.
+ *
+ * If ShadyCSS is not active, then this function does nothing.
+ *
+ * Note that LitElement and Polymer Library users do not typically need to call
+ * this function, because it is called automatically.
+ */
+export function styleElement(element: HTMLElement): void {
+  if (scopedStylesArePolyfilled()) {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    polyfillsWindow.ShadyCSS!.styleElement(element);
+  }
+}
+
+/**
+ * Propagate CSS custom properties on this element to all descendant shadow
+ * roots, and optionally set new ones.
+ *
+ * Uses ShadyCSS custom property emulation if the polyfill is active, otherwise
+ * calls native style.setProperty.
+ */
+export function styleSubtree(
+  element: HTMLElement,
+  properties?: CustomPropertyValues
+): void {
+  if (customPropertiesArePolyfilled()) {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    polyfillsWindow.ShadyCSS!.styleSubtree(element, properties);
+  } else if (properties != null) {
+    setProperties(element, properties);
+  }
+}
+
+/**
+ * Set CSS custom properties on the document and propagate to all shadow roots.
+ *
+ * Uses ShadyCSS custom property emulation if that polyfill is active, otherwise
+ * uses native style.setProperty.
+ */
+export function styleDocument(properties: CustomPropertyValues): void {
+  if (customPropertiesArePolyfilled()) {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    polyfillsWindow.ShadyCSS!.styleDocument(properties);
+  } else if (properties != null) {
+    setProperties(document.body, properties);
+  }
+}
+
+/**
+ * Propagate custom properties from the given `document` level `<style>` tag.
+ * Changes occur asynchronously as a microtask.
+ *
+ * If ShadyCSS is not active, or if the `custom-style-interface` library has not
+ * been loaded, then this function does nothing.
+ *
+ * Note that the `custom-style-interface` library is not automatically loaded by
+ * the `loader` or `bundle` scripts. It must be loaded separately.
+ */
+export function addCustomStyle(style: HTMLStyleElement): void {
+  if (
+    customPropertiesArePolyfilled() &&
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    polyfillsWindow.ShadyCSS!.CustomStyleInterface !== undefined
+  ) {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    polyfillsWindow.ShadyCSS!.CustomStyleInterface.addCustomStyle(style);
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "name": "@webcomponents/interface",
+  "version": "1.0.0",
+  "description": "Importable interface for Web Components polyfill",
+  "license": "BSD-3-Clause",
+  "author": "The Polymer Project Authors",
+  "publishConfig": {
+    "access": "public"
+  },
+  "homepage": "https://github.com/webcomponents/polyfills/tree/master/packages/interface",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/webcomponents/polyfills.git",
+    "directory": "packages/interface"
+  },
+  "main": "dist/interface.js",
+  "module": "dist/interface.js",
+  "scripts": {
+    "build": "npm run clean && tsc",
+    "watch": "npm run clean && tsc --watch",
+    "clean": "rimraf 'dist/*' 'dist/.*'",
+    "lint": "eslint 'src/**/*.ts'",
+    "format": "prettier --write 'src/**/*.ts'",
+    "size": "npm run build && rollup -c",
+    "prepack": "npm run build"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^2.30.0",
+    "@typescript-eslint/parser": "^2.30.0",
+    "eslint": "^6.8.0",
+    "prettier": "^2.0.5",
+    "rimraf": "^3.0.2",
+    "rollup": "^2.7.3",
+    "rollup-plugin-filesize": "^7.0.0",
+    "rollup-plugin-terser": "^5.3.0",
+    "typescript": "^3.8.3"
+  }
+}
