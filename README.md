@@ -36,7 +36,7 @@ Load the polyfills loader before any of your application code:
     <script src="./node_modules/@webcomponents/webcomponentsjs/custom-elements-es5-adapter.js"></script>
 
     <!-- Add support for Web Components to older browsers. -->
-    <script src="./node_modules/@webcomponents/webcomponentsjs/loader.js"></script>
+    <script src="./node_modules/@webcomponents/webcomponentsjs/webcomponents-loader.js"></script>
 
     <!-- Load your application code anytime after loader.js -->
   </head>
