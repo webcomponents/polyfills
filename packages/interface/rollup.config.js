@@ -1,10 +1,10 @@
-import filesize from 'rollup-plugin-filesize';
-import {terser} from 'rollup-plugin-terser';
+import filesize from "rollup-plugin-filesize";
+import { terser } from "rollup-plugin-terser";
 
 export default {
   // A bundle just for testing compressed and minified file size. We don't
   // actually distribute this minified file.
-  input: 'dist/interface.js',
+  input: "lib/interface.js",
   output: null,
   plugins: [
     terser({
@@ -12,6 +12,6 @@ export default {
     }),
     filesize({
       showBrotliSize: true,
-    })
-  ]
-}
+    }),
+  ],
+};

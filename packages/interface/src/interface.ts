@@ -30,7 +30,8 @@ interface CustomStyleInterface {
 
 type CustomPropertyValues = { [property: string]: string };
 
-const polyfillsWindow = window as PolyfillsWindow;
+// eslint-disable-next-line no-var
+declare var window: PolyfillsWindow;
 
 function setProperties(
   element: HTMLElement,
@@ -50,8 +51,7 @@ function setProperties(
  */
 export function scopedStylesArePolyfilled(): boolean {
   return (
-    polyfillsWindow.ShadyCSS !== undefined &&
-    polyfillsWindow.ShadyCSS.nativeShadow === false
+    window.ShadyCSS !== undefined && window.ShadyCSS.nativeShadow === false
   );
 }
 
@@ -62,10 +62,7 @@ export function scopedStylesArePolyfilled(): boolean {
  * polyfills are not loaded.
  */
 export function customPropertiesArePolyfilled(): boolean {
-  return (
-    polyfillsWindow.ShadyCSS !== undefined &&
-    polyfillsWindow.ShadyCSS.nativeCss === false
-  );
+  return window.ShadyCSS !== undefined && window.ShadyCSS.nativeCss === false;
 }
 
 /**
@@ -88,7 +85,7 @@ export function prepareTemplate(
 ): void {
   if (scopedStylesArePolyfilled()) {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    polyfillsWindow.ShadyCSS!.prepareTemplate(template, customElementName);
+    window.ShadyCSS!.prepareTemplate(template, customElementName);
   }
 }
 
@@ -105,7 +102,7 @@ export function prepareTemplate(
 export function styleElement(element: HTMLElement): void {
   if (scopedStylesArePolyfilled()) {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    polyfillsWindow.ShadyCSS!.styleElement(element);
+    window.ShadyCSS!.styleElement(element);
   }
 }
 
@@ -122,7 +119,7 @@ export function styleSubtree(
 ): void {
   if (customPropertiesArePolyfilled()) {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    polyfillsWindow.ShadyCSS!.styleSubtree(element, properties);
+    window.ShadyCSS!.styleSubtree(element, properties);
   } else if (properties != null) {
     setProperties(element, properties);
   }
@@ -137,7 +134,7 @@ export function styleSubtree(
 export function styleDocument(properties: CustomPropertyValues): void {
   if (customPropertiesArePolyfilled()) {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    polyfillsWindow.ShadyCSS!.styleDocument(properties);
+    window.ShadyCSS!.styleDocument(properties);
   } else if (properties != null) {
     setProperties(document.body, properties);
   }
@@ -157,9 +154,9 @@ export function addCustomStyle(style: HTMLStyleElement): void {
   if (
     customPropertiesArePolyfilled() &&
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    polyfillsWindow.ShadyCSS!.CustomStyleInterface !== undefined
+    window.ShadyCSS!.CustomStyleInterface !== undefined
   ) {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    polyfillsWindow.ShadyCSS!.CustomStyleInterface.addCustomStyle(style);
+    window.ShadyCSS!.CustomStyleInterface.addCustomStyle(style);
   }
 }

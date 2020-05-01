@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <!--
 @license
 Copyright (c) 2020 The Polymer Project Authors. All rights reserved.
@@ -9,33 +9,32 @@ Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 -->
 <html>
-<head>
-  <meta charset="utf-8">
-  <script>
-    if (window.customElements) window.customElements.forcePolyfill = true;
-    ShadyDOM = { force: true };
-    ShadyCSS = { shimcssproperties: true};
-  </script>
-  <script src="../node_modules/wct-browser-legacy/browser.js"></script>
-  <script src="../node_modules/@webcomponents/webcomponentsjs/webcomponents-bundle.js"></script>
-  <title>Web Components Interface</title>
-</head>
-<body>
-  
-<script type="module">
-import {
-  scopedStylesArePolyfilled,
-  customPropertiesArePolyfilled,
-  prepareTemplate,
-  styleElement,
-  styleSubtree,
-  styleDocument,
-  addCustomStyle
-} from '../node_modules/@webcomponents/interface/dist/interface.js';
-import '../node_modules/@webcomponents/shadycss/entrypoints/custom-style-interface.js';
+  <head>
+    <meta charset="utf-8" />
+    <script>
+      if (window.customElements) window.customElements.forcePolyfill = true;
+      ShadyDOM = { force: true };
+      ShadyCSS = { shimcssproperties: true };
+    </script>
+    <script src="../node_modules/wct-browser-legacy/browser.js"></script>
+    <script src="../node_modules/@webcomponents/webcomponentsjs/webcomponents-bundle.js"></script>
+    <title>Web Components Interface</title>
+  </head>
+  <body>
+    <script type="module">
+      import {
+        scopedStylesArePolyfilled,
+        customPropertiesArePolyfilled,
+        prepareTemplate,
+        styleElement,
+        styleSubtree,
+        styleDocument,
+        addCustomStyle,
+      } from "../node_modules/@webcomponents/interface/lib/interface.js";
+      import "../node_modules/@webcomponents/shadycss/entrypoints/custom-style-interface.js";
 
-const template = document.createElement('template');
-template.innerHTML = `
+      const template = document.createElement("template");
+      template.innerHTML = `
 <style>
   :host {
     --custom-color: red;
@@ -48,90 +47,96 @@ template.innerHTML = `
 Hello!
 `;
 
-prepareTemplate(template, 'test-element');
+      prepareTemplate(template, "test-element");
 
-class TestElement extends HTMLElement {
-  constructor() {
-    super();
-    this.attachShadow({ mode: "open" });
-  }
+      class TestElement extends HTMLElement {
+        constructor() {
+          super();
+          this.attachShadow({ mode: "open" });
+        }
 
-  connectedCallback() {
-    styleElement(this);
-    this.shadowRoot.appendChild(template.content.cloneNode(true));
-  }
-}
+        connectedCallback() {
+          styleElement(this);
+          this.shadowRoot.appendChild(template.content.cloneNode(true));
+        }
+      }
 
-customElements.define('test-element', TestElement);
+      customElements.define("test-element", TestElement);
 
-const black = 'rgb(0, 0, 0)';
-const red = 'rgb(255, 0, 0)';
-const green = 'rgb(0, 128, 0)';
-const blue = 'rgb(0, 0, 255)';
-const yellow = 'rgb(255, 255, 0)';
+      const black = "rgb(0, 0, 0)";
+      const red = "rgb(255, 0, 0)";
+      const green = "rgb(0, 128, 0)";
+      const blue = "rgb(0, 0, 255)";
+      const yellow = "rgb(255, 255, 0)";
 
-suite('interface', function() {
-  let el;
-  
-  setup(() => {
-    el = document.createElement('test-element');
-    document.body.appendChild(el);
-  });
+      suite("interface", function () {
+        let el;
 
-  teardown(() => {
-    document.body.removeChild(el);
-  });
+        setup(() => {
+          el = document.createElement("test-element");
+          document.body.appendChild(el);
+        });
 
-  test('scopedStylesArePolyfilled', () => {
-    assert.equal(scopedStylesArePolyfilled(), !!window.ShadyCSS && !window.ShadyCSS.nativeShadow);
-  });
-  
-  test('customPropertiesArePolyfilled', () => {
-    assert.equal(customPropertiesArePolyfilled(), !!window.ShadyCSS && !window.ShadyCSS.nativeCss);
-  });
-  
-  test('prepareTemplate and styleElement', () => {
-    assert.equal(window.getComputedStyle(el).color, red);
-  });
-  
-  test('styleSubtree', () => {
-    assert.equal(window.getComputedStyle(el).color, red);
-    styleSubtree(el, {'--custom-color': 'green'});
-    assert.equal(window.getComputedStyle(el).color, green);
-  });
+        teardown(() => {
+          document.body.removeChild(el);
+        });
 
-  test('styleSubtree', () => {
-    assert.equal(window.getComputedStyle(el).backgroundColor, black);
-    styleDocument({'--custom-background-color': 'blue'});
-    assert.equal(window.getComputedStyle(el).backgroundColor, blue);
-  });
+        test("scopedStylesArePolyfilled", () => {
+          assert.equal(
+            scopedStylesArePolyfilled(),
+            !!window.ShadyCSS && !window.ShadyCSS.nativeShadow
+          );
+        });
 
-  suite('custom style', () => {
-    let style;
+        test("customPropertiesArePolyfilled", () => {
+          assert.equal(
+            customPropertiesArePolyfilled(),
+            !!window.ShadyCSS && !window.ShadyCSS.nativeCss
+          );
+        });
 
-    setup(() => {
-      style = document.createElement('style');
-      document.body.appendChild(style);
-    });
+        test("prepareTemplate and styleElement", () => {
+          assert.equal(window.getComputedStyle(el).color, red);
+        });
 
-    teardown(() => {
-      document.body.removeChild(style);
-    });
+        test("styleSubtree", () => {
+          assert.equal(window.getComputedStyle(el).color, red);
+          styleSubtree(el, { "--custom-color": "green" });
+          assert.equal(window.getComputedStyle(el).color, green);
+        });
 
-    test('addCustomStyle', async () => {
-      assert.equal(window.getComputedStyle(el).fontStyle, 'normal');
-      style.textContent = `
+        test("styleSubtree", () => {
+          assert.equal(window.getComputedStyle(el).backgroundColor, black);
+          styleDocument({ "--custom-background-color": "blue" });
+          assert.equal(window.getComputedStyle(el).backgroundColor, blue);
+        });
+
+        suite("custom style", () => {
+          let style;
+
+          setup(() => {
+            style = document.createElement("style");
+            document.body.appendChild(style);
+          });
+
+          teardown(() => {
+            document.body.removeChild(style);
+          });
+
+          test("addCustomStyle", async () => {
+            assert.equal(window.getComputedStyle(el).fontStyle, "normal");
+            style.textContent = `
         test-element {
           --custom-font-style: italic;
         }
       `;
-      addCustomStyle(style)
-      // Wait for styles to flush.
-      await new Promise((r) => requestAnimationFrame(r));
-      assert.equal(window.getComputedStyle(el).fontStyle, 'italic');
-    });
-  });
-});
-</script>
-</body>
+            addCustomStyle(style);
+            // Wait for styles to flush.
+            await new Promise((r) => requestAnimationFrame(r));
+            assert.equal(window.getComputedStyle(el).fontStyle, "italic");
+          });
+        });
+      });
+    </script>
+  </body>
 </html>

@@ -13,12 +13,12 @@
     "url": "https://github.com/webcomponents/polyfills.git",
     "directory": "packages/interface"
   },
-  "main": "dist/interface.js",
-  "module": "dist/interface.js",
+  "main": "lib/interface.js",
+  "module": "lib/interface.js",
   "scripts": {
     "build": "npm run clean && tsc",
     "watch": "npm run clean && tsc --watch",
-    "clean": "rimraf 'dist/*' 'dist/.*'",
+    "clean": "rimraf 'lib/*' 'lib/.*'",
     "lint": "eslint 'src/**/*.ts'",
     "format": "prettier --write 'src/**/*.ts'",
     "size": "npm run build && rollup -c",
