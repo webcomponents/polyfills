@@ -199,11 +199,6 @@ export const patchExistingProperties = (proto, descriptors) => {
   }
 }
 
-/** @type {!function(new:HTMLElement)} */
-export const NativeHTMLElement =
-    (window['customElements'] && window['customElements']['nativeHTMLElement']) ||
-    HTMLElement;
-
 // note, this is not a perfect polyfill since it doesn't include symbols
 /** @return {!Object<!ObjectPropertyDescriptor>} */
 export const getOwnPropertyDescriptors = (obj) => {

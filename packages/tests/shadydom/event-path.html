@@ -626,11 +626,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     });
 
     const hasOnListenersOnPrototype = (function() {
-      let nativeHTMLElement =
-        (window['customElements'] && window['customElements']['nativeHTMLElement']) ||
-        HTMLElement;
       // Chrome 41 has no listener attributes on the HTMLElement
-      return Object.getOwnPropertyDescriptor(nativeHTMLElement.prototype, 'onblur');
+      return Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'onblur');
     })();
 
     test('onfocus property has correct eventTarget', function(done) {
