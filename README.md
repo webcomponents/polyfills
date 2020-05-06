@@ -82,7 +82,9 @@ there are certain patterns that require direct interaction with the library:
 
 This repo is a _monorepo_. Each package lives under `packages/<package>`.
 
-### [![Published on npm](https://img.shields.io/npm/v/@webcomponents/webcomponentsjs.svg)](https://www.npmjs.com/package/@webcomponents/webcomponentsjs) [webcomponentsjs](https://github.com/webcomponents/polyfills/tree/master/packages/webcomponentsjs) ([Issues](https://github.com/webcomponents/polyfills/issues?q=is%3Aissue+is%3Aopen+label%3A%22Package%3A+webcomponentsjs%22))
+### [![Published on npm](https://img.shields.io/npm/v/@webcomponents/webcomponentsjs.svg)](https://www.npmjs.com/package/@webcomponents/webcomponentsjs) [webcomponentsjs](https://github.com/webcomponents/polyfills/tree/master/packages/webcomponentsjs)
+
+##### [Documentation](https://github.com/webcomponents/polyfills/tree/master/packages/webcomponentsjs#readme) | [Changelog](https://github.com/webcomponents/polyfills/blob/master/packages/webcomponentsjs/CHANGELOG.md) | [Issues](https://github.com/webcomponents/polyfills/issues?q=is%3Aissue+is%3Aopen+label%3A%22Package%3A+webcomponentsjs%22)
 
 Loader and pre-minimized bundles for the full suite of Web Components
 polyfills.
@@ -90,24 +92,44 @@ polyfills.
 Most users only need to install this package, but it is also possible to
 separately install any of the individual polyfills listed below.
 
-### [![Published on npm](https://img.shields.io/npm/v/@webcomponents/custom-elements.svg)](https://www.npmjs.com/package/@webcomponents/custom-elements) [custom-elements](https://github.com/webcomponents/polyfills/tree/master/packages/custom-elements) ([Issues](https://github.com/webcomponents/polyfills/issues?q=is%3Aissue+is%3Aopen+label%3A%22Package%3A+custom-elements%22))
+---
+
+### [![Published on npm](https://img.shields.io/npm/v/@webcomponents/custom-elements.svg)](https://www.npmjs.com/package/@webcomponents/custom-elements) [custom-elements](https://github.com/webcomponents/polyfills/tree/master/packages/custom-elements)
+
+##### [Documentation](https://github.com/webcomponents/polyfills/tree/master/packages/custom-elements#readme) | [Changelog](https://github.com/webcomponents/polyfills/blob/master/packages/custom-elements/CHANGELOG.md) | [Issues](https://github.com/webcomponents/polyfills/issues?q=is%3Aissue+is%3Aopen+label%3A%22Package%3A+custom-elements%22)
 
 Polyfill for Custom Elements ([MDN](https://developer.mozilla.org/en-US/docs/Web/Web_Components/Using_custom_elements), [Spec](https://html.spec.whatwg.org/multipage/custom-elements.html))
 
-### [![Published on npm](https://img.shields.io/npm/v/@webcomponents/template.svg)](https://www.npmjs.com/package/@webcomponents/template) [template](https://github.com/webcomponents/polyfills/tree/master/packages/template) ([Issues](https://github.com/webcomponents/polyfills/issues?q=is%3Aissue+is%3Aopen+label%3A%22Package%3A+template%22))
+---
 
+### [![Published on npm](https://img.shields.io/npm/v/@webcomponents/template.svg)](https://www.npmjs.com/package/@webcomponents/template) [template](https://github.com/webcomponents/polyfills/tree/master/packages/template)
+
+##### [Documentation](https://github.com/webcomponents/polyfills/tree/master/packages/template#readme) | [Changelog](https://github.com/webcomponents/polyfills/blob/master/packages/template/CHANGELOG.md) | [Issues](https://github.com/webcomponents/polyfills/issues?q=is%3Aissue+is%3Aopen+label%3A%22Package%3A+template%22)
 
 Polyfill for Template Element ([MDN](https://developer.mozilla.org/en-US/docs/Web/API/HTMLTemplateElement), [Spec](https://html.spec.whatwg.org/multipage/scripting.html#the-template-element))
 
-### [![Published on npm](https://img.shields.io/npm/v/@webcomponents/shadydom.svg)](https://www.npmjs.com/package/@webcomponents/shadydom) [shadydom](https://github.com/webcomponents/polyfills/tree/master/packages/shadydom) ([Issues](https://github.com/webcomponents/polyfills/issues?q=is%3Aissue+is%3Aopen+label%3A%22Package%3A+shadydom%22))
+---
+
+### [![Published on npm](https://img.shields.io/npm/v/@webcomponents/shadydom.svg)](https://www.npmjs.com/package/@webcomponents/shadydom) [shadydom](https://github.com/webcomponents/polyfills/tree/master/packages/shadydom)
+
+##### [Documentation](https://github.com/webcomponents/polyfills/tree/master/packages/shadydom#readme) | [Changelog](https://github.com/webcomponents/polyfills/blob/master/packages/shadydom/CHANGELOG.md) | [Issues](https://github.com/webcomponents/polyfills/issues?q=is%3Aissue+is%3Aopen+label%3A%22Package%3A+shadydom%22)
 
 Polyfill for Shadow DOM ([MDN](https://developer.mozilla.org/en-US/docs/Web/Web_Components/Using_shadow_DOM), [Spec](https://dom.spec.whatwg.org/#shadow-trees))
 
-### [![Published on npm](https://img.shields.io/npm/v/@webcomponents/shadycss.svg)](https://www.npmjs.com/package/@webcomponents/shadycss) [shadycss](https://github.com/webcomponents/polyfills/tree/master/packages/shadycss) ([Issues](https://github.com/webcomponents/polyfills/issues?q=is%3Aissue+is%3Aopen+label%3A%22Package%3A+shadycss%22))
+---
+
+### [![Published on npm](https://img.shields.io/npm/v/@webcomponents/shadycss.svg)](https://www.npmjs.com/package/@webcomponents/shadycss) [shadycss](https://github.com/webcomponents/polyfills/tree/master/packages/shadycss)
+
+##### [Documentation](https://github.com/webcomponents/polyfills/tree/master/packages/shadycss#readme) | [Changelog](https://github.com/webcomponents/polyfills/blob/master/packages/shadycss/CHANGELOG.md) | [Issues](https://github.com/webcomponents/polyfills/issues?q=is%3Aissue+is%3Aopen+label%3A%22Package%3A+shadycss%22)
 
 Polyfill for Scoped CSS ([Spec](https://drafts.csswg.org/css-scoping))
 
-### [![Published on npm](https://img.shields.io/npm/v/@webcomponents/html-imports.svg)](https://www.npmjs.com/package/@webcomponents/html-imports) [html-imports](https://github.com/webcomponents/polyfills/tree/master/packages/html-imports) ([Issues](https://github.com/webcomponents/polyfills/issues?q=is%3Aissue+is%3Aopen+label%3A%22Package%3A+html-imports%22))
+---
+
+### [![Published on npm](https://img.shields.io/npm/v/@webcomponents/html-imports.svg)](https://www.npmjs.com/package/@webcomponents/html-imports) [html-imports](https://github.com/webcomponents/polyfills/tree/master/packages/html-imports)
+
+##### [Documentation](https://github.com/webcomponents/polyfills/tree/master/packages/html-imports#readme) | [Changelog](https://github.com/webcomponents/polyfills/blob/master/packages/html-imports/CHANGELOG.md) | [Issues](https://github.com/webcomponents/polyfills/issues?q=is%3Aissue+is%3Aopen+label%3A%22Package%3A+html-imports%22)
+
 Polyfill for HTML Imports ([Spec](https://w3c.github.io/webcomponents/spec/imports/))
 
 Note that HTML Imports are
