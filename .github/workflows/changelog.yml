@@ -18,8 +18,14 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - name: Require CHANGELOG changes
+    - name: Check for CHANGELOG changes
       run: |
-        git fetch origin master:master --depth=1
-        git diff --name-only master
-        git diff --name-only master | grep CHANGELOG
+        git fetch origin ${{ github.base_ref }} --depth=1
+        if [[ $(git diff --name-only FETCH_HEAD | grep CHANGELOG) ]]
+        then
+          echo "A CHANGELOG was modified. Looks good!"
+        else
+          echo "No CHANGELOG was modified."
+          echo "Please add a CHANGELOG entry, or add the \"Skip Changelog\" label if not required."
+          false
+        fi
