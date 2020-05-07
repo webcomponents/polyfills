@@ -30,7 +30,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         styleSubtree,
         styleDocument,
         addCustomStyle,
-      } from "../node_modules/@webcomponents/interface/lib/interface.js";
+      } from "../node_modules/@webcomponents/shadycss/interface.js";
       import "../node_modules/@webcomponents/shadycss/entrypoints/custom-style-interface.js";
 
       const template = document.createElement("template");
@@ -132,7 +132,7 @@ Hello!
       `;
             addCustomStyle(style);
             // Wait for styles to flush.
-            await new Promise((r) => requestAnimationFrame(r));
+            await new Promise((r) => setTimeout(r, 10));
             assert.equal(window.getComputedStyle(el).fontStyle, "italic");
           });
         });

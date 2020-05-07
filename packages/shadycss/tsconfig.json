@@ -5,17 +5,17 @@
     "moduleResolution": "node",
     "lib": ["DOM"],
     "strict": true,
+    "declaration": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "preserveConstEnums": true,
     "forceConsistentCasingInFileNames": true,
-    "rootDir": "src/",
-    "outDir": "lib/",
+    "rootDir": "ts_src/",
+    "outDir": "./",
     "sourceMap": true,
     "incremental": true,
-    "tsBuildInfoFile": "lib/.tsbuildinfo"
+    "tsBuildInfoFile": ".tsbuildinfo"
   },
-  "include": ["src/**/*"],
-  "declaration": true,
-  "pretty": true
+  "include": ["ts_src/**/*"],
+  "exclude": []
 }

@@ -4,7 +4,7 @@ import { terser } from "rollup-plugin-terser";
 export default {
   // A bundle just for testing compressed and minified file size. We don't
   // actually distribute this minified file.
-  input: "lib/interface.js",
+  input: "interface.js",
   output: null,
   plugins: [
     terser({

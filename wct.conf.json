@@ -2,7 +2,6 @@
   "suites": [
     "packages/tests/custom-elements/index.html",
     "packages/tests/html-imports/index.html",
-    "packages/tests/interface/index.html",
     "packages/tests/shadycss/runner.html",
     "packages/tests/shadydom/runner.html",
     "packages/tests/template/runner.html",
