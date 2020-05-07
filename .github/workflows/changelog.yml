@@ -1,0 +1,22 @@
+# This action requires that any PR targeting the master branch should touch at
+# least one CHANGELOG file. If a CHANGELOG entry is not required, add the "Skip
+# Changelog" label to disable this action.
+
+name: changelog
+
+on:
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  changelog:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Require CHANGELOG changes
+      run: |
+        git fetch origin master:master --depth=1
+        git diff --name-only master | grep CHANGELOG
