@@ -99,10 +99,10 @@ represented as shown below, thus there is no "resetting" after the second rule
 has matched an ancestor:
 
 ```css
-x-a x-a.odd[shady-part~=x-a:x-a:num] {
+x-a x-a.odd[shady-part~="x-a:x-a:num"] {
   color: red;
 }
-x-a x-a.even[shady-part~=x-a:x-a:num] {
+x-a x-a.even[shady-part~="x-a:x-a:num"] {
   color: green;
 }
 ```
@@ -138,7 +138,7 @@ ShadyCSS:
 
 ```html
 <style>
-  x-a x-b [shady-part~=x-a:x-b:greeting] {
+  x-a x-b [shady-part~="x-a:x-b:greeting"] {
     color: red;
   }
 </style>
@@ -176,7 +176,7 @@ x-b::part(foo bar) {
 ShadyCSS:
 
 ```css
-x-a x-b [shady-part~=x-a:x-b:foo][shady-part~=x-a:x-b:bar] {
+x-a x-b [shady-part~="x-a:x-b:foo"][shady-part~="x-a:x-b:bar"] {
   color: red;
 }
 ```
@@ -222,10 +222,10 @@ ShadyCSS:
 
 ```html
 <style>
-  x-a x-b [shady-part~=x-a:x-b:salutation] {
+  x-a x-b [shady-part~="x-a:x-b:salutation"] {
     color: red;
   }
-  x-b x-c [shady-part~=x-b:x-c:greeting] {
+  x-b x-c [shady-part~="x-b:x-c:greeting"] {
     font-weight: bold;
   }
 </style>
@@ -246,11 +246,11 @@ The spec behavior is that when a `::part` rule consumes a CSS Custom Property,
 the value of that property is determined at each site where that rule is
 _consumed_, not where the rule was _defined_.
 
-ShadyCSS emulates this behavior by switching to per-instance styling for any
-node that receives a `::part` rule that consumes a CSS Custom Property. This is
-identical to the behavior already used for normal custom property consumption in
-ShadyCSS, where each such host is given a class that is unique for its set of
-property values.
+For browsers that don't support native CSS custom properties, ShadyCSS emulates
+this behavior by switching to per-instance styling for any node that receives a
+`::part` rule that consumes a CSS Custom Property. This is identical to the
+behavior already used for normal custom property consumption in ShadyCSS, where
+each such host is given a class that is unique for its set of property values.
 
 Native:
 
@@ -289,10 +289,10 @@ ShadyCSS:
 
 ```html
 <style>
-  x-a .x-b-1 [shady-part~=x-a:x-b:greeting] {
+  x-a .x-b-1 [shady-part~="x-a:x-b:greeting"] {
     color: red;
   }
-  x-a .x-b-2 [shady-part~=x-a:x-b:greeting] {
+  x-a .x-b-2 [shady-part~="x-a:x-b:greeting"] {
     color: blue;
   }
 </style>
@@ -305,3 +305,41 @@ ShadyCSS:
   </x-b>
 </x-a>
 ```
+
+## Performance
+
+If an application does not contain any CSS rules containing `::part` selectors
+(as determined by all calls to `prepareTemplate`), then there is minimal
+overhead to Shadow Parts support, as none of the work below needs to be
+performed.
+
+Once a `::part` rule has been discovered in at least one element template, then
+each time an instance of any element is rendered (on `styleElement`), as well
+as each time an element is added or moved within a shadow root, then a
+`querySelectorAll` is performed to search for nodes with a `part` attribute.
+
+When at least one part node is found in a shadow root, then the element name of
+the host and of the parent host are retrieved, and along with the part names
+themselves, are used to add a `shady-part` attribute to each part node.
+
+In addition, when at least one part node is found in a shadow root, the host is
+checked for an `exportparts` attribute. If found, then _its_ host is checked
+for an `exportparts` attribute, and so on, walking upwards through the
+hierarchy of shadow roots, to construct a part name forwarding map. This map is
+cached for each shadow root, so each shadow root is only walked once. This map
+is then used to add additional `shady-part` attributes to each applicable part
+node.
+
+If a `part` attribute is added or removed from an element, then the appropriate
+`shady-part` attributes are added, as described above (but no `querySelectorAll`
+is required, since we already know which element is affected).
+
+If an `exportparts` attribute is added or removed, all descendents of the
+element with that attribute are fully re-evaluated in the same way that they
+are for `styleElement` (this pattern is not currently well optimized, since it
+is not expected to be common place, though it is possible to optimize if
+needed).
+
+### Benchmarks
+
+TODO(aomarks) Include benchmarking data here.
