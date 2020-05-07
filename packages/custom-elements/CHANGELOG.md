@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- fake
+
 - Type annotation improvements for Closure ([#287](https://github.com/webcomponents/polyfills/pull/287))
 - README improvements ([#169](https://github.com/webcomponents/polyfills/pull/169))
 
