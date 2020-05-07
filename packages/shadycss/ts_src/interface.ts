@@ -19,13 +19,6 @@ interface ShadyCSS {
   prepareTemplate(template: HTMLTemplateElement, elementName: string): void;
   styleElement(element: HTMLElement, properties?: CustomPropertyValues): void;
   styleSubtree(element: HTMLElement, properties?: CustomPropertyValues): void;
-  styleDocument(properties: CustomPropertyValues): void;
-
-  CustomStyleInterface?: CustomStyleInterface;
-}
-
-interface CustomStyleInterface {
-  addCustomStyle(style: HTMLStyleElement): void;
 }
 
 type CustomPropertyValues = { [property: string]: string };
@@ -49,7 +42,7 @@ function setProperties(
  * Note that the other functions in this module are safe to call even if the
  * polyfills are not loaded.
  */
-export function scopedStylesArePolyfilled(): boolean {
+function scopedStylesArePolyfilled(): boolean {
   return (
     window.ShadyCSS !== undefined && window.ShadyCSS.nativeShadow === false
   );
@@ -61,7 +54,7 @@ export function scopedStylesArePolyfilled(): boolean {
  * Note that the other functions in this module are safe to call even if the
  * polyfills are not loaded.
  */
-export function customPropertiesArePolyfilled(): boolean {
+function customPropertiesArePolyfilled(): boolean {
   return window.ShadyCSS !== undefined && window.ShadyCSS.nativeCss === false;
 }
 
@@ -122,41 +115,5 @@ export function styleSubtree(
     window.ShadyCSS!.styleSubtree(element, properties);
   } else if (properties != null) {
     setProperties(element, properties);
-  }
-}
-
-/**
- * Set CSS custom properties on the document and propagate to all shadow roots.
- *
- * Uses ShadyCSS custom property emulation if that polyfill is active, otherwise
- * uses native style.setProperty.
- */
-export function styleDocument(properties: CustomPropertyValues): void {
-  if (customPropertiesArePolyfilled()) {
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    window.ShadyCSS!.styleDocument(properties);
-  } else if (properties != null) {
-    setProperties(document.body, properties);
-  }
-}
-
-/**
- * Propagate custom properties from the given `document` level `<style>` tag.
- * Changes occur asynchronously as a microtask.
- *
- * If ShadyCSS is not active, or if the `custom-style-interface` library has not
- * been loaded, then this function does nothing.
- *
- * Note that the `custom-style-interface` library is not automatically loaded by
- * the `loader` or `bundle` scripts. It must be loaded separately.
- */
-export function addCustomStyle(style: HTMLStyleElement): void {
-  if (
-    customPropertiesArePolyfilled() &&
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    window.ShadyCSS!.CustomStyleInterface !== undefined
-  ) {
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    window.ShadyCSS!.CustomStyleInterface.addCustomStyle(style);
   }
 }
