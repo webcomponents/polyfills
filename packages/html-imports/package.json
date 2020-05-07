@@ -3,9 +3,13 @@
   "version": "1.2.4",
   "description": "HTML Imports polyfill",
   "main": "html-imports.min.js",
-  "repository": "github:webcomponents/polyfills",
-  "bugs": "https://github.com/webcomponents/polyfills/issues",
-  "homepage": "https://webcomponents.org/polyfills",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/webcomponents/polyfills.git",
+    "directory": "packages/html-imports"
+  },
+  "bugs": "https://github.com/webcomponents/polyfills/issues?q=is%3Aissue+is%3Aopen+label%3A\"Package%3A+html-imports\"",
+  "homepage": "https://github.com/webcomponents/polyfills/tree/master/packages/html-imports",
   "author": "The Polymer Project Authors (https://polymer.github.io/AUTHORS.txt)",
   "keywords": [
     "html-imports",
