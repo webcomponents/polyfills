@@ -1,0 +1,71 @@
+name: tests
+
+on: [push, pull_request]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-node@v1
+      with:
+        node-version: 13
+
+    - name: NPM install
+      run: npm ci
+
+    - name: Lerna bootstrap
+      run: npm run bootstrap
+
+    - name: Check lint
+      run: npm run lint
+
+  wct-local:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-node@v1
+      with:
+        node-version: 13
+
+    - name: NPM install
+      run: npm ci
+
+    - name: Lerna bootstrap
+      run: npm run bootstrap
+
+    - name: Build
+      run: npm run build
+
+    - name: WCT local (Chrome/Firefox)
+      run: npm test
+
+  wct-sauce:
+    # Skip if this is from a forked repository because we can't access Sauce
+    # secrets.
+    if: github.event.pull_request.base.repo.id == github.event.pull_request.head.repo.id
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-node@v1
+      with:
+        node-version: 13
+
+    - name: NPM install
+      run: npm ci
+
+    - name: Lerna bootstrap
+      run: npm run bootstrap
+
+    - name: Build
+      run: npm run build
+
+    - name: WCT sauce (Safari/Edge/IE11/Chrome 41)
+      env:
+        SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
+        SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
+      run: npm run test-sauce

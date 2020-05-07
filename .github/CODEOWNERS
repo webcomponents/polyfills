@@ -1,0 +1,7 @@
+packages/custom-elements/ @azakus @bicknellr
+packages/html-imports/ @azakus
+packages/shadycss/ @azakus
+packages/shadydom/ @azakus @sorvell
+packages/template/ @azakus
+packages/url/ @azakus
+packages/webcomponentsjs/ @azakus

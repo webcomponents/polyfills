@@ -1,0 +1,936 @@
+<!doctype html>
+<!--
+@license
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="wct-browser-config.js"></script>
+  <script src="../node_modules/@webcomponents/webcomponents-platform/webcomponents-platform.js"></script>
+  <script src="../node_modules/@webcomponents/template/template.js"></script>
+  <script src="loader.js"></script>
+  <script>
+  if (customElements.polyfillWrapFlushCallback) {
+    customElements.polyfillWrapFlushCallback(function(cb) {
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', cb);
+      } else {
+        cb();
+      }
+    });
+  }</script>
+  <script>
+    /**
+     * Safari's Element.prototype.click may set `composed: false`, which is counter to the spec.
+     * https://bugs.webkit.org/show_bug.cgi?id=170211
+     */
+    window.brokenClickFn = (() => {
+      let brokenComposed = false;
+      const div = document.createElement('div');
+      ShadyDOM.wrapIfNeeded(div).addEventListener('click', (e) => {
+        brokenComposed = e.composed === false;
+      });
+      div.click();
+      return brokenComposed;
+    })();
+  </script>
+  <script src="../node_modules/wct-browser-legacy/browser.js"></script>
+</head>
+<body>
+
+  <script>
+    window.defineTestElement = function(name, connected, mixin) {
+      let template = ShadyDOM.wrapIfNeeded(document).querySelector('#' + name);
+      // es5 compat class
+      function Klass() {
+        const self = (window.Reflect && Reflect.construct)
+          ? Reflect.construct(HTMLElement, [], this.constructor || Klass)
+          : HTMLElement.call(this);
+        return self;
+      }
+
+      Klass.prototype = Object.create(HTMLElement.prototype, {
+        'constructor': {
+          value: Klass,
+          configurable: true,
+          writable: true
+        }
+      });
+
+      Klass.prototype.connectedCallback = function() {
+        if (!this._initialized) {
+          this._initialized = true;
+          if (template) {
+            ShadyDOM.wrapIfNeeded(this).attachShadow({mode: 'open'});
+            ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(this).shadowRoot).appendChild(ShadyDOM.wrapIfNeeded(document).importNode(template.content, true));
+          }
+          if (connected) {
+            connected.call(this);
+          }
+        }
+      }
+
+      if (mixin) {
+        for (let p in mixin) {
+          Klass.prototype[p] = mixin[p];
+        }
+      }
+
+      customElements.define(name, Klass);
+    }
+
+    function ensureDocumentHasFocus() {
+      window.top && window.top.focus();
+      window.focus();
+    }
+  </script>
+
+  <template id="x-event-scoped">
+    <div id="scoped"></div>
+  </template>
+    <script>
+    defineTestElement('x-event-scoped', function() {
+      this.scoped = ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(this).shadowRoot).querySelector('#scoped');
+      this.hostEvents = [];
+      this.childEvents = [];
+      ShadyDOM.wrapIfNeeded(this).addEventListener('composed', this.hostHandler.bind(this));
+      ShadyDOM.wrapIfNeeded(this).addEventListener('scoped', this.hostHandler.bind(this));
+      ShadyDOM.wrapIfNeeded(this.scoped).addEventListener('composed', this.childHandler.bind(this));
+      ShadyDOM.wrapIfNeeded(this.scoped).addEventListener('scoped', this.childHandler.bind(this));
+    }, {
+      hostHandler: function(e) {
+        this.hostEvents.push({
+          target: e.target,
+          type: e.type,
+          path: e.composedPath()
+        });
+      },
+      childHandler: function(e) {
+        this.childEvents.push({
+          target: e.target,
+          type: e.type,
+          path: e.composedPath()
+        });
+      },
+      fireComposed: function() {
+        return ShadyDOM.wrapIfNeeded(this.scoped).dispatchEvent(
+          new Event('composed', {composed: true, bubbles: true}));
+      },
+      fireScoped: function(){
+        return ShadyDOM.wrapIfNeeded(this.scoped).dispatchEvent(
+          new Event('scoped', {bubbles: true}));
+      }
+    });
+  </script>
+
+  <template id="x-event-scoped-window">
+    <div id="scoped"></div>
+  </template>
+    <script>
+    defineTestElement('x-event-scoped-window', function() {
+      this.scoped = ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(this).shadowRoot).querySelector('#scoped');
+      this.windowEvents = [];
+      ShadyDOM.wrap(window).addEventListener('composed', this.windowHandler.bind(this));
+      ShadyDOM.wrap(window).addEventListener('scoped', this.windowHandler.bind(this));
+    }, {
+      windowHandler: function(e) {
+        this.windowEvents.push({
+          target: e.target,
+          type: e.type,
+          path: e.composedPath()
+        });
+      },
+      fireComposed: function() {
+        return ShadyDOM.wrapIfNeeded(this.scoped).dispatchEvent(
+          new Event('composed', {composed: true, bubbles: true}));
+      },
+      fireScoped: function(){
+        return ShadyDOM.wrapIfNeeded(this.scoped).dispatchEvent(
+          new Event('scoped', {bubbles: true}));
+      }
+    });
+  </script>
+
+  <template id="x-event-scoped-document">
+    <div id="scoped"></div>
+  </template>
+    <script>
+    defineTestElement('x-event-scoped-document', function() {
+      this.scoped = ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(this).shadowRoot).querySelector('#scoped');
+      this.documentEvents = [];
+      ShadyDOM.wrap(document).addEventListener('composed', this.handler.bind(this));
+      ShadyDOM.wrap(document).addEventListener('scoped', this.handler.bind(this));
+    }, {
+      handler: function(e) {
+        this.documentEvents.push({
+          target: e.target,
+          type: e.type,
+          path: e.composedPath()
+        });
+      },
+      fireComposed: function() {
+        return ShadyDOM.wrapIfNeeded(this.scoped).dispatchEvent(
+          new Event('composed', {composed: true, bubbles: true}));
+      },
+      fireScoped: function(){
+        return ShadyDOM.wrapIfNeeded(this.scoped).dispatchEvent(
+          new Event('scoped', {bubbles: true}));
+      }
+    });
+  </script>
+
+  <template id="x-focus">
+    <style>
+      :host {
+        display: block;
+      }
+    </style>
+    <div id="child"></div>
+  </template>
+  <script>
+  defineTestElement('x-focus', function() {
+    this.events = [];
+    this.child = ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(this).shadowRoot).querySelector('#child');
+    ShadyDOM.wrapIfNeeded(this).addEventListener('focus', this.focusHandler.bind(this));
+    ShadyDOM.wrapIfNeeded(this.child).addEventListener('focus', this.focusHandler.bind(this));
+  }, {
+    focusHandler: function(e) {
+      this.events.push(e.target);
+    },
+    fireComposed: function() {
+      let ev = new Event('focus', {composed: true});
+      ShadyDOM.wrapIfNeeded(this.child).dispatchEvent(ev);
+    },
+    fireScoped: function() {
+      let ev = new Event('focus');
+      ShadyDOM.wrapIfNeeded(this.child).dispatchEvent(ev);
+    }
+  });
+  </script>
+
+  <template id="x-nested-focus">
+    <input id="child">
+  </template>
+  <script>
+    defineTestElement('x-nested-focus', function() {
+      this.tabIndex = -1;
+      this.events = [];
+      this.lastFocus = null;
+      this.child = ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(this).shadowRoot).querySelector('#child');
+      ShadyDOM.wrapIfNeeded(this).addEventListener('focus', this.focusHandler.bind(this));
+      ShadyDOM.wrapIfNeeded(this).addEventListener('blur', this.focusHandler.bind(this));
+      ShadyDOM.wrapIfNeeded(this.child).addEventListener('focus', this.focusHandler.bind(this));
+      ShadyDOM.wrapIfNeeded(this.child).addEventListener('blur', this.focusHandler.bind(this));
+    }, {
+      focusHandler(e) {
+        this.events.push({type: e.type, target: e.target, relatedTarget: e.relatedTarget});
+      }
+    })
+  </script>
+
+  <template id="x-a">
+    <div id="child" on-foo="childFooHandler"></div>
+    <div id="child2"></div>
+  </template>
+  <script>
+  defineTestElement('x-a', function() {
+    this.child = ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(this).shadowRoot).querySelector('#child');
+    this.child2 = ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(this).shadowRoot).querySelector('#child2');
+    ShadyDOM.wrapIfNeeded(this).addEventListener('foo', this.fooHandler.bind(this));
+    ShadyDOM.wrapIfNeeded(this.child).addEventListener('foo', this.childFooHandler.bind(this));
+  }, {
+    fooHandler: function(e) {
+      this.event = {target: e.target, relatedTarget: e.relatedTarget};
+    },
+    childFooHandler: function(e) {
+      this.childEvent = {target: e.target, relatedTarget: e.relatedTarget};
+    }
+  });
+  </script>
+
+  <div id="globalpatch"></div>
+
+  <template id="relatedtarget">
+    <x-a id="one"></x-a>
+    <x-a id="two"></x-a>
+  </template>
+
+  <script>
+  'use strict';
+
+  function createEnabledElement(tag) {
+    let e = document.createElement(tag);
+    ShadyDOM.wrapIfNeeded(document.body).appendChild(e);
+    return e;
+  }
+
+  function stampNodes(selector) {
+    let t = ShadyDOM.wrapIfNeeded(document).querySelector(selector);
+    let dom = ShadyDOM.wrapIfNeeded(document).importNode(t.content, true);
+    let c = document.createElement('div');
+    ShadyDOM.wrapIfNeeded(c).appendChild(dom);
+    ShadyDOM.wrapIfNeeded(document.body).appendChild(c);
+    return c;
+  }
+
+  function pathCompare(expectedPath, givenPath) {
+    for (let i = 0; i < expectedPath.length; i++) {
+      assert.equal(expectedPath[i], givenPath[i], 'node at index ' + i + ' not expected');
+    }
+    assert.equal(expectedPath.length, givenPath.length, 'paths should be equal');
+  }
+
+  suite('events', function() {
+
+    test('events retarget', function() {
+      let el = createEnabledElement('x-event-scoped');
+      el.fireComposed();
+      assert.equal(el.hostEvents[0].target, el);
+      assert.equal(el.childEvents[0].target, el.scoped);
+      ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(el).parentNode).removeChild(el);
+    });
+
+    test('window events retarget', function() {
+      let el = createEnabledElement('x-event-scoped-window');
+      el.fireComposed();
+      assert.equal(el.windowEvents[0].target, el);
+      ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(el).parentNode).removeChild(el);
+    });
+
+    test('window remove event listener', function() {
+      let el = createEnabledElement('x-event-scoped-window');
+      let listener = function() {
+        el.windowListenerEvents = el.windowListenerEvents ? el.windowListenerEvents+1 : 1;
+      };
+      ShadyDOM.wrapIfNeeded(window).addEventListener("composed", listener);
+      el.fireComposed();
+      assert.equal(1, el.windowListenerEvents);
+      ShadyDOM.wrapIfNeeded(window).removeEventListener("composed", listener);
+      el.fireComposed();
+      assert.equal(1, el.windowListenerEvents);
+      ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(el).parentNode).removeChild(el);
+    });
+
+    test('implicit window add/remove event listener', function() {
+      let el = createEnabledElement('x-event-scoped-window');
+      let listener = function(e) {
+        el.windowListenerEvents = el.windowListenerEvents ? el.windowListenerEvents+1 : 1;
+      };
+      ShadyDOM.wrapIfNeeded(window).addEventListener("composed", listener);
+      el.fireComposed();
+      assert.equal(1, el.windowListenerEvents);
+      ShadyDOM.wrapIfNeeded(window).removeEventListener("composed", listener);
+      el.fireComposed();
+      assert.equal(1, el.windowListenerEvents);
+      ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(el).parentNode).removeChild(el);
+    });
+
+    test('scoped event does not reach window', function() {
+      let el = createEnabledElement('x-event-scoped-window');
+      el.fireScoped();
+      assert.equal(0, el.windowEvents.length);
+      ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(el).parentNode).removeChild(el);
+    });
+
+    test('bubbling events reach shadowRoot', function() {
+      // Create a div element with a shadow root
+      const theDiv = document.createElement('div');
+      const root = ShadyDOM.wrapIfNeeded(theDiv).attachShadow({mode: 'open'});
+      ShadyDOM.wrapIfNeeded(document.body).appendChild(theDiv);
+
+      const shadowChild = document.createElement('div');
+      root.appendChild(shadowChild);
+
+      const spy = sinon.spy();
+
+      // Add event listener to the shadow root
+      ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(theDiv).shadowRoot).addEventListener('anEvent', spy);
+
+      // Dispatch a bubbling event to the a shadowRoot child
+      ShadyDOM.wrapIfNeeded(shadowChild).dispatchEvent(new CustomEvent('anEvent', {bubbles: true}));
+
+      assert.isTrue(spy.called, 'Callback should be called on shadowRoot');
+    });
+
+    test('scoped composed does not reach shadowRoot', function() {
+      // Create a div element with a shadow root
+      const theDiv = document.createElement('div');
+      ShadyDOM.wrapIfNeeded(theDiv).attachShadow({mode: 'open'});
+      ShadyDOM.wrapIfNeeded(document.body).appendChild(theDiv);
+
+      const spy = sinon.spy();
+
+      // Add event listener to the shadow root
+      ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(theDiv).shadowRoot).addEventListener('composed', spy);
+
+      // Dispatch a composed event to the div element (not its shadow root)
+      ShadyDOM.wrapIfNeeded(theDiv).dispatchEvent(new CustomEvent('composed', {bubbles: true, composed: true}));
+
+      assert.isFalse(spy.called, 'Callback should not be called on shadowRoot');
+    });
+
+    test('composed event on child lightdom does not reach shadowRoot', function() {
+      // Create a div element with a shadow root
+      const theDiv = document.createElement('div');
+      ShadyDOM.wrapIfNeeded(theDiv).attachShadow({mode: 'open'});
+      ShadyDOM.wrapIfNeeded(document.body).appendChild(theDiv);
+      const child = document.createElement('div');
+      ShadyDOM.wrapIfNeeded(theDiv).appendChild(child);
+
+      const spy = sinon.spy();
+
+      // Add event listener to the shadow root
+      ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(theDiv).shadowRoot).addEventListener('composed', spy);
+
+      // Dispatch a composed event to a child of the div element (not its shadow root)
+      ShadyDOM.wrapIfNeeded(child).dispatchEvent(new CustomEvent('composed', {bubbles: true, composed: true}));
+
+      assert.isFalse(spy.called, 'Callback should not be called on shadowRoot');
+    });
+
+    test('bubbling events reach <slot>', function() {
+      // Create a div element with a shadow root
+      const theDiv = document.createElement('div');
+      const root = ShadyDOM.wrapIfNeeded(theDiv).attachShadow({mode: 'open'});
+      ShadyDOM.wrapIfNeeded(document.body).appendChild(theDiv);
+
+      const slot = document.createElement('slot');
+      root.appendChild(slot);
+      const child = document.createElement('div');
+      ShadyDOM.wrapIfNeeded(theDiv).appendChild(child);
+
+      const spy = sinon.spy();
+
+      // Add event listener to the <slot>
+      ShadyDOM.wrapIfNeeded(slot).addEventListener('bubbling', spy);
+
+      // Dispatch a bubbling event to the child distributed to the slot
+      ShadyDOM.wrapIfNeeded(child).dispatchEvent(new CustomEvent('bubbling', {bubbles: true}));
+
+      assert.isTrue(spy.called, 'Callback should be called on <slot>');
+    });
+
+    test('events on slot parent do not reach <slot>', function() {
+      // Create a div element with a shadow root
+      const theDiv = document.createElement('div');
+      const root = ShadyDOM.wrapIfNeeded(theDiv).attachShadow({mode: 'open'});
+      ShadyDOM.wrapIfNeeded(document.body).appendChild(theDiv);
+
+      const slot = document.createElement('slot');
+      const slotParent = document.createElement('div');
+      slotParent.appendChild(slot);
+      root.appendChild(slotParent);
+
+      const spy = sinon.spy();
+
+      // Add event listener to the shadow root
+      ShadyDOM.wrapIfNeeded(slot).addEventListener('bubbling', spy);
+
+      // Dispatch a bubbling event to the slot parent
+      slotParent.dispatchEvent(new CustomEvent('bubbling', {bubbles: true}));
+
+      assert.isFalse(spy.called, 'Callback should not be called on <slot>');
+    });
+
+    test('events bubbling to slot parent do not reach <slot>', function() {
+      // Create a div element with a shadow root
+      const theDiv = document.createElement('div');
+      const root = ShadyDOM.wrapIfNeeded(theDiv).attachShadow({mode: 'open'});
+      ShadyDOM.wrapIfNeeded(document.body).appendChild(theDiv);
+
+      const slot = document.createElement('slot');
+      root.appendChild(slot);
+      const child = document.createElement('div');
+      root.appendChild(child);
+
+      const spy = sinon.spy();
+
+      // Add event listener to the <slot>
+      ShadyDOM.wrapIfNeeded(slot).addEventListener('bubbling', spy);
+
+      // Dispatch a bubbling event to a sibling of the slot (not distributed to it)
+      ShadyDOM.wrapIfNeeded(child).dispatchEvent(new CustomEvent('bubbling', {bubbles: true}));
+
+      assert.isFalse(spy.called, 'Callback should not be called on <slot>');
+    });
+
+    test('document events retarget', function() {
+      let el = createEnabledElement('x-event-scoped-document');
+      el.fireComposed();
+      assert.equal(el.documentEvents[0].target, el);
+      ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(el).parentNode).removeChild(el);
+    });
+
+    test('document remove event listener', function() {
+      let el = createEnabledElement('x-event-scoped-document');
+      let listener = function(e) {
+        el.listenerEvents = el.listenerEvents ? el.listenerEvents+1 : 1;
+      };
+      ShadyDOM.wrapIfNeeded(document).addEventListener("composed", listener);
+      el.fireComposed();
+      assert.equal(1, el.listenerEvents);
+      ShadyDOM.wrapIfNeeded(document).removeEventListener("composed", listener);
+      el.fireComposed();
+      assert.equal(1, el.listenerEvents);
+      ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(el).parentNode).removeChild(el);
+    });
+
+    test('scoped event does not reach document', function() {
+      let el = createEnabledElement('x-event-scoped-document');
+      el.fireScoped();
+      assert.equal(0, el.documentEvents.length);
+      ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(el).parentNode).removeChild(el);
+    });
+
+    test('event.composedPath is consistent', function() {
+      let el = createEnabledElement('x-event-scoped');
+      el.fireComposed();
+      assert.equal(el.hostEvents.length, el.childEvents.length);
+      ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(el).parentNode).removeChild(el);
+    });
+
+    test('`composed` flag controls event propagation through roots', function() {
+      let el = createEnabledElement('x-event-scoped');
+      el.fireScoped();
+      el.fireComposed();
+      assert.equal(el.hostEvents.length, 1);
+      assert.equal(el.hostEvents[0].type, 'composed');
+      assert.equal(el.childEvents.length, 2);
+      assert.equal(el.childEvents[0].type, 'scoped');
+      assert.equal(el.childEvents[1].type, 'composed');
+      ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(el).parentNode).removeChild(el);
+    });
+
+    test('event patching (add and remove) works on any elements', function() {
+      let el = ShadyDOM.wrapIfNeeded(document).querySelector('#globalpatch');
+      let path;
+      const fn = function(e) {
+        path = e.composedPath();
+      }
+      ShadyDOM.wrap(el).addEventListener('foo', fn);
+      const e = new Event('foo', {composed: true});
+      ShadyDOM.wrap(el).dispatchEvent(e);
+      assert.deepEqual([el, document.body, document.documentElement, document, window], path);
+      path = null;
+      ShadyDOM.wrap(el).removeEventListener('foo', fn);
+      const e2 = new Event('foo', {composed: true});
+      ShadyDOM.wrap(el).dispatchEvent(e2);
+      assert.isNull(path);
+    });
+
+    test('events can be added and removed on shadowRoot', function() {
+      let el = createEnabledElement('x-event-scoped');
+      let composed, scoped;
+      const composedFn = function() {
+        composed = true;
+      };
+      const scopedFn = function() {
+        scoped = true;
+      }
+      ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(el).shadowRoot).addEventListener('composed', composedFn);
+      ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(el).shadowRoot).addEventListener('scoped', scopedFn);
+      el.fireComposed()
+      el.fireScoped();
+      assert.isTrue(composed, 'composed events should fire on shadowRoot');
+      assert.isTrue(scoped, 'scoped events should fire on shadowRoot');
+      composed = null;
+      scoped = null;
+      ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(el).shadowRoot).removeEventListener('composed', composedFn);
+      ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(el).shadowRoot).removeEventListener('scoped', scopedFn);
+      el.fireComposed()
+      el.fireScoped();
+      assert.isNull(composed, 'composed events should not fire on shadowRoot after listener removed');
+      assert.isNull(scoped, 'scoped events should fire on shadowRoot after listener removed');
+    });
+
+    test('addEventListener using event options to set capture false', function() {
+      const parent = document.createElement('div');
+      document.body.appendChild(parent);
+      const child = document.createElement('div');
+      ShadyDOM.wrapIfNeeded(parent).appendChild(child);
+      let heardEvent = false;
+      function listener(e) {
+        assert.equal(e.eventPhase, Event.BUBBLING_PHASE);
+        heardEvent = true;
+      }
+      ShadyDOM.wrapIfNeeded(parent).addEventListener('foo', listener);
+      ShadyDOM.wrapIfNeeded(child).dispatchEvent(new Event('foo', {bubbles: true}));
+      ShadyDOM.flush();
+      assert.isTrue(heardEvent);
+      document.body.removeChild(parent);
+    });
+
+    test('should use bubbling phase for event listeners added via properties', function () {
+      if (!hasOnListenersOnPrototype) {
+        this.skip();
+      }
+      const parent = document.createElement('div');
+      parent.id = "parent";
+      ShadyDOM.wrapIfNeeded(document.body).appendChild(parent);
+      const child = document.createElement('div');
+      child.id = "child";
+      ShadyDOM.wrapIfNeeded(parent).appendChild(child);
+      const parentMouseDownSpy = sinon.spy();
+      const childMouseDownSpy = sinon.spy();
+      ShadyDOM.wrapIfNeeded(parent).onmousedown = parentMouseDownSpy;
+      ShadyDOM.wrapIfNeeded(child).onmousedown = childMouseDownSpy;
+      ShadyDOM.wrapIfNeeded(child).dispatchEvent(new MouseEvent('mousedown', { bubbles: true, composed: true }));
+      assert.isTrue(childMouseDownSpy.calledBefore(parentMouseDownSpy), 'Event handler on child should be called first');
+    });
+
+    test('composed focus and blur events retarget up tree', function() {
+      let el = createEnabledElement('x-focus');
+      el.fireComposed();
+      assert.equal(el.events.length, 2);
+      assert.equal(el.events[0], el.child);
+      assert.equal(el.events[1], el);
+      ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(el).parentNode).removeChild(el);
+    });
+
+    test('focusin and focusout events patched to be always composed', function() {
+      // this test only makes sense for browsers having native "composed" getter,
+      // with the others (IE and Edge) the case is not reproducible, so skip.
+      if (Object.getOwnPropertyDescriptor(Event.prototype, 'composed') === undefined) {
+        this.skip();
+      }
+      const theDiv = document.createElement('div');
+      ShadyDOM.wrapIfNeeded(theDiv).attachShadow({mode: 'open'});
+
+      const theInput = document.createElement('input');
+      ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(theDiv).shadowRoot).appendChild(theInput);
+      ShadyDOM.wrapIfNeeded(document.body).appendChild(theDiv);
+
+      const dispatchMockEvent = function(type, target) {
+        // do not set composed to force patching needed for Firefox 61
+        const e = new CustomEvent(type);
+        ShadyDOM.wrapIfNeeded(target).dispatchEvent(e);
+      };
+
+      const focusinSpy = sinon.spy();
+      const focusoutSpy = sinon.spy();
+
+      ShadyDOM.wrapIfNeeded(theInput).addEventListener('focusin', focusinSpy);
+      ShadyDOM.wrapIfNeeded(theInput).addEventListener('focusout', focusoutSpy);
+
+      dispatchMockEvent('focusin', theInput);
+      dispatchMockEvent('focusout', theInput);
+
+      assert.isTrue(focusinSpy.firstCall.args[0].composed, 'focusin event should be always composed');
+      assert.isTrue(focusoutSpy.firstCall.args[0].composed, 'focusout event should be always composed');
+    });
+
+    const hasOnListenersOnPrototype = (function() {
+      // Chrome 41 has no listener attributes on the HTMLElement
+      return Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'onblur');
+    })();
+
+    test('onfocus property has correct eventTarget', function(done) {
+      if (!hasOnListenersOnPrototype) {
+        this.skip();
+      }
+      let input = createEnabledElement('input');
+      const callback = (event) => {
+        assert.isTrue(event.currentTarget === input, 'CurrentTarget should be input, not window');
+        ShadyDOM.wrapIfNeeded(document.body).removeChild(input);
+        done();
+      };
+      ShadyDOM.wrap(input).onfocus = callback;
+      assert.equal(ShadyDOM.wrap(input).onfocus, callback);
+      let ev = new Event('focus', {composed: true});
+      ShadyDOM.wrap(input).dispatchEvent(ev);
+    });
+
+    test('onblur property has correct eventTarget', function(done) {
+      if (!hasOnListenersOnPrototype) {
+        this.skip();
+      }
+      let input = createEnabledElement('input');
+      const callback = (event) => {
+        assert.isTrue(event.currentTarget === input, 'CurrentTarget should be input, not window');
+        ShadyDOM.wrapIfNeeded(document.body).removeChild(input);
+        done();
+      };
+      ShadyDOM.wrap(input).onblur = callback;
+      assert.equal(ShadyDOM.wrap(input).onblur, callback);
+      let ev = new Event('blur', {composed: true});
+      ShadyDOM.wrap(input).dispatchEvent(ev);
+    });
+
+    test('scoped focus and blur events do not retarget', function() {
+      let e = new Event('focus');
+      if (e.isTrusted !== false) {
+        // skip browser if we cannot distinguish
+        // native focus events from user created ones
+        this.skip();
+      }
+      let el = createEnabledElement('x-focus');
+      el.fireScoped();
+      assert.equal(el.events.length, 1);
+      assert.equal(el.events[0], el.child);
+      ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(el).parentNode).removeChild(el);
+    });
+
+    test('focusing a shadow nested node does not blur the parent', function(done) {
+      ensureDocumentHasFocus();
+      // skip test if the document is unfocused (firefox won't send focus events)
+      // or in IE (IE doesn't have relatedTarget on focus events)
+      if (!document.hasFocus() || navigator.userAgent.match(/Trident/)) {
+        this.skip();
+      }
+      let el = createEnabledElement('x-nested-focus');
+      ShadyDOM.wrapIfNeeded(el).focus();
+      ShadyDOM.wrapIfNeeded(el.child).focus();
+      setTimeout(function() {
+        let filtered = el.events.map(ev => ({type: ev.type, target: ev.target}));
+        assert.deepEqual(filtered, [
+          {type: 'focus', target: el},
+          {type: 'focus', target: el.child}
+        ]);
+        ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(el).parentNode).removeChild(el);
+        done();
+      });
+    });
+
+    test('focus and blur events have relatedTarget', function() {
+      ensureDocumentHasFocus();
+      // skip test if the document is unfocused (firefox won't send focus events)
+      // or in IE (IE doesn't have relatedTarget on focus events)
+      if (!document.hasFocus() || navigator.userAgent.match(/Trident/)) {
+        this.skip();
+      }
+      let el = createEnabledElement('x-nested-focus');
+      let wait = function() {
+        return new Promise((resolve) => {
+          setTimeout(resolve);
+        });
+      }
+      return Promise.resolve().then(function() {
+        ShadyDOM.wrapIfNeeded(el.child).focus();
+        return wait();
+      }).then(function() {
+        assert.deepEqual(el.events, [
+          {type: 'focus', target: el.child, relatedTarget: null},
+          {type: 'focus', target: el, relatedTarget: null},
+        ]);
+      }).then(function(){
+        ShadyDOM.wrapIfNeeded(el).focus();
+        return wait();
+      }).then(function() {
+        assert.deepEqual(el.events, [
+          {type: 'focus', target: el.child, relatedTarget: null},
+          {type: 'focus', target: el, relatedTarget: null},
+          {type: 'blur', target: el.child, relatedTarget: el}
+        ]);
+      }).then(function() {
+        ShadyDOM.wrapIfNeeded(el).blur();
+        return wait();
+      }).then(function() {
+        assert.deepEqual(el.events, [
+          {type: 'focus', target: el.child, relatedTarget: null},
+          {type: 'focus', target: el, relatedTarget: null},
+          {type: 'blur', target: el.child, relatedTarget: el},
+          {type: 'blur', target: el, relatedTarget: null}
+        ]);
+      }).then(function() {
+        ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(el).parentNode).removeChild(el);
+      });
+    });
+
+    test('composed relatedTarget retargets', function() {
+      let container = stampNodes('#relatedtarget');
+      let a = ShadyDOM.wrapIfNeeded(container).children[0];
+      let b = ShadyDOM.wrapIfNeeded(container).children[1];
+      let ev = new MouseEvent('foo', {bubbles: true, composed: true, relatedTarget: b.child});
+      ShadyDOM.wrapIfNeeded(a.child).dispatchEvent(ev);
+      assert.property(a, 'childEvent');
+      assert.deepEqual(a.childEvent, {target: a.child, relatedTarget: b});
+      assert.property(a, 'event');
+      assert.deepEqual(a.event, {target: a, relatedTarget: b});
+      ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(container).parentNode).removeChild(container);
+    });
+
+    test('events do not fire if relatedtarget and target are the same node after retargeting', function() {
+      let container = stampNodes('#relatedtarget');
+      let a = ShadyDOM.wrapIfNeeded(container).children[0];
+      let ev = new MouseEvent('foo', {bubbles: true, composed: true, relatedTarget: a.child2});
+      ShadyDOM.wrapIfNeeded(a.child).dispatchEvent(ev);
+      assert.property(a, 'childEvent');
+      assert.deepEqual(a.childEvent, {target: a.child, relatedTarget: a.child2});
+      assert.notProperty(a, 'event');
+      ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(container).parentNode).removeChild(container);
+    });
+
+    test('events fire if relatedtarget and target are the same node without retargeting', function() {
+      let container = stampNodes('#relatedtarget');
+      let a = ShadyDOM.wrapIfNeeded(container).children[0];
+      let ev = new MouseEvent('foo', {bubbles: true, composed: true, relatedTarget: a});
+      ShadyDOM.wrapIfNeeded(a).dispatchEvent(ev);
+      assert.property(a, 'event');
+      assert.deepEqual(a.event, {target: a, relatedTarget: a});
+      ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(container).parentNode).removeChild(container);
+    });
+
+    test('capturing event listeners fire correctly for focus and blur', function() {
+      let el = createEnabledElement('x-focus');
+      let timeStamp;
+      ShadyDOM.wrap(el).addEventListener('focus', function(e) {
+        timeStamp = e.timeStamp;
+      }, true);
+      el.fireComposed();
+      assert.ok(timeStamp);
+      assert.equal(el.events.length, 2);
+      assert.equal(el.events[0], el.child);
+      assert.equal(el.events[1], el);
+      ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(el).parentNode).removeChild(el);
+    });
+
+    test('.focus() and .blur() work as expected', function() {
+      // NOTE: IE 11 fails to work for some reason in Saucelabs when running with WCT
+      // Passes when running locally with WCT on the same Saucelabs VMs :/
+      if (navigator.userAgent.match(/Trident/)) {
+        this.skip();
+      }
+      let el = createEnabledElement('x-nested-focus');
+      ShadyDOM.wrapIfNeeded(el.child).focus();
+      assert.equal(ShadyDOM.wrapIfNeeded(document)._activeElement, el);
+      assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(el).shadowRoot).activeElement, el.child);
+      ShadyDOM.wrapIfNeeded(el).blur();
+      assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(el).shadowRoot).activeElement, null);
+      assert.notEqual(ShadyDOM.wrapIfNeeded(document)._activeElement, el);
+      ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(el).parentNode).removeChild(el);
+    });
+
+    suite('composedPath', function() {
+      test('does not confuse anchor with shadowroot', function() {
+        let el = document.createElement('div');
+        let root = ShadyDOM.wrapIfNeeded(el).attachShadow({mode: 'open'});
+        let a = document.createElement('a');
+        a.href = 'http://localhost/foo.html';
+        ShadyDOM.wrapIfNeeded(a).textContent = 'link!';
+        ShadyDOM.wrapIfNeeded(root).appendChild(a)
+        ShadyDOM.wrap(el).addEventListener('foo', function(event) {
+          let path = event.composedPath();
+          pathCompare([a, root, el, document.body, document.documentElement, document, window], path);
+        });
+        ShadyDOM.wrapIfNeeded(document.body).appendChild(el);
+        ShadyDOM.flush();
+        let ev = new Event('foo', {bubbles: true, composed: true});
+        ShadyDOM.wrapIfNeeded(a).dispatchEvent(ev);
+        ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(el).parentNode).removeChild(el);
+      });
+
+      test('focus events retarget', function() {
+        let recv = [];
+        function track(el) {
+          ShadyDOM.wrap(el).addEventListener('focus', function() {
+            recv.push(el);
+          })
+        }
+        let top = document.createElement('div');
+        top.id = 'top';
+        ShadyDOM.wrapIfNeeded(top).attachShadow({mode: 'open'});
+        track(top);
+        track(ShadyDOM.wrapIfNeeded(top).shadowRoot);
+
+        let mid = document.createElement('div');
+        ShadyDOM.wrapIfNeeded(mid).attachShadow({mode: 'open'});
+        mid.id = 'mid';
+        track(mid);
+        track(ShadyDOM.wrapIfNeeded(mid).shadowRoot);
+        let slot = document.createElement('slot');
+        ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(mid).shadowRoot).appendChild(slot);
+        track(slot);
+        ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(top).shadowRoot).appendChild(mid);
+
+        let bot = document.createElement('div');
+        bot.id = 'bot';
+        track(bot);
+        ShadyDOM.wrapIfNeeded(mid).appendChild(bot);
+
+        ShadyDOM.wrapIfNeeded(document.body).appendChild(top);
+
+        ShadyDOM.flush();
+
+        let ev = new Event('focus', {composed: true});
+        ShadyDOM.wrapIfNeeded(bot).dispatchEvent(ev);
+
+        assert.equal(recv.length, 2);
+        pathCompare([bot, top], recv);
+        ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(top).parentNode).removeChild(top);
+      });
+
+      test('composedPath of events from non-Node subclasses works', function() {
+        const xhr = new XMLHttpRequest();
+        xhr.open('GET', window.location.href);
+        xhr.addEventListener('load', (e) => {
+          assert.doesNotThrow(() => {e.composedPath()});
+        });
+        xhr.addEventListener('error', () => assert.fail('xhr failed'));
+        xhr.send();
+      });
+    });
+
+    test('click function is composed', function() {
+      if (window.brokenClickFn) {
+        this.skip();
+      }
+      let sawClick = false;
+      const top = document.createElement('div');
+      ShadyDOM.wrapIfNeeded(top).addEventListener('click', () => {
+        sawClick = true;
+      });
+      ShadyDOM.wrapIfNeeded(top).attachShadow({mode: 'open'});
+      const inner = document.createElement('div');
+      ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(top).shadowRoot).appendChild(inner);
+      ShadyDOM.wrapIfNeeded(document.body).appendChild(top);
+      inner.click();
+      assert.equal(sawClick, true, 'host should see click from inner node');
+      ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(top).parentNode).removeChild(top);
+    });
+
+    test('delayed target does not throw', function(done) {
+      const button = document.createElement('button');
+      button.addEventListener('click', (e) => {
+        setTimeout(() => {
+          assert.equal(e.target, button);
+          assert.isNotOk(e.currentTarget);
+          done();
+        });
+      });
+      ShadyDOM.wrapIfNeeded(document.body).appendChild(button);
+      button.click();
+      ShadyDOM.wrapIfNeeded(document.body).removeChild(button);
+    });
+
+    test('delayed relatedTarget does not throw', function(done) {
+      const div = document.createElement('div');
+      ShadyDOM.wrapIfNeeded(div).addEventListener('mouseover', (e) => {
+        setTimeout(() => {
+          assert.equal(e.relatedTarget, document);
+          assert.isNotOk(e.currentTarget);
+          done();
+        });
+      });
+      ShadyDOM.wrapIfNeeded(document.body).appendChild(div);
+      ShadyDOM.wrapIfNeeded(div).dispatchEvent(new MouseEvent('mouseover', {bubbles: true, cancelable: true, relatedTarget: document}));
+    });
+
+    test('events on window', function() {
+      const w = ShadyDOM.wrapIfNeeded(window);
+      let heardEvent = false;
+      w.addEventListener('foo', (e) => {
+        heardEvent = true;
+      })
+      w.dispatchEvent(new Event('foo'));
+      assert.isTrue(heardEvent);
+    });
+  });
+  </script>
+</body>
+</html>

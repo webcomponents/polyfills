@@ -1,0 +1,7 @@
+packages/*/node_modules/
+packages/custom-elements/src/
+packages/custom-elements/buildcache
+node_modules/
+lerna-debug.log
+*.min.js*
+*.tgz

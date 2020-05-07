@@ -1,0 +1,406 @@
+<!doctype html>
+<!--
+@license
+Copyright (c) 2018 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="wct-browser-config.js"></script>
+  <script src="../node_modules/@webcomponents/webcomponents-platform/webcomponents-platform.js"></script>
+  <script src="../node_modules/promise-polyfill/dist/polyfill.js"></script>
+  <script>
+    // TODO(sorvell): fix Promise to resolve at microtask time when polyfilled
+    if (Promise._immediateFn) {
+      const node = document.createTextNode('');
+      const twiddleNode = function twiddleNode() {
+        node.textContent = node.textContent.length > 0 ? '' : 'a';
+      };
+      /** @type {!Array<function():void>} */
+      const callbacks = [];
+      (new MutationObserver(() => {
+        const len = callbacks.length;
+        for (let i = 0; i < len; i++) {
+          callbacks[i]();
+        }
+        callbacks.splice(0, len);
+      }).observe(node, {characterData: true}));
+
+      // set _immediateFn to a MutationObserver for close-to-native timing
+      Promise._immediateFn = (fn) => {
+        callbacks.push(fn);
+        twiddleNode();
+      };
+    }
+  </script>
+  <script src="../node_modules/@webcomponents/template/template.js"></script>
+  <script src="loader.js"></script>
+  <script>
+  if (customElements.polyfillWrapFlushCallback) {
+    customElements.polyfillWrapFlushCallback(function(cb) {
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', cb);
+      } else {
+        cb();
+      }
+    });
+  }</script>
+  <script src="../node_modules/@webcomponents/shadycss/scoping-shim.min.js"></script>
+  <script src="../node_modules/wct-browser-legacy/browser.js"></script>
+</head>
+<body>
+  <template id="api-element">
+    <style>
+    </style>
+    <div id="internal"></div>
+    <slot></slot>
+  </template>
+  <template id="complicated">
+    <div></div>
+    <span></span>
+    <a>
+      <complicated>
+        <structure>
+          <of>
+            <img>
+            With
+            <img>
+            Some
+            <img>
+            Text
+          </of>
+        </structure>
+      </complicated>
+    </a>
+    <api-element></api-element>
+  </template>
+  <template id="clone-element">
+    <div>
+      <span></span>
+    </div>
+  </template>
+  <div id="arena"></div>
+  <script>
+    class Base extends HTMLElement {
+      constructor() {
+        super();
+        this.__template = ShadyDOM.wrapIfNeeded(document).querySelector(`template#${this.localName}`);
+      }
+      connectedCallback() {
+        if (this.__template) {
+          if (!this.__template.__prepared) {
+            window.ShadyCSS.prepareTemplate(this.__template, this.localName);
+            this.__template.__prepared = true;
+          }
+          window.ShadyCSS.styleElement(this);
+          if (!ShadyDOM.wrapIfNeeded(this).shadowRoot) {
+            ShadyDOM.wrapIfNeeded(this).attachShadow({mode: 'open'});
+            ShadyDOM.wrapIfNeeded(this).shadowRoot.appendChild(ShadyDOM.wrap(this.__template.content).cloneNode(true));
+          }
+        }
+      }
+    }
+
+    customElements.define('api-element', class extends Base {});
+    customElements.define('naive-element', class extends HTMLElement {
+      constructor() {
+        super();
+        ShadyDOM.wrapIfNeeded(this).attachShadow({mode: 'open'});
+      }
+    });
+
+    suite('Synchronous Scoping', function() {
+      let scopeSpy, unscopeSpy;
+
+      // returns the "current" scope of the node
+      const csfn = (node) => {
+        return window.ShadyCSS.ScopingShim.currentScopeForNode(node);
+      };
+
+      const arena = ShadyDOM.wrapIfNeeded(document).querySelector('#arena');
+
+
+      // set up spies on scoping APIs
+      const createSpies = () => {
+        scopeSpy = sinon.spy(window.ShadyCSS.ScopingShim, 'scopeNode');
+        unscopeSpy = sinon.spy(window.ShadyCSS.ScopingShim, 'unscopeNode');
+      };
+
+      teardown(function() {
+        // reset spies
+        if (scopeSpy) {
+          scopeSpy.restore();
+          scopeSpy = null;
+        }
+        if (unscopeSpy) {
+          unscopeSpy.restore();
+          unscopeSpy = null;
+        }
+        // NOTE: wrapping here is critical to avoid using native `innerHTML`
+        // setter which, on IE11, nukes the DOM subtree and can cause
+        // pending ShadyDOM renders to fail.
+        ShadyDOM.wrap(arena).innerHTML = '';
+        // Ensure clean rendering state between tests
+        ShadyDOM.flush();
+      });
+
+      suite('append', function() {
+
+        test('elements appended to the document are unscoped', function() {
+          const el = document.createElement('div');
+          ShadyDOM.wrapIfNeeded(arena).appendChild(el);
+          assert.equal(csfn(el), '');
+        });
+
+        test('elements appended to a shadowRoot are scoped to that shadowroot', function () {
+          const el = document.createElement('api-element');
+          ShadyDOM.wrapIfNeeded(arena).appendChild(el);
+          const newDiv = document.createElement('div');
+          ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(el).shadowRoot).appendChild(newDiv);
+          ShadyDOM.flush();
+          assert.equal(csfn(newDiv), 'api-element');
+        });
+
+        test('elements moved from a shadowroot to document are unscoped', function() {
+          const el = document.createElement('api-element');
+          ShadyDOM.wrapIfNeeded(arena).appendChild(el);
+          const inner = ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(el).shadowRoot).querySelector('#internal');
+          ShadyDOM.wrap(arena).appendChild(inner);
+          assert.equal(csfn(inner), '');
+        });
+
+        test('elements moving document to document do not do unnecessary work', function() {
+          const owner1 = document.createElement('div');
+          const inner = document.createElement('a');
+          ShadyDOM.wrapIfNeeded(owner1).appendChild(inner);
+          const owner2 = document.createElement('span');
+          ShadyDOM.wrapIfNeeded(arena).appendChild(owner1);
+          ShadyDOM.wrapIfNeeded(arena).appendChild(owner2);
+          createSpies();
+          ShadyDOM.wrapIfNeeded(owner2).appendChild(inner);
+          assert(scopeSpy.notCalled, 'scoping function should not have been called');
+          assert(unscopeSpy.notCalled, 'unscoping function should not have been called');
+        });
+
+        test('appending to a deep shadowroot gets the right scope', function () {
+          const el = document.createElement('naive-element');
+          ShadyDOM.wrapIfNeeded(arena).appendChild(el);
+          const api = document.createElement('api-element');
+          ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(el).shadowRoot).appendChild(api);
+          assert.equal(csfn(api), 'naive-element');
+          const div = document.createElement('div');
+          ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(api).shadowRoot).appendChild(div);
+          assert.equal(csfn(div), 'api-element');
+        });
+
+        test('moving between two shadowroots of the same type does not call scoping functions', function() {
+          const owner1 = document.createElement('naive-element');
+          const owner2 = document.createElement('naive-element');
+          const el = document.createElement('div');
+          ShadyDOM.wrapIfNeeded(arena).appendChild(owner1);
+          ShadyDOM.wrapIfNeeded(arena).appendChild(owner2);
+          ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(owner1).shadowRoot).appendChild(el);
+          assert.equal(csfn(el), 'naive-element');
+          createSpies();
+          ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(owner2).shadowRoot).appendChild(el);
+          assert.equal(csfn(el), 'naive-element');
+          assert(unscopeSpy.notCalled, 'unscopeNode should not have been called');
+          assert(scopeSpy.notCalled, 'scopeNode should not have been called');
+        });
+
+        test('ShadyCSS prepareTemplate is not needed for bulk append', function() {
+          const el = document.createElement('naive-element');
+          ShadyDOM.wrapIfNeeded(arena).appendChild(el);
+          const template = ShadyDOM.wrapIfNeeded(document).querySelector('template#complicated');
+          ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(el).shadowRoot).appendChild(ShadyDOM.wrapIfNeeded(template.content).cloneNode(true));
+          const nodes = Array.from(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(el).shadowRoot).querySelectorAll('*'));
+          nodes.forEach((node) =>
+            assert.equal(csfn(node), 'naive-element'));
+        });
+
+        test('appending to a document fragment does not scope', function() {
+          const df = document.createDocumentFragment();
+          const api = document.createElement('api-element');
+          ShadyDOM.wrapIfNeeded(df).appendChild(api);
+          assert.equal(csfn(api), '');
+        });
+
+        test('appending a distributed node has the correct scope', function() {
+          const span = document.createElement('span');
+          const el = document.createElement('api-element');
+          ShadyDOM.wrapIfNeeded(arena).appendChild(el);
+          ShadyDOM.wrapIfNeeded(el).appendChild(span);
+          ShadyDOM.flush();
+          assert.equal(csfn(span), '');
+          const naive = document.createElement('naive-element');
+          ShadyDOM.wrapIfNeeded(arena).appendChild(naive);
+          ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(naive).shadowRoot).appendChild(el);
+          ShadyDOM.flush();
+          assert.equal(csfn(span), 'naive-element');
+        });
+
+        test('appending a node to a disconnected light dom tree does not scope', function () {
+          const el = document.createElement('div');
+          const child = document.createElement('span');
+          ShadyDOM.wrapIfNeeded(el).appendChild(child);
+          assert.equal(csfn(child), '');
+        });
+
+        test('appending a disconnected, scoped node to document unscopes correctly', function() {
+          const el = document.createElement('api-element');
+          ShadyDOM.wrapIfNeeded(arena).appendChild(el);
+          const clone = ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(el).shadowRoot).querySelector('div').cloneNode(true);
+          assert.equal(csfn(clone), 'api-element');
+          ShadyDOM.wrap(arena).appendChild(clone);
+          assert.equal(csfn(clone), '');
+        });
+
+        test('appending a cloned, scoped node to document unscopes correctly', function() {
+          customElements.define('clone-element', class extends Base {});
+          const el = document.createElement('clone-element');
+          ShadyDOM.wrapIfNeeded(arena).appendChild(el);
+          const clone = ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(el).shadowRoot).querySelector('div').cloneNode(true);
+          const span = ShadyDOM.wrapIfNeeded(clone).querySelector('span');
+          assert.equal(csfn(span), 'clone-element');
+          ShadyDOM.wrap(arena).appendChild(span);
+          assert.equal(csfn(span), '');
+        });
+
+        test('appending a unscoped node into a disconnected shadowroot scopes correctly', function() {
+          const el = document.createElement('naive-element');
+          const span = document.createElement('span');
+          ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(el).shadowRoot).appendChild(span);
+          assert.equal(csfn(span), 'naive-element');
+        });
+
+        test('`setAttribute(\'class\', ...)` scopes correctly', function() {
+          const el = document.createElement('naive-element');
+          const span = document.createElement('span');
+          ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(el).shadowRoot).appendChild(span);
+          ShadyDOM.wrapIfNeeded(span).setAttribute('class', 'foo');
+          assert.equal(csfn(span), 'naive-element');
+        });
+
+        test('`removeAttribute(\'class\', ...)` scopes correctly', function() {
+          const el = document.createElement('naive-element');
+          const span = document.createElement('span');
+          ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(el).shadowRoot).appendChild(span);
+          ShadyDOM.wrapIfNeeded(span).removeAttribute('class');
+          assert.equal(csfn(span), 'naive-element');
+        });
+
+        test('`removeAttribute(\'class\', ...)` removes if class is empty', function () {
+          const el = document.createElement('naive-element');
+          const span = document.createElement('span');
+          ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(el)).appendChild(span);
+          ShadyDOM.wrapIfNeeded(span).removeAttribute('class');
+          assert.equal(span.getAttribute('class'), null);
+        });
+
+        test('`className` scopes correctly', function() {
+          const el = document.createElement('naive-element');
+          const span = document.createElement('span');
+          ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(el).shadowRoot).appendChild(span);
+          ShadyDOM.wrapIfNeeded(span).className = 'foo';
+          assert.equal(csfn(span), 'naive-element');
+        });
+      });
+
+      suite('remove', function() {
+
+        test('removing a shadowed node removes the scope', function() {
+          const el = document.createElement('api-element');
+          ShadyDOM.wrapIfNeeded(arena).appendChild(el);
+          const inner = ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(el).shadowRoot).querySelector('#internal');
+          ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(el).shadowRoot).removeChild(inner);
+          assert.equal(csfn(inner), '');
+        });
+
+        test('removing document scope node does not use scoping API', function() {
+          const el = document.createElement('div');
+          ShadyDOM.wrapIfNeeded(arena).appendChild(el);
+          createSpies();
+          ShadyDOM.wrapIfNeeded(arena).removeChild(el);
+          assert(scopeSpy.notCalled, 'scopeNode should not be called');
+          assert(unscopeSpy.notCalled, 'unscopeNode should not be called');
+        });
+      });
+
+      suite('mutation', function() {
+        test('setting class and className works and preserves scoping', function() {
+          const el = document.createElement('api-element');
+          ShadyDOM.wrapIfNeeded(arena).appendChild(el);
+          const inner = ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(el).shadowRoot).querySelector('#internal');
+          const innerWrapper = ShadyDOM.wrapIfNeeded(inner);
+          assert.equal(csfn(inner), 'api-element');
+          innerWrapper.setAttribute('class', 'a');
+          assert.isTrue(inner.classList.contains('a'));
+          assert.equal(csfn(inner), 'api-element');
+          innerWrapper.className = 'b';
+          assert.isTrue(inner.classList.contains('b'));
+          assert.equal(csfn(inner), 'api-element');
+        })
+      });
+
+      suite('elements not owned by the main document', function() {
+        let el;
+        const template = document.createElement('template');
+        const doc = template.content.ownerDocument;
+        const scopeSelector = 'style-scope x-foo';
+
+        setup(function() {
+          el = doc.createElement('div');
+          el.className = scopeSelector;
+        });
+
+        test('setAttribute does not update a scoping class', function() {
+          ShadyDOM.wrapIfNeeded(el).setAttribute('class', el.getAttribute('class') + ' nug');
+          assert.equal(ShadyDOM.wrapIfNeeded(el).getAttribute('class'), scopeSelector + ' nug');
+        });
+
+        test('appendChild does not update a scoping class', function() {
+          const container = doc.createElement('div');
+          ShadyDOM.wrapIfNeeded(container).appendChild(el);
+          assert.equal(ShadyDOM.wrapIfNeeded(el).getAttribute('class'), scopeSelector);
+        });
+
+        test('removeChild does not update a scoping class', function() {
+          const container = doc.createElement('div');
+          const d = doc.createElement('div');
+          ShadyDOM.wrapIfNeeded(container).appendChild(d);
+          d.className = scopeSelector;
+          ShadyDOM.wrapIfNeeded(container).removeChild(d);
+          assert.equal(ShadyDOM.wrapIfNeeded(el).getAttribute('class'), scopeSelector);
+        });
+      });
+
+      suite('moving back into document fragment', function() {
+        test('pre-scoped content moved back into doc fragment', function() {
+          const template = document.createElement('template');
+          template.innerHTML = '<span></span>';
+          window.ShadyCSS.prepareTemplate(template, 'x-host');
+          const host = document.body.appendChild(document.createElement('x-host'));
+          ShadyDOM.wrapIfNeeded(host).attachShadow({mode: 'open'});
+          const fragment = ShadyDOM.wrapIfNeeded(document).importNode(template.content, true);
+          fragment.__noInsertionPoint = true;
+          ShadyDOM.wrapIfNeeded(host).shadowRoot.appendChild(fragment);
+          ShadyDOM.wrap(fragment).appendChild(ShadyDOM.wrapIfNeeded(host).shadowRoot.firstChild);
+          // Under preferPerformance, the scoping classes are not removed when moving
+          // back into a pre-scoped fragment, otherwise they are
+          assert.equal(ShadyDOM.wrapIfNeeded(fragment).firstChild.classList.contains('style-scope'), ShadyDOM.preferPerformance);
+          assert.equal(ShadyDOM.wrapIfNeeded(fragment).firstChild.classList.contains('x-host'), ShadyDOM.preferPerformance);
+          ShadyDOM.wrapIfNeeded(host).shadowRoot.appendChild(fragment);
+          // However, when put back into a shadowRoot, it should always be scoped
+          assert.isTrue(ShadyDOM.wrapIfNeeded(host).shadowRoot.firstChild.classList.contains('style-scope'));
+          assert.isTrue(ShadyDOM.wrapIfNeeded(host).shadowRoot.firstChild.classList.contains('x-host'));
+        });
+       });
+    });
+  </script>
+</body>
+</html>

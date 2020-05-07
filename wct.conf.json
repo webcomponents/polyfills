@@ -1,0 +1,25 @@
+{
+  "suites": [
+    "packages/tests/custom-elements/index.html",
+    "packages/tests/html-imports/index.html",
+    "packages/tests/shadycss/runner.html",
+    "packages/tests/shadydom/runner.html",
+    "packages/tests/template/runner.html",
+    "packages/tests/webcomponentsjs_/runner.html"
+  ],
+  "npm": true,
+  "plugins": {
+    "local": {
+      "browserOptions": {
+        "chrome": [
+          "headless",
+          "disable-gpu",
+          "no-sandbox"
+        ],
+        "firefox": [
+          "-headless"
+        ]
+      }
+    }
+  }
+}

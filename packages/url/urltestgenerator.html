@@ -1,0 +1,88 @@
+<!doctype html>
+<!--
+ This lacks documentation. But basically you pass in an array of tests (in cases below)
+ and a common base URL and after some tweaking you get tests you can use in urltests.txt.
+
+ With some more tweaking you can vary the base URL, too.
+
+ Not covered by this format: testing URLs & encodings, and testing setting of properties,
+ such as .host.
+-->
+<meta charset=utf-8>
+<script src=url.js></script>
+<pre><script>
+var base  = "about:blank"
+var cases = []
+function serialize_components(url) {
+  var output = "",
+      components = ["_scheme", "_username", "_password", "_host", "_port", "_path", "_query", "_fragment"],
+      componentsKeys = ["s",   "u",         "pass",      "h",     "port",  "p",     "q",      "f"]
+  for(var i=0, l = components.length; i < l; i++) {
+    var val = components[i] == "_path" ? url.pathname : url[components[i]]
+    if(val !== "") {
+      if(val === null) {
+        continue // only true for "_password"
+      }
+      if(output !== "")
+        output += " "
+      output += componentsKeys[i] + ":" + esc(val)
+    } else if(components[i] == "_password") {
+      if(output !== "")
+        output += " "
+      output += componentsKeys[i] + ":" // need to log empty string for "_password" as default is null
+    }
+  }
+  return output
+}
+
+function serialize(input, base, components) {
+  var output = esc(input)
+  if(base || components)
+    output += " "
+  if(base)
+    output += base
+  if(components)
+    output += " " + components
+  return output += "\n"
+}
+
+function hex(input, padding) {
+  var output = input.toString(16).toUpperCase()
+  while(output.length < padding) {
+    output = "0" + output
+  }
+  return output
+}
+
+function esc(input) {
+  var output = ""
+  for(var i=0, l = input.length; i < l; i++) {
+    if(input[i] == "\\") {
+      output += "\\\\"
+    } else if(input[i] == "\n") {
+      output += "\\n"
+    } else if(input[i] == "\r") {
+      output += "\\r"
+    } else if(input[i] == " ") {
+      output += "\\s"
+    } else if(input[i] == "\t") {
+      output += "\\t"
+    } else if(input.charCodeAt(i) > 127 || input.charCodeAt(i) < 20) {
+      output += "\\u" + hex(input.charCodeAt(i), 4)
+    } else {
+      output += input[i]
+    }
+  }
+  return output
+}
+
+var copyBase = base
+//base = new jURL(base)
+for(var i = 0, l = cases.length; i < l; i++) {
+  var input = cases[i][0]
+  var components = serialize_components(new jURL(input, new jURL(base)))
+  document.write(serialize(input, copyBase, components))
+  copyBase = ""
+}
+
+</script></pre>
