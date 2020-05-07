@@ -14,21 +14,9 @@ The most-supported loading order is:
 1. ApplyShim
 1. CustomStyleInterface
 
-All libraries will expose an object on `window` named `ShadyCSS` with the following interface:
-
-```js
-ShadyCSS = {
-  prepareTemplate(templateElement, elementName, elementExtension){},
-  styleElement(element){},
-  styleSubtree(element, overrideProperties){},
-  styleDocument(overrideProperties){},
-  getComputedStyleValue(element, propertyName){
-    return // style value for property name on element
-  },
-  nativeCss: Boolean,
-  nativeShadow: Boolean
-}
-```
+Import the `@webcomponents/shadycss` module to interact with ShadyCSS. This is a
+small module that lets you interface with ShadyCSS for patterns that don't work
+automatically, and is safe to use whether or not ShadyCSS is loaded.
 
 ## About ScopingShim
 
@@ -221,17 +209,25 @@ CustomStyleInterface.addCustomStyle({
 
 To use ShadyCSS:
 
-1. First, call `ShadyCSS.prepareTemplate(template, name)` on a
+1. Import the ShadyCSS interface module. (Note that this module does not load
+   the polyfill itself, rather it provides functions for interfacing with
+   ShadyCSS _if_ it is loaded.)
+
+  ```typescript
+  import * as shadyCss from '@webcomponents/shadycss';
+  ```
+
+1. First, call `shadyCss.prepareTemplate(template, name)` on a
 `<template>` element that will be imported into a `shadowRoot`.
 
-2. When the element instance is connected, call `ShadyCSS.styleElement(element)`
+2. When the element instance is connected, call `shadyCss.styleElement(element)`
 
 3. Create and stamp the element's shadowRoot
 
-4. Whenever dynamic updates are required, call `ShadyCSS.styleSubtree(element)`.
+4. Whenever dynamic updates are required, call `shadyCss.styleSubtree(element)`.
 
 5. If a styling change is made that may affect the whole document, call
-`ShadyCSS.styleDocument()`.
+`shadyCss.styleSubtree(document.documentElement)`.
 
 The following example uses ShadyCSS and ShadyDOM to define a custom element.
 
@@ -257,13 +253,15 @@ The following example uses ShadyCSS and ShadyDOM to define a custom element.
     <slot></slot>
   </div>
 </template>
-<script>
-  // Use polyfill only in browsers that lack native Shadow DOM.
-  window.ShadyCSS && ShadyCSS.prepareTemplate(myElementTemplate, 'my-element');
+<script type="module">
+  import * as shadyCss from '@webcomponents/shadycss';
+
+  const myElementTemplate = document.body.querySelector('#myElementTemplate');
+  shadyCss.prepareTemplate(myElementTemplate, 'my-element');
 
   class MyElement extends HTMLElement {
     connectedCallback() {
-      window.ShadyCSS && ShadyCSS.styleElement(this);
+      shadyCSS.styleElement(this);
       if (!this.shadowRoot) {
         this.attachShadow({mode: 'open'});
         this.shadowRoot.appendChild(
@@ -276,58 +274,12 @@ The following example uses ShadyCSS and ShadyDOM to define a custom element.
 </script>
 ```
 
-## Type Extension elements
-
-ShadyCSS can also be used with type extension elements by supplying the base
-element name to `prepareTemplate` as a third argument.
-
-### Example
-
-```html
-<template id="myElementTemplate">
-  <style>
-    :host {
-      display: block;
-      padding: 8px;
-    }
-
-    #content {
-      background-color: var(--content-color);
-    }
-
-    .slot-container ::slotted(*) {
-      border: 1px solid steelblue;
-      margin: 4px;
-    }
-  </style>
-  <div id="content">Content</div>
-  <div class="slot-container">
-    <slot></slot>
-  </div>
-</template>
-<script>
-  window.ShadyCSS && ShadyCSS.prepareTemplate(myElementTemplate, 'my-element', 'div');
-
-  class MyElement extends HTMLDivElement {
-    connectedCallback() {
-      window.ShadyCSS && ShadyCSS.styleElement(this);
-      if (!this.shadowRoot) {
-        this.attachShadow({mode: 'open'});
-        this.shadowRoot.appendChild(
-          document.importNode(myElementTemplate.content, true));
-      }
-    }
-  }
-
-  customElements.define('my-element', MyElement, {extends: 'div'});
-</script>
-```
-
 ## Imperative values for Custom properties
 
-To set the value of a CSS Custom Property imperatively, `ShadyCSS.styleSubtree`
-and `ShadyCSS.styleDocument` support an additional argument of an object mapping
-variable name to value.
+To set the value of a CSS Custom Property imperatively, use the `styleSubtree`
+function from the `@webcomponents/shadycss` module. This function supports an
+additional argument of an object mapping variable name to value, and works
+whether or not ShadyCSS is loaded.
 
 When using ApplyShim, defining new mixins or new values for current mixins imperatively is not
 supported.
@@ -336,10 +288,13 @@ supported.
 ```html
 <my-element id="a">Text</my-element>
 <my-element>Text</my-element>
-<script>
-let el = document.querySelector('my-element#a');
+
+<script type="module">
+import {styleElement} from '@webcomponents/shadycss';
+
+const el = document.querySelector('my-element#a');
 // Set the color of all my-element instances to 'green'
-ShadyCSS.styleDocument({'--content-color' : 'green'});
+ShadyCSS.styleSubtree(document.documentElement, {'--content-color' : 'green'});
 // Set the color my-element#a's text to 'red'
 ShadyCSS.styleSubtree(el, {'--content-color' : 'red'});
 </script>
