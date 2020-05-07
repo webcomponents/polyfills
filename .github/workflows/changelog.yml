@@ -21,4 +21,5 @@ jobs:
     - name: Require CHANGELOG changes
       run: |
         git fetch origin master:master --depth=1
+        git diff --name-only master
         git diff --name-only master | grep CHANGELOG
