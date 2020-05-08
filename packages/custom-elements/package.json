@@ -22,6 +22,7 @@
   "license": "BSD-3-Clause",
   "scripts": {
     "build": "tsc && gulp",
+    "build:watch": "concurrently --names=tsc,gulp 'tsc --noEmitOnError --watch' 'chokidar \"src/**/*.js\" -c gulp'",
     "debug": "rollup -c",
     "prepack": "npm run build",
     "format": "find src -name \"*.ts\" | xargs clang-format --style=file -i"

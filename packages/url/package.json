@@ -13,6 +13,7 @@
   "description": "URL parser in JavaScript",
   "scripts": {
     "build": "gulp",
+    "build:watch": "chokidar 'url.js' -c 'npm run build'",
     "prepack": "npm run build"
   },
   "author": "Erik Arvidsson <arv@chromium.org>",

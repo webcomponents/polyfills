@@ -7,6 +7,7 @@
   "scripts": {
     "bootstrap": "lerna bootstrap --ci --reject-cycles",
     "build": "lerna run build --stream",
+    "build:watch": "lerna run build:watch --stream",
     "lint": "lerna run lint --stream",
     "test": "wct",
     "test-pack": "lerna exec \"npm pack\"",
@@ -16,6 +17,8 @@
   "devDependencies": {
     "@gulp-sourcemaps/sources-content": "^1.0.0",
     "babel-core": "^6.26.3",
+    "chokidar-cli": "^2.1.0",
+    "concurrently": "^5.2.0",
     "del": "^3.0.0",
     "eslint": "^5.9.0",
     "eslint-plugin-html": "^5.0.3",
