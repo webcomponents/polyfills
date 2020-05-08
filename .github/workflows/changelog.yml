@@ -20,7 +20,7 @@ jobs:
 
     - name: Check for CHANGELOG changes
       run: |
-        # Only the latest commit of the feature branch is checkoued out
+        # Only the latest commit of the feature branch is available
         # automatically (see https://github.com/webcomponents/polyfills). To
         # diff with the base branch, we need to fetch that too (and we only
         # need its latest commit).
