@@ -1,11 +1,11 @@
 ---
 name: Bug
 about: Report an error or other polyfill problem
-labels: 'Type: Bug', 'Focus Area: Standards & Polyfills'
-
+labels: "Type: Bug, Focus Area: Standards & Polyfills"
 ---
 
 ### Description
+
 <!--
   Please provide a clear and concise summary of the bug.
 
@@ -13,12 +13,14 @@ labels: 'Type: Bug', 'Focus Area: Standards & Polyfills'
 -->
 
 ### Example
+
 <!--
   Please include a Glitch/JSBin/etc. URL, or a minimal code snippet, that
   can be used to demonstrate and reproduce the problem.
  -->
 
 ### Steps to reproduce
+
 <!--
 Example:
 
@@ -29,12 +31,15 @@ Example:
 -->
 
 #### Expected behavior
+
 <!-- Example: No error is thrown -->
 
 #### Actual behavior
+
 <!-- Example: Error is thrown -->
 
 ### Version
+
 <!--
   You can usually find this by running:
     npm ls @webcomponents/webcomponentsjs
@@ -43,7 +48,9 @@ Example:
 -->
 
 ### Browsers affected
+
 <!-- Check all that apply -->
+
 - [ ] Chrome
 - [ ] Firefox
 - [ ] Edge
