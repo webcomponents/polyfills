@@ -7,8 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- Add `@webcomponents/shadycss/interface`, an interface to ShadyCSS polyfills
-  that is importable, type-safe, and easier to use than the `window.ShadyCSS`
+- Add `@webcomponents/shadycss` module, an interface to ShadyCSS polyfills that
+  is importable, type-safe, and easier to use than the `window.ShadyCSS`
   globals.
 
 ## [1.9.6] - 2020-03-16

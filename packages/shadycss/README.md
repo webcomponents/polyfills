@@ -14,9 +14,10 @@ The most-supported loading order is:
 1. ApplyShim
 1. CustomStyleInterface
 
-Import the `@webcomponents/shadycss` module to interact with ShadyCSS. This is a
-small module that lets you interface with ShadyCSS for patterns that don't work
-automatically, and is safe to use whether or not ShadyCSS is loaded.
+Import the `@webcomponents/shadycss` module to interact with ShadyCSS. Note this
+module does not _load_ the polyfill, instead this module is used to interact
+with ShadyCSS _if_ the polyfill is loaded, and is safe to use whether or not
+ShadyCSS is loaded.
 
 ## About ScopingShim
 
