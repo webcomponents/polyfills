@@ -1,7 +1,7 @@
 ---
 name: Bug
 about: Report an error or other polyfill problem
-labels: 'Type: Bug'
+labels: 'Type: Bug', 'Focus Area: Standards & Polyfills'
 
 ---
 
