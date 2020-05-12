@@ -14,7 +14,7 @@
   "license": "BSD-3-Clause",
   "scripts": {
     "build": "gulp",
-    "build:watch": "chokidar 'template.js' -c 'npm run build'",
+    "build:watch": "chokidar --initial 'template.js' -c 'npm run build'",
     "lint": "eslint template.js",
     "prepack": "npm run build"
   },

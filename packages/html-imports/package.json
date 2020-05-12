@@ -22,7 +22,7 @@
   "license": "BSD-3-Clause",
   "scripts": {
     "build": "gulp",
-    "build:watch": "chokidar 'src/**/*.js' -c 'npm run build'",
+    "build:watch": "chokidar --initial 'src/**/*.js' -c 'npm run build'",
     "debug": "cp src/html-imports.js html-imports.min.js",
     "prepack": "npm run build"
   },

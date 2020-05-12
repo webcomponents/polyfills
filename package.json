@@ -7,7 +7,7 @@
   "scripts": {
     "bootstrap": "lerna bootstrap --ci --reject-cycles",
     "build": "lerna run build --stream",
-    "build:watch": "lerna run build:watch --stream",
+    "build:watch": "lerna run build:watch --parallel",
     "lint": "lerna run lint --stream",
     "test": "wct",
     "test-pack": "lerna exec \"npm pack\"",
