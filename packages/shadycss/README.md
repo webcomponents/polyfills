@@ -14,10 +14,31 @@ The most-supported loading order is:
 1. ApplyShim
 1. CustomStyleInterface
 
+## Interacting
+
 Import the `@webcomponents/shadycss` module to interact with ShadyCSS. Note this
 module does not _load_ the polyfill, instead this module is used to interact
 with ShadyCSS _if_ the polyfill is loaded, and is safe to use whether or not
 ShadyCSS is loaded.
+
+### Legacy global API
+
+There is also a legacy global API exposed on `window.ShadyCSS`. Prefer use of
+the `@webcomponents/shadycss` module described above.
+
+```js
+ShadyCSS = {
+  prepareTemplate(templateElement, elementName, elementExtension){},
+  styleElement(element){},
+  styleSubtree(element, overrideProperties){},
+  styleDocument(overrideProperties){},
+  getComputedStyleValue(element, propertyName){
+    return // style value for property name on element
+  },
+  nativeCss: Boolean,
+  nativeShadow: Boolean
+}
+```
 
 ## About ScopingShim
 
@@ -218,16 +239,16 @@ To use ShadyCSS:
   import * as shadyCss from '@webcomponents/shadycss';
   ```
 
-1. First, call `shadyCss.prepareTemplate(template, name)` on a
+2. First, call `shadyCss.prepareTemplate(template, name)` on a
 `<template>` element that will be imported into a `shadowRoot`.
 
-2. When the element instance is connected, call `shadyCss.styleElement(element)`
+3. When the element instance is connected, call `shadyCss.styleElement(element)`.
 
-3. Create and stamp the element's shadowRoot
+4. Create and stamp the element's shadowRoot.
 
-4. Whenever dynamic updates are required, call `shadyCss.styleSubtree(element)`.
+5. Whenever dynamic updates are required, call `shadyCss.styleSubtree(element)`.
 
-5. If a styling change is made that may affect the whole document, call
+6. If a styling change is made that may affect the whole document, call
 `shadyCss.styleSubtree(document.documentElement)`.
 
 The following example uses ShadyCSS and ShadyDOM to define a custom element.
@@ -291,13 +312,13 @@ supported.
 <my-element>Text</my-element>
 
 <script type="module">
-import {styleElement} from '@webcomponents/shadycss';
+import * as shadyCSS from '@webcomponents/shadycss';
 
 const el = document.querySelector('my-element#a');
 // Set the color of all my-element instances to 'green'
-ShadyCSS.styleSubtree(document.documentElement, {'--content-color' : 'green'});
+shadyCss.styleSubtree(document.documentElement, {'--content-color' : 'green'});
 // Set the color my-element#a's text to 'red'
-ShadyCSS.styleSubtree(el, {'--content-color' : 'red'});
+shadyCss.styleSubtree(el, {'--content-color' : 'red'});
 </script>
 ```
 
@@ -313,8 +334,8 @@ You cannot use any selector for the `<slot>` element. Rules like `.foo .bar::slo
 ### Custom properties and `@apply`
 
 Dynamic changes are not automatically applied. If elements change such that they
-conditionally match selectors they did not previously, `ShadyCSS.styleDocument()`
-must be called.
+conditionally match selectors they did not previously,
+`styleElement(document.documentElement)` must be called.
 
 For a given element's shadowRoot, only 1 value is allowed per custom properties.
 Properties cannot change from parent to child as they can under native custom
@@ -325,8 +346,8 @@ defines the property in its host's stylesheet.
 
 ### `<custom-style>` Flash of unstyled content
 
-If `ShadyCSS.applyStyle` is never called, `<custom-style>` elements will process
-after HTML Imports have loaded, after the document loads, or after the next paint.
+If `applyStyle` is never called, `<custom-style>` elements will process after
+HTML Imports have loaded, after the document loads, or after the next paint.
 This means that there may be a flash of unstyled content on the first load.
 
 ### Mixins do not cascade throught `<slot>`
