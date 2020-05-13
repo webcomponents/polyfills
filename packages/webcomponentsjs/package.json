@@ -20,7 +20,7 @@
   ],
   "scripts": {
     "build": "tsc && gulp",
-    "build:watch": "concurrently --names=tsc,gulp 'tsc --watch --noEmitOnError' 'chokidar --initial --follow-symlinks \"src/**/*.js\" \"node_modules/@webcomponents/**/*.js\" -c gulp'",
+    "build:watch": "chokidar --initial --follow-symlinks 'src/**/*.js' 'node_modules/@webcomponents/**/*.js' -c 'npm run build'",
     "lint": "eslint src",
     "regen-package-lock": "rm -rf node_modules package-lock.json; npm install",
     "prepack": "npm run build",
