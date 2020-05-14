@@ -254,6 +254,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   });
   </script>
 
+  <template id="x-no-slot">
+    This element has no slot.
+  </template>
+  <script>
+    defineTestElement('x-no-slot');
+  </script>
+
   <div id="globalpatch"></div>
 
   <template id="relatedtarget">
@@ -929,6 +936,20 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       })
       w.dispatchEvent(new Event('foo'));
       assert.isTrue(heardEvent);
+    });
+
+    test('events dispatched to unassigned slottables bubble through the tree above them', () => {
+      const noSlot = ShadyDOM.wrapIfNeeded(document.createElement('x-no-slot'));
+      const unassignedSlottable = ShadyDOM.wrapIfNeeded(document.createElement('div'));
+
+      ShadyDOM.wrapIfNeeded(document.body).appendChild(noSlot);
+      noSlot.appendChild(unassignedSlottable);
+      assert.equal(ShadyDOM.wrapIfNeeded(unassignedSlottable).assignedSlot, undefined);
+
+      let listenerTriggered = false;
+      ShadyDOM.wrapIfNeeded(noSlot).addEventListener('some-event', () => listenerTriggered = true);
+      ShadyDOM.wrapIfNeeded(unassignedSlottable).dispatchEvent(new Event('some-event', {bubbles: true}));
+      assert.ok(listenerTriggered);
     });
   });
   </script>
