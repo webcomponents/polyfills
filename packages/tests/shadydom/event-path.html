@@ -950,6 +950,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       ShadyDOM.wrapIfNeeded(noSlot).addEventListener('some-event', () => listenerTriggered = true);
       ShadyDOM.wrapIfNeeded(unassignedSlottable).dispatchEvent(new Event('some-event', {bubbles: true}));
       assert.ok(listenerTriggered);
+
+      ShadyDOM.wrapIfNeeded(document.body).removeChild(noSlot);
     });
   });
   </script>
