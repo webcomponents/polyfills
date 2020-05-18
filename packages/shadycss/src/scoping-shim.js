@@ -23,6 +23,8 @@ import templateMap from './template-map.js';
 import * as ApplyShimUtils from './apply-shim-utils.js';
 import {updateNativeProperties, detectMixin} from './common-utils.js';
 import {CustomStyleInterfaceInterface, CustomStyleProvider} from './custom-style-interface.js'; // eslint-disable-line no-unused-vars
+import * as shadowParts from './shadow-parts.js';
+import {disableShadowParts} from './style-settings.js';
 
 /** @type {!Object<string, string>} */
 const adoptedCssTextMap = {};
@@ -275,6 +277,21 @@ export default class ScopingShim {
     // sort ast ordering for document
     this._documentOwnerStyleInfo.styleRules['rules'] = styles.map(s => StyleUtil.rulesForStyle(s));
   }
+
+  /**
+   * Hook for performing ShadyCSS behavior for each ShadyDOM insertBefore call.
+   *
+   * @param {!HTMLElement} parentNode
+   * @param {!HTMLElement} newNode
+   * @param {?HTMLElement} referenceNode
+   * @return {void}
+   */
+  onInsertBefore(parentNode, newNode, referenceNode) {
+    if (!disableShadowParts) {
+      shadowParts.onInsertBefore(parentNode, newNode, referenceNode);
+    }
+  }
+
   /**
    * Apply styles for the given element
    *

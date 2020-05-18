@@ -12,6 +12,10 @@ import {shadyDataForNode} from './shady-data.js';
 /** @type {!Object} */
 export const settings = window['ShadyDOM'] || {};
 
+/** @type {boolean} */
+export const disableShadowParts =
+    Boolean(window['ShadyCSS'] && window['ShadyCSS']['disableShadowParts']);
+
 settings.hasNativeShadowDOM = Boolean(Element.prototype.attachShadow && Node.prototype.getRootNode);
 
 // The user might need to pass the custom elements polyfill a flag by setting an

@@ -165,3 +165,47 @@ export function formatShadyPartSelector(
     })
     .join('');
 }
+
+/*  eslint-disable no-unused-vars */
+/**
+ * Perform any needed Shadow Parts updates after a ShadyDOM insertBefore call
+ * has been made.
+ *
+ * @param {!HTMLElement} parentNode
+ * @param {!HTMLElement} newNode
+ * @param {?HTMLElement} referenceNode
+ * @return {void}
+ */
+export function onInsertBefore(parentNode, newNode, referenceNode) {
+  /* eslint-enable no-unused-vars */
+  if (!parentNode.getRootNode) {
+    // TODO(aomarks) Why is it in noPatch mode on Chrome 41 and other older
+    // browsers that getRootNode is sometimes undefined?
+    return;
+  }
+  const root = parentNode.getRootNode();
+  if (root === document) {
+    // Parts in the document scope would never have any effect. Return early so
+    // we don't waste time querying it.
+    return;
+  }
+  const parts = parentNode.querySelectorAll('[part]');
+  if (parts.length === 0) {
+    return;
+  }
+  const host = root.host;
+  const receiverScope = host.localName;
+  const superRoot = host.getRootNode();
+  const providerScope =
+    superRoot === document ? 'document' : superRoot.host.localName;
+  for (const part of parts) {
+    part.setAttribute(
+      'shady-part',
+      formatShadyPartAttribute(
+        providerScope,
+        receiverScope,
+        part.getAttribute('part')
+      )
+    );
+  }
+}

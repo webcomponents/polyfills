@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<!--
+@license
+Copyright (c) 2020 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<title>shadycss/shadow-parts/disable</title>
+
+<script>
+  window.ShadyCSS = {disableShadowParts: true};
+</script>
+
+<script src="../test-flags.js"></script>
+<script src="../../node_modules/wct-browser-legacy/browser.js"></script>
+<script src="../../node_modules/@webcomponents/webcomponents-platform/webcomponents-platform.js"></script>
+<script src="../../node_modules/es6-promise/dist/es6-promise.auto.min.js"></script>
+<script src="../../node_modules/@webcomponents/template/template.js"></script>
+<script src="../../node_modules/@webcomponents/shadydom/shadydom.min.js"></script>
+<script src="../../node_modules/@webcomponents/custom-elements/custom-elements.min.js"></script>
+<script src="../../node_modules/@webcomponents/shadycss/scoping-shim.min.js"></script>
+<script src="../module/generated/make-element.js"></script>
+
+<template id="x-a">
+  <style>
+    x-b::part(pa) {
+      color: red;
+    }
+  </style>
+  <x-b></x-b>
+</template>
+
+<template id="x-b">
+  <div part="pa">pa</div>
+</template>
+
+<x-a></x-a>
+
+<script type="module">
+  import {pierce, color, black} from './test-utils.js';
+
+  suite('with disableShadowParts', () => {
+    let pa;
+
+    suiteSetup(() => {
+      makeElement('x-a');
+      makeElement('x-b');
+      pa = pierce('x-a', 'x-b', '[part=pa]');
+    });
+
+    if (!window.ShadyCSS.nativeShadow) {
+      test('part does not receive style', () => {
+        assert.equal(color(pa), black);
+      });
+
+      test('::part selector is not transformed', () => {
+        const style = document.querySelector('style[scope=x-a]');
+        assert.equal(
+          style.textContent.replace(/\n/gm, ' ').replace(/\s+/g, ' ').trim(),
+          `x-b.x-a::part(pa) { color: red; }`
+        );
+      });
+    }
+
+    test('part does not get shady-parts attribute', () => {
+      assert.isFalse(pa.hasAttribute('shady-part'));
+    });
+  });
+</script>

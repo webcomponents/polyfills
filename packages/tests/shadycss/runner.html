@@ -73,7 +73,9 @@
     webcomponents = 'wc-register=true';
   }
   // if native is available, make sure to test polyfill
-  if (Element.prototype.attachShadow && document.documentElement.getRootNode) {
+  const hasNativeShadow =
+      Element.prototype.attachShadow && document.documentElement.getRootNode;
+  if (hasNativeShadow) {
     webcomponents = addUrlOption(webcomponents, 'wc-shadydom=true');
   }
   // ce + sd becomes a single test iteration.
@@ -110,6 +112,15 @@
       'no-applyshim/custom-style.html',
       'no-applyshim/custom-style-late.html'
     ]);
+  }
+
+  // Skip shadow part tests if the browser supports shadow DOM but not shadow
+  // parts, unless we are forcing the polyfill on. ShadyCSS doesn't polyfill
+  // just shadow parts on top of native shadow DOM, so these would fail.
+  const hasNativeParts = 'part' in HTMLElement.prototype;
+  if (hasNativeShadow && !hasNativeParts) {
+    suites = suites.filter((url) =>
+        !(url.startsWith('shadow-parts/') && !url.includes('wc-shadydom')));
   }
 
   WCT.loadSuites(suites);

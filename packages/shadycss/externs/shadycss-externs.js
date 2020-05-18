@@ -9,6 +9,7 @@
  * styleDocument: function(Object<string, string>=),
  * flushCustomStyles: function(),
  * getComputedStyleValue: function(!Element, string): string,
+ * onInsertBefore: function(!HTMLElement, !HTMLElement, ?HTMLElement): void,
  * ScopingShim: (Object|undefined),
  * ApplyShim: (Object|undefined),
  * CustomStyleInterface: (Object|undefined),
@@ -16,6 +17,7 @@
  * nativeShadow: boolean,
  * cssBuild: (string | undefined),
  * disableRuntime: boolean,
+ * disableShadowParts: (boolean | undefined),
  * }}
  */
 let ShadyCSSInterface; //eslint-disable-line no-unused-vars
@@ -26,6 +28,7 @@ let ShadyCSSInterface; //eslint-disable-line no-unused-vars
  * shimshadow: (boolean | undefined),
  * cssBuild: (string | undefined),
  * disableRuntime: (boolean | undefined),
+ * disableShadowParts: (boolean | undefined),
  * }}
  */
 let ShadyCSSOptions; //eslint-disable-line no-unused-vars

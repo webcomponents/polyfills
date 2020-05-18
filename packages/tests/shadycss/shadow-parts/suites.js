@@ -13,5 +13,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
  * that we can include it in a few different runner indexes.
  */
 export const suites = [
+  'basic.html',
+  'disable.html',
+  'document.html',
   'parsing-formatting.html',
 ];

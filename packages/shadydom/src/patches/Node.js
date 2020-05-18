@@ -375,6 +375,12 @@ export const NodePatches = utils.getOwnPropertyDescriptors({
     } else if (node.ownerDocument !== this.ownerDocument) {
       this.ownerDocument.adoptNode(node);
     }
+    if (!utils.disableShadowParts) {
+      const shim = getScopingShim();
+      if (shim) {
+        shim['onInsertBefore'](this, node, ref_node);
+      }
+    }
     return node;
   },
 
