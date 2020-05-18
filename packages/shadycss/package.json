@@ -48,6 +48,7 @@
     "ts_src/**/*.ts"
   ],
   "devDependencies": {
+    "rollup-stream": "=1.23.1",
     "@typescript-eslint/eslint-plugin": "^2.31.0",
     "@typescript-eslint/parser": "^2.31.0",
     "prettier": "^2.0.5",
