@@ -48,17 +48,47 @@
           );
         });
 
+        test("pseudo-class", () => {
+          assert.deepEqual(
+            shadowParts.parsePartSelector(
+              "my-button::part(foo):hover"
+            ),
+            {
+              combinators: "",
+              elementName: "my-button",
+              selectors: "",
+              parts: "foo",
+              pseudos: ":hover",
+            }
+          );
+        });
+
+        test("pseudo-element", () => {
+          assert.deepEqual(
+            shadowParts.parsePartSelector(
+              "my-button::part(foo)::before"
+            ),
+            {
+              combinators: "",
+              elementName: "my-button",
+              selectors: "",
+              parts: "foo",
+              pseudos: "::before",
+            }
+          );
+        });
+
         test("all components", () => {
           assert.deepEqual(
             shadowParts.parsePartSelector(
-              "#parent > my-button.fancy::part(foo bar)::hover"
+              "#parent > my-button.fancy::part(foo bar):hover"
             ),
             {
               combinators: "#parent > ",
               elementName: "my-button",
               selectors: ".fancy",
               parts: "foo bar",
-              pseudos: "::hover",
+              pseudos: ":hover",
             }
           );
         });

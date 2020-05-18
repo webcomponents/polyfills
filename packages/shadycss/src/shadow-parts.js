@@ -49,11 +49,15 @@ export function parseExportPartsAttribute(attr) {
     const split = part.split(/\s*:\s*/);
     let inner, outer;
     if (split.length === 1) {
+      // E.g. "foo"
       inner = outer = split[0];
     } else if (split.length === 2) {
+      // E.g. "foo:bar"
       inner = split[0];
       outer = split[1];
     } else {
+      // E.g. "foo:bar:baz". Invalid format; skip but keep parsing (this
+      // matches native behavior).
       continue;
     }
     parts.push({ inner, outer });
@@ -66,7 +70,7 @@ export function parseExportPartsAttribute(attr) {
  * parsePartSelector for description of pieces.
  *                  [0  ][1         ][2      ]        [3 ]   [4   ]
  */
-const PART_REGEX = /(.*?)([a-z]+-\w+)([^\s]*?)::part\((.*)?\)(::.*)?/;
+const PART_REGEX = /(.*?)([a-z]+-\w+)([^\s]*?)::part\((.*)?\)(::?.*)?/;
 
 /**
  * De-compose a ::part rule into interesting pieces.
@@ -87,7 +91,7 @@ const PART_REGEX = /(.*?)([a-z]+-\w+)([^\s]*?)::part\((.*)?\)(::.*)?/;
  *
  * Example:
  *   [0       ][1      ][2   ]       [3    ] [4    ]
- *   #parent > my-button.fancy::part(foo bar)::hover
+ *   #parent > my-button.fancy::part(foo bar):hover
  *
  * @param {!string} selector The selector.
  * @return {?{
