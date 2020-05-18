@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<head>
+  <script>
+    WCT = {
+      waitFor: function (cb) {
+        HTMLImports.whenReady(cb);
+      },
+    };
+  </script>
+  <script src="../test-flags.js"></script>
+  <script src="../../node_modules/@webcomponents/html-imports/html-imports.min.js"></script>
+  <script src="../../node_modules/wct-browser-legacy/browser.js"></script>
+</head>
+<body>
+  <script type="module">
+    import * as shadowParts from "../../node_modules/@webcomponents/shadycss/src/shadow-parts.js";
+
+    suite("shadow parts parsing and formatting", () => {
+      test("splitPartString", () => {
+        assert.deepEqual(shadowParts.splitPartString("foo bar  foo "), [
+          "foo",
+          "bar",
+          "foo",
+        ]);
+      });
+
+      test("parseExportPartsAttribute", () => {
+        assert.deepEqual(
+          shadowParts.parseExportPartsAttribute("foo, bar:baz"),
+          [
+            { inner: "foo", outer: "foo" },
+            { inner: "bar", outer: "baz" },
+          ]
+        );
+      });
+
+      suite("parsePartSelector", () => {
+        test("minimal", () => {
+          assert.deepEqual(
+            shadowParts.parsePartSelector("my-button::part(foo)"),
+            {
+              combinators: "",
+              elementName: "my-button",
+              selectors: "",
+              parts: "foo",
+              pseudos: "",
+            }
+          );
+        });
+
+        test("pseudo-class", () => {
+          assert.deepEqual(
+            shadowParts.parsePartSelector(
+              "my-button::part(foo):hover"
+            ),
+            {
+              combinators: "",
+              elementName: "my-button",
+              selectors: "",
+              parts: "foo",
+              pseudos: ":hover",
+            }
+          );
+        });
+
+        test("pseudo-element", () => {
+          assert.deepEqual(
+            shadowParts.parsePartSelector(
+              "my-button::part(foo)::before"
+            ),
+            {
+              combinators: "",
+              elementName: "my-button",
+              selectors: "",
+              parts: "foo",
+              pseudos: "::before",
+            }
+          );
+        });
+
+        test("all components", () => {
+          assert.deepEqual(
+            shadowParts.parsePartSelector(
+              "#parent > my-button.fancy::part(foo bar):hover"
+            ),
+            {
+              combinators: "#parent > ",
+              elementName: "my-button",
+              selectors: ".fancy",
+              parts: "foo bar",
+              pseudos: ":hover",
+            }
+          );
+        });
+
+        test("missing ::part selector", () => {
+          assert.deepEqual(
+            shadowParts.parsePartSelector("#parent > my-button.fancy::hover"),
+            null
+          );
+        });
+
+        test("missing custom element name", () => {
+          assert.deepEqual(
+            shadowParts.parsePartSelector(
+              "#parent > .fancy::part(foo bar)::hover"
+            ),
+            null
+          );
+        });
+      });
+
+      test("formatShadyPartAttribute", () => {
+        assert.equal(
+          shadowParts.formatShadyPartAttribute("x-app", "x-btn", "prt1"),
+          "x-app:x-btn:prt1"
+        );
+      });
+
+      test("formatShadyPartSelector", () => {
+        assert.equal(
+          shadowParts.formatShadyPartSelector("x-app", "x-btn", "prt1  prt2 "),
+          '[shady-part~="x-app:x-btn:prt1"][shady-part~="x-app:x-btn:prt2"]'
+        );
+      });
+    });
+  </script>
+</body>
