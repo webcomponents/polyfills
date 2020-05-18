@@ -60,7 +60,7 @@ export function parseExportPartsAttribute(attr) {
       // matches native behavior).
       continue;
     }
-    parts.push({ inner, outer });
+    parts.push({inner, outer});
   }
   return parts;
 }
@@ -90,7 +90,7 @@ const PART_REGEX = /(.*?)([a-z]+-\w+)([^\s]*?)::part\((.*)?\)(::?.*)?/;
  *     spec-compliant.
  *
  * Example:
- *   [0       ][1      ][2   ]       [3    ] [4    ]
+ *   [0       ][1      ][2   ]       [3    ] [4   ]
  *   #parent > my-button.fancy::part(foo bar):hover
  *
  * @param {!string} selector The selector.
@@ -108,7 +108,7 @@ export function parsePartSelector(selector) {
     return null;
   }
   const [, combinators, elementName, selectors, parts, pseudos] = match;
-  return { combinators, elementName, selectors, parts, pseudos: pseudos || "" };
+  return {combinators, elementName, selectors, parts, pseudos: pseudos || ''};
 }
 
 /**
@@ -163,5 +163,5 @@ export function formatShadyPartSelector(
       );
       return `[shady-part~="${attr}"]`;
     })
-    .join("");
+    .join('');
 }

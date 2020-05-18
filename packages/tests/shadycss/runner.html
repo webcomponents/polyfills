@@ -13,8 +13,9 @@
 
 <script src="../node_modules/wct-browser-legacy/browser.js"></script>
 
-<script>
-(function(){
+<script type="module">
+  import {suites as shadowPartsSuites} from './shadow-parts/suites.js';
+
   var suites = [
     'css-parse.html',
     'apply-shim.html',
@@ -38,7 +39,8 @@
     'wc-1.html',
     'scoping-api.html',
     'mixin-fallbacks.html',
-    'interface.html'
+    'interface.html',
+    ...shadowPartsSuites.map((file) => `shadow-parts/${file}`),
   ];
 
   // http://eddmann.com/posts/cartesian-product-in-javascript/
@@ -111,5 +113,4 @@
   }
 
   WCT.loadSuites(suites);
-})();
 </script>
