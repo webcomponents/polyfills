@@ -55,4 +55,4 @@ In this case, the shadowRoot will not render correctly. To workaround this,
 call `ShadyDOM.patch(node)` prior to setting `textContent` or `innerHTML`.
 
 The APIs `Document.querySelectorAll`, `Element.querySelectorAll`, `Node.childNodes`,
-and `ParentNode.children` each return an `Array` instead of a `NodeList`.
+and `ParentNode.children` each return an `Array` instead of a `NodeList` or `HTMLCollection`.
