@@ -32,7 +32,6 @@
     "lint": "eslint src entrypoints",
     "lint:interface": "(cd ts_src && eslint '**/*.ts')",
     "format:interface": "prettier --write 'ts_src/**/*.ts'",
-    "size:interface": "npm run build:interface && rollup -c rollup.config.interface.js",
     "prepack": "npm run build"
   },
   "files": [
@@ -54,10 +53,6 @@
     "@typescript-eslint/parser": "^2.31.0",
     "prettier": "^2.0.5",
     "rimraf": "^3.0.2",
-    "rollup": "^2.8.0",
-    "rollup-plugin-filesize": "^8.0.2",
-    "rollup-plugin-terser": "^5.3.0",
-    "rollup-stream": "=1.23.1",
     "typescript": "^3.8.3",
     "vinyl-buffer": "^1.0.1",
     "vinyl-source-stream": "^2.0.0"
