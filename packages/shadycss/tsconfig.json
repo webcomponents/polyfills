@@ -11,7 +11,7 @@
     "preserveConstEnums": true,
     "forceConsistentCasingInFileNames": true,
     "rootDir": "ts_src/",
-    "outDir": "./",
+    "outDir": "src/",
     "sourceMap": true,
     "incremental": true,
     "tsBuildInfoFile": ".tsbuildinfo"
