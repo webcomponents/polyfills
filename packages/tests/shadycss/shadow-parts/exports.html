@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<!--
+@license
+Copyright (c) 2020 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<title>shadycss/shadow-parts/exports</title>
+
+<script src="../test-flags.js"></script>
+<script src="../../node_modules/wct-browser-legacy/browser.js"></script>
+<script src="../../node_modules/@webcomponents/webcomponents-platform/webcomponents-platform.js"></script>
+<script src="../../node_modules/es6-promise/dist/es6-promise.auto.min.js"></script>
+<script src="../../node_modules/@webcomponents/template/template.js"></script>
+<script src="../../node_modules/@webcomponents/shadydom/shadydom.min.js"></script>
+<script src="../../node_modules/@webcomponents/custom-elements/custom-elements.min.js"></script>
+<script src="../../node_modules/@webcomponents/shadycss/scoping-shim.min.js"></script>
+<script src="../../node_modules/@webcomponents/shadycss/custom-style-interface.min.js"></script>
+<script src="../module/generated/make-element.js"></script>
+
+<style id="testDocumentStyle">
+  x-a::part(foo) {
+    color: red;
+  }
+  x-a::part(bar4) {
+    color: green;
+  }
+</style>
+
+<template id="x-a">
+  <x-b exportparts="foo,bar3:bar4"></x-b>
+</template>
+
+<template id="x-b">
+  <style>
+    x-c::part(baz2) {
+      color: blue;
+    }
+  </style>
+  <x-c exportparts="foo,bar2:bar3"></x-c>
+</template>
+
+<template id="x-c">
+  <x-d exportparts="foo,bar:bar2,baz:baz2"></x-d>
+</template>
+
+<template id="x-d">
+  <div part="foo">foo</div>
+  <div part="bar">bar</div>
+  <div part="baz">baz</div>
+</template>
+
+<script type="module">
+  import {pierce, color, red, green, blue} from './test-utils.js';
+
+  suite('exported shadow parts', () => {
+    suiteSetup(() => {
+      makeElement('x-a');
+      makeElement('x-b');
+      makeElement('x-c');
+      makeElement('x-d');
+      const style = document.querySelector('#testDocumentStyle');
+      window.ShadyCSS.CustomStyleInterface.addCustomStyle(style);
+    });
+
+    let xa, foo, bar, baz;
+
+    setup(() => {
+      xa = document.createElement('x-a');
+      document.body.appendChild(xa);
+      const xd = pierce(xa, 'x-b', 'x-c', 'x-d');
+      foo = pierce(xd, '[part=foo]');
+      bar = pierce(xd, '[part=bar]');
+      baz = pierce(xd, '[part=baz]');
+    });
+
+    teardown(() => {
+      document.body.removeChild(xa);
+    });
+
+    test('foo receives style from document', () => {
+      assert.equal(color(foo), red);
+    });
+
+    test('bar receives style from document', () => {
+      assert.equal(color(bar), green);
+    });
+
+    test('baz receives style from grand-parent', () => {
+      assert.equal(color(baz), blue);
+    });
+
+    if (!window.ShadyCSS.nativeShadow) {
+      test('bar gets shady-parts attribute for all scopes', () => {
+        assert.equal(
+          bar.getAttribute('shady-part'),
+          [
+            'x-c:x-d:bar',
+            'x-b:x-c:bar2',
+            'x-a:x-b:bar3',
+            'document:x-a:bar4',
+          ].join(' ')
+        );
+      });
+    }
+  });
+</script>

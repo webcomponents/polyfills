@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<!--
+@license
+Copyright (c) 2020 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<title>shadycss/shadow-parts/find-export-parts</title>
+
+<script src="../test-flags.js"></script>
+<script src="../../node_modules/wct-browser-legacy/browser.js"></script>
+<script src="../../node_modules/@webcomponents/webcomponents-platform/webcomponents-platform.js"></script>
+<script src="../../node_modules/es6-promise/dist/es6-promise.auto.min.js"></script>
+<script src="../../node_modules/@webcomponents/template/template.js"></script>
+<script src="../../node_modules/@webcomponents/shadydom/shadydom.min.js"></script>
+<script src="../../node_modules/@webcomponents/custom-elements/custom-elements.min.js"></script>
+<script src="../../node_modules/@webcomponents/shadycss/scoping-shim.min.js"></script>
+<script src="../module/generated/make-element.js"></script>
+
+<template id="x-a">
+  <x-b exportparts="foo,bar3:bar4"></x-b>
+</template>
+
+<template id="x-b">
+  <x-c exportparts="foo,bar2:bar3"></x-c>
+</template>
+
+<template id="x-c">
+  <x-d exportparts="foo,bar:bar2,foo:foo2"></x-d>
+</template>
+
+<template id="x-d"></template>
+
+<script type="module">
+  import {pierce} from './test-utils.js';
+  import {findExportedPartMappings} from '../../node_modules/@webcomponents/shadycss/src/shadow-parts.js';
+
+  /**
+   * assert.deepEqual just prints `{ Object (... ) }` instead of something
+   * readable. JSON lets us see what's wrong on failure.
+   */
+  const assertJsonEqual = (actual, expected) =>
+    assert.equal(JSON.stringify(actual), JSON.stringify(expected));
+
+  suite('findExportedPartMappings', () => {
+    suiteSetup(() => {
+      makeElement('x-a');
+      makeElement('x-b');
+      makeElement('x-c');
+      makeElement('x-d');
+    });
+
+    let xa, xb, xc, xd;
+
+    setup(() => {
+      xa = document.createElement('x-a');
+      document.body.appendChild(xa);
+      xb = pierce('x-a', 'x-b');
+      xc = pierce('x-a', 'x-b', 'x-c');
+      xd = pierce('x-a', 'x-b', 'x-c', 'x-d');
+    });
+
+    teardown(() => {
+      document.body.removeChild(xa);
+    });
+
+    test('finds export parts of x-a', () => {
+      const expected = {};
+      const actual = findExportedPartMappings(xa);
+      assertJsonEqual(actual, expected);
+    });
+
+    test('finds export parts of x-b', () => {
+      const expected = {
+        foo: [['document', 'x-a', 'foo']],
+        bar3: [['document', 'x-a', 'bar4']],
+      };
+      const actual = findExportedPartMappings(xb);
+      assertJsonEqual(actual, expected);
+    });
+
+    test('finds export parts of x-c', () => {
+      const expected = {
+        foo: [
+          ['x-a', 'x-b', 'foo'],
+          ['document', 'x-a', 'foo'],
+        ],
+        bar2: [
+          ['x-a', 'x-b', 'bar3'],
+          ['document', 'x-a', 'bar4'],
+        ],
+      };
+      const actual = findExportedPartMappings(xc);
+      assertJsonEqual(actual, expected);
+    });
+
+    test('finds export parts of x-d', () => {
+      const expected = {
+        foo: [
+          ['x-b', 'x-c', 'foo'],
+          ['x-b', 'x-c', 'foo2'],
+          ['x-a', 'x-b', 'foo'],
+          ['document', 'x-a', 'foo'],
+        ],
+        bar: [
+          ['x-b', 'x-c', 'bar2'],
+          ['x-a', 'x-b', 'bar3'],
+          ['document', 'x-a', 'bar4'],
+        ],
+      };
+      const actual = findExportedPartMappings(xd);
+      assertJsonEqual(actual, expected);
+    });
+  });
+</script>
