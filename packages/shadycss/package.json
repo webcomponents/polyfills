@@ -2,8 +2,8 @@
   "name": "@webcomponents/shadycss",
   "version": "1.9.6",
   "description": "Polyfill for Scoped CSS",
-  "main": "interface.js",
-  "module": "interface.js",
+  "main": "src/interface.js",
+  "module": "src/interface.js",
   "repository": {
     "type": "git",
     "url": "https://github.com/webcomponents/polyfills.git",
