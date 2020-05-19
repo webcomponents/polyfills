@@ -2,7 +2,8 @@
   "name": "@webcomponents/shadycss",
   "version": "1.9.6",
   "description": "Polyfill for Scoped CSS",
-  "main": "shadycss.min.js",
+  "main": "src/interface.js",
+  "module": "src/interface.js",
   "repository": {
     "type": "git",
     "url": "https://github.com/webcomponents/polyfills.git",
@@ -23,10 +24,14 @@
     "shim"
   ],
   "scripts": {
-    "build": "gulp",
-    "build:watch": "chokidar --initial 'src/**/*.js' -c 'npm run build'",
+    "build": "npm run build:interface && gulp",
+    "build:interface": "npm run clean:interface && tsc",
+    "clean:interface": "rimraf 'src/interface.*' .tsbuildinfo",
+    "build:watch": "chokidar --initial 'src/**/*.js' 'ts_src/**/*.ts' -c 'npm run build'",
     "debug": "gulp debug",
     "lint": "eslint src entrypoints",
+    "lint:interface": "(cd ts_src && eslint '**/*.ts')",
+    "format:interface": "prettier --write 'ts_src/**/*.ts'",
     "prepack": "npm run build"
   },
   "files": [
@@ -37,10 +42,18 @@
     "scoping-shim.min.js*",
     "entrypoints/**/*.js",
     "src/**/*.js",
-    "externs/**/*.js"
+    "src/**/*.js.map",
+    "src/**/*.d.ts",
+    "externs/**/*.js",
+    "ts_src/**/*.ts"
   ],
   "devDependencies": {
     "rollup-stream": "=1.23.1",
+    "@typescript-eslint/eslint-plugin": "^2.31.0",
+    "@typescript-eslint/parser": "^2.31.0",
+    "prettier": "^2.0.5",
+    "rimraf": "^3.0.2",
+    "typescript": "^3.8.3",
     "vinyl-buffer": "^1.0.1",
     "vinyl-source-stream": "^2.0.0"
   },
