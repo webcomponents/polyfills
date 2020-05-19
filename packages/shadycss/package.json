@@ -27,7 +27,7 @@
     "build": "npm run build:interface && gulp",
     "build:interface": "npm run clean:interface && tsc",
     "clean:interface": "rimraf 'src/interface.*' .tsbuildinfo",
-    "build:watch": "chokidar --initial 'src/**/*.js' 'ts_src/**/*.ts' -c 'npm run build'",
+    "build:watch": "chokidar --initial 'src/**/*.js' 'ts_src/**/*.ts' --ignore 'src/interface.js' -c 'npm run build'",
     "debug": "gulp debug",
     "lint": "eslint src entrypoints",
     "lint:interface": "(cd ts_src && eslint '**/*.ts')",
