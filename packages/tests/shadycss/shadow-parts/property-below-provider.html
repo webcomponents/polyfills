@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<!--
+@license
+Copyright (c) 2020 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<title>shadycss/shadow-parts/property-below-providerd</title>
+
+<script src="../test-flags.js"></script>
+<script src="../../node_modules/wct-browser-legacy/browser.js"></script>
+<script src="../../node_modules/@webcomponents/webcomponents-platform/webcomponents-platform.js"></script>
+<script src="../../node_modules/es6-promise/dist/es6-promise.auto.min.js"></script>
+<script src="../../node_modules/@webcomponents/template/template.js"></script>
+<script src="../../node_modules/@webcomponents/shadydom/shadydom.min.js"></script>
+<script src="../../node_modules/@webcomponents/custom-elements/custom-elements.min.js"></script>
+<script src="../../node_modules/@webcomponents/shadycss/scoping-shim.min.js"></script>
+<script src="../module/generated/make-element.js"></script>
+
+<template id="x-a">
+  <style>
+    x-b::part(p1) {
+      color: var(--color);
+    }
+  </style>
+  <x-b></x-b>
+</template>
+
+<template id="x-b">
+  <style>
+    :host {
+      --color: red;
+    }
+  </style>
+  <x-c exportparts="p1"></x-c>
+</template>
+
+<template id="x-c">
+  <div part="p1"></div>
+</template>
+
+<x-a></x-a>
+
+<script type="module">
+  import {pierce, color, red} from './test-utils.js';
+
+  suite('property set below part style provider', () => {
+    let p1;
+    suiteSetup(() => {
+      makeElement('x-a');
+      makeElement('x-b');
+      makeElement('x-c');
+      p1 = pierce('x-a', 'x-b', 'x-c', '[part=p1]');
+    });
+
+    test('part receives property value', () => {
+      assert.equal(color(p1), red);
+    });
+  });
+</script>

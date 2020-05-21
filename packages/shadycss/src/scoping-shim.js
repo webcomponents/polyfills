@@ -109,6 +109,9 @@ export default class ScopingShim {
         this._applyShim['transformRules'](ast, elementName);
       }
       template['_styleAst'] = ast;
+      if (!disableShadowParts && ast) {
+        shadowParts.analyzeTemplatePartRules(elementName, ast);
+      }
     }
     let ownPropertyNames = [];
     if (!nativeCssVariables) {
@@ -404,7 +407,12 @@ export default class ScopingShim {
   }
   _applyStyleProperties(host, styleInfo) {
     let is = StyleUtil.getIsExtends(host).is;
-    let cacheEntry = styleCache.fetch(is, styleInfo.styleProperties, styleInfo.ownStylePropertyNames);
+    let cacheEntry = styleCache.fetch(
+      is,
+      styleInfo.styleProperties,
+      styleInfo.ownStylePropertyNames,
+      styleInfo.customPropertyPartRules
+    );
     let cachedScopeSelector = cacheEntry && cacheEntry.scopeSelector;
     let cachedStyle = cacheEntry ? cacheEntry.styleElement : null;
     let oldScopeSelector = styleInfo.scopeSelector;
@@ -415,7 +423,13 @@ export default class ScopingShim {
       StyleProperties.applyElementScopeSelector(host, styleInfo.scopeSelector, oldScopeSelector);
     }
     if (!cacheEntry) {
-      styleCache.store(is, styleInfo.styleProperties, style, styleInfo.scopeSelector);
+      styleCache.store(
+        is,
+        styleInfo.styleProperties,
+        style,
+        styleInfo.scopeSelector,
+        styleInfo.customPropertyPartRules
+      );
     }
     return style;
   }

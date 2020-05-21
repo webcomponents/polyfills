@@ -65,6 +65,13 @@ export default class StyleInfo {
     this.scopeSelector = null;
     /** @type {HTMLStyleElement} */
     this.customStyle = null;
+    /**
+     * Shadow part rules that are currently applied to this node, if those part
+     * rules consume a CSS custom property, and we don't have native custom
+     * property support.
+     * @type {!Array<!StyleNode>|undefined}
+     */
+    this.customPropertyPartRules;
   }
   _getStyleRules() {
     return this.styleRules;
