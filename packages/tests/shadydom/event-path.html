@@ -939,11 +939,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     });
 
     test('events dispatched to unassigned slottables bubble through the tree above them', () => {
-      const noSlot = ShadyDOM.wrapIfNeeded(document.createElement('x-no-slot'));
-      const unassignedSlottable = ShadyDOM.wrapIfNeeded(document.createElement('div'));
+      const noSlot = document.createElement('x-no-slot');
+      const unassignedSlottable = document.createElement('div');
 
       ShadyDOM.wrapIfNeeded(document.body).appendChild(noSlot);
-      noSlot.appendChild(unassignedSlottable);
+      ShadyDOM.wrapIfNeeded(noSlot).appendChild(unassignedSlottable);
       assert.equal(ShadyDOM.wrapIfNeeded(unassignedSlottable).assignedSlot, undefined);
 
       let listenerTriggered = false;
