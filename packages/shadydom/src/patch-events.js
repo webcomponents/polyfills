@@ -394,7 +394,7 @@ function targetNeedsPathCheck(node) {
 /** @this {Node} */
 export function dispatchEvent(event) {
   flush();
-  if (this instanceof Node && !document.documentElement[utils.NATIVE_PREFIX + 'contains'](this)) {
+  if (this instanceof Node && !(this === document || document.documentElement[utils.NATIVE_PREFIX + 'contains'](this))) {
     if (!event['__target']) {
       patchEvent(event, this);
     }
