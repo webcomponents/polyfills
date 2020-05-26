@@ -1,5 +1,16 @@
 {
   "name": "@webcomponents/formdata",
   "version": "0.0.1",
-  "private": true
+  "private": true,
+  "scripts": {
+    "build": "tsc",
+    "build:watch": "chokidar --initial 'ts_src/**/*.ts' -c 'npm run build'",
+    "prepack": "npm run build"
+  },
+  "files": [
+    "src/"
+  ],
+  "devDependencies": {
+    "typescript": "^3.9.3"
+  }
 }
