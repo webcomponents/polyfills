@@ -3,11 +3,12 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && gulp",
     "build:watch": "chokidar --initial 'ts_src/**/*.ts' -c 'npm run build'",
     "prepack": "npm run build"
   },
   "files": [
+    "formdata.min.js*",
     "src/"
   ],
   "devDependencies": {
