@@ -1,5 +1,5 @@
 {
-  "name": "@webcomponents/formdata",
+  "name": "@webcomponents/formdata-event",
   "version": "0.0.1",
   "private": true,
   "scripts": {
@@ -8,7 +8,7 @@
     "prepack": "npm run build"
   },
   "files": [
-    "formdata.min.js*",
+    "formdata-event.min.js*",
     "src/"
   ],
   "devDependencies": {
