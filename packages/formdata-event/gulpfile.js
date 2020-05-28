@@ -23,7 +23,7 @@ gulp.task('default', () => {
     .pipe(closureCompiler({
       compilation_level: 'ADVANCED',
       warning_level: 'VERBOSE',
-      language_in: 'ECMASCRIPT6_STRICT',
+      language_in: 'ECMASCRIPT_2019',
       language_out: 'ECMASCRIPT5_STRICT',
       dependency_mode: 'STRICT',
       entry_point: ['/src/formdata-event'],
