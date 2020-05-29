@@ -92,7 +92,14 @@ export const microtask = (callback) => {
   twiddle.textContent = content++;
 }
 
-export const hasDocumentContains = Boolean(document.contains);
+const hasDocumentContains = Boolean(document.contains);
+
+/** @type {function(!Document, !Node): boolean} */
+export const documentContains = (doc, node) => (
+  doc === node ||
+  (hasDocumentContains && doc[NATIVE_PREFIX + 'contains'](node)) ||
+  (doc.documentElement && doc.documentElement[NATIVE_PREFIX + 'contains'](node))
+);
 
 export const contains = (container, node) => {
   while (node) {
