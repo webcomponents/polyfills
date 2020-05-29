@@ -324,8 +324,8 @@ function shadyDispatchEvent(e) {
     }
   }
 
-  // set the event phase to `AT_TARGET` as in spec
-  Object.defineProperty(e, 'eventPhase', {get() { return Event.AT_TARGET }});
+  let eventPhase = Event.AT_TARGET;
+  Object.defineProperty(e, 'eventPhase', {get() { return eventPhase; }});
 
   const bubbles = e.bubbles;
   // the event only needs to be fired when owner roots change when iterating the event path
@@ -337,8 +337,9 @@ function shadyDispatchEvent(e) {
     const root = nodeData && nodeData.root;
     // Listeners on the deepest node in the path and the deepest node in each
     // root of all nodes in the path should be called in the AT_TARGET phase.
-    const isRetargetedTarget = i === 0 || (root && root === lastFiredRoot);
-    if (bubbles || isRetargetedTarget) {
+    const atDeepestNodeInRoot = i === 0 || (root && root === lastFiredRoot);
+    if (bubbles || atDeepestNodeInRoot) {
+      eventPhase = atDeepestNodeInRoot ? Event.AT_TARGET : Event.BUBBLING_PHASE;
       fireHandlers(e, node, 'bubble');
       // don't bother with window, it doesn't have `getRootNode` and will be last in the path anyway
       if (node !== window) {

@@ -938,20 +938,72 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       assert.isTrue(heardEvent);
     });
 
-    test('events dispatched to unassigned slottables bubble through the tree above them', () => {
-      const noSlot = document.createElement('x-no-slot');
-      const unassignedSlottable = document.createElement('div');
+    suite('unassigned slottable targets', () => {
+      test('events bubble through the tree above them', () => {
+        const noSlot = document.createElement('x-no-slot');
+        const unassignedSlottable = document.createElement('div');
 
-      ShadyDOM.wrapIfNeeded(document.body).appendChild(noSlot);
-      ShadyDOM.wrapIfNeeded(noSlot).appendChild(unassignedSlottable);
-      assert.equal(ShadyDOM.wrapIfNeeded(unassignedSlottable).assignedSlot, undefined);
+        ShadyDOM.wrapIfNeeded(document.body).appendChild(noSlot);
+        ShadyDOM.wrapIfNeeded(noSlot).appendChild(unassignedSlottable);
+        assert.strictEqual(ShadyDOM.wrapIfNeeded(unassignedSlottable).assignedSlot, null);
 
-      let listenerTriggered = false;
-      ShadyDOM.wrapIfNeeded(noSlot).addEventListener('some-event', () => listenerTriggered = true);
-      ShadyDOM.wrapIfNeeded(unassignedSlottable).dispatchEvent(new Event('some-event', {bubbles: true}));
-      assert.ok(listenerTriggered);
+        let listenerTriggered = false;
+        ShadyDOM.wrapIfNeeded(noSlot).addEventListener('some-event', () => listenerTriggered = true);
+        ShadyDOM.wrapIfNeeded(unassignedSlottable).dispatchEvent(new Event('some-event', {bubbles: true}));
+        assert.ok(listenerTriggered);
 
-      ShadyDOM.wrapIfNeeded(document.body).removeChild(noSlot);
+        ShadyDOM.wrapIfNeeded(document.body).removeChild(noSlot);
+      });
+
+      test('events have the correct phase', () => {
+        const sd = node => ShadyDOM.wrapIfNeeded(node);
+        /*
+          <x-no-slot> <!-- outerNoSlot -->
+            #shadow-root
+              <div> <!-- outerDiv -->
+                <x-no-slot> <!-- innerNoSlot -->
+                  #shadow-root
+                  #/shadow-root
+                  <div></div> <!-- target -->
+                </x-no-slot>
+              </div>
+            #/shadow-root
+          </x-no-slot>
+        */
+        const outerNoSlot = document.createElement('x-no-slot');
+        sd(document.body).appendChild(outerNoSlot);
+        const outerDiv = document.createElement('div');
+        sd(outerNoSlot).shadowRoot.appendChild(outerDiv);
+        const innerNoSlot = document.createElement('x-no-slot');
+        sd(outerDiv).appendChild(innerNoSlot);
+        const target = document.createElement('div');
+        sd(innerNoSlot).appendChild(target);
+
+        assert.strictEqual(sd(target).assignedSlot, null);
+
+        const eventLog = [];
+        const pushToEventLog = (e) => {
+          eventLog.push({currentTarget: e.currentTarget, eventPhase: e.eventPhase});
+        };
+
+        sd(outerNoSlot).addEventListener('some-event', pushToEventLog);
+        // `sd(outerNoSlot).shadowRoot` will also see this event in its path,
+        // but event listeners on shadow roots are instead redirected by Shady
+        // DOM to their host, causing the phase to incorrect (AT_TARGET).
+        sd(outerDiv).addEventListener('some-event', pushToEventLog);
+        sd(innerNoSlot).addEventListener('some-event', pushToEventLog);
+        sd(target).addEventListener('some-event', pushToEventLog);
+
+        sd(target).dispatchEvent(new Event('some-event', {bubbles: true, composed: true}));
+        assert.deepEqual(eventLog, [
+          {currentTarget: target, eventPhase: Event.AT_TARGET},
+          {currentTarget: innerNoSlot, eventPhase: Event.BUBBLING_PHASE},
+          {currentTarget: outerDiv, eventPhase: Event.BUBBLING_PHASE},
+          {currentTarget: outerNoSlot, eventPhase: Event.AT_TARGET},
+        ]);
+
+        sd(document.body).removeChild(outerNoSlot);
+      });
     });
   });
   </script>
