@@ -335,17 +335,18 @@ function shadyDispatchEvent(e) {
     node = path[i];
     const nodeData = shadyDataForNode(node);
     const root = nodeData && nodeData.root;
-    if (!(i === 0 || (root && root === lastFiredRoot)) && !bubbles) {
-      continue;
-    }
-
-    fireHandlers(e, node, 'bubble');
-    // don't bother with window, it doesn't have `getRootNode` and will be last in the path anyway
-    if (node !== window) {
-      lastFiredRoot = node[utils.SHADY_PREFIX + 'getRootNode']();
-    }
-    if (e.__propagationStopped) {
-      return;
+    // Listeners on the deepest node in the path and the deepest node in each
+    // root of all nodes in the path should be called in the AT_TARGET phase.
+    const isRetargetedTarget = i === 0 || (root && root === lastFiredRoot);
+    if (bubbles || isRetargetedTarget) {
+      fireHandlers(e, node, 'bubble');
+      // don't bother with window, it doesn't have `getRootNode` and will be last in the path anyway
+      if (node !== window) {
+        lastFiredRoot = node[utils.SHADY_PREFIX + 'getRootNode']();
+      }
+      if (e.__propagationStopped) {
+        return;
+      }
     }
   }
 }
