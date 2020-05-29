@@ -584,8 +584,8 @@ const EventPatchesDescriptors = utils.getOwnPropertyDescriptors(EventPatches);
 const SHADY_PROTO = '__shady_patchedProto';
 const SHADY_SOURCE_PROTO = '__shady_sourceProto';
 
-function patchEvent(event, forcedTarget = undefined) {
-  event['__target'] = forcedTarget !== undefined ? forcedTarget : event.target;
+function patchEvent(event, target = event.target) {
+  event['__target'] = target;
   event.__relatedTarget = event.relatedTarget;
   // attempt to patch prototype (via cache)
   if (utils.settings.hasDescriptors) {
