@@ -396,6 +396,9 @@ function targetNeedsPathCheck(node) {
 /** @this {Node} */
 export function dispatchEvent(event) {
   flush();
+  // If the target is disconnected from the real document, it might still be
+  // connected in the user-facing tree. To allow its path to potentially
+  // include both connected and disconnected parts, dispatch it manually.
   if (this instanceof Node && !utils.documentContains(document, this)) {
     if (!event['__target']) {
       patchEvent(event, this);
