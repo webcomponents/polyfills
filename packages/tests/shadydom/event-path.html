@@ -955,7 +955,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         ShadyDOM.wrapIfNeeded(document.body).removeChild(noSlot);
       });
 
-      test('events have the correct phase', () => {
+      test('events have the correct phase during dispatch', () => {
         const sd = node => ShadyDOM.wrapIfNeeded(node);
         /*
           <x-no-slot> <!-- outerNoSlot -->
@@ -986,16 +986,24 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           eventLog.push({currentTarget: e.currentTarget, eventPhase: e.eventPhase});
         };
 
-        sd(outerNoSlot).addEventListener('some-event', pushToEventLog);
         // `sd(outerNoSlot).shadowRoot` will also see this event in its path,
         // but event listeners on shadow roots are instead redirected by Shady
         // DOM to their host, causing the phase to incorrect (AT_TARGET).
+        sd(outerNoSlot).addEventListener('some-event', pushToEventLog);
+        sd(outerNoSlot).addEventListener('some-event', pushToEventLog, true);
         sd(outerDiv).addEventListener('some-event', pushToEventLog);
+        sd(outerDiv).addEventListener('some-event', pushToEventLog, true);
         sd(innerNoSlot).addEventListener('some-event', pushToEventLog);
+        sd(innerNoSlot).addEventListener('some-event', pushToEventLog, true);
         sd(target).addEventListener('some-event', pushToEventLog);
+        sd(target).addEventListener('some-event', pushToEventLog,true);
 
         sd(target).dispatchEvent(new Event('some-event', {bubbles: true, composed: true}));
         assert.deepEqual(eventLog, [
+          {currentTarget: outerNoSlot, eventPhase: Event.AT_TARGET},
+          {currentTarget: outerDiv, eventPhase: Event.CAPTURING_PHASE},
+          {currentTarget: innerNoSlot, eventPhase: Event.CAPTURING_PHASE},
+          {currentTarget: target, eventPhase: Event.AT_TARGET},
           {currentTarget: target, eventPhase: Event.AT_TARGET},
           {currentTarget: innerNoSlot, eventPhase: Event.BUBBLING_PHASE},
           {currentTarget: outerDiv, eventPhase: Event.BUBBLING_PHASE},

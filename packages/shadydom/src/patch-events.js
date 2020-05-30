@@ -306,50 +306,50 @@ function fireHandlers(event, node, phase) {
 }
 
 function shadyDispatchEvent(e) {
-  let path = e.composedPath();
-  let node;
+  const path = e.composedPath();
+  const retargetedPath = path.map(node => retarget(node, path));
+  const bubbles = e.bubbles;
+
+  let currentTarget;
   // override `currentTarget` to let patched `target` calculate correctly
   Object.defineProperty(e, 'currentTarget', {
     get: function() {
-      return node;
+      return currentTarget;
     },
     configurable: true
   });
+
+  let eventPhase = Event.CAPTURING_PHASE;
+  Object.defineProperty(e, 'eventPhase', {
+    get: function() {
+      return eventPhase;
+    },
+  });
+
   for (let i = path.length - 1; i >= 0; i--) {
-    node = path[i];
+    currentTarget = path[i];
+    eventPhase = currentTarget === retargetedPath[i] ? Event.AT_TARGET : Event.CAPTURING_PHASE;
     // capture phase fires all capture handlers
-    fireHandlers(e, node, 'capture');
+    fireHandlers(e, currentTarget, 'capture');
     if (e.__propagationStopped) {
       return;
     }
   }
 
-  let eventPhase = Event.AT_TARGET;
-  Object.defineProperty(e, 'eventPhase', {get() { return eventPhase; }});
-
-  const bubbles = e.bubbles;
-  // the event only needs to be fired when owner roots change when iterating the event path
-  // keep track of the last seen owner root
-  let lastFiredRoot;
   for (let i = 0; i < path.length; i++) {
-    node = path[i];
-    const nodeData = shadyDataForNode(node);
-    const root = nodeData && nodeData.root;
-    // Listeners on the deepest node in the path and the deepest node in each
-    // root of all nodes in the path should be called in the AT_TARGET phase.
-    const atDeepestNodeInRoot = i === 0 || (root && root === lastFiredRoot);
-    if (bubbles || atDeepestNodeInRoot) {
-      eventPhase = atDeepestNodeInRoot ? Event.AT_TARGET : Event.BUBBLING_PHASE;
-      fireHandlers(e, node, 'bubble');
-      // don't bother with window, it doesn't have `getRootNode` and will be last in the path anyway
-      if (node !== window) {
-        lastFiredRoot = node[utils.SHADY_PREFIX + 'getRootNode']();
-      }
+    currentTarget = path[i];
+    const atTarget = currentTarget === retargetedPath[i];
+    if (atTarget || bubbles) {
+      eventPhase = atTarget ? Event.AT_TARGET : Event.BUBBLING_PHASE;
+      fireHandlers(e, currentTarget, 'bubble');
       if (e.__propagationStopped) {
         return;
       }
     }
   }
+
+  eventPhase = Event.NONE;
+  currentTarget = null;
 }
 
 function listenerSettingsEqual(savedListener, node, type, capture, once, passive) {
