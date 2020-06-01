@@ -348,7 +348,7 @@ function shadyDispatchEvent(e) {
     }
   }
 
-  eventPhase = Event.NONE;
+  eventPhase = 0; // `Event.NONE` is not available in IE11.
   currentTarget = null;
 }
 
