@@ -943,16 +943,16 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         const noSlot = document.createElement('x-no-slot');
         const unassignedSlottable = document.createElement('div');
 
-        ShadyDOM.wrapIfNeeded(document.body).appendChild(noSlot);
-        ShadyDOM.wrapIfNeeded(noSlot).appendChild(unassignedSlottable);
-        assert.strictEqual(ShadyDOM.wrapIfNeeded(unassignedSlottable).assignedSlot, null);
+        ShadyDOM.wrap(document.body).appendChild(noSlot);
+        ShadyDOM.wrap(noSlot).appendChild(unassignedSlottable);
+        assert.strictEqual(ShadyDOM.wrap(unassignedSlottable).assignedSlot, null);
 
         let listenerTriggered = false;
-        ShadyDOM.wrapIfNeeded(noSlot).addEventListener('some-event', () => listenerTriggered = true);
-        ShadyDOM.wrapIfNeeded(unassignedSlottable).dispatchEvent(new Event('some-event', {bubbles: true}));
+        ShadyDOM.wrap(noSlot).addEventListener('some-event', () => listenerTriggered = true);
+        ShadyDOM.wrap(unassignedSlottable).dispatchEvent(new Event('some-event', {bubbles: true}));
         assert.ok(listenerTriggered);
 
-        ShadyDOM.wrapIfNeeded(document.body).removeChild(noSlot);
+        ShadyDOM.wrap(document.body).removeChild(noSlot);
       });
 
       test('events have the correct phase during dispatch', () => {
@@ -970,15 +970,15 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           </x-no-slot>
         */
         const outerNoSlot = document.createElement('x-no-slot');
-        ShadyDOM.wrapIfNeeded(document.body).appendChild(outerNoSlot);
+        ShadyDOM.wrap(document.body).appendChild(outerNoSlot);
         const outerDiv = document.createElement('div');
         ShadyDOM.wrapIfNeeded(outerNoSlot).shadowRoot.appendChild(outerDiv);
         const innerNoSlot = document.createElement('x-no-slot');
-        ShadyDOM.wrapIfNeeded(outerDiv).appendChild(innerNoSlot);
+        ShadyDOM.wrap(outerDiv).appendChild(innerNoSlot);
         const target = document.createElement('div');
-        ShadyDOM.wrapIfNeeded(innerNoSlot).appendChild(target);
+        ShadyDOM.wrap(innerNoSlot).appendChild(target);
 
-        assert.strictEqual(ShadyDOM.wrapIfNeeded(target).assignedSlot, null);
+        assert.strictEqual(ShadyDOM.wrap(target).assignedSlot, null);
 
         const eventLog = [];
         const pushToEventLog = (e) => {
@@ -988,16 +988,16 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         // `ShadyDOM.wrapIfNeeded(outerNoSlot).shadowRoot` will also see this event in its path,
         // but event listeners on shadow roots are instead redirected by Shady
         // DOM to their host, causing the phase to incorrect (AT_TARGET).
-        ShadyDOM.wrapIfNeeded(outerNoSlot).addEventListener('some-event', pushToEventLog);
-        ShadyDOM.wrapIfNeeded(outerNoSlot).addEventListener('some-event', pushToEventLog, true);
-        ShadyDOM.wrapIfNeeded(outerDiv).addEventListener('some-event', pushToEventLog);
-        ShadyDOM.wrapIfNeeded(outerDiv).addEventListener('some-event', pushToEventLog, true);
-        ShadyDOM.wrapIfNeeded(innerNoSlot).addEventListener('some-event', pushToEventLog);
-        ShadyDOM.wrapIfNeeded(innerNoSlot).addEventListener('some-event', pushToEventLog, true);
-        ShadyDOM.wrapIfNeeded(target).addEventListener('some-event', pushToEventLog);
-        ShadyDOM.wrapIfNeeded(target).addEventListener('some-event', pushToEventLog,true);
+        ShadyDOM.wrap(outerNoSlot).addEventListener('some-event', pushToEventLog);
+        ShadyDOM.wrap(outerNoSlot).addEventListener('some-event', pushToEventLog, true);
+        ShadyDOM.wrap(outerDiv).addEventListener('some-event', pushToEventLog);
+        ShadyDOM.wrap(outerDiv).addEventListener('some-event', pushToEventLog, true);
+        ShadyDOM.wrap(innerNoSlot).addEventListener('some-event', pushToEventLog);
+        ShadyDOM.wrap(innerNoSlot).addEventListener('some-event', pushToEventLog, true);
+        ShadyDOM.wrap(target).addEventListener('some-event', pushToEventLog);
+        ShadyDOM.wrap(target).addEventListener('some-event', pushToEventLog,true);
 
-        ShadyDOM.wrapIfNeeded(target).dispatchEvent(new Event('some-event', {bubbles: true, composed: true}));
+        ShadyDOM.wrap(target).dispatchEvent(new Event('some-event', {bubbles: true, composed: true}));
         assert.deepEqual(eventLog, [
           {currentTarget: outerNoSlot, eventPhase: Event.AT_TARGET},
           {currentTarget: outerDiv, eventPhase: Event.CAPTURING_PHASE},
@@ -1009,7 +1009,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           {currentTarget: outerNoSlot, eventPhase: Event.AT_TARGET},
         ]);
 
-        ShadyDOM.wrapIfNeeded(document.body).removeChild(outerNoSlot);
+        ShadyDOM.wrap(document.body).removeChild(outerNoSlot);
       });
 
       test('events dispatched from children that are disconnected in the ' +
@@ -1026,7 +1026,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             ShadyDOM.flush();
 
             this.listenerCallCount = 0;
-            ShadyDOM.wrapIfNeeded(this).addEventListener('some-event', () => {
+            ShadyDOM.wrap(this).addEventListener('some-event', () => {
               this.listenerCallCount++;
             });
           }
@@ -1035,23 +1035,23 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         customElements.define('child-dispatcher-element', class extends HTMLElement {
           constructor() {
             super();
-            ShadyDOM.wrapIfNeeded(this).dispatchEvent(new Event('some-event', {bubbles: true}));
+            ShadyDOM.wrap(this).dispatchEvent(new Event('some-event', {bubbles: true}));
           }
         });
 
         const container = document.createElement('div');
-        ShadyDOM.wrapIfNeeded(document.body).appendChild(container);
+        ShadyDOM.wrap(document.body).appendChild(container);
 
-        ShadyDOM.wrapIfNeeded(container).innerHTML = `
+        ShadyDOM.wrap(container).innerHTML = `
           <parent-listener-element>
             <child-dispatcher-element></child-dispatcher-element>
           </parent-listener-element>
         `;
 
-        const eventListenerElement = ShadyDOM.wrapIfNeeded(container).querySelector('parent-listener-element');
+        const eventListenerElement = ShadyDOM.wrap(container).querySelector('parent-listener-element');
         assert.strictEqual(eventListenerElement.listenerCallCount, 1);
 
-        ShadyDOM.wrapIfNeeded(document.body).removeChild(container);
+        ShadyDOM.wrap(document.body).removeChild(container);
       });
     });
   });
