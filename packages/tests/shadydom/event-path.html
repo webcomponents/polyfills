@@ -1015,6 +1015,50 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
         wrap(document.body).removeChild(outerNoSlot);
       });
+
+      test('events dispatched from children that are disconnected in the ' +
+          'real tree but connected in the user-facing tree bubble up to ' +
+          'parents that are connected in the real tree', () => {
+        const wrap = node => ShadyDOM.wrapIfNeeded(node);
+
+        customElements.define('parent-listener-element', class extends HTMLElement {
+          constructor() {
+            super();
+
+            // This elements' shadow root is empty, so all of its (non-shadow)
+            // children will be removed from the real tree even though they are
+            // considered connected in the user-facing tree.
+            wrap(this).attachShadow({mode: 'open'});
+            ShadyDOM.flush();
+
+            this.listenerCallCount = 0;
+            wrap(this).addEventListener('some-event', () => {
+              this.listenerCallCount++;
+            });
+          }
+        });
+
+        customElements.define('child-dispatcher-element', class extends HTMLElement {
+          constructor() {
+            super();
+            this.dispatchEvent(new Event('some-event', {bubbles: true}));
+          }
+        });
+
+        const container = document.createElement('div');
+        document.body.appendChild(container);
+
+        container.innerHTML = `
+          <parent-listener-element>
+            <child-dispatcher-element></child-dispatcher-element>
+          </parent-listener-element>
+        `;
+
+        const eventListenerElement = container.querySelector('parent-listener-element');
+        assert.strictEqual(eventListenerElement.listenerCallCount, 1);
+
+        document.body.removeChild(container);
+      });
     });
   });
   </script>
