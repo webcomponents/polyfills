@@ -1,6 +1,6 @@
 {
   "name": "@webcomponents/shadycss",
-  "version": "1.9.6",
+  "version": "1.10.0",
   "description": "Polyfill for Scoped CSS",
   "main": "src/interface.js",
   "module": "src/interface.js",
