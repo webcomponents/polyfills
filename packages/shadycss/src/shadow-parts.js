@@ -418,7 +418,21 @@ export function onInsertBefore(parentNode, newNode, referenceNode) {
 
 /**
  * Update a host to account for it receiving part styles which consume custom
- * properties
+ * properties.
+ *
+ * We need special handling here because if an instance is receiving a part rule
+ * that consumes a custom property, our basic handling above is not sufficient,
+ * as we'd get incorrect property values.
+ *
+ * This is because the values of properties in part rules are determined in each
+ * scope where the part rules are _consumed_, not in the scope where the part
+ * rule is _defined_.
+ *
+ * To address this, when we see that an instance is consuming a part rule that
+ * consumes a custom property, we "adopt" that part rule into the styles tracked
+ * by ShadyCSS for that instance, and re-run the custom property shim logic.
+ * This causes the part rule to be copied into the <style> tag for this
+ * instance, with correct property values computed for the specific instance.
  *
  * @param host {!HTMLElement} The host to re-scope.
  * @param newStyleNodes {!Array<!StyleNode>} New part rules that need to be
@@ -464,6 +478,15 @@ function rescopeForCustomProperties(host, newStyleNodes, newProperties) {
   // Re-scope this host. This creates a new <style> for this instance, or
   // re-uses an existing one by checking the cache, and updates "scope" classes
   // in this host's shadow root.
+  //
+  // TODO(aomarks) This function will already have been called on this instance,
+  // when the element first connected. In that first invocation, we weren't able
+  // to do any parts handling, because the DOM hadn't stamped yet, so we didn't
+  // even know if the shadow root had any parts. We might be able to optimize
+  // out these redundant calls, e.g. by skipping the first initial
+  // _applyStyleProperties if we know that there *could* be part styles that
+  // consume custom properties, based on ancestor template styles.
+  // https://github.com/webcomponents/polyfills/issues/348
   window.ShadyCSS.ScopingShim._applyStyleProperties(host, styleInfo);
 }
 
@@ -471,7 +494,7 @@ function rescopeForCustomProperties(host, newStyleNodes, newProperties) {
  * A map from "providerScope:receiverScope" compound string key to an array of
  * ::part rules that were found during template preparation.
  *
- * We only populate this map if a ::part rule consumes a custom property and 
+ * We only populate this map if a ::part rule consumes a custom property and
  * native custom properties are not available.
  *
  * This map is used to quickly lookup whether a given ::part rule being applied
@@ -524,17 +547,21 @@ export function analyzeTemplatePartRules(providerScope, styleAst) {
   }
   for (const styleNode of styleAst.rules) {
     const selector = styleNode['selector'];
-    if (!selector || selector.indexOf('::part') === -1) {
+    if (!selector || !selector.includes('::part')) {
+      // TODO(aomarks) We do the `includes` check here to make the case where no
+      // `::part` rules are used is as fast as possible, but we could get away
+      // with just the `parsePartSelector` call we're doing next if the
+      // difference is negligible. Needs benchmarking.
+      continue;
+    }
+    const parsed = parsePartSelector(selector);
+    if (parsed === null) {
       continue;
     }
     const consumedProperties = findConsumedCustomProperties(
       styleNode['cssText']
     );
     if (consumedProperties.length === 0) {
-      continue;
-    }
-    const parsed = parsePartSelector(selector);
-    if (parsed === null) {
       continue;
     }
     const {elementName: receiverScope, parts} = parsed;
@@ -581,7 +608,7 @@ function lookupMatchingPartRules(scopeKey, partNames) {
   for (const entry of entries) {
     let matches = true;
     for (const partName of entry.partNames) {
-      if (partNames.indexOf(partName) === -1) {
+      if (!partNames.includes(partName)) {
         matches = false;
         break;
       }

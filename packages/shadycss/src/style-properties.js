@@ -493,11 +493,11 @@ class StyleProperties {
         /** @type {?} */ (rule.transformedSelector) || rule['selector'];
     let selector = rule.transformedSelector;
     let scope = '.' + scopeId;
-    let parts = StyleUtil.splitSelectorList(selector);
-    for (let i=0, l=parts.length, p; (i<l) && (p=parts[i]); i++) {
-      if (p.match(hostRx)) {
-        parts[i] = p.replace(hostSelector, scope);
-      } else if (!disableShadowParts && p.indexOf('[shady-part') !== -1) {
+    let segments = StyleUtil.splitSelectorList(selector);
+    for (let i=0, l=segments.length, s; (i<l) && (s=segments[i]); i++) {
+      if (s.match(hostRx)) {
+        segments[i] = s.replace(hostSelector, scope);
+      } else if (!disableShadowParts && s.indexOf('[shady-part') !== -1) {
         // Kind of hacky! This is the case where a part rule is being applied to
         // a node, where that part rule comes from the grandparent of the node
         // or higher, through the exportparts tree. In this case, we're
@@ -505,12 +505,12 @@ class StyleProperties {
         // [shady-part...]", and we want to transform that to "x-parent
         // x-child-n [shady-part...]" (and NOT "x-child-n x-parent
         // [shady-part...]" as we would if we didn't have this special case).
-        parts[i] = p.replace('[shady-part', scope + ' [shady-part');
+        segments[i] = s.replace('[shady-part', scope + ' [shady-part');
       } else {
-        parts[i] = scope + ' ' + p;
+        segments[i] = scope + ' ' + s;
       }
     }
-    rule['selector'] = parts.join(',');
+    rule['selector'] = segments.join(',');
   }
 
   /**
