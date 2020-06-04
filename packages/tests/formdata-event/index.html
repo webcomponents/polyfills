@@ -1,25 +1,58 @@
 <!doctype html>
+<!--
+@license
+Copyright (c) 2020 The Polymer Project Authors. All rights reserved. This code
+may only be used under the BSD style license found at
+http://polymer.github.io/LICENSE.txt The complete set of authors may be found
+at http://polymer.github.io/AUTHORS.txt The complete set of contributors may be
+found at http://polymer.github.io/CONTRIBUTORS.txt Code distributed by Google
+as part of the polymer project is also subject to an additional IP rights grant
+found at http://polymer.github.io/PATENTS.txt
+-->
 <html>
 <head>
 <script src="../node_modules/wct-browser-legacy/browser.js"></script>
-<script src="../node_modules/@webcomponents/formdata-event/formdata-event.min.js"></script>
 </head>
 <body>
 <script type="module">
-/**
- * @license
- * Copyright (c) 2020 The Polymer Project Authors. All rights reserved. This
- * code may only be used under the BSD style license found at
- * http://polymer.github.io/LICENSE.txt The complete set of authors may be
- * found at http://polymer.github.io/AUTHORS.txt The complete set of
- * contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt Code
- * distributed by Google as part of the polymer project is also subject to an
- * additional IP rights grant found at http://polymer.github.io/PATENTS.txt
- */
+suite('formdata-event', () => {
+  let iframe = undefined;
 
-suite('formdata-event', function() {
-  test('test', function() {
-    // Pass!
+  setup((done) => {
+    iframe = document.createElement('iframe');
+    document.body.appendChild(iframe);
+
+    const iframeWindow = iframe.contentDocument.defaultView;
+    (iframeWindow.FormDataEvent = iframeWindow.FormDataEvent || {}).forcePolyfill = true;
+
+    const script = document.createElement('script');
+    script.src = '../node_modules/@webcomponents/formdata-event/formdata-event.min.js';
+    iframeWindow.document.body.appendChild(script);
+
+    script.addEventListener('load', () => { done(); });
+  });
+
+  teardown(() => {
+    document.body.removeChild(iframe);
+    iframe = undefined;
+  });
+
+  test('Submitting a form causes a "formdata" event to be dispatched to the ' +
+      'form.', () => {
+    const form = document.createElement('form');
+      const submitButton = document.createElement('input');
+        submitButton.type = 'submit';
+      form.appendChild(submitButton);
+    iframe.contentDocument.body.appendChild(form);
+
+    let called = false;
+    form.addEventListener('formdata', (e) => {
+      called = true;
+    });
+    submitButton.click();
+    assert(called);
+
+    iframe.contentDocument.body.removeChild(form);
   });
 });
 </script>
