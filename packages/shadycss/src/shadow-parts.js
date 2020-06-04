@@ -173,7 +173,7 @@ export function formatShadyPartSelector(
  *   #document
  *     <x-a exportparts="foo">
  *       #shadow-root
- *         <x-b exportparts="foo,bar:bar2">
+ *         <x-b exportparts="foo,bar:bar2,bar:bar3">
  *           #shadow-root
  *             <x-c>
  *
@@ -186,6 +186,7 @@ export function formatShadyPartSelector(
  *     ],
  *     bar: [
  *       ["x-a", "x-b", "bar2"],
+ *       ["x-a", "x-b", "bar3"],
  *     ],
  *  }
  *
@@ -219,12 +220,13 @@ export function findExportedPartMappings(host) {
     // attribute.
     if (superHost === undefined) {
       const root = host.getRootNode();
-      if (!root || root === document) {
-        // exportparts doesn't mean anything here; there is nothing beyond the
-        // document scope.
+      if (root === document || root === host) {
+        // When document, there's nothing beyond the document scope where styles
+        // could be exported from. When host, we're not attached to the DOM.
         break;
       }
       superHost = root.host;
+
       if (!superHost) {
         break;
       }

@@ -26,13 +26,17 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   x-a::part(foo) {
     color: red;
   }
+  /** fooalt is the same part as foo, but exported under a different name */
+  x-a::part(fooalt) {
+    background-color: blue;
+  }
   x-a::part(bar4) {
     color: green;
   }
 </style>
 
 <template id="x-a">
-  <x-b exportparts="foo,bar3:bar4"></x-b>
+  <x-b exportparts="foo,foo:fooalt,bar3:bar4"></x-b>
 </template>
 
 <template id="x-b">
@@ -49,13 +53,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 </template>
 
 <template id="x-d">
-  <div part="foo">foo</div>
+  <div part="foo">foo1</div>
+  <div part="foo">foo2</div>
   <div part="bar">bar</div>
   <div part="baz">baz</div>
 </template>
 
 <script type="module">
-  import {pierce, color, red, green, blue} from './test-utils.js';
+  import {pierce, style, color, red, green, blue} from './test-utils.js';
 
   suite('exported shadow parts', () => {
     suiteSetup(() => {
@@ -67,13 +72,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       window.ShadyCSS.CustomStyleInterface.addCustomStyle(style);
     });
 
-    let xa, foo, bar, baz;
+    let xa, foo1, foo2, bar, baz;
 
     setup(() => {
       xa = document.createElement('x-a');
       document.body.appendChild(xa);
       const xd = pierce(xa, 'x-b', 'x-c', 'x-d');
-      foo = pierce(xd, '[part=foo]');
+      [foo1, foo2] = xd.shadowRoot.querySelectorAll('[part=foo]');
       bar = pierce(xd, '[part=bar]');
       baz = pierce(xd, '[part=baz]');
     });
@@ -82,8 +87,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       document.body.removeChild(xa);
     });
 
-    test('foo receives style from document', () => {
-      assert.equal(color(foo), red);
+    test('foo parts receive style from document via name foo', () => {
+      assert.equal(color(foo1), red);
+      assert.equal(color(foo2), red);
+    });
+
+    test('foo parts receive style from document via name fooalt', () => {
+      assert.equal(style(foo1).backgroundColor, blue);
+      assert.equal(style(foo2).backgroundColor, blue);
     });
 
     test('bar receives style from document', () => {
