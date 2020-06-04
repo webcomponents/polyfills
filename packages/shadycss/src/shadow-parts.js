@@ -168,7 +168,10 @@ export function formatShadyPartSelector(
 
 /*  eslint-disable no-unused-vars */
 /**
- * Perform any needed Shadow Parts in response to a ShadyDOM insertBefore call.
+ * Add "shady-part" attributes to new nodes on insertion.
+ *
+ * This function will be called by ShadyDOM during any insertBefore call,
+ * before the native insert has occured.
  *
  * @param {!HTMLElement} parentNode
  * @param {!HTMLElement} newNode
@@ -178,8 +181,8 @@ export function formatShadyPartSelector(
 export function onInsertBefore(parentNode, newNode, referenceNode) {
   /* eslint-enable no-unused-vars */
   if (!parentNode.getRootNode) {
-    // TODO(aomarks) Why is it in noPatch mode on Chrome 41 and other older
-    // browsers that getRootNode is sometimes undefined?
+    // TODO(aomarks) We're in noPatch mode. Wrap where needed and add tests.
+    // https://github.com/webcomponents/polyfills/issues/343
     return;
   }
   const root = parentNode.getRootNode();
@@ -195,6 +198,10 @@ export function onInsertBefore(parentNode, newNode, referenceNode) {
     return;
   }
   let parts;
+  // TODO(aomarks) We should be able to get much better performance over the
+  // querySelectorAll calls here by integrating the part check into the walk
+  // that ShadyDOM already does to find slots.
+  // https://github.com/webcomponents/polyfills/issues/345
   if (newNode instanceof DocumentFragment) {
     // E.g. a template stamp. Note this call occurs before the native insert, so
     // DocumentFragment children are still contained by newNode.

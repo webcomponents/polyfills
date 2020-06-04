@@ -405,6 +405,18 @@ class StyleTransformer {
     return output.join('');
   }
 
+  /**
+   * Transform a `::part` selector into  a `shady-part` attribute selector.
+   *
+   * Example:
+   *   Given: 'parent > x-b.fancy::part(foo):hover' andd scope 'x-a'
+   *   Returns: 'parent > x-b.fancy [shady-part~="x-a:x-b:foo"]:hover'
+   *
+   * @param {!string} selector The `::part` selector.
+   * @param {!string} scope Lowercase custom-element name of the scope that
+   * defined this `::part` rule.
+   * @return {!string} Transformed `shady-part` attribute selector.
+   */
   _transformPartSelector(selector, scope) {
     const parsed = parsePartSelector(selector);
     if (parsed === null) {
