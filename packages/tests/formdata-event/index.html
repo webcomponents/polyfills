@@ -18,18 +18,11 @@ found at http://polymer.github.io/PATENTS.txt
 suite('formdata-event', () => {
   let iframe = undefined;
 
-  setup((done) => {
+  setup(done => {
     iframe = document.createElement('iframe');
+    iframe.src = './test-environment.html';
+    iframe.addEventListener('load', () => done());
     document.body.appendChild(iframe);
-
-    const iframeWindow = iframe.contentDocument.defaultView;
-    (iframeWindow.FormDataEvent = iframeWindow.FormDataEvent || {}).forcePolyfill = true;
-
-    const script = document.createElement('script');
-    script.src = '../node_modules/@webcomponents/formdata-event/formdata-event.min.js';
-    iframeWindow.document.body.appendChild(script);
-
-    script.addEventListener('load', () => { done(); });
   });
 
   teardown(() => {
