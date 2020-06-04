@@ -456,13 +456,13 @@ function rescopeForCustomProperties(host, newStyleNodes, newProperties) {
     // Inject this ::part rule into the array of style rules managed by this
     // instance. This way, the standard ShadyCSS mechanism for evaluating
     // per-instance styles will take effect.
-    if (!styleInfo.styleRules.rules.includes(styleNode)) {
+    if (styleInfo.styleRules.rules.indexOf(styleNode) === -1) {
       styleInfo.styleRules.rules.push(styleNode);
     }
 
     // We need to explicitly enumerate the active part rules on the styleInfo,
     // because that is used as part of the per-instance style cache lookup.
-    if (!styleInfo.customPropertyPartRules.includes(styleNode)) {
+    if (styleInfo.customPropertyPartRules.indexOf(styleNode) === -1) {
       styleInfo.customPropertyPartRules.push(styleNode);
     }
   }
@@ -470,7 +470,7 @@ function rescopeForCustomProperties(host, newStyleNodes, newProperties) {
   // Augment the array of CSS custom properties consumed by this instance,
   // because that is also used in the per-instance style cache lookup.
   for (const property of newProperties) {
-    if (!styleInfo.ownStylePropertyNames.includes(property)) {
+    if (styleInfo.ownStylePropertyNames.indexOf(property) === -1) {
       styleInfo.ownStylePropertyNames.push(property);
     }
   }
@@ -547,8 +547,8 @@ export function analyzeTemplatePartRules(providerScope, styleAst) {
   }
   for (const styleNode of styleAst.rules) {
     const selector = styleNode['selector'];
-    if (!selector || !selector.includes('::part')) {
-      // TODO(aomarks) We do the `includes` check here to make the case where no
+    if (!selector || selector.indexOf('::part') === -1) {
+      // TODO(aomarks) We do the `indexOf` check here to make the case where no
       // `::part` rules are used is as fast as possible, but we could get away
       // with just the `parsePartSelector` call we're doing next if the
       // difference is negligible. Needs benchmarking.
@@ -608,7 +608,7 @@ function lookupMatchingPartRules(scopeKey, partNames) {
   for (const entry of entries) {
     let matches = true;
     for (const partName of entry.partNames) {
-      if (!partNames.includes(partName)) {
+      if (partNames.indexOf(partName) === -1) {
         matches = false;
         break;
       }
