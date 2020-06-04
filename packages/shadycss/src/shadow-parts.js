@@ -471,7 +471,7 @@ function rescopeForCustomProperties(host, newStyleNodes, newProperties) {
  * A map from "providerScope:receiverScope" compound string key to an array of
  * ::part rules that were found during template preparation.
  *
- * We only populate this map if a ::part rule consumes a custom property and we
+ * We only populate this map if a ::part rule consumes a custom property and 
  * native custom properties are not available.
  *
  * This map is used to quickly lookup whether a given ::part rule being applied
