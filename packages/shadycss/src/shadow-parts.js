@@ -168,8 +168,7 @@ export function formatShadyPartSelector(
 
 /*  eslint-disable no-unused-vars */
 /**
- * Perform any needed Shadow Parts updates after a ShadyDOM insertBefore call
- * has been made.
+ * Perform any needed Shadow Parts in response to a ShadyDOM insertBefore call.
  *
  * @param {!HTMLElement} parentNode
  * @param {!HTMLElement} newNode
@@ -189,11 +188,30 @@ export function onInsertBefore(parentNode, newNode, referenceNode) {
     // we don't waste time querying it.
     return;
   }
-  const parts = parentNode.querySelectorAll('[part]');
+  const host = root.host;
+  if (!host) {
+    // If there's no host, we're not connected, so no part styles could apply
+    // here.
+    return;
+  }
+  let parts;
+  if (newNode instanceof DocumentFragment) {
+    // E.g. a template stamp. Note this call occurs before the native insert, so
+    // DocumentFragment children are still contained by newNode.
+    parts = newNode.querySelectorAll('[part]');
+  } else if (newNode instanceof Text) {
+    // E.g. an innerHTML assignment.
+    parts = parentNode.querySelectorAll('[part]');
+  } else {
+    parts = newNode.querySelectorAll('[part]');
+    // querySelectorAll doesn't match the parent node itself.
+    if (newNode.hasAttribute('part')) {
+      parts = [newNode, ...parts];
+    }
+  }
   if (parts.length === 0) {
     return;
   }
-  const host = root.host;
   const receiverScope = host.localName;
   const superRoot = host.getRootNode();
   const providerScope =

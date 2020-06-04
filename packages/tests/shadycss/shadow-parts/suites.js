@@ -16,5 +16,6 @@ export const suites = [
   'basic.html',
   'disable.html',
   'document.html',
+  'insertions.html',
   'parsing-formatting.html',
 ];
