@@ -9,7 +9,7 @@
  * additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
-import {FormDataEvent} from "./Wrappers/FormDataEvent.js";
+import {FormDataEvent} from "./FormDataEvent.js";
 
 // Use `WeakMap<K, true>` in place of `WeakSet` for IE11.
 const submitListenerInstalled: WeakMap<EventTarget, true> = new WeakMap();
