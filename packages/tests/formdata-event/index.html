@@ -17,11 +17,15 @@ found at http://polymer.github.io/PATENTS.txt
 <script type="module">
 suite('formdata-event', () => {
   let iframe = undefined;
+  let iframeDoc = undefined;
 
   setup(done => {
     iframe = document.createElement('iframe');
     iframe.src = './test-environment.html';
-    iframe.addEventListener('load', () => done());
+    iframe.addEventListener('load', () => {
+      iframeDoc = iframe.contentDocument;
+      done();
+    });
     document.body.appendChild(iframe);
   });
 
@@ -32,20 +36,21 @@ suite('formdata-event', () => {
 
   test('Submitting a form causes a "formdata" event to be dispatched to the ' +
       'form.', () => {
-    const form = document.createElement('form');
-      const submitButton = document.createElement('input');
-        submitButton.type = 'submit';
-      form.appendChild(submitButton);
-    iframe.contentDocument.body.appendChild(form);
+    const form = iframeDoc.createElement('form');
+    iframeDoc.body.appendChild(form);
 
-    let called = false;
+    const submitButton = iframeDoc.createElement('input');
+    submitButton.type = 'submit';
+    form.appendChild(submitButton);
+
+    let callCount = 0;
     form.addEventListener('formdata', (e) => {
-      called = true;
+      callCount++;
     });
     submitButton.click();
-    assert(called);
+    assert.strictEqual(callCount, 1);
 
-    iframe.contentDocument.body.removeChild(form);
+    iframeDoc.body.removeChild(form);
   });
 });
 </script>
