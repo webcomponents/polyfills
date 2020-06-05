@@ -12,8 +12,8 @@
 import {prototype as EventTargetPrototype, methods as EventTargetMethods} from "../Environment/EventTarget.js";
 import {watchFormdataTarget} from "../watchFormdataTarget.js";
 
-export const install = () => {
-  EventTargetPrototype.addEventListener = function(
+const wrapAddEventListener = (prototype: any, original: any) => {
+  prototype.addEventListener = function(
       type: string,
       listener: EventListenerOrEventListenerObject | null,
       options?: boolean | AddEventListenerOptions) {
@@ -21,6 +21,12 @@ export const install = () => {
       watchFormdataTarget(this);
     }
 
-    return EventTargetMethods.addEventListener.call(this, type, listener, options);
+    return original.call(this, type, listener, options);
   };
+};
+
+export const install = () => {
+  if (EventTargetPrototype) {
+    wrapAddEventListener(EventTargetPrototype, EventTargetMethods.addEventListener);
+  }
 };

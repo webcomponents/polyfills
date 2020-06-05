@@ -11,10 +11,10 @@
 
 export const constructor = window['EventTarget'];
 
-export const prototype = constructor['prototype'];
+export const prototype = constructor?.['prototype'];
 
 export const methods = {
-  addEventListener: prototype.addEventListener,
-  removeEventListener: prototype.removeEventListener,
-  dispatchEvent: prototype.dispatchEvent,
+  addEventListener: prototype?.addEventListener,
+  removeEventListener: prototype?.removeEventListener,
+  dispatchEvent: prototype?.dispatchEvent,
 };
