@@ -19,6 +19,7 @@ export const install = () => {
       e.initEvent(type, eventInit.bubbles, eventInit.cancelable);
       return e;
     };
+    Object.setPrototypeOf(Event, Function);
     Object.setPrototypeOf(EventWrapper, Event);
     EventWrapper.prototype = Event.prototype;
     EventWrapper.prototype.constructor = EventWrapper;
