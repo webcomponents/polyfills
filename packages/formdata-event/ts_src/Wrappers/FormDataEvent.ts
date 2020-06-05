@@ -28,7 +28,7 @@ export class FormDataEvent extends Event {
     private_formData.set(this, formData);
   }
 
-  get ['formData']() {
+  get formData() {
     return private_formData.get(this);
   }
 }

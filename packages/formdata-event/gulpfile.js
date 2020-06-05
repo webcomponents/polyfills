@@ -24,7 +24,7 @@ gulp.task('default', () => {
       compilation_level: 'ADVANCED',
       warning_level: 'VERBOSE',
       language_in: 'ECMASCRIPT_2019',
-      language_out: 'ECMASCRIPT6_STRICT',
+      language_out: 'ECMASCRIPT5_STRICT',
       dependency_mode: 'STRICT',
       entry_point: ['/src/index'],
       js_output_file: 'formdata-event.min.js',

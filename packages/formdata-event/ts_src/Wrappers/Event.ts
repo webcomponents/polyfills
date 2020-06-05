@@ -9,14 +9,20 @@
  * additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
-import {install as installEvent} from "./Wrappers/Event.js";
-import {install as installFormDataEvent} from "./Wrappers/FormDataEvent.js";
-import {install as installEventTarget} from "./Wrappers/EventTarget.js";
+export const install = () => {
+  // Thanks, IE
+  try {
+    new Event('name');
+  } catch {
+    const EventWrapper = function Event(type: string, eventInit: EventInit = {}) {
+      const e = document.createEvent('Event');
+      e.initEvent(type, eventInit.bubbles, eventInit.cancelable);
+      return e;
+    };
+    Object.setPrototypeOf(EventWrapper, Event);
+    EventWrapper.prototype = Event.prototype;
+    EventWrapper.prototype.constructor = EventWrapper;
 
-const priorFormDataEvent = window['FormDataEvent'] as any;
-if (priorFormDataEvent === undefined ||
-    priorFormDataEvent['forcePolyfill'] === true) {
-  installEvent();
-  installFormDataEvent();
-  installEventTarget();
-}
+    (window.Event as any) = EventWrapper;
+  }
+};
