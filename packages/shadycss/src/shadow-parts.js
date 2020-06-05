@@ -396,7 +396,7 @@ export function onInsertBefore(parentNode, newNode, referenceNode) {
       // properties. We'll need to switch to per-instance styling if we find any
       // within this host.
       for (const scopeKey of scopeKeys.values()) {
-        const rules = lookupMatchingPartRules(scopeKey, partNames);
+        const rules = findPartRulesThatMatchPartNode(scopeKey, partNames);
         for (const rule of rules) {
           if (!needsRescoping) {
             needsRescoping = true;
@@ -596,10 +596,19 @@ function findConsumedCustomProperties(cssText) {
 }
 
 /**
- * Return entries from the partRulesMap that match the given scopes and all of
- * the given part names.
+ * Use the partRulesMap to retrieve any ::part rules that match a node in the
+ * given scope with the given list of part names.
+ *
+ * Note that, by the spec, a specifier like "::part(foo bar)" will only match a
+ * node that has both "foo" AND "bar" in its "part" attribute.
+ *
+ * @param {!string} scopeKey The compound scope key with format
+ * "providerScope:receiverScope".
+ * @param {!Array<!string>} partNames The split "part" attribute of some part
+ * node.
+ * @return {!Array<!PartRulesMapEntry>} The matching entries.
  */
-function lookupMatchingPartRules(scopeKey, partNames) {
+function findPartRulesThatMatchPartNode(scopeKey, partNames) {
   const entries = partRulesMap.get(scopeKey);
   if (entries === undefined) {
     return [];
@@ -609,6 +618,9 @@ function lookupMatchingPartRules(scopeKey, partNames) {
     let matches = true;
     for (const partName of entry.partNames) {
       if (partNames.indexOf(partName) === -1) {
+        // This rule does not match the given part node. E.g. the specifier is
+        // "::part(foo bar)" but this part node is missin either "foo" or "bar"
+        // or both in its "part" attribute.
         matches = false;
         break;
       }
