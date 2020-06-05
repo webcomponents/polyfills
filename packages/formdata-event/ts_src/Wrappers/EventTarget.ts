@@ -10,49 +10,7 @@
  */
 
 import {prototype as EventTargetPrototype, methods as EventTargetMethods} from "../Environment/EventTarget.js";
-import {FormDataEvent} from "./FormDataEvent.js";
-
-// Use `WeakMap<K, true>` in place of `WeakSet` for IE11.
-const submitListenerInstalled: WeakMap<EventTarget, true> = new WeakMap();
-const submitEventSeen: WeakMap<Event, true> = new WeakMap();
-
-const watchFormdataTarget = (subject: EventTarget) => {
-  if (submitListenerInstalled.has(subject)) {
-    return;
-  }
-  submitListenerInstalled.set(subject, true);
-
-  EventTargetMethods.addEventListener.call(subject, 'submit', (capturingEvent: Event) => {
-    if (submitEventSeen.has(capturingEvent)) {
-      return;
-    }
-    submitEventSeen.set(capturingEvent, true);
-
-    const target = capturingEvent.target;
-    if (!(target instanceof HTMLFormElement)) {
-      return;
-    }
-
-    const submitBubblingListener = (bubblingEvent: Event) => {
-      if (bubblingEvent !== capturingEvent) {
-        return;
-      }
-
-      EventTargetMethods.removeEventListener.call(subject, 'submit', submitBubblingListener);
-
-      if (bubblingEvent.defaultPrevented) {
-        return;
-      }
-
-      EventTargetMethods.dispatchEvent.call(target, new FormDataEvent('formdata', {
-        bubbles: true,
-        formData: new FormData(target),
-      }));
-    };
-
-    EventTargetMethods.addEventListener.call(target.getRootNode(), 'submit', submitBubblingListener);
-  }, true);
-};
+import {watchFormdataTarget} from "../watchFormdataTarget.js";
 
 export const install = () => {
   EventTargetPrototype.addEventListener = function(
