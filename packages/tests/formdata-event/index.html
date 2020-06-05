@@ -22,7 +22,8 @@ suite('formdata-event', () => {
   setup(done => {
     iframe = document.createElement('iframe');
     iframe.src = './test-environment.html';
-    iframe.addEventListener('load', () => {
+    iframe.addEventListener('load', function listener() {
+      iframe.removeEventListener('load', listener);
       iframeDoc = iframe.contentDocument;
       done();
     });
