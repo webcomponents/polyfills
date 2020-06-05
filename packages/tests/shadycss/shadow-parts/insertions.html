@@ -109,7 +109,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       assert.equal(color(pa), red);
     });
 
-    test('appendChild: text node', () => {
+    test('insertBefore: text node', () => {
       const text = document.createTextNode('foo');
       xb.shadowRoot.insertBefore(text, null);
     });
