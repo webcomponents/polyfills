@@ -79,6 +79,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       assert.equal(color(pa), red);
     });
 
+    test('appendChild: text node', () => {
+      const text = document.createTextNode('foo');
+      xb.shadowRoot.appendChild(text);
+    });
+
     test('insertBefore: part', () => {
       const pa = document.createElement('div');
       pa.setAttribute('part', 'pa');
@@ -102,6 +107,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       fragment.appendChild(pa);
       xb.shadowRoot.insertBefore(fragment, null);
       assert.equal(color(pa), red);
+    });
+
+    test('appendChild: text node', () => {
+      const text = document.createTextNode('foo');
+      xb.shadowRoot.insertBefore(text, null);
     });
 
     test('replaceChild: part', () => {
@@ -133,6 +143,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       fragment.appendChild(pa);
       xb.shadowRoot.replaceChild(fragment, oldChild);
       assert.equal(color(pa), red);
+    });
+
+    test('replaceChild: text node', () => {
+      const oldChild = document.createElement('div');
+      xb.shadowRoot.appendChild(oldChild);
+      const text = document.createTextNode('foo');
+      xb.shadowRoot.replaceChild(text, oldChild);
     });
 
     test('innerHTML', () => {

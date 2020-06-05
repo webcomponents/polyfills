@@ -180,6 +180,10 @@ export function formatShadyPartSelector(
  */
 export function onInsertBefore(parentNode, newNode, referenceNode) {
   /* eslint-enable no-unused-vars */
+  if (newNode instanceof Text) {
+    // No parts in text.
+    return;
+  }
   if (!parentNode.getRootNode) {
     // TODO(aomarks) We're in noPatch mode. Wrap where needed and add tests.
     // https://github.com/webcomponents/polyfills/issues/343
@@ -197,24 +201,13 @@ export function onInsertBefore(parentNode, newNode, referenceNode) {
     // here.
     return;
   }
-  let parts;
+  let parts = newNode.querySelectorAll('[part]');
   // TODO(aomarks) We should be able to get much better performance over the
   // querySelectorAll calls here by integrating the part check into the walk
   // that ShadyDOM already does to find slots.
   // https://github.com/webcomponents/polyfills/issues/345
-  if (newNode instanceof DocumentFragment) {
-    // E.g. a template stamp. Note this call occurs before the native insert, so
-    // DocumentFragment children are still contained by newNode.
-    parts = newNode.querySelectorAll('[part]');
-  } else if (newNode instanceof Text) {
-    // E.g. an innerHTML assignment.
-    parts = parentNode.querySelectorAll('[part]');
-  } else {
-    parts = newNode.querySelectorAll('[part]');
-    // querySelectorAll doesn't match the parent node itself.
-    if (newNode.hasAttribute('part')) {
-      parts = [newNode, ...parts];
-    }
+  if (newNode instanceof HTMLElement && newNode.hasAttribute('part')) {
+    parts = [newNode, ...parts];
   }
   if (parts.length === 0) {
     return;
