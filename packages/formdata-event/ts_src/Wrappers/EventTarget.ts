@@ -9,7 +9,7 @@
  * additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
-import {prototype as EventTarget_prototype, proxy as EventTargetProxy} from "../Environment/EventTarget.js";
+import {prototype as EventTargetPrototype, methods as EventTargetMethods} from "../Environment/EventTarget.js";
 import {FormDataEvent} from "./FormDataEvent.js";
 
 // Use `WeakMap<K, true>` in place of `WeakSet` for IE11.
@@ -22,7 +22,7 @@ const watchFormdataTarget = (subject: EventTarget) => {
   }
   submitListenerInstalled.set(subject, true);
 
-  EventTargetProxy.addEventListener.call(subject, 'submit', (capturingEvent: Event) => {
+  EventTargetMethods.addEventListener.call(subject, 'submit', (capturingEvent: Event) => {
     if (submitEventSeen.has(capturingEvent)) {
       return;
     }
@@ -38,24 +38,24 @@ const watchFormdataTarget = (subject: EventTarget) => {
         return;
       }
 
-      EventTargetProxy.removeEventListener.call(subject, 'submit', submitBubblingListener);
+      EventTargetMethods.removeEventListener.call(subject, 'submit', submitBubblingListener);
 
       if (bubblingEvent.defaultPrevented) {
         return;
       }
 
-      EventTargetProxy.dispatchEvent.call(target, new FormDataEvent('formdata', {
+      EventTargetMethods.dispatchEvent.call(target, new FormDataEvent('formdata', {
         bubbles: true,
         formData: new FormData(target),
       }));
     };
 
-    EventTargetProxy.addEventListener.call(target.getRootNode(), 'submit', submitBubblingListener);
+    EventTargetMethods.addEventListener.call(target.getRootNode(), 'submit', submitBubblingListener);
   }, true);
 };
 
 export const install = () => {
-  EventTarget_prototype.addEventListener = function(
+  EventTargetPrototype.addEventListener = function(
       type: string,
       listener: EventListenerOrEventListenerObject | null,
       options?: boolean | AddEventListenerOptions) {
@@ -63,6 +63,6 @@ export const install = () => {
       watchFormdataTarget(this);
     }
 
-    return EventTargetProxy.addEventListener.call(this, type, listener, options);
+    return EventTargetMethods.addEventListener.call(this, type, listener, options);
   };
 };
