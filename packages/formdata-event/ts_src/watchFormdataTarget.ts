@@ -9,20 +9,25 @@
  * additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
-import {methods as EventTargetMethods} from "./Environment/EventTarget.js";
 import {FormDataEvent} from "./Wrappers/FormDataEvent.js";
 
 // Use `WeakMap<K, true>` in place of `WeakSet` for IE11.
 const submitListenerInstalled: WeakMap<EventTarget, true> = new WeakMap();
 const submitEventSeen: WeakMap<Event, true> = new WeakMap();
 
-export const watchFormdataTarget = (subject: EventTarget) => {
+export interface WatchFormdataTargetArgs {
+  addEventListener: EventTarget['addEventListener'];
+  removeEventListener: EventTarget['removeEventListener'];
+  dispatchEvent: EventTarget['dispatchEvent'];
+}
+
+export const watchFormdataTarget = (subject: EventTarget, args: WatchFormdataTargetArgs) => {
   if (submitListenerInstalled.has(subject)) {
     return;
   }
   submitListenerInstalled.set(subject, true);
 
-  EventTargetMethods.addEventListener.call(subject, 'submit', (capturingEvent: Event) => {
+  args.addEventListener.call(subject, 'submit', (capturingEvent: Event) => {
     if (submitEventSeen.has(capturingEvent)) {
       return;
     }
@@ -38,18 +43,19 @@ export const watchFormdataTarget = (subject: EventTarget) => {
         return;
       }
 
-      EventTargetMethods.removeEventListener.call(subject, 'submit', submitBubblingListener);
+      args.removeEventListener.call(subject, 'submit', submitBubblingListener);
 
       if (bubblingEvent.defaultPrevented) {
         return;
       }
 
-      EventTargetMethods.dispatchEvent.call(target, new FormDataEvent('formdata', {
+      args.dispatchEvent.call(target, new FormDataEvent('formdata', {
         bubbles: true,
         formData: new FormData(target),
       }));
     };
 
-    EventTargetMethods.addEventListener.call(target.getRootNode(), 'submit', submitBubblingListener);
+    const rootNode = target.getRootNode?.() ?? target.ownerDocument;
+    args.addEventListener.call(rootNode, 'submit', submitBubblingListener);
   }, true);
 };
