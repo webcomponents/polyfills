@@ -11,15 +11,22 @@
 
 import {prototype as EventTargetPrototype, methods as EventTargetMethods} from "../Environment/EventTarget.js";
 import {prototype as NodePrototype, methods as NodeMethods} from "../Environment/Node.js";
-import {watchFormdataTarget, WatchFormdataTargetArgs} from "../watchFormdataTarget.js";
+import {watchFormdataTarget} from "../watchFormdataTarget.js";
 
-export const wrapAddEventListener = (prototype: any, original: EventTarget['addEventListener'], methods: WatchFormdataTargetArgs) => {
+export const wrapAddEventListener = (
+  prototype: {
+    addEventListener: EventTarget['addEventListener'],
+  },
+  original: EventTarget['addEventListener'],
+) => {
   prototype.addEventListener = function(
-      type: string,
-      listener: EventListenerOrEventListenerObject | null,
-      options?: boolean | AddEventListenerOptions) {
+    this: EventTarget,
+    type: string,
+    listener: EventListenerOrEventListenerObject | null,
+    options?: boolean | AddEventListenerOptions
+  ) {
     if (type === 'formdata') {
-      watchFormdataTarget(this, methods);
+      watchFormdataTarget(this);
     }
 
     return original.call(this, type, listener, options);
@@ -28,8 +35,8 @@ export const wrapAddEventListener = (prototype: any, original: EventTarget['addE
 
 export const install = () => {
   if (EventTargetPrototype) {
-    wrapAddEventListener(EventTargetPrototype, EventTargetMethods.addEventListener, EventTargetMethods);
+    wrapAddEventListener(EventTargetPrototype, EventTargetMethods.addEventListener);
   } else if (NodeMethods.addEventListener) {
-    wrapAddEventListener(NodePrototype, NodeMethods.addEventListener, NodeMethods);
+    wrapAddEventListener(NodePrototype, NodeMethods.addEventListener);
   }
 };

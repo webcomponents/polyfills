@@ -10,24 +10,19 @@
  */
 
 import {FormDataEvent} from "./FormDataEvent.js";
+import {addEventListener, removeEventListener, dispatchEvent} from "./EnvironmentAPI/EventTarget.js";
 
 // Use `WeakMap<K, true>` in place of `WeakSet` for IE11.
 const submitListenerInstalled: WeakMap<EventTarget, true> = new WeakMap();
 const submitEventSeen: WeakMap<Event, true> = new WeakMap();
 
-export interface WatchFormdataTargetArgs {
-  addEventListener: EventTarget['addEventListener'];
-  removeEventListener: EventTarget['removeEventListener'];
-  dispatchEvent: EventTarget['dispatchEvent'];
-}
-
-export const watchFormdataTarget = (subject: EventTarget, args: WatchFormdataTargetArgs) => {
+export const watchFormdataTarget = (subject: EventTarget) => {
   if (submitListenerInstalled.has(subject)) {
     return;
   }
   submitListenerInstalled.set(subject, true);
 
-  args.addEventListener.call(subject, 'submit', (capturingEvent: Event) => {
+  addEventListener.call(subject, 'submit', (capturingEvent: Event) => {
     if (submitEventSeen.has(capturingEvent)) {
       return;
     }
@@ -43,19 +38,19 @@ export const watchFormdataTarget = (subject: EventTarget, args: WatchFormdataTar
         return;
       }
 
-      args.removeEventListener.call(subject, 'submit', submitBubblingListener);
+      removeEventListener.call(subject, 'submit', submitBubblingListener);
 
       if (bubblingEvent.defaultPrevented) {
         return;
       }
 
-      args.dispatchEvent.call(target, new FormDataEvent('formdata', {
+      dispatchEvent.call(target, new FormDataEvent('formdata', {
         bubbles: true,
         formData: new FormData(target),
       }));
     };
 
     const rootNode = target.getRootNode?.() ?? target.ownerDocument;
-    args.addEventListener.call(rootNode, 'submit', submitBubblingListener);
+    addEventListener.call(rootNode, 'submit', submitBubblingListener);
   }, true);
 };
