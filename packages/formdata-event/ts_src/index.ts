@@ -14,8 +14,7 @@ import {install as installEventTarget} from "./Wrappers/EventTarget.js";
 import {install as installFormDataEvent} from "./FormDataEvent.js";
 
 const priorFormDataEvent = window['FormDataEvent'] as any;
-if (priorFormDataEvent === undefined ||
-    priorFormDataEvent['forcePolyfill'] === true) {
+if (priorFormDataEvent === undefined) {
   installEvent();
   installFormDataEvent();
   installEventTarget();

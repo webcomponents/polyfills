@@ -15,7 +15,4 @@ environment. Tests should load this page in an iframe so that forms injected
 inside it can be submitted (causing a redirect) without affecting the test page
 itself.
 -->
-<script>
-(window.FormDataEvent = window.FormDataEvent || {}).forcePolyfill = true;
-</script>
 <script src="../node_modules/@webcomponents/formdata-event/formdata-event.min.js"></script>
