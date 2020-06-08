@@ -11,7 +11,7 @@ found at http://polymer.github.io/PATENTS.txt
 -->
 <html>
 <head>
-<script src="../node_modules/wct-browser-legacy/browser.js"></script>
+<script src="../../node_modules/wct-browser-legacy/browser.js"></script>
 </head>
 <body>
 <script>
@@ -24,7 +24,7 @@ suite('FormDataEvent', () => {
 
   setup(done => {
     iframe = document.createElement('iframe');
-    iframe.src = './test-environment.html';
+    iframe.src = '../test-environment.html';
     iframe.addEventListener('load', function listener() {
       iframe.removeEventListener('load', listener);
       iframeDoc = iframe.contentDocument;
@@ -41,27 +41,22 @@ suite('FormDataEvent', () => {
     iframe = undefined;
   });
 
-  test('FormDataEvent is available on the window', () => {
-    assert.ok(FormDataEvent);
-  });
+  test('Constructing an Event extension results in an instance of the ' +
+      'constructed class.', () => {
+    class SomeEvent extends Event {
+      constructor() {
+        super('some-event');
+        this._x = 123;
+      }
 
-  test('FormDataEvent must be constructed with a `formData` option', () => {
-    assert.throws(() => {
-      new FormDataEvent('formdata');
-    });
+      addToXAndReturn(y) { return this._x + y; }
+    }
 
-    assert.throws(() => {
-      new FormDataEvent('formdata', {formData: "This isn't a FormData."});
-    });
+    const event = new SomeEvent();
+    assert.instanceOf(event, Event);
+    assert.instanceOf(event, SomeEvent);
 
-    new FormDataEvent('formdata', {formData: new FormData()});
-  });
-
-  test('FormDataEvent\'s `formData` property returns the FormData the event ' +
-      'was constructed with', () => {
-    const formData = new FormData();
-    const event = new FormDataEvent('formdata', {formData});
-    assert.strictEqual(event.formData, formData);
+    assert.strictEqual(event.addToXAndReturn(456), 123 + 456);
   });
 });
 </script>
