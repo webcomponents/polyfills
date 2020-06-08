@@ -9,6 +9,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 */
 
 export const black = 'rgb(0, 0, 0)';
+export const blackQuad = 'rgba(0, 0, 0, 0)';
 export const red = 'rgb(255, 0, 0)';
 export const green = 'rgb(0, 128, 0)';
 export const blue = 'rgb(0, 0, 255)';

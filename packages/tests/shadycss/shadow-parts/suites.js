@@ -20,6 +20,7 @@ export const suites = [
   'exports.html',
   'find-exported-part-mappings.html',
   'insertions.html',
+  'move-shadow-roots.html',
   'parsing-formatting.html',
   'part-intersection.html',
   'property-above-provider.html',
