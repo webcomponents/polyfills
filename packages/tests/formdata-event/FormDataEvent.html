@@ -18,6 +18,8 @@ found at http://polymer.github.io/PATENTS.txt
 suite('FormDataEvent', () => {
   let iframe = undefined;
   let iframeDoc = undefined;
+  let FormDataEvent = undefined;
+  let FormData = undefined;
 
   setup(done => {
     iframe = document.createElement('iframe');
@@ -25,6 +27,8 @@ suite('FormDataEvent', () => {
     iframe.addEventListener('load', function listener() {
       iframe.removeEventListener('load', listener);
       iframeDoc = iframe.contentDocument;
+      FormDataEvent = iframeDoc.defaultView.FormDataEvent;
+      FormData = iframeDoc.defaultView.FormData;
       done();
     });
     document.body.appendChild(iframe);
@@ -36,7 +40,19 @@ suite('FormDataEvent', () => {
   });
 
   test('FormDataEvent is available on the window', () => {
-    assert.ok(iframeDoc.defaultView.FormDataEvent);
+    assert.ok(FormDataEvent);
+  });
+
+  test('FormDataEvent must be constructed with a `formData` option', () => {
+    assert.throws(() => {
+      new FormDataEvent('formdata');
+    });
+
+    assert.throws(() => {
+      new FormDataEvent('formdata', {formData: "This isn't a FormData."});
+    });
+
+    new FormDataEvent('formdata', {formData: new FormData()});
   });
 });
 </script>
