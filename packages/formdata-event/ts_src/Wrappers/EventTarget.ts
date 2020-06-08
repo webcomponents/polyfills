@@ -11,6 +11,7 @@
 
 import {prototype as EventTargetPrototype, methods as EventTargetMethods} from "../Environment/EventTarget.js";
 import {prototype as NodePrototype, methods as NodeMethods} from "../Environment/Node.js";
+import {prototype as WindowPrototype, methods as WindowMethods} from "../Environment/Window.js";
 import {watchFormdataTarget} from "../watchFormdataTarget.js";
 
 export const wrapAddEventListener = (
@@ -36,7 +37,13 @@ export const wrapAddEventListener = (
 export const install = () => {
   if (EventTargetPrototype) {
     wrapAddEventListener(EventTargetPrototype, EventTargetMethods.addEventListener);
-  } else if (NodeMethods.addEventListener) {
+  }
+
+  if (NodeMethods.addEventListener) {
     wrapAddEventListener(NodePrototype, NodeMethods.addEventListener);
+  }
+
+  if (WindowMethods.addEventListener) {
+    wrapAddEventListener(WindowPrototype, WindowMethods.addEventListener);
   }
 };

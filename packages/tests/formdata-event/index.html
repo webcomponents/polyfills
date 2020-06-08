@@ -36,7 +36,7 @@ suite('formdata-event', () => {
   });
 
   test('Submitting a form causes a "formdata" event to be dispatched to the ' +
-      'form.', () => {
+      'form. (listener on form)', () => {
     const form = iframeDoc.createElement('form');
     iframeDoc.body.appendChild(form);
 
@@ -46,6 +46,25 @@ suite('formdata-event', () => {
 
     let callCount = 0;
     form.addEventListener('formdata', (e) => {
+      callCount++;
+    });
+    submitButton.click();
+    assert.strictEqual(callCount, 1);
+
+    iframeDoc.body.removeChild(form);
+  });
+
+  test('Submitting a form causes a "formdata" event to be dispatched to the ' +
+      'form. (listener on window)', () => {
+    const form = iframeDoc.createElement('form');
+    iframeDoc.body.appendChild(form);
+
+    const submitButton = iframeDoc.createElement('input');
+    submitButton.type = 'submit';
+    form.appendChild(submitButton);
+
+    let callCount = 0;
+    iframeDoc.defaultView.addEventListener('formdata', (e) => {
       callCount++;
     });
     submitButton.click();

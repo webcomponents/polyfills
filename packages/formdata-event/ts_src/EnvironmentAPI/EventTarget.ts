@@ -11,6 +11,7 @@
 
 import {constructor as EventTargetCtor, methods as EventTargetMethods} from "../Environment/EventTarget.js";
 import {methods as NodeMethods} from "../Environment/Node.js";
+import {methods as WindowMethods} from "../Environment/Window.js";
 
 export const addEventListener: EventTarget['addEventListener'] = (() => {
   if (EventTargetCtor) {
@@ -25,6 +26,11 @@ export const addEventListener: EventTarget['addEventListener'] = (() => {
   ) {
     if (this instanceof Node) {
       return NodeMethods.addEventListener.call(this, type, listener, options);
+    }
+
+    if (this instanceof Window) {
+      return WindowMethods.addEventListener.call(
+          this, type, listener as EventListenerOrEventListenerObject, options);
     }
 
     throw new TypeError("Unsupported.");
@@ -46,6 +52,11 @@ export const removeEventListener: EventTarget['removeEventListener'] = (() => {
       return NodeMethods.removeEventListener.call(this, type, listener, options);
     }
 
+    if (this instanceof Window) {
+      return WindowMethods.removeEventListener.call(
+          this, type, listener as EventListenerOrEventListenerObject, options);
+    }
+
     throw new TypeError("Unsupported.");
   };
 })();
@@ -58,6 +69,10 @@ export const dispatchEvent: EventTarget['dispatchEvent'] = (() => {
   return function(this: EventTarget, event: Event): boolean {
     if (this instanceof Node) {
       return NodeMethods.dispatchEvent.call(this, event);
+    }
+
+    if (this instanceof Window) {
+      return WindowMethods.dispatchEvent.call(this, event);
     }
 
     throw new TypeError("Unsupported.");
