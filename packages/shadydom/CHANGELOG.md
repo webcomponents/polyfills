@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Compare node with ref_node before executing `replaceChild`.
+  ([#350](https://github.com/webcomponents/polyfills/pull/350))
 - Remove outdated references to `customElements.nativeHTMLElement`
   ([#234](https://github.com/webcomponents/polyfills/pull/234))
 - Add README warning about polyfill ordering when using `noPatch`
