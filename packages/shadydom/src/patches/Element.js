@@ -13,6 +13,7 @@ import {scopeClassAttribute} from '../style-scoping.js';
 import {shadyDataForNode} from '../shady-data.js';
 import {attachShadow, ownerShadyRootForNode} from '../attach-shadow.js';
 import {eventPropertyNamesForElement, wrappedDescriptorForEventProperty} from '../patch-events.js';
+import {getScopingShim} from '../style-scoping.js';
 
 const doc = window.document;
 
@@ -102,6 +103,12 @@ export const ElementPatches = utils.getOwnPropertyDescriptors({
     } else if (!scopeClassAttribute(this, attr, value)) {
       this[utils.NATIVE_PREFIX + 'setAttribute'](attr, value);
       distributeAttributeChange(this, attr);
+      if (!utils.disableShadowParts && attr === 'part') {
+        const shim = getScopingShim();
+        if (shim) {
+          shim['onSetAttribute'](this, attr, value);
+        }
+      }
     }
   },
 
@@ -115,6 +122,12 @@ export const ElementPatches = utils.getOwnPropertyDescriptors({
     } else if (!scopeClassAttribute(this, attr, '')) {
       this[utils.NATIVE_PREFIX + 'removeAttribute'](attr);
       distributeAttributeChange(this, attr);
+      if (!utils.disableShadowParts && attr === 'part') {
+        const shim = getScopingShim();
+        if (shim) {
+          shim['onRemoveAttribute'](this, attr);
+        }
+      }
     } else if (this.getAttribute(attr) === '') {
       // ensure that "class" attribute is fully removed if ShadyCSS does not keep scoping
       this[utils.NATIVE_PREFIX + 'removeAttribute'](attr);

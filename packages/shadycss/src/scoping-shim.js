@@ -295,6 +295,46 @@ export default class ScopingShim {
     }
   }
 
+  /* eslint-disable no-unused-vars */
+
+  /**
+   * Hook for performing ShadyCSS updates when a relevant attribute is set.
+   * Note ShadyDOM will only call this function for "part" and "exportparts"
+   * attributes.
+   *
+   * @param {!HTMLElement} element Element
+   * @param {!string} name Attribute name.
+   * @param {!string} value Attribute value.
+   * @return {void}
+   */
+  onSetAttribute(element, name, value) {
+    if (!disableShadowParts) {
+      if (name === 'part') {
+        shadowParts.onSetPartAttribute(element);
+      }
+    }
+  }
+
+  /* eslint-enable no-unused-vars */
+
+  /**
+   * Hook for performing ShadyCSS updates when a relevant attribute is removed.
+   * Note ShadyDOM will only call this function for "part" and "exportparts"
+   * attributes.
+   *
+   * @param {!HTMLElement} element Element
+   * @param {!string} name Attribute name ("part" or "exportparts")
+   * @param {!string} value Attribute value.
+   * @return {void}
+   */
+  onRemoveAttribute(element, name, value) {
+    if (!disableShadowParts) {
+      if (name === 'part') {
+        shadowParts.onRemovePartAttribute(element);
+      }
+    }
+  }
+
   /**
    * Apply styles for the given element
    *

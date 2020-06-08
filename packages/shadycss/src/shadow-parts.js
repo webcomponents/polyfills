@@ -14,6 +14,28 @@ import StyleInfo from './style-info.js';
 import StyleProperties from './style-properties.js';
 import * as StyleUtil from './style-util.js';
 import {nativeCssVariables} from './style-settings.js';
+import {NATIVE_PREFIX} from './common-utils.js';
+
+/**
+ * Set the "shady-part" attribute using the native method.
+ *
+ * @param {!HTMLElement} element
+ * @param {!string} value
+ * @return {void}
+ */
+function setShadyPartAttribute(element, value) {
+  element[NATIVE_PREFIX + 'setAttribute']('shady-part', value);
+}
+
+/**
+ * Remove the "shady-part" attribute using the native method.
+ *
+ * @param {!HTMLElement} element
+ * @return {void}
+ */
+function removeShadyPartAttribute(element) {
+  element[NATIVE_PREFIX + 'removeAttribute']('shady-part');
+}
 
 /**
  * Parse a CSS Shadow Parts "part" attribute into an array of part names.
@@ -300,6 +322,36 @@ export function findExportedPartMappings(host) {
   return result;
 }
 
+/**
+ * Update the "shady-part" attribute when the "part" attribute is set.
+ *
+ * @param {!HTMLElement} element The element.
+ * @return {void}
+ */
+export function onSetPartAttribute(element) {
+  if (!element.getRootNode) {
+    // TODO(aomarks) We're in noPatch mode. Wrap where needed and add tests.
+    // https://github.com/webcomponents/polyfills/issues/343
+    return;
+  }
+  const root = element.getRootNode();
+  if (root === document || root === element) {
+    // Nowhere to receive part styles from.
+    return;
+  }
+  addShadyPartAttributes(root.host, [element]);
+}
+
+/**
+ * Remove the "shady-part" attribute when the "part" attribute is removed.
+ *
+ * @param {!HTMLElement} element The element.
+ * @return {void}
+ */
+export function onRemovePartAttribute(element) {
+  removeShadyPartAttribute(element);
+}
+
 /* eslint-disable no-unused-vars */
 /**
  * Add "shady-part" attributes to new nodes on insertion.
@@ -346,6 +398,18 @@ export function onInsertBefore(parentNode, newNode, referenceNode) {
   if (parts.length === 0) {
     return;
   }
+  addShadyPartAttributes(host, parts);
+}
+
+/**
+ * Add "shady-part" attributes to the given part nodes. All part nodes are
+ * assumed to be in the same given host.
+ *
+ * @param {!HTMLElement} host The host element of the given parts.
+ * @param {!Array<!HTMLElement>} parts The new or changed part elements.
+ * @return {void}
+ */
+export function addShadyPartAttributes(host, parts) {
   const hostScope = host.localName;
   const superRoot = host.getRootNode();
   const parentScope =
@@ -361,6 +425,9 @@ export function onInsertBefore(parentNode, newNode, referenceNode) {
     const shadyParts = [];
     const partNames = splitPartString(node.getAttribute('part'));
     if (partNames.length === 0) {
+      // Remove the "shady-part" attribute to support the case of "part" getting set to
+      // the empty string or whitespace.
+      removeShadyPartAttribute(node);
       continue;
     }
 
@@ -390,7 +457,7 @@ export function onInsertBefore(parentNode, newNode, referenceNode) {
         }
       }
     }
-    node.setAttribute('shady-part', shadyParts.join(' '));
+    setShadyPartAttribute(node, shadyParts.join(' '));
 
     if (!nativeCssVariables) {
       // Find the part rules that match this node and that consume custom

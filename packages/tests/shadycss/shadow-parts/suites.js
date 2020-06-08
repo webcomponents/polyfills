@@ -13,6 +13,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
  * that we can include it in a few different runner indexes.
  */
 export const suites = [
+  'attribute-mutations.html',
   'basic.html',
   'disable.html',
   'document.html',
@@ -20,9 +21,9 @@ export const suites = [
   'find-exported-part-mappings.html',
   'insertions.html',
   'parsing-formatting.html',
+  'part-intersection.html',
   'property-above-provider.html',
   'property-below-provider.html',
-  'part-intersection.html',
   'property-part-intersection.html',
   'property-selector-group.html',
   'property-within-provider.html',

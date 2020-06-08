@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<!--
+@license
+Copyright (c) 2020 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<title>shadycss/shadow-parts/attribute-mutations</title>
+
+<script src="../test-flags.js"></script>
+<script src="../../node_modules/wct-browser-legacy/browser.js"></script>
+<script src="../../node_modules/@webcomponents/webcomponents-platform/webcomponents-platform.js"></script>
+<script src="../../node_modules/es6-promise/dist/es6-promise.auto.min.js"></script>
+<script src="../../node_modules/@webcomponents/template/template.js"></script>
+<script src="../../node_modules/@webcomponents/shadydom/shadydom.min.js"></script>
+<script src="../../node_modules/@webcomponents/custom-elements/custom-elements.min.js"></script>
+<script src="../../node_modules/@webcomponents/shadycss/scoping-shim.min.js"></script>
+<script src="../module/generated/make-element.js"></script>
+
+<template id="x-parent">
+  <style>
+    x-child::part(red) {
+      color: red;
+    }
+    x-child::part(green) {
+      background-color: green;
+    }
+  </style>
+  <x-child></x-child>
+</template>
+
+<template id="x-child">
+</template>
+
+<script type="module">
+  import {pierce, style, black, blackQuad, red, green} from './test-utils.js';
+
+  suite('part inserted', () => {
+    suiteSetup(() => {
+      makeElement('x-parent');
+      makeElement('x-child');
+    });
+
+    let parent, child;
+
+    setup(() => {
+      parent = document.createElement('x-parent');
+      document.body.appendChild(parent);
+      child = pierce(parent, 'x-child');
+    });
+
+    teardown(() => {
+      document.body.removeChild(parent);
+    });
+
+    test('add new part attribute', () => {
+      const part = document.createElement('div');
+      child.shadowRoot.appendChild(part);
+      assert.equal(style(part).color, black);
+
+      part.setAttribute('part', 'red');
+      assert.equal(style(part).color, red);
+    });
+
+    test('remove part attribute', () => {
+      const part = document.createElement('div');
+      part.setAttribute('part', 'red');
+      child.shadowRoot.appendChild(part);
+      assert.equal(style(part).color, red);
+
+      part.removeAttribute('part');
+      assert.equal(style(part).color, black);
+    });
+
+    test('change part attribute', () => {
+      const part = document.createElement('div');
+      part.setAttribute('part', 'red');
+      child.shadowRoot.appendChild(part);
+      assert.equal(style(part).color, red);
+      assert.equal(style(part).backgroundColor, blackQuad);
+
+      part.setAttribute('part', 'green');
+      assert.equal(style(part).color, black);
+      assert.equal(style(part).backgroundColor, green);
+    });
+
+    test('set part attribute to empty', () => {
+      const part = document.createElement('div');
+      part.setAttribute('part', 'red');
+      child.shadowRoot.appendChild(part);
+      assert.equal(style(part).color, red);
+
+      part.setAttribute('part', '');
+      assert.equal(style(part).color, black);
+    });
+
+    test('set part attribute to whitespace', () => {
+      const part = document.createElement('div');
+      part.setAttribute('part', 'red');
+      child.shadowRoot.appendChild(part);
+      assert.equal(style(part).color, red);
+
+      part.setAttribute('part', ' ');
+      assert.equal(style(part).color, black);
+    });
+
+    test('set part attribute to invalid', () => {
+      const part = document.createElement('div');
+      part.setAttribute('part', 'red');
+      child.shadowRoot.appendChild(part);
+      assert.equal(style(part).color, red);
+
+      part.setAttribute('part', ':::');
+      assert.equal(style(part).color, black);
+    });
+
+    test('remove part attribute while disconnected', () => {
+      const part = document.createElement('div');
+      part.setAttribute('part', 'red');
+      child.shadowRoot.appendChild(part);
+      assert.equal(style(part).color, red);
+
+      child.shadowRoot.removeChild(part);
+      part.removeAttribute('part');
+      child.shadowRoot.appendChild(part);
+      assert.equal(style(part).color, black);
+    });
+
+    test('change part attribute while disconnected', () => {
+      const part = document.createElement('div');
+      part.setAttribute('part', 'red');
+      child.shadowRoot.appendChild(part);
+      assert.equal(style(part).color, red);
+      assert.equal(style(part).backgroundColor, blackQuad);
+
+      child.shadowRoot.removeChild(part);
+      part.setAttribute('part', 'green');
+      child.shadowRoot.appendChild(part);
+      assert.equal(style(part).color, black);
+      assert.equal(style(part).backgroundColor, green);
+    });
+   });
+</script>

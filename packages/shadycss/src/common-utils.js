@@ -13,6 +13,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 import { MIXIN_MATCH, VAR_ASSIGN } from './common-regex.js';
 
 /**
+ * The prefix used by ShadyDOM for the native version of patched methods
+ * (e.g. `__shady_native_setAttribute`).
+ * @type {!string}
+ */
+export const NATIVE_PREFIX = '__shady_native_';
+
+/**
  * @param {Element} element
  * @param {Object=} properties
  */
