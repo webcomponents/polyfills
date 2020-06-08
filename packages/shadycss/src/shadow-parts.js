@@ -60,7 +60,7 @@ export function parseExportPartsAttribute(attr) {
       // matches native behavior).
       continue;
     }
-    parts.push({ inner, outer });
+    parts.push({inner, outer});
   }
   return parts;
 }
@@ -90,7 +90,7 @@ const PART_REGEX = /(.*?)([a-z]+-\w+)([^\s]*?)::part\((.*)?\)(::?.*)?/;
  *     spec-compliant.
  *
  * Example:
- *   [0       ][1      ][2   ]       [3    ] [4    ]
+ *   [0       ][1      ][2   ]       [3    ] [4   ]
  *   #parent > my-button.fancy::part(foo bar):hover
  *
  * @param {!string} selector The selector.
@@ -108,7 +108,7 @@ export function parsePartSelector(selector) {
     return null;
   }
   const [, combinators, elementName, selectors, parts, pseudos] = match;
-  return { combinators, elementName, selectors, parts, pseudos: pseudos || "" };
+  return {combinators, elementName, selectors, parts, pseudos: pseudos || ''};
 }
 
 /**
@@ -163,5 +163,67 @@ export function formatShadyPartSelector(
       );
       return `[shady-part~="${attr}"]`;
     })
-    .join("");
+    .join('');
+}
+
+/*  eslint-disable no-unused-vars */
+/**
+ * Add "shady-part" attributes to new nodes on insertion.
+ *
+ * This function will be called by ShadyDOM during any insertBefore call,
+ * before the native insert has occured.
+ *
+ * @param {!HTMLElement} parentNode
+ * @param {!HTMLElement} newNode
+ * @param {?HTMLElement} referenceNode
+ * @return {void}
+ */
+export function onInsertBefore(parentNode, newNode, referenceNode) {
+  /* eslint-enable no-unused-vars */
+  if (newNode instanceof Text) {
+    // No parts in text.
+    return;
+  }
+  if (!parentNode.getRootNode) {
+    // TODO(aomarks) We're in noPatch mode. Wrap where needed and add tests.
+    // https://github.com/webcomponents/polyfills/issues/343
+    return;
+  }
+  const root = parentNode.getRootNode();
+  if (root === document) {
+    // Parts in the document scope would never have any effect. Return early so
+    // we don't waste time querying it.
+    return;
+  }
+  const host = root.host;
+  if (!host) {
+    // If there's no host, we're not connected, so no part styles could apply
+    // here.
+    return;
+  }
+  let parts = newNode.querySelectorAll('[part]');
+  // TODO(aomarks) We should be able to get much better performance over the
+  // querySelectorAll calls here by integrating the part check into the walk
+  // that ShadyDOM already does to find slots.
+  // https://github.com/webcomponents/polyfills/issues/345
+  if (newNode instanceof HTMLElement && newNode.hasAttribute('part')) {
+    parts = [newNode, ...parts];
+  }
+  if (parts.length === 0) {
+    return;
+  }
+  const receiverScope = host.localName;
+  const superRoot = host.getRootNode();
+  const providerScope =
+    superRoot === document ? 'document' : superRoot.host.localName;
+  for (const part of parts) {
+    part.setAttribute(
+      'shady-part',
+      formatShadyPartAttribute(
+        providerScope,
+        receiverScope,
+        part.getAttribute('part')
+      )
+    );
+  }
 }

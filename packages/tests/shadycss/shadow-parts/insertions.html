@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<!--
+@license
+Copyright (c) 2020 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<title>shadycss/shadow-parts/insertions</title>
+
+<script src="../test-flags.js"></script>
+<script src="../../node_modules/wct-browser-legacy/browser.js"></script>
+<script src="../../node_modules/@webcomponents/webcomponents-platform/webcomponents-platform.js"></script>
+<script src="../../node_modules/es6-promise/dist/es6-promise.auto.min.js"></script>
+<script src="../../node_modules/@webcomponents/template/template.js"></script>
+<script src="../../node_modules/@webcomponents/shadydom/shadydom.min.js"></script>
+<script src="../../node_modules/@webcomponents/custom-elements/custom-elements.min.js"></script>
+<script src="../../node_modules/@webcomponents/shadycss/scoping-shim.min.js"></script>
+<script src="../module/generated/make-element.js"></script>
+
+<template id="x-a">
+  <style>
+    x-b::part(pa) {
+      color: red;
+    }
+  </style>
+  <x-b></x-b>
+</template>
+
+<template id="x-b">
+</template>
+
+<script type="module">
+  import {pierce, color, black, red} from './test-utils.js';
+
+  suite('part inserted', () => {
+    suiteSetup(() => {
+      makeElement('x-a');
+      makeElement('x-b');
+    });
+
+    let xa, xb;
+
+    setup(() => {
+      xa = document.createElement('x-a');
+      document.body.appendChild(xa);
+      xb = pierce(xa, 'x-b');
+    });
+
+    teardown(() => {
+      document.body.removeChild(xa);
+    });
+
+    test('appendChild: part', () => {
+      const pa = document.createElement('div');
+      pa.setAttribute('part', 'pa');
+      xb.shadowRoot.appendChild(pa);
+      assert.equal(color(pa), red);
+    });
+
+    test('appendChild: parent of part', () => {
+      const parent = document.createElement('div');
+      const pa = document.createElement('div');
+      pa.setAttribute('part', 'pa');
+      parent.appendChild(pa);
+      xb.shadowRoot.appendChild(parent);
+      assert.equal(color(pa), red);
+    });
+
+    test('appendChild: DocumentFragment with part', () => {
+      const fragment = new DocumentFragment();
+      const pa = document.createElement('div');
+      pa.setAttribute('part', 'pa');
+      fragment.appendChild(pa);
+      xb.shadowRoot.appendChild(fragment);
+      assert.equal(color(pa), red);
+    });
+
+    test('appendChild: text node', () => {
+      const text = document.createTextNode('foo');
+      xb.shadowRoot.appendChild(text);
+    });
+
+    test('insertBefore: part', () => {
+      const pa = document.createElement('div');
+      pa.setAttribute('part', 'pa');
+      xb.shadowRoot.insertBefore(pa, null);
+      assert.equal(color(pa), red);
+    });
+
+    test('insertBefore: parent of part', () => {
+      const parent = document.createElement('div');
+      const pa = document.createElement('div');
+      pa.setAttribute('part', 'pa');
+      parent.insertBefore(pa, null);
+      xb.shadowRoot.appendChild(parent);
+      assert.equal(color(pa), red);
+    });
+
+    test('insertBefore: DocumentFragment with part', () => {
+      const fragment = new DocumentFragment();
+      const pa = document.createElement('div');
+      pa.setAttribute('part', 'pa');
+      fragment.appendChild(pa);
+      xb.shadowRoot.insertBefore(fragment, null);
+      assert.equal(color(pa), red);
+    });
+
+    test('insertBefore: text node', () => {
+      const text = document.createTextNode('foo');
+      xb.shadowRoot.insertBefore(text, null);
+    });
+
+    test('replaceChild: part', () => {
+      const oldChild = document.createElement('div');
+      xb.shadowRoot.appendChild(oldChild);
+      const pa = document.createElement('div');
+      pa.setAttribute('part', 'pa');
+      xb.shadowRoot.replaceChild(pa, oldChild);
+      assert.equal(color(pa), red);
+    });
+
+    test('replaceChild: parent of part', () => {
+      const oldChild = document.createElement('div');
+      xb.shadowRoot.appendChild(oldChild);
+      const parent = document.createElement('div');
+      const pa = document.createElement('div');
+      pa.setAttribute('part', 'pa');
+      parent.insertBefore(pa, null);
+      xb.shadowRoot.replaceChild(parent, oldChild);
+      assert.equal(color(pa), red);
+    });
+
+    test('replaceChild: DocumentFragment with part', () => {
+      const oldChild = document.createElement('div');
+      xb.shadowRoot.appendChild(oldChild);
+      const fragment = new DocumentFragment();
+      const pa = document.createElement('div');
+      pa.setAttribute('part', 'pa');
+      fragment.appendChild(pa);
+      xb.shadowRoot.replaceChild(fragment, oldChild);
+      assert.equal(color(pa), red);
+    });
+
+    test('replaceChild: text node', () => {
+      const oldChild = document.createElement('div');
+      xb.shadowRoot.appendChild(oldChild);
+      const text = document.createTextNode('foo');
+      xb.shadowRoot.replaceChild(text, oldChild);
+    });
+
+    test('innerHTML', () => {
+      xb.shadowRoot.innerHTML = `
+        <div part="pa"></div>
+      `;
+      const pa = pierce(xb, '[part=pa]')
+      assert.equal(color(pa), red);
+    });
+   });
+</script>

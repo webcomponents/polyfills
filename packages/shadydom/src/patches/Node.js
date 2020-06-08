@@ -357,6 +357,15 @@ export const NodePatches = utils.getOwnPropertyDescriptors({
         ownerRoot._asyncRender();
       }
     }
+    if (!utils.disableShadowParts) {
+      const shim = getScopingShim();
+      if (shim) {
+        // Note that we do want to call this before the actual native insert,
+        // because in the case that we're inserting from a DocumentFragment,
+        // we want to know exactly which new child nodes are being inserted.
+        shim['onInsertBefore'](this, node, ref_node);
+      }
+    }
     if (allowNativeInsert) {
       // if adding to a shadyRoot, add to host instead
       let container = utils.isShadyRoot(this) ?

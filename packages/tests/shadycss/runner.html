@@ -13,8 +13,9 @@
 
 <script src="../node_modules/wct-browser-legacy/browser.js"></script>
 
-<script>
-(function(){
+<script type="module">
+  import {suites as shadowPartsSuites} from './shadow-parts/suites.js';
+
   var suites = [
     'css-parse.html',
     'apply-shim.html',
@@ -38,7 +39,8 @@
     'wc-1.html',
     'scoping-api.html',
     'mixin-fallbacks.html',
-    'interface.html'
+    'interface.html',
+    ...shadowPartsSuites.map((file) => `shadow-parts/${file}`),
   ];
 
   // http://eddmann.com/posts/cartesian-product-in-javascript/
@@ -71,7 +73,9 @@
     webcomponents = 'wc-register=true';
   }
   // if native is available, make sure to test polyfill
-  if (Element.prototype.attachShadow && document.documentElement.getRootNode) {
+  const hasNativeShadow =
+      Element.prototype.attachShadow && document.documentElement.getRootNode;
+  if (hasNativeShadow) {
     webcomponents = addUrlOption(webcomponents, 'wc-shadydom=true');
   }
   // ce + sd becomes a single test iteration.
@@ -110,6 +114,14 @@
     ]);
   }
 
+  // Skip shadow part tests if the browser supports shadow DOM but not shadow
+  // parts, unless we are forcing the polyfill on. ShadyCSS doesn't polyfill
+  // just shadow parts on top of native shadow DOM, so these would fail.
+  const hasNativeParts = 'part' in HTMLElement.prototype;
+  if (hasNativeShadow && !hasNativeParts) {
+    suites = suites.filter((url) =>
+        !(url.startsWith('shadow-parts/') && !url.includes('wc-shadydom')));
+  }
+
   WCT.loadSuites(suites);
-})();
 </script>

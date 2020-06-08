@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<!--
+@license
+Copyright (c) 2020 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<title>shadycss/shadow-parts/basic</title>
+
+<script src="../test-flags.js"></script>
+<script src="../../node_modules/wct-browser-legacy/browser.js"></script>
+<script src="../../node_modules/@webcomponents/webcomponents-platform/webcomponents-platform.js"></script>
+<script src="../../node_modules/es6-promise/dist/es6-promise.auto.min.js"></script>
+<script src="../../node_modules/@webcomponents/template/template.js"></script>
+<script src="../../node_modules/@webcomponents/shadydom/shadydom.min.js"></script>
+<script src="../../node_modules/@webcomponents/custom-elements/custom-elements.min.js"></script>
+<script src="../../node_modules/@webcomponents/shadycss/scoping-shim.min.js"></script>
+<script src="../../node_modules/@webcomponents/shadycss/custom-style-interface.min.js"></script>
+<script src="../module/generated/make-element.js"></script>
+
+<style id="testDocumentStyle">
+  x-a::part(pa) {
+    color: red;
+  }
+</style>
+
+<template id="x-a">
+  <div part="pa">pa</div>
+</template>
+
+<script type="module">
+  import {pierce, color, red} from './test-utils.js';
+
+  suite('document style', () => {
+    let style, xa, pa;
+
+    suiteSetup(() => {
+      makeElement('x-a');
+      style = document.querySelector('#testDocumentStyle');
+      window.ShadyCSS.CustomStyleInterface.addCustomStyle(style);
+    });
+
+    setup(() => {
+      xa = document.createElement('x-a');
+      document.body.appendChild(xa);
+      pa = pierce('x-a', '[part=pa]');
+    });
+
+    teardown(() => {
+      document.body.removeChild(xa);
+    });
+
+    test('part receives style', () => {
+      assert.equal(color(pa), red);
+    });
+
+    if (!window.ShadyCSS.nativeShadow) {
+      test('part gets shady-part attribute', () => {
+        assert.equal(pa.getAttribute('shady-part'), 'document:x-a:pa');
+      });
+
+      test('document style transformed with shady-part attribute', () => {
+        assert.equal(
+          style.textContent.replace(/\n/gm, ' ').replace(/\s+/g, ' ').trim(),
+          `x-a [shady-part~="document:x-a:pa"] { color: red; }`
+        );
+      });
+    }
+  });
+</script>
