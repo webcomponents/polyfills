@@ -11,12 +11,13 @@
 
 import {methods as NodeMethods, descriptors as NodeDescriptors} from "../Environment/Node.js";
 
-export const getRootNode = (node: Node) => {
+export const getRootNode: Node['getRootNode'] = function(
+    this: Node, options: GetRootNodeOptions | undefined = undefined) {
   if (NodeMethods.getRootNode !== undefined) {
-    return NodeMethods.getRootNode.call(node);
+    return NodeMethods.getRootNode.call(this, options);
   }
 
-  let current = node;
+  let current = this;
   let parent = NodeDescriptors.parentNode!.get!.call(current);
   while (parent !== null) {
     current = parent;

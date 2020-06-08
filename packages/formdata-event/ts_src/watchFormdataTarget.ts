@@ -52,6 +52,6 @@ export const watchFormdataTarget = (subject: EventTarget) => {
       }));
     };
 
-    addEventListener.call(getRootNode(target), 'submit', submitBubblingListener);
+    addEventListener.call(getRootNode.call(target), 'submit', submitBubblingListener);
   }, true);
 };
