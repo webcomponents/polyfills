@@ -15,10 +15,30 @@ found at http://polymer.github.io/PATENTS.txt
 </head>
 <body>
 <script>
-WCT.loadSuites([
-  './FormDataEvent.html',
-  './watchFormdataTarget.html',
-]);
+suite('FormDataEvent', () => {
+  let iframe = undefined;
+  let iframeDoc = undefined;
+
+  setup(done => {
+    iframe = document.createElement('iframe');
+    iframe.src = './test-environment.html';
+    iframe.addEventListener('load', function listener() {
+      iframe.removeEventListener('load', listener);
+      iframeDoc = iframe.contentDocument;
+      done();
+    });
+    document.body.appendChild(iframe);
+  });
+
+  teardown(() => {
+    document.body.removeChild(iframe);
+    iframe = undefined;
+  });
+
+  test('FormDataEvent is available on the window', () => {
+    assert.ok(iframeDoc.defaultView.FormDataEvent);
+  });
+});
 </script>
 </body>
 </html>
