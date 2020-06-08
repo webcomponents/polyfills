@@ -11,6 +11,7 @@
 
 import {FormDataEvent} from "./FormDataEvent.js";
 import {addEventListener, removeEventListener, dispatchEvent} from "./EnvironmentAPI/EventTarget.js";
+import {getRootNode} from "./EnvironmentAPI/Node.js";
 import {getTarget, getDefaultPrevented} from "./EnvironmentAPI/Event.js";
 
 // Use `WeakMap<K, true>` in place of `WeakSet` for IE11.
@@ -51,7 +52,6 @@ export const watchFormdataTarget = (subject: EventTarget) => {
       }));
     };
 
-    const rootNode = target.getRootNode?.() ?? target.ownerDocument;
-    addEventListener.call(rootNode, 'submit', submitBubblingListener);
+    addEventListener.call(getRootNode(target), 'submit', submitBubblingListener);
   }, true);
 };

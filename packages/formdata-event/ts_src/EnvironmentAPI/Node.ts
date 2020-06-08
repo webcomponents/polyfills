@@ -9,9 +9,18 @@
  * additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
-import {descriptors as EventDescriptors} from "../Environment/Event.js";
+import {methods as NodeMethods, descriptors as NodeDescriptors} from "../Environment/Node.js";
 
-export const getTarget = (e: Event) => EventDescriptors.target!.get!.call(e);
-export const getDefaultPrevented = (e: Event) => {
-  return EventDescriptors.defaultPrevented!.get!.call(e);
+export const getRootNode = (node: Node) => {
+  if (NodeMethods.getRootNode !== undefined) {
+    return NodeMethods.getRootNode.call(node);
+  }
+
+  let current = node;
+  let parent = NodeDescriptors.parentNode!.get!.call(current);
+  while (parent !== null) {
+    current = parent;
+    parent = NodeDescriptors.parentNode!.get!.call(parent);
+  }
+  return current;
 };
