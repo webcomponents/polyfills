@@ -36,14 +36,11 @@ export function splitPartString(str) {
  *     {inner:"bar", outer:"baz"},
  *   ]
  *
- * @param {?string} attr The "exportparts" attribute value.
+ * @param {!string} attr The "exportparts" attribute value.
  * @return {!Array<{inner: !string, outer: !string}>} The inner/outer mapping.
  * Order and duplicates are preserved.
  */
 export function parseExportPartsAttribute(attr) {
-  if (!attr) {
-    return [];
-  }
   const parts = [];
   for (const part of attr.split(/\s*,\s*/)) {
     const split = part.split(/\s*:\s*/);
@@ -166,6 +163,136 @@ export function formatShadyPartSelector(
     .join('');
 }
 
+/**
+ * Build a forwarding map from part names in the given host, to part names in
+ * all ancestor scopes that also provide styles for those parts, by walking up
+ * the DOM following "exportparts" attributes on each host element.
+ *
+ * For example, given the <x-c> node from the following tree:
+ *
+ *   #document
+ *     <x-a exportparts="foo">
+ *       #shadow-root
+ *         <x-b exportparts="foo,bar:bar2,bar:bar3">
+ *           #shadow-root
+ *             <x-c>
+ *
+ * Then return:
+ *
+ *   {
+ *     foo: [
+ *       ["x-a", "x-b", "foo"],
+ *       ["document", "x-a", "foo"],
+ *     ],
+ *     bar: [
+ *       ["x-a", "x-b", "bar2"],
+ *       ["x-a", "x-b", "bar3"],
+ *     ],
+ *  }
+ *
+ * @param {!HTMLElement} host The element whose shadow parts we are evaluating.
+ * @return {!Object<!string, !Array<string>>} An object that maps from part name
+ * in the given `host` to an array of `[providerScope, receiverScope, partName]`
+ * triplets describing additional style sources for that part.
+ *
+ * TODO(aomarks) Cache each host's exportparts mapping so that we don't need to
+ * walk any hosts twice.
+ */
+export function findExportedPartMappings(host) {
+  // The mapping we will return.
+  const result = {};
+
+  // As we walk up the tree, this object always maintains a mapping from part
+  // names in the previously walked scope, to part names in the base host scope.
+  let forwarding;
+
+  let superHost;
+
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    const attr = host.getAttribute('exportparts');
+    if (!attr) {
+      break;
+    }
+
+    // Initialize superHost on the first iteration. Done here, inside the loop,
+    // so that we can return as quickly as possible when there is no exportparts
+    // attribute.
+    if (superHost === undefined) {
+      const root = host.getRootNode();
+      if (root === document || root === host) {
+        // When document, there's nothing beyond the document scope where styles
+        // could be exported from. When host, we're not attached to the DOM.
+        break;
+      }
+      superHost = root.host;
+
+      if (!superHost) {
+        break;
+      }
+    }
+
+    const receiverScope = superHost.localName;
+    const superRoot = superHost.getRootNode();
+    if (!superRoot) {
+      break;
+    }
+
+    let providerScope;
+    let superSuperHost;
+    if (superRoot === document) {
+      providerScope = 'document';
+    } else {
+      superSuperHost = superRoot.host;
+      if (!superSuperHost) {
+        break;
+      }
+      providerScope = superSuperHost.localName;
+    }
+
+    const parsed = parseExportPartsAttribute(attr);
+    if (parsed.length === 0) {
+      // This could happen if the attribute was set to something non-empty, but
+      // it was entirely invalid.
+      break;
+    }
+
+    const newForwarding = {};
+    for (const {inner, outer} of parsed) {
+      let basePart;
+      if (forwarding === undefined) {
+        // We're in the immediate parent scope (since we haven't initialized the
+        // forwarding map yet), so the name parsed from the "exportparts"
+        // attribute is already the right one.
+        basePart = inner;
+      } else {
+        basePart = forwarding[inner];
+        if (basePart === undefined) {
+          // We don't care about this exported part, because it doesn't
+          // ultimately forward down to a part in our base scope.
+          continue;
+        }
+      }
+      let arr = result[basePart];
+      if (arr === undefined) {
+        arr = result[basePart] = [];
+      }
+      arr.push([providerScope, receiverScope, outer]);
+      newForwarding[outer] = basePart;
+    }
+
+    if (superRoot === document) {
+      break;
+    }
+
+    host = superHost;
+    superHost = superSuperHost;
+    forwarding = newForwarding;
+  }
+
+  return result;
+}
+
 /*  eslint-disable no-unused-vars */
 /**
  * Add "shady-part" attributes to new nodes on insertion.
@@ -212,18 +339,29 @@ export function onInsertBefore(parentNode, newNode, referenceNode) {
   if (parts.length === 0) {
     return;
   }
-  const receiverScope = host.localName;
+  const hostScope = host.localName;
   const superRoot = host.getRootNode();
-  const providerScope =
+  const parentScope =
     superRoot === document ? 'document' : superRoot.host.localName;
-  for (const part of parts) {
-    part.setAttribute(
-      'shady-part',
-      formatShadyPartAttribute(
-        providerScope,
-        receiverScope,
-        part.getAttribute('part')
-      )
-    );
+  const exportMap = findExportedPartMappings(host);
+
+  for (const node of parts) {
+    const shadyParts = [];
+    for (const name of splitPartString(node.getAttribute('part'))) {
+      // Styles from our immediate parent scope.
+      shadyParts.push(formatShadyPartAttribute(parentScope, hostScope, name));
+
+      // Styles from grand-parent and higher ancestor scopes, via the forwarding
+      // map defined by "exportparts" attributes.
+      const exported = exportMap[name];
+      if (exported !== undefined) {
+        for (const [providerScope, receiverScope, exportedName] of exported) {
+          shadyParts.push(
+            formatShadyPartAttribute(providerScope, receiverScope, exportedName)
+          );
+        }
+      }
+    }
+    node.setAttribute('shady-part', shadyParts.join(' '));
   }
 }
