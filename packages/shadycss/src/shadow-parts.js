@@ -12,6 +12,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 import {StyleNode} from './css-parse.js';
 import StyleInfo from './style-info.js';
 import StyleProperties from './style-properties.js';
+import * as StyleUtil from './style-util.js';
 import {nativeCssVariables} from './style-settings.js';
 
 /**
@@ -546,16 +547,12 @@ export function analyzeTemplatePartRules(providerScope, styleAst) {
     return;
   }
   for (const styleNode of styleAst.rules) {
-    const selector = styleNode['selector'];
-    if (!selector || selector.indexOf('::part') === -1) {
+    const selectorList = styleNode['selector'];
+    if (!selectorList || selectorList.indexOf('::part') === -1) {
       // TODO(aomarks) We do the `indexOf` check here to make the case where no
       // `::part` rules are used is as fast as possible, but we could get away
       // with just the `parsePartSelector` call we're doing next if the
       // difference is negligible. Needs benchmarking.
-      continue;
-    }
-    const parsed = parsePartSelector(selector);
-    if (parsed === null) {
       continue;
     }
     const consumedProperties = findConsumedCustomProperties(
@@ -564,21 +561,28 @@ export function analyzeTemplatePartRules(providerScope, styleAst) {
     if (consumedProperties.length === 0) {
       continue;
     }
-    const {elementName: receiverScope, parts} = parsed;
-    if (parts.length === 0) {
-      continue;
+    const selectors = StyleUtil.splitSelectorList(selectorList);
+    for (const selector of selectors) {
+      const parsed = parsePartSelector(selector);
+      if (parsed === null) {
+        continue;
+      }
+      const {elementName: receiverScope, parts} = parsed;
+      if (parts.length === 0) {
+        continue;
+      }
+      const key = [providerScope, receiverScope].join(':');
+      let entries = partRulesMap.get(key);
+      if (entries === undefined) {
+        entries = [];
+        partRulesMap.set(key, entries);
+      }
+      entries.push({
+        styleNode,
+        consumedProperties,
+        partNames: splitPartString(parts),
+      });
     }
-    const key = [providerScope, receiverScope].join(':');
-    let entries = partRulesMap.get(key);
-    if (entries === undefined) {
-      entries = [];
-      partRulesMap.set(key, entries);
-    }
-    entries.push({
-      styleNode,
-      consumedProperties,
-      partNames: splitPartString(parts),
-    });
   }
 }
 

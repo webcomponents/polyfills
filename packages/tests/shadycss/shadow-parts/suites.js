@@ -24,5 +24,7 @@ export const suites = [
   'property-below-provider.html',
   'part-intersection.html',
   'property-part-intersection.html',
+  'property-selector-group.html',
   'property-within-provider.html',
+  'selector-group.html',
 ];
