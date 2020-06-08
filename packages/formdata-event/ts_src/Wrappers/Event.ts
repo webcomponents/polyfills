@@ -14,8 +14,9 @@ export const install = () => {
   try {
     new Event('name');
   } catch {
-    const EventWrapper = function Event(type: string, eventInit: EventInit = {}) {
+    const EventWrapper = function Event(this: Event, type: string, eventInit: EventInit = {}) {
       const e = document.createEvent('Event');
+      Object.setPrototypeOf(e, Object.getPrototypeOf(this));
       e.initEvent(type, eventInit.bubbles, eventInit.cancelable);
       return e;
     };

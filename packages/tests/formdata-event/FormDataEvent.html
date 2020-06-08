@@ -18,6 +18,7 @@ found at http://polymer.github.io/PATENTS.txt
 suite('FormDataEvent', () => {
   let iframe = undefined;
   let iframeDoc = undefined;
+  let Event = undefined;
   let FormDataEvent = undefined;
   let FormData = undefined;
 
@@ -27,6 +28,7 @@ suite('FormDataEvent', () => {
     iframe.addEventListener('load', function listener() {
       iframe.removeEventListener('load', listener);
       iframeDoc = iframe.contentDocument;
+      Event = iframeDoc.defaultView.Event;
       FormDataEvent = iframeDoc.defaultView.FormDataEvent;
       FormData = iframeDoc.defaultView.FormData;
       done();
@@ -53,6 +55,20 @@ suite('FormDataEvent', () => {
     });
 
     new FormDataEvent('formdata', {formData: new FormData()});
+  });
+
+  test('FormDataEvent constructor returns a FormDataEvent instance', () => {
+    const formData = new FormData();
+    const event = new FormDataEvent('formdata', {formData});
+    assert.instanceOf(event, FormDataEvent);
+    assert.instanceOf(event, Event);
+  });
+
+  test('FormDataEvent\'s `formData` property returns the FormData the event ' +
+      'was constructed with', () => {
+    const formData = new FormData();
+    const event = new FormDataEvent('formdata', {formData});
+    assert.strictEqual(event.formData, formData);
   });
 });
 </script>
