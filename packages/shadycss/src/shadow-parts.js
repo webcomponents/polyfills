@@ -71,9 +71,9 @@ export function parseExportPartsAttribute(attr) {
 /**
  * Regular expression to de-compose a ::part rule into interesting pieces. See
  * parsePartSelector for description of pieces.
- *                  [0  ][1         ][2      ]        [3 ]   [4   ]
+ *                  [0  ][1              ][2      ]        [3 ]   [4    ]
  */
-const PART_REGEX = /(.*?)([a-z]+-\w+)([^\s]*?)::part\((.*)?\)(::?.*)?/;
+const PART_REGEX = /(.*?)([a-z]+(?:-\w+)+)([^\s]*?)::part\((.*)?\)(::?.*)?/;
 
 /**
  * De-compose a ::part rule into interesting pieces.

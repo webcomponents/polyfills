@@ -47,6 +47,19 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         );
       });
 
+      test('multiple dashes in custom element name', () => {
+        assert.deepEqual(
+          shadowParts.parsePartSelector('my-foo-bar-baz::part(foo)'),
+          {
+            combinators: '',
+            elementName: 'my-foo-bar-baz',
+            selectors: '',
+            parts: 'foo',
+            pseudos: '',
+          }
+        );
+      });
+
       test('pseudo-class', () => {
         assert.deepEqual(
           shadowParts.parsePartSelector('my-button::part(foo):hover'),
