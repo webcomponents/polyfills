@@ -461,8 +461,10 @@ export const NodePatches = utils.getOwnPropertyDescriptors({
    * @param {Node=} ref_node
    */
   replaceChild(node, ref_node) {
-    this[utils.SHADY_PREFIX + 'insertBefore'](node, ref_node);
-    this[utils.SHADY_PREFIX + 'removeChild'](ref_node);
+    if (node !== ref_node) {
+      this[utils.SHADY_PREFIX + 'insertBefore'](node, ref_node);
+      this[utils.SHADY_PREFIX + 'removeChild'](ref_node);
+    }
     return node;
   },
 
