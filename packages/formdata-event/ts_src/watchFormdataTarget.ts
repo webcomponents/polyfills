@@ -11,6 +11,7 @@
 
 import {FormDataEvent} from "./FormDataEvent.js";
 import {addEventListener, removeEventListener, dispatchEvent} from "./EnvironmentAPI/EventTarget.js";
+import {getTarget, getDefaultPrevented} from "./EnvironmentAPI/Event.js";
 
 // Use `WeakMap<K, true>` in place of `WeakSet` for IE11.
 const submitListenerInstalled: WeakMap<EventTarget, true> = new WeakMap();
@@ -28,7 +29,7 @@ export const watchFormdataTarget = (subject: EventTarget) => {
     }
     submitEventSeen.set(capturingEvent, true);
 
-    const target = capturingEvent.target;
+    const target = getTarget(capturingEvent);
     if (!(target instanceof HTMLFormElement)) {
       return;
     }
@@ -40,7 +41,7 @@ export const watchFormdataTarget = (subject: EventTarget) => {
 
       removeEventListener.call(subject, 'submit', submitBubblingListener);
 
-      if (bubblingEvent.defaultPrevented) {
+      if (getDefaultPrevented(bubblingEvent)) {
         return;
       }
 
