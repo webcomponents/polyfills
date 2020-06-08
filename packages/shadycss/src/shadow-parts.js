@@ -8,6 +8,12 @@ Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 */
 
+/* eslint-disable-next-line no-unused-vars */
+import {StyleNode} from './css-parse.js';
+import StyleInfo from './style-info.js';
+import StyleProperties from './style-properties.js';
+import {nativeCssVariables} from './style-settings.js';
+
 /**
  * Parse a CSS Shadow Parts "part" attribute into an array of part names.
  *
@@ -293,7 +299,7 @@ export function findExportedPartMappings(host) {
   return result;
 }
 
-/*  eslint-disable no-unused-vars */
+/* eslint-disable no-unused-vars */
 /**
  * Add "shady-part" attributes to new nodes on insertion.
  *
@@ -345,11 +351,29 @@ export function onInsertBefore(parentNode, newNode, referenceNode) {
     superRoot === document ? 'document' : superRoot.host.localName;
   const exportMap = findExportedPartMappings(host);
 
+  // Things to keep track of that determine if and how we need to update this
+  // host to account for ::part rules that consume custom properties.
+  let needsRescoping = false;
+  let newStyleNodes, newProperties;
+
   for (const node of parts) {
     const shadyParts = [];
-    for (const name of splitPartString(node.getAttribute('part'))) {
+    const partNames = splitPartString(node.getAttribute('part'));
+    if (partNames.length === 0) {
+      continue;
+    }
+
+    let scopeKeys;
+    if (!nativeCssVariables) {
+      scopeKeys = new Set();
+    }
+
+    for (const name of partNames) {
       // Styles from our immediate parent scope.
       shadyParts.push(formatShadyPartAttribute(parentScope, hostScope, name));
+      if (!nativeCssVariables) {
+        scopeKeys.add(parentScope + ':' + hostScope);
+      }
 
       // Styles from grand-parent and higher ancestor scopes, via the forwarding
       // map defined by "exportparts" attributes.
@@ -359,9 +383,251 @@ export function onInsertBefore(parentNode, newNode, referenceNode) {
           shadyParts.push(
             formatShadyPartAttribute(providerScope, receiverScope, exportedName)
           );
+          if (!nativeCssVariables) {
+            scopeKeys.add(providerScope + ':' + receiverScope);
+          }
         }
       }
     }
     node.setAttribute('shady-part', shadyParts.join(' '));
+
+    if (!nativeCssVariables) {
+      // Find the part rules that match this node and that consume custom
+      // properties. We'll need to switch to per-instance styling if we find any
+      // within this host.
+      for (const scopeKey of scopeKeys.values()) {
+        const rules = findPartRulesThatMatchPartNode(scopeKey, partNames);
+        for (const rule of rules) {
+          if (!needsRescoping) {
+            needsRescoping = true;
+            newStyleNodes = new Set();
+            newProperties = new Set();
+          }
+          newStyleNodes.add(rule.styleNode);
+          newProperties.add(...rule.consumedProperties);
+        }
+      }
+    }
   }
+
+  if (needsRescoping) {
+    rescopeForCustomProperties(host, newStyleNodes, newProperties);
+  }
+}
+/* eslint-enable no-unused-vars */
+
+/**
+ * Update a host to account for it receiving part styles which consume custom
+ * properties.
+ *
+ * We need special handling here because if an instance is receiving a part rule
+ * that consumes a custom property, our basic handling above is not sufficient,
+ * as we'd get incorrect property values.
+ *
+ * This is because the values of properties in part rules are determined in each
+ * scope where the part rules are _consumed_, not in the scope where the part
+ * rule is _defined_.
+ *
+ * To address this, when we see that an instance is consuming a part rule that
+ * consumes a custom property, we "adopt" that part rule into the styles tracked
+ * by ShadyCSS for that instance, and re-run the custom property shim logic.
+ * This causes the part rule to be copied into the <style> tag for this
+ * instance, with correct property values computed for the specific instance.
+ *
+ * @param host {!HTMLElement} The host to re-scope.
+ * @param newStyleNodes {!Array<!StyleNode>} New part rules that need to be
+ * adopted by this instance.
+ * @param newProperties {!Array<!string>} New custom properties that this
+ * instance now needs to track.
+ * @return {void}
+ */
+function rescopeForCustomProperties(host, newStyleNodes, newProperties) {
+  const styleInfo = StyleInfo.get(host);
+
+  // These arrays aren't always initialized.
+  if (!styleInfo.styleRules.rules) {
+    styleInfo.styleRules.rules = [];
+  }
+  if (!styleInfo.customPropertyPartRules) {
+    styleInfo.customPropertyPartRules = [];
+  }
+
+  for (const styleNode of newStyleNodes) {
+    // Inject this ::part rule into the array of style rules managed by this
+    // instance. This way, the standard ShadyCSS mechanism for evaluating
+    // per-instance styles will take effect.
+    if (styleInfo.styleRules.rules.indexOf(styleNode) === -1) {
+      styleInfo.styleRules.rules.push(styleNode);
+    }
+
+    // We need to explicitly enumerate the active part rules on the styleInfo,
+    // because that is used as part of the per-instance style cache lookup.
+    if (styleInfo.customPropertyPartRules.indexOf(styleNode) === -1) {
+      styleInfo.customPropertyPartRules.push(styleNode);
+    }
+  }
+
+  // Augment the array of CSS custom properties consumed by this instance,
+  // because that is also used in the per-instance style cache lookup.
+  for (const property of newProperties) {
+    if (styleInfo.ownStylePropertyNames.indexOf(property) === -1) {
+      styleInfo.ownStylePropertyNames.push(property);
+    }
+  }
+
+  // Re-scope this host. This creates a new <style> for this instance, or
+  // re-uses an existing one by checking the cache, and updates "scope" classes
+  // in this host's shadow root.
+  //
+  // TODO(aomarks) This function will already have been called on this instance,
+  // when the element first connected. In that first invocation, we weren't able
+  // to do any parts handling, because the DOM hadn't stamped yet, so we didn't
+  // even know if the shadow root had any parts. We might be able to optimize
+  // out these redundant calls, e.g. by skipping the first initial
+  // _applyStyleProperties if we know that there *could* be part styles that
+  // consume custom properties, based on ancestor template styles.
+  // https://github.com/webcomponents/polyfills/issues/348
+  window.ShadyCSS.ScopingShim._applyStyleProperties(host, styleInfo);
+}
+
+/**
+ * A map from "providerScope:receiverScope" compound string key to an array of
+ * ::part rules that were found during template preparation.
+ *
+ * We only populate this map if a ::part rule consumes a custom property and
+ * native custom properties are not available.
+ *
+ * This map is used to quickly lookup whether a given ::part rule being applied
+ * to an instance of a part node needs special handling for custom properties.
+ *
+ * @type {!Map<string, !Array<!PartRulesMapEntry>>}
+ */
+const partRulesMap = new Map();
+
+/* eslint-disable no-unused-vars */
+/**
+ * An entry in the part rules map. Note this class is just used as a type; it
+ * will be dead-code removed.
+ * @record
+ */
+class PartRulesMapEntry {
+  constructor() {
+    /**
+     * The ShadyCSS StyleNode for this ::part rule.
+     * @type {!StyleNode}
+     */
+    this.styleNode;
+
+    /**
+     * The CSS custom property names consumed by this ::part rule.
+     * @type {!Array<!string>}
+     */
+    this.consumedProperties;
+
+    /**
+     * The parsed part names that this ::part rule targets.
+     * @type {!Array<!string>}
+     */
+    this.partNames;
+  }
+}
+/* eslint-enable no-unused-vars */
+
+/**
+ * Look for any ::part rules in the given AST that consume custom properties,
+ * and load those into the part rules map.
+ *
+ * @param {!string} providerScope Lower-case tag name of the element whose
+ *     template this is.
+ * @param {!StyleNode} styleAst Parsed CSS for this template.
+ */
+export function analyzeTemplatePartRules(providerScope, styleAst) {
+  if (nativeCssVariables || !styleAst.rules) {
+    return;
+  }
+  for (const styleNode of styleAst.rules) {
+    const selector = styleNode['selector'];
+    if (!selector || selector.indexOf('::part') === -1) {
+      // TODO(aomarks) We do the `indexOf` check here to make the case where no
+      // `::part` rules are used is as fast as possible, but we could get away
+      // with just the `parsePartSelector` call we're doing next if the
+      // difference is negligible. Needs benchmarking.
+      continue;
+    }
+    const parsed = parsePartSelector(selector);
+    if (parsed === null) {
+      continue;
+    }
+    const consumedProperties = findConsumedCustomProperties(
+      styleNode['cssText']
+    );
+    if (consumedProperties.length === 0) {
+      continue;
+    }
+    const {elementName: receiverScope, parts} = parsed;
+    if (parts.length === 0) {
+      continue;
+    }
+    const key = [providerScope, receiverScope].join(':');
+    let entries = partRulesMap.get(key);
+    if (entries === undefined) {
+      entries = [];
+      partRulesMap.set(key, entries);
+    }
+    entries.push({
+      styleNode,
+      consumedProperties,
+      partNames: splitPartString(parts),
+    });
+  }
+}
+
+/**
+ * Extract the CSS custom property names that are consumed by the given CSS
+ * text.
+ *
+ * @param {!string} cssText The CSS text.
+ * @return {!Array<!string>}>} The CSS Custom Property names.
+ */
+function findConsumedCustomProperties(cssText) {
+  const obj = {};
+  StyleProperties.collectPropertiesInCssText(cssText, obj);
+  return Object.getOwnPropertyNames(obj);
+}
+
+/**
+ * Use the partRulesMap to retrieve any ::part rules that match a node in the
+ * given scope with the given list of part names.
+ *
+ * Note that, by the spec, a specifier like "::part(foo bar)" will only match a
+ * node that has both "foo" AND "bar" in its "part" attribute.
+ *
+ * @param {!string} scopeKey The compound scope key with format
+ * "providerScope:receiverScope".
+ * @param {!Array<!string>} partNames The split "part" attribute of some part
+ * node.
+ * @return {!Array<!PartRulesMapEntry>} The matching entries.
+ */
+function findPartRulesThatMatchPartNode(scopeKey, partNames) {
+  const entries = partRulesMap.get(scopeKey);
+  if (entries === undefined) {
+    return [];
+  }
+  const matching = [];
+  for (const entry of entries) {
+    let matches = true;
+    for (const partName of entry.partNames) {
+      if (partNames.indexOf(partName) === -1) {
+        // This rule does not match the given part node. E.g. the specifier is
+        // "::part(foo bar)" but this part node is missin either "foo" or "bar"
+        // or both in its "part" attribute.
+        matches = false;
+        break;
+      }
+    }
+    if (matches === true) {
+      matching.push(entry);
+    }
+  }
+  return matching;
 }

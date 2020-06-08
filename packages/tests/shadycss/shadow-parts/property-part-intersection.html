@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<!--
+@license
+Copyright (c) 2020 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<title>shadycss/shadow-parts/property-part-intersection</title>
+
+<script src="../test-flags.js"></script>
+<script src="../../node_modules/wct-browser-legacy/browser.js"></script>
+<script src="../../node_modules/@webcomponents/webcomponents-platform/webcomponents-platform.js"></script>
+<script src="../../node_modules/es6-promise/dist/es6-promise.auto.min.js"></script>
+<script src="../../node_modules/@webcomponents/template/template.js"></script>
+<script src="../../node_modules/@webcomponents/shadydom/shadydom.min.js"></script>
+<script src="../../node_modules/@webcomponents/custom-elements/custom-elements.min.js"></script>
+<script src="../../node_modules/@webcomponents/shadycss/scoping-shim.min.js"></script>
+<script src="../module/generated/make-element.js"></script>
+
+<template id="x-a">
+  <style>
+    x-b::part(p1 p2) {
+      color: var(--color);
+    }
+  </style>
+  <x-b></x-b>
+</template>
+
+<template id="x-b">
+  <style>
+    :host {
+      --color: red;
+    }
+  </style>
+  <x-c exportparts="p1,p2"></x-c>
+</template>
+
+<template id="x-c">
+  <div part="p1"></div>
+  <div part="p2"></div>
+  <!-- Only this part should be red, because the ::part selector selects the
+       intersection of p1 and p2 (not the union!). -->
+  <div part="p1 p2"></div>
+</template>
+
+<x-a></x-a>
+
+<script type="module">
+  import {pierce, color, black, red} from './test-utils.js';
+
+  suite('part selector with intersection and custom property', () => {
+    let p1, p2, p1p2;
+
+    suiteSetup(() => {
+      makeElement('x-a');
+      makeElement('x-b');
+      makeElement('x-c');
+      p1 = pierce('x-a', 'x-b', 'x-c', '[part=p1]');
+      p2 = pierce('x-a', 'x-b', 'x-c', '[part=p2]');
+      p1p2 = pierce('x-a', 'x-b', 'x-c', '[part~=p1][part~=p2]');
+    });
+
+    test('node with both parts receives style', () => {
+      assert.equal(color(p1p2), red);
+    });
+
+    test('nodes with only one part does not receive style', () => {
+      assert.equal(color(p1), black);
+      assert.equal(color(p2), black);
+    });
+  });
+</script>
