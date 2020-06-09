@@ -12,21 +12,24 @@
 import {constructor as EventConstructor, prototype as EventPrototype} from "../Environment/Event.js";
 
 export const install = () => {
-  // Thanks, IE
-  try {
-    new Event('name');
-  } catch {
-    const EventWrapper = function Event(this: Event, type: string, eventInit: EventInit = {}) {
-      const e = document.createEvent('Event');
-      Object.setPrototypeOf(e, Object.getPrototypeOf(this));
+  const EventWrapper = function Event(this: Event, type: string, eventInit: EventInit = {}) {
+    let e;
+    try {
+      e = new EventConstructor(type, eventInit);
+    } catch {
+      e = document.createEvent('Event');
       e.initEvent(type, eventInit.bubbles, eventInit.cancelable);
-      return e;
-    };
-    Object.setPrototypeOf(EventConstructor, Function);
-    Object.setPrototypeOf(EventWrapper, EventConstructor);
-    EventWrapper.prototype = EventPrototype;
-    EventWrapper.prototype.constructor = EventWrapper;
-
-    (window.Event as any) = EventWrapper;
+    }
+    Object.setPrototypeOf(e, Object.getPrototypeOf(this));
+    return e;
+  };
+  for (const prop of Object.keys(EventConstructor)) {
+    Object.defineProperty(EventWrapper, prop,
+        Object.getOwnPropertyDescriptor(EventConstructor, prop) as PropertyDescriptor);
   }
+  Object.setPrototypeOf(EventWrapper, Function);
+  EventWrapper.prototype = EventPrototype;
+  EventWrapper.prototype.constructor = EventWrapper;
+
+  (window.Event as any) = EventWrapper;
 };
