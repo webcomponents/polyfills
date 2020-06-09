@@ -478,10 +478,27 @@ export function onInsertBefore(parentNode, newNode, referenceNode) {
   if (newNode instanceof HTMLElement && newNode.hasAttribute('part')) {
     parts = [newNode, ...parts];
   }
-  if (parts.length === 0) {
-    return;
+  if (parts.length > 0) {
+    addShadyPartAttributes(host, parts);
   }
-  addShadyPartAttributes(host, parts);
+  // Handle "exportparts" nodes moving from one root to another. In this case,
+  // any descendant part nodes have already been inserted, so we can't rely on
+  // the upwards-walk that we would normally get from an insert call. We can
+  // skip this work if we're inserting from a DocumentFragment, though, because
+  // it's safe to assume in that case that the children have never been
+  // connected anywhere else.
+  if (!(newNode instanceof DocumentFragment)) {
+    let exporters = newNode.querySelectorAll('[exportparts]');
+    if (newNode instanceof HTMLElement && newNode.hasAttribute('exportparts')) {
+      exporters = [newNode, ...exporters];
+    }
+    for (const exporter of exporters) {
+      const partNames = parseExportPartsAttribute(
+        exporter.getAttribute('exportparts')
+      ).map(({inner}) => inner);
+      refreshShadyPartAttributes(exporter, partNames);
+    }
+  }
 }
 
 /**

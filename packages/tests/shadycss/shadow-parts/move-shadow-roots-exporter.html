@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<!--
+@license
+Copyright (c) 2020 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<title>shadycss/shadow-parts/move-shadow-roots-exporter</title>
+
+<script src="../test-flags.js"></script>
+<script src="../../node_modules/wct-browser-legacy/browser.js"></script>
+<script src="../../node_modules/@webcomponents/webcomponents-platform/webcomponents-platform.js"></script>
+<script src="../../node_modules/es6-promise/dist/es6-promise.auto.min.js"></script>
+<script src="../../node_modules/@webcomponents/template/template.js"></script>
+<script src="../../node_modules/@webcomponents/shadydom/shadydom.min.js"></script>
+<script src="../../node_modules/@webcomponents/custom-elements/custom-elements.min.js"></script>
+<script src="../../node_modules/@webcomponents/shadycss/scoping-shim.min.js"></script>
+<script src="../module/generated/make-element.js"></script>
+
+<template id="x-great">
+  <style>
+    x-grand-1::part(part) {
+      color: red;
+    }
+    x-grand-2::part(part) {
+      background-color: green;
+    }
+  </style>
+  <x-grand-1></x-grand-1>
+  <x-grand-2></x-grand-2>
+</template>
+
+<template id="x-grand-1">
+  <x-parent exportparts="part"></x-parent>
+</template>
+
+<template id="x-grand-2">
+  <!-- no <x-parent> here initially -->
+</template>
+
+<template id="x-parent">
+  <x-child exportparts="part"></x-child>
+</template>
+
+<template id="x-child">
+  <div part="part"></div>
+</template>
+
+<script type="module">
+  import {pierce, style, red, green, black, blackQuad} from './test-utils.js';
+
+  suite('move shadow roots exporter', () => {
+    suiteSetup(() => {
+      makeElement('x-great');
+      makeElement('x-grand-1');
+      makeElement('x-grand-2');
+      makeElement('x-parent');
+      makeElement('x-child');
+    });
+
+    let great, grand1, grand2, parent, part;
+
+    setup(() => {
+      great = document.createElement('x-great');
+      document.body.appendChild(great);
+      grand1 = pierce(great, 'x-grand-1');
+      grand2 = pierce(great, 'x-grand-2');
+      parent = pierce(grand1, 'x-parent');
+      part = pierce(parent, 'x-child', '[part]');
+    });
+
+    teardown(() => {
+      document.body.removeChild(great);
+    });
+
+    test('initial state', () => {
+      assert.equal(style(part).color, red);
+      assert.equal(style(part).backgroundColor, blackQuad);
+    });
+
+    test('move parent from grand-1 to grand-2', () => {
+      grand2.shadowRoot.appendChild(parent);
+      assert.equal(style(part).color, black);
+      assert.equal(style(part).backgroundColor, green);
+    });
+  });
+</script>

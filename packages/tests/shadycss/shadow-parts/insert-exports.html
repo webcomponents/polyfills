@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<!--
+@license
+Copyright (c) 2020 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<title>shadycss/shadow-parts/insert-exports</title>
+
+<script src="../test-flags.js"></script>
+<script src="../../node_modules/wct-browser-legacy/browser.js"></script>
+<script src="../../node_modules/@webcomponents/webcomponents-platform/webcomponents-platform.js"></script>
+<script src="../../node_modules/es6-promise/dist/es6-promise.auto.min.js"></script>
+<script src="../../node_modules/@webcomponents/template/template.js"></script>
+<script src="../../node_modules/@webcomponents/shadydom/shadydom.min.js"></script>
+<script src="../../node_modules/@webcomponents/custom-elements/custom-elements.min.js"></script>
+<script src="../../node_modules/@webcomponents/shadycss/scoping-shim.min.js"></script>
+<script src="../module/generated/make-element.js"></script>
+
+<template id="x-great">
+  <style>
+    x-grand::part(red) {
+      background-color: red;
+    }
+  </style>
+  <x-grand></x-grand>
+</template>
+
+<template id="x-grand">
+  <style>
+    x-parent::part(red) {
+      color: red;
+    }
+  </style>
+  <!-- no <x-parent> here initially -->
+</template>
+
+<template id="x-parent">
+  <x-child exportparts="part:red"></x-child>
+</template>
+
+<template id="x-child">
+  <div part="part"></div>
+</template>
+
+<script type="module">
+  import {pierce, style, black, blackQuad, red} from './test-utils.js';
+
+  suite('insert exports', () => {
+    suiteSetup(() => {
+      makeElement('x-great');
+      makeElement('x-grand');
+      makeElement('x-parent');
+      makeElement('x-child');
+    });
+
+    let great, grand;
+
+    setup(() => {
+      great = document.createElement('x-great');
+      document.body.appendChild(great);
+      grand = pierce(great, 'x-grand');
+    });
+
+    teardown(() => {
+      document.body.removeChild(great);
+    });
+
+    test('appendChild: exporter', () => {
+      const parent = document.createElement('x-parent');
+      parent.setAttribute('exportparts', 'red');
+      grand.shadowRoot.appendChild(parent);
+      const part = pierce(parent, 'x-child', '[part]');
+      assert.equal(style(part).color, red);
+      assert.equal(style(part).backgroundColor, red);
+    });
+
+    test('appendChild: parent of exporter', () => {
+      const container = document.createElement('div');
+      const parent = document.createElement('x-parent');
+      parent.setAttribute('exportparts', 'red');
+      container.appendChild(parent);
+      grand.shadowRoot.appendChild(container);
+      const part = pierce(parent, 'x-child', '[part]');
+      assert.equal(style(part).color, red);
+      assert.equal(style(part).backgroundColor, red);
+    });
+
+    test('insertBefore: exporter', () => {
+      const parent = document.createElement('x-parent');
+      parent.setAttribute('exportparts', 'red');
+      grand.shadowRoot.insertBefore(parent, null);
+      const part = pierce(parent, 'x-child', '[part]');
+      assert.equal(style(part).color, red);
+      assert.equal(style(part).backgroundColor, red);
+    });
+
+    test('insertBefore: parent of exporter', () => {
+      const container = document.createElement('div');
+      const parent = document.createElement('x-parent');
+      parent.setAttribute('exportparts', 'red');
+      container.appendChild(parent);
+      grand.shadowRoot.insertBefore(container, null);
+      const part = pierce(parent, 'x-child', '[part]');
+      assert.equal(style(part).color, red);
+      assert.equal(style(part).backgroundColor, red);
+    });
+
+    test('replaceChild: exporter', () => {
+      const oldChild = document.createElement('div');
+      grand.shadowRoot.appendChild(oldChild);
+      const parent = document.createElement('x-parent');
+      parent.setAttribute('exportparts', 'red');
+      grand.shadowRoot.replaceChild(parent, oldChild);
+      const part = pierce(parent, 'x-child', '[part]');
+      assert.equal(style(part).color, red);
+      assert.equal(style(part).backgroundColor, red);
+    });
+
+    test('replaceChild: parent of exporter', () => {
+      const oldChild = document.createElement('div');
+      grand.shadowRoot.appendChild(oldChild);
+      const container = document.createElement('div');
+      const parent = document.createElement('x-parent');
+      parent.setAttribute('exportparts', 'red');
+      container.appendChild(parent);
+      grand.shadowRoot.replaceChild(container, oldChild);
+      const part = pierce(parent, 'x-child', '[part]');
+      assert.equal(style(part).color, red);
+      assert.equal(style(part).backgroundColor, red);
+    });
+
+    /**
+     * TODO(aomarks) These should pass except due to an unrelated bug custom
+     * elements created with innerHTML are never upgraded!
+     * https://github.com/webcomponents/polyfills/issues/48
+     */
+    test.skip('innerHTML: x-parent', async () => {
+      grand.shadowRoot.innerHTML = `
+        <x-parent exportparts="red"></x-parent>
+      `;
+      const part = pierce(grand, 'x-parent', 'x-child', '[part]');
+      assert.equal(style(part).color, red);
+      assert.equal(style(part).backgroundColor, red);
+    });
+  });
+</script>
