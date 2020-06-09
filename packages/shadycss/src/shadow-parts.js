@@ -314,8 +314,8 @@ export function findExportedPartMappings(host) {
  */
 export function onInsertBefore(parentNode, newNode, referenceNode) {
   /* eslint-enable no-unused-vars */
-  if (newNode instanceof Text) {
-    // No parts in text.
+  if (newNode instanceof Text || newNode instanceof Comment) {
+    // No parts in text or comments.
     return;
   }
   if (!parentNode.getRootNode) {

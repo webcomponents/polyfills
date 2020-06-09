@@ -84,6 +84,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       xb.shadowRoot.appendChild(text);
     });
 
+    test('appendChild: comment', () => {
+      const comment = document.createComment('foo');
+      xb.shadowRoot.appendChild(comment);
+    });
+
     test('insertBefore: part', () => {
       const pa = document.createElement('div');
       pa.setAttribute('part', 'pa');
@@ -112,6 +117,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     test('insertBefore: text node', () => {
       const text = document.createTextNode('foo');
       xb.shadowRoot.insertBefore(text, null);
+    });
+
+    test('insertBefore: comment', () => {
+      const comment = document.createComment('foo');
+      xb.shadowRoot.insertBefore(comment, null);
     });
 
     test('replaceChild: part', () => {
@@ -150,6 +160,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       xb.shadowRoot.appendChild(oldChild);
       const text = document.createTextNode('foo');
       xb.shadowRoot.replaceChild(text, oldChild);
+    });
+
+    test('replaceChild: comment node', () => {
+      const oldChild = document.createElement('div');
+      xb.shadowRoot.appendChild(oldChild);
+      const comment = document.createComment('foo');
+      xb.shadowRoot.replaceChild(comment, oldChild);
     });
 
     test('innerHTML', () => {
