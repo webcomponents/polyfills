@@ -9,6 +9,8 @@
  * additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
+import {constructor as EventConstructor, prototype as EventPrototype} from "../Environment/Event.js";
+
 export const install = () => {
   // Thanks, IE
   try {
@@ -20,9 +22,9 @@ export const install = () => {
       e.initEvent(type, eventInit.bubbles, eventInit.cancelable);
       return e;
     };
-    Object.setPrototypeOf(Event, Function);
-    Object.setPrototypeOf(EventWrapper, Event);
-    EventWrapper.prototype = Event.prototype;
+    Object.setPrototypeOf(EventConstructor, Function);
+    Object.setPrototypeOf(EventWrapper, EventConstructor);
+    EventWrapper.prototype = EventPrototype;
     EventWrapper.prototype.constructor = EventWrapper;
 
     (window.Event as any) = EventWrapper;
