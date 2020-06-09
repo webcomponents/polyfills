@@ -40,6 +40,11 @@ suite('watchFormdataTarget', () => {
     const form = iframeDoc.createElement('form');
     iframeDoc.body.appendChild(form);
 
+    // Submitting a form by calling the `<form>`'s `submit` method causes the UA
+    // not to dispatch a 'submit' event. To work around this, we create a submit
+    // button and call it's `click` method instead.
+    //
+    // https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#concept-form-submit
     const submitButton = iframeDoc.createElement('input');
     submitButton.type = 'submit';
     form.appendChild(submitButton);
@@ -59,6 +64,11 @@ suite('watchFormdataTarget', () => {
     const form = iframeDoc.createElement('form');
     iframeDoc.body.appendChild(form);
 
+    // Submitting a form by calling the `<form>`'s `submit` method causes the UA
+    // not to dispatch a 'submit' event. To work around this, we create a submit
+    // button and call it's `click` method instead.
+    //
+    // https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#concept-form-submit
     const submitButton = iframeDoc.createElement('input');
     submitButton.type = 'submit';
     form.appendChild(submitButton);
