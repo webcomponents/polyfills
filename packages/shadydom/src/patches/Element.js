@@ -101,14 +101,21 @@ export const ElementPatches = utils.getOwnPropertyDescriptors({
     if (this.ownerDocument !== doc) {
       this[utils.NATIVE_PREFIX + 'setAttribute'](attr, value);
     } else if (!scopeClassAttribute(this, attr, value)) {
+      const affectsShadowParts =
+        !utils.disableShadowParts &&
+        (attr === 'part' || attr === 'exportparts');
+      let oldValue;
+      if (affectsShadowParts) {
+        oldValue = this.getAttribute(attr);
+      }
       this[utils.NATIVE_PREFIX + 'setAttribute'](attr, value);
-      distributeAttributeChange(this, attr);
-      if (!utils.disableShadowParts && attr === 'part') {
+      if (affectsShadowParts) {
         const shim = getScopingShim();
         if (shim) {
-          shim['onSetAttribute'](this, attr, value);
+          shim['onSetAttribute'](this, attr, value, oldValue);
         }
       }
+      distributeAttributeChange(this, attr);
     }
   },
 
@@ -120,14 +127,21 @@ export const ElementPatches = utils.getOwnPropertyDescriptors({
     if (this.ownerDocument !== doc) {
       this[utils.NATIVE_PREFIX + 'removeAttribute'](attr);
     } else if (!scopeClassAttribute(this, attr, '')) {
+      const affectsShadowParts =
+        !utils.disableShadowParts &&
+        (attr === 'part' || attr === 'exportparts');
+      let oldValue;
+      if (affectsShadowParts) {
+        oldValue = this.getAttribute(attr);
+      }
       this[utils.NATIVE_PREFIX + 'removeAttribute'](attr);
-      distributeAttributeChange(this, attr);
-      if (!utils.disableShadowParts && attr === 'part') {
+      if (affectsShadowParts) {
         const shim = getScopingShim();
         if (shim) {
-          shim['onRemoveAttribute'](this, attr);
+          shim['onRemoveAttribute'](this, attr, oldValue);
         }
       }
+      distributeAttributeChange(this, attr);
     } else if (this.getAttribute(attr) === '') {
       // ensure that "class" attribute is fully removed if ShadyCSS does not keep scoping
       this[utils.NATIVE_PREFIX + 'removeAttribute'](attr);

@@ -352,6 +352,89 @@ export function onRemovePartAttribute(element) {
   removeShadyPartAttribute(element);
 }
 
+/**
+ * Update descendant parts when the "exportparts" attribute is set.
+ *
+ * @param {!HTMLElement} element The element.
+ * @param {!string} newValue The new "exportparts" value.
+ * @param {?string} oldValue The old "exportparts" value or null if was unset.
+ * @return {void}
+ */
+export function onSetExportPartsAttribute(element, newValue, oldValue) {
+  let parsed = parseExportPartsAttribute(newValue);
+  if (oldValue) {
+    parsed.push(...parseExportPartsAttribute(oldValue));
+  }
+  refreshShadyPartAttributes(
+    element,
+    parsed.map(({inner}) => inner)
+  );
+}
+
+/**
+ * Update descendant parts when the "exportparts" attribute is removed.
+ *
+ * @param {!HTMLElement} element The element.
+ * @param {!string} oldValue The old "exportparts" value.
+ * @return {void}
+ */
+export function onRemoveExportPartsAttribute(element, oldValue) {
+  const parsed = parseExportPartsAttribute(oldValue);
+  refreshShadyPartAttributes(
+    element,
+    parsed.map(({inner}) => inner)
+  );
+}
+
+/**
+ * Update the "shady-parts" attribute for all part nodes that may be affected by
+ * the given list of part names that have been added or removed, including those
+ * in descendent scopes via "exportparts" attributes.
+ *
+ * @param {!HTMLElement} host The host element.
+ * @param {!Array<!string>} staleNames The part names which have changed.
+ * @return {void}
+ */
+function refreshShadyPartAttributes(host, staleNames) {
+  if (staleNames.length === 0) {
+    return;
+  }
+  const root = host.shadowRoot;
+  if (!root) {
+    return;
+  }
+  const staleParts = [];
+  // TODO(aomarks) We've already looked at this shadow root, since an insert
+  // call must have already happened. It might be worth at least storing a bit
+  // on each host that has a part or exporter, so that we can skip unneccessary
+  // querySelectorAll calls here.
+  for (const partNode of root.querySelectorAll('[part]')) {
+    for (const name of splitPartString(partNode.getAttribute('part'))) {
+      if (staleNames.includes(name)) {
+        staleParts.push(partNode);
+        break;
+      }
+    }
+  }
+  if (staleParts.length > 0) {
+    addShadyPartAttributes(host, staleParts);
+  }
+  for (const exporter of root.querySelectorAll('[exportparts]')) {
+    const staleInnerNames = [];
+    const parsed = parseExportPartsAttribute(
+      exporter.getAttribute('exportparts')
+    );
+    for (const {inner, outer} of parsed) {
+      if (staleNames.includes(outer)) {
+        staleInnerNames.push(inner);
+      }
+    }
+    if (staleInnerNames.length > 0) {
+      refreshShadyPartAttributes(exporter, staleInnerNames);
+    }
+  }
+}
+
 /* eslint-disable no-unused-vars */
 /**
  * Add "shady-part" attributes to new nodes on insertion.
