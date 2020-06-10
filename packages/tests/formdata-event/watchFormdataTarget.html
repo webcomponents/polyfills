@@ -53,6 +53,7 @@ suite('watchFormdataTarget', () => {
     form.addEventListener('formdata', (e) => {
       callCount++;
     });
+
     submitButton.click();
     assert.strictEqual(callCount, 1);
 
@@ -64,11 +65,7 @@ suite('watchFormdataTarget', () => {
     const form = iframeDoc.createElement('form');
     iframeDoc.body.appendChild(form);
 
-    // Submitting a form by calling the `<form>`'s `submit` method causes the UA
-    // not to dispatch a 'submit' event. To work around this, we create a submit
-    // button and call it's `click` method instead.
-    //
-    // https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#concept-form-submit
+    // See note above.
     const submitButton = iframeDoc.createElement('input');
     submitButton.type = 'submit';
     form.appendChild(submitButton);
@@ -77,6 +74,7 @@ suite('watchFormdataTarget', () => {
     iframeDoc.defaultView.addEventListener('formdata', (e) => {
       callCount++;
     });
+
     submitButton.click();
     assert.strictEqual(callCount, 1);
 
