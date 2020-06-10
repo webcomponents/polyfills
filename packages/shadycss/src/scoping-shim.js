@@ -304,7 +304,7 @@ export default class ScopingShim {
    *
    * @param {!HTMLElement} element Element
    * @param {!string} name Attribute name.
-   * @param {!string} value New attribute value.
+   * @param {!string} newValue New attribute value.
    * @param {?string} oldValue Old attribute value or null if was unset.
    * @return {void}
    */
