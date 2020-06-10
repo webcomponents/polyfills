@@ -13,16 +13,17 @@ import {constructor as EventConstructor, prototype as EventPrototype} from '../E
 
 export const install = () => {
   const EventWrapper = function Event(this: Event, type: string, eventInit: EventInit = {}) {
-    let e;
+    let _this;
     try {
-      e = new EventConstructor(type, eventInit);
+      _this = new EventConstructor(type, eventInit);
     } catch {
-      e = document.createEvent('Event');
-      e.initEvent(type, eventInit.bubbles, eventInit.cancelable);
+      _this = document.createEvent('Event');
+      _this.initEvent(type, eventInit.bubbles, eventInit.cancelable);
     }
-    Object.setPrototypeOf(e, Object.getPrototypeOf(this));
-    return e;
+    Object.setPrototypeOf(_this, Object.getPrototypeOf(this));
+    return _this;
   };
+
   for (const prop of Object.keys(EventConstructor)) {
     Object.defineProperty(EventWrapper, prop,
         Object.getOwnPropertyDescriptor(EventConstructor, prop) as PropertyDescriptor);
