@@ -518,7 +518,7 @@ export function onInsertBefore(parentNode, newNode, referenceNode) {
  *   [2] Walk upwards through the tree of shadow hosts following "exportparts"
  *   attributes. For each exporting scope, for each given part node, add an
  *   additional "shady-part" attribute value with format e.g.
- *   "parent-scope:grand-parent-scope:aliased-part-name".
+ *   "grand-parent-scope:parent-scope:aliased-part-name".
  *
  *   [3] If any of these ancestor scopes provide a ::part style rule to any of
  *   the given parts, and if any of those rules consume a CSS custom property,
