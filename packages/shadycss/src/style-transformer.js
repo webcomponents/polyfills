@@ -297,8 +297,11 @@ class StyleTransformer {
    * @return {string}
    */
   _replaceMatchesPseudo(selector, matches) {
-    const parts = selector.split(MATCHES_REPLACEMENT);
-    return matches.reduce((acc, cur, idx) => acc + cur + parts[idx + 1], parts[0]);
+    const segments = selector.split(MATCHES_REPLACEMENT);
+    return matches.reduce(
+      (acc, cur, idx) => acc + cur + segments[idx + 1],
+      segments[0]
+    );
   }
 
 /**
@@ -422,13 +425,18 @@ class StyleTransformer {
     if (parsed === null) {
       return selector;
     }
-    const {combinators, elementName, selectors, parts, pseudos} = parsed;
+    const {combinators, elementName, selectors, partNames, pseudos} = parsed;
     // Earlier we did a hacky transform from "part(foo bar)" to "part(foo,bar)"
     // so that the SIMPLE_SELECTOR regex didn't get confused by spaces.
-    const partSelector =
-        formatShadyPartSelector(scope, elementName, parts.replace(',', ' '));
-    return (scope === 'document' ? '' : scope + ' ') +
-        `${combinators}${elementName}${selectors} ${partSelector}${pseudos}`;
+    const partSelector = formatShadyPartSelector(
+      scope,
+      elementName,
+      partNames.replace(',', ' ')
+    );
+    return (
+      (scope === 'document' ? '' : scope + ' ') +
+      `${combinators}${elementName}${selectors} ${partSelector}${pseudos}`
+    );
   }
 
   // :host(...) -> scopeName...

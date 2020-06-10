@@ -92,12 +92,16 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       assert.equal(style(part).paddingTop, '0px');
       assert.equal(style(part).marginTop, '10px');
 
+      // Also confirm removeChild doesn't do anything weird (this is
+      // semantically equivalent to just calling appendChild).
+      greenChild.shadowRoot.removeChild(part);
       redChild.shadowRoot.appendChild(part);
       assert.equal(style(part).color, red)
       assert.equal(style(part).backgroundColor, blackQuad);
       assert.equal(style(part).paddingTop, '10px');
       assert.equal(style(part).marginTop, '0px');
 
+      redChild.shadowRoot.removeChild(part);
       greenChild.shadowRoot.appendChild(part);
       assert.equal(style(part).color, black);
       assert.equal(style(part).backgroundColor, green);
