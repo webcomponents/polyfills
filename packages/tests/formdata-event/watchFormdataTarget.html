@@ -36,7 +36,7 @@ suite('watchFormdataTarget', () => {
   });
 
   test('Submitting a form causes a "formdata" event to be dispatched to the ' +
-      'form. (listener on form)', () => {
+      'form.', () => {
     const form = iframeDoc.createElement('form');
     iframeDoc.body.appendChild(form);
 
@@ -49,19 +49,75 @@ suite('watchFormdataTarget', () => {
     submitButton.type = 'submit';
     form.appendChild(submitButton);
 
-    let callCount = 0;
+    let events = [];
     form.addEventListener('formdata', (e) => {
-      callCount++;
+      events.push(e);
     });
 
     submitButton.click();
-    assert.strictEqual(callCount, 1);
+    assert.strictEqual(events.length, 1);
+    assert.strictEqual(events[0].type, 'formdata');
+    assert.strictEqual(events[0].target, form);
 
     iframeDoc.body.removeChild(form);
   });
 
-  test('Submitting a form causes a "formdata" event to be dispatched to the ' +
-      'form. (listener on window)', () => {
+  test('"formdata" events bubble.', () => {
+    const form = iframeDoc.createElement('form');
+    iframeDoc.body.appendChild(form);
+
+    // See note above.
+    const submitButton = iframeDoc.createElement('input');
+    submitButton.type = 'submit';
+    form.appendChild(submitButton);
+
+    let events = [];
+    iframeDoc.defaultView.addEventListener('formdata', (e) => {
+      events.push(e);
+    });
+
+    submitButton.click();
+    assert.strictEqual(events.length, 1);
+    assert.strictEqual(events[0].type, 'formdata');
+    assert.strictEqual(events[0].target, form);
+
+    iframeDoc.body.removeChild(form);
+  });
+
+  test('Only one "formdata" event is dispatched per "submit" event.',
+      () => {
+    const form = iframeDoc.createElement('form');
+    iframeDoc.body.appendChild(form);
+
+    // See note above.
+    const submitButton = iframeDoc.createElement('input');
+    submitButton.type = 'submit';
+    form.appendChild(submitButton);
+
+    // Adding a 'formdata' event listener causes the polyfill to start watching
+    // for 'submit' events. Adding multiple 'formdata' listeners should not
+    // trigger multiple 'formdata' events in response to the same 'submit'
+    // event.
+    let listener1Events = [];
+    iframeDoc.defaultView.addEventListener('formdata', (e) => {
+      listener1Events.push(e);
+    });
+
+    let listener2Events = [];
+    form.addEventListener('formdata', (e) => {
+      listener2Events.push(e);
+    });
+
+    submitButton.click();
+    assert.strictEqual(listener1Events.length, 1);
+    assert.strictEqual(listener2Events.length, 1);
+    assert.strictEqual(listener1Events[0], listener2Events[0]);
+
+    iframeDoc.body.removeChild(form);
+  });
+
+  test('Only "submit" events dispatched to forms cause "formdata" events.',
+      () => {
     const form = iframeDoc.createElement('form');
     iframeDoc.body.appendChild(form);
 
@@ -75,8 +131,32 @@ suite('watchFormdataTarget', () => {
       callCount++;
     });
 
+    submitButton.dispatchEvent(new Event('submit', {bubbles: true}));
+    assert.strictEqual(callCount, 0);
+
+    iframeDoc.body.removeChild(form);
+  });
+
+  test('Canceling a "submit" event prevents the "formdata" event.', () => {
+    const form = iframeDoc.createElement('form');
+    iframeDoc.body.appendChild(form);
+
+    // See note above.
+    const submitButton = iframeDoc.createElement('input');
+    submitButton.type = 'submit';
+    form.appendChild(submitButton);
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+    });
+
+    let callCount = 0;
+    iframeDoc.defaultView.addEventListener('formdata', (e) => {
+      callCount++;
+    });
+
     submitButton.click();
-    assert.strictEqual(callCount, 1);
+    assert.strictEqual(callCount, 0);
 
     iframeDoc.body.removeChild(form);
   });
