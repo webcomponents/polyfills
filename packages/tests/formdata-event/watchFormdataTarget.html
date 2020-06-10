@@ -18,6 +18,7 @@ found at http://polymer.github.io/PATENTS.txt
 suite('watchFormdataTarget', () => {
   let iframe = undefined;
   let iframeDoc = undefined;
+  let Event = undefined;
 
   setup(done => {
     iframe = document.createElement('iframe');
@@ -25,6 +26,7 @@ suite('watchFormdataTarget', () => {
     iframe.addEventListener('load', function listener() {
       iframe.removeEventListener('load', listener);
       iframeDoc = iframe.contentDocument;
+      Event = iframe.contentDocument.defaultView.Event;
       done();
     });
     document.body.appendChild(iframe);
