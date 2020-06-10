@@ -9,7 +9,7 @@
  * additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
-import {constructor as EventConstructor, prototype as EventPrototype} from "../Environment/Event.js";
+import {constructor as EventConstructor, prototype as EventPrototype} from '../Environment/Event.js';
 
 export const install = () => {
   const EventWrapper = function Event(this: Event, type: string, eventInit: EventInit = {}) {

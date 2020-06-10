@@ -9,11 +9,11 @@
  * additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
-import {constructor as FormData} from "./Environment/FormData.js";
-import {addEventListener, removeEventListener, dispatchEvent} from "./EnvironmentAPI/EventTarget.js";
-import {getRootNode} from "./EnvironmentAPI/Node.js";
-import {getTarget, getDefaultPrevented} from "./EnvironmentAPI/Event.js";
-import {FormDataEvent} from "./FormDataEvent.js";
+import {constructor as FormData} from './Environment/FormData.js';
+import {addEventListener, removeEventListener, dispatchEvent} from './EnvironmentAPI/EventTarget.js';
+import {getRootNode} from './EnvironmentAPI/Node.js';
+import {getTarget, getDefaultPrevented} from './EnvironmentAPI/Event.js';
+import {FormDataEvent} from './FormDataEvent.js';
 
 // Use `WeakMap<K, true>` in place of `WeakSet` for IE11.
 const submitListenerInstalled: WeakMap<EventTarget, true> = new WeakMap();

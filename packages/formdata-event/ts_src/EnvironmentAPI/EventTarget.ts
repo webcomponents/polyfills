@@ -9,9 +9,9 @@
  * additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
-import {constructor as EventTargetCtor, methods as EventTargetMethods} from "../Environment/EventTarget.js";
-import {methods as NodeMethods} from "../Environment/Node.js";
-import {methods as WindowMethods} from "../Environment/Window.js";
+import {constructor as EventTargetCtor, methods as EventTargetMethods} from '../Environment/EventTarget.js';
+import {methods as NodeMethods} from '../Environment/Node.js';
+import {methods as WindowMethods} from '../Environment/Window.js';
 
 export const addEventListener: EventTarget['addEventListener'] = (() => {
   if (EventTargetCtor) {
@@ -33,7 +33,7 @@ export const addEventListener: EventTarget['addEventListener'] = (() => {
           this, type, listener as EventListenerOrEventListenerObject, options);
     }
 
-    throw new TypeError("Unsupported.");
+    throw new TypeError('Unsupported.');
   };
 })();
 
@@ -57,7 +57,7 @@ export const removeEventListener: EventTarget['removeEventListener'] = (() => {
           this, type, listener as EventListenerOrEventListenerObject, options);
     }
 
-    throw new TypeError("Unsupported.");
+    throw new TypeError('Unsupported.');
   };
 })();
 
@@ -75,6 +75,6 @@ export const dispatchEvent: EventTarget['dispatchEvent'] = (() => {
       return WindowMethods.dispatchEvent.call(this, event);
     }
 
-    throw new TypeError("Unsupported.");
+    throw new TypeError('Unsupported.');
   };
 })();

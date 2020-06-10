@@ -9,7 +9,7 @@
  * additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
-import {descriptors as EventDescriptors} from "../Environment/Event.js";
+import {descriptors as EventDescriptors} from '../Environment/Event.js';
 
 export const getTarget = (e: Event) => {
   return EventDescriptors.target!.get!.call(e);

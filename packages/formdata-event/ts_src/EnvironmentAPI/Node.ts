@@ -9,7 +9,7 @@
  * additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
-import {methods as NodeMethods, descriptors as NodeDescriptors} from "../Environment/Node.js";
+import {methods as NodeMethods, descriptors as NodeDescriptors} from '../Environment/Node.js';
 
 export const getRootNode: Node['getRootNode'] = function(
     this: Node, options: GetRootNodeOptions | undefined = undefined) {

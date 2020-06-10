@@ -9,9 +9,9 @@
  * additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
-import {install as installEvent} from "./Wrappers/Event.js";
-import {install as installEventTarget} from "./Wrappers/EventTarget.js";
-import {install as installFormDataEvent} from "./FormDataEvent.js";
+import {install as installEvent} from './Wrappers/Event.js';
+import {install as installEventTarget} from './Wrappers/EventTarget.js';
+import {install as installFormDataEvent} from './FormDataEvent.js';
 
 const priorFormDataEvent = window['FormDataEvent'] as any;
 if (priorFormDataEvent === undefined) {
