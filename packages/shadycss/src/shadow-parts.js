@@ -824,3 +824,65 @@ function findPartRulesThatMatchPartNode(scopeKey, partNames) {
   }
   return matching;
 }
+
+/**
+ * Transform all declarations in the given ::part rule to be !important.
+ *
+ * We do this to all ::part rules as a crude way to improve the specificity
+ * behavior of shadow parts for the (hopefully) common simple use-case of a
+ * part node that has some local default styles that should be overridable by
+ * some ::part rule. For example:
+ *
+ * <x-parent>
+ *   #shadow-root
+ *     <!-- This color should have precendence. Unless we transform it to
+ *          !important, though it would not beat out the #foo selector
+ *          from the <x-child> default part styles. -->
+ *     <style>
+ *       x-child::part(foo) { color: red; }
+ *     </style>
+ *
+ *     <x-child>
+ *       #shadow-root
+ *         <style>
+ *           #foo { color: green; }
+ *         </style>
+ *         <div id="foo" part="foo">Hello</div>
+ *
+ * Since this is all we do to help ::part rule specificity, there are many
+ * patterns that still won't behave correctly. For example, adding a
+ * grand-parent scope to the above case:
+ *
+ * <x-grandparent>
+ *   #shadow-root
+       <!-- This color should have precedence over both the <x-parent>
+            and <x-child> ones, but we don't guarantee this. -->
+ *     <style>
+ *       x-parent::part(foo) { color: blue; }
+ *     </style>
+ *     <x-parent>...</x-parent>
+ *
+ * This is because the 3 transformed selectors will look as below, so
+ * precedence is determined by template processing order:
+ *
+ *   x-grandparent x-parent [shady-part~="x-grandparent:x-parent:foo"]
+ *   x-parent      x-child  [shady-part~="x-parent:x-child:foo"]
+ *   .x-child#foo
+ *
+ * To workaround specificity issues like this, the user will need to manually
+ * increase the weight of rules that they want to take precedence (e.g. adding
+ * an #id selector to the <x-grandparent> rule).
+ *
+ * @param {!string} cssText The string text of a CSS rule.
+ * @return {void}
+ */
+export function makeDeclarationsImportant(cssText) {
+  const declarations = cssText.split(';');
+  for (let i = 0; i < declarations.length; i++) {
+    const decl = declarations[i];
+    if (decl.trim() !== '' && decl.match(/!important\s*$/) === null) {
+      declarations[i] += ' !important';
+    }
+  }
+  return declarations.join(';');
+}

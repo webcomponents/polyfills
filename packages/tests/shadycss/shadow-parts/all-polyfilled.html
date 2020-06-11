@@ -17,10 +17,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <script type="module">
   import {suites} from './suites';
 
-  WCT.loadSuites(
-    suites.map(
-      (url) =>
-        url + "?wc-register=true&wc-shadydom=true&wc-shimcssproperties=true"
-    )
-  );
+  WCT.loadSuites([
+    ...suites.map((url) => url + '?wc-register=true&wc-shadydom=true&wc-shimcssproperties=true'),
+    ...suites.map((url) => url + '?wc-register=true&wc-shadydom=true'),
+  ]);
 </script>

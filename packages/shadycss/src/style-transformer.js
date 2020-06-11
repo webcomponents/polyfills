@@ -13,7 +13,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 import {StyleNode, parse} from './css-parse.js'; // eslint-disable-line no-unused-vars
 import * as StyleUtil from './style-util.js';
 import {nativeShadow, disableShadowParts} from './style-settings.js';
-import {parsePartSelector, formatShadyPartSelector} from './shadow-parts.js';
+import * as shadowParts from './shadow-parts.js';
 
 /* Transforms ShadowDOM styling into ShadyDOM styling
 
@@ -211,6 +211,9 @@ class StyleTransformer {
   }
 
   rule(rule, scope, hostScope) {
+    if (!disableShadowParts && PART.test(rule['selector'])) {
+      rule['cssText'] = shadowParts.makeDeclarationsImportant(rule['cssText']);
+    }
     this._transformRule(rule, this._transformComplexSelector,
       scope, hostScope);
   }
@@ -412,7 +415,7 @@ class StyleTransformer {
    * Transform a `::part` selector into  a `shady-part` attribute selector.
    *
    * Example:
-   *   Given: 'parent > x-b.fancy::part(foo):hover' andd scope 'x-a'
+   *   Given: 'parent > x-b.fancy::part(foo):hover' and scope 'x-a'
    *   Returns: 'parent > x-b.fancy [shady-part~="x-a:x-b:foo"]:hover'
    *
    * @param {!string} selector The `::part` selector.
@@ -421,14 +424,14 @@ class StyleTransformer {
    * @return {!string} Transformed `shady-part` attribute selector.
    */
   _transformPartSelector(selector, scope) {
-    const parsed = parsePartSelector(selector);
+    const parsed = shadowParts.parsePartSelector(selector);
     if (parsed === null) {
       return selector;
     }
     const {combinators, elementName, selectors, partNames, pseudos} = parsed;
     // Earlier we did a hacky transform from "part(foo bar)" to "part(foo,bar)"
     // so that the SIMPLE_SELECTOR regex didn't get confused by spaces.
-    const partSelector = formatShadyPartSelector(
+    const partSelector = shadowParts.formatShadyPartSelector(
       scope,
       elementName,
       partNames.replace(',', ' ')
@@ -478,6 +481,15 @@ class StyleTransformer {
   documentRule(rule) {
     // reset selector in case this is redone.
     rule['selector'] = rule['parsedSelector'];
+    if (!disableShadowParts && PART.test(rule['selector'])) {
+      rule['cssText'] = shadowParts.makeDeclarationsImportant(rule['cssText']);
+      // TODO(aomarks) Not sure why, but we have to modify different properties
+      // in different circumstances:
+      //   non-document styles: cssText
+      //   document styles with native custom properties: cssText
+      //   document styles with polyfilled custom properties: parsedCssText
+      rule['parsedCssText'] = rule['cssText'];
+    }
     this.normalizeRootSelector(rule);
     this._transformRule(rule, this._transformDocumentSelector);
   }

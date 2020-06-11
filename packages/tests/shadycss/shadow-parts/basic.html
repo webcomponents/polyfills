@@ -82,7 +82,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         const style = document.querySelector('style[scope=x-a]');
         assert.equal(
           style.textContent.replace(/\n/gm, ' ').replace(/\s+/g, ' ').trim(),
-          `x-a x-b [shady-part~="x-a:x-b:pa"] { color: red; }`
+          `x-a x-b [shady-part~="x-a:x-b:pa"] { color: red !important; }`
         );
       });
     }

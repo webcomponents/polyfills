@@ -32,4 +32,5 @@ export const suites = [
   'property-selector-group.html',
   'property-within-provider.html',
   'selector-group.html',
+  'specificity.html',
 ];
