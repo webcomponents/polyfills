@@ -19,6 +19,13 @@ export const install = () => {
     Object.setPrototypeOf(_this, Object.getPrototypeOf(this));
 
     if (form instanceof HTMLFormElement) {
+      // Using `_this` as the `formData` for this event is technically
+      // incorrect. 'construct the entry list' (called by the FormData
+      // constructor) actually creates a _new_ FormData, dispatches the
+      // 'formdata' event with that as its `formData`, and returns the entry
+      // list associated with it after the event has finished propagating. The
+      // FormData constructor then takes this returned entry list and associates
+      // it with itself.
       dispatchEvent.call(form, new FormDataEvent('formdata', {
         bubbles: true,
         formData: _this,
