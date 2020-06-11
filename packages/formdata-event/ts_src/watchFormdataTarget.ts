@@ -9,11 +9,9 @@
  * additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
-import {constructor as FormData} from './Environment/FormData.js';
-import {addEventListener, removeEventListener, dispatchEvent} from './EnvironmentAPI/EventTarget.js';
-import {getRootNode} from './EnvironmentAPI/Node.js';
 import {getTarget, getDefaultPrevented} from './EnvironmentAPI/Event.js';
-import {FormDataEvent} from './FormDataEvent.js';
+import {addEventListener, removeEventListener} from './EnvironmentAPI/EventTarget.js';
+import {getRootNode} from './EnvironmentAPI/Node.js';
 
 // Use `WeakMap<K, true>` in place of `WeakSet` for IE11.
 const submitListenerInstalled: WeakMap<EventTarget, true> = new WeakMap();
@@ -47,10 +45,9 @@ export const watchFormdataTarget = (subject: EventTarget) => {
         return;
       }
 
-      dispatchEvent.call(target, new FormDataEvent('formdata', {
-        bubbles: true,
-        formData: new FormData(target),
-      }));
+      // Constructing this FormData with `target` causes the 'formdata' event to
+      // be dispatched to it.
+      new FormData(target);
     };
 
     addEventListener.call(getRootNode.call(target), 'submit', submitBubblingListener);
