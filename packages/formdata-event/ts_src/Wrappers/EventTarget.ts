@@ -12,7 +12,7 @@
 import {prototype as EventTargetPrototype, methods as EventTargetMethods} from '../Environment/EventTarget.js';
 import {prototype as NodePrototype, methods as NodeMethods} from '../Environment/Node.js';
 import {prototype as WindowPrototype, methods as WindowMethods} from '../Environment/Window.js';
-import {watchFormdataTarget} from '../watchFormdataTarget.js';
+import {formdataListenerAdded, formdataListenerRemoved} from '../watchFormdataTarget.js';
 
 export const wrapAddEventListener = (
   prototype: {
@@ -24,10 +24,30 @@ export const wrapAddEventListener = (
     this: EventTarget,
     type: string,
     listener: EventListenerOrEventListenerObject | null,
-    options?: boolean | AddEventListenerOptions
+    options?: boolean | AddEventListenerOptions,
   ) {
     if (type === 'formdata') {
-      watchFormdataTarget(this);
+      formdataListenerAdded(this, listener, options);
+    }
+
+    return original.call(this, type, listener, options);
+  };
+};
+
+export const wrapRemoveEventListener = (
+  prototype: {
+    removeEventListener: EventTarget['removeEventListener'],
+  },
+  original: EventTarget['removeEventListener'],
+) => {
+  prototype.removeEventListener = function(
+    this: EventTarget,
+    type: string,
+    listener: EventListenerOrEventListenerObject | null,
+    options?: boolean | EventListenerOptions,
+  ) {
+    if (type === 'formdata') {
+      formdataListenerRemoved(this, listener, options);
     }
 
     return original.call(this, type, listener, options);
@@ -37,13 +57,16 @@ export const wrapAddEventListener = (
 export const install = () => {
   if (EventTargetPrototype) {
     wrapAddEventListener(EventTargetPrototype, EventTargetMethods.addEventListener);
+    wrapRemoveEventListener(EventTargetPrototype, EventTargetMethods.removeEventListener);
   }
 
   if (NodeMethods.addEventListener) {
     wrapAddEventListener(NodePrototype, NodeMethods.addEventListener);
+    wrapRemoveEventListener(NodePrototype, NodeMethods.removeEventListener);
   }
 
   if (WindowMethods.addEventListener) {
     wrapAddEventListener(WindowPrototype, WindowMethods.addEventListener);
+    wrapRemoveEventListener(WindowPrototype, WindowMethods.removeEventListener);
   }
 };

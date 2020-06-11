@@ -13,17 +13,80 @@ import {getTarget, getDefaultPrevented} from './EnvironmentAPI/Event.js';
 import {addEventListener, removeEventListener} from './EnvironmentAPI/EventTarget.js';
 import {getRootNode} from './EnvironmentAPI/Node.js';
 
-// Use `WeakMap<K, true>` in place of `WeakSet` for IE11.
-const submitListenerInstalled: WeakMap<EventTarget, true> = new WeakMap();
-const submitEventSeen: WeakMap<Event, true> = new WeakMap();
+interface FormdataEventListenerRecord {
+  callback: EventListenerOrEventListenerObject;
+  capture: boolean;
+}
 
-export const watchFormdataTarget = (subject: EventTarget) => {
-  if (submitListenerInstalled.has(subject)) {
+const targetToFormdataListeners = new WeakMap<EventTarget, Set<FormdataEventListenerRecord>>();
+
+export const formdataListenerAdded = (
+  target: EventTarget,
+  callback: EventListenerOrEventListenerObject | null,
+  options?: boolean | AddEventListenerOptions,
+) => {
+  if (!callback) {
     return;
   }
-  submitListenerInstalled.set(subject, true);
 
-  addEventListener.call(subject, 'submit', (capturingEvent: Event) => {
+  const capture = typeof options === 'boolean' ? options : (options?.capture ?? false);
+  const formdataListeners = targetToFormdataListeners.get(target);
+
+  if (formdataListeners !== undefined) {
+    for (const existing of formdataListeners) {
+      if (callback === existing.callback && capture === existing.capture) {
+        return;
+      }
+    }
+  }
+
+  if (formdataListeners === undefined) {
+    targetToFormdataListeners.set(target, new Set([{callback, capture}]));
+    addSubmitListener(target);
+  } else {
+    formdataListeners.add({callback, capture});
+  }
+};
+
+export const formdataListenerRemoved = (
+  target: EventTarget,
+  callback: EventListenerOrEventListenerObject | null,
+  options?: boolean | EventListenerOptions,
+) => {
+  const formdataListeners = targetToFormdataListeners.get(target);
+  if (formdataListeners === undefined) {
+    return;
+  }
+
+  const capture = typeof options === 'boolean' ? options : (options?.capture ?? false);
+
+  for (const existing of formdataListeners) {
+    if (callback === existing.callback && capture === existing.capture) {
+      formdataListeners.delete(existing);
+      break;
+    }
+  }
+
+  if (formdataListeners.size === 0) {
+    targetToFormdataListeners.delete(target);
+    removeSubmitListener(target);
+  }
+};
+
+// Tracks the 'submit' event listener applied to each EventTarget that has at
+// least one 'formdata' event listener.
+const targetToSubmitListener = new WeakMap<EventTarget, EventListener>();
+// Tracks whether or not the bubbling listener has already been added for a
+// given 'submit' event.
+// IE11 does not support WeakSet, so a WeakMap<K, true> is used instead.
+const submitEventSeen = new WeakMap<Event, true>();
+
+const addSubmitListener = (subject: EventTarget) => {
+  if (targetToSubmitListener.has(subject)) {
+    return;
+  }
+
+  const submitListener = (capturingEvent: Event) => {
     if (submitEventSeen.has(capturingEvent)) {
       return;
     }
@@ -51,5 +114,17 @@ export const watchFormdataTarget = (subject: EventTarget) => {
     };
 
     addEventListener.call(getRootNode.call(target), 'submit', submitBubblingListener);
-  }, true);
+  };
+
+  addEventListener.call(subject, 'submit', submitListener, true);
+  targetToSubmitListener.set(subject, submitListener);
+};
+
+const removeSubmitListener = (subject: EventTarget) => {
+  const callback = targetToSubmitListener.get(subject);
+  if (callback === undefined) {
+    return;
+  }
+
+  removeEventListener.call(subject, 'submit', callback);
 };
