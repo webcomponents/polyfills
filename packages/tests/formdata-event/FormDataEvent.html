@@ -41,11 +41,11 @@ suite('FormDataEvent', () => {
     iframe = undefined;
   });
 
-  test('FormDataEvent is available on the window', () => {
+  test('A `FormDataEvent` property is added to `window`.', () => {
     assert.ok(FormDataEvent);
   });
 
-  test('FormDataEvent must be constructed with a `formData` option', () => {
+  test('FormDataEvent must be constructed with a `formData` option.', () => {
     assert.throws(() => {
       new FormDataEvent('formdata');
     });
@@ -57,8 +57,8 @@ suite('FormDataEvent', () => {
     new FormDataEvent('formdata', {formData: new FormData()});
   });
 
-  test('FormDataEvent\'s `formData` property returns the FormData the event ' +
-      'was constructed with', () => {
+  test('FormDataEvent\'s `formData` property returns the FormData used to ' +
+      'construct it.', () => {
     const formData = new FormData();
     const event = new FormDataEvent('formdata', {formData});
     assert.strictEqual(event.formData, formData);
