@@ -75,18 +75,18 @@ export const formdataListenerRemoved = (
 
 // Tracks the 'submit' event listener applied to each EventTarget that has at
 // least one 'formdata' event listener.
-const targetToSubmitListener = new WeakMap<EventTarget, EventListener>();
+const targetToSubmitCallback = new WeakMap<EventTarget, EventListener>();
 // Tracks whether or not the bubbling listener has already been added for a
 // given 'submit' event.
 // IE11 does not support WeakSet, so a WeakMap<K, true> is used instead.
 const submitEventSeen = new WeakMap<Event, true>();
 
 const addSubmitListener = (subject: EventTarget) => {
-  if (targetToSubmitListener.has(subject)) {
+  if (targetToSubmitCallback.has(subject)) {
     return;
   }
 
-  const submitListener = (capturingEvent: Event) => {
+  const submitCallback = (capturingEvent: Event) => {
     if (submitEventSeen.has(capturingEvent)) {
       return;
     }
@@ -97,12 +97,12 @@ const addSubmitListener = (subject: EventTarget) => {
       return;
     }
 
-    const submitBubblingListener = (bubblingEvent: Event) => {
+    const submitBubblingCallback = (bubblingEvent: Event) => {
       if (bubblingEvent !== capturingEvent) {
         return;
       }
 
-      removeEventListener.call(subject, 'submit', submitBubblingListener);
+      removeEventListener.call(subject, 'submit', submitBubblingCallback);
 
       if (getDefaultPrevented(bubblingEvent)) {
         return;
@@ -113,18 +113,18 @@ const addSubmitListener = (subject: EventTarget) => {
       new FormData(target);
     };
 
-    addEventListener.call(getRootNode.call(target), 'submit', submitBubblingListener);
+    addEventListener.call(getRootNode.call(target), 'submit', submitBubblingCallback);
   };
 
-  addEventListener.call(subject, 'submit', submitListener, true);
-  targetToSubmitListener.set(subject, submitListener);
+  addEventListener.call(subject, 'submit', submitCallback, true);
+  targetToSubmitCallback.set(subject, submitCallback);
 };
 
 const removeSubmitListener = (subject: EventTarget) => {
-  const callback = targetToSubmitListener.get(subject);
-  if (callback === undefined) {
+  const submitCallback = targetToSubmitCallback.get(subject);
+  if (submitCallback === undefined) {
     return;
   }
 
-  removeEventListener.call(subject, 'submit', callback, true);
+  removeEventListener.call(subject, 'submit', submitCallback, true);
 };
