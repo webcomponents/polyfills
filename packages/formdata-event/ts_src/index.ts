@@ -13,6 +13,7 @@ import {install as installEvent} from './Wrappers/Event.js';
 import {install as installEventTarget} from './Wrappers/EventTarget.js';
 import {install as installFormData} from './Wrappers/FormData.js';
 import {install as installFormDataEvent} from './FormDataEvent.js';
+import {install as installHTMLFormElement} from './Wrappers/HTMLFormElement.js';
 
 const priorFormDataEvent = window['FormDataEvent'] as any;
 if (priorFormDataEvent === undefined) {
@@ -20,4 +21,5 @@ if (priorFormDataEvent === undefined) {
   installEventTarget();
   installFormData();
   installFormDataEvent();
+  installHTMLFormElement();
 }
