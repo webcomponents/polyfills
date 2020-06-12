@@ -126,5 +126,5 @@ const removeSubmitListener = (subject: EventTarget) => {
     return;
   }
 
-  removeEventListener.call(subject, 'submit', callback);
+  removeEventListener.call(subject, 'submit', callback, true);
 };
