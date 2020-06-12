@@ -10,6 +10,7 @@
  */
 
 import {prototype as HTMLFormElementPrototype, methods as HTMLFormElementMethods} from '../Environment/HTMLFormElement.js';
+import {dispatchFormdataForSubmission} from '../dispatchFormdataForSubmission.js';
 
 export const wrapSubmit = (
   prototype: {
@@ -18,7 +19,7 @@ export const wrapSubmit = (
   original: HTMLFormElement['submit'],
 ) => {
   prototype.submit = function(this: HTMLFormElement) {
-    new FormData(this);
+    dispatchFormdataForSubmission(this);
     return original.call(this);
   };
 };

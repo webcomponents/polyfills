@@ -12,6 +12,7 @@
 import {getTarget, getDefaultPrevented} from './EnvironmentAPI/Event.js';
 import {addEventListener, removeEventListener} from './EnvironmentAPI/EventTarget.js';
 import {getRootNode} from './EnvironmentAPI/Node.js';
+import {dispatchFormdataForSubmission} from './dispatchFormdataForSubmission.js';
 
 interface FormdataEventListenerRecord {
   callback: EventListenerOrEventListenerObject;
@@ -108,9 +109,7 @@ const addSubmitListener = (subject: EventTarget) => {
         return;
       }
 
-      // Constructing this FormData with `target` causes the 'formdata' event to
-      // be dispatched to it.
-      new FormData(target);
+      dispatchFormdataForSubmission(target);
     };
 
     addEventListener.call(getRootNode.call(target), 'submit', submitBubblingCallback);
