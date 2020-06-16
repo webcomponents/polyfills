@@ -9,14 +9,24 @@
  * additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
-import {constructor as FormDataConstructor, prototype as FormDataPrototype} from '../Environment/FormData.js';
+import {constructor as FormDataConstructor, prototype as FormDataPrototype, methods as FormDataMethods} from '../Environment/FormData.js';
 import {dispatchEvent} from '../EnvironmentAPI/EventTarget.js';
 import {FormDataEvent} from '../FormDataEvent.js';
+
+type FormDataEntry = {
+  name: string,
+  value: string,
+};
+const private_entries = new WeakMap<FormData, Array<FormDataEntry>>();
+
+export const getEntries = (formData: FormData) => private_entries.get(formData);
 
 export const install = () => {
   const FormDataWrapper = function FormData(this: FormData, form?: HTMLFormElement) {
     const _this = new FormDataConstructor(form);
     Object.setPrototypeOf(_this, Object.getPrototypeOf(this));
+
+    private_entries.set(_this, []);
 
     if (form instanceof HTMLFormElement) {
       // Using `_this` as the `formData` for this event is technically
@@ -41,6 +51,25 @@ export const install = () => {
   }
   FormDataWrapper.prototype = FormDataPrototype;
   FormDataWrapper.prototype.constructor = FormDataWrapper;
+
+  FormDataWrapper.prototype.append = function(
+    this: FormData,
+    name: string,
+    value: string | Blob,
+    _filename?: string,
+  ) {
+    const entries = private_entries.get(this);
+    if (entries === undefined) {
+      throw new Error('Could not find the entry list for this FormData.');
+    }
+
+    if (typeof value !== 'string') {
+      throw new Error('Unsupported.');
+    }
+
+    entries.push({name, value});
+    return FormDataMethods.append.call(this, name, value);
+  };
 
   (window.FormData as any) = FormDataWrapper;
 };

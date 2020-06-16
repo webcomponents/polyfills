@@ -12,3 +12,7 @@
 export const constructor = window['FormData'];
 
 export const prototype = constructor?.['prototype'];
+
+export const methods = {
+  append: prototype?.append,
+};

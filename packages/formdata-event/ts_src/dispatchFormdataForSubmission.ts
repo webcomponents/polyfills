@@ -9,8 +9,25 @@
  * additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
+import {getEntries} from './Wrappers/FormData.js';
+
 export const dispatchFormdataForSubmission = (form: HTMLFormElement) => {
-  // Constructing this FormData with `target` causes the 'formdata' event to be
-  // dispatched to it.
-  new FormData(form);
+  // Constructing this FormData with `form` dispatches the 'formdata' event.
+  const formData = new FormData(form);
+  const insertedInputs: Array<HTMLInputElement> = [];
+
+  for (const {name, value} of getEntries(formData)!) {
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = name;
+    input.value = value;
+    form.appendChild(input);
+    insertedInputs.push(input);
+  }
+
+  setTimeout(() => {
+    for (const input of insertedInputs) {
+      input.parentNode?.removeChild(input);
+    }
+  });
 };
