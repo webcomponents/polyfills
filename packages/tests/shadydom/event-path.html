@@ -985,9 +985,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           eventLog.push({currentTarget: e.currentTarget, eventPhase: e.eventPhase});
         };
 
-        // `ShadyDOM.wrapIfNeeded(outerNoSlot).shadowRoot` will also see this event in its path,
-        // but event listeners on shadow roots are instead redirected by Shady
-        // DOM to their host, causing the phase to incorrect (AT_TARGET).
+        // `ShadyDOM.wrapIfNeeded(outerNoSlot).shadowRoot` will also see this
+        // event in its path, but event listeners on shadow roots are instead
+        // redirected by Shady DOM to their host, causing the phase to be
+        // incorrect (AT_TARGET).
         ShadyDOM.wrap(outerNoSlot).addEventListener('some-event', pushToEventLog);
         ShadyDOM.wrap(outerNoSlot).addEventListener('some-event', pushToEventLog, true);
         ShadyDOM.wrap(outerDiv).addEventListener('some-event', pushToEventLog);
