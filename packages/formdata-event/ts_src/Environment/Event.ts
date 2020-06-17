@@ -11,9 +11,9 @@
 
 export const constructor = window['Event'];
 
-export const prototype = constructor?.['prototype'];
+export const prototype = constructor.prototype;
 
 export const descriptors = {
-  target: Object.getOwnPropertyDescriptor(prototype, 'target'),
-  defaultPrevented: Object.getOwnPropertyDescriptor(prototype, 'defaultPrevented'),
+  target: Object.getOwnPropertyDescriptor(prototype, 'target')!,
+  defaultPrevented: Object.getOwnPropertyDescriptor(prototype, 'defaultPrevented')!,
 };

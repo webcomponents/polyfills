@@ -9,12 +9,12 @@
  * additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
-import {constructor as EventTargetCtor, methods as EventTargetMethods} from '../Environment/EventTarget.js';
+import {constructor as EventTargetConstructor, methods as EventTargetMethods} from '../Environment/EventTarget.js';
 import {methods as NodeMethods} from '../Environment/Node.js';
 import {methods as WindowMethods} from '../Environment/Window.js';
 
 export const addEventListener: EventTarget['addEventListener'] = (() => {
-  if (EventTargetCtor) {
+  if (EventTargetConstructor) {
     return EventTargetMethods.addEventListener;
   }
 
@@ -38,7 +38,7 @@ export const addEventListener: EventTarget['addEventListener'] = (() => {
 })();
 
 export const removeEventListener: EventTarget['removeEventListener'] = (() => {
-  if (EventTargetCtor) {
+  if (EventTargetConstructor) {
     return EventTargetMethods.removeEventListener;
   }
 
@@ -62,7 +62,7 @@ export const removeEventListener: EventTarget['removeEventListener'] = (() => {
 })();
 
 export const dispatchEvent: EventTarget['dispatchEvent'] = (() => {
-  if (EventTargetCtor) {
+  if (EventTargetConstructor) {
     return EventTargetMethods.dispatchEvent;
   }
 
