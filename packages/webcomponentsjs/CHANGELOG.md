@@ -8,6 +8,7 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+- Fixed bug where Object.assign polyfill would copy non-enumerable properties.
 - Convert platform (`Array.from`, `CustomEvent`, `Promise` etc.) polyfills to
   TypeScript ([#292](https://github.com/webcomponents/polyfills/pull/292))
 - Improve types for JSCompiler compatibility
