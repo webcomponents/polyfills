@@ -1,0 +1,66 @@
+<!doctype html>
+<!--
+@license
+Copyright (c) 2020 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<html>
+
+<head>
+  <title>Object.assign Polyfill</title>
+  <script>Object.assign = undefined;</script>
+  <script id="loader" src="../node_modules/@webcomponents/webcomponentsjs/src/platform/es6-misc.js"></script>
+  <script src="./wct-config.js"></script>
+  <script src="../node_modules/wct-browser-legacy/browser.js"></script>
+</head>
+<body>
+  <script>
+    suite('Object.assign', function() {
+      test('exists on window', function() {
+        assert(Object.assign);
+      });
+
+      test('copies enumerable own properties', function() {
+        const target = {};
+        const source = {};
+        Object.defineProperty(source, 'foo', {enumerable: true, value: 'foo'});
+        Object.defineProperty(source, 'bar', {enumerable: true, value: 'bar'});
+        Object.assign(target, source);
+        assert.equal(target.foo, 'foo');
+        assert.equal(target.bar, 'bar');
+      });
+
+      test('does not copy non-enumerable own property', function() {
+        const target = {};
+        const source = {};
+        Object.defineProperty(source, 'foo', {enumerable: false, value: 'foo'});
+        Object.assign(target, source);
+        assert.equal(target.foo, undefined);
+      });
+
+      test('source beats target, and later source beats earlier source', function() {
+        const target = {};
+        Object.defineProperty(target, 'foo', {enumerable: true, value: 'foo0', writable: true});
+        const source1 = {};
+        const source2 = {};
+        Object.defineProperty(source1, 'foo', {enumerable: true, value: 'foo1'});
+        Object.defineProperty(source2, 'foo', {enumerable: true, value: 'foo2'});
+        Object.assign(target, source1, source2);
+        assert.equal(target.foo, 'foo2');
+      });
+
+      test('ignores null and undefined sources', function() {
+        const target = {};
+        const source = {};
+        Object.defineProperty(source, 'foo', {enumerable: true, value: 'foo'});
+        Object.assign(target, null, undefined, source);
+        assert.equal(target.foo, 'foo');
+      });
+    });
+  </script>
+</body>
+</html>

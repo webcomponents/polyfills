@@ -3,9 +3,13 @@
   "version": "1.4.1",
   "description": "HTML Custom Elements Polyfill",
   "main": "custom-elements.min.js",
-  "repository": "github:webcomponents/polyfills",
-  "bugs": "https://github.com/webcomponents/polyfills/issues",
-  "homepage": "https://webcomponents.org/polyfills",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/webcomponents/polyfills.git",
+    "directory": "packages/custom-elements"
+  },
+  "bugs": "https://github.com/webcomponents/polyfills/issues?q=is%3Aissue+is%3Aopen+label%3A\"Package%3A+custom-elements\"",
+  "homepage": "https://github.com/webcomponents/polyfills/tree/master/packages/custom-elements",
   "author": "The Polymer Project Authors (https://polymer.github.io/AUTHORS.txt)",
   "keywords": [
     "custom-elements",
@@ -18,6 +22,7 @@
   "license": "BSD-3-Clause",
   "scripts": {
     "build": "tsc && gulp",
+    "build:watch": "chokidar --initial 'ts_src/**/*.ts' -c 'npm run build'",
     "debug": "rollup -c",
     "prepack": "npm run build",
     "format": "find src -name \"*.ts\" | xargs clang-format --style=file -i"

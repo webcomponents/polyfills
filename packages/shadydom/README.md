@@ -53,3 +53,6 @@ This should only be an issue when setting `textContent` or `innerHTML` on a
 node inside a shadowRoot adds or removes a `<slot>` element.
 In this case, the shadowRoot will not render correctly. To workaround this,
 call `ShadyDOM.patch(node)` prior to setting `textContent` or `innerHTML`.
+
+The APIs `Document.querySelectorAll`, `Element.querySelectorAll`, `Node.childNodes`,
+and `ParentNode.children` each return an `Array` instead of a `NodeList` or `HTMLCollection`.

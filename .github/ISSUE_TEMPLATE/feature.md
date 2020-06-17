@@ -1,11 +1,11 @@
 ---
 name: Feature
 about: Request a new polyfill feature
-labels: 'Type: Feature'
-
+labels: "Type: Feature, Focus Area: Standards & Polyfills"
 ---
 
 ## Description
+
 <!--
   Please provide a clear and concise explanation of the new feature you would
   like to be supported.
@@ -14,6 +14,7 @@ labels: 'Type: Feature'
 -->
 
 ## Motivation
+
 <!--
   Please provide a concrete explanation of the use-cases that this feature
   will help you achieve.

@@ -3,9 +3,13 @@
   "version": "2.4.3",
   "description": "Web Components Polyfills",
   "main": "webcomponents-bundle.js",
-  "repository": "github:webcomponents/polyfills",
-  "bugs": "https://github.com/webcomponents/polyfills/issues",
-  "homepage": "https://webcomponents.org/polyfills",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/webcomponents/polyfills.git",
+    "directory": "packages/webcomponentsjs"
+  },
+  "bugs": "https://github.com/webcomponents/polyfills/issues?q=is%3Aissue+is%3Aopen+label%3A\"Package%3A+webcomponentsjs\"",
+  "homepage": "https://github.com/webcomponents/polyfills/tree/master/packages/webcomponentsjs",
   "author": "The Polymer Project Authors (https://polymer.github.io/AUTHORS.txt)",
   "license": "BSD-3-Clause",
   "keywords": [
@@ -16,6 +20,7 @@
   ],
   "scripts": {
     "build": "tsc && gulp",
+    "build:watch": "chokidar --initial --follow-symlinks 'src/entrypoints/**/*.js' 'ts_src/**/*.ts' 'node_modules/@webcomponents/**/*.js' -c 'npm run build'",
     "lint": "eslint src",
     "regen-package-lock": "rm -rf node_modules package-lock.json; npm install",
     "prepack": "npm run build",
