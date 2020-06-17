@@ -11,4 +11,4 @@
 
 export const constructor = window['FormData'];
 
-export const prototype = constructor?.['prototype'];
+export const prototype = constructor.prototype;

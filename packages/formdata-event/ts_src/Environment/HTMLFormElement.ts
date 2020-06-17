@@ -11,8 +11,8 @@
 
 export const constructor = window['HTMLFormElement'];
 
-export const prototype = constructor?.['prototype'];
+export const prototype = constructor.prototype;
 
 export const methods = {
-  submit: prototype?.submit,
+  submit: prototype.submit,
 };

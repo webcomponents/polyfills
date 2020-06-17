@@ -11,15 +11,15 @@
 
 export const constructor = window['Node'];
 
-export const prototype = constructor?.['prototype'];
+export const prototype = constructor.prototype;
 
 export const methods = {
-  addEventListener: prototype?.addEventListener,
-  removeEventListener: prototype?.removeEventListener,
-  dispatchEvent: prototype?.dispatchEvent,
-  getRootNode: prototype?.getRootNode,
+  addEventListener: prototype.addEventListener,
+  removeEventListener: prototype.removeEventListener,
+  dispatchEvent: prototype.dispatchEvent,
+  getRootNode: prototype.getRootNode,
 };
 
 export const descriptors = {
-  parentNode: Object.getOwnPropertyDescriptor(prototype, 'parentNode'),
+  parentNode: Object.getOwnPropertyDescriptor(prototype, 'parentNode')!,
 };

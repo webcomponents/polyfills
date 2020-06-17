@@ -12,9 +12,9 @@
 import {descriptors as EventDescriptors} from '../Environment/Event.js';
 
 export const getTarget = (e: Event) => {
-  return EventDescriptors.target!.get!.call(e);
+  return EventDescriptors.target.get!.call(e);
 };
 
 export const getDefaultPrevented = (e: Event) => {
-  return EventDescriptors.defaultPrevented!.get!.call(e);
+  return EventDescriptors.defaultPrevented.get!.call(e);
 };

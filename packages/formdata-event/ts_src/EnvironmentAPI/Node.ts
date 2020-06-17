@@ -18,10 +18,10 @@ export const getRootNode: Node['getRootNode'] = function(
   }
 
   let current = this;
-  let parent = NodeDescriptors.parentNode!.get!.call(current);
+  let parent = NodeDescriptors.parentNode.get!.call(current);
   while (parent !== null) {
     current = parent;
-    parent = NodeDescriptors.parentNode!.get!.call(parent);
+    parent = NodeDescriptors.parentNode.get!.call(parent);
   }
   return current;
 };
