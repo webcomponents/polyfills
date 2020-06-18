@@ -939,7 +939,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     });
 
     suite('unassigned slottable targets', () => {
-      test('events bubble through the tree above them', () => {
+      test('bubbling events bubble through the tree above them', () => {
         const noSlot = document.createElement('x-no-slot');
         const unassignedSlottable = document.createElement('div');
 
@@ -951,6 +951,25 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         ShadyDOM.wrap(noSlot).addEventListener('some-event', () => listenerTriggered = true);
         ShadyDOM.wrap(unassignedSlottable).dispatchEvent(new Event('some-event', {bubbles: true}));
         assert.ok(listenerTriggered);
+
+        ShadyDOM.wrap(document.body).removeChild(noSlot);
+      });
+
+      test('non-bubbling events do not bubble through the tree above them', () => {
+        const noSlot = document.createElement('x-no-slot');
+        const unassignedSlottable = document.createElement('div');
+        const target = document.createElement('div');
+
+        ShadyDOM.wrap(document.body).appendChild(noSlot);
+        ShadyDOM.wrap(noSlot).appendChild(unassignedSlottable);
+        ShadyDOM.wrap(unassignedSlottable).appendChild(target);
+        assert.strictEqual(ShadyDOM.wrap(unassignedSlottable).assignedSlot, null);
+
+        let listenerTriggered = false;
+        ShadyDOM.wrap(noSlot).addEventListener('some-event', () => listenerTriggered = true);
+        ShadyDOM.wrap(unassignedSlottable).addEventListener('some-event', () => listenerTriggered = true);
+        ShadyDOM.wrap(target).dispatchEvent(new Event('some-event', {bubbles: false}));
+        assert.ok(!listenerTriggered);
 
         ShadyDOM.wrap(document.body).removeChild(noSlot);
       });
