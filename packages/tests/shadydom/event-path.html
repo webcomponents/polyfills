@@ -261,6 +261,17 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     defineTestElement('x-no-slot');
   </script>
 
+  <template id="x-dispatch-test">
+    <div id="outerDiv">
+      <x-no-slot id="innerNoSlot">
+        <div id="target"></div>
+      </x-no-slot>
+    </div>
+  </template>
+  <script>
+    defineTestElement('x-dispatch-test');
+  </script>
+
   <div id="globalpatch"></div>
 
   <template id="relatedtarget">
@@ -939,64 +950,152 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     });
 
     suite('unassigned slottable targets', () => {
-      test('bubbling events bubble through the tree above them', () => {
-        const noSlot = document.createElement('x-no-slot');
-        const unassignedSlottable = document.createElement('div');
+      /**
+       * Generates a tree with the following structure and returns an object
+       * with references to each node:
+       *
+       * <x-dispatch-test>
+       *   #shadow-root
+       *     <div id="outerDiv">
+       *       <x-no-slot id="innerNoSlot">
+       *         #shadow-root
+       *         #/shadow-root
+       *         <div id="target"></div>
+       *       </x-no-slot>
+       *     </div>
+       *   #/shadow-root
+       * </x-dispatch-test>
+       */
+      const getDispatchTestElement = () => {
+        const fixtureRoot = document.createElement('x-dispatch-test');
+        ShadyDOM.wrap(document.body).appendChild(fixtureRoot);
+        ShadyDOM.wrap(document.body).removeChild(fixtureRoot);
 
-        ShadyDOM.wrap(document.body).appendChild(noSlot);
-        ShadyDOM.wrap(noSlot).appendChild(unassignedSlottable);
-        assert.strictEqual(ShadyDOM.wrap(unassignedSlottable).assignedSlot, null);
+        const getShadowElementById = (id) => {
+          return ShadyDOM.wrap(fixtureRoot.shadowRoot).getElementById(id);
+        };
 
-        let listenerTriggered = false;
-        ShadyDOM.wrap(noSlot).addEventListener('some-event', () => listenerTriggered = true);
-        ShadyDOM.wrap(unassignedSlottable).dispatchEvent(new Event('some-event', {bubbles: true}));
-        assert.ok(listenerTriggered);
+        return {
+          fixtureRoot,
+          outerDiv: getShadowElementById('outerDiv'),
+          innerNoSlot: getShadowElementById('innerNoSlot'),
+          target: getShadowElementById('target'),
+        };
+      };
 
-        ShadyDOM.wrap(document.body).removeChild(noSlot);
+      test('bubbling, non-composed events', () => {
+        const {fixtureRoot, outerDiv, innerNoSlot, target} = getDispatchTestElement();
+        ShadyDOM.wrap(document.body).appendChild(fixtureRoot);
+        assert.strictEqual(ShadyDOM.wrap(target).assignedSlot, null);
+
+        let fixtureRootListenerTriggered = false;
+        ShadyDOM.wrap(fixtureRoot).addEventListener('some-event', () => {
+          fixtureRootListenerTriggered = true;
+        });
+
+        let outerDivListenerTriggered = false;
+        ShadyDOM.wrap(outerDiv).addEventListener('some-event', () => {
+          outerDivListenerTriggered = true;
+        });
+
+        ShadyDOM.wrap(target).dispatchEvent(new Event('some-event', {
+          bubbles: true,
+          composed: false,
+        }));
+        // The event shouldn't escape the target's root.
+        assert.ok(!fixtureRootListenerTriggered);
+        // The event should bubble up to ancestors of the target.
+        assert.ok(outerDivListenerTriggered);
+
+        ShadyDOM.wrap(document.body).removeChild(fixtureRoot);
       });
 
-      test('non-bubbling events do not bubble through the tree above them', () => {
-        const noSlot = document.createElement('x-no-slot');
-        const unassignedSlottable = document.createElement('div');
-        const target = document.createElement('div');
+      test('non-bubbling, non-composed events', () => {
+        const {fixtureRoot, outerDiv, innerNoSlot, target} = getDispatchTestElement();
+        ShadyDOM.wrap(document.body).appendChild(fixtureRoot);
+        assert.strictEqual(ShadyDOM.wrap(target).assignedSlot, null);
 
-        ShadyDOM.wrap(document.body).appendChild(noSlot);
-        ShadyDOM.wrap(noSlot).appendChild(unassignedSlottable);
-        ShadyDOM.wrap(unassignedSlottable).appendChild(target);
-        assert.strictEqual(ShadyDOM.wrap(unassignedSlottable).assignedSlot, null);
+        let fixtureRootListenerTriggered = false;
+        ShadyDOM.wrap(fixtureRoot).addEventListener('some-event', () => {
+          fixtureRootListenerTriggered = true;
+        });
 
-        let listenerTriggered = false;
-        ShadyDOM.wrap(noSlot).addEventListener('some-event', () => listenerTriggered = true);
-        ShadyDOM.wrap(unassignedSlottable).addEventListener('some-event', () => listenerTriggered = true);
-        ShadyDOM.wrap(target).dispatchEvent(new Event('some-event', {bubbles: false}));
-        assert.ok(!listenerTriggered);
+        let outerDivListenerTriggered = false;
+        ShadyDOM.wrap(outerDiv).addEventListener('some-event', () => {
+          outerDivListenerTriggered = true;
+        });
 
-        ShadyDOM.wrap(document.body).removeChild(noSlot);
+        ShadyDOM.wrap(target).dispatchEvent(new Event('some-event', {
+          bubbles: false,
+          composed: false,
+        }));
+        // The event shouldn't escape the target's root.
+        assert.ok(!fixtureRootListenerTriggered);
+        // The event shouldn't bubble up to (non-shadow-including) ancestors of
+        // target.
+        assert.ok(!outerDivListenerTriggered);
+
+        ShadyDOM.wrap(document.body).removeChild(fixtureRoot);
+      });
+
+      test('non-bubbling, composed events', () => {
+        const {fixtureRoot, outerDiv, innerNoSlot, target} = getDispatchTestElement();
+        ShadyDOM.wrap(document.body).appendChild(fixtureRoot);
+        assert.strictEqual(ShadyDOM.wrap(target).assignedSlot, null);
+
+        let fixtureRootListenerTriggered = false;
+        ShadyDOM.wrap(fixtureRoot).addEventListener('some-event', () => {
+          fixtureRootListenerTriggered = true;
+        });
+
+        let outerDivListenerTriggered = false;
+        ShadyDOM.wrap(outerDiv).addEventListener('some-event', () => {
+          outerDivListenerTriggered = true;
+        });
+
+        ShadyDOM.wrap(target).dispatchEvent(new Event('some-event', {
+          bubbles: false,
+          composed: true,
+        }));
+        // The event should escape the target's root.
+        assert.ok(fixtureRootListenerTriggered);
+        // The event shouldn't bubble up to (non-shadow-including) ancestors of
+        // target.
+        assert.ok(!outerDivListenerTriggered);
+
+        ShadyDOM.wrap(document.body).removeChild(fixtureRoot);
+      });
+
+      test('bubbling, composed events', () => {
+        const {fixtureRoot, outerDiv, innerNoSlot, target} = getDispatchTestElement();
+        ShadyDOM.wrap(document.body).appendChild(fixtureRoot);
+        assert.strictEqual(ShadyDOM.wrap(target).assignedSlot, null);
+
+        let fixtureRootListenerTriggered = false;
+        ShadyDOM.wrap(fixtureRoot).addEventListener('some-event', () => {
+          fixtureRootListenerTriggered = true;
+        });
+
+        let outerDivListenerTriggered = false;
+        ShadyDOM.wrap(outerDiv).addEventListener('some-event', () => {
+          outerDivListenerTriggered = true;
+        });
+
+        ShadyDOM.wrap(target).dispatchEvent(new Event('some-event', {
+          bubbles: true,
+          composed: true,
+        }));
+        // The event should escape the target's root.
+        assert.ok(fixtureRootListenerTriggered);
+        // The event should bubble up to ancestors of the target.
+        assert.ok(outerDivListenerTriggered);
+
+        ShadyDOM.wrap(document.body).removeChild(fixtureRoot);
       });
 
       test('events have the correct phase during dispatch', () => {
-        /*
-          <x-no-slot> <!-- outerNoSlot -->
-            #shadow-root
-              <div> <!-- outerDiv -->
-                <x-no-slot> <!-- innerNoSlot -->
-                  #shadow-root
-                  #/shadow-root
-                  <div></div> <!-- target -->
-                </x-no-slot>
-              </div>
-            #/shadow-root
-          </x-no-slot>
-        */
-        const outerNoSlot = document.createElement('x-no-slot');
-        ShadyDOM.wrap(document.body).appendChild(outerNoSlot);
-        const outerDiv = document.createElement('div');
-        ShadyDOM.wrapIfNeeded(outerNoSlot).shadowRoot.appendChild(outerDiv);
-        const innerNoSlot = document.createElement('x-no-slot');
-        ShadyDOM.wrap(outerDiv).appendChild(innerNoSlot);
-        const target = document.createElement('div');
-        ShadyDOM.wrap(innerNoSlot).appendChild(target);
-
+        const {fixtureRoot, outerDiv, innerNoSlot, target} = getDispatchTestElement();
+        ShadyDOM.wrap(document.body).appendChild(fixtureRoot);
         assert.strictEqual(ShadyDOM.wrap(target).assignedSlot, null);
 
         const eventLog = [];
@@ -1004,12 +1103,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           eventLog.push({currentTarget: e.currentTarget, eventPhase: e.eventPhase});
         };
 
-        // `ShadyDOM.wrapIfNeeded(outerNoSlot).shadowRoot` will also see this
+        // `ShadyDOM.wrapIfNeeded(fixtureRoot).shadowRoot` will also see this
         // event in its path, but event listeners on shadow roots are instead
         // redirected by Shady DOM to their host, causing the phase to be
         // incorrect (AT_TARGET).
-        ShadyDOM.wrap(outerNoSlot).addEventListener('some-event', pushToEventLog);
-        ShadyDOM.wrap(outerNoSlot).addEventListener('some-event', pushToEventLog, true);
+        ShadyDOM.wrap(fixtureRoot).addEventListener('some-event', pushToEventLog);
+        ShadyDOM.wrap(fixtureRoot).addEventListener('some-event', pushToEventLog, true);
         ShadyDOM.wrap(outerDiv).addEventListener('some-event', pushToEventLog);
         ShadyDOM.wrap(outerDiv).addEventListener('some-event', pushToEventLog, true);
         ShadyDOM.wrap(innerNoSlot).addEventListener('some-event', pushToEventLog);
@@ -1019,17 +1118,17 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
         ShadyDOM.wrap(target).dispatchEvent(new Event('some-event', {bubbles: true, composed: true}));
         assert.deepEqual(eventLog, [
-          {currentTarget: outerNoSlot, eventPhase: Event.AT_TARGET},
+          {currentTarget: fixtureRoot, eventPhase: Event.AT_TARGET},
           {currentTarget: outerDiv, eventPhase: Event.CAPTURING_PHASE},
           {currentTarget: innerNoSlot, eventPhase: Event.CAPTURING_PHASE},
           {currentTarget: target, eventPhase: Event.AT_TARGET},
           {currentTarget: target, eventPhase: Event.AT_TARGET},
           {currentTarget: innerNoSlot, eventPhase: Event.BUBBLING_PHASE},
           {currentTarget: outerDiv, eventPhase: Event.BUBBLING_PHASE},
-          {currentTarget: outerNoSlot, eventPhase: Event.AT_TARGET},
+          {currentTarget: fixtureRoot, eventPhase: Event.AT_TARGET},
         ]);
 
-        ShadyDOM.wrap(document.body).removeChild(outerNoSlot);
+        ShadyDOM.wrap(document.body).removeChild(fixtureRoot);
       });
 
       test('events dispatched from children that are disconnected in the ' +
