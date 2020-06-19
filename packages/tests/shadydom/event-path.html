@@ -968,11 +968,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
        */
       const getDispatchTestElement = () => {
         const fixtureRoot = document.createElement('x-dispatch-test');
+
+        // Force the element to upgrade and create its shadow root.
         ShadyDOM.wrap(document.body).appendChild(fixtureRoot);
         ShadyDOM.wrap(document.body).removeChild(fixtureRoot);
 
         const getShadowElementById = (id) => {
-          return ShadyDOM.wrap(fixtureRoot.shadowRoot).getElementById(id);
+          return ShadyDOM.wrap(ShadyDOM.wrap(fixtureRoot).shadowRoot).getElementById(id);
         };
 
         return {
