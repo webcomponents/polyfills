@@ -561,8 +561,7 @@ export function removeEventListener(type, fnOrObj, optionsOrCapture) {
   }
   this[utils.NATIVE_PREFIX + 'removeEventListener'](type, wrapperFn || fnOrObj,
     nativeEventOptions);
-  if (wrapperFn && nonBubblingEventsToRetarget[type] &&
-      this.__handlers && this.__handlers[type]) {
+  if (wrapperFn && this.__handlers && this.__handlers[type]) {
     const arr = this.__handlers[type][capture ? 'capture' : 'bubble'];
     const idx = arr.indexOf(wrapperFn);
     if (idx > -1) {

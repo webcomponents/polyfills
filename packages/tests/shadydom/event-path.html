@@ -1172,6 +1172,27 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
         ShadyDOM.wrap(document.body).removeChild(container);
       });
+
+      test('removed bubbling event listeners are no longer called during manual dispatch', () => {
+        const {fixtureRoot, outerDiv, innerNoSlot, target} = getDispatchTestElement();
+        ShadyDOM.wrap(document.body).appendChild(fixtureRoot);
+        assert.strictEqual(ShadyDOM.wrap(target).assignedSlot, null);
+
+        let listenerCallCount = 0;
+        const listener = () => listenerCallCount++;
+
+        ShadyDOM.wrap(target).addEventListener('some-event', listener);
+        ShadyDOM.wrap(target).dispatchEvent(new Event('some-event'));
+        // Confirm that the listener was added.
+        assert.strictEqual(listenerCallCount, 1);
+
+        ShadyDOM.wrap(target).removeEventListener('some-event', listener);
+        ShadyDOM.wrap(target).dispatchEvent(new Event('some-event'));
+        // The event listener call count should not have changed.
+        assert.strictEqual(listenerCallCount, 1);
+
+        ShadyDOM.wrap(document.body).removeChild(fixtureRoot);
+      });
     });
   });
   </script>
