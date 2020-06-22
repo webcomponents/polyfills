@@ -313,14 +313,17 @@ function shadyDispatchEvent(e) {
   let currentTarget;
   // override `currentTarget` to let patched `target` calculate correctly
   Object.defineProperty(e, 'currentTarget', {
+    configurable: true,
+    enumerable: true,
     get: function() {
       return currentTarget;
     },
-    configurable: true
   });
 
   let eventPhase = Event.CAPTURING_PHASE;
   Object.defineProperty(e, 'eventPhase', {
+    configurable: true,
+    enumerable: true,
     get: function() {
       return eventPhase;
     },
@@ -469,10 +472,21 @@ export function addEventListener(type, fnOrObj, optionsOrCapture) {
       patchEvent(e);
     }
     let lastCurrentTargetDesc;
+    let lastEventPhaseDesc;
     if (target !== this) {
       // replace `currentTarget` to make `target` and `relatedTarget` correct for inside the shadowroot
       lastCurrentTargetDesc = Object.getOwnPropertyDescriptor(e, 'currentTarget');
       Object.defineProperty(e, 'currentTarget', {get() { return target }, configurable: true});
+      lastEventPhaseDesc = Object.getOwnPropertyDescriptor(e, 'eventPhase');
+      Object.defineProperty(e, 'eventPhase', {
+        configurable: true,
+        enumerable: true,
+        get() {
+          // Shady DOM doesn't support dispatching to a shadow root as the
+          // target, so we don't need to handle Event.AT_TARGET.
+          return capture ? Event.CAPTURING_PHASE : Event.BUBBLING_PHASE;
+        },
+      });
     }
     e['__previousCurrentTarget'] = e['currentTarget'];
     // Always check if a shadowRoot or slot is in the current event path.
@@ -499,12 +513,18 @@ export function addEventListener(type, fnOrObj, optionsOrCapture) {
         fnOrObj.call(target, e) :
         (fnOrObj.handleEvent && fnOrObj.handleEvent(e));
       if (target !== this) {
-        // replace the "correct" `currentTarget`
+        // Replace the original descriptors for `currentTarget` and `eventPhase`.
         if (lastCurrentTargetDesc) {
           Object.defineProperty(e, 'currentTarget', lastCurrentTargetDesc);
           lastCurrentTargetDesc = null;
         } else {
           delete e['currentTarget'];
+        }
+        if (lastEventPhaseDesc) {
+          Object.defineProperty(e, 'eventPhase', lastEventPhaseDesc);
+          lastEventPhaseDesc = null;
+        } else {
+          delete e['eventPhase'];
         }
       }
       return ret;
