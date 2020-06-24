@@ -13,6 +13,7 @@ import {scopeClassAttribute} from '../style-scoping.js';
 import {shadyDataForNode} from '../shady-data.js';
 import {attachShadow, ownerShadyRootForNode} from '../attach-shadow.js';
 import {eventPropertyNamesForElement, wrappedDescriptorForEventProperty} from '../patch-events.js';
+import {getScopingShim} from '../style-scoping.js';
 
 const doc = window.document;
 
@@ -100,7 +101,20 @@ export const ElementPatches = utils.getOwnPropertyDescriptors({
     if (this.ownerDocument !== doc) {
       this[utils.NATIVE_PREFIX + 'setAttribute'](attr, value);
     } else if (!scopeClassAttribute(this, attr, value)) {
+      const affectsShadowParts =
+        !utils.disableShadowParts &&
+        (attr === 'part' || attr === 'exportparts');
+      let oldValue;
+      if (affectsShadowParts) {
+        oldValue = this.getAttribute(attr);
+      }
       this[utils.NATIVE_PREFIX + 'setAttribute'](attr, value);
+      if (affectsShadowParts) {
+        const shim = getScopingShim();
+        if (shim) {
+          shim['onSetAttribute'](this, attr, value, oldValue);
+        }
+      }
       distributeAttributeChange(this, attr);
     }
   },
@@ -113,7 +127,20 @@ export const ElementPatches = utils.getOwnPropertyDescriptors({
     if (this.ownerDocument !== doc) {
       this[utils.NATIVE_PREFIX + 'removeAttribute'](attr);
     } else if (!scopeClassAttribute(this, attr, '')) {
+      const affectsShadowParts =
+        !utils.disableShadowParts &&
+        (attr === 'part' || attr === 'exportparts');
+      let oldValue;
+      if (affectsShadowParts) {
+        oldValue = this.getAttribute(attr);
+      }
       this[utils.NATIVE_PREFIX + 'removeAttribute'](attr);
+      if (affectsShadowParts) {
+        const shim = getScopingShim();
+        if (shim) {
+          shim['onRemoveAttribute'](this, attr, oldValue);
+        }
+      }
       distributeAttributeChange(this, attr);
     } else if (this.getAttribute(attr) === '') {
       // ensure that "class" attribute is fully removed if ShadyCSS does not keep scoping

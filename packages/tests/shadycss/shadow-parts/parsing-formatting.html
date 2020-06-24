@@ -41,7 +41,20 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             combinators: '',
             elementName: 'my-button',
             selectors: '',
-            parts: 'foo',
+            partNames: 'foo',
+            pseudos: '',
+          }
+        );
+      });
+
+      test('multiple dashes in custom element name', () => {
+        assert.deepEqual(
+          shadowParts.parsePartSelector('my-foo-bar-baz::part(foo)'),
+          {
+            combinators: '',
+            elementName: 'my-foo-bar-baz',
+            selectors: '',
+            partNames: 'foo',
             pseudos: '',
           }
         );
@@ -54,7 +67,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             combinators: '',
             elementName: 'my-button',
             selectors: '',
-            parts: 'foo',
+            partNames: 'foo',
             pseudos: ':hover',
           }
         );
@@ -67,7 +80,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             combinators: '',
             elementName: 'my-button',
             selectors: '',
-            parts: 'foo',
+            partNames: 'foo',
             pseudos: '::before',
           }
         );
@@ -82,7 +95,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             combinators: '#parent > ',
             elementName: 'my-button',
             selectors: '.fancy',
-            parts: 'foo bar',
+            partNames: 'foo bar',
             pseudos: ':hover',
           }
         );

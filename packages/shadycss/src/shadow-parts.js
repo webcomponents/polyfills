@@ -12,7 +12,30 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 import {StyleNode} from './css-parse.js';
 import StyleInfo from './style-info.js';
 import StyleProperties from './style-properties.js';
+import * as StyleUtil from './style-util.js';
 import {nativeCssVariables} from './style-settings.js';
+import {NATIVE_PREFIX} from './common-utils.js';
+
+/**
+ * Set the "shady-part" attribute using the native method.
+ *
+ * @param {!HTMLElement} element
+ * @param {!string} value
+ * @return {void}
+ */
+function setShadyPartAttribute(element, value) {
+  element[NATIVE_PREFIX + 'setAttribute']('shady-part', value);
+}
+
+/**
+ * Remove the "shady-part" attribute using the native method.
+ *
+ * @param {!HTMLElement} element
+ * @return {void}
+ */
+function removeShadyPartAttribute(element) {
+  element[NATIVE_PREFIX + 'removeAttribute']('shady-part');
+}
 
 /**
  * Parse a CSS Shadow Parts "part" attribute into an array of part names.
@@ -47,9 +70,9 @@ export function splitPartString(str) {
  * Order and duplicates are preserved.
  */
 export function parseExportPartsAttribute(attr) {
-  const parts = [];
-  for (const part of attr.split(/\s*,\s*/)) {
-    const split = part.split(/\s*:\s*/);
+  const exports = [];
+  for (const segment of attr.split(/\s*,\s*/)) {
+    const split = segment.split(/\s*:\s*/);
     let inner, outer;
     if (split.length === 1) {
       // E.g. "foo"
@@ -63,17 +86,17 @@ export function parseExportPartsAttribute(attr) {
       // matches native behavior).
       continue;
     }
-    parts.push({inner, outer});
+    exports.push({inner, outer});
   }
-  return parts;
+  return exports;
 }
 
 /**
  * Regular expression to de-compose a ::part rule into interesting pieces. See
  * parsePartSelector for description of pieces.
- *                  [0  ][1         ][2      ]        [3 ]   [4   ]
+ *                  [0  ][1              ][2      ]        [3 ]   [4    ]
  */
-const PART_REGEX = /(.*?)([a-z]+-\w+)([^\s]*?)::part\((.*)?\)(::?.*)?/;
+const PART_REGEX = /(.*?)([a-z]+(?:-\w+)+)([^\s]*?)::part\((.*)?\)(::?.*)?/;
 
 /**
  * De-compose a ::part rule into interesting pieces.
@@ -101,7 +124,7 @@ const PART_REGEX = /(.*?)([a-z]+-\w+)([^\s]*?)::part\((.*)?\)(::?.*)?/;
  *   combinators: !string,
  *   elementName: !string,
  *   selectors: !string,
- *   parts: !string,
+ *   partNames: !string,
  *   pseudos: !string
  * }}
  */
@@ -110,8 +133,14 @@ export function parsePartSelector(selector) {
   if (match === null) {
     return null;
   }
-  const [, combinators, elementName, selectors, parts, pseudos] = match;
-  return {combinators, elementName, selectors, parts, pseudos: pseudos || ''};
+  const [, combinators, elementName, selectors, partNames, pseudos] = match;
+  return {
+    combinators,
+    elementName,
+    selectors,
+    partNames,
+    pseudos: pseudos || '',
+  };
 }
 
 /**
@@ -256,15 +285,15 @@ export function findExportedPartMappings(host) {
       providerScope = superSuperHost.localName;
     }
 
-    const parsed = parseExportPartsAttribute(attr);
-    if (parsed.length === 0) {
+    const exports = parseExportPartsAttribute(attr);
+    if (exports.length === 0) {
       // This could happen if the attribute was set to something non-empty, but
       // it was entirely invalid.
       break;
     }
 
     const newForwarding = {};
-    for (const {inner, outer} of parsed) {
+    for (const {inner, outer} of exports) {
       let basePart;
       if (forwarding === undefined) {
         // We're in the immediate parent scope (since we haven't initialized the
@@ -299,6 +328,119 @@ export function findExportedPartMappings(host) {
   return result;
 }
 
+/**
+ * Update the "shady-part" attribute when the "part" attribute is set.
+ *
+ * @param {!HTMLElement} element The element.
+ * @return {void}
+ */
+export function onSetPartAttribute(element) {
+  if (!element.getRootNode) {
+    // TODO(aomarks) We're in noPatch mode. Wrap where needed and add tests.
+    // https://github.com/webcomponents/polyfills/issues/343
+    return;
+  }
+  const root = element.getRootNode();
+  if (root === document || root === element) {
+    // Nowhere to receive part styles from.
+    return;
+  }
+  styleShadowParts(root.host, [element]);
+}
+
+/**
+ * Remove the "shady-part" attribute when the "part" attribute is removed.
+ *
+ * @param {!HTMLElement} element The element.
+ * @return {void}
+ */
+export function onRemovePartAttribute(element) {
+  removeShadyPartAttribute(element);
+}
+
+/**
+ * Update descendant parts when the "exportparts" attribute is set.
+ *
+ * @param {!HTMLElement} element The element.
+ * @param {!string} newValue The new "exportparts" value.
+ * @param {?string} oldValue The old "exportparts" value or null if was unset.
+ * @return {void}
+ */
+export function onSetExportPartsAttribute(element, newValue, oldValue) {
+  let exports = parseExportPartsAttribute(newValue);
+  if (oldValue) {
+    exports.push(...parseExportPartsAttribute(oldValue));
+  }
+  refreshShadyPartAttributes(
+    element,
+    exports.map(({inner}) => inner)
+  );
+}
+
+/**
+ * Update descendant parts when the "exportparts" attribute is removed.
+ *
+ * @param {!HTMLElement} element The element.
+ * @param {!string} oldValue The old "exportparts" value.
+ * @return {void}
+ */
+export function onRemoveExportPartsAttribute(element, oldValue) {
+  const exports = parseExportPartsAttribute(oldValue);
+  refreshShadyPartAttributes(
+    element,
+    exports.map(({inner}) => inner)
+  );
+}
+
+/**
+ * Update the "shady-parts" attribute for all part nodes that may be affected by
+ * the given list of part names that have been added or removed, including those
+ * in descendent scopes via "exportparts" attributes.
+ *
+ * @param {!HTMLElement} host The host element.
+ * @param {!Array<!string>} staleNames The part names which have changed.
+ * @return {void}
+ */
+function refreshShadyPartAttributes(host, staleNames) {
+  if (staleNames.length === 0) {
+    return;
+  }
+  const root = host.shadowRoot;
+  if (!root) {
+    return;
+  }
+  const stalePartNodes = [];
+  // TODO(aomarks) We've already looked at this shadow root, since an insert
+  // call must have already happened. It might be worth at least storing a bit
+  // on each host that has a part or exporter, so that we can skip unneccessary
+  // querySelectorAll calls here.
+  for (const partNode of root.querySelectorAll('[part]')) {
+    for (const name of splitPartString(partNode.getAttribute('part'))) {
+      if (staleNames.includes(name)) {
+        stalePartNodes.push(partNode);
+        break;
+      }
+    }
+  }
+  if (stalePartNodes.length > 0) {
+    styleShadowParts(host, stalePartNodes);
+  }
+  for (const exporter of root.querySelectorAll('[exportparts]')) {
+    const staleInnerNames = [];
+    const exports = parseExportPartsAttribute(
+      exporter.getAttribute('exportparts')
+    );
+    for (const {inner, outer} of exports) {
+      if (staleNames.includes(outer)) {
+        staleInnerNames.push(inner);
+      }
+    }
+    if (staleInnerNames.length > 0) {
+      refreshShadyPartAttributes(exporter, staleInnerNames);
+    }
+  }
+}
+
 /* eslint-disable no-unused-vars */
 /**
  * Add "shady-part" attributes to new nodes on insertion.
@@ -313,8 +455,8 @@ export function findExportedPartMappings(host) {
  */
 export function onInsertBefore(parentNode, newNode, referenceNode) {
   /* eslint-enable no-unused-vars */
-  if (newNode instanceof Text) {
-    // No parts in text.
+  if (newNode instanceof Text || newNode instanceof Comment) {
+    // No parts in text or comments.
     return;
   }
   if (!parentNode.getRootNode) {
@@ -334,17 +476,62 @@ export function onInsertBefore(parentNode, newNode, referenceNode) {
     // here.
     return;
   }
-  let parts = newNode.querySelectorAll('[part]');
+  let partNodes = newNode.querySelectorAll('[part]');
   // TODO(aomarks) We should be able to get much better performance over the
   // querySelectorAll calls here by integrating the part check into the walk
   // that ShadyDOM already does to find slots.
   // https://github.com/webcomponents/polyfills/issues/345
   if (newNode instanceof HTMLElement && newNode.hasAttribute('part')) {
-    parts = [newNode, ...parts];
+    partNodes = [newNode, ...partNodes];
   }
-  if (parts.length === 0) {
-    return;
+  if (partNodes.length > 0) {
+    styleShadowParts(host, partNodes);
   }
+  // Handle "exportparts" nodes moving from one root to another. In this case,
+  // any descendant part nodes have already been inserted, so we can't rely on
+  // the upwards-walk that we would normally get from an insert call. We can
+  // skip this work if we're inserting from a DocumentFragment, though, because
+  // it's safe to assume in that case that the children have never been
+  // connected anywhere else.
+  if (!(newNode instanceof DocumentFragment)) {
+    let exporters = newNode.querySelectorAll('[exportparts]');
+    if (newNode instanceof HTMLElement && newNode.hasAttribute('exportparts')) {
+      exporters = [newNode, ...exporters];
+    }
+    for (const exporter of exporters) {
+      const exports = parseExportPartsAttribute(
+        exporter.getAttribute('exportparts')
+      ).map(({inner}) => inner);
+      refreshShadyPartAttributes(exporter, exports);
+    }
+  }
+}
+
+/**
+ * Enable/update styling of the given part nodes in the given host. All given
+ * part nodes are assumed to be within the shadow root of the given host. This
+ * function does the following:
+ *
+ *   [1] For each given part node, add a "shady-part" attribute with format
+ *   "host-scope:parent-scope:part-name".
+ *
+ *   [2] Walk upwards through the tree of shadow hosts following "exportparts"
+ *   attributes. For each exporting scope, for each given part node, add an
+ *   additional "shady-part" attribute value with format e.g.
+ *   "grand-parent-scope:parent-scope:aliased-part-name".
+ *
+ *   [3] If any of these ancestor scopes provide a ::part style rule to any of
+ *   the given parts, and if any of those rules consume a CSS custom property,
+ *   then "adopt" those style rules (by adding them to the host's StyleInfo
+ *   object) and enable per-instance styling, so that CSS custom property values
+ *   are computed at the correct scope (the receiver's scope, not the
+ *   provider's).
+ *
+ * @param {!HTMLElement} host The host element of the given parts.
+ * @param {!Array<!HTMLElement>} partNodes The new or changed part elements.
+ * @return {void}
+ */
+export function styleShadowParts(host, partNodes) {
   const hostScope = host.localName;
   const superRoot = host.getRootNode();
   const parentScope =
@@ -356,10 +543,13 @@ export function onInsertBefore(parentNode, newNode, referenceNode) {
   let needsRescoping = false;
   let newStyleNodes, newProperties;
 
-  for (const node of parts) {
+  for (const node of partNodes) {
     const shadyParts = [];
     const partNames = splitPartString(node.getAttribute('part'));
     if (partNames.length === 0) {
+      // Remove the "shady-part" attribute to support the case of "part" getting set to
+      // the empty string or whitespace.
+      removeShadyPartAttribute(node);
       continue;
     }
 
@@ -389,7 +579,7 @@ export function onInsertBefore(parentNode, newNode, referenceNode) {
         }
       }
     }
-    node.setAttribute('shady-part', shadyParts.join(' '));
+    setShadyPartAttribute(node, shadyParts.join(' '));
 
     if (!nativeCssVariables) {
       // Find the part rules that match this node and that consume custom
@@ -546,16 +736,12 @@ export function analyzeTemplatePartRules(providerScope, styleAst) {
     return;
   }
   for (const styleNode of styleAst.rules) {
-    const selector = styleNode['selector'];
-    if (!selector || selector.indexOf('::part') === -1) {
+    const selectorList = styleNode['selector'];
+    if (!selectorList || selectorList.indexOf('::part') === -1) {
       // TODO(aomarks) We do the `indexOf` check here to make the case where no
       // `::part` rules are used is as fast as possible, but we could get away
       // with just the `parsePartSelector` call we're doing next if the
       // difference is negligible. Needs benchmarking.
-      continue;
-    }
-    const parsed = parsePartSelector(selector);
-    if (parsed === null) {
       continue;
     }
     const consumedProperties = findConsumedCustomProperties(
@@ -564,21 +750,28 @@ export function analyzeTemplatePartRules(providerScope, styleAst) {
     if (consumedProperties.length === 0) {
       continue;
     }
-    const {elementName: receiverScope, parts} = parsed;
-    if (parts.length === 0) {
-      continue;
+    const selectors = StyleUtil.splitSelectorList(selectorList);
+    for (const selector of selectors) {
+      const parsed = parsePartSelector(selector);
+      if (parsed === null) {
+        continue;
+      }
+      const {elementName: receiverScope, partNames} = parsed;
+      if (partNames.length === 0) {
+        continue;
+      }
+      const key = [providerScope, receiverScope].join(':');
+      let entries = partRulesMap.get(key);
+      if (entries === undefined) {
+        entries = [];
+        partRulesMap.set(key, entries);
+      }
+      entries.push({
+        styleNode,
+        consumedProperties,
+        partNames: splitPartString(partNames),
+      });
     }
-    const key = [providerScope, receiverScope].join(':');
-    let entries = partRulesMap.get(key);
-    if (entries === undefined) {
-      entries = [];
-      partRulesMap.set(key, entries);
-    }
-    entries.push({
-      styleNode,
-      consumedProperties,
-      partNames: splitPartString(parts),
-    });
   }
 }
 

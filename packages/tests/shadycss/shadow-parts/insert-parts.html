@@ -9,7 +9,7 @@ Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 -->
 
-<title>shadycss/shadow-parts/insertions</title>
+<title>shadycss/shadow-parts/insert parts</title>
 
 <script src="../test-flags.js"></script>
 <script src="../../node_modules/wct-browser-legacy/browser.js"></script>
@@ -36,7 +36,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <script type="module">
   import {pierce, color, black, red} from './test-utils.js';
 
-  suite('part inserted', () => {
+  suite('insert parts', () => {
     suiteSetup(() => {
       makeElement('x-a');
       makeElement('x-b');
@@ -84,6 +84,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       xb.shadowRoot.appendChild(text);
     });
 
+    test('appendChild: comment', () => {
+      const comment = document.createComment('foo');
+      xb.shadowRoot.appendChild(comment);
+    });
+
     test('insertBefore: part', () => {
       const pa = document.createElement('div');
       pa.setAttribute('part', 'pa');
@@ -112,6 +117,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     test('insertBefore: text node', () => {
       const text = document.createTextNode('foo');
       xb.shadowRoot.insertBefore(text, null);
+    });
+
+    test('insertBefore: comment', () => {
+      const comment = document.createComment('foo');
+      xb.shadowRoot.insertBefore(comment, null);
     });
 
     test('replaceChild: part', () => {
@@ -150,6 +160,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       xb.shadowRoot.appendChild(oldChild);
       const text = document.createTextNode('foo');
       xb.shadowRoot.replaceChild(text, oldChild);
+    });
+
+    test('replaceChild: comment node', () => {
+      const oldChild = document.createElement('div');
+      xb.shadowRoot.appendChild(oldChild);
+      const comment = document.createComment('foo');
+      xb.shadowRoot.replaceChild(comment, oldChild);
     });
 
     test('innerHTML', () => {

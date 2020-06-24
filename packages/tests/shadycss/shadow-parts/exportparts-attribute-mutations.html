@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<!--
+@license
+Copyright (c) 2020 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<title>shadycss/shadow-parts/exportparts-attribute-mutations</title>
+
+<script src="../test-flags.js"></script>
+<script src="../../node_modules/wct-browser-legacy/browser.js"></script>
+<script src="../../node_modules/@webcomponents/webcomponents-platform/webcomponents-platform.js"></script>
+<script src="../../node_modules/es6-promise/dist/es6-promise.auto.min.js"></script>
+<script src="../../node_modules/@webcomponents/template/template.js"></script>
+<script src="../../node_modules/@webcomponents/shadydom/shadydom.min.js"></script>
+<script src="../../node_modules/@webcomponents/custom-elements/custom-elements.min.js"></script>
+<script src="../../node_modules/@webcomponents/shadycss/scoping-shim.min.js"></script>
+<script src="../module/generated/make-element.js"></script>
+
+<template id="x-great">
+  <style>
+    x-grand::part(red) {
+      background-color: red;
+    }
+    x-grand::part(green) {
+      background-color: green;
+    }
+    x-grand::part(italic) {
+      font-style: italic;
+    }
+  </style>
+  <x-grand></x-grand>
+</template>
+
+<template id="x-grand">
+  <style>
+    x-parent::part(red) {
+      color: red;
+    }
+    x-parent::part(green) {
+      color: green;
+    }
+  </style>
+  <x-parent exportparts="red"></x-parent>
+</template>
+
+<template id="x-parent">
+  <x-child exportparts="part:red"></x-child>
+</template>
+
+<template id="x-child">
+  <div part="part"></div>
+</template>
+
+<script type="module">
+  import {pierce, style, black, blackQuad, red, green} from './test-utils.js';
+
+  suite('exportparts attribute mutations', () => {
+    suiteSetup(() => {
+      makeElement('x-great');
+      makeElement('x-grand');
+      makeElement('x-parent');
+      makeElement('x-child');
+    });
+
+    let great, grand, parent, child, part;
+
+    setup(() => {
+      great = document.createElement('x-great');
+      document.body.appendChild(great);
+      grand = pierce(great, 'x-grand');
+      parent = pierce(grand, 'x-parent');
+      child = pierce(parent, 'x-child');
+      part = pierce(child, '[part=part]');
+    });
+
+    teardown(() => {
+      document.body.removeChild(great);
+    });
+
+    test('verify initial state', () => {
+      assert.equal(style(part).color, red);
+      assert.equal(style(part).backgroundColor, red);
+      assert.equal(style(part).fontStyle, 'normal');
+    });
+
+    test('change child to green', () => {
+      child.setAttribute('exportparts', 'part:green');
+      assert.equal(style(part).color, green);
+      assert.equal(style(part).backgroundColor, blackQuad);
+    });
+
+    test('change parent to green', () => {
+      parent.setAttribute('exportparts', 'red:green');
+      assert.equal(style(part).color, red);
+      assert.equal(style(part).backgroundColor, green);
+    });
+
+    test('change child and parent to green', () => {
+      child.setAttribute('exportparts', 'part:green');
+      parent.setAttribute('exportparts', 'green');
+      assert.equal(style(part).color, green);
+      assert.equal(style(part).backgroundColor, green);
+    });
+
+    test('add italic alias', () => {
+      parent.setAttribute('exportparts', 'red,red:italic');
+      assert.equal(style(part).color, red);
+      assert.equal(style(part).backgroundColor, red);
+      assert.equal(style(part).fontStyle, 'italic');
+    });
+
+    test('remove from child', () => {
+      child.removeAttribute('exportparts');
+      assert.equal(style(part).color, black)
+      assert.equal(style(part).backgroundColor, blackQuad)
+    });
+
+    test('remove from child', () => {
+      parent.removeAttribute('exportparts');
+      assert.equal(style(part).color, red);
+      assert.equal(style(part).backgroundColor, blackQuad);
+    });
+
+    test('remove from child and parent', () => {
+      child.removeAttribute('exportparts');
+      parent.removeAttribute('exportparts');
+      assert.equal(style(part).color, black);
+      assert.equal(style(part).backgroundColor, blackQuad);
+    });
+
+    test('set child to empty', () => {
+      child.setAttribute('exportparts', '');
+      assert.equal(style(part).color, black);
+      assert.equal(style(part).backgroundColor, blackQuad);
+    });
+
+    test('set parent to empty', () => {
+      parent.setAttribute('exportparts', '');
+      assert.equal(style(part).color, red);
+      assert.equal(style(part).backgroundColor, blackQuad);
+    });
+
+    test('set child and parent to empty', () => {
+      child.setAttribute('exportparts', '');
+      parent.setAttribute('exportparts', '');
+      assert.equal(style(part).color, black);
+      assert.equal(style(part).backgroundColor, blackQuad);
+    });
+  });
+</script>

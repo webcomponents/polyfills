@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<!--
+@license
+Copyright (c) 2020 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<title>shadycss/shadow-parts/move-shadow-roots</title>
+
+<script src="../test-flags.js"></script>
+<script src="../../node_modules/wct-browser-legacy/browser.js"></script>
+<script src="../../node_modules/@webcomponents/webcomponents-platform/webcomponents-platform.js"></script>
+<script src="../../node_modules/es6-promise/dist/es6-promise.auto.min.js"></script>
+<script src="../../node_modules/@webcomponents/template/template.js"></script>
+<script src="../../node_modules/@webcomponents/shadydom/shadydom.min.js"></script>
+<script src="../../node_modules/@webcomponents/custom-elements/custom-elements.min.js"></script>
+<script src="../../node_modules/@webcomponents/shadycss/scoping-shim.min.js"></script>
+<script src="../module/generated/make-element.js"></script>
+
+<template id="x-grand-parent">
+  <style>
+    x-parent::part(red) {
+      padding: 10px;
+    }
+    x-parent::part(green) {
+      margin: 10px;
+    }
+  </style>
+  <x-parent></x-parent>
+</template>
+
+<template id="x-parent">
+  <style>
+    x-child-red::part(part) {
+      color: red;
+    }
+    x-child-green::part(part) {
+      background-color: green;
+    }
+  </style>
+  <x-child-red exportparts="part:red"></x-child-red>
+  <x-child-green exportparts="part:green"></x-child-green>
+</template>
+
+<template id="x-child-red"></template>
+<template id="x-child-green"></template>
+
+<script type="module">
+  import {pierce, style, black, blackQuad, red, green} from './test-utils.js';
+
+  suite('move shadow roots', () => {
+    suiteSetup(() => {
+      makeElement('x-grand-parent');
+      makeElement('x-parent');
+      makeElement('x-child-red');
+      makeElement('x-child-green');
+    });
+
+    let grandParent, redChild, greenChild;
+
+    setup(() => {
+      grandParent = document.createElement('x-grand-parent');
+      document.body.appendChild(grandParent);
+      redChild = pierce(grandParent, 'x-parent', 'x-child-red');
+      greenChild = pierce(grandParent, 'x-parent', 'x-child-green');
+    });
+
+    teardown(() => {
+      document.body.removeChild(grandParent);
+    });
+
+    test('gains new styles and loses old styles', () => {
+      const part = document.createElement('div');
+      part.setAttribute('part', 'part');
+
+      redChild.shadowRoot.appendChild(part);
+      assert.equal(style(part).color, red)
+      assert.equal(style(part).backgroundColor, blackQuad);
+      // Note getComputedStyle always returns an empty string for shortcut
+      // properties like "padding" and on Firefox, so we have to query a
+      // specific property like "padding-top".
+      assert.equal(style(part).paddingTop, '10px');
+      assert.equal(style(part).marginTop, '0px');
+
+      greenChild.shadowRoot.appendChild(part);
+      assert.equal(style(part).color, black);
+      assert.equal(style(part).backgroundColor, green);
+      assert.equal(style(part).paddingTop, '0px');
+      assert.equal(style(part).marginTop, '10px');
+
+      // Also confirm removeChild doesn't do anything weird (this is
+      // semantically equivalent to just calling appendChild).
+      greenChild.shadowRoot.removeChild(part);
+      redChild.shadowRoot.appendChild(part);
+      assert.equal(style(part).color, red)
+      assert.equal(style(part).backgroundColor, blackQuad);
+      assert.equal(style(part).paddingTop, '10px');
+      assert.equal(style(part).marginTop, '0px');
+
+      redChild.shadowRoot.removeChild(part);
+      greenChild.shadowRoot.appendChild(part);
+      assert.equal(style(part).color, black);
+      assert.equal(style(part).backgroundColor, green);
+      assert.equal(style(part).paddingTop, '0px');
+      assert.equal(style(part).marginTop, '10px');
+    });
+   });
+</script>

@@ -10,6 +10,8 @@
  * flushCustomStyles: function(),
  * getComputedStyleValue: function(!Element, string): string,
  * onInsertBefore: function(!HTMLElement, !HTMLElement, ?HTMLElement): void,
+ * onSetAttribute: function(!HTMLElement, !string, !string, ?string): void,
+ * onRemoveAttribute: function(!HTMLElement, !string): void,
  * ScopingShim: (Object|undefined),
  * ApplyShim: (Object|undefined),
  * CustomStyleInterface: (Object|undefined),
