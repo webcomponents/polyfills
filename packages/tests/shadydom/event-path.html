@@ -950,6 +950,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     });
 
     suite('unassigned slottable targets', () => {
+      suiteSetup(function() {
+        // These cases are handled only if `preferPerformance` is not enabled.
+        if (ShadyDOM.settings.preferPerformance) {
+          this.skip();
+        }
+      });
+
       /**
        * Generates a tree with the following structure and returns an object
        * with references to each node:

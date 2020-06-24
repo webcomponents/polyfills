@@ -7,7 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- Manually dispatch events for connected, unassigned targets.
+- Manually dispatch events for connected, unassigned targets, if
+  `preferPerformance` is not enabled.
   ([#332](https://github.com/webcomponents/polyfills/pull/332))
 - Remove outdated references to `customElements.nativeHTMLElement`
   ([#234](https://github.com/webcomponents/polyfills/pull/234))
