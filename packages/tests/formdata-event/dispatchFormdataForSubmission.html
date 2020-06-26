@@ -280,6 +280,138 @@ suite('dispatchFormdataForSubmission', () => {
       });
     });
   });
+
+  suite('`FormData#set`', function() {
+    suiteSetup(function() {
+      if (FormData.prototype.set === undefined) {
+        this.skip();
+      }
+    });
+
+    test('Sets entries in the submitted form data.', (done) => {
+      const form = iframeDoc.createElement('form');
+      form.action = 'blank.html';
+      form.method = 'GET';
+      iframeDoc.body.appendChild(form);
+
+      form.addEventListener('formdata', (e) => {
+        e.formData.set('name', 'value');
+      });
+
+      form.submit();
+
+      iframe.addEventListener('load', () => {
+        // Explicitly retrieve `iframe.contentDocument` again because the
+        // document was replaced when submitting the form.
+        const newSearch = iframe.contentDocument.defaultView.location.search;
+        assert.strictEqual(newSearch, '?name=value');
+        done();
+      });
+    });
+
+    test('Entries with new names are appended after entries from existing ' +
+        'elements.', (done) => {
+      const form = iframeDoc.createElement('form');
+      form.action = 'blank.html';
+      form.method = 'GET';
+      iframeDoc.body.appendChild(form);
+
+      const inputName1 = document.createElement('input');
+      inputName1.setAttribute('name', 'name1');
+      inputName1.setAttribute('value', 'value1');
+      form.appendChild(inputName1);
+
+      form.addEventListener('formdata', (e) => {
+        e.formData.set('name2', 'value2');
+      });
+
+      form.submit();
+
+      iframe.addEventListener('load', () => {
+        // Explicitly retrieve `iframe.contentDocument` again because the
+        // document was replaced when submitting the form.
+        const newSearch = iframe.contentDocument.defaultView.location.search;
+        assert.strictEqual(newSearch, '?name1=value1&name2=value2');
+        done();
+      });
+    });
+
+    test('Appended entries appear in the order they were appended.', (done) => {
+      const form = iframeDoc.createElement('form');
+      form.action = 'blank.html';
+      form.method = 'GET';
+      iframeDoc.body.appendChild(form);
+
+      form.addEventListener('formdata', (e) => {
+        e.formData.set('name1', 'value1');
+        e.formData.set('name2', 'value2');
+        e.formData.set('name3', 'value3');
+      });
+
+      form.submit();
+
+      iframe.addEventListener('load', () => {
+        // Explicitly retrieve `iframe.contentDocument` again because the
+        // document was replaced when submitting the form.
+        const newSearch = iframe.contentDocument.defaultView.location.search;
+        assert.strictEqual(newSearch, '?name1=value1&name2=value2&name3=value3');
+        done();
+      });
+    });
+
+    test('Setting an entry with a name matching an existing entry from an ' +
+        'element overwrites the value of the existing entry.', (done) => {
+      const form = iframeDoc.createElement('form');
+      form.action = 'blank.html';
+      form.method = 'GET';
+      iframeDoc.body.appendChild(form);
+
+      const inputName1 = document.createElement('input');
+      inputName1.setAttribute('name', 'name1');
+      inputName1.setAttribute('value', 'value1');
+      form.appendChild(inputName1);
+
+      form.addEventListener('formdata', (e) => {
+        e.formData.set('name1', 'value2');
+      });
+
+      form.submit();
+
+      iframe.addEventListener('load', () => {
+        // Explicitly retrieve `iframe.contentDocument` again because the
+        // document was replaced when submitting the form.
+        const newSearch = iframe.contentDocument.defaultView.location.search;
+        assert.strictEqual(newSearch, '?name1=value2');
+        done();
+      });
+    });
+
+    test('Setting an entry with a name matching an existing entry from ' +
+        'FormData calls overwrites the value of the existing entry.',
+        (done) => {
+      const form = iframeDoc.createElement('form');
+      form.action = 'blank.html';
+      form.method = 'GET';
+      iframeDoc.body.appendChild(form);
+
+      form.addEventListener('formdata', (e) => {
+        e.formData.set('name1', 'value1');
+      });
+      form.addEventListener('formdata', (e) => {
+        e.formData.set('name1', 'value2');
+      });
+
+      form.submit();
+
+      iframe.addEventListener('load', () => {
+        // Explicitly retrieve `iframe.contentDocument` again because the
+        // document was replaced when submitting the form.
+        const newSearch = iframe.contentDocument.defaultView.location.search;
+        assert.strictEqual(newSearch, '?name1=value2');
+        done();
+      });
+    });
+  });
 });
 </script>
 </body>
