@@ -24,7 +24,13 @@ interface FormDataDeleteEntry {
   name: string,
 }
 
-type FormDataEntry = FormDataAppendEntry | FormDataDeleteEntry;
+interface FormDataSetEntry {
+  operation: 'set',
+  name: string,
+  value: string,
+}
+
+type FormDataEntry = FormDataAppendEntry | FormDataDeleteEntry | FormDataSetEntry;
 
 const private_entries = new WeakMap<FormData, Array<FormDataEntry>>();
 
@@ -86,6 +92,24 @@ export const install = () => {
 
       entries.push({operation: 'delete', name});
       return FormDataMethods.delete.call(this, name);
+    };
+  }
+
+  if (FormDataMethods.set !== undefined) {
+    FormDataWrapper.prototype.set = function(
+      this: FormData,
+      name: string,
+      value: string | Blob,
+      _filename?: string,
+    ) {
+      const entries = private_entries.get(this)!;
+
+      if (typeof value !== 'string') {
+        throw new Error('Unsupported.');
+      }
+
+      entries.push({operation: 'set', name, value});
+      return FormDataMethods.set.call(this, name, value);
     };
   }
 

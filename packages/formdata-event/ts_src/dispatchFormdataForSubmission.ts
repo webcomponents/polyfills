@@ -16,40 +16,43 @@ export const dispatchFormdataForSubmission = (form: HTMLFormElement) => {
   const formData = new FormData(form);
 
   const insertedInputs: Array<HTMLInputElement> = [];
-  const disabledInitialValue = new Map<Element, string | null>();
-  const setDisabled = (element: Element, value: boolean) => {
-    if (!disabledInitialValue.has(element)) {
-      disabledInitialValue.set(element, element.getAttribute('disabled'));
-    }
+  const appendEntry = (name: string, value: string) => {
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = name;
+    input.value = value;
+    form.appendChild(input);
 
-    if (value) {
-      element.setAttribute('disabled', '');
-    } else {
-      element.removeAttribute('disabled');
+    insertedInputs.push(input);
+  };
+
+  const disabledInitialValue = new Map<Element, string | null>();
+  const disableExistingEntries = (name: string) => {
+    for (let i = 0; i < form.elements.length; i++) {
+      const element = form.elements[i];
+      if (element.getAttribute('name') === name) {
+        if (!disabledInitialValue.has(element)) {
+          disabledInitialValue.set(element, element.getAttribute('disabled'));
+        }
+
+        element.setAttribute('disabled', '');
+      }
     }
   };
 
   for (const entry of getEntries(formData)!) {
     switch (entry.operation) {
       case 'append': {
-        const {name, value} = entry;
-        const input = document.createElement('input');
-        input.type = 'hidden';
-        input.name = name;
-        input.value = value;
-        form.appendChild(input);
-        insertedInputs.push(input);
+        appendEntry(entry.name, entry.value);
       } break;
 
       case 'delete': {
-        const {name} = entry;
+        disableExistingEntries(entry.name);
+      } break;
 
-        for (let i = 0; i < form.elements.length; i++) {
-          const element = form.elements[i];
-          if (element.getAttribute('name') === name) {
-            setDisabled(element, true);
-          }
-        }
+      case 'set': {
+        disableExistingEntries(entry.name);
+        appendEntry(entry.name, entry.value);
       } break;
 
       default:
