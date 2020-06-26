@@ -44,25 +44,11 @@ suite('dispatchFormdataForSubmission', () => {
     form.method = 'GET';
     iframeDoc.body.appendChild(form);
 
-    // Submitting a form by calling the `<form>`'s `submit` method causes the UA
-    // not to dispatch a 'submit' event. To work around this, we create a submit
-    // button and call it's `click` method instead.
-    //
-    // https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#concept-form-submit
-    const submitButton = iframeDoc.createElement('input');
-    submitButton.type = 'submit';
-    form.appendChild(submitButton);
-
-    let events = [];
     form.addEventListener('formdata', (e) => {
-      events.push(e);
       e.formData.append('name', 'value');
     });
 
-    submitButton.click();
-    assert.strictEqual(events.length, 1);
-    assert.strictEqual(events[0].type, 'formdata');
-    assert.strictEqual(events[0].target, form);
+    form.submit();
 
     iframe.addEventListener('load', () => {
       // Explicitly retrieve `iframe.contentDocument` again because the document
