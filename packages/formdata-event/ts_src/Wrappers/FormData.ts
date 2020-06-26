@@ -13,10 +13,19 @@ import {constructor as FormDataConstructor, prototype as FormDataPrototype, meth
 import {dispatchEvent} from '../EnvironmentAPI/EventTarget.js';
 import {FormDataEvent} from '../FormDataEvent.js';
 
-type FormDataEntry = {
+interface FormDataAppendEntry {
+  operation: 'append',
   name: string,
   value: string,
-};
+}
+
+interface FormDataDeleteEntry {
+  operation: 'delete',
+  name: string,
+}
+
+type FormDataEntry = FormDataAppendEntry | FormDataDeleteEntry;
+
 const private_entries = new WeakMap<FormData, Array<FormDataEntry>>();
 
 export const getEntries = (formData: FormData) => private_entries.get(formData);
@@ -58,18 +67,27 @@ export const install = () => {
     value: string | Blob,
     _filename?: string,
   ) {
-    const entries = private_entries.get(this);
-    if (entries === undefined) {
-      throw new Error('Could not find the entry list for this FormData.');
-    }
+    const entries = private_entries.get(this)!;
 
     if (typeof value !== 'string') {
       throw new Error('Unsupported.');
     }
 
-    entries.push({name, value});
+    entries.push({operation: 'append', name, value});
     return FormDataMethods.append.call(this, name, value);
   };
+
+  if (FormDataMethods.delete !== undefined) {
+    FormDataWrapper.prototype.delete = function(
+      this: FormData,
+      name: string,
+    ) {
+      const entries = private_entries.get(this)!;
+
+      entries.push({operation: 'delete', name});
+      return FormDataMethods.delete.call(this, name);
+    };
+  }
 
   (window.FormData as any) = FormDataWrapper;
 };
