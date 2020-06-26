@@ -411,6 +411,73 @@ suite('dispatchFormdataForSubmission', () => {
         done();
       });
     });
+
+    test('Setting an entry with a name matching entries from elements ' +
+        'replaces the first entry with a matching name and removes all others.',
+        function(done) {
+      const form = iframeDoc.createElement('form');
+      form.action = 'blank.html';
+      form.method = 'GET';
+      iframeDoc.body.appendChild(form);
+
+      const inputName1Value1 = document.createElement('input');
+      inputName1Value1.setAttribute('name', 'name1');
+      inputName1Value1.setAttribute('value', 'value1');
+      form.appendChild(inputName1Value1);
+
+      const inputName2Value2 = document.createElement('input');
+      inputName2Value2.setAttribute('name', 'name2');
+      inputName2Value2.setAttribute('value', 'value2');
+      form.appendChild(inputName2Value2);
+
+      const inputName1Value3 = document.createElement('input');
+      inputName1Value3.setAttribute('name', 'name1');
+      inputName1Value3.setAttribute('value', 'value3');
+      form.appendChild(inputName1Value3);
+
+      form.addEventListener('formdata', (e) => {
+        e.formData.set('name1', 'value4');
+      });
+
+      form.submit();
+
+      iframe.addEventListener('load', () => {
+        // Explicitly retrieve `iframe.contentDocument` again because the
+        // document was replaced when submitting the form.
+        const newSearch = iframe.contentDocument.defaultView.location.search;
+        assert.strictEqual(newSearch, '?name1=value4&name2=value2');
+        done();
+      });
+    });
+
+    test('Setting an entry with a name matching entries from FormData calls ' +
+        'replaces the first entry with a matching name and removes all others.',
+        function(done) {
+      const form = iframeDoc.createElement('form');
+      form.action = 'blank.html';
+      form.method = 'GET';
+      iframeDoc.body.appendChild(form);
+
+      form.addEventListener('formdata', (e) => {
+        e.formData.append('name1', 'value1');
+        e.formData.append('name2', 'value2');
+        e.formData.append('name1', 'value3');
+      });
+
+      form.addEventListener('formdata', (e) => {
+        e.formData.set('name1', 'value4');
+      });
+
+      form.submit();
+
+      iframe.addEventListener('load', () => {
+        // Explicitly retrieve `iframe.contentDocument` again because the
+        // document was replaced when submitting the form.
+        const newSearch = iframe.contentDocument.defaultView.location.search;
+        assert.strictEqual(newSearch, '?name1=value4&name2=value2');
+        done();
+      });
+    });
   });
 });
 </script>
