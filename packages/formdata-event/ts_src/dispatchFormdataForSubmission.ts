@@ -40,6 +40,16 @@ export const dispatchFormdataForSubmission = (form: HTMLFormElement) => {
     }
   };
 
+  const findFirstEnabledElement = (name: string): Element | undefined => {
+    for (let i = 0; i < form.elements.length; i++) {
+      const element = form.elements[i];
+      if (element.getAttribute('name') === name && !element.hasAttribute('disabled')) {
+        return element;
+      }
+    }
+    return undefined;
+  };
+
   for (const entry of getEntries(formData)!) {
     switch (entry.operation) {
       case 'append': {
@@ -51,8 +61,22 @@ export const dispatchFormdataForSubmission = (form: HTMLFormElement) => {
       } break;
 
       case 'set': {
-        disableExistingEntries(entry.name);
-        appendEntry(entry.name, entry.value);
+        const {name, value} = entry;
+
+        const first = findFirstEnabledElement(name);
+        if (first === undefined) {
+          appendEntry(name, value);
+          break;
+        }
+
+        disableExistingEntries(name);
+
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = name;
+        input.value = value;
+        first.parentNode!.insertBefore(input, first);
+        insertedInputs.push(input);
       } break;
 
       default:
