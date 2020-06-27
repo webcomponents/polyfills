@@ -64,10 +64,13 @@ export default class CustomElementRegistry {
         undefined;
   }
 
+  /**
+   * @param {string} localName
+   * @param {function(): function(new: HTMLElement)} constructorGetter
+   */
   polyfillDefineLazy(localName: string, constructorGetter: ConstructorGetter) {
-    if (!(constructorGetter instanceof Function)) {
-      throw new TypeError(
-          'Custom element constructor getters must be functions.');
+    if (typeof constructorGetter !== 'function') {
+      throw new TypeError('Custom element constructor getters must be functions.');
     }
     this.internal_assertCanDefineLocalName(localName);
     this._localNameToConstructorGetter.set(localName, constructorGetter);
@@ -80,8 +83,13 @@ export default class CustomElementRegistry {
     }
   }
 
+  /**
+   * @override
+   * @param {string} localName
+   * @param {function(new: HTMLElement)} constructor
+   */
   define(localName: string, constructor: Function) {
-    if (!(constructor instanceof Function)) {
+    if (typeof constructor !== 'function') {
       throw new TypeError('Custom element constructors must be functions.');
     }
 
@@ -124,9 +132,8 @@ export default class CustomElementRegistry {
     let observedAttributes: CustomElementDefinition['observedAttributes'];
     try {
       const prototype = constructor.prototype;
-      if (!(prototype instanceof Object)) {
-        throw new TypeError(
-            'The custom element constructor\'s prototype is not an object.');
+      if (typeof prototype !== 'object') {
+        throw new TypeError('The custom element constructor\'s prototype is not an object.');
       }
 
       type CEReactionCallback = 'connectedCallback'|'disconnectedCallback'|
@@ -134,8 +141,7 @@ export default class CustomElementRegistry {
       const getCallback =
           function getCallback(name: CEReactionCallback) {
         const callbackValue = prototype[name];
-        if (callbackValue !== undefined &&
-            !(callbackValue instanceof Function)) {
+        if (callbackValue !== undefined && typeof callbackValue !== 'function') {
           throw new Error(`The '${name}' callback must be a function.`);
         }
         return callbackValue;
