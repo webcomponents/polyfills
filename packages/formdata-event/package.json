@@ -2,6 +2,22 @@
   "name": "@webcomponents/formdata-event",
   "version": "0.0.1",
   "private": true,
+  "description": "'formdata' event polyfill",
+  "main": "formdata-event.min.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/webcomponents/polyfills.git",
+    "directory": "packages/formdata-event"
+  },
+  "bugs": "https://github.com/webcomponents/polyfills/issues?q=is%3Aissue+is%3Aopen+label%3A\"Package%3A+formdata-event\"",
+  "homepage": "https://github.com/webcomponents/polyfills/tree/master/packages/formdata-event",
+  "author": "The Polymer Project Authors (https://polymer.github.io/AUTHORS.txt)",
+  "keywords": [
+    "formdata",
+    "event",
+    "polyfill"
+  ],
+  "license": "BSD-3-Clause",
   "scripts": {
     "build": "tsc && gulp",
     "build:watch": "chokidar --initial 'ts_src/**/*.ts' -c 'npm run build'",
