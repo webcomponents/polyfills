@@ -9,9 +9,9 @@
  * additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
-export const constructor = window['EventTarget'];
+export const constructor = window.EventTarget;
 
-export const prototype = constructor?.['prototype'];
+export const prototype = constructor?.prototype;
 
 export const methods = {
   addEventListener: prototype?.addEventListener,

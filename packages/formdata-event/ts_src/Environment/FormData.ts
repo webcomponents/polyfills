@@ -9,6 +9,6 @@
  * additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
-export const constructor = window['FormData'];
+export const constructor = window.FormData;
 
 export const prototype = constructor.prototype;

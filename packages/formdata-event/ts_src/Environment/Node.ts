@@ -9,7 +9,7 @@
  * additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
-export const constructor = window['Node'];
+export const constructor = window.Node;
 
 export const prototype = constructor.prototype;
 
