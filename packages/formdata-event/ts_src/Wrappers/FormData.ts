@@ -42,5 +42,5 @@ export const install = () => {
   FormDataWrapper.prototype = FormDataPrototype;
   FormDataWrapper.prototype.constructor = FormDataWrapper;
 
-  (window.FormData as any) = FormDataWrapper;
+  window.FormData = FormDataWrapper as Function as typeof window.FormData;
 };

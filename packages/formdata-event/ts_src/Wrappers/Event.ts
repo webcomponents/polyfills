@@ -45,5 +45,5 @@ export const install = () => {
   EventWrapper.prototype = EventPrototype;
   EventWrapper.prototype.constructor = EventWrapper;
 
-  (window.Event as any) = EventWrapper;
+  window.Event = EventWrapper as Function as typeof window.Event;
 };
