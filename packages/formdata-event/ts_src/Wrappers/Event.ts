@@ -25,8 +25,8 @@ export const install = () => {
   // ```
   const EventWrapper = function Event(this: Event, type: string, eventInit: EventInit = {}) {
     let _this;
-    // When running in a browser were Event isn't constructible (e.g. IE11) this
-    // throws and we fall back to the old `createEvent` API.
+    // When running in a browser where Event isn't constructible (e.g. IE11)
+    // this throws and we fall back to the old `createEvent` API.
     try {
       _this = new EventConstructor(type, eventInit);
     } catch {
