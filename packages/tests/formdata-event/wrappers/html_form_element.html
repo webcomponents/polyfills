@@ -23,7 +23,7 @@ suite('FormData', () => {
 
   setup(done => {
     iframe = document.createElement('iframe');
-    iframe.src = '../test-environment.html';
+    iframe.src = '../test_environment.html';
     iframe.addEventListener('load', function listener() {
       iframe.removeEventListener('load', listener);
       iframeDoc = iframe.contentDocument;
@@ -39,8 +39,8 @@ suite('FormData', () => {
     iframe = undefined;
   });
 
-  test('Constructing a FormData dispatches a "formdata" event with that ' +
-      'FormData to the form.', () => {
+  test('Submitting a form by calling `submit` dispatches a "formdata" event ' +
+      'to the form.', () => {
     const form = iframeDoc.createElement('form');
     iframeDoc.body.appendChild(form);
 
@@ -51,8 +51,8 @@ suite('FormData', () => {
       assert.instanceOf(e.formData, FormData);
     });
 
-    const formData = new FormData(form);
-    assert.strictEqual(eventFormData, formData);
+    form.submit();
+    assert.ok(eventFormData);
   });
 });
 </script>
