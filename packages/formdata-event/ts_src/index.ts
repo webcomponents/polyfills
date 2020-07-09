@@ -15,8 +15,7 @@ import {install as installFormData} from './Wrappers/FormData.js';
 import {install as installFormDataEvent} from './FormDataEvent.js';
 import {install as installHTMLFormElement} from './Wrappers/HTMLFormElement.js';
 
-const priorFormDataEvent = window['FormDataEvent'] as any;
-if (priorFormDataEvent === undefined) {
+if (window['FormDataEvent'] === undefined) {
   installEvent();
   installEventTarget();
   installFormData();
