@@ -9,9 +9,9 @@
  * additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
-import {constructor as FormDataConstructor, prototype as FormDataPrototype} from '../Environment/FormData.js';
-import {dispatchEvent} from '../EnvironmentAPI/EventTarget.js';
-import {FormDataEvent} from '../FormDataEvent.js';
+import {constructor as FormDataConstructor, prototype as FormDataPrototype} from '../environment/form_data.js';
+import {dispatchEvent} from '../environment_api/event_target.js';
+import {FormDataEvent} from '../form_data_event.js';
 
 export const install = () => {
   const FormDataWrapper = function FormData(this: FormData, form?: HTMLFormElement) {

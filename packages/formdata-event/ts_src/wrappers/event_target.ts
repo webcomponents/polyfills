@@ -9,10 +9,10 @@
  * additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
-import {prototype as EventTargetPrototype, methods as EventTargetMethods} from '../Environment/EventTarget.js';
-import {prototype as NodePrototype, methods as NodeMethods} from '../Environment/Node.js';
-import {prototype as WindowPrototype, methods as WindowMethods} from '../Environment/Window.js';
-import {formdataListenerAdded, formdataListenerRemoved} from '../formdataListenerAdded.js';
+import {prototype as EventTargetPrototype, methods as EventTargetMethods} from '../environment/event_target.js';
+import {prototype as NodePrototype, methods as NodeMethods} from '../environment/node.js';
+import {prototype as WindowPrototype, methods as WindowMethods} from '../environment/window.js';
+import {formdataListenerAdded, formdataListenerRemoved} from '../formdata_listener_added.js';
 
 export const wrapAddEventListener = (
   prototype: {

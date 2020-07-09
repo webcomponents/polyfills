@@ -9,9 +9,9 @@
  * additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
-import {constructor as EventTargetConstructor, methods as EventTargetMethods} from '../Environment/EventTarget.js';
-import {methods as NodeMethods} from '../Environment/Node.js';
-import {methods as WindowMethods} from '../Environment/Window.js';
+import {constructor as EventTargetConstructor, methods as EventTargetMethods} from '../environment/event_target.js';
+import {methods as NodeMethods} from '../environment/node.js';
+import {methods as WindowMethods} from '../environment/window.js';
 
 export const addEventListener: EventTarget['addEventListener'] = (() => {
   if (EventTargetConstructor) {

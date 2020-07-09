@@ -9,11 +9,11 @@
  * additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
-import {install as installEvent} from './Wrappers/Event.js';
-import {install as installEventTarget} from './Wrappers/EventTarget.js';
-import {install as installFormData} from './Wrappers/FormData.js';
-import {install as installFormDataEvent} from './FormDataEvent.js';
-import {install as installHTMLFormElement} from './Wrappers/HTMLFormElement.js';
+import {install as installEvent} from './wrappers/event.js';
+import {install as installEventTarget} from './wrappers/event_target.js';
+import {install as installFormData} from './wrappers/form_data.js';
+import {install as installFormDataEvent} from './form_data_event.js';
+import {install as installHTMLFormElement} from './wrappers/html_form_element.js';
 
 if (window['FormDataEvent'] === undefined) {
   installEvent();
