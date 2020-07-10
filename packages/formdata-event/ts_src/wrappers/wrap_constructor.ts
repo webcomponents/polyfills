@@ -13,12 +13,18 @@ interface Constructor<T> extends Function {
   new (...args: Array<any>): T;
 }
 
+/**
+ * Modifies a constructible function, `Wrapper`, to act as a wrapper for some
+ * other constructor, `Original`. This includes copying the function's own
+ * properties and prototype, but with `Wrapper.prototype.constructor` continuing
+ * to point to `Wrapper`.
+ */
 export function wrapConstructor<T extends Object, C extends Constructor<T>>(
   Wrapper: C,
-  Constructor: C,
+  Original: C,
   prototype: C['prototype'],
 ) {
-  for (const prop of Object.keys(Constructor)) {
+  for (const prop of Object.keys(Original)) {
     // `Event.prototype` is not writable or configurable in Safari 9. We
     // overwrite it immediately after, so we might as well not copy it.
     if (prop === 'prototype') {
@@ -26,7 +32,7 @@ export function wrapConstructor<T extends Object, C extends Constructor<T>>(
     }
 
     Object.defineProperty(Wrapper, prop,
-        Object.getOwnPropertyDescriptor(Constructor, prop) as PropertyDescriptor);
+        Object.getOwnPropertyDescriptor(Original, prop) as PropertyDescriptor);
   }
   Wrapper.prototype = prototype;
   // `Event.prototype.constructor` is not writable in Safari 9, so we have to
