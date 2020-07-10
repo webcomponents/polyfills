@@ -9,9 +9,7 @@
  * additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
-interface Constructor<T> extends Function {
-  new (...args: Array<any>): T;
-}
+type Constructor<T> = new (...args: Array<any>) => T;
 
 /**
  * Modifies a constructible function, `Wrapper`, to act as a wrapper for some
@@ -19,10 +17,10 @@ interface Constructor<T> extends Function {
  * properties and prototype, but with `Wrapper.prototype.constructor` continuing
  * to point to `Wrapper`.
  */
-export function wrapConstructor<T extends Object, C extends Constructor<T>>(
-  Wrapper: C,
-  Original: C,
-  prototype: C['prototype'],
+export function wrapConstructor<T extends Object>(
+  Wrapper: Constructor<T>,
+  Original: Constructor<T>,
+  prototype: Constructor<T>['prototype'],
 ) {
   Object.setPrototypeOf(Wrapper, Object.getPrototypeOf(Original));
   for (const prop of Object.keys(Original)) {
