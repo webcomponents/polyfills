@@ -9,7 +9,15 @@
  * additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
-export const wrapConstructor = (Wrapper: any, Constructor: any, prototype: any) => {
+interface Constructor<T> extends Function {
+  new (...args: Array<any>): T;
+}
+
+export function wrapConstructor<T extends Object, C extends Constructor<T>>(
+  Wrapper: C,
+  Constructor: C,
+  prototype: C['prototype'],
+) {
   for (const prop of Object.keys(Constructor)) {
     // `Event.prototype` is not writable or configurable in Safari 9. We
     // overwrite it immediately after, so we might as well not copy it.
