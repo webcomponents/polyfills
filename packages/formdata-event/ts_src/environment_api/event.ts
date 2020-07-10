@@ -11,10 +11,20 @@
 
 import {descriptors as EventDescriptors} from '../environment/event.js';
 
-export const getTarget = (e: Event) => {
-  return EventDescriptors.target.get!.call(e);
-};
+// `Object.getOwnPropertyDescriptor(Event.prototype, 'target')` is undefined
+// in Chrome 41.
+// `Object.getOwnPropertyDescriptor(Event.prototype, 'target').get` is undefined
+// in Safari 9.
+const targetGetter = EventDescriptors.target?.get;
+export const getTarget = targetGetter !== undefined
+    ? (e: Event) => { return targetGetter.call(e); }
+    : (e: Event) => { return e.target; };
 
-export const getDefaultPrevented = (e: Event) => {
-  return EventDescriptors.defaultPrevented.get!.call(e);
-};
+// `Object.getOwnPropertyDescriptor(Event.prototype, 'defaultPrevented')` is undefined
+// in Chrome 41.
+// `Object.getOwnPropertyDescriptor(Event.prototype, 'defaultPrevented').get` is undefined
+// in Safari 9.
+const defaultPreventedGetter = EventDescriptors.defaultPrevented?.get;
+export const getDefaultPrevented = defaultPreventedGetter !== undefined
+    ? (e: Event) => { return defaultPreventedGetter.call(e); }
+    : (e: Event) => { return e.defaultPrevented; };
