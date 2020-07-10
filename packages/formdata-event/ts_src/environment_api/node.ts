@@ -11,6 +11,15 @@
 
 import {methods as NodeMethods, descriptors as NodeDescriptors} from '../environment/node.js';
 
+// `Object.getOwnPropertyDescriptor(Node.prototype, 'parentNode')` is
+// undefined in Chrome 41.
+// `Object.getOwnPropertyDescriptor(Node.prototype, 'parentNode').get` is
+// undefined in Safari 9.
+const parentNodeGetter = NodeDescriptors.parentNode?.get;
+const getParentNode = parentNodeGetter !== undefined
+    ? (node: Node) => { return parentNodeGetter.call(node); }
+    : (node: Node) => { return node.parentNode; };
+
 export const getRootNode: Node['getRootNode'] = function(
     this: Node, options: GetRootNodeOptions | undefined = undefined) {
   if (NodeMethods.getRootNode !== undefined) {
@@ -18,10 +27,10 @@ export const getRootNode: Node['getRootNode'] = function(
   }
 
   let current = this;
-  let parent = NodeDescriptors.parentNode.get!.call(current);
+  let parent = getParentNode(current);
   while (parent !== null) {
     current = parent;
-    parent = NodeDescriptors.parentNode.get!.call(parent);
+    parent = getParentNode(parent);
   }
   return current;
 };

@@ -9,6 +9,8 @@
  * additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
+import {Event} from './wrappers/event.js';
+
 interface FormEventInit extends EventInit {
   // `formData` is required, but user-supplied outside of TS, so it's marked as
   // optional here and is manually checked in the `FormDataEvent` constructor.
