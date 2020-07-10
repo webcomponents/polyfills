@@ -36,8 +36,12 @@ export const Event: typeof window.Event = function Event(this: Event, type: stri
   return _this;
 } as Function as typeof window.Event;
 
-Object.setPrototypeOf(Event, Function);
 wrapConstructor(Event, EventConstructor, EventPrototype);
+
+// In IE11, `Object.getPrototypeOf(Event) === Object.prototype` and
+// `Object.getPrototypeOf(Event.prototype) === Object.prototype`.
+Object.setPrototypeOf(Event, Function);
+Object.setPrototypeOf(Event.prototype, Function.prototype);
 
 export const install = () => {
   window.Event = Event;

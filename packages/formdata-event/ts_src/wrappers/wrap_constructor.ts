@@ -24,6 +24,7 @@ export function wrapConstructor<T extends Object, C extends Constructor<T>>(
   Original: C,
   prototype: C['prototype'],
 ) {
+  Object.setPrototypeOf(Wrapper, Object.getPrototypeOf(Original));
   for (const prop of Object.keys(Original)) {
     // `Event.prototype` is not writable or configurable in Safari 9. We
     // overwrite it immediately after, so we might as well not copy it.
