@@ -12,34 +12,33 @@
 import {constructor as EventConstructor, prototype as EventPrototype} from '../environment/event.js';
 import {wrapConstructor} from './wrap_constructor.js';
 
+// This wrapper makes Event constructible / extensible in ES5 (the compilation
+// target) by causing `Event.call(...)` to create native Event instances rather
+// than throwing. It also avoids an issue with Safari where constructing a class
+// that extends Event does not produce an instance of that class:
+//
+// ```js
+// class SpecialEvent extends Event {}
+// const s = new SpecialEvent("type");
+// console.assert(s instanceof SpecialEvent); // fails in Safari 13.1
+// ```
+export const Event: typeof window.Event = function Event(this: Event, type: string, eventInit: EventInit = {}) {
+  let _this;
+  // When running in a browser where Event isn't constructible (e.g. IE11) this
+  // throws and we fall back to the old `createEvent` API.
+  try {
+    _this = new EventConstructor(type, eventInit);
+  } catch {
+    _this = document.createEvent('Event');
+    _this.initEvent(type, eventInit.bubbles, eventInit.cancelable);
+  }
+  Object.setPrototypeOf(_this, Object.getPrototypeOf(this));
+  return _this;
+} as Function as typeof window.Event;
+
+Object.setPrototypeOf(Event, Function);
+wrapConstructor(Event, EventConstructor, EventPrototype);
+
 export const install = () => {
-  // This wrapper makes Event constructible / extensible in ES5 (the compilation
-  // target) by causing `Event.call(...)` to create native Event instances
-  // rather than throwing. It also avoids an issue with Safari where
-  // constructing a class that extends Event does not produce an instance of
-  // that class:
-  //
-  // ```js
-  // class SpecialEvent extends Event {}
-  // const s = new SpecialEvent("type");
-  // console.assert(s instanceof SpecialEvent); // fails in Safari 13.1
-  // ```
-  const EventWrapper = function Event(this: Event, type: string, eventInit: EventInit = {}) {
-    let _this;
-    // When running in a browser where Event isn't constructible (e.g. IE11)
-    // this throws and we fall back to the old `createEvent` API.
-    try {
-      _this = new EventConstructor(type, eventInit);
-    } catch {
-      _this = document.createEvent('Event');
-      _this.initEvent(type, eventInit.bubbles, eventInit.cancelable);
-    }
-    Object.setPrototypeOf(_this, Object.getPrototypeOf(this));
-    return _this;
-  };
-
-  Object.setPrototypeOf(EventWrapper, Function);
-  wrapConstructor(EventWrapper, EventConstructor, EventPrototype);
-
-  window.Event = EventWrapper as Function as typeof window.Event;
+  window.Event = Event;
 };
