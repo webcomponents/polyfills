@@ -11,7 +11,7 @@
 
 import {constructor as FormDataConstructor, prototype as FormDataPrototype} from '../environment/form_data.js';
 import {dispatchEvent} from '../environment_api/event_target.js';
-import {FormDataEvent} from '../form_data_event.js';
+import {wrapConstructor} from './wrap_constructor.js';
 
 export const install = () => {
   const FormDataWrapper = function FormData(this: FormData, form?: HTMLFormElement) {
@@ -26,7 +26,7 @@ export const install = () => {
       // list associated with it after the event has finished propagating. The
       // FormData constructor then takes this returned entry list and associates
       // it with itself.
-      dispatchEvent.call(form, new FormDataEvent('formdata', {
+      dispatchEvent.call(form, new window['FormDataEvent']('formdata', {
         bubbles: true,
         formData: _this,
       }));
@@ -35,12 +35,7 @@ export const install = () => {
     return _this;
   };
 
-  for (const prop of Object.keys(FormDataConstructor)) {
-    Object.defineProperty(FormDataWrapper, prop,
-        Object.getOwnPropertyDescriptor(FormDataConstructor, prop) as PropertyDescriptor);
-  }
-  FormDataWrapper.prototype = FormDataPrototype;
-  FormDataWrapper.prototype.constructor = FormDataWrapper;
+  wrapConstructor(FormDataWrapper, FormDataConstructor, FormDataPrototype);
 
   window.FormData = FormDataWrapper as Function as typeof window.FormData;
 };

@@ -15,32 +15,36 @@ interface FormEventInit extends EventInit {
   formData?: FormData,
 }
 
-const private_formData: WeakMap<FormDataEvent, FormData> = new WeakMap();
-
-export class FormDataEvent extends Event {
-  constructor(type: string, formEventInit: FormEventInit = {}) {
-    super(type, formEventInit);
-    const formData = formEventInit.formData;
-    if (!(formData instanceof FormData)) {
-      throw new TypeError('Failed to construct \'FormDataEvent\': member ' +
-          'formData is not of type FormData.');
-    }
-    private_formData.set(this, formData);
-  }
-
-  get formData() {
-    return private_formData.get(this);
-  }
-}
-
-
 declare global {
+  class FormDataEvent extends Event {
+    constructor(type: string, formEventInit?: FormEventInit);
+    get formData(): FormData;
+  }
+
   interface Window {
     FormDataEvent: typeof FormDataEvent;
   }
 }
 
 export const install = () => {
+  const private_formData: WeakMap<FormDataEvent, FormData> = new WeakMap();
+
+  class FormDataEvent extends Event {
+    constructor(type: string, formEventInit: FormEventInit = {}) {
+      super(type, formEventInit);
+      const formData = formEventInit.formData;
+      if (!(formData instanceof FormData)) {
+        throw new TypeError('Failed to construct \'FormDataEvent\': member ' +
+            'formData is not of type FormData.');
+      }
+      private_formData.set(this, formData);
+    }
+
+    get formData() {
+      return private_formData.get(this);
+    }
+  }
+
   Object.defineProperty(window, 'FormDataEvent', {
     writable: true,
     enumerable: false,

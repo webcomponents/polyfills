@@ -10,6 +10,7 @@
  */
 
 import {constructor as EventConstructor, prototype as EventPrototype} from '../environment/event.js';
+import {wrapConstructor} from './wrap_constructor.js';
 
 export const install = () => {
   // This wrapper makes Event constructible / extensible in ES5 (the compilation
@@ -37,13 +38,8 @@ export const install = () => {
     return _this;
   };
 
-  for (const prop of Object.keys(EventConstructor)) {
-    Object.defineProperty(EventWrapper, prop,
-        Object.getOwnPropertyDescriptor(EventConstructor, prop) as PropertyDescriptor);
-  }
   Object.setPrototypeOf(EventWrapper, Function);
-  EventWrapper.prototype = EventPrototype;
-  EventWrapper.prototype.constructor = EventWrapper;
+  wrapConstructor(EventWrapper, EventConstructor, EventPrototype);
 
   window.Event = EventWrapper as Function as typeof window.Event;
 };
