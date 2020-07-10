@@ -9,11 +9,24 @@
  * additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
-import {constructor as EventConstructor, prototype as EventPrototype} from '../Environment/Event.js';
+import {constructor as EventConstructor, prototype as EventPrototype} from '../environment/event.js';
 
 export const install = () => {
+  // This wrapper makes Event constructible / extensible in ES5 (the compilation
+  // target) by causing `Event.call(...)` to create native Event instances
+  // rather than throwing. It also avoids an issue with Safari where
+  // constructing a class that extends Event does not produce an instance of
+  // that class:
+  //
+  // ```js
+  // class SpecialEvent extends Event {}
+  // const s = new SpecialEvent("type");
+  // console.assert(s instanceof SpecialEvent); // fails in Safari 13.1
+  // ```
   const EventWrapper = function Event(this: Event, type: string, eventInit: EventInit = {}) {
     let _this;
+    // When running in a browser where Event isn't constructible (e.g. IE11)
+    // this throws and we fall back to the old `createEvent` API.
     try {
       _this = new EventConstructor(type, eventInit);
     } catch {
@@ -32,5 +45,5 @@ export const install = () => {
   EventWrapper.prototype = EventPrototype;
   EventWrapper.prototype.constructor = EventWrapper;
 
-  (window.Event as any) = EventWrapper;
+  window.Event = EventWrapper as Function as typeof window.Event;
 };

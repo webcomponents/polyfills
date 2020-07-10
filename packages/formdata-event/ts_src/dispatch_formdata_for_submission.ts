@@ -9,7 +9,7 @@
  * additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
-import {getEntries} from './Wrappers/FormData.js';
+import {getEntries} from './wrappers/form_data.js';
 
 export const dispatchFormdataForSubmission = (form: HTMLFormElement) => {
   // Constructing this FormData with `form` dispatches the 'formdata' event.

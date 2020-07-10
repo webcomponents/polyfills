@@ -9,8 +9,8 @@
  * additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
-import {prototype as HTMLFormElementPrototype, methods as HTMLFormElementMethods} from '../Environment/HTMLFormElement.js';
-import {dispatchFormdataForSubmission} from '../dispatchFormdataForSubmission.js';
+import {prototype as HTMLFormElementPrototype, methods as HTMLFormElementMethods} from '../environment/html_form_element.js';
+import {dispatchFormdataForSubmission} from '../dispatch_formdata_for_submission.js';
 
 export const wrapSubmit = (
   prototype: {

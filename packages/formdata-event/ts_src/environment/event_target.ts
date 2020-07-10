@@ -9,17 +9,12 @@
  * additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
-export const constructor = window['Node'];
+export const constructor = window.EventTarget;
 
-export const prototype = constructor.prototype;
+export const prototype = constructor?.prototype;
 
 export const methods = {
-  addEventListener: prototype.addEventListener,
-  removeEventListener: prototype.removeEventListener,
-  dispatchEvent: prototype.dispatchEvent,
-  getRootNode: prototype.getRootNode,
-};
-
-export const descriptors = {
-  parentNode: Object.getOwnPropertyDescriptor(prototype, 'parentNode')!,
+  addEventListener: prototype?.addEventListener,
+  removeEventListener: prototype?.removeEventListener,
+  dispatchEvent: prototype?.dispatchEvent,
 };

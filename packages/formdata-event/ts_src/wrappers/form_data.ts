@@ -9,9 +9,9 @@
  * additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
-import {constructor as FormDataConstructor, prototype as FormDataPrototype, methods as FormDataMethods} from '../Environment/FormData.js';
-import {dispatchEvent} from '../EnvironmentAPI/EventTarget.js';
-import {FormDataEvent} from '../FormDataEvent.js';
+import {constructor as FormDataConstructor, prototype as FormDataPrototype, methods as FormDataMethods} from '../environment/form_data.js';
+import {dispatchEvent} from '../environment_api/event_target.js';
+import {FormDataEvent} from '../form_data_event.js';
 
 interface FormDataAppendEntry {
   operation: 'append',
@@ -113,5 +113,5 @@ export const install = () => {
     };
   }
 
-  (window.FormData as any) = FormDataWrapper;
+  window.FormData = FormDataWrapper as Function as typeof window.FormData;
 };

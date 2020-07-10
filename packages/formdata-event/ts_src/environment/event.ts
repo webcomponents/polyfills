@@ -9,12 +9,11 @@
  * additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
-export const constructor = window['EventTarget'];
+export const constructor = window.Event;
 
-export const prototype = constructor?.['prototype'];
+export const prototype = constructor.prototype;
 
-export const methods = {
-  addEventListener: prototype?.addEventListener,
-  removeEventListener: prototype?.removeEventListener,
-  dispatchEvent: prototype?.dispatchEvent,
+export const descriptors = {
+  target: Object.getOwnPropertyDescriptor(prototype, 'target')!,
+  defaultPrevented: Object.getOwnPropertyDescriptor(prototype, 'defaultPrevented')!,
 };

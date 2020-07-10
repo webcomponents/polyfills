@@ -15,20 +15,22 @@ found at http://polymer.github.io/PATENTS.txt
 </head>
 <body>
 <script>
-suite('FormData', () => {
+suite('Event', () => {
   let iframe = undefined;
   let iframeDoc = undefined;
-  let FormData = undefined;
+  let Event = undefined;
   let FormDataEvent = undefined;
+  let FormData = undefined;
 
   setup(done => {
     iframe = document.createElement('iframe');
-    iframe.src = '../test-environment.html';
+    iframe.src = '../test_environment.html';
     iframe.addEventListener('load', function listener() {
       iframe.removeEventListener('load', listener);
       iframeDoc = iframe.contentDocument;
-      FormData = iframeDoc.defaultView.FormData;
+      Event = iframeDoc.defaultView.Event;
       FormDataEvent = iframeDoc.defaultView.FormDataEvent;
+      FormData = iframeDoc.defaultView.FormData;
       done();
     });
     document.body.appendChild(iframe);
@@ -39,20 +41,22 @@ suite('FormData', () => {
     iframe = undefined;
   });
 
-  test('Constructing a FormData dispatches a "formdata" event with that ' +
-      'FormData to the form.', () => {
-    const form = iframeDoc.createElement('form');
-    iframeDoc.body.appendChild(form);
+  test('Constructing an Event extension results in an instance of the ' +
+      'constructed class.', () => {
+    class SomeEvent extends Event {
+      constructor() {
+        super('some-event');
+        this._x = 123;
+      }
 
-    let eventFormData = undefined;
-    form.addEventListener('formdata', (e) => {
-      assert.instanceOf(e, FormDataEvent);
-      eventFormData = e.formData;
-      assert.instanceOf(e.formData, FormData);
-    });
+      addToXAndReturn(y) { return this._x + y; }
+    }
 
-    const formData = new FormData(form);
-    assert.strictEqual(eventFormData, formData);
+    const event = new SomeEvent();
+    assert.instanceOf(event, Event);
+    assert.instanceOf(event, SomeEvent);
+
+    assert.strictEqual(event.addToXAndReturn(456), 123 + 456);
   });
 });
 </script>

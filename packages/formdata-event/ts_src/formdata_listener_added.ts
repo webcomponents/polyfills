@@ -9,10 +9,10 @@
  * additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
-import {getTarget, getDefaultPrevented} from './EnvironmentAPI/Event.js';
-import {addEventListener, removeEventListener} from './EnvironmentAPI/EventTarget.js';
-import {getRootNode} from './EnvironmentAPI/Node.js';
-import {dispatchFormdataForSubmission} from './dispatchFormdataForSubmission.js';
+import {getTarget, getDefaultPrevented} from './environment_api/event.js';
+import {addEventListener, removeEventListener} from './environment_api/event_target.js';
+import {getRootNode} from './environment_api/node.js';
+import {dispatchFormdataForSubmission} from './dispatch_formdata_for_submission.js';
 
 interface FormdataEventListenerRecord {
   callback: EventListenerOrEventListenerObject;

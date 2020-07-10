@@ -22,7 +22,7 @@ suite('formdataListenerAdded', () => {
 
   setup(done => {
     iframe = document.createElement('iframe');
-    iframe.src = './test-environment.html';
+    iframe.src = './test_environment.html';
     iframe.addEventListener('load', function listener() {
       iframe.removeEventListener('load', listener);
       iframeDoc = iframe.contentDocument;

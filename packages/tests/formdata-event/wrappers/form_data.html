@@ -23,7 +23,7 @@ suite('FormData', () => {
 
   setup(done => {
     iframe = document.createElement('iframe');
-    iframe.src = '../test-environment.html';
+    iframe.src = '../test_environment.html';
     iframe.addEventListener('load', function listener() {
       iframe.removeEventListener('load', listener);
       iframeDoc = iframe.contentDocument;
@@ -39,20 +39,37 @@ suite('FormData', () => {
     iframe = undefined;
   });
 
-  test('Submitting a form by calling `submit` dispatches a "formdata" event ' +
-      'to the form.', () => {
+  test('Constructing a FormData dispatches a "formdata" event with that ' +
+      'FormData to the form.', () => {
+    const form = iframeDoc.createElement('form');
+    iframeDoc.body.appendChild(form);
+
+    let eventWasDispatched = false;
+    form.addEventListener('formdata', (e) => {
+      eventWasDispatched = true;
+      assert.instanceOf(e, FormDataEvent);
+      assert.instanceOf(e.formData, FormData);
+    });
+
+    const formData = new FormData(form);
+    assert.ok(eventWasDispatched);
+  });
+
+  // TODO: Enable this test once 'formdata' events for constructed FormData
+  // objects dispatch with a different FormData instance.
+  test.skip('The "formdata" event dispatched during construction has a ' +
+      'different FormData object for `formData` than the one being ' +
+      'constructed.', () => {
     const form = iframeDoc.createElement('form');
     iframeDoc.body.appendChild(form);
 
     let eventFormData = undefined;
     form.addEventListener('formdata', (e) => {
-      assert.instanceOf(e, FormDataEvent);
       eventFormData = e.formData;
-      assert.instanceOf(e.formData, FormData);
     });
 
-    form.submit();
-    assert.ok(eventFormData);
+    const formData = new FormData(form);
+    assert.notStrictEqual(eventFormData, formData);
   });
 });
 </script>
