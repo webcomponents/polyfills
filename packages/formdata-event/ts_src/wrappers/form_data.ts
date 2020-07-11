@@ -60,38 +60,10 @@ export const FormData: typeof window.FormData = function FormData(this: FormData
   return _this;
 } as Function as typeof window.FormData;
 
-wrapConstructor(FormData, FormDataConstructor, FormDataPrototype);
+export const install = () => {
+  wrapConstructor(FormData, FormDataConstructor, FormDataPrototype);
 
-FormData.prototype['append'] = function(
-  this: FormData,
-  name: string,
-  value: string | Blob,
-  _filename?: string,
-) {
-  const entries = private_entries.get(this)!;
-
-  if (typeof value !== 'string') {
-    throw new Error('Unsupported.');
-  }
-
-  entries.push({operation: 'append', name, value});
-  return FormDataMethods.append.call(this, name, value);
-};
-
-if (FormDataMethods.delete !== undefined) {
-  FormData.prototype['delete'] = function(
-    this: FormData,
-    name: string,
-  ) {
-    const entries = private_entries.get(this)!;
-
-    entries.push({operation: 'delete', name});
-    return FormDataMethods.delete.call(this, name);
-  };
-}
-
-if (FormDataMethods.set !== undefined) {
-  FormData.prototype['set'] = function(
+  FormData.prototype['append'] = function(
     this: FormData,
     name: string,
     value: string | Blob,
@@ -103,11 +75,39 @@ if (FormDataMethods.set !== undefined) {
       throw new Error('Unsupported.');
     }
 
-    entries.push({operation: 'set', name, value});
-    return FormDataMethods.set.call(this, name, value);
+    entries.push({operation: 'append', name, value});
+    return FormDataMethods.append.call(this, name, value);
   };
-}
 
-export const install = () => {
+  if (FormDataMethods.delete !== undefined) {
+    FormData.prototype['delete'] = function(
+      this: FormData,
+      name: string,
+    ) {
+      const entries = private_entries.get(this)!;
+
+      entries.push({operation: 'delete', name});
+      return FormDataMethods.delete.call(this, name);
+    };
+  }
+
+  if (FormDataMethods.set !== undefined) {
+    FormData.prototype['set'] = function(
+      this: FormData,
+      name: string,
+      value: string | Blob,
+      _filename?: string,
+    ) {
+      const entries = private_entries.get(this)!;
+
+      if (typeof value !== 'string') {
+        throw new Error('Unsupported.');
+      }
+
+      entries.push({operation: 'set', name, value});
+      return FormDataMethods.set.call(this, name, value);
+    };
+  }
+
   window.FormData = FormData;
 };
