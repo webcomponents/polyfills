@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Modify the existing form to submit data from the FormData object.
+  ([#361](https://github.com/webcomponents/polyfills/pull/361))
 - formdata event polyfill: Add support for legacy browsers.
   ([#363](https://github.com/webcomponents/polyfills/pull/363))
 - Initial, incomplete implementation of the 'formdata' event polyfill.
