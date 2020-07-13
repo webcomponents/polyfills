@@ -66,6 +66,7 @@ and [HTML](https://html.spec.whatwg.org/) specifications are marked with the
     - `DOMTokenList` (`element.classList`)
     - `NamedNodeMap` (`element.attributes`)
     - `Attr` (`element.attributes.getNamedItem('attr-name')`)
+    - `element.dataset`
 - The [custom element reactions stack](https://html.spec.whatwg.org/multipage/scripting.html#custom-element-reactions-stack)
   is not implemented.
   - Typically, DOM operations patched in this polyfill gather the list of
