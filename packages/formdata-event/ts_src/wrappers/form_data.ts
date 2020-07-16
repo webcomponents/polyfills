@@ -12,7 +12,7 @@
 import {constructor as FormDataConstructor, prototype as FormDataPrototype, methods as FormDataMethods} from '../environment/form_data.js';
 import {dispatchEvent} from '../environment_api/event_target.js';
 import {FormDataEvent} from '../form_data_event.js';
-import {wrapConstructor} from './wrap_constructor.js';
+import {prepareWrapper, installWrapper} from './wrap_constructor.js';
 
 interface FormDataAppendEntry {
   operation: 'append',
@@ -60,8 +60,10 @@ export const FormData: typeof window.FormData = function FormData(this: FormData
   return _this;
 } as Function as typeof window.FormData;
 
+prepareWrapper(FormData, FormDataConstructor, FormDataPrototype);
+
 export const install = () => {
-  wrapConstructor(FormData, FormDataConstructor, FormDataPrototype);
+  installWrapper(FormData);
 
   FormData.prototype['append'] = function(
     this: FormData,

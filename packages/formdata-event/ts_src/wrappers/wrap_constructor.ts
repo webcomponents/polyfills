@@ -13,11 +13,13 @@ type Constructor<T> = new (...args: Array<any>) => T;
 
 /**
  * Modifies a constructible function, `Wrapper`, to act as a wrapper for some
- * other constructor, `Original`. This includes copying the function's own
- * properties and prototype, but with `Wrapper.prototype.constructor` continuing
- * to point to `Wrapper`.
+ * other constructor, `Original`, by copying the function's own properties and
+ * prototype. `prepareWrapper` does not modify `Original` or any objects
+ * accessible from it, so it can be safely called before knowing if the wrapper
+ * is actually required but still sets up the wrapper enough to be properly
+ * extended by another ES5-compiled class.
  */
-export function wrapConstructor<T extends Object>(
+export function prepareWrapper<T extends Object>(
   Wrapper: Constructor<T>,
   Original: Constructor<T>,
   prototype: Constructor<T>['prototype'],
@@ -38,7 +40,17 @@ export function wrapConstructor<T extends Object>(
   }
 
   Wrapper.prototype = prototype;
+};
 
+/**
+ * Sets a constructible function's `.prototype.constructor` to point to itself.
+ * This step should be performed after a previous call to `prepareWrapper` and
+ * only when the wrapper is actually needed as it will modify `.prototype`,
+ * which was copied from a global object.
+ */
+export function installWrapper<T extends Object>(
+  Wrapper: Constructor<T>,
+) {
   // `Event.prototype.constructor` is not writable in Safari 9, so we have to
   // define it with `defineProperty`.
   Object.defineProperty(Wrapper.prototype, 'constructor', {
