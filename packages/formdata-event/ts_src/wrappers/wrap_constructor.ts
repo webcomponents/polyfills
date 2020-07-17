@@ -40,6 +40,16 @@ export function prepareWrapper<T extends Object>(
   }
 
   Wrapper.prototype = prototype;
+
+  // `Event.prototype.constructor` is not writable in Safari 9, which breaks the
+  // ES5-compiled class that sets `constructor` to the prototype created as
+  // `Object.create(Event.prototype)` as well as `installWrapper`.
+  Object.defineProperty(prototype, 'constructor', {
+    writable: true,
+    configurable: true,
+    enumerable: false,
+    value: prototype.constructor,
+  });
 };
 
 /**
@@ -48,15 +58,6 @@ export function prepareWrapper<T extends Object>(
  * only when the wrapper is actually needed as it will modify `.prototype`,
  * which was copied from a global object.
  */
-export function installWrapper<T extends Object>(
-  Wrapper: Constructor<T>,
-) {
-  // `Event.prototype.constructor` is not writable in Safari 9, so we have to
-  // define it with `defineProperty`.
-  Object.defineProperty(Wrapper.prototype, 'constructor', {
-    writable: true,
-    configurable: true,
-    enumerable: false,
-    value: Wrapper,
-  });
+export function installWrapper<T extends Object>(Wrapper: Constructor<T>) {
+  Wrapper.prototype.constructor = Wrapper;
 };
