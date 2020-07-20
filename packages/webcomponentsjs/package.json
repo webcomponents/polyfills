@@ -1,6 +1,6 @@
 {
   "name": "@webcomponents/webcomponentsjs",
-  "version": "2.4.3",
+  "version": "2.4.4",
   "description": "Web Components Polyfills",
   "main": "webcomponents-bundle.js",
   "repository": {
@@ -27,11 +27,11 @@
     "clean": "gulp clean"
   },
   "devDependencies": {
-    "@webcomponents/custom-elements": "^1.4.1",
-    "@webcomponents/shadycss": "^1.9.6",
-    "@webcomponents/shadydom": "^1.7.3",
-    "@webcomponents/template": "^1.4.2",
-    "@webcomponents/url": "^0.7.5",
+    "@webcomponents/custom-elements": "^1.4.2",
+    "@webcomponents/shadycss": "^1.10.1",
+    "@webcomponents/shadydom": "^1.7.4",
+    "@webcomponents/template": "^1.4.3",
+    "@webcomponents/url": "^0.7.6",
     "babel-preset-minify": "^0.4.3",
     "get-own-property-symbols": "^0.9.2",
     "promise-polyfill": "^8.0.0",
