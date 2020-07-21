@@ -19,7 +19,7 @@ if (!Array.from) {
 
 if (!Object.assign) {
   const assign = (target: object, source: object) => {
-    const n$ = Object.getOwnPropertyNames(source);
+    const n$ = Object.keys(source);
     for (let i = 0; i < n$.length; i++) {
       const p = n$[i];
       // tslint:disable-next-line:no-any

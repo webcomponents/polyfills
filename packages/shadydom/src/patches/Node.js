@@ -177,12 +177,7 @@ export const NodePatches = utils.getOwnPropertyDescriptors({
     }
     // Fast path for distributed nodes.
     const ownerDocument = this.ownerDocument;
-    if (utils.hasDocumentContains) {
-      if (ownerDocument[utils.NATIVE_PREFIX + 'contains'](this)) {
-        return true;
-      }
-    } else if (ownerDocument.documentElement &&
-      ownerDocument.documentElement[utils.NATIVE_PREFIX + 'contains'](this)) {
+    if (ownerDocument === null || utils.documentContains(ownerDocument, this)) {
       return true;
     }
     // Slow path for non-distributed nodes.
