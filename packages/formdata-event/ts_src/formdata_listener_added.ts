@@ -145,6 +145,8 @@ const addSubmitListener = (subject: EventTarget) => {
       return;
     }
 
+    const shallowRoot = getRootNode.call(target);
+
     /**
      * Waits for `capturingEvent` to bubble to its shallow root node, and
      * dispatches the 'formdata' event if it wasn't cancelled.
@@ -155,7 +157,7 @@ const addSubmitListener = (subject: EventTarget) => {
         return;
       }
 
-      removeEventListener.call(subject, 'submit', submitBubblingCallback);
+      removeEventListener.call(shallowRoot, 'submit', submitBubblingCallback);
 
       // If the event was cancelled, don't dispatch 'formdata'.
       if (getDefaultPrevented(bubblingEvent)) {
@@ -167,7 +169,7 @@ const addSubmitListener = (subject: EventTarget) => {
 
     // Listen for the bubbling phase of any 'submit' event that reaches the root
     // node of the tree containing the target form.
-    addEventListener.call(getRootNode.call(target), 'submit', submitBubblingCallback);
+    addEventListener.call(shallowRoot, 'submit', submitBubblingCallback);
   };
 
   // Listen for the capturing-phase of any 'submit' event.
