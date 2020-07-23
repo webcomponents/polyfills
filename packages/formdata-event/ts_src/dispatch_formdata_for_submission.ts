@@ -9,6 +9,12 @@
  * additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
+/**
+ * This module handles dispatching the 'formdata' event to a form and modifying
+ * the form to reflect any changes that any listeners make to the FormData
+ * object passed along with the event.
+ */
+
 import {getEntries} from './wrappers/form_data.js';
 
 /**

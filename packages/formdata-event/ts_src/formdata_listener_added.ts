@@ -9,6 +9,12 @@
  * additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
+/**
+ * This module takes information about 'formdata' listeners added or removed
+ * from nodes and manages the listeners for 'submit' events that watch for form
+ * submissions that should dispatch a 'formdata' event.
+ */
+
 import {getTarget, getDefaultPrevented} from './environment_api/event.js';
 import {addEventListener, removeEventListener} from './environment_api/event_target.js';
 import {getRootNode} from './environment_api/node.js';
@@ -20,9 +26,9 @@ interface FormdataEventListenerRecord {
 }
 
 /**
- * The set of event listeners for 'formdata' events for any event target,
- * including enough information to determine if they would be deduplicated: type
- * (always 'formdata' here), the callback itself, and capture flag. See
+ * The set of 'formdata' event listeners for an event target, including enough
+ * information to determine if they would be deduplicated: type (always
+ * 'formdata' here), the callback itself, and capture flag. See
  * https://dom.spec.whatwg.org/#add-an-event-listener for a full description.
  */
 const targetToFormdataListeners = new WeakMap<EventTarget, Set<FormdataEventListenerRecord>>();
@@ -111,14 +117,20 @@ const targetToSubmitCallback = new WeakMap<EventTarget, EventListener>();
 const submitEventSeen = new WeakMap<Event, true>();
 
 /**
- * Adds a 'submit' event listener to `subject` that decides if / when to
- * dispatch 'formdata' events.
+ * Adds a 'submit' event listener to `subject` (an EventTarget with one or more
+ * 'formdata' event listeners) that eventually decides if / when to dispatch
+ * 'formdata' events.
  */
 const addSubmitListener = (subject: EventTarget) => {
   if (targetToSubmitCallback.has(subject)) {
     return;
   }
 
+  /**
+   * Listens for 'submit' events propagating through `subject` and adds another
+   * listener that listens for those same events to reach their (shallow) root
+   * node.
+   */
   const submitCallback = (capturingEvent: Event) => {
     // Multiple elements in the event path of `capturingEvent` may have 'submit'
     // listeners, so only continue if this is the first to see it.
@@ -133,6 +145,10 @@ const addSubmitListener = (subject: EventTarget) => {
       return;
     }
 
+    /**
+     * Waits for `capturingEvent` to bubble to its shallow root node, and
+     * dispatches the 'formdata' event if it wasn't cancelled.
+     */
     const submitBubblingCallback = (bubblingEvent: Event) => {
       // Filter out any other 'submit' events that might bubble to this root.
       if (bubblingEvent !== capturingEvent) {
