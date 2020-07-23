@@ -53,7 +53,7 @@ export const formdataListenerAdded = (
   // listener.
   if (formdataListeners === undefined) {
     targetToFormdataListeners.set(target, new Set([{callback, capture}]));
-    addSubmitListener(target);
+    addEventListener.call(target, 'submit', submitCallback, true);
     return;
   }
 
@@ -97,39 +97,6 @@ export const formdataListenerRemoved = (
   // 'submit' listener.
   if (formdataListeners.size === 0) {
     targetToFormdataListeners.delete(target);
-    removeSubmitListener(target);
+    removeEventListener.call(target, 'submit', submitCallback, true);
   }
-};
-
-/**
- * Tracks the 'submit' event listener applied to each EventTarget that has at
- * least one 'formdata' event listener.
- */
-const targetToSubmitCallback = new WeakMap<EventTarget, EventListener>();
-
-/**
- * Adds a 'submit' event listener to `subject` (an EventTarget with one or more
- * 'formdata' event listeners) that eventually decides if / when to dispatch
- * 'formdata' events.
- */
-const addSubmitListener = (subject: EventTarget) => {
-  if (targetToSubmitCallback.has(subject)) {
-    return;
-  }
-
-  // Listen for the capturing-phase of any 'submit' event.
-  addEventListener.call(subject, 'submit', submitCallback, true);
-  targetToSubmitCallback.set(subject, submitCallback);
-};
-
-/**
- * Removes the 'submit' event listener from `subject`.
- */
-const removeSubmitListener = (subject: EventTarget) => {
-  const submitCallback = targetToSubmitCallback.get(subject);
-  if (submitCallback === undefined) {
-    return;
-  }
-
-  removeEventListener.call(subject, 'submit', submitCallback, true);
 };
