@@ -45,24 +45,23 @@ export const formdataListenerAdded = (
   const capture = typeof options === 'boolean' ? options : (options?.capture ?? false);
   const formdataListeners = targetToFormdataListeners.get(target);
 
-  // If this listener has the same callback and capture flag as any that already
-  // exists, the browser ignores it.
-  if (formdataListeners !== undefined) {
-    for (const existing of formdataListeners) {
-      if (callback === existing.callback && capture === existing.capture) {
-        return;
-      }
-    }
-  }
-
   // When the first 'formdata' listener is added, also add the 'submit'
   // listener.
   if (formdataListeners === undefined) {
     targetToFormdataListeners.set(target, new Set([{callback, capture}]));
     addSubmitListener(target);
-  } else {
-    formdataListeners.add({callback, capture});
+    return;
   }
+
+  // If this listener has the same callback and capture flag as any that
+  // already exists, the browser ignores it.
+  for (const existing of formdataListeners) {
+    if (callback === existing.callback && capture === existing.capture) {
+      return;
+    }
+  }
+
+  formdataListeners.add({callback, capture});
 };
 
 /**
