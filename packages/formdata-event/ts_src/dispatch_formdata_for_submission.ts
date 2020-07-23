@@ -33,15 +33,21 @@ export const dispatchFormdataForSubmission = (form: HTMLFormElement) => {
   const insertedInputs: Array<HTMLInputElement> = [];
 
   /**
-   * Appends a hidden input to the form with the given name and value.
+   * Inserts a hidden input to the form with the given name and value. By
+   * default, the input is appended to the end of the form; passing
+   * `insertBeforeNode` will insert the new input before that node.
    */
-  const appendEntry = (name: string, value: string) => {
+  const insertEntry = (name: string, value: string, beforeNode?: Node) => {
     const input = document.createElement('input');
     input.type = 'hidden';
     input.name = name;
     input.value = value;
 
-    form.appendChild(input);
+    if (beforeNode !== undefined) {
+      beforeNode.parentNode!.insertBefore(input, beforeNode);
+    } else {
+      form.appendChild(input);
+    }
     insertedInputs.push(input);
   };
 
@@ -54,7 +60,7 @@ export const dispatchFormdataForSubmission = (form: HTMLFormElement) => {
 
   /**
    * Disables any form-associated elements that have the given name, including
-   * those inserted by `appendEntry`.
+   * those inserted by `insertEntry`.
    */
   const disableExistingEntries = (name: string) => {
     for (let i = 0; i < form.elements.length; i++) {
@@ -86,7 +92,7 @@ export const dispatchFormdataForSubmission = (form: HTMLFormElement) => {
   for (const entry of getEntries(formData)!) {
     switch (entry.operation) {
       case 'append': {
-        appendEntry(entry.name, entry.value);
+        insertEntry(entry.name, entry.value);
       } break;
 
       case 'delete': {
@@ -100,23 +106,14 @@ export const dispatchFormdataForSubmission = (form: HTMLFormElement) => {
         // If there are no entries (i.e. enabled, form-associated elements) with
         // the given name, then setting an entry is the same as appending it.
         if (first === undefined) {
-          appendEntry(name, value);
-        // If there are entries with the given name, then setting an entry
-        // should overwrite the _first_ entry in the list with that name and
-        // delete all other entries.
+          insertEntry(name, value);
+        // Otherwise, setting an entry means overwriting the _first_ entry in
+        // the list with that name and delete all other entries.
         } else {
           disableExistingEntries(name);
-
-          // Insert the input representing the new entry into the form
-          // immediately before the first enabled element with that name (before
-          // it was disabled above) so that it appears to replace it in the
-          // entry list.
-          const input = document.createElement('input');
-          input.type = 'hidden';
-          input.name = name;
-          input.value = value;
-          first.parentNode!.insertBefore(input, first);
-          insertedInputs.push(input);
+          // Insert before `first` so that the new input appears in `first`'s
+          // old position in the entry list.
+          insertEntry(name, value, first);
         }
       } break;
 
