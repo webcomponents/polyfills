@@ -135,3 +135,16 @@ export function treeVisitor(node, visitorFn) {
     }
   }
 }
+
+/**
+ * Return whether CSS Shadow Parts handling is currently necessary. True if we
+ * have seen at least one ::part rule when processing any element's template
+ * style through prepareTemplate, and if window.ShadyCSS.disableShadowParts is
+ * not truthy.
+ *
+ * @return {!boolean}
+ */
+export function shadowPartsActive() {
+  const shim = getScopingShim();
+  return shim && shim['shadowPartsActive']();
+}

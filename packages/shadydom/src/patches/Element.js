@@ -13,7 +13,7 @@ import {scopeClassAttribute} from '../style-scoping.js';
 import {shadyDataForNode} from '../shady-data.js';
 import {attachShadow, ownerShadyRootForNode} from '../attach-shadow.js';
 import {eventPropertyNamesForElement, wrappedDescriptorForEventProperty} from '../patch-events.js';
-import {getScopingShim} from '../style-scoping.js';
+import {getScopingShim, shadowPartsActive} from '../style-scoping.js';
 
 const doc = window.document;
 
@@ -102,7 +102,7 @@ export const ElementPatches = utils.getOwnPropertyDescriptors({
       this[utils.NATIVE_PREFIX + 'setAttribute'](attr, value);
     } else if (!scopeClassAttribute(this, attr, value)) {
       const affectsShadowParts =
-        !utils.disableShadowParts &&
+        shadowPartsActive() &&
         (attr === 'part' || attr === 'exportparts');
       let oldValue;
       if (affectsShadowParts) {
@@ -128,7 +128,7 @@ export const ElementPatches = utils.getOwnPropertyDescriptors({
       this[utils.NATIVE_PREFIX + 'removeAttribute'](attr);
     } else if (!scopeClassAttribute(this, attr, '')) {
       const affectsShadowParts =
-        !utils.disableShadowParts &&
+        shadowPartsActive() &&
         (attr === 'part' || attr === 'exportparts');
       let oldValue;
       if (affectsShadowParts) {

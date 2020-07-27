@@ -37,6 +37,18 @@ import {parsePartSelector, formatShadyPartSelector} from './shadow-parts.js';
 */
 const SCOPE_NAME = 'style-scope';
 
+/** @type {!boolean} */
+let _anyPartRulesTransformed = false;
+
+/**
+ * Returns whether any ::part selector has been parsed during style transform.
+ *
+ * @return {!boolean}
+ */
+export function anyPartRulesTransformed() {
+  return _anyPartRulesTransformed;
+}
+
 class StyleTransformer {
   /** @return {string} */
   get SCOPE_NAME() {
@@ -412,7 +424,7 @@ class StyleTransformer {
    * Transform a `::part` selector into  a `shady-part` attribute selector.
    *
    * Example:
-   *   Given: 'parent > x-b.fancy::part(foo):hover' andd scope 'x-a'
+   *   Given: 'parent > x-b.fancy::part(foo):hover' and scope 'x-a'
    *   Returns: 'parent > x-b.fancy [shady-part~="x-a:x-b:foo"]:hover'
    *
    * @param {!string} selector The `::part` selector.
@@ -425,6 +437,7 @@ class StyleTransformer {
     if (parsed === null) {
       return selector;
     }
+    _anyPartRulesTransformed = true;
     const {combinators, elementName, selectors, partNames, pseudos} = parsed;
     // Earlier we did a hacky transform from "part(foo bar)" to "part(foo,bar)"
     // so that the SIMPLE_SELECTOR regex didn't get confused by spaces.

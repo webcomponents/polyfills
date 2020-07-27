@@ -10,7 +10,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 import * as utils from '../utils.js';
 import {getScopingShim, removeShadyScoping, replaceShadyScoping,
-  treeVisitor, currentScopeForNode, currentScopeIsCorrect } from '../style-scoping.js';
+  treeVisitor, currentScopeForNode, currentScopeIsCorrect, shadowPartsActive } from '../style-scoping.js';
 import {shadyDataForNode, ensureShadyDataForNode} from '../shady-data.js';
 import {recordInsertBefore, recordRemoveChild} from '../link-nodes.js';
 import {ownerShadyRootForNode} from '../attach-shadow.js';
@@ -357,7 +357,7 @@ export const NodePatches = utils.getOwnPropertyDescriptors({
         ownerRoot._asyncRender();
       }
     }
-    if (!utils.disableShadowParts) {
+    if (shadowPartsActive()) {
       const shim = getScopingShim();
       if (shim) {
         // Note that we do want to call this before the actual native insert,
