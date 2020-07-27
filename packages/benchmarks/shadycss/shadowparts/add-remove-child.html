@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+
+<script>
+  window.ShadyDOM = {force: true};
+  window.ShadyCSS = {shimcssproperties: true};
+  const url = new URL(window.location.href);
+  if (url.searchParams.has('disableShadowParts')) {
+    window.ShadyCSS.disableShadowParts = true;
+  }
+</script>
+<script src="../../node_modules/@webcomponents/webcomponentsjs/webcomponents-loader.js"></script>
+
+<template id="xElTmpl">x-el</template>
+
+<script type="module">
+  import * as shadyCss from '@webcomponents/shadycss';
+
+  const xElTmpl = document.querySelector('#xElTmpl');
+  class XEl extends HTMLElement {
+    connectedCallback() {
+      shadyCss.styleElement(this);
+      this.attachShadow({mode: 'open'});
+      this.shadowRoot.appendChild(document.importNode(xElTmpl.content, true));
+    }
+  }
+  shadyCss.prepareTemplate(xElTmpl, 'x-el');
+  customElements.define('x-el', XEl);
+
+  const el = document.createElement('x-el');
+  document.body.appendChild(el);
+
+  const child = document.createElement('div');
+  performance.mark('start');
+  for (let i = 0; i < 1000; i++) {
+    el.shadowRoot.appendChild(child);
+    el.shadowRoot.removeChild(child);
+  }
+  performance.measure('add-remove-child', 'start');
+</script>

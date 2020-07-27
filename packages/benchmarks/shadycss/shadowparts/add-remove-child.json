@@ -1,0 +1,49 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Polymer/tachometer/master/config.schema.json",
+  "sampleSize": 100,
+  "timeout": 0,
+  "benchmarks": [
+    {
+      "name": "before",
+      "url": "shadycss/shadowparts/add-remove-child.html",
+      "browser": {
+        "name": "chrome",
+        "headless": true
+      },
+      "measurement": {
+        "mode": "performance",
+        "entryName": "add-remove-child"
+      },
+      "packageVersions": {
+        "label": "before",
+        "dependencies": {
+          "@webcomponents/webcomponentsjs": "=2.4.4"
+        }
+      }
+    },
+    {
+      "name": "head",
+      "url": "shadycss/shadowparts/add-remove-child.html",
+      "browser": {
+        "name": "chrome",
+        "headless": true
+      },
+      "measurement": {
+        "mode": "performance",
+        "entryName": "add-remove-child"
+      }
+    },
+    {
+      "name": "disabled",
+      "url": "shadycss/shadowparts/add-remove-child.html?disableShadowParts",
+      "browser": {
+        "name": "chrome",
+        "headless": true
+      },
+      "measurement": {
+        "mode": "performance",
+        "entryName": "add-remove-child"
+      }
+    }
+  ]
+}
