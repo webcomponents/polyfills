@@ -30,11 +30,12 @@ const submitEventSeen = new WeakMap<Event, true>();
 /**
  * This callback listens for 'submit' events propagating through the target and
  * adds another listener that waits for those same events to reach the shallow
- * root node.
+ * root node, where it calls `dispatchFormdataForSubmission` if the event wasn't
+ * cancelled.
  */
 export const submitCallback = (capturingEvent: Event) => {
-  // Multiple elements in the event path of `capturingEvent` may have 'submit'
-  // listeners, so only continue if this is the first to see it.
+  // Ignore any events that have already been seen by this callback, which could
+  // be in the event's path at more than once.
   if (submitEventSeen.has(capturingEvent)) {
     return;
   }
@@ -48,29 +49,23 @@ export const submitCallback = (capturingEvent: Event) => {
 
   const shallowRoot = getRootNode.call(target);
 
-  /**
-   * Waits for `capturingEvent` to bubble to its shallow root node, and
-   * dispatches the 'formdata' event if it wasn't cancelled.
-   */
-  const submitBubblingCallback = (bubblingEvent: Event) => {
-    // Filter out any other 'submit' events that might bubble to this root.
+  // Listen for the bubbling phase of any 'submit' event that reaches the root
+  // node of the tree containing the target form.
+  addEventListener.call(shallowRoot, 'submit', function bubblingCallback(bubblingEvent: Event) {
+    // Ignore any other 'submit' events that might bubble to this root.
     if (bubblingEvent !== capturingEvent) {
       return;
     }
 
-    removeEventListener.call(shallowRoot, 'submit', submitBubblingCallback);
+    removeEventListener.call(shallowRoot, 'submit', bubblingCallback);
 
-    // If the event was cancelled, don't dispatch 'formdata'.
+    // Ignore any cancelled events.
     if (getDefaultPrevented(bubblingEvent)) {
       return;
     }
 
     dispatchFormdataForSubmission(target);
-  };
-
-  // Listen for the bubbling phase of any 'submit' event that reaches the root
-  // node of the tree containing the target form.
-  addEventListener.call(shallowRoot, 'submit', submitBubblingCallback);
+  });
 };
 
 /**
