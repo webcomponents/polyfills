@@ -15,58 +15,7 @@
  * object passed along with the event.
  */
 
-import {getTarget, getDefaultPrevented} from './environment_api/event.js';
-import {addEventListener, removeEventListener} from './environment_api/event_target.js';
-import {getRootNode} from './environment_api/node.js';
 import {getEntries} from './wrappers/form_data.js';
-
-/**
- * Tracks whether or not the bubbling listener has already been added for a
- * given 'submit' event. IE11 does not support WeakSet, so a WeakMap<K, true> is
- * used instead.
- */
-const submitEventSeen = new WeakMap<Event, true>();
-
-/**
- * This callback listens for 'submit' events propagating through the target and
- * adds another listener that waits for those same events to reach the shallow
- * root node, where it calls `dispatchFormdataForSubmission` if the event wasn't
- * cancelled.
- */
-export const submitCallback = (capturingEvent: Event) => {
-  // Ignore any events that have already been seen by this callback, which could
-  // be in the event's path at more than once.
-  if (submitEventSeen.has(capturingEvent)) {
-    return;
-  }
-  submitEventSeen.set(capturingEvent, true);
-
-  // Ignore any 'submit' events that don't target forms.
-  const target = getTarget(capturingEvent);
-  if (!(target instanceof HTMLFormElement)) {
-    return;
-  }
-
-  const shallowRoot = getRootNode.call(target);
-
-  // Listen for the bubbling phase of any 'submit' event that reaches the root
-  // node of the tree containing the target form.
-  addEventListener.call(shallowRoot, 'submit', function bubblingCallback(bubblingEvent: Event) {
-    // Ignore any other 'submit' events that might bubble to this root.
-    if (bubblingEvent !== capturingEvent) {
-      return;
-    }
-
-    removeEventListener.call(shallowRoot, 'submit', bubblingCallback);
-
-    // Ignore any cancelled events.
-    if (getDefaultPrevented(bubblingEvent)) {
-      return;
-    }
-
-    dispatchFormdataForSubmission(target);
-  });
-};
 
 /**
  * Dispatches a 'formdata' event to `form` and modifies the form to reflect any
