@@ -1,0 +1,12 @@
+{
+  "name": "benchmarks",
+  "private": true,
+  "scripts": {
+    "benchmark": "tachometer"
+  },
+  "dependencies": {
+    "@webcomponents/shadycss": "^1.10.0",
+    "@webcomponents/webcomponentsjs": "^2.4.3",
+    "tachometer": "^0.4.21"
+  }
+}

@@ -11,11 +11,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 'use strict';
 
 import {removeCustomPropAssignment, StyleNode} from './css-parse.js'; // eslint-disable-line no-unused-vars
-import {nativeShadow, disableShadowParts} from './style-settings.js';
+import {nativeShadow} from './style-settings.js';
 import StyleTransformer from './style-transformer.js';
 import * as StyleUtil from './style-util.js';
 import * as RX from './common-regex.js';
 import StyleInfo from './style-info.js';
+import {shadowPartsActive} from './shadow-parts.js';
 
 // TODO: dedupe with shady
 /**
@@ -497,7 +498,7 @@ class StyleProperties {
     for (let i=0, l=segments.length, s; (i<l) && (s=segments[i]); i++) {
       if (s.match(hostRx)) {
         segments[i] = s.replace(hostSelector, scope);
-      } else if (!disableShadowParts && s.indexOf('[shady-part') !== -1) {
+      } else if (shadowPartsActive() && s.indexOf('[shady-part') !== -1) {
         // Kind of hacky! This is the case where a part rule is being applied to
         // a node, where that part rule comes from the grandparent of the node
         // or higher, through the exportparts tree. In this case, we're

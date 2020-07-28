@@ -290,7 +290,7 @@ export default class ScopingShim {
    * @return {void}
    */
   onInsertBefore(parentNode, newNode, referenceNode) {
-    if (!disableShadowParts) {
+    if (shadowParts.shadowPartsActive()) {
       shadowParts.onInsertBefore(parentNode, newNode, referenceNode);
     }
   }
@@ -309,7 +309,7 @@ export default class ScopingShim {
    * @return {void}
    */
   onSetAttribute(element, name, newValue, oldValue) {
-    if (!disableShadowParts) {
+    if (shadowParts.shadowPartsActive()) {
       if (name === 'part') {
         shadowParts.onSetPartAttribute(element);
       } else if (name === 'exportparts') {
@@ -331,7 +331,7 @@ export default class ScopingShim {
    * @return {void}
    */
   onRemoveAttribute(element, name, oldValue) {
-    if (!disableShadowParts) {
+    if (shadowParts.shadowPartsActive()) {
       if (name === 'part') {
         shadowParts.onRemovePartAttribute(element);
       } else if (name === 'exportparts') {
@@ -678,6 +678,17 @@ export default class ScopingShim {
    */
   currentScopeForNode(node) {
     return getCurrentScope(node);
+  }
+
+  /**
+   * Returns whether CSS Shadow Parts handling is currently necessary. True if
+   * we have seen at least one ::part rule when processing any style rules, and
+   * if window.ShadyCSS.disableShadowParts is not truthy.
+   *
+   * @return {!boolean}
+   */
+  shadowPartsActive() {
+    return shadowParts.shadowPartsActive();
   }
 }
 

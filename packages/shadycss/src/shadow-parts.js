@@ -13,8 +13,20 @@ import {StyleNode} from './css-parse.js';
 import StyleInfo from './style-info.js';
 import StyleProperties from './style-properties.js';
 import * as StyleUtil from './style-util.js';
-import {nativeCssVariables} from './style-settings.js';
+import {nativeCssVariables, disableShadowParts} from './style-settings.js';
 import {NATIVE_PREFIX} from './common-utils.js';
+import {anyPartRulesTransformed} from './style-transformer.js';
+
+/**
+ * Returns whether CSS Shadow Parts handling is currently necessary. True if we
+ * have seen at least one ::part rule when processing any style rules, and if
+ * window.ShadyCSS.disableShadowParts is not truthy.
+ *
+ * @return {!boolean}
+ */
+export function shadowPartsActive() {
+  return !disableShadowParts && anyPartRulesTransformed();
+}
 
 /**
  * Set the "shady-part" attribute using the native method.

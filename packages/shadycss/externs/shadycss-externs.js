@@ -12,6 +12,7 @@
  * onInsertBefore: function(!HTMLElement, !HTMLElement, ?HTMLElement): void,
  * onSetAttribute: function(!HTMLElement, !string, !string, ?string): void,
  * onRemoveAttribute: function(!HTMLElement, !string): void,
+ * shadowPartsActive: function(): !boolean,
  * ScopingShim: (Object|undefined),
  * ApplyShim: (Object|undefined),
  * CustomStyleInterface: (Object|undefined),
