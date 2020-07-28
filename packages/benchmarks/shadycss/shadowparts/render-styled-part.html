@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+
+<script>
+  const url = new URL(window.location.href);
+  if (url.searchParams.has('forcePolyfill')) {
+    window.ShadyDOM = {force: true};
+    window.ShadyCSS = {shimcssproperties: true};
+  }
+</script>
+<script src="../../node_modules/@webcomponents/webcomponentsjs/webcomponents-loader.js"></script>
+
+<template id="xParentTmpl">
+  <style>
+    x-child::part(foo) {
+      color: red;
+    }
+  </style>
+  x-parent
+  <x-child></x-child>
+</template>
+
+<template id="xChildTmpl">
+  x-child
+  <div part="foo">part</div>
+</template>
+
+<script type="module">
+  import * as shadyCss from '@webcomponents/shadycss';
+
+  const xParentTmpl = document.querySelector('#xParentTmpl');
+  class XParent extends HTMLElement {
+    connectedCallback() {
+      shadyCss.styleElement(this);
+      this.attachShadow({mode: 'open'});
+      this.shadowRoot.appendChild(document.importNode(xParentTmpl.content, true));
+    }
+  }
+  shadyCss.prepareTemplate(xParentTmpl, 'x-parent');
+  customElements.define('x-parent', XParent);
+
+  const xChildTmpl = document.querySelector('#xChildTmpl');
+  class XChild extends HTMLElement {
+    connectedCallback() {
+      shadyCss.styleElement(this);
+      this.attachShadow({mode: 'open'});
+      this.shadowRoot.appendChild(document.importNode(xChildTmpl.content, true));
+    }
+  }
+  shadyCss.prepareTemplate(xChildTmpl, 'x-child');
+  customElements.define('x-child', XChild);
+
+  performance.mark('start');
+  for (let i = 0; i < 1000; i++) {
+    const parent = document.createElement('x-parent');
+    document.body.appendChild(parent);
+  }
+  performance.measure('render-styled-part', 'start');
+</script>

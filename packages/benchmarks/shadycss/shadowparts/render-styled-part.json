@@ -1,0 +1,31 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Polymer/tachometer/master/config.schema.json",
+  "sampleSize": 100,
+  "timeout": 0,
+  "benchmarks": [
+    {
+      "name": "native",
+      "url": "shadycss/shadowparts/render-styled-part.html",
+      "browser": {
+        "name": "chrome",
+        "headless": true
+      },
+      "measurement": {
+        "mode": "performance",
+        "entryName": "render-styled-part"
+      }
+    },
+    {
+      "name": "polyfill",
+      "url": "shadycss/shadowparts/render-styled-part.html?forcePolyfill",
+      "browser": {
+        "name": "chrome",
+        "headless": true
+      },
+      "measurement": {
+        "mode": "performance",
+        "entryName": "render-styled-part"
+      }
+    }
+  ]
+}
