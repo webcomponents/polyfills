@@ -15,6 +15,7 @@ export const prototype = constructor.prototype;
 
 export const methods = {
   addEventListener: prototype.addEventListener,
+  appendChild: prototype.appendChild,
   dispatchEvent: prototype.dispatchEvent,
   getRootNode: prototype.getRootNode,
   insertBefore: prototype.insertBefore,

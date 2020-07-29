@@ -17,7 +17,7 @@
 
 import {methods as DocumentMethods} from './environment/document.js';
 import {document} from './environment/globals.js';
-import {getParentNode, insertBefore} from './environment_api/node.js';
+import {appendChild, getParentNode, insertBefore} from './environment_api/node.js';
 import {descriptors as HTMLInputElementDescriptors} from './environment/html_input_element.js';
 import {getEntries} from './wrappers/form_data.js';
 
@@ -56,7 +56,7 @@ export const dispatchFormdataForSubmission = (form: HTMLFormElement) => {
     if (beforeNode !== undefined) {
       insertBefore(getParentNode(beforeNode)!, input, beforeNode);
     } else {
-      form.appendChild(input);
+      appendChild(form, input);
     }
     insertedInputs.push(input);
   };
