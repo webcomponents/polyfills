@@ -16,9 +16,9 @@ import {methods as NodeMethods, descriptors as NodeDescriptors} from '../environ
 // `Object.getOwnPropertyDescriptor(Node.prototype, 'parentNode').get` is
 // undefined in Safari 9.
 const parentNodeGetter = NodeDescriptors.parentNode?.get;
-const getParentNode = parentNodeGetter !== undefined
-    ? (node: Node) => { return parentNodeGetter.call(node); }
-    : (node: Node) => { return node.parentNode; };
+export const getParentNode = parentNodeGetter !== undefined
+    ? function(this: Node) { return parentNodeGetter.call(this); }
+    : function(this: Node) { return this.parentNode; };
 
 export const getRootNode: Node['getRootNode'] = function(
     this: Node, options: GetRootNodeOptions | undefined = undefined) {
@@ -27,10 +27,10 @@ export const getRootNode: Node['getRootNode'] = function(
   }
 
   let current = this;
-  let parent = getParentNode(current);
+  let parent = getParentNode.call(current);
   while (parent !== null) {
     current = parent;
-    parent = getParentNode(parent);
+    parent = getParentNode.call(parent);
   }
   return current;
 };
