@@ -17,20 +17,20 @@ import {methods as NodeMethods, descriptors as NodeDescriptors} from '../environ
 // undefined in Safari 9.
 const parentNodeGetter = NodeDescriptors.parentNode?.get;
 export const getParentNode = parentNodeGetter !== undefined
-    ? function(this: Node) { return parentNodeGetter.call(this); }
-    : function(this: Node) { return this.parentNode; };
+    ? (node: Node) => { return parentNodeGetter.call(node); }
+    : (node: Node) => { return node.parentNode; };
 
-export const getRootNode: Node['getRootNode'] = function(
-    this: Node, options: GetRootNodeOptions | undefined = undefined) {
+export const getRootNode =
+    (node: Node, options: GetRootNodeOptions | undefined = undefined) => {
   if (NodeMethods.getRootNode !== undefined) {
-    return NodeMethods.getRootNode.call(this, options);
+    return NodeMethods.getRootNode.call(node, options);
   }
 
-  let current = this;
-  let parent = getParentNode.call(current);
+  let current = node;
+  let parent = getParentNode(current);
   while (parent !== null) {
     current = parent;
-    parent = getParentNode.call(parent);
+    parent = getParentNode(parent);
   }
   return current;
 };

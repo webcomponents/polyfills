@@ -54,7 +54,7 @@ export const dispatchFormdataForSubmission = (form: HTMLFormElement) => {
     HTMLInputElementDescriptors.value.set!.call(input, value);
 
     if (beforeNode !== undefined) {
-      getParentNode.call(beforeNode)!.insertBefore(input, beforeNode);
+      getParentNode(beforeNode)!.insertBefore(input, beforeNode);
     } else {
       form.appendChild(input);
     }
@@ -141,7 +141,7 @@ export const dispatchFormdataForSubmission = (form: HTMLFormElement) => {
   setTimeout(() => {
     // Remove any inserted inputs.
     for (const input of insertedInputs) {
-      getParentNode.call(input)?.removeChild(input);
+      getParentNode(input)?.removeChild(input);
     }
 
     // Restore the 'disabled' attribute state of any modified form elements.
