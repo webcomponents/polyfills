@@ -34,3 +34,8 @@ export const getRootNode =
   }
   return current;
 };
+
+export const insertBefore =
+    (node: Node, newNode: Node, refNode: Node | null): Node | null => {
+  return NodeMethods.insertBefore.call(node, newNode, refNode);
+};
