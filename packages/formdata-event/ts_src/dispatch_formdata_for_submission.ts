@@ -15,6 +15,7 @@
  * object passed along with the event.
  */
 
+import {document} from './environment/globals.js';
 import {getEntries} from './wrappers/form_data.js';
 
 /**

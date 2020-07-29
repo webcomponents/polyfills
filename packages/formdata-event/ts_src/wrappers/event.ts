@@ -10,6 +10,7 @@
  */
 
 import {constructor as EventConstructor, prototype as EventPrototype} from '../environment/event.js';
+import {document} from '../environment/globals.js';
 import {prepareWrapper, installWrapper} from './wrap_constructor.js';
 
 // This wrapper makes Event constructible / extensible in ES5 (the compilation
