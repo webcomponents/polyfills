@@ -17,8 +17,9 @@
 
 import {methods as DocumentMethods} from './environment/document.js';
 import {document} from './environment/globals.js';
-import {appendChild, getParentNode, insertBefore} from './environment_api/node.js';
 import {descriptors as HTMLInputElementDescriptors} from './environment/html_input_element.js';
+import {appendChild, getParentNode, insertBefore} from './environment_api/node.js';
+import {getElements} from './environment_api/html_form_element.js';
 import {getEntries} from './wrappers/form_data.js';
 
 /**
@@ -73,8 +74,9 @@ export const dispatchFormdataForSubmission = (form: HTMLFormElement) => {
    * those inserted by `insertEntry`.
    */
   const disableExistingEntries = (name: string) => {
-    for (let i = 0; i < form.elements.length; i++) {
-      const element = form.elements[i];
+    const elements = getElements(form);
+    for (let i = 0; i < elements.length; i++) {
+      const element = elements[i];
       if (element.getAttribute('name') === name) {
         if (!disabledInitialValue.has(element)) {
           disabledInitialValue.set(element, element.getAttribute('disabled'));
@@ -89,8 +91,9 @@ export const dispatchFormdataForSubmission = (form: HTMLFormElement) => {
    * Finds the first non-disabled form-associated element with a given name.
    */
   const findFirstEnabledElement = (name: string): Element | undefined => {
-    for (let i = 0; i < form.elements.length; i++) {
-      const element = form.elements[i];
+    const elements = getElements(form);
+    for (let i = 0; i < elements.length; i++) {
+      const element = elements[i];
       if (element.getAttribute('name') === name && !element.hasAttribute('disabled')) {
         return element;
       }

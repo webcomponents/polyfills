@@ -9,14 +9,8 @@
  * additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
-export const constructor = window.HTMLFormElement;
+import {descriptors as HTMLFormElementDescriptors} from '../environment/html_form_element.js';
 
-export const prototype = constructor.prototype;
-
-export const methods = {
-  submit: prototype.submit,
-};
-
-export const descriptors = {
-  elements: Object.getOwnPropertyDescriptor(prototype, 'elements')!,
+export const getElements = (form: HTMLFormElement) => {
+  return HTMLFormElementDescriptors.elements.get!.call(form);
 };
