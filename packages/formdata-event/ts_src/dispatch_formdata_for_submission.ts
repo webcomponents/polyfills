@@ -17,6 +17,7 @@
 
 import {methods as DocumentMethods} from './environment/document.js';
 import {document} from './environment/globals.js';
+import {descriptors as HTMLInputElementDescriptors} from './environment/html_input_element.js';
 import {getEntries} from './wrappers/form_data.js';
 
 /**
@@ -47,9 +48,9 @@ export const dispatchFormdataForSubmission = (form: HTMLFormElement) => {
    */
   const insertEntry = (name: string, value: string, beforeNode?: Node) => {
     const input = DocumentMethods.createElement.call(document, 'input') as HTMLInputElement;
-    input.type = 'hidden';
-    input.name = name;
-    input.value = value;
+    HTMLInputElementDescriptors.type.set!.call(input, 'hidden');
+    HTMLInputElementDescriptors.name.set!.call(input, name);
+    HTMLInputElementDescriptors.value.set!.call(input, value);
 
     if (beforeNode !== undefined) {
       beforeNode.parentNode!.insertBefore(input, beforeNode);
