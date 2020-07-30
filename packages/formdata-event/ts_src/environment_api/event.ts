@@ -9,7 +9,7 @@
  * additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
-import {descriptors as EventDescriptors} from '../environment/event.js';
+import {descriptors as EventDescriptors, methods as EventMethods} from '../environment/event.js';
 
 // `Object.getOwnPropertyDescriptor(Event.prototype, 'target')` is undefined
 // in Chrome 41.
@@ -28,3 +28,12 @@ const defaultPreventedGetter = EventDescriptors.defaultPrevented?.get;
 export const getDefaultPrevented = defaultPreventedGetter !== undefined
     ? (e: Event) => { return defaultPreventedGetter.call(e); }
     : (e: Event) => { return e.defaultPrevented; };
+
+export const initEvent = (
+  event: Event,
+  type: string,
+  bubbles: boolean = false,
+  cancelable: boolean = false,
+) => {
+  EventMethods.initEvent.call(event, type, bubbles, cancelable);
+};
