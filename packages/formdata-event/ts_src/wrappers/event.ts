@@ -10,7 +10,7 @@
  */
 
 import {constructor as EventConstructor, prototype as EventPrototype} from '../environment/event.js';
-import {wrapConstructor} from './wrap_constructor.js';
+import {prepareWrapper, installWrapper} from './wrap_constructor.js';
 
 // This wrapper makes Event constructible / extensible in ES5 (the compilation
 // target) by causing `Event.call(...)` to create native Event instances rather
@@ -36,12 +36,14 @@ export const Event: typeof window.Event = function Event(this: Event, type: stri
   return _this;
 } as Function as typeof window.Event;
 
-wrapConstructor(Event, EventConstructor, EventPrototype);
-
-// In IE11, `Object.getPrototypeOf(window.Event) === Object.prototype`, which
-// was copied by `wrapConstructor` from `window.Event` to `Event` above.
-Object.setPrototypeOf(Event, Function.prototype);
+prepareWrapper(Event, EventConstructor, EventPrototype);
 
 export const install = () => {
+  installWrapper(Event);
+
+  // In IE11, `Object.getPrototypeOf(window.Event) === Object.prototype`, which
+  // was copied by `prepareWrapper` from `window.Event` to `Event` above.
+  Object.setPrototypeOf(Event, Function.prototype);
+
   window.Event = Event;
 };
