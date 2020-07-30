@@ -35,6 +35,10 @@ export const getRootNode =
   return current;
 };
 
+export const removeChild = (node: Node, child: Node): Node => {
+  return NodeMethods.removeChild.call(node, child);
+};
+
 export const appendChild = (node: Node, child: Node): Node | null => {
   return NodeMethods.appendChild.call(node, child);
 };

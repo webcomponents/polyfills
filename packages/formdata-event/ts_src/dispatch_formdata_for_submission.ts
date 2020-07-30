@@ -18,7 +18,7 @@
 import {methods as DocumentMethods} from './environment/document.js';
 import {document} from './environment/globals.js';
 import {descriptors as HTMLInputElementDescriptors} from './environment/html_input_element.js';
-import {appendChild, getParentNode, insertBefore} from './environment_api/node.js';
+import {appendChild, getParentNode, insertBefore, removeChild} from './environment_api/node.js';
 import {hasAttribute, getAttribute, removeAttribute, setAttribute} from './environment_api/element.js';
 import {getElements} from './environment_api/html_form_element.js';
 import {getEntries} from './wrappers/form_data.js';
@@ -145,7 +145,10 @@ export const dispatchFormdataForSubmission = (form: HTMLFormElement) => {
   setTimeout(() => {
     // Remove any inserted inputs.
     for (const input of insertedInputs) {
-      getParentNode(input)?.removeChild(input);
+      const parent = getParentNode(input);
+      if (parent) {
+        removeChild(parent, input);
+      }
     }
 
     // Restore the 'disabled' attribute state of any modified form elements.

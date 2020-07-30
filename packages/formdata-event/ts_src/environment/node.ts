@@ -19,6 +19,7 @@ export const methods = {
   dispatchEvent: prototype.dispatchEvent,
   getRootNode: prototype.getRootNode,
   insertBefore: prototype.insertBefore,
+  removeChild: prototype.removeChild,
   removeEventListener: prototype.removeEventListener,
 };
 
