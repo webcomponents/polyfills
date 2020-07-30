@@ -14,7 +14,7 @@ export const constructor = window.HTMLInputElement;
 export const prototype = constructor.prototype;
 
 export const descriptors = {
-  name: Object.getOwnPropertyDescriptor(prototype, 'name')!,
-  type: Object.getOwnPropertyDescriptor(prototype, 'type')!,
-  value: Object.getOwnPropertyDescriptor(prototype, 'value')!,
+  name: Object.getOwnPropertyDescriptor(prototype, 'name'),
+  type: Object.getOwnPropertyDescriptor(prototype, 'type'),
+  value: Object.getOwnPropertyDescriptor(prototype, 'value'),
 };
