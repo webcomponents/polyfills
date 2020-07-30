@@ -22,7 +22,7 @@ import {appendChild, getParentNode, insertBefore, removeChild} from './environme
 import {hasAttribute, getAttribute, removeAttribute, setAttribute} from './environment_api/element.js';
 import {getLength} from './environment_api/html_collection.js';
 import {getElements} from './environment_api/html_form_element.js';
-import {getEntries} from './wrappers/form_data.js';
+import {FormData, getEntries} from './wrappers/form_data.js';
 
 /**
  * Dispatches a 'formdata' event to `form` and modifies the form to reflect any
