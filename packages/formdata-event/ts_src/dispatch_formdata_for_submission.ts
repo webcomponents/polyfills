@@ -20,6 +20,7 @@ import {document} from './environment/globals.js';
 import {descriptors as HTMLInputElementDescriptors} from './environment/html_input_element.js';
 import {appendChild, getParentNode, insertBefore, removeChild} from './environment_api/node.js';
 import {hasAttribute, getAttribute, removeAttribute, setAttribute} from './environment_api/element.js';
+import {getLength} from './environment_api/html_collection.js';
 import {getElements} from './environment_api/html_form_element.js';
 import {getEntries} from './wrappers/form_data.js';
 
@@ -76,7 +77,8 @@ export const dispatchFormdataForSubmission = (form: HTMLFormElement) => {
    */
   const disableExistingEntries = (name: string) => {
     const elements = getElements(form);
-    for (let i = 0; i < elements.length; i++) {
+    const length = getLength(elements);
+    for (let i = 0; i < length; i++) {
       const element = elements[i];
       if (getAttribute(element, 'name') === name) {
         if (!disabledInitialValue.has(element)) {
@@ -93,7 +95,8 @@ export const dispatchFormdataForSubmission = (form: HTMLFormElement) => {
    */
   const findFirstEnabledElement = (name: string): Element | undefined => {
     const elements = getElements(form);
-    for (let i = 0; i < elements.length; i++) {
+    const length = getLength(elements);
+    for (let i = 0; i < length; i++) {
       const element = elements[i];
       if (getAttribute(element, 'name') === name && !hasAttribute(element, 'disabled')) {
         return element;
