@@ -9,7 +9,10 @@
  * additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
+import {methods as DocumentMethods} from '../environment/document.js';
 import {constructor as EventConstructor, prototype as EventPrototype} from '../environment/event.js';
+import {document} from '../environment/globals.js';
+import {initEvent} from '../environment_api/event.js';
 import {prepareWrapper, installWrapper} from './wrap_constructor.js';
 
 // This wrapper makes Event constructible / extensible in ES5 (the compilation
@@ -29,8 +32,8 @@ export const Event: typeof window.Event = function Event(this: Event, type: stri
   try {
     _this = new EventConstructor(type, eventInit);
   } catch {
-    _this = document.createEvent('Event');
-    _this.initEvent(type, eventInit.bubbles, eventInit.cancelable);
+    _this = DocumentMethods.createEvent.call(document, 'Event');
+    initEvent(_this, type, eventInit.bubbles, eventInit.cancelable);
   }
   Object.setPrototypeOf(_this, Object.getPrototypeOf(this));
   return _this;

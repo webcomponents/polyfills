@@ -16,21 +16,34 @@ import {methods as NodeMethods, descriptors as NodeDescriptors} from '../environ
 // `Object.getOwnPropertyDescriptor(Node.prototype, 'parentNode').get` is
 // undefined in Safari 9.
 const parentNodeGetter = NodeDescriptors.parentNode?.get;
-const getParentNode = parentNodeGetter !== undefined
+export const getParentNode = parentNodeGetter !== undefined
     ? (node: Node) => { return parentNodeGetter.call(node); }
     : (node: Node) => { return node.parentNode; };
 
-export const getRootNode: Node['getRootNode'] = function(
-    this: Node, options: GetRootNodeOptions | undefined = undefined) {
+export const getRootNode =
+    (node: Node, options: GetRootNodeOptions | undefined = undefined) => {
   if (NodeMethods.getRootNode !== undefined) {
-    return NodeMethods.getRootNode.call(this, options);
+    return NodeMethods.getRootNode.call(node, options);
   }
 
-  let current = this;
+  let current = node;
   let parent = getParentNode(current);
   while (parent !== null) {
     current = parent;
     parent = getParentNode(parent);
   }
   return current;
+};
+
+export const removeChild = (node: Node, child: Node): Node => {
+  return NodeMethods.removeChild.call(node, child);
+};
+
+export const appendChild = (node: Node, child: Node): Node | null => {
+  return NodeMethods.appendChild.call(node, child);
+};
+
+export const insertBefore =
+    (node: Node, newNode: Node, refNode: Node | null): Node | null => {
+  return NodeMethods.insertBefore.call(node, newNode, refNode);
 };

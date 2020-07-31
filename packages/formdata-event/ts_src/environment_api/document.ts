@@ -9,15 +9,12 @@
  * additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
-export const constructor = window.Event;
+import {methods as DocumentMethods} from '../environment/document.js';
 
-export const prototype = constructor.prototype;
-
-export const methods = {
-  initEvent: prototype.initEvent,
-};
-
-export const descriptors = {
-  target: Object.getOwnPropertyDescriptor(prototype, 'target')!,
-  defaultPrevented: Object.getOwnPropertyDescriptor(prototype, 'defaultPrevented')!,
+export const createElement = <K extends keyof HTMLElementTagNameMap>(
+  doc: Document,
+  localName: K,
+  options?: ElementCreationOptions,
+): HTMLElementTagNameMap[K] => {
+  return DocumentMethods.createElement.call(doc, localName, options) as HTMLElementTagNameMap[K];
 };

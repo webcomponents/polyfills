@@ -16,3 +16,7 @@ export const prototype = constructor.prototype;
 export const methods = {
   submit: prototype.submit,
 };
+
+export const descriptors = {
+  elements: Object.getOwnPropertyDescriptor(prototype, 'elements')!,
+};

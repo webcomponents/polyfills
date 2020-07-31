@@ -130,7 +130,7 @@ export const submitCallback = (capturingEvent: Event) => {
     return;
   }
 
-  const shallowRoot = getRootNode.call(target);
+  const shallowRoot = getRootNode(target);
 
   // Listen for the bubbling phase of any 'submit' event that reaches the root
   // node of the tree containing the target form.

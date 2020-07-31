@@ -15,9 +15,12 @@ export const prototype = constructor.prototype;
 
 export const methods = {
   addEventListener: prototype.addEventListener,
-  removeEventListener: prototype.removeEventListener,
+  appendChild: prototype.appendChild,
   dispatchEvent: prototype.dispatchEvent,
   getRootNode: prototype.getRootNode,
+  insertBefore: prototype.insertBefore,
+  removeChild: prototype.removeChild,
+  removeEventListener: prototype.removeEventListener,
 };
 
 export const descriptors = {

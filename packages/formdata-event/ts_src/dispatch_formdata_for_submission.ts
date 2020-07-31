@@ -15,7 +15,14 @@
  * object passed along with the event.
  */
 
-import {getEntries} from './wrappers/form_data.js';
+import {document} from './environment/globals.js';
+import {createElement} from './environment_api/document.js';
+import {setType, setName, setValue} from './environment_api/html_input_element.js';
+import {appendChild, getParentNode, insertBefore, removeChild} from './environment_api/node.js';
+import {hasAttribute, getAttribute, removeAttribute, setAttribute} from './environment_api/element.js';
+import {getLength} from './environment_api/html_collection.js';
+import {getElements} from './environment_api/html_form_element.js';
+import {FormData, getEntries} from './wrappers/form_data.js';
 
 /**
  * Dispatches a 'formdata' event to `form` and modifies the form to reflect any
@@ -44,15 +51,15 @@ export const dispatchFormdataForSubmission = (form: HTMLFormElement) => {
    * `insertBeforeNode` will insert the new input before that node.
    */
   const insertEntry = (name: string, value: string, beforeNode?: Node) => {
-    const input = document.createElement('input');
-    input.type = 'hidden';
-    input.name = name;
-    input.value = value;
+    const input = createElement(document, 'input');
+    setType(input, 'hidden');
+    setName(input, name);
+    setValue(input, value);
 
     if (beforeNode !== undefined) {
-      beforeNode.parentNode!.insertBefore(input, beforeNode);
+      insertBefore(getParentNode(beforeNode)!, input, beforeNode);
     } else {
-      form.appendChild(input);
+      appendChild(form, input);
     }
     insertedInputs.push(input);
   };
@@ -69,14 +76,16 @@ export const dispatchFormdataForSubmission = (form: HTMLFormElement) => {
    * those inserted by `insertEntry`.
    */
   const disableExistingEntries = (name: string) => {
-    for (let i = 0; i < form.elements.length; i++) {
-      const element = form.elements[i];
-      if (element.getAttribute('name') === name) {
+    const elements = getElements(form);
+    const length = getLength(elements);
+    for (let i = 0; i < length; i++) {
+      const element = elements[i];
+      if (getAttribute(element, 'name') === name) {
         if (!disabledInitialValue.has(element)) {
-          disabledInitialValue.set(element, element.getAttribute('disabled'));
+          disabledInitialValue.set(element, getAttribute(element, 'disabled'));
         }
 
-        element.setAttribute('disabled', '');
+        setAttribute(element, 'disabled', '');
       }
     }
   };
@@ -85,9 +94,11 @@ export const dispatchFormdataForSubmission = (form: HTMLFormElement) => {
    * Finds the first non-disabled form-associated element with a given name.
    */
   const findFirstEnabledElement = (name: string): Element | undefined => {
-    for (let i = 0; i < form.elements.length; i++) {
-      const element = form.elements[i];
-      if (element.getAttribute('name') === name && !element.hasAttribute('disabled')) {
+    const elements = getElements(form);
+    const length = getLength(elements);
+    for (let i = 0; i < length; i++) {
+      const element = elements[i];
+      if (getAttribute(element, 'name') === name && !hasAttribute(element, 'disabled')) {
         return element;
       }
     }
@@ -137,16 +148,19 @@ export const dispatchFormdataForSubmission = (form: HTMLFormElement) => {
   setTimeout(() => {
     // Remove any inserted inputs.
     for (const input of insertedInputs) {
-      input.parentNode?.removeChild(input);
+      const parent = getParentNode(input);
+      if (parent) {
+        removeChild(parent, input);
+      }
     }
 
     // Restore the 'disabled' attribute state of any modified form elements.
     for (const [element, value] of disabledInitialValue) {
-      if (element.getAttribute('disabled') !== value) {
+      if (getAttribute(element, 'disabled') !== value) {
         if (value === null) {
-          element.removeAttribute('disabled');
+          removeAttribute(element, 'disabled');
         } else {
-          element.setAttribute('disabled', value);
+          setAttribute(element, 'disabled', value);
         }
       }
     }

@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Capture browser APIs used in `dispatchFormdataForSubmission`.
+  ([#370](https://github.com/webcomponents/polyfills/pull/370))
 - Modify the existing form to submit data from the FormData object.
   ([#361](https://github.com/webcomponents/polyfills/pull/361))
 - formdata event polyfill: Add support for legacy browsers.

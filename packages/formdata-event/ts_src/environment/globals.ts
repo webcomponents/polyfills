@@ -9,15 +9,4 @@
  * additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
-export const constructor = window.Event;
-
-export const prototype = constructor.prototype;
-
-export const methods = {
-  initEvent: prototype.initEvent,
-};
-
-export const descriptors = {
-  target: Object.getOwnPropertyDescriptor(prototype, 'target')!,
-  defaultPrevented: Object.getOwnPropertyDescriptor(prototype, 'defaultPrevented')!,
-};
+export const document = window.document;

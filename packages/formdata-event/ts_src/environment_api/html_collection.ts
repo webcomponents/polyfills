@@ -9,15 +9,8 @@
  * additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
-export const constructor = window.Event;
+import {descriptors as HTMLCollectionDescriptors} from '../environment/html_collection.js';
 
-export const prototype = constructor.prototype;
-
-export const methods = {
-  initEvent: prototype.initEvent,
-};
-
-export const descriptors = {
-  target: Object.getOwnPropertyDescriptor(prototype, 'target')!,
-  defaultPrevented: Object.getOwnPropertyDescriptor(prototype, 'defaultPrevented')!,
-};
+const lengthDescriptor = HTMLCollectionDescriptors.length ?? {};
+const lengthGetter = lengthDescriptor.get ?? function(this: HTMLCollection) { return this.length; };
+export const getLength = (collection: HTMLCollection): number => lengthGetter.call(collection);
