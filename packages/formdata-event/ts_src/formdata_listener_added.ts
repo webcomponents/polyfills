@@ -104,11 +104,16 @@ export const formdataListenerRemoved = (
 };
 
 /**
- * Tracks whether or not the bubbling listener has already been added for a
- * given 'submit' event. IE11 does not support WeakSet, so a WeakMap<K, true> is
+ * Tracks whether or not a given 'submit' event has already been seen by
+ * `submitCallback`. IE11 does not support WeakSet, so a WeakMap<K, true> is
  * used instead.
  */
 const submitEventSeen = new WeakMap<Event, true>();
+
+/**
+ * Tracks the bubbling listener added for a given 'submit' event.
+ */
+const submitEventToBubblingListener = new WeakMap<Event, Function>();
 
 /**
  * This callback listens for 'submit' events propagating through the target and
@@ -132,15 +137,14 @@ export const submitCallback = (capturingEvent: Event) => {
 
   const shallowRoot = getRootNode(target);
 
-  // Listen for the bubbling phase of any 'submit' event that reaches the root
-  // node of the tree containing the target form.
-  addEventListener.call(shallowRoot, 'submit', function bubblingCallback(bubblingEvent: Event) {
+  const bubblingCallback = function(bubblingEvent: Event) {
     // Ignore any other 'submit' events that might bubble to this root.
     if (bubblingEvent !== capturingEvent) {
       return;
     }
 
     removeEventListener.call(shallowRoot, 'submit', bubblingCallback);
+    submitEventToBubblingListener.delete(capturingEvent);
 
     // Ignore any cancelled events.
     if (getDefaultPrevented(bubblingEvent)) {
@@ -148,5 +152,10 @@ export const submitCallback = (capturingEvent: Event) => {
     }
 
     dispatchFormdataForSubmission(target);
-  });
+  };
+  submitEventToBubblingListener.set(capturingEvent, bubblingCallback);
+
+  // Listen for the bubbling phase of any 'submit' event that reaches the root
+  // node of the tree containing the target form.
+  addEventListener.call(shallowRoot, 'submit', bubblingCallback);
 };
