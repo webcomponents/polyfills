@@ -51,7 +51,7 @@ export const dispatchFormdataForSubmission = (form: HTMLFormElement) => {
    * `insertBeforeNode` will insert the new input before that node.
    */
   const insertEntry = (name: string, value: string, beforeNode?: Node) => {
-    const input = createElement(document, 'input') as HTMLInputElement;
+    const input = createElement(document, 'input');
     setType(input, 'hidden');
     setName(input, name);
     setValue(input, value);
