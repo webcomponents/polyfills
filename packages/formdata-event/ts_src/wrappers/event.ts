@@ -10,7 +10,7 @@
  */
 
 import {methods as DocumentMethods} from '../environment/document.js';
-import {constructor as EventConstructor, prototype as EventPrototype} from '../environment/event.js';
+import {constructor as EventConstructor, prototype as EventPrototype, methods as EventMethods} from '../environment/event.js';
 import {document} from '../environment/globals.js';
 import {initEvent} from '../environment_api/event.js';
 import {prepareWrapper, installWrapper} from './wrap_constructor.js';
@@ -47,6 +47,14 @@ export const install = () => {
   // In IE11, `Object.getPrototypeOf(window.Event) === Object.prototype`, which
   // was copied by `prepareWrapper` from `window.Event` to `Event` above.
   Object.setPrototypeOf(Event, Function.prototype);
+
+  Event.prototype['stopImmediatePropagation'] = function() {
+    return EventMethods.stopImmediatePropagation.call(this);
+  };
+
+  Event.prototype['stopPropagation'] = function() {
+    return EventMethods.stopPropagation.call(this);
+  };
 
   window.Event = Event;
 };

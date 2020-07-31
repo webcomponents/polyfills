@@ -15,6 +15,8 @@ export const prototype = constructor.prototype;
 
 export const methods = {
   initEvent: prototype.initEvent,
+  stopImmediatePropagation: prototype?.stopImmediatePropagation,
+  stopPropagation: prototype?.stopPropagation,
 };
 
 export const descriptors = {
