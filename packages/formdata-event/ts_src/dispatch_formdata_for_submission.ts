@@ -15,8 +15,8 @@
  * object passed along with the event.
  */
 
-import {methods as DocumentMethods} from './environment/document.js';
 import {document} from './environment/globals.js';
+import {createElement} from './environment_api/document.js';
 import {setType, setName, setValue} from './environment_api/html_input_element.js';
 import {appendChild, getParentNode, insertBefore, removeChild} from './environment_api/node.js';
 import {hasAttribute, getAttribute, removeAttribute, setAttribute} from './environment_api/element.js';
@@ -51,7 +51,7 @@ export const dispatchFormdataForSubmission = (form: HTMLFormElement) => {
    * `insertBeforeNode` will insert the new input before that node.
    */
   const insertEntry = (name: string, value: string, beforeNode?: Node) => {
-    const input = DocumentMethods.createElement.call(document, 'input') as HTMLInputElement;
+    const input = createElement(document, 'input') as HTMLInputElement;
     setType(input, 'hidden');
     setName(input, name);
     setValue(input, value);
