@@ -164,7 +164,7 @@ suite('formdataListenerAdded', () => {
   });
 
   test('Calling `stopPropagation` on a "submit" event should not cancel the ' +
-      '"formdata" event.', () => {
+      '"formdata" event and the form should still be updated.', (done) => {
     const form = iframeDoc.createElement('form');
     iframeDoc.body.appendChild(form);
 
@@ -177,19 +177,24 @@ suite('formdataListenerAdded', () => {
       e.stopPropagation();
     });
 
-    let callCount = 0;
     iframeDoc.defaultView.addEventListener('formdata', (e) => {
-      callCount++;
+      e.formData.set('name', 'value');
     });
 
     submitButton.click();
-    assert.strictEqual(callCount, 1);
 
-    iframeDoc.body.removeChild(form);
+    iframe.addEventListener('load', () => {
+      // Explicitly retrieve `iframe.contentDocument` again because the
+      // document was replaced when submitting the form.
+      const newSearch = iframe.contentDocument.defaultView.location.search;
+      assert.strictEqual(newSearch, '?name=value');
+      done();
+    });
   });
 
   test('Calling `stopImmediatePropagation` on a "submit" event should not ' +
-      'cancel the "formdata" event.', () => {
+      'cancel the "formdata" event and the form should still be updated.',
+      (done) => {
     const form = iframeDoc.createElement('form');
     iframeDoc.body.appendChild(form);
 
@@ -202,15 +207,19 @@ suite('formdataListenerAdded', () => {
       e.stopImmediatePropagation();
     });
 
-    let callCount = 0;
     iframeDoc.defaultView.addEventListener('formdata', (e) => {
-      callCount++;
+      e.formData.set('name', 'value');
     });
 
     submitButton.click();
-    assert.strictEqual(callCount, 1);
 
-    iframeDoc.body.removeChild(form);
+    iframe.addEventListener('load', () => {
+      // Explicitly retrieve `iframe.contentDocument` again because the
+      // document was replaced when submitting the form.
+      const newSearch = iframe.contentDocument.defaultView.location.search;
+      assert.strictEqual(newSearch, '?name=value');
+      done();
+    });
   });
 });
 </script>
