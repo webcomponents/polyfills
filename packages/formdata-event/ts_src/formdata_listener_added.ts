@@ -18,6 +18,7 @@
 import {getTarget, getDefaultPrevented} from './environment_api/event.js';
 import {addEventListener, removeEventListener} from './environment_api/event_target.js';
 import {getRootNode} from './environment_api/node.js';
+import {setSubmitEventPropagationStopped} from './wrappers/event.js';
 import {dispatchFormdataForSubmission} from './dispatch_formdata_for_submission.js';
 
 interface FormdataEventListenerRecord {
@@ -110,10 +111,15 @@ export const formdataListenerRemoved = (
  */
 const submitEventSeen = new WeakMap<Event, true>();
 
+interface SubmitEventBubblingListener {
+  readonly target: EventTarget;
+  readonly callback: EventListener;
+}
+
 /**
  * Tracks the bubbling listener added for a given 'submit' event.
  */
-const submitEventToBubblingListener = new WeakMap<Event, Function>();
+const submitEventToListenerInfo = new WeakMap<Event, SubmitEventBubblingListener>();
 
 /**
  * This callback listens for 'submit' events propagating through the target and
@@ -144,7 +150,7 @@ export const submitCallback = (capturingEvent: Event) => {
     }
 
     removeEventListener.call(shallowRoot, 'submit', bubblingCallback);
-    submitEventToBubblingListener.delete(capturingEvent);
+    submitEventToListenerInfo.delete(capturingEvent);
 
     // Ignore any cancelled events.
     if (getDefaultPrevented(bubblingEvent)) {
@@ -153,9 +159,28 @@ export const submitCallback = (capturingEvent: Event) => {
 
     dispatchFormdataForSubmission(target);
   };
-  submitEventToBubblingListener.set(capturingEvent, bubblingCallback);
+  submitEventToListenerInfo.set(capturingEvent, {
+    target: shallowRoot,
+    callback: bubblingCallback,
+  });
 
   // Listen for the bubbling phase of any 'submit' event that reaches the root
   // node of the tree containing the target form.
   addEventListener.call(shallowRoot, 'submit', bubblingCallback);
 };
+
+/**
+ * This function should be called when any 'submit' event's propagation is
+ * stopped, either through `stopPropagation` or `stopImmediatePropagation`.
+ */
+export const submitEventPropagationStopped = (event: Event) => {
+  const listenerInfo = submitEventToListenerInfo.get(event);
+  if (listenerInfo === undefined) {
+    return;
+  }
+
+  const {target, callback} = listenerInfo;
+  removeEventListener.call(target, 'submit', callback);
+};
+
+setSubmitEventPropagationStopped(submitEventPropagationStopped);

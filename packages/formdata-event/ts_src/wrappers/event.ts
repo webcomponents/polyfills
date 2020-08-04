@@ -15,6 +15,30 @@ import {document} from '../environment/globals.js';
 import {initEvent} from '../environment_api/event.js';
 import {prepareWrapper, installWrapper} from './wrap_constructor.js';
 
+/**
+ * A callback that is called whenever an Event's propagation is stopped.
+ *
+ * Q: Why doesn't this file just import and call `submitEventPropagationStopped`
+ * from 'formdata_listener_added.ts' directly, given that this value is set to
+ * that function and never changed?
+ *
+ * A: The way Closure compiles classes down to ES5 (which involves modifying the
+ * constructor function's prototype) paired with the prototype modifications
+ * necessary to wrap a built-in constructor, the `prepareWrapper` call in the
+ * `Event` wrapper must come *before* the `prepareWrapper` call for
+ * `FormDataEvent`. As of writing this, importing the function directly causes a
+ * dependency cycle which reorders these two calls and breaks the
+ * `FormDataEvent` prototype.
+ */
+let submitEventPropagationStopped: ((e: Event) => void) | undefined = undefined;
+
+/**
+ * Sets the callback to be called whenever an Event's propagation is stopped.
+ */
+export const setSubmitEventPropagationStopped = (fn: (e: Event) => void) => {
+  submitEventPropagationStopped = fn;
+};
+
 // This wrapper makes Event constructible / extensible in ES5 (the compilation
 // target) by causing `Event.call(...)` to create native Event instances rather
 // than throwing. It also avoids an issue with Safari where constructing a class
@@ -49,10 +73,16 @@ export const install = () => {
   Object.setPrototypeOf(Event, Function.prototype);
 
   Event.prototype['stopImmediatePropagation'] = function() {
+    if (this.type === 'submit') {
+      submitEventPropagationStopped?.(this);
+    }
     return EventMethods.stopImmediatePropagation.call(this);
   };
 
   Event.prototype['stopPropagation'] = function() {
+    if (this.type === 'submit') {
+      submitEventPropagationStopped?.(this);
+    }
     return EventMethods.stopPropagation.call(this);
   };
 
