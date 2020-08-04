@@ -162,6 +162,56 @@ suite('formdataListenerAdded', () => {
 
     iframeDoc.body.removeChild(form);
   });
+
+  test('Calling `stopPropagation` on a "submit" event should not cancel the ' +
+      '"formdata" event.', () => {
+    const form = iframeDoc.createElement('form');
+    iframeDoc.body.appendChild(form);
+
+    // See note above.
+    const submitButton = iframeDoc.createElement('input');
+    submitButton.type = 'submit';
+    form.appendChild(submitButton);
+
+    form.addEventListener('submit', (e) => {
+      e.stopPropagation();
+    });
+
+    let callCount = 0;
+    iframeDoc.defaultView.addEventListener('formdata', (e) => {
+      callCount++;
+    });
+
+    submitButton.click();
+    assert.strictEqual(callCount, 1);
+
+    iframeDoc.body.removeChild(form);
+  });
+
+  test('Calling `stopImmediatePropagation` on a "submit" event should not ' +
+      'cancel the "formdata" event.', () => {
+    const form = iframeDoc.createElement('form');
+    iframeDoc.body.appendChild(form);
+
+    // See note above.
+    const submitButton = iframeDoc.createElement('input');
+    submitButton.type = 'submit';
+    form.appendChild(submitButton);
+
+    form.addEventListener('submit', (e) => {
+      e.stopImmediatePropagation();
+    });
+
+    let callCount = 0;
+    iframeDoc.defaultView.addEventListener('formdata', (e) => {
+      callCount++;
+    });
+
+    submitButton.click();
+    assert.strictEqual(callCount, 1);
+
+    iframeDoc.body.removeChild(form);
+  });
 });
 </script>
 </body>
