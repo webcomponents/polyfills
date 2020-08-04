@@ -20,6 +20,7 @@ export const methods = {
 };
 
 export const descriptors = {
-  target: Object.getOwnPropertyDescriptor(prototype, 'target')!,
   defaultPrevented: Object.getOwnPropertyDescriptor(prototype, 'defaultPrevented')!,
+  target: Object.getOwnPropertyDescriptor(prototype, 'target')!,
+  type: Object.getOwnPropertyDescriptor(prototype, 'type')!,
 };

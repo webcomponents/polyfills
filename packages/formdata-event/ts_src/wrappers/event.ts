@@ -12,7 +12,7 @@
 import {methods as DocumentMethods} from '../environment/document.js';
 import {constructor as EventConstructor, prototype as EventPrototype, methods as EventMethods} from '../environment/event.js';
 import {document} from '../environment/globals.js';
-import {initEvent} from '../environment_api/event.js';
+import {getType, initEvent} from '../environment_api/event.js';
 import {prepareWrapper, installWrapper} from './wrap_constructor.js';
 
 /**
@@ -73,14 +73,14 @@ export const install = () => {
   Object.setPrototypeOf(Event, Function.prototype);
 
   Event.prototype['stopImmediatePropagation'] = function() {
-    if (this.type === 'submit') {
+    if (getType(this) === 'submit') {
       submitEventPropagationStoppedCallback?.(this);
     }
     return EventMethods.stopImmediatePropagation.call(this);
   };
 
   Event.prototype['stopPropagation'] = function() {
-    if (this.type === 'submit') {
+    if (getType(this) === 'submit') {
       submitEventPropagationStoppedCallback?.(this);
     }
     return EventMethods.stopPropagation.call(this);
