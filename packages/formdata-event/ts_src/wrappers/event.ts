@@ -18,9 +18,9 @@ import {prepareWrapper, installWrapper} from './wrap_constructor.js';
 /**
  * A callback that is called whenever an Event's propagation is stopped.
  *
- * Q: Why doesn't this file just import and call `submitEventPropagationStopped`
- * from 'formdata_listener_added.ts' directly, given that this value is set to
- * that function and never changed?
+ * Q: Why doesn't this file just import and call the callback from
+ * 'formdata_listener_added.ts' directly, given that this value is set to that
+ * function and never changed?
  *
  * A: The way Closure compiles classes down to ES5 (which involves modifying the
  * constructor function's prototype) paired with the prototype modifications
@@ -30,13 +30,13 @@ import {prepareWrapper, installWrapper} from './wrap_constructor.js';
  * dependency cycle which reorders these two calls and breaks the
  * `FormDataEvent` prototype.
  */
-let submitEventPropagationStopped: ((e: Event) => void) | undefined = undefined;
+let submitEventPropagationStoppedCallback: ((e: Event) => void) | undefined = undefined;
 
 /**
  * Sets the callback to be called whenever an Event's propagation is stopped.
  */
-export const setSubmitEventPropagationStopped = (fn: (e: Event) => void) => {
-  submitEventPropagationStopped = fn;
+export const setSubmitEventPropagationStoppedCallback = (fn: (e: Event) => void) => {
+  submitEventPropagationStoppedCallback = fn;
 };
 
 // This wrapper makes Event constructible / extensible in ES5 (the compilation
@@ -74,14 +74,14 @@ export const install = () => {
 
   Event.prototype['stopImmediatePropagation'] = function() {
     if (this.type === 'submit') {
-      submitEventPropagationStopped?.(this);
+      submitEventPropagationStoppedCallback?.(this);
     }
     return EventMethods.stopImmediatePropagation.call(this);
   };
 
   Event.prototype['stopPropagation'] = function() {
     if (this.type === 'submit') {
-      submitEventPropagationStopped?.(this);
+      submitEventPropagationStoppedCallback?.(this);
     }
     return EventMethods.stopPropagation.call(this);
   };
