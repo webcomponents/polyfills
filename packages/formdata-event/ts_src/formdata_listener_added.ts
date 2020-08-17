@@ -91,6 +91,66 @@ export const formdataListenerRemoved = (
 };
 
 /**
+ * The set of 'submit' event listeners for an event target.
+ */
+const targetToSubmitListeners = new WeakMap<EventTarget, EventListenerArray>();
+
+/**
+ * This function should be called when any 'submit' event listener is added to
+ * `target`.
+ */
+export const submitListenerAdded = (
+  target: EventTarget,
+  callback: EventListenerOrEventListenerObject | null,
+  options?: boolean | AddEventListenerOptions,
+) => {
+  // If this listener's `callback` is null, the browser ignores it.
+  if (!callback) {
+    return;
+  }
+
+  const capture = typeof options === 'boolean' ? options : (options?.capture ?? false);
+  const submitListeners = targetToSubmitListeners.get(target);
+
+  if (submitListeners === undefined) {
+    const listeners = new EventListenerArray();
+    listeners.push({callback, capture});
+    targetToSubmitListeners.set(target, listeners);
+    return;
+  }
+
+  submitListeners.push({callback, capture});
+};
+
+/**
+ * This function should be called when any 'submit' event listener is removed
+ * from `target`.
+ */
+export const submitListenerRemoved = (
+  target: EventTarget,
+  callback: EventListenerOrEventListenerObject | null,
+  options?: boolean | EventListenerOptions,
+) => {
+  // Event listeners with null callbacks aren't stored.
+  if (!callback) {
+    return;
+  }
+
+  const submitListeners = targetToSubmitListeners.get(target);
+  if (submitListeners === undefined) {
+    return;
+  }
+
+  const capture = typeof options === 'boolean' ? options : (options?.capture ?? false);
+
+  submitListeners.delete({callback, capture});
+
+  if (submitListeners.length === 0) {
+    targetToSubmitListeners.delete(target);
+  }
+};
+
+/**
  * Tracks whether or not a given 'submit' event has already been seen by
  * `submitCallback`. IE11 does not support WeakSet, so a WeakMap<K, true> is
  * used instead.
