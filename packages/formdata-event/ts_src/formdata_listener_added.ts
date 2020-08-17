@@ -23,10 +23,7 @@ import {dispatchFormdataForSubmission} from './dispatch_formdata_for_submission.
 import {EventListenerArray} from './event_listener_array.js';
 
 /**
- * The set of 'formdata' event listeners for an event target, including enough
- * information to determine if they would be deduplicated: type (always
- * 'formdata' here), the callback itself, and capture flag. See
- * https://dom.spec.whatwg.org/#add-an-event-listener for a full description.
+ * The set of 'formdata' event listeners for an event target.
  */
 const targetToFormdataListeners = new WeakMap<EventTarget, EventListenerArray>();
 

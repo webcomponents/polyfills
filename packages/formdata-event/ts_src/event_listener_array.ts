@@ -14,6 +14,13 @@ interface EventListenerRecord {
   readonly capture: boolean;
 }
 
+/**
+ * EventListenerArray keeps track of an array of event listeners, including
+ * enough information to determine if they would be deduplicated by the browser:
+ * type (always 'formdata' here), the callback itself, and capture flag. See
+ * https://dom.spec.whatwg.org/#add-an-event-listener for a full description of
+ * the deduplicating behavior.
+ */
 export class EventListenerArray {
   #listeners = new Array<EventListenerRecord>();
 
