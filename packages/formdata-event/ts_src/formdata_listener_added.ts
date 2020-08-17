@@ -20,11 +20,7 @@ import {addEventListener, removeEventListener} from './environment_api/event_tar
 import {getRootNode} from './environment_api/node.js';
 import {setSubmitEventPropagationStoppedCallback} from './wrappers/event.js';
 import {dispatchFormdataForSubmission} from './dispatch_formdata_for_submission.js';
-
-interface FormdataEventListenerRecord {
-  callback: EventListenerOrEventListenerObject;
-  capture: boolean;
-}
+import {EventListenerArray} from './event_listener_array.js';
 
 /**
  * The set of 'formdata' event listeners for an event target, including enough
@@ -32,7 +28,7 @@ interface FormdataEventListenerRecord {
  * 'formdata' here), the callback itself, and capture flag. See
  * https://dom.spec.whatwg.org/#add-an-event-listener for a full description.
  */
-const targetToFormdataListeners = new WeakMap<EventTarget, Set<FormdataEventListenerRecord>>();
+const targetToFormdataListeners = new WeakMap<EventTarget, EventListenerArray>();
 
 /**
  * This function should be called when any 'formdata' event listener is added to
@@ -55,20 +51,14 @@ export const formdataListenerAdded = (
   // When the first 'formdata' listener is added, also add the 'submit'
   // listener.
   if (formdataListeners === undefined) {
-    targetToFormdataListeners.set(target, new Set([{callback, capture}]));
+    const listeners = new EventListenerArray();
+    listeners.push({callback, capture});
+    targetToFormdataListeners.set(target, listeners);
     addEventListener.call(target, 'submit', submitCallback, true);
     return;
   }
 
-  // If this listener has the same callback and capture flag as any that
-  // already exists, the browser ignores it.
-  for (const existing of formdataListeners) {
-    if (callback === existing.callback && capture === existing.capture) {
-      return;
-    }
-  }
-
-  formdataListeners.add({callback, capture});
+  formdataListeners.push({callback, capture});
 };
 
 /**
@@ -81,6 +71,11 @@ export const formdataListenerRemoved = (
   callback: EventListenerOrEventListenerObject | null,
   options?: boolean | EventListenerOptions,
 ) => {
+  // Event listeners with null callbacks aren't stored.
+  if (!callback) {
+    return;
+  }
+
   const formdataListeners = targetToFormdataListeners.get(target);
   if (formdataListeners === undefined) {
     return;
@@ -88,17 +83,11 @@ export const formdataListenerRemoved = (
 
   const capture = typeof options === 'boolean' ? options : (options?.capture ?? false);
 
-  // Remove any existing listener that matches the given arguments.
-  for (const existing of formdataListeners) {
-    if (callback === existing.callback && capture === existing.capture) {
-      formdataListeners.delete(existing);
-      break;
-    }
-  }
+  formdataListeners.delete({callback, capture});
 
   // When the last 'formdata' event listener is removed, also remove the
   // 'submit' listener.
-  if (formdataListeners.size === 0) {
+  if (formdataListeners.length === 0) {
     targetToFormdataListeners.delete(target);
     removeEventListener.call(target, 'submit', submitCallback, true);
   }
