@@ -26,6 +26,10 @@ export class EventListenerArray {
 
   get length() { return this.#listeners.length; }
 
+  get capturingCount() { return this.#listeners.filter(record => record.capture).length; }
+
+  get bubblingCount() { return this.#listeners.filter(record => !record.capture).length; }
+
   push(record: EventListenerRecord) {
     const {callback, capture} = record;
 

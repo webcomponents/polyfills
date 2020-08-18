@@ -109,17 +109,23 @@ export const submitListenerAdded = (
     return;
   }
 
-  const capture = typeof options === 'boolean' ? options : (options?.capture ?? false);
-  const submitListeners = targetToSubmitListeners.get(target);
-
-  if (submitListeners === undefined) {
-    const listeners = new EventListenerArray();
-    listeners.push({callback, capture});
-    targetToSubmitListeners.set(target, listeners);
-    return;
+  if (!targetToSubmitListeners.has(target)) {
+    targetToSubmitListeners.set(target, new EventListenerArray());
   }
 
+  const capture = typeof options === 'boolean' ? options : (options?.capture ?? false);
+  const submitListeners = targetToSubmitListeners.get(target)!;
+  const initialSubmitListenerCount = submitListeners.length;
+
   submitListeners.push({callback, capture});
+
+  // Was the new listener added? (i.e. Was it not deduplicated?)
+  if (submitListeners.length > initialSubmitListenerCount) {
+    // Remove and re-add `finalSubmitCallback` to move it to the end of the list
+    // of listeners for the given phase.
+    removeEventListener.call(target, 'submit', finalSubmitCallback, capture);
+    addEventListener.call(target, 'submit', finalSubmitCallback, capture);
+  }
 };
 
 /**
@@ -145,9 +151,28 @@ export const submitListenerRemoved = (
 
   submitListeners.delete({callback, capture});
 
-  if (submitListeners.length === 0) {
-    targetToSubmitListeners.delete(target);
+  // If there are no remaining capturing 'submit' listeners, remove the
+  // capturing `finalSubmitListener`.
+  if (capture && submitListeners.capturingCount === 0) {
+    removeEventListener.call(target, 'submit', finalSubmitCallback, capture);
   }
+
+  // If there are no remaining bubbling 'submit' listeners, remove the bubbling
+  // `finalSubmitListener`.
+  if (!capture && submitListeners.bubblingCount === 0) {
+    removeEventListener.call(target, 'submit', finalSubmitCallback, capture);
+  }
+};
+
+/**
+ * This callback listens for 'submit' events on EventTargets with other 'submit'
+ * event listeners. The callback listens at both the capturing and bubbling
+ * phases, if any other listener at that phase is added, and is moved by
+ * `submitListenerAdded` to always be the *last* 'submit' listener for that
+ * phase.
+ */
+const finalSubmitCallback = (e: Event) => {
+  console.log('Check the stop propagation flag here.', e);
 };
 
 /**
