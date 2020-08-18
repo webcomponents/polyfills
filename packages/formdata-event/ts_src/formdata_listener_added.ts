@@ -173,7 +173,7 @@ const submitEventToListenerInfo = new WeakMap<Event, SubmitEventBubblingListener
  * root node, where it calls `dispatchFormdataForSubmission` if the event wasn't
  * cancelled.
  */
-export const submitCallback = (capturingEvent: Event) => {
+const submitCallback = (capturingEvent: Event) => {
   // Ignore any events that have already been seen by this callback, which could
   // be in the event's path at more than once.
   if (submitEventSeen.has(capturingEvent)) {
