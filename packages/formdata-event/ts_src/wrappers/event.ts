@@ -39,6 +39,22 @@ export const setSubmitEventPropagationStoppedCallback = (fn: (e: Event) => void)
   submitEventPropagationStoppedCallback = fn;
 };
 
+/**
+ * A callback that is called whenever an Event's propagation is immediately
+ * stopped.
+ *
+ * See the note above for `submitEventPropagationStoppedCallback`.
+ */
+let submitEventPropagationImmediatelyStoppedCallback: ((e: Event) => void) | undefined = undefined;
+
+/**
+ * Sets the callback to be called whenever an Event's propagation is immediately
+ * stopped.
+ */
+export const setSubmitEventPropagationImmediatelyStoppedCallback = (fn: (e: Event) => void) => {
+  submitEventPropagationImmediatelyStoppedCallback = fn;
+};
+
 // This wrapper makes Event constructible / extensible in ES5 (the compilation
 // target) by causing `Event.call(...)` to create native Event instances rather
 // than throwing. It also avoids an issue with Safari where constructing a class
@@ -74,7 +90,7 @@ export const install = () => {
 
   Event.prototype['stopImmediatePropagation'] = function() {
     if (getType(this) === 'submit') {
-      submitEventPropagationStoppedCallback?.(this);
+      submitEventPropagationImmediatelyStoppedCallback?.(this);
     }
     return EventMethods.stopImmediatePropagation.call(this);
   };

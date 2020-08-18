@@ -18,7 +18,7 @@
 import {getTarget, getDefaultPrevented} from './environment_api/event.js';
 import {addEventListener, removeEventListener} from './environment_api/event_target.js';
 import {getRootNode} from './environment_api/node.js';
-import {setSubmitEventPropagationStoppedCallback} from './wrappers/event.js';
+import {setSubmitEventPropagationStoppedCallback, setSubmitEventPropagationImmediatelyStoppedCallback} from './wrappers/event.js';
 import {dispatchFormdataForSubmission} from './dispatch_formdata_for_submission.js';
 import {EventListenerArray} from './event_listener_array.js';
 
@@ -247,8 +247,8 @@ const submitCallback = (capturingEvent: Event) => {
 };
 
 /**
- * This function will be called when any 'submit' event's propagation is
- * stopped, either through `stopPropagation` or `stopImmediatePropagation`.
+ * This function will be called when any 'submit' event's propagation is stopped
+ * by `stopPropagation`.
  */
 setSubmitEventPropagationStoppedCallback((event: Event) => {
   const listenerInfo = submitEventToListenerInfo.get(event);
@@ -258,4 +258,21 @@ setSubmitEventPropagationStoppedCallback((event: Event) => {
   }
 
   eventToPropagationStopped.set(event, true);
+});
+
+/**
+ * This function will be called when any 'submit' event's propagation is stopped
+ * by `stopImmediatePropagation`.
+ */
+setSubmitEventPropagationImmediatelyStoppedCallback((event: Event) => {
+  const listenerInfo = submitEventToListenerInfo.get(event);
+  if (listenerInfo) {
+    const {target, callback} = listenerInfo;
+    removeEventListener.call(target, 'submit', callback);
+  }
+
+  // Ignore any cancelled events.
+  if (!getDefaultPrevented(event)) {
+    dispatchFormdataForSubmission(getTarget(event));
+  }
 });
