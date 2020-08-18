@@ -26,13 +26,15 @@ export const wrapAddEventListener = (
     listener: EventListenerOrEventListenerObject | null,
     options?: boolean | AddEventListenerOptions,
   ) {
+    const result = original.call(this, type, listener, options);
+
     if (type === 'formdata') {
       formdataListenerAdded(this, listener, options);
     } else if (type === 'submit') {
       submitListenerAdded(this, listener, options);
     }
 
-    return original.call(this, type, listener, options);
+    return result;
   };
 };
 
@@ -48,13 +50,15 @@ export const wrapRemoveEventListener = (
     listener: EventListenerOrEventListenerObject | null,
     options?: boolean | EventListenerOptions,
   ) {
+    const result = original.call(this, type, listener, options);
+
     if (type === 'formdata') {
       formdataListenerRemoved(this, listener, options);
     } else if (type === 'submit') {
       submitListenerRemoved(this, listener, options);
     }
 
-    return original.call(this, type, listener, options);
+    return result;
   };
 };
 
