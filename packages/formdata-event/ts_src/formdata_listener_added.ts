@@ -164,6 +164,8 @@ export const submitListenerRemoved = (
   }
 };
 
+const eventToPropagationStopped = new WeakMap<Event, true>();
+
 /**
  * This callback listens for 'submit' events on EventTargets with other 'submit'
  * event listeners. The callback listens at both the capturing and bubbling
@@ -171,8 +173,12 @@ export const submitListenerRemoved = (
  * `submitListenerAdded` to always be the *last* 'submit' listener for that
  * phase.
  */
-const finalSubmitCallback = (e: Event) => {
-  console.log('Check the stop propagation flag here.', e);
+const finalSubmitCallback = (event: Event) => {
+  // If the event's propagation was stopped by `stopPropagation` but not
+  // cancelled, dispatch the 'formdata' event.
+  if (eventToPropagationStopped.has(event) && !getDefaultPrevented(event)) {
+    dispatchFormdataForSubmission(getTarget(event));
+  }
 };
 
 /**
@@ -246,10 +252,10 @@ const submitCallback = (capturingEvent: Event) => {
  */
 setSubmitEventPropagationStoppedCallback((event: Event) => {
   const listenerInfo = submitEventToListenerInfo.get(event);
-  if (listenerInfo === undefined) {
-    return;
+  if (listenerInfo) {
+    const {target, callback} = listenerInfo;
+    removeEventListener.call(target, 'submit', callback);
   }
 
-  const {target, callback} = listenerInfo;
-  removeEventListener.call(target, 'submit', callback);
+  eventToPropagationStopped.set(event, true);
 });
