@@ -18,21 +18,13 @@
 import {getTarget, getDefaultPrevented} from './environment_api/event.js';
 import {addEventListener, removeEventListener} from './environment_api/event_target.js';
 import {getRootNode} from './environment_api/node.js';
-import {setSubmitEventPropagationStoppedCallback} from './wrappers/event.js';
 import {dispatchFormdataForSubmission} from './dispatch_formdata_for_submission.js';
-
-interface FormdataEventListenerRecord {
-  callback: EventListenerOrEventListenerObject;
-  capture: boolean;
-}
+import {EventListenerArray} from './event_listener_array.js';
 
 /**
- * The set of 'formdata' event listeners for an event target, including enough
- * information to determine if they would be deduplicated: type (always
- * 'formdata' here), the callback itself, and capture flag. See
- * https://dom.spec.whatwg.org/#add-an-event-listener for a full description.
+ * The set of 'formdata' event listeners for an event target.
  */
-const targetToFormdataListeners = new WeakMap<EventTarget, Set<FormdataEventListenerRecord>>();
+const targetToFormdataListeners = new WeakMap<EventTarget, EventListenerArray>();
 
 /**
  * This function should be called when any 'formdata' event listener is added to
@@ -55,20 +47,14 @@ export const formdataListenerAdded = (
   // When the first 'formdata' listener is added, also add the 'submit'
   // listener.
   if (formdataListeners === undefined) {
-    targetToFormdataListeners.set(target, new Set([{callback, capture}]));
+    const listeners = new EventListenerArray();
+    listeners.push({callback, capture});
+    targetToFormdataListeners.set(target, listeners);
     addEventListener.call(target, 'submit', submitCallback, true);
     return;
   }
 
-  // If this listener has the same callback and capture flag as any that
-  // already exists, the browser ignores it.
-  for (const existing of formdataListeners) {
-    if (callback === existing.callback && capture === existing.capture) {
-      return;
-    }
-  }
-
-  formdataListeners.add({callback, capture});
+  formdataListeners.push({callback, capture});
 };
 
 /**
@@ -81,6 +67,11 @@ export const formdataListenerRemoved = (
   callback: EventListenerOrEventListenerObject | null,
   options?: boolean | EventListenerOptions,
 ) => {
+  // Event listeners with null callbacks aren't stored.
+  if (!callback) {
+    return;
+  }
+
   const formdataListeners = targetToFormdataListeners.get(target);
   if (formdataListeners === undefined) {
     return;
@@ -88,22 +79,15 @@ export const formdataListenerRemoved = (
 
   const capture = typeof options === 'boolean' ? options : (options?.capture ?? false);
 
-  // Remove any existing listener that matches the given arguments.
-  for (const existing of formdataListeners) {
-    if (callback === existing.callback && capture === existing.capture) {
-      formdataListeners.delete(existing);
-      break;
-    }
-  }
+  formdataListeners.delete({callback, capture});
 
   // When the last 'formdata' event listener is removed, also remove the
   // 'submit' listener.
-  if (formdataListeners.size === 0) {
+  if (formdataListeners.length === 0) {
     targetToFormdataListeners.delete(target);
     removeEventListener.call(target, 'submit', submitCallback, true);
   }
 };
-
 /**
  * Tracks whether or not a given 'submit' event has already been seen by
  * `submitCallback`. IE11 does not support WeakSet, so a WeakMap<K, true> is
@@ -127,7 +111,7 @@ const submitEventToListenerInfo = new WeakMap<Event, SubmitEventBubblingListener
  * root node, where it calls `dispatchFormdataForSubmission` if the event wasn't
  * cancelled.
  */
-export const submitCallback = (capturingEvent: Event) => {
+const submitCallback = (capturingEvent: Event) => {
   // Ignore any events that have already been seen by this callback, which could
   // be in the event's path at more than once.
   if (submitEventSeen.has(capturingEvent)) {
@@ -149,8 +133,7 @@ export const submitCallback = (capturingEvent: Event) => {
       return;
     }
 
-    removeEventListener.call(shallowRoot, 'submit', bubblingCallback);
-    submitEventToListenerInfo.delete(capturingEvent);
+    removeBubblingCallback(bubblingEvent);
 
     // Ignore any cancelled events.
     if (getDefaultPrevented(bubblingEvent)) {
@@ -169,16 +152,11 @@ export const submitCallback = (capturingEvent: Event) => {
   addEventListener.call(shallowRoot, 'submit', bubblingCallback);
 };
 
-/**
- * This function will be called when any 'submit' event's propagation is
- * stopped, either through `stopPropagation` or `stopImmediatePropagation`.
- */
-setSubmitEventPropagationStoppedCallback((event: Event) => {
+export const removeBubblingCallback = (event: Event) => {
   const listenerInfo = submitEventToListenerInfo.get(event);
-  if (listenerInfo === undefined) {
-    return;
+  if (listenerInfo) {
+    const {target, callback} = listenerInfo;
+    removeEventListener.call(target, 'submit', callback);
+    submitEventToListenerInfo.delete(event);
   }
-
-  const {target, callback} = listenerInfo;
-  removeEventListener.call(target, 'submit', callback);
-});
+};

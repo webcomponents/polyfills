@@ -13,6 +13,7 @@ import {prototype as EventTargetPrototype, methods as EventTargetMethods} from '
 import {prototype as NodePrototype, methods as NodeMethods} from '../environment/node.js';
 import {prototype as WindowPrototype, methods as WindowMethods} from '../environment/window.js';
 import {formdataListenerAdded, formdataListenerRemoved} from '../formdata_listener_added.js';
+import {submitListenerAdded, submitListenerRemoved} from '../submit_listener_added.js';
 
 export const wrapAddEventListener = (
   prototype: {
@@ -26,11 +27,15 @@ export const wrapAddEventListener = (
     listener: EventListenerOrEventListenerObject | null,
     options?: boolean | AddEventListenerOptions,
   ) {
+    const result = original.call(this, type, listener, options);
+
     if (type === 'formdata') {
       formdataListenerAdded(this, listener, options);
+    } else if (type === 'submit') {
+      submitListenerAdded(this, listener, options);
     }
 
-    return original.call(this, type, listener, options);
+    return result;
   };
 };
 
@@ -46,11 +51,15 @@ export const wrapRemoveEventListener = (
     listener: EventListenerOrEventListenerObject | null,
     options?: boolean | EventListenerOptions,
   ) {
+    const result = original.call(this, type, listener, options);
+
     if (type === 'formdata') {
       formdataListenerRemoved(this, listener, options);
+    } else if (type === 'submit') {
+      submitListenerRemoved(this, listener, options);
     }
 
-    return original.call(this, type, listener, options);
+    return result;
   };
 };
 
