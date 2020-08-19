@@ -22,36 +22,40 @@ interface EventListenerRecord {
  * the deduplicating behavior.
  */
 export class EventListenerArray {
-  #listeners = new Array<EventListenerRecord>();
+  private _listeners: Array<EventListenerRecord>;
 
-  get length() { return this.#listeners.length; }
+  constructor() {
+    this._listeners = new Array<EventListenerRecord>();
+  }
 
-  get capturingCount() { return this.#listeners.filter(record => record.capture).length; }
+  get length() { return this._listeners.length; }
 
-  get bubblingCount() { return this.#listeners.filter(record => !record.capture).length; }
+  get capturingCount() { return this._listeners.filter(record => record.capture).length; }
+
+  get bubblingCount() { return this._listeners.filter(record => !record.capture).length; }
 
   push(record: EventListenerRecord) {
     const {callback, capture} = record;
 
     // If this listener has the same callback and capture flag as any that
     // already exists, the browser ignores it.
-    for (const existing of this.#listeners) {
+    for (const existing of this._listeners) {
       if (callback === existing.callback && capture === existing.capture) {
         return;
       }
     }
 
-    this.#listeners.push(record);
+    this._listeners.push(record);
   }
 
   delete(record: EventListenerRecord) {
     const {callback, capture} = record;
 
     // Remove any existing listener that matches the given arguments.
-    for (let i = 0; i < this.#listeners.length; i++) {
-      const existing = this.#listeners[i];
+    for (let i = 0; i < this._listeners.length; i++) {
+      const existing = this._listeners[i];
       if (callback === existing.callback && capture === existing.capture) {
-        this.#listeners.splice(i, 1);
+        this._listeners.splice(i, 1);
         break;
       }
     }
