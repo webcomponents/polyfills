@@ -178,7 +178,7 @@ suite('formdataListenerAdded', () => {
     });
 
     iframeDoc.defaultView.addEventListener('formdata', (e) => {
-      e.formData.set('name', 'value');
+      e.formData.append('name', 'value');
     });
 
     submitButton.click();
@@ -208,7 +208,7 @@ suite('formdataListenerAdded', () => {
     });
 
     iframeDoc.defaultView.addEventListener('formdata', (e) => {
-      e.formData.set('name', 'value');
+      e.formData.append('name', 'value');
     });
 
     submitButton.click();
