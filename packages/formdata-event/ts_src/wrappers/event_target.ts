@@ -12,7 +12,8 @@
 import {prototype as EventTargetPrototype, methods as EventTargetMethods} from '../environment/event_target.js';
 import {prototype as NodePrototype, methods as NodeMethods} from '../environment/node.js';
 import {prototype as WindowPrototype, methods as WindowMethods} from '../environment/window.js';
-import {formdataListenerAdded, formdataListenerRemoved, submitListenerAdded, submitListenerRemoved} from '../formdata_listener_added.js';
+import {formdataListenerAdded, formdataListenerRemoved} from '../formdata_listener_added.js';
+import {submitListenerAdded, submitListenerRemoved} from '../submit_listener_added.js';
 
 export const wrapAddEventListener = (
   prototype: {
