@@ -21,7 +21,7 @@ import {addEventListener, removeEventListener} from './environment_api/event_tar
 import {getRootNode} from './environment_api/node.js';
 import {dispatchFormdataForSubmission} from './dispatch_formdata_for_submission.js';
 import {EventListenerArray} from './event_listener_array.js';
-import {targetToSubmitListeners} from './submit_listener_added.js';
+import {submitListenerAdded, submitListenerRemoved, targetToSubmitListeners} from './submit_listener_added.js';
 
 /**
  * The set of 'formdata' event listeners for an event target.
@@ -130,21 +130,9 @@ const submitCallback = (capturingEvent: Event) => {
 
   const shallowRoot = getRootNode(target);
 
-  const bubblingCallback = function(bubblingEvent: Event) {
-    // Ignore any other 'submit' events that might bubble to this root.
-    if (bubblingEvent !== capturingEvent) {
-      return;
-    }
-
-    removeBubblingCallback(bubblingEvent);
-
-    // Ignore any cancelled events.
-    if (getDefaultPrevented(bubblingEvent)) {
-      return;
-    }
-
-    dispatchFormdataForSubmission(target);
-  };
+  // The wrapper generated here will handle dispatching the event if it bubbles
+  // all the way to `shallowRoot`.
+  const bubblingCallback = wrapSubmitListener(() => {});
   submitEventToListenerInfo.set(capturingEvent, {
     target: shallowRoot,
     callback: bubblingCallback,
@@ -153,6 +141,7 @@ const submitCallback = (capturingEvent: Event) => {
   // Listen for the bubbling phase of any 'submit' event that reaches the root
   // node of the tree containing the target form.
   addEventListener.call(shallowRoot, 'submit', bubblingCallback);
+  submitListenerAdded(shallowRoot, bubblingCallback);
 };
 
 const removeBubblingCallback = (event: Event) => {
@@ -160,6 +149,7 @@ const removeBubblingCallback = (event: Event) => {
   if (listenerInfo) {
     const {target, callback} = listenerInfo;
     removeEventListener.call(target, 'submit', callback);
+    submitListenerRemoved(target, callback);
     submitEventToListenerInfo.delete(event);
   }
 };
@@ -173,7 +163,6 @@ const eventToPropagationImmediatelyStopped = new WeakMap<Event, true>();
  */
 setSubmitEventPropagationStoppedCallback((event: Event) => {
   eventToPropagationStopped.set(event, true);
-  removeBubblingCallback(event);
 });
 
 /**
@@ -182,7 +171,6 @@ setSubmitEventPropagationStoppedCallback((event: Event) => {
  */
 setSubmitEventPropagationImmediatelyStoppedCallback((event: Event) => {
   eventToPropagationImmediatelyStopped.set(event, true);
-  removeBubblingCallback(event);
 });
 
 export const wrapSubmitListener = (listener: EventListenerOrEventListenerObject): EventListener => {
@@ -191,20 +179,36 @@ export const wrapSubmitListener = (listener: EventListenerOrEventListenerObject)
         listener.call(this, e, ...rest) :
         listener.handleEvent(e, ...rest);
 
-    // Ignore any cancelled events.
-    if (!getDefaultPrevented(e)) {
+    const listenerInfo = submitEventToListenerInfo.get(e);
+    if (listenerInfo !== undefined) {
       if (eventToPropagationImmediatelyStopped.has(e)) {
-        dispatchFormdataForSubmission(getTarget(e));
+        maybeDispatchFormdataForEvent(e);
       } else if (eventToPropagationStopped.has(e)) {
-        const submitListeners = targetToSubmitListeners.get(getTarget(e))!;
+        const submitListeners = targetToSubmitListeners.get(this)!;
         const {lastCapturingCallback, lastBubblingCallback} = submitListeners;
 
         if (wrapper === lastCapturingCallback || wrapper === lastBubblingCallback) {
-          dispatchFormdataForSubmission(getTarget(e));
+          maybeDispatchFormdataForEvent(e);
+        }
+      } else if (this === listenerInfo.target) {
+        const submitListeners = targetToSubmitListeners.get(this)!;
+        const {lastBubblingCallback} = submitListeners;
+
+        console.log(wrapper, lastBubblingCallback);
+        if (wrapper === lastBubblingCallback) {
+          maybeDispatchFormdataForEvent(e);
         }
       }
     }
 
     return result;
   };
+};
+
+const maybeDispatchFormdataForEvent = (e: Event) => {
+  // Ignore any cancelled events.
+  if (!getDefaultPrevented(e)) {
+    removeBubblingCallback(e);
+    dispatchFormdataForSubmission(getTarget(e));
+  }
 };
