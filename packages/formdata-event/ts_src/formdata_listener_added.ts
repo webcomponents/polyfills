@@ -194,7 +194,6 @@ export const wrapSubmitListener = (listener: EventListenerOrEventListenerObject)
         const submitListeners = targetToSubmitListeners.get(this)!;
         const {lastBubblingCallback} = submitListeners;
 
-        console.log(wrapper, lastBubblingCallback);
         if (wrapper === lastBubblingCallback) {
           maybeDispatchFormdataForEvent(e);
         }
