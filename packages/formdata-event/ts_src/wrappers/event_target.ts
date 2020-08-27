@@ -14,6 +14,9 @@ import {prototype as NodePrototype, methods as NodeMethods} from '../environment
 import {prototype as WindowPrototype, methods as WindowMethods} from '../environment/window.js';
 import {formdataListenerAdded, formdataListenerRemoved} from '../formdata_listener_added.js';
 import {submitListenerAdded, submitListenerRemoved} from '../submit_listener_added.js';
+import {wrapSubmitListener} from '../submit_listener_added.js';
+
+const submitListenerToWrapper = new WeakMap<EventListenerOrEventListenerObject, EventListener>();
 
 export const wrapAddEventListener = (
   prototype: {
@@ -27,11 +30,17 @@ export const wrapAddEventListener = (
     listener: EventListenerOrEventListenerObject | null,
     options?: boolean | AddEventListenerOptions,
   ) {
+    if (type === 'submit' && listener !== null) {
+      const wrapper = wrapSubmitListener(listener);
+      submitListenerToWrapper.set(listener, wrapper);
+      listener = wrapper;
+    }
+
     const result = original.call(this, type, listener, options);
 
     if (type === 'formdata') {
       formdataListenerAdded(this, listener, options);
-    } else if (type === 'submit') {
+    } else if (type === 'submit' && listener !== null) {
       submitListenerAdded(this, listener, options);
     }
 
@@ -51,11 +60,15 @@ export const wrapRemoveEventListener = (
     listener: EventListenerOrEventListenerObject | null,
     options?: boolean | EventListenerOptions,
   ) {
+    if (type === 'submit' && listener !== null) {
+      listener = submitListenerToWrapper.get(listener) ?? listener;
+    }
+
     const result = original.call(this, type, listener, options);
 
     if (type === 'formdata') {
       formdataListenerRemoved(this, listener, options);
-    } else if (type === 'submit') {
+    } else if (type === 'submit' && listener !== null) {
       submitListenerRemoved(this, listener, options);
     }
 

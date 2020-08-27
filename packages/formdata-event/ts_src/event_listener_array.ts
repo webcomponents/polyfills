@@ -34,6 +34,30 @@ export class EventListenerArray {
 
   get bubblingCount() { return this._listeners.filter(record => !record.capture).length; }
 
+  get lastCapturingCallback() {
+    const listeners = this._listeners;
+    for (let i = listeners.length - 1; i >= 0; i--) {
+      const item = listeners[i];
+      if (item.capture) {
+        return item.callback;
+      }
+    }
+
+    return undefined;
+  }
+
+  get lastBubblingCallback() {
+    const listeners = this._listeners;
+    for (let i = listeners.length - 1; i >= 0; i--) {
+      const item = listeners[i];
+      if (!item.capture) {
+        return item.callback;
+      }
+    }
+
+    return undefined;
+  }
+
   push(record: EventListenerRecord) {
     const {callback, capture} = record;
 
