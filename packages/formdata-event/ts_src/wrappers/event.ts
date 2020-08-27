@@ -12,47 +12,18 @@
 import {methods as DocumentMethods} from '../environment/document.js';
 import {constructor as EventConstructor, prototype as EventPrototype, methods as EventMethods} from '../environment/event.js';
 import {document} from '../environment/globals.js';
-import {getType, initEvent} from '../environment_api/event.js';
+import {initEvent} from '../environment_api/event.js';
 import {prepareWrapper, installWrapper} from './wrap_constructor.js';
 
-/**
- * A callback that is called whenever an Event's propagation is stopped.
- *
- * Q: Why doesn't this file just import and call the callback from
- * 'formdata_listener_added.ts' directly, given that this value is set to that
- * function and never changed?
- *
- * A: The way Closure compiles classes down to ES5 (which involves modifying the
- * constructor function's prototype) paired with the prototype modifications
- * necessary to wrap a built-in constructor, the `prepareWrapper` call in the
- * `Event` wrapper must come *before* the `prepareWrapper` call for
- * `FormDataEvent`. As of writing this, importing the function directly causes a
- * dependency cycle which reorders these two calls and breaks the
- * `FormDataEvent` prototype.
- */
-let submitEventPropagationStoppedCallback: ((e: Event) => void) | undefined = undefined;
+const propagationStopped = new WeakMap<Event, true>();
+const propagationImmediatelyStopped = new WeakMap<Event, true>();
 
-/**
- * Sets the callback to be called whenever an Event's propagation is stopped.
- */
-export const setSubmitEventPropagationStoppedCallback = (fn: (e: Event) => void) => {
-  submitEventPropagationStoppedCallback = fn;
+export const getEventPropagationStopped = (e: Event) => {
+  return propagationStopped.has(e);
 };
 
-/**
- * A callback that is called whenever an Event's propagation is immediately
- * stopped.
- *
- * See the note above for `submitEventPropagationStoppedCallback`.
- */
-let submitEventPropagationImmediatelyStoppedCallback: ((e: Event) => void) | undefined = undefined;
-
-/**
- * Sets the callback to be called whenever an Event's propagation is immediately
- * stopped.
- */
-export const setSubmitEventPropagationImmediatelyStoppedCallback = (fn: (e: Event) => void) => {
-  submitEventPropagationImmediatelyStoppedCallback = fn;
+export const getEventPropagationImmediatelyStopped = (e: Event) => {
+  return propagationImmediatelyStopped.has(e);
 };
 
 // This wrapper makes Event constructible / extensible in ES5 (the compilation
@@ -89,16 +60,12 @@ export const install = () => {
   Object.setPrototypeOf(Event, Function.prototype);
 
   Event.prototype['stopImmediatePropagation'] = function() {
-    if (getType(this) === 'submit') {
-      submitEventPropagationImmediatelyStoppedCallback?.(this);
-    }
+    propagationImmediatelyStopped.set(this, true);
     return EventMethods.stopImmediatePropagation.call(this);
   };
 
   Event.prototype['stopPropagation'] = function() {
-    if (getType(this) === 'submit') {
-      submitEventPropagationStoppedCallback?.(this);
-    }
+    propagationStopped.set(this, true);
     return EventMethods.stopPropagation.call(this);
   };
 

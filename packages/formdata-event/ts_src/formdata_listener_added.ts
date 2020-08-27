@@ -15,7 +15,7 @@
  * submissions that should dispatch a 'formdata' event.
  */
 
-import {setSubmitEventPropagationStoppedCallback, setSubmitEventPropagationImmediatelyStoppedCallback} from './wrappers/event.js';
+import {getEventPropagationStopped, getEventPropagationImmediatelyStopped} from './wrappers/event.js';
 import {getTarget, getDefaultPrevented} from './environment_api/event.js';
 import {addEventListener, removeEventListener} from './environment_api/event_target.js';
 import {getRootNode} from './environment_api/node.js';
@@ -154,25 +154,6 @@ const removeBubblingCallback = (event: Event) => {
   }
 };
 
-const eventToPropagationStopped = new WeakMap<Event, true>();
-const eventToPropagationImmediatelyStopped = new WeakMap<Event, true>();
-
-/**
- * This function will be called when any 'submit' event's propagation is stopped
- * by `stopPropagation`.
- */
-setSubmitEventPropagationStoppedCallback((event: Event) => {
-  eventToPropagationStopped.set(event, true);
-});
-
-/**
- * This function will be called when any 'submit' event's propagation is stopped
- * by `stopImmediatePropagation`.
- */
-setSubmitEventPropagationImmediatelyStoppedCallback((event: Event) => {
-  eventToPropagationImmediatelyStopped.set(event, true);
-});
-
 export const wrapSubmitListener = (listener: EventListenerOrEventListenerObject): EventListener => {
   return function wrapper(this: EventTarget, e: Event, ...rest) {
     const result: any = typeof listener === "function" ?
@@ -181,9 +162,9 @@ export const wrapSubmitListener = (listener: EventListenerOrEventListenerObject)
 
     const listenerInfo = submitEventToListenerInfo.get(e);
     if (listenerInfo !== undefined) {
-      if (eventToPropagationImmediatelyStopped.has(e)) {
+      if (getEventPropagationImmediatelyStopped(e)) {
         maybeDispatchFormdataForEvent(e);
-      } else if (eventToPropagationStopped.has(e)) {
+      } else if (getEventPropagationStopped(e)) {
         const submitListeners = targetToSubmitListeners.get(this)!;
         const {lastCapturingCallback, lastBubblingCallback} = submitListeners;
 
