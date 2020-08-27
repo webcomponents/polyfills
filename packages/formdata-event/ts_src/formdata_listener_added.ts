@@ -15,11 +15,13 @@
  * submissions that should dispatch a 'formdata' event.
  */
 
+import {setSubmitEventPropagationStoppedCallback, setSubmitEventPropagationImmediatelyStoppedCallback} from './wrappers/event.js';
 import {getTarget, getDefaultPrevented} from './environment_api/event.js';
 import {addEventListener, removeEventListener} from './environment_api/event_target.js';
 import {getRootNode} from './environment_api/node.js';
 import {dispatchFormdataForSubmission} from './dispatch_formdata_for_submission.js';
 import {EventListenerArray} from './event_listener_array.js';
+import {targetToSubmitListeners} from './submit_listener_added.js';
 
 /**
  * The set of 'formdata' event listeners for an event target.
@@ -88,6 +90,7 @@ export const formdataListenerRemoved = (
     removeEventListener.call(target, 'submit', submitCallback, true);
   }
 };
+
 /**
  * Tracks whether or not a given 'submit' event has already been seen by
  * `submitCallback`. IE11 does not support WeakSet, so a WeakMap<K, true> is
@@ -152,11 +155,56 @@ const submitCallback = (capturingEvent: Event) => {
   addEventListener.call(shallowRoot, 'submit', bubblingCallback);
 };
 
-export const removeBubblingCallback = (event: Event) => {
+const removeBubblingCallback = (event: Event) => {
   const listenerInfo = submitEventToListenerInfo.get(event);
   if (listenerInfo) {
     const {target, callback} = listenerInfo;
     removeEventListener.call(target, 'submit', callback);
     submitEventToListenerInfo.delete(event);
   }
+};
+
+const eventToPropagationStopped = new WeakMap<Event, true>();
+const eventToPropagationImmediatelyStopped = new WeakMap<Event, true>();
+
+/**
+ * This function will be called when any 'submit' event's propagation is stopped
+ * by `stopPropagation`.
+ */
+setSubmitEventPropagationStoppedCallback((event: Event) => {
+  eventToPropagationStopped.set(event, true);
+  removeBubblingCallback(event);
+});
+
+/**
+ * This function will be called when any 'submit' event's propagation is stopped
+ * by `stopImmediatePropagation`.
+ */
+setSubmitEventPropagationImmediatelyStoppedCallback((event: Event) => {
+  eventToPropagationImmediatelyStopped.set(event, true);
+  removeBubblingCallback(event);
+});
+
+export const wrapSubmitListener = (listener: EventListenerOrEventListenerObject): EventListener => {
+  return function wrapper(this: EventTarget, e: Event, ...rest) {
+    const result: any = typeof listener === "function" ?
+        listener.call(this, e, ...rest) :
+        listener.handleEvent(e, ...rest);
+
+    // Ignore any cancelled events.
+    if (!getDefaultPrevented(e)) {
+      if (eventToPropagationImmediatelyStopped.has(e)) {
+        dispatchFormdataForSubmission(getTarget(e));
+      } else if (eventToPropagationStopped.has(e)) {
+        const submitListeners = targetToSubmitListeners.get(getTarget(e))!;
+        const {lastCapturingCallback, lastBubblingCallback} = submitListeners;
+
+        if (wrapper === lastCapturingCallback || wrapper === lastBubblingCallback) {
+          dispatchFormdataForSubmission(getTarget(e));
+        }
+      }
+    }
+
+    return result;
+  };
 };

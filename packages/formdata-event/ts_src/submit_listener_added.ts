@@ -9,16 +9,12 @@
  * additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
-import {getTarget, getDefaultPrevented} from './environment_api/event.js';
-import {setSubmitEventPropagationStoppedCallback, setSubmitEventPropagationImmediatelyStoppedCallback} from './wrappers/event.js';
-import {dispatchFormdataForSubmission} from './dispatch_formdata_for_submission.js';
 import {EventListenerArray} from './event_listener_array.js';
-import {removeBubblingCallback} from './formdata_listener_added.js';
 
 /**
  * The set of 'submit' event listeners for an event target.
  */
-const targetToSubmitListeners = new WeakMap<EventTarget, EventListenerArray>();
+export const targetToSubmitListeners = new WeakMap<EventTarget, EventListenerArray>();
 
 /**
  * This function should be called when any 'submit' event listener is added to
@@ -63,49 +59,4 @@ export const submitListenerRemoved = (
 
   const capture = typeof options === 'boolean' ? options : (options?.capture ?? false);
   submitListeners.delete({callback, capture});
-};
-
-const eventToPropagationStopped = new WeakMap<Event, true>();
-const eventToPropagationImmediatelyStopped = new WeakMap<Event, true>();
-
-/**
- * This function will be called when any 'submit' event's propagation is stopped
- * by `stopPropagation`.
- */
-setSubmitEventPropagationStoppedCallback((event: Event) => {
-  removeBubblingCallback(event);
-  eventToPropagationStopped.set(event, true);
-});
-
-/**
- * This function will be called when any 'submit' event's propagation is stopped
- * by `stopImmediatePropagation`.
- */
-setSubmitEventPropagationImmediatelyStoppedCallback((event: Event) => {
-  removeBubblingCallback(event);
-  eventToPropagationImmediatelyStopped.set(event, true);
-});
-
-export const wrapSubmitListener = (listener: EventListenerOrEventListenerObject): EventListener => {
-  return function wrapper(this: EventTarget, e: Event, ...rest) {
-    const result: any = typeof listener === "function" ?
-        listener.call(this, e, ...rest) :
-        listener.handleEvent(e, ...rest);
-
-    // Ignore any cancelled events.
-    if (!getDefaultPrevented(e)) {
-      if (eventToPropagationImmediatelyStopped.has(e)) {
-        dispatchFormdataForSubmission(getTarget(e));
-      } else if (eventToPropagationStopped.has(e)) {
-        const submitListeners = targetToSubmitListeners.get(getTarget(e))!;
-        const {lastCapturingCallback, lastBubblingCallback} = submitListeners;
-
-        if (wrapper === lastCapturingCallback || wrapper === lastBubblingCallback) {
-          dispatchFormdataForSubmission(getTarget(e));
-        }
-      }
-    }
-
-    return result;
-  };
 };
