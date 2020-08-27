@@ -186,9 +186,9 @@ export const wrapSubmitListener = (listener: EventListenerOrEventListenerObject)
 };
 
 const maybeDispatchFormdataForEvent = (e: Event) => {
-  // Ignore any cancelled events.
+  removeBubblingCallback(e);
+
   if (!getDefaultPrevented(e)) {
-    removeBubblingCallback(e);
     dispatchFormdataForSubmission(getTarget(e));
   }
 };
