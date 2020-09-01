@@ -144,16 +144,6 @@ const submitCallback = (capturingEvent: Event) => {
   submitListenerAdded(shallowRoot, bubblingCallback);
 };
 
-const removeBubblingCallback = (event: Event) => {
-  const listenerInfo = submitEventToListenerInfo.get(event);
-  if (listenerInfo) {
-    const {target, callback} = listenerInfo;
-    removeEventListener.call(target, 'submit', callback);
-    submitListenerRemoved(target, callback);
-    submitEventToListenerInfo.delete(event);
-  }
-};
-
 export const wrapSubmitListener = (listener: EventListenerOrEventListenerObject): EventListener => {
   return function wrapper(this: EventTarget, e: Event, ...rest) {
     const result: any = typeof listener === "function" ?
@@ -186,8 +176,16 @@ export const wrapSubmitListener = (listener: EventListenerOrEventListenerObject)
 };
 
 const maybeDispatchFormdataForEvent = (e: Event) => {
-  removeBubblingCallback(e);
+  // Remove the bubbling 'submit' event listener.
+  const listenerInfo = submitEventToListenerInfo.get(e);
+  if (listenerInfo) {
+    const {target, callback} = listenerInfo;
+    removeEventListener.call(target, 'submit', callback);
+    submitListenerRemoved(target, callback);
+    submitEventToListenerInfo.delete(e);
+  }
 
+  // Dispatch a 'formdata' event if the 'submit' event wasn't cancelled.
   if (!getDefaultPrevented(e)) {
     dispatchFormdataForSubmission(getTarget(e));
   }
