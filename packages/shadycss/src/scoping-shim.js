@@ -294,7 +294,7 @@ export default class ScopingShim {
    * @param {!Array<!HTMLElement>} partNodes "part" nodes in the given host's
    * shadow root. Each of these will have its "shady-part" attribute updated
    * according to the host's scope.
-   * @param {!Array<!HTMLElement>} exportPartsNodes "exportparts" nodes in this
+   * @param {!Array<!HTMLElement>|undefined} exportPartsNodes "exportparts" nodes in this
    * host's shadow root. The shadow roots of each of these will be walked, and
    * any relevant descendant "part" nodes will have their "shady-part"
    * attributes updated.
@@ -304,11 +304,13 @@ export default class ScopingShim {
     if (partNodes.length > 0) {
       shadowParts.styleShadowParts(host, partNodes);
     }
-    for (const exporter of exportPartsNodes) {
-      const exports = shadowParts.parseExportPartsAttribute(
-        exporter.getAttribute('exportparts')
-      ).map(({inner}) => inner);
-      shadowParts.refreshShadyPartAttributes(exporter, exports);
+    if (exportPartsNodes) {
+      for (const exporter of exportPartsNodes) {
+        const exports = shadowParts.parseExportPartsAttribute(
+          exporter.getAttribute('exportparts')
+        ).map(({inner}) => inner);
+        shadowParts.refreshShadyPartAttributes(exporter, exports);
+      }
     }
   }
 

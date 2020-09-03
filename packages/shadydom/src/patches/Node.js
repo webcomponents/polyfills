@@ -309,21 +309,21 @@ export const NodePatches = utils.getOwnPropertyDescriptors({
     const needsSlotFinding = ownerRoot && !node['__noInsertionPoint'] &&
         (!preferPerformance || node.nodeType === Node.DOCUMENT_FRAGMENT_NODE);
 
-    const partNodes = [];
-    const needsPartFinding =
+    let partNodes, exportpartsNodes;
+    if (
       // Only look for parts if there are known ::part rules active on the page,
       // and if shadow parts support hasn't been forced off.
       shadowPartsActive() &&
       // ownerRoot is undefined if we're inserting into the main document, and
       // host is undefined if we're not connected. Part rules can't apply in
       // either case.
-      ownerRoot && ownerRoot.host &&
+      ownerRoot &&
+      ownerRoot.host &&
       // Comments etc. can't contain part nodes.
       (node.nodeType === Node.ELEMENT_NODE ||
-        node.nodeType === Node.DOCUMENT_FRAGMENT_NODE);
-
-    const exportpartsNodes = [];
-    const needsExportpartsFinding = needsPartFinding &&
+        node.nodeType === Node.DOCUMENT_FRAGMENT_NODE)
+    ) {
+      partNodes = [];
       // There's no need to look for exportparts nodes when we're inserting a
       // fragment, because its not possible for any child custom elements to
       // themselves have a shadow DOM yet. Once those custom elements render,
@@ -332,9 +332,12 @@ export const NodePatches = utils.getOwnPropertyDescriptors({
       // only reason we need to sometimes search for exportparts here is to
       // cover the case where an exportparts node has moved from one shadow root
       // to another.
-      node.nodeType !== Node.DOCUMENT_FRAGMENT_NODE;
+      if (node.nodeType !== Node.DOCUMENT_FRAGMENT_NODE) {
+        exportpartsNodes = [];
+      }
+    }
 
-    if (needsSlotFinding || needsScoping || needsPartFinding) {
+    if (needsSlotFinding || needsScoping || partNodes) {
       // NOTE: avoid node.removeChild as this *can* trigger another patched
       // method (e.g. custom elements) and we want only the shady method to run.
       // The following table describes what style scoping actions should happen as a result of this insertion.
@@ -355,10 +358,10 @@ export const NodePatches = utils.getOwnPropertyDescriptors({
         if (needsScoping) {
           replaceShadyScoping(node, newScopeName, oldScopeName);
         }
-        if (needsPartFinding && node.hasAttribute('part')) {
+        if (partNodes && node.hasAttribute('part')) {
           partNodes.push(node);
         }
-        if (needsExportpartsFinding && node.hasAttribute('exportparts')) {
+        if (exportpartsNodes && node.hasAttribute('exportparts')) {
           exportpartsNodes.push(node);
         }
       });
@@ -407,7 +410,10 @@ export const NodePatches = utils.getOwnPropertyDescriptors({
     } else if (node.ownerDocument !== this.ownerDocument) {
       this.ownerDocument.adoptNode(node);
     }
-    if (partNodes.length > 0 || exportpartsNodes.length > 0) {
+    if (
+      (partNodes && partNodes.length > 0) ||
+      (exportpartsNodes && exportpartsNodes.length > 0)
+    ) {
       const shim = getScopingShim();
       if (shim) {
         shim['styleShadowParts'](ownerRoot.host, partNodes, exportpartsNodes);
