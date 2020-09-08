@@ -413,7 +413,7 @@ export function onRemoveExportPartsAttribute(element, oldValue) {
  * @param {!Array<!string>} staleNames The part names which have changed.
  * @return {void}
  */
-function refreshShadyPartAttributes(host, staleNames) {
+export function refreshShadyPartAttributes(host, staleNames) {
   if (staleNames.length === 0) {
     return;
   }
@@ -449,72 +449,6 @@ function refreshShadyPartAttributes(host, staleNames) {
     }
     if (staleInnerNames.length > 0) {
       refreshShadyPartAttributes(exporter, staleInnerNames);
-    }
-  }
-}
-
-/* eslint-disable no-unused-vars */
-/**
- * Add "shady-part" attributes to new nodes on insertion.
- *
- * This function will be called by ShadyDOM during any insertBefore call,
- * before the native insert has occured.
- *
- * @param {!HTMLElement} parentNode
- * @param {!HTMLElement} newNode
- * @param {?HTMLElement} referenceNode
- * @return {void}
- */
-export function onInsertBefore(parentNode, newNode, referenceNode) {
-  /* eslint-enable no-unused-vars */
-  if (newNode instanceof Text || newNode instanceof Comment) {
-    // No parts in text or comments.
-    return;
-  }
-  if (!parentNode.getRootNode) {
-    // TODO(aomarks) We're in noPatch mode. Wrap where needed and add tests.
-    // https://github.com/webcomponents/polyfills/issues/343
-    return;
-  }
-  const root = parentNode.getRootNode();
-  if (root === document) {
-    // Parts in the document scope would never have any effect. Return early so
-    // we don't waste time querying it.
-    return;
-  }
-  const host = root.host;
-  if (!host) {
-    // If there's no host, we're not connected, so no part styles could apply
-    // here.
-    return;
-  }
-  let partNodes = newNode.querySelectorAll('[part]');
-  // TODO(aomarks) We should be able to get much better performance over the
-  // querySelectorAll calls here by integrating the part check into the walk
-  // that ShadyDOM already does to find slots.
-  // https://github.com/webcomponents/polyfills/issues/345
-  if (newNode instanceof HTMLElement && newNode.hasAttribute('part')) {
-    partNodes = [newNode, ...partNodes];
-  }
-  if (partNodes.length > 0) {
-    styleShadowParts(host, partNodes);
-  }
-  // Handle "exportparts" nodes moving from one root to another. In this case,
-  // any descendant part nodes have already been inserted, so we can't rely on
-  // the upwards-walk that we would normally get from an insert call. We can
-  // skip this work if we're inserting from a DocumentFragment, though, because
-  // it's safe to assume in that case that the children have never been
-  // connected anywhere else.
-  if (!(newNode instanceof DocumentFragment)) {
-    let exporters = newNode.querySelectorAll('[exportparts]');
-    if (newNode instanceof HTMLElement && newNode.hasAttribute('exportparts')) {
-      exporters = [newNode, ...exporters];
-    }
-    for (const exporter of exporters) {
-      const exports = parseExportPartsAttribute(
-        exporter.getAttribute('exportparts')
-      ).map(({inner}) => inner);
-      refreshShadyPartAttributes(exporter, exports);
     }
   }
 }

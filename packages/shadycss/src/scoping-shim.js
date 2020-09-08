@@ -282,16 +282,35 @@ export default class ScopingShim {
   }
 
   /**
-   * Hook for performing ShadyCSS behavior for each ShadyDOM insertBefore call.
+   * Update the given host to account for any changes that affect the scope of
+   * its descendant shadow parts.
    *
-   * @param {!HTMLElement} parentNode
-   * @param {!HTMLElement} newNode
-   * @param {?HTMLElement} referenceNode
+   * Note the caller is responsible for providing the changed "part" and
+   * "exportparts" nodes here, because the caller may have the ability to find
+   * them more efficiently than an intrinsic walk or querySelectorAll would
+   * (e.g. ShadyDOM already walks all inserted trees).
+   *
+   * @param {!HTMLElement} host The host element.
+   * @param {!Array<!HTMLElement>} partNodes "part" nodes in the given host's
+   * shadow root. Each of these will have its "shady-part" attribute updated
+   * according to the host's scope.
+   * @param {!Array<!HTMLElement>|undefined} exportPartsNodes "exportparts" nodes in this
+   * host's shadow root. The shadow roots of each of these will be walked, and
+   * any relevant descendant "part" nodes will have their "shady-part"
+   * attributes updated.
    * @return {void}
    */
-  onInsertBefore(parentNode, newNode, referenceNode) {
-    if (shadowParts.shadowPartsActive()) {
-      shadowParts.onInsertBefore(parentNode, newNode, referenceNode);
+  styleShadowParts(host, partNodes, exportPartsNodes) {
+    if (partNodes.length > 0) {
+      shadowParts.styleShadowParts(host, partNodes);
+    }
+    if (exportPartsNodes) {
+      for (const exporter of exportPartsNodes) {
+        const exports = shadowParts.parseExportPartsAttribute(
+          exporter.getAttribute('exportparts')
+        ).map(({inner}) => inner);
+        shadowParts.refreshShadyPartAttributes(exporter, exports);
+      }
     }
   }
 

@@ -308,7 +308,36 @@ export const NodePatches = utils.getOwnPropertyDescriptors({
         !currentScopeIsCorrect(node, newScopeName);
     const needsSlotFinding = ownerRoot && !node['__noInsertionPoint'] &&
         (!preferPerformance || node.nodeType === Node.DOCUMENT_FRAGMENT_NODE);
-    if (needsSlotFinding || needsScoping) {
+
+    let partNodes, exportpartsNodes;
+    if (
+      // Only look for parts if there are known ::part rules active on the page,
+      // and if shadow parts support hasn't been forced off.
+      shadowPartsActive() &&
+      // ownerRoot is undefined if we're inserting into the main document, and
+      // host is undefined if we're not connected. Part rules can't apply in
+      // either case.
+      ownerRoot &&
+      ownerRoot.host &&
+      // Comments etc. can't contain part nodes.
+      (node.nodeType === Node.ELEMENT_NODE ||
+        node.nodeType === Node.DOCUMENT_FRAGMENT_NODE)
+    ) {
+      partNodes = [];
+      // There's no need to look for exportparts nodes when we're inserting a
+      // fragment, because its not possible for any child custom elements to
+      // themselves have a shadow DOM yet. Once those custom elements render,
+      // this function will be invoked for them, and if any parts are found,
+      // we'll walk back _up_ the tree to find any relevant exportsparts. The
+      // only reason we need to sometimes search for exportparts here is to
+      // cover the case where an exportparts node has moved from one shadow root
+      // to another.
+      if (node.nodeType !== Node.DOCUMENT_FRAGMENT_NODE) {
+        exportpartsNodes = [];
+      }
+    }
+
+    if (needsSlotFinding || needsScoping || partNodes) {
       // NOTE: avoid node.removeChild as this *can* trigger another patched
       // method (e.g. custom elements) and we want only the shady method to run.
       // The following table describes what style scoping actions should happen as a result of this insertion.
@@ -328,6 +357,12 @@ export const NodePatches = utils.getOwnPropertyDescriptors({
         }
         if (needsScoping) {
           replaceShadyScoping(node, newScopeName, oldScopeName);
+        }
+        if (partNodes && node.hasAttribute('part')) {
+          partNodes.push(node);
+        }
+        if (exportpartsNodes && node.hasAttribute('exportparts')) {
+          exportpartsNodes.push(node);
         }
       });
     }
@@ -357,15 +392,6 @@ export const NodePatches = utils.getOwnPropertyDescriptors({
         ownerRoot._asyncRender();
       }
     }
-    if (shadowPartsActive()) {
-      const shim = getScopingShim();
-      if (shim) {
-        // Note that we do want to call this before the actual native insert,
-        // because in the case that we're inserting from a DocumentFragment,
-        // we want to know exactly which new child nodes are being inserted.
-        shim['onInsertBefore'](this, node, ref_node);
-      }
-    }
     if (allowNativeInsert) {
       // if adding to a shadyRoot, add to host instead
       let container = utils.isShadyRoot(this) ?
@@ -383,6 +409,15 @@ export const NodePatches = utils.getOwnPropertyDescriptors({
     // We correct this by calling `adoptNode`.
     } else if (node.ownerDocument !== this.ownerDocument) {
       this.ownerDocument.adoptNode(node);
+    }
+    if (
+      (partNodes && partNodes.length > 0) ||
+      (exportpartsNodes && exportpartsNodes.length > 0)
+    ) {
+      const shim = getScopingShim();
+      if (shim) {
+        shim['styleShadowParts'](ownerRoot.host, partNodes, exportpartsNodes);
+      }
     }
     return node;
   },

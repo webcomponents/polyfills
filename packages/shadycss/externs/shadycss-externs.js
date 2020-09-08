@@ -9,7 +9,7 @@
  * styleDocument: function(Object<string, string>=),
  * flushCustomStyles: function(),
  * getComputedStyleValue: function(!Element, string): string,
- * onInsertBefore: function(!HTMLElement, !HTMLElement, ?HTMLElement): void,
+ * styleShadowParts: function(!HTMLElement, !Array<!HTMLElement>, (!Array<!HTMLElement>|undefined)): void,
  * onSetAttribute: function(!HTMLElement, !string, !string, ?string): void,
  * onRemoveAttribute: function(!HTMLElement, !string): void,
  * shadowPartsActive: function(): !boolean,
