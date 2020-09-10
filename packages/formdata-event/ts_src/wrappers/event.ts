@@ -10,10 +10,21 @@
  */
 
 import {methods as DocumentMethods} from '../environment/document.js';
-import {constructor as EventConstructor, prototype as EventPrototype} from '../environment/event.js';
+import {constructor as EventConstructor, prototype as EventPrototype, methods as EventMethods} from '../environment/event.js';
 import {document} from '../environment/globals.js';
 import {initEvent} from '../environment_api/event.js';
 import {prepareWrapper, installWrapper} from './wrap_constructor.js';
+
+const propagationStopped = new WeakMap<Event, true>();
+const propagationImmediatelyStopped = new WeakMap<Event, true>();
+
+export const getEventPropagationStopped = (e: Event) => {
+  return propagationStopped.has(e);
+};
+
+export const getEventPropagationImmediatelyStopped = (e: Event) => {
+  return propagationImmediatelyStopped.has(e);
+};
 
 // This wrapper makes Event constructible / extensible in ES5 (the compilation
 // target) by causing `Event.call(...)` to create native Event instances rather
@@ -47,6 +58,16 @@ export const install = () => {
   // In IE11, `Object.getPrototypeOf(window.Event) === Object.prototype`, which
   // was copied by `prepareWrapper` from `window.Event` to `Event` above.
   Object.setPrototypeOf(Event, Function.prototype);
+
+  Event.prototype['stopImmediatePropagation'] = function() {
+    propagationImmediatelyStopped.set(this, true);
+    return EventMethods.stopImmediatePropagation.call(this);
+  };
+
+  Event.prototype['stopPropagation'] = function() {
+    propagationStopped.set(this, true);
+    return EventMethods.stopPropagation.call(this);
+  };
 
   window.Event = Event;
 };
