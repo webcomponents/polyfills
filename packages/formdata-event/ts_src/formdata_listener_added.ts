@@ -130,8 +130,8 @@ const submitCallback = (capturingEvent: Event) => {
 
   const shallowRoot = getRootNode(target);
 
-  // The wrapper generated here will handle dispatching the event if it bubbles
-  // all the way to `shallowRoot`.
+  // The wrapper generated here will dispatch a 'formdata' event if this
+  // 'submit' event bubbles all the way to `shallowRoot`.
   const bubblingCallback = wrapSubmitListener(() => {});
   submitEventToListenerInfo.set(capturingEvent, {
     target: shallowRoot,
@@ -144,6 +144,12 @@ const submitCallback = (capturingEvent: Event) => {
   submitListenerAdded(shallowRoot, bubblingCallback);
 };
 
+/**
+ * All 'submit' event listeners added by the user or polyfill (_except_ the
+ * bubbling listener above) should be wrapped by this function. All 'formdata'
+ * events dispatched as a result of observing a 'submit' event are dispatched by
+ * one of these wrappers.
+ */
 export const wrapSubmitListener = (listener: EventListenerOrEventListenerObject): EventListener => {
   return function wrapper(this: EventTarget, e: Event, ...rest) {
     const result: any = typeof listener === "function" ?
@@ -189,6 +195,10 @@ export const wrapSubmitListener = (listener: EventListenerOrEventListenerObject)
   };
 };
 
+/**
+ * Dispatches a 'formdata' event for a 'submit' event that has finished
+ * propagating through the tree, if the 'submit' wasn't cancelled.
+ */
 const maybeDispatchFormdataForEvent = (e: Event) => {
   // Remove the bubbling 'submit' event listener, if one was added for this
   // event (i.e. if the capturing listener saw the event).
