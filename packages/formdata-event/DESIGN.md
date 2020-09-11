@@ -52,16 +52,6 @@ as well as modifying forms' `submit` methods and respond by dispatching the
 `formdata` event.
 
 
-#### The `submit` event and timing
-
-The time at which the browser collects the data it will submit is critical to
-the operation of the polyfill. From the perspective of scripts on the page (e.g.
-the polyfill), this data is collected [immediately after the `submit` event
-finishes propagating][concept-form-submit]. This means that a script needs to be
-able to finish updating the data before the last `submit` event listener along
-its path returns for those modifications to be reflected in the submitted data.
-
-
 #### Handling forms' `submit` function
 
 When a script calls a form's `submit` function, that form is submitted without
@@ -86,11 +76,11 @@ a `formdata` event that does not propagate through the target either.
 The polyfill listens for relevant `submit` events in two ways:
 
 First, whenever a `formdata` event listener is added to any event target, it
-also adds a `submit` event listener to that target. This guarantees that at
-least one `submit` event listener will be in the path of any relevant `submit`
-events.
+also adds a capturing `submit` event listener to that target. This guarantees
+that at least one `submit` event listener will be in the path of any relevant
+`submit` events.
 
-Second, when the page adds any `submit` event listener, the provided callback is
+Second, when the user adds any `submit` event listener, the provided callback is
 wrapped with a function that (after calling the original) checks if anything
 happened to the event that might prevent it from reaching the `submit` event
 listener added to the target of the `formdata` event listener mentioned earlier.
@@ -98,10 +88,32 @@ This can happen when the user calls `stopPropagation` or
 `stopImmediatePropagation` (or sets `cancelBubble`, which is equivalent to
 calling `stopPropagation`).
 
-The combination of (a) wrapping all `submit` listeners and (b) adding a `submit`
-listener to every target with a `formdata` listener guarantees that every form
+The combination of adding a `submit` listener to every target with a `formdata`
+listener and wrapping all `submit` listeners guarantees that every form
 submission that should cause a `formdata` event to be triggered that has an
 event target with a `formdata` event listener in its path will be detected.
+
+
+#### The `submit` event and timing
+
+The time at which the browser collects the data it will submit is critical to
+how the polyfill works. From the perspective of scripts on the page (e.g. the
+polyfill), this data is collected [immediately after the `submit` event finishes
+propagating][concept-form-submit]. This means that a script needs to be able to
+finish updating the data before the last `submit` event listener along its path
+returns for those modifications to be reflected in the submitted data.
+
+To be sure that the `formdata` event is dispatched after any user-added `submit`
+listeners are run, the capturing `submit` listener mentioned in [_Listening for
+`submit` events_](#listening-for-submit-events) doesn't dispatch the `formdata`
+event itself. Instead, it adds a new bubbling `submit` listener to the last
+element in the path of the event to guarantee that at least one bubbling
+`submit` listener is there when the event reaches it. This capturing `submit`
+listener is also wrapped with the same function as all user-added `submit`
+listeners and, in addition to handling `stopPropagation`, the wrapper will also
+dispatch a `formdata` event after calling the wrapped function if both the event
+is at the last target in its path and it wraps the last bubbling `submit`
+listener added to that target.
 
 
 ### Dispatching the `formdata` event and collecting data
