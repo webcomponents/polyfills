@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Copy the design doc to the repo; expand the timing section.
+  ([#381](https://github.com/webcomponents/polyfills/pull/381))
 - Handle `stopPropagation` and `stopImmediatePropagation` calls on the 'submit'
   event. ([#379](https://github.com/webcomponents/polyfills/pull/379))
 - Capture browser APIs used in `dispatchFormdataForSubmission`.
