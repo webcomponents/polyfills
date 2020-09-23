@@ -1,0 +1,120 @@
+<!-- 
+/**
+ * @license
+ * Copyright (c) 2020 The Polymer Project Authors. All rights reserved.
+ * This code may only be used under the BSD style license found at
+ * http://polymer.github.io/LICENSE.txt
+ * The complete set of authors may be found at
+ * http://polymer.github.io/AUTHORS.txt
+ * The complete set of contributors may be found at
+ * http://polymer.github.io/CONTRIBUTORS.txt
+ * Code distributed by Google as part of the polymer project is also
+ * subject to an additional IP rights grant found at
+ * http://polymer.github.io/PATENTS.txt
+ */
+-->
+
+<script src="../custom-elements-scoped.js"></script>
+
+<script type="module">
+
+  const baseStyle = `
+    :host {
+      display: inline-block;
+      border: 1px solid gray;
+      padding: 5px;
+      margin: 5px;
+    }`;
+  
+  class ChildElementA extends HTMLElement {
+    static observedAttributes = ['attr'];
+    get name() { return `${this.localName} (ChildElementA)`; }
+    constructor() {
+      super();
+      console.log('constructed', this.name);
+      this.attachShadow({mode: 'open'}).innerHTML = `
+        <style>${baseStyle} :host { background: lightblue; }</style>
+        ${this.name}
+      `;
+    }
+    connectedCallback() {
+      console.log('connected', this.name);
+    }
+    attributeChangedCallback(name, old, value) {
+      console.log(`attributeChangedCallback`, this.name, `${name}=${value}`);
+    }
+  }
+
+  class ChildElementB extends HTMLElement {
+    static observedAttributes = ['attr'];
+    get name() { return `${this.localName} (ChildElementB)`; }
+    constructor() {
+      super();
+      console.log('constructed', this.name);
+      this.attachShadow({mode: 'open'}).innerHTML = `
+        <style>${baseStyle} :host { background: orange; }</style>
+        ${this.name}
+      `;
+    }
+    connectedCallback() {
+      console.log('connected', this.name);
+    }
+    attributeChangedCallback(name, old, value) {
+      console.log(`attributeChangedCallback`, this.name, `${name}=${value}`);
+    }
+  }
+
+  const hostRegistryA = new CustomElementRegistry();
+  hostRegistryA.whenDefined('child-element').then(() =>
+    console.log('child-element defined in hostRegistryA:', hostRegistryA.get('child-element')));
+  hostRegistryA.whenDefined('other-element').then(() =>
+    console.log('other-element defined in hostRegistryA:', hostRegistryA.get('other-element')));
+  hostRegistryA.define('child-element', ChildElementA);
+  class HostElementA extends HTMLElement {
+    constructor() {
+      super();
+      this.attachShadow({mode: 'open', customElements: hostRegistryA}).innerHTML = `
+        <style>${baseStyle} :host { background: pink; }</style>
+        HostElementA
+        <child-element id="hostA" attr="child:hostA"></child-element>
+        <button>Lazy define</button>
+        <other-element id="hostA" attr="other:hostA"></other-element>
+      `;
+      this.shadowRoot.querySelector('button').addEventListener('click', () => {
+        this.shadowRoot.customElements.define('other-element', ChildElementB);
+      });
+    }
+  }
+  customElements.define('host-element-a', HostElementA);
+  
+  const hostRegistryB = new CustomElementRegistry();
+  hostRegistryB.whenDefined('child-element').then(() =>
+    console.log('child-element defined in hostRegistryB:', hostRegistryB.get('child-element')));
+  hostRegistryB.whenDefined('other-element').then(() =>
+    console.log('other-element defined in hostRegistryB:', hostRegistryB.get('other-element')));
+  hostRegistryB.define('child-element', ChildElementB);
+  const hostElementBTemplate = document.createElement('template');
+  hostElementBTemplate.innerHTML = `
+    <style>${baseStyle} :host { background: lightgreen; }</style>
+    HostElementB
+    <child-element id="hostB" attr="child:hostB"></child-element>
+    <button>Lazy define</button>
+    <other-element id="hostB" attr="other:hostB"></other-element>
+  `;
+  class HostElementB extends HTMLElement {
+    constructor() {
+      super();
+      this.attachShadow({mode: 'open', customElements: hostRegistryB});
+      this.shadowRoot.appendChild(this.shadowRoot.importNode(hostElementBTemplate.content, true));
+      this.shadowRoot.querySelector('button').addEventListener('click', () => {
+        this.shadowRoot.customElements.define('other-element', ChildElementA);
+      });
+    }
+  }
+  customElements.define('host-element-b', HostElementB);
+  
+</script>
+
+<host-element-a></host-element-a>
+<hr>
+<host-element-b></host-element-b>
