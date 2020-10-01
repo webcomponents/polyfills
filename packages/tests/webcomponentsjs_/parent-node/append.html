@@ -29,29 +29,40 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     const testAppend = (createContainer) => {
       test('Appends an element', () => {
         const container = createContainer();
+        container.appendChild(document.createElement('div'));
+
         const child = document.createElement('div');
         container.append(child);
+
         assert(child.parentNode === container);
+        assert(container.childNodes.length === 2);
+        assert(container.childNodes[1] === child);
       });
 
       test('Appends a text node', () => {
         const container = createContainer();
+        container.appendChild(document.createElement('div'));
+
         container.append('This is some text.');
-        assert(container.childNodes.length === 1);
-        assert(container.childNodes[0].nodeType === Node.TEXT_NODE);
-        assert(container.childNodes[0].textContent === 'This is some text.');
+
+        assert(container.childNodes.length === 2);
+        assert(container.childNodes[1].nodeType === Node.TEXT_NODE);
+        assert(container.childNodes[1].textContent === 'This is some text.');
       });
 
       test('Appends multiple types of nodes', () => {
         const container = createContainer();
-        const child0 = document.createElement('div');
-        const child2 = document.createElement('div');
-        container.append(child0, 'This is some text.', child2);
-        assert(container.childNodes.length === 3);
-        assert(container.childNodes[0] === child0);
-        assert(container.childNodes[1].nodeType === Node.TEXT_NODE);
-        assert(container.childNodes[1].textContent === 'This is some text.');
-        assert(container.childNodes[2] === child2);
+        container.appendChild(document.createElement('div'));
+
+        const child1 = document.createElement('div');
+        const child3 = document.createElement('div');
+        container.append(child1, 'This is some text.', child3);
+
+        assert(container.childNodes.length === 4);
+        assert(container.childNodes[1] === child1);
+        assert(container.childNodes[2].nodeType === Node.TEXT_NODE);
+        assert(container.childNodes[2].textContent === 'This is some text.');
+        assert(container.childNodes[3] === child3);
       });
     };
 
