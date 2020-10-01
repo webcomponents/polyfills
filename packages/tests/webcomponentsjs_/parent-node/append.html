@@ -26,11 +26,57 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 </head>
 <body>
   <script>
+    const testAppend = (createContainer) => {
+      test('Appends an element', () => {
+        const container = createContainer();
+        const child = document.createElement('div');
+        container.append(child);
+        assert(child.parentNode === container);
+      });
+
+      test('Appends a text node', () => {
+        const container = createContainer();
+        container.append('This is some text.');
+        assert(container.childNodes.length === 1);
+        assert(container.childNodes[0].nodeType === Node.TEXT_NODE);
+        assert(container.childNodes[0].textContent === 'This is some text.');
+      });
+
+      test('Appends multiple types of nodes', () => {
+        const container = createContainer();
+        const child0 = document.createElement('div');
+        const child2 = document.createElement('div');
+        container.append(child0, 'This is some text.', child2);
+        assert(container.childNodes.length === 3);
+        assert(container.childNodes[0] === child0);
+        assert(container.childNodes[1].nodeType === Node.TEXT_NODE);
+        assert(container.childNodes[1].textContent === 'This is some text.');
+        assert(container.childNodes[2] === child2);
+      });
+    };
+
     suite('ParentNode append', function() {
-      test('Installed', () => {
-        assert('append' in Document.prototype);
-        assert('append' in DocumentFragment.prototype);
-        assert('append' in Element.prototype);
+      suite('Document', function() {
+        test('Appends an element', () => {
+          const doc = document.implementation.createHTMLDocument();
+          while (doc.firstChild) {
+            doc.removeChild(doc.firstChild);
+          }
+
+          const child = document.createElement('html');
+          doc.append(child);
+
+          assert(doc.childNodes.length === 1);
+          assert(doc.childNodes[0] === child);
+        });
+      });
+
+      suite('DocumentFragment', function() {
+        testAppend(() => document.createDocumentFragment());
+      });
+
+      suite('Element', function() {
+        testAppend(() => document.createElement('div'));
       });
     });
   </script>
