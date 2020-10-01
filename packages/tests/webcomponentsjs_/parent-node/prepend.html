@@ -69,7 +69,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     suite('ParentNode prepend', function() {
       suite('Document', function() {
         test('Appends an element', () => {
-          const doc = document.implementation.createHTMLDocument();
+          const doc = document.implementation.createHTMLDocument('');
           while (doc.firstChild) {
             doc.removeChild(doc.firstChild);
           }
