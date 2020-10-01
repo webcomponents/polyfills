@@ -1,27 +1,37 @@
-// From MDN, added after 2010.
-// https://developer.mozilla.org/en-US/docs/MDN/About#Code_samples_and_snippets
+/**
+@license
+Copyright (c) 2020 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+*/
 
-// Source: https://github.com/jserz/js_piece/blob/master/DOM/ParentNode/append()/append().md
-(function (arr) {
-  arr.forEach(function (item) {
-    if (item.hasOwnProperty('append')) {
-      return;
-    }
-    Object.defineProperty(item, 'append', {
-      configurable: true,
-      enumerable: true,
-      writable: true,
-      value: function append() {
-        var argArr = Array.prototype.slice.call(arguments),
-          docFrag = document.createDocumentFragment();
+export {};
 
-        argArr.forEach(function (argItem) {
-          var isNode = argItem instanceof Node;
-          docFrag.appendChild(isNode ? argItem : document.createTextNode(String(argItem)));
-        });
+type Constructor<T> = new (...args: Array<any>) => T;
 
-        this.appendChild(docFrag);
+const nativeAppendChild = Node.prototype.appendChild;
+
+function installAppend<T>(constructor: Constructor<T>) {
+  const prototype = constructor.prototype;
+  if (prototype.hasOwnProperty('append')) {
+    return;
+  }
+
+  Object.defineProperty(prototype, 'append', {
+    configurable: true,
+    enumerable: true,
+    writable: true,
+    value: function append(...args: Array<Node|string>) {
+      for (const arg of args) {
+        nativeAppendChild.call(this, typeof arg === 'string' ? document.createTextNode(arg) : arg);
       }
-    });
+    }
   });
-})([Element.prototype, Document.prototype, DocumentFragment.prototype]);
+}
+
+installAppend(Document);
+installAppend(DocumentFragment);
+installAppend(Element);

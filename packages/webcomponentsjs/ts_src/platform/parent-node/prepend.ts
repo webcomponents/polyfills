@@ -1,27 +1,40 @@
-// From MDN, added after 2010.
-// https://developer.mozilla.org/en-US/docs/MDN/About#Code_samples_and_snippets
+/**
+@license
+Copyright (c) 2020 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+*/
 
-// Source: https://github.com/jserz/js_piece/blob/master/DOM/ParentNode/prepend()/prepend().md
-(function (arr) {
-  arr.forEach(function (item) {
-    if (item.hasOwnProperty('prepend')) {
-      return;
-    }
-    Object.defineProperty(item, 'prepend', {
-      configurable: true,
-      enumerable: true,
-      writable: true,
-      value: function prepend() {
-        var argArr = Array.prototype.slice.call(arguments),
-          docFrag = document.createDocumentFragment();
+export {};
 
-        argArr.forEach(function (argItem) {
-          var isNode = argItem instanceof Node;
-          docFrag.appendChild(isNode ? argItem : document.createTextNode(String(argItem)));
-        });
+type Constructor<T> = new (...args: Array<any>) => T;
 
-        this.insertBefore(docFrag, this.firstChild);
+const nativeInsertBefore = Node.prototype.insertBefore;
+const nativeGetFirstChild = Object.getOwnPropertyDescriptor(Node.prototype, 'firstChild')!.get!;
+
+function installPrepend<T>(constructor: Constructor<T>) {
+  const prototype = constructor.prototype;
+  if (prototype.hasOwnProperty('prepend')) {
+    return;
+  }
+
+  Object.defineProperty(prototype, 'prepend', {
+    configurable: true,
+    enumerable: true,
+    writable: true,
+    value: function prepend(...args: Array<Node|string>) {
+      const firstChild = nativeGetFirstChild.call(this);
+      for (const arg of args) {
+        const newNode = typeof arg === 'string' ? document.createTextNode(arg) : arg;
+        nativeInsertBefore.call(this, newNode, firstChild);
       }
-    });
+    }
   });
-})([Element.prototype, Document.prototype, DocumentFragment.prototype]);
+}
+
+installPrepend(Document);
+installPrepend(DocumentFragment);
+installPrepend(Element);
