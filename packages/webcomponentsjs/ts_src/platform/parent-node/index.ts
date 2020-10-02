@@ -10,3 +10,4 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 import './append.js';
 import './prepend.js';
+import './replace-children.js';
