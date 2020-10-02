@@ -93,7 +93,36 @@ export const ParentNodePatches = utils.getOwnPropertyDescriptors({
       return children.length;
     }
     return 0;
-  }
+  },
+
+  /** @this {Element} */
+  append(...args) {
+    for (const arg of args) {
+      const newChild = typeof arg === 'string' ? document.createTextNode(arg) : arg;
+      this[utils.SHADY_PREFIX + 'insertBefore'](newChild);
+    }
+  },
+
+  /** @this {Element} */
+  prepend(...args) {
+    const firstChild = this[utils.SHADY_PREFIX + 'firstChild'];
+    for (const arg of args) {
+      const newChild = typeof arg === 'string' ? document.createTextNode(arg) : arg;
+      this[utils.SHADY_PREFIX + 'insertBefore'](newChild, firstChild);
+    }
+  },
+
+  /** @this {Element} */
+  replaceChildren(...args) {
+    let child;
+    while (child = this[utils.SHADY_PREFIX + 'firstChild']) {
+      this[utils.SHADY_PREFIX + 'removeChild'](child);
+    }
+    for (const arg of args) {
+      const newChild = typeof arg === 'string' ? document.createTextNode(arg) : arg;
+      this[utils.SHADY_PREFIX + 'insertBefore'](newChild);
+    }
+  },
 
 });
 
