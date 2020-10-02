@@ -33,7 +33,7 @@ function installReplaceChildren<T>(constructor: Constructor<T>) {
     writable: true,
     value: function replaceChildren(...args: Array<Node|string>) {
       let child;
-      while (child = nativeGetFirstChild.call(this)) {
+      while ((child = nativeGetFirstChild.call(this)) !== null) {
         nativeRemoveChild.call(this, child);
       }
 
