@@ -113,7 +113,7 @@ export const ParentNodePatches = utils.getOwnPropertyDescriptors({
   },
 
   /** @this {Element} */
-  replaceChildren(...args) {
+  ['replaceChildren'](...args) {
     let child;
     while (child = this[utils.SHADY_PREFIX + 'firstChild']) {
       this[utils.SHADY_PREFIX + 'removeChild'](child);
