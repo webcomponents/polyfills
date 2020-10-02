@@ -13,7 +13,10 @@ export {};
 type Constructor<T> = new (...args: Array<any>) => T;
 
 const nativeInsertBefore = Node.prototype.insertBefore;
-const nativeGetFirstChild = Object.getOwnPropertyDescriptor(Node.prototype, 'firstChild')!.get!;
+const nativeGetFirstChild =
+    Object.getOwnPropertyDescriptor(Node.prototype, 'firstChild')!.get! ??
+    // In Safari 9, the `firstChild` descriptor's `get` and `set` are undefined.
+    function(this: Node) { return this.firstChild; };
 
 function installPrepend<T>(constructor: Constructor<T>) {
   const prototype = constructor.prototype;
