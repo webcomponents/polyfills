@@ -104,6 +104,13 @@ function closurify(sourceName, fileName) {
   .pipe(gulp.dest(outDir));
 }
 
+gulp.task('debugify-platform', () => {
+  const rollupOptions = {
+    plugins: [commonjs()]
+  };
+  return debugify('webcomponents-platform', null, rollupOptions)
+});
+
 gulp.task('debugify-ce', () => {
   return debugify('webcomponents-ce')
 });
@@ -129,6 +136,10 @@ gulp.task('debugify-bundle', () => {
   };
   return debugify('webcomponents-bundle', 'webcomponents-bundle', rollupOptions);
 })
+
+gulp.task('closurify-platform', () => {
+  return closurify('webcomponents-platform')
+});
 
 gulp.task('closurify-ce', () => {
   return closurify('webcomponents-ce')
@@ -177,6 +188,7 @@ gulp.task('clean', () => {
 });
 
 gulp.task('debug', gulp.series([
+  'debugify-platform',
   'debugify-ce',
   'debugify-sd',
   'debugify-sd-ce',
@@ -186,6 +198,7 @@ gulp.task('debug', gulp.series([
 ]));
 
 gulp.task('closure', gulp.series([
+  'closurify-platform',
   'closurify-ce',
   'closurify-sd',
   'closurify-sd-ce',
