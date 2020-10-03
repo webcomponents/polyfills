@@ -5,8 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+<!-- ## [Unreleased] -->
 
+## [1.7.4] - 2020-07-20
+
+- Manually dispatch events for connected, unassigned targets, if
+  `preferPerformance` is not enabled.
+  ([#332](https://github.com/webcomponents/polyfills/pull/332))
 - Remove outdated references to `customElements.nativeHTMLElement`
   ([#234](https://github.com/webcomponents/polyfills/pull/234))
 - Add README warning about polyfill ordering when using `noPatch`

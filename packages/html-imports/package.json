@@ -1,6 +1,6 @@
 {
   "name": "@webcomponents/html-imports",
-  "version": "1.2.4",
+  "version": "1.2.5",
   "description": "HTML Imports polyfill",
   "main": "html-imports.min.js",
   "repository": {
