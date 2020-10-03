@@ -14,6 +14,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
  * Used in: Safari 10, when loaded with flag
  */
 
+import '../unresolved.js';
 import '../../node_modules/@webcomponents/html-imports/src/html-imports.js';
 import '../../node_modules/@webcomponents/custom-elements/src/custom-elements.js';
-import '../platform/unresolved.js';
