@@ -14,7 +14,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
  * Used in: IE 11
  */
 
-import './webcomponents-platform-index.js';
+import './webcomponents-js-index.js';
+import './webcomponents-web-index.js';
+import '../flag-parser.js';
 import '../../node_modules/@webcomponents/template/template.js';
 import '../../node_modules/@webcomponents/shadydom/src/shadydom.js';
 import '../../node_modules/@webcomponents/custom-elements/src/custom-elements.js';

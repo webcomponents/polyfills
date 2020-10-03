@@ -104,11 +104,18 @@ function closurify(sourceName, fileName) {
   .pipe(gulp.dest(outDir));
 }
 
-gulp.task('debugify-platform', () => {
+gulp.task('debugify-js', () => {
   const rollupOptions = {
     plugins: [commonjs()]
   };
-  return debugify('webcomponents-platform', null, rollupOptions)
+  return debugify('webcomponents-js', null, rollupOptions)
+});
+
+gulp.task('debugify-web', () => {
+  const rollupOptions = {
+    plugins: [commonjs()]
+  };
+  return debugify('webcomponents-web', null, rollupOptions)
 });
 
 gulp.task('debugify-ce', () => {
@@ -137,8 +144,12 @@ gulp.task('debugify-bundle', () => {
   return debugify('webcomponents-bundle', 'webcomponents-bundle', rollupOptions);
 })
 
-gulp.task('closurify-platform', () => {
-  return closurify('webcomponents-platform')
+gulp.task('closurify-js', () => {
+  return closurify('webcomponents-js')
+});
+
+gulp.task('closurify-web', () => {
+  return closurify('webcomponents-web')
 });
 
 gulp.task('closurify-ce', () => {
@@ -188,7 +199,8 @@ gulp.task('clean', () => {
 });
 
 gulp.task('debug', gulp.series([
-  'debugify-platform',
+  'debugify-js',
+  'debugify-web',
   'debugify-ce',
   'debugify-sd',
   'debugify-sd-ce',
@@ -198,7 +210,8 @@ gulp.task('debug', gulp.series([
 ]));
 
 gulp.task('closure', gulp.series([
-  'closurify-platform',
+  'closurify-js',
+  'closurify-web',
   'closurify-ce',
   'closurify-sd',
   'closurify-sd-ce',
