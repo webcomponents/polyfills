@@ -8,8 +8,8 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-- Add a new entrypoint to webcomponentsjs that contains only the platform
-  polyfills. ([#385](https://github.com/webcomponents/polyfills/pull/385))
+- Add new entrypoints to webcomponentsjs for the 'platform' polyfills.
+  ([#385](https://github.com/webcomponents/polyfills/pull/385))
 
 ## [2.4.4] - 2020-07-20
 
