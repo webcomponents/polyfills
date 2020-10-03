@@ -16,6 +16,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 import './webcomponents-js-index.js';
 import './webcomponents-web-index.js';
+import '../unresolved.js';
 import '../flag-parser.js';
 import '../../node_modules/@webcomponents/template/template.js';
 import '../../node_modules/@webcomponents/shadydom/src/shadydom.js';
