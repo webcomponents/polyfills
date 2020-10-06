@@ -104,18 +104,18 @@ function closurify(sourceName, fileName) {
   .pipe(gulp.dest(outDir));
 }
 
-gulp.task('debugify-js', () => {
+gulp.task('debugify-pf_js', () => {
   const rollupOptions = {
     plugins: [commonjs()]
   };
-  return debugify('webcomponents-js', null, rollupOptions)
+  return debugify('webcomponents-pf_js', null, rollupOptions)
 });
 
-gulp.task('debugify-dom', () => {
+gulp.task('debugify-pf_dom', () => {
   const rollupOptions = {
     plugins: [commonjs()]
   };
-  return debugify('webcomponents-dom', null, rollupOptions)
+  return debugify('webcomponents-pf_dom', null, rollupOptions)
 });
 
 gulp.task('debugify-ce', () => {
@@ -144,12 +144,12 @@ gulp.task('debugify-bundle', () => {
   return debugify('webcomponents-bundle', 'webcomponents-bundle', rollupOptions);
 })
 
-gulp.task('closurify-js', () => {
-  return closurify('webcomponents-js')
+gulp.task('closurify-pf_js', () => {
+  return closurify('webcomponents-pf_js')
 });
 
-gulp.task('closurify-dom', () => {
-  return closurify('webcomponents-dom')
+gulp.task('closurify-pf_dom', () => {
+  return closurify('webcomponents-pf_dom')
 });
 
 gulp.task('closurify-ce', () => {
@@ -199,8 +199,8 @@ gulp.task('clean', () => {
 });
 
 gulp.task('debug', gulp.series([
-  'debugify-js',
-  'debugify-dom',
+  'debugify-pf_js',
+  'debugify-pf_dom',
   'debugify-ce',
   'debugify-sd',
   'debugify-sd-ce',
@@ -210,8 +210,8 @@ gulp.task('debug', gulp.series([
 ]));
 
 gulp.task('closure', gulp.series([
-  'closurify-js',
-  'closurify-dom',
+  'closurify-pf_js',
+  'closurify-pf_dom',
   'closurify-ce',
   'closurify-sd',
   'closurify-sd-ce',

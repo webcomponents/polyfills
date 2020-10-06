@@ -14,8 +14,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
  * Used in: IE 11
  */
 
-import './webcomponents-js-index.js';
-import './webcomponents-dom-index.js';
+import './webcomponents-pf_js-index.js';
+import './webcomponents-pf_dom-index.js';
 import '../unresolved.js';
 import '../flag-parser.js';
 import '../../node_modules/@webcomponents/template/template.js';
