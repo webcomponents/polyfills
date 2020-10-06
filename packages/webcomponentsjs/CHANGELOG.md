@@ -8,6 +8,11 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+- Add new entrypoints to webcomponentsjs for the 'platform' polyfills.
+  ([#385](https://github.com/webcomponents/polyfills/pull/385))
+
+## [2.4.4] - 2020-07-20
+
 - Fixed bug where Object.assign polyfill would copy non-enumerable properties.
 - Convert platform (`Array.from`, `CustomEvent`, `Promise` etc.) polyfills to
   TypeScript ([#292](https://github.com/webcomponents/polyfills/pull/292))
