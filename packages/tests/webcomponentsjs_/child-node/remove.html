@@ -1,0 +1,69 @@
+<!doctype html>
+<!--
+@license
+Copyright (c) 2020 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<html>
+<head>
+  <title>ChildNode remove</title>
+  <script>
+    for (const item of [
+      CharacterData.prototype,
+      DocumentType.prototype,
+      Element.prototype,
+    ]) {
+      delete item.remove;
+    }
+  </script>
+  <script src="../../node_modules/@webcomponents/webcomponentsjs/bundles/webcomponents-pf_dom.js"></script>
+  <script src="../wct-config.js"></script>
+  <script src="../../node_modules/wct-browser-legacy/browser.js"></script>
+</head>
+<body>
+  <script>
+    const testRemove = (createChild) => {
+      test('Removes the node', () => {
+        const parent = document.createElement('div');
+        const child = createChild();
+
+        parent.appendChild(child);
+        assert.equal(child.parentNode, parent);
+
+        child.remove();
+        assert.equal(child.parentNode, null);
+      });
+    };
+
+    suite('ChildNode remove', function() {
+      suite('CharacterData', function() {
+        testRemove(() => document.createTextNode(''));
+      });
+
+      suite('DocumentType', function() {
+        test('Removes the node', () => {
+          // Doctypes can only be inserted as children of documents.
+          const parent = document.implementation.createHTMLDocument('');
+          parent.removeChild(parent.doctype);
+          const child = document.implementation.createHTMLDocument('').doctype;
+
+          // The doctype must come before the document element.
+          parent.insertBefore(child, parent.documentElement);
+          assert.equal(child.parentNode, parent);
+
+          child.remove();
+          assert.equal(child.parentNode, null);
+        });
+      });
+
+      suite('Element', function() {
+        testRemove(() => document.createElement('div'));
+      });
+    });
+  </script>
+</body>
+</html>
