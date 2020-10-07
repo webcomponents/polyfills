@@ -8,6 +8,8 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+- Add polyfills for select ParentNode APIs.
+  ([#389](https://github.com/webcomponents/polyfills/pull/389))
 - Add new entrypoints to webcomponentsjs for the 'platform' polyfills.
   ([#385](https://github.com/webcomponents/polyfills/pull/385))
 
