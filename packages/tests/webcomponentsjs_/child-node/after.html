@@ -1,0 +1,126 @@
+<!doctype html>
+<!--
+@license
+Copyright (c) 2020 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<html>
+<head>
+  <title>ChildNode after</title>
+  <script>
+    for (const item of [
+      CharacterData.prototype,
+      DocumentType.prototype,
+      Element.prototype,
+    ]) {
+      delete item.after;
+    }
+  </script>
+  <script src="../../node_modules/@webcomponents/webcomponentsjs/bundles/webcomponents-pf_dom.js"></script>
+  <script src="../wct-config.js"></script>
+  <script src="../../node_modules/wct-browser-legacy/browser.js"></script>
+</head>
+<body>
+  <script>
+    const testBefore = (createChildNode) => {
+      test('Inserts an element after the target node', () => {
+        const container = document.createElement('div');
+        const target = createChildNode();
+        container.appendChild(target);
+
+        const child = document.createElement('div');
+        target.after(child);
+
+        assert(child.parentNode === container);
+        assert(container.childNodes.length === 2);
+        assert(container.childNodes[0] === target);
+        assert(container.childNodes[1] === child);
+      });
+
+      test('Inserts a text node after the target node', () => {
+        const container = document.createElement('div');
+        const target = createChildNode();
+        container.appendChild(target);
+
+        target.after('This is some text.');
+
+        assert(container.childNodes.length === 2);
+        assert(container.childNodes[0] === target);
+        assert(container.childNodes[1].nodeType === Node.TEXT_NODE);
+        assert(container.childNodes[1].textContent === 'This is some text.');
+      });
+
+      test('Inserts multiple types of nodes after the target node', () => {
+        const container = document.createElement('div');
+        const target = createChildNode();
+        container.appendChild(target);
+
+        const child1 = document.createElement('div');
+        const child3 = document.createElement('div');
+        target.after(child1, 'This is some text.', child3);
+
+        assert(container.childNodes.length === 4);
+        assert(container.childNodes[0] === target);
+        assert(container.childNodes[1] === child1);
+        assert(container.childNodes[2].nodeType === Node.TEXT_NODE);
+        assert(container.childNodes[2].textContent === 'This is some text.');
+        assert(container.childNodes[3] === child3);
+      });
+    };
+
+    suite('ChildNode after', function() {
+      suite('CharacterData', function() {
+        testBefore(() => document.createTextNode(''));
+      });
+
+      suite('DocumentType', function() {
+        test('Inserts a comment after the target node', () => {
+          const container = document.implementation.createHTMLDocument('');
+          const target = container.doctype;
+          let firstChild;
+          while ((firstChild = container.firstChild) !== null) {
+            container.removeChild(firstChild);
+          }
+          container.appendChild(target);
+
+          const child = document.createComment('');
+          target.after(child);
+
+          assert(child.parentNode === container);
+          assert(container.childNodes.length === 2);
+          assert(container.childNodes[0] === target);
+          assert(container.childNodes[1] === child);
+        });
+
+        test('Inserts multiple nodes after the target node', () => {
+          const container = document.implementation.createHTMLDocument('');
+          const target = container.doctype;
+          let firstChild;
+          while ((firstChild = container.firstChild) !== null) {
+            container.removeChild(firstChild);
+          }
+          container.appendChild(target);
+
+          // Text nodes can't be inserted as children of documents.
+          const child1 = document.createComment('');
+          const child2 = document.createComment('');
+          target.after(child1, child2);
+
+          assert(container.childNodes.length === 3);
+          assert(container.childNodes[0] === target);
+          assert(container.childNodes[1] === child1);
+          assert(container.childNodes[2] === child2);
+        });
+      });
+
+      suite('Element', function() {
+        testBefore(() => document.createElement('div'));
+      });
+    });
+  </script>
+</body>
+</html>
