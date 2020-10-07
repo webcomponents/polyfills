@@ -11,3 +11,4 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 import './after.js';
 import './before.js';
 import './remove.js';
+import './replace-with.js';
