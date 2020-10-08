@@ -51,10 +51,11 @@ export const ChildNodePatches = utils.getOwnPropertyDescriptors({
     if (parentNode === null) {
       return;
     }
+    const nextSibling = this[utils.SHADY_PREFIX + 'nextSibling'];
+    parentNode[utils.SHADY_PREFIX + 'removeChild'](this);
     for (const arg of args) {
       const newChild = typeof arg === 'string' ? document.createTextNode(arg) : arg;
-      parentNode[utils.SHADY_PREFIX + 'insertBefore'](newChild, this);
+      parentNode[utils.SHADY_PREFIX + 'insertBefore'](newChild, nextSibling);
     }
-    parentNode[utils.SHADY_PREFIX + 'removeChild'](this);
   },
 });
