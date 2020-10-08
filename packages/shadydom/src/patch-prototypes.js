@@ -13,6 +13,7 @@ import {EventTargetPatches} from './patches/EventTarget.js';
 import {NodePatches} from './patches/Node.js';
 import {SlotablePatches} from './patches/Slotable.js';
 import {ParentNodePatches, ParentNodeDocumentOrFragmentPatches} from './patches/ParentNode.js';
+import {ChildNodePatches} from './patches/ChildNode.js';
 import {ElementPatches, ElementShadowPatches} from './patches/Element.js';
 import {ElementOrShadowRootPatches} from './patches/ElementOrShadowRoot.js';
 import {HTMLElementPatches} from './patches/HTMLElement.js';
@@ -57,14 +58,16 @@ const patchMap = {
   Comment: [SlotablePatches],
   CDATASection: [SlotablePatches],
   ProcessingInstruction: [SlotablePatches],
-  Element: [ElementPatches, ParentNodePatches, SlotablePatches,
+  Element: [ElementPatches, ParentNodePatches, ChildNodePatches, SlotablePatches,
     ElementShouldHaveInnerHTML ? ElementOrShadowRootPatches : null,
     !window.HTMLSlotElement ? SlotPatches : null],
   HTMLElement: [HTMLElementPatches, NonStandardHTMLElement],
   HTMLSlotElement: [SlotPatches],
   DocumentFragment: [ParentNodeDocumentOrFragmentPatches, DocumentOrFragmentPatches],
   Document: [DocumentPatches, ParentNodeDocumentOrFragmentPatches, DocumentOrFragmentPatches, DocumentOrShadowRootPatches],
-  Window: [WindowPatches]
+  Window: [WindowPatches],
+  CharacterData: [ChildNodePatches],
+  DocumentType: [ChildNodePatches],
 }
 
 const getPatchPrototype = (name) => window[name] && window[name].prototype;
