@@ -230,3 +230,17 @@ export const assign = (target, source) => {
 export const arrayFrom = (object) => {
   return [].slice.call(/** @type {IArrayLike} */(object));
 };
+
+// Implements 'convert nodes into a node'.
+// https://dom.spec.whatwg.org/#converting-nodes-into-a-node
+export const convertNodesIntoANode = (...args) => {
+  if (args.length === 1) {
+    return args[0];
+  }
+
+  const fragment = document.createDocumentFragment();
+  for (const arg of args) {
+    fragment.appendChild(typeof arg === 'string' ? document.createTextNode(arg) : arg);
+  }
+  return fragment;
+};
