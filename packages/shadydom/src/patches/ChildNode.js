@@ -18,10 +18,7 @@ export const ChildNodePatches = utils.getOwnPropertyDescriptors({
       return;
     }
     const nextSibling = this[utils.SHADY_PREFIX + 'nextSibling'];
-    for (const arg of args) {
-      const newChild = typeof arg === 'string' ? document.createTextNode(arg) : arg;
-      parentNode[utils.SHADY_PREFIX + 'insertBefore'](newChild, nextSibling);
-    }
+    parentNode[utils.SHADY_PREFIX + 'insertBefore'](utils.convertNodesIntoANode(...args), nextSibling);
   },
 
   /** @this {Element} */
@@ -30,10 +27,7 @@ export const ChildNodePatches = utils.getOwnPropertyDescriptors({
     if (parentNode === null) {
       return;
     }
-    for (const arg of args) {
-      const newChild = typeof arg === 'string' ? document.createTextNode(arg) : arg;
-      parentNode[utils.SHADY_PREFIX + 'insertBefore'](newChild, this);
-    }
+    parentNode[utils.SHADY_PREFIX + 'insertBefore'](utils.convertNodesIntoANode(...args), this);
   },
 
   /** @this {Element} */
@@ -53,9 +47,6 @@ export const ChildNodePatches = utils.getOwnPropertyDescriptors({
     }
     const nextSibling = this[utils.SHADY_PREFIX + 'nextSibling'];
     parentNode[utils.SHADY_PREFIX + 'removeChild'](this);
-    for (const arg of args) {
-      const newChild = typeof arg === 'string' ? document.createTextNode(arg) : arg;
-      parentNode[utils.SHADY_PREFIX + 'insertBefore'](newChild, nextSibling);
-    }
+    parentNode[utils.SHADY_PREFIX + 'insertBefore'](utils.convertNodesIntoANode(...args), nextSibling);
   },
 });
