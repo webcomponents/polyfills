@@ -97,19 +97,13 @@ export const ParentNodePatches = utils.getOwnPropertyDescriptors({
 
   /** @this {Element} */
   append(...args) {
-    for (const arg of args) {
-      const newChild = typeof arg === 'string' ? document.createTextNode(arg) : arg;
-      this[utils.SHADY_PREFIX + 'insertBefore'](newChild);
-    }
+    this[utils.SHADY_PREFIX + 'insertBefore'](utils.convertNodesIntoANode(...args), null);
   },
 
   /** @this {Element} */
   prepend(...args) {
-    const firstChild = this[utils.SHADY_PREFIX + 'firstChild'];
-    for (const arg of args) {
-      const newChild = typeof arg === 'string' ? document.createTextNode(arg) : arg;
-      this[utils.SHADY_PREFIX + 'insertBefore'](newChild, firstChild);
-    }
+    this[utils.SHADY_PREFIX + 'insertBefore'](
+        utils.convertNodesIntoANode(...args), this[utils.SHADY_PREFIX + 'firstChild']);
   },
 
   /** @this {Element} */
@@ -118,10 +112,7 @@ export const ParentNodePatches = utils.getOwnPropertyDescriptors({
     while ((child = this[utils.SHADY_PREFIX + 'firstChild']) !== null) {
       this[utils.SHADY_PREFIX + 'removeChild'](child);
     }
-    for (const arg of args) {
-      const newChild = typeof arg === 'string' ? document.createTextNode(arg) : arg;
-      this[utils.SHADY_PREFIX + 'insertBefore'](newChild);
-    }
+    this[utils.SHADY_PREFIX + 'insertBefore'](utils.convertNodesIntoANode(...args), null);
   },
 
 });
