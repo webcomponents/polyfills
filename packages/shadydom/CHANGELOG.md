@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Add support for ChildNode APIs.
+  ([#390](https://github.com/webcomponents/polyfills/pull/390))
 - Add support for select ParentNode APIs.
   ([#389](https://github.com/webcomponents/polyfills/pull/389))
 
