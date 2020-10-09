@@ -11,7 +11,7 @@ found at http://polymer.github.io/PATENTS.txt
 
 const Element_prototype = window.Element.prototype;
 const HTMLElement_prototype = window.HTMLElement.prototype;
-const SVGElement_prototype = window.SVGElement.prototype;
+const SVGElement_prototype = window['SVGElement'].prototype;
 
 // Thanks to @justinfagnani for finding this:
 //
