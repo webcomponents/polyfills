@@ -9,6 +9,8 @@ part of the polymer project is also subject to an additional IP rights grant
 found at http://polymer.github.io/PATENTS.txt
 */
 
+export {};
+
 const Element_prototype = window.Element.prototype;
 const HTMLElement_prototype = window.HTMLElement.prototype;
 const SVGElement_prototype = window['SVGElement'].prototype;

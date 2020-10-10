@@ -129,40 +129,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         svgElement.classList.replace('one', 'two');
         assert(svgElement.getAttribute('class') === 'two');
       });
-
-      test('supports()', () => {
-        const svgElement = createSVGElement();
-        assert.throws(() => {
-          svgElement.classList.supports('one');
-        });
-      });
-
-      test('value', () => {
-        const svgElement = createSVGElement();
-
-        svgElement.classList.add('one', 'two');
-        assert(svgElement.classList.value === 'one two');
-      });
-
-      test('[Symbol.iterator]', () => {
-        const svgElement = createSVGElement();
-        svgElement.classList.add('one', 'two');
-
-        const iterator = svgElement.classList[Symbol.iterator]();
-        let value, done;
-
-        ({value, done} = iterator.next());
-        assert(value === 'one');
-        assert(!done);
-
-        ({value, done} = iterator.next());
-        assert(value === 'two');
-        assert(!done);
-
-        ({value, done} = iterator.next());
-        assert(value === undefined);
-        assert(done);
-      });
     });
   </script>
 </body>
