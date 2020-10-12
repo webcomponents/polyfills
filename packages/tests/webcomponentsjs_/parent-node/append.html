@@ -26,46 +26,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 </head>
 <body>
   <script>
-    const testAppend = (createContainer) => {
-      test('Appends an element', () => {
-        const container = createContainer();
-        container.appendChild(document.createElement('div'));
-
-        const child = document.createElement('div');
-        container.append(child);
-
-        assert(child.parentNode === container);
-        assert(container.childNodes.length === 2);
-        assert(container.childNodes[1] === child);
-      });
-
-      test('Appends a text node', () => {
-        const container = createContainer();
-        container.appendChild(document.createElement('div'));
-
-        container.append('This is some text.');
-
-        assert(container.childNodes.length === 2);
-        assert(container.childNodes[1].nodeType === Node.TEXT_NODE);
-        assert(container.childNodes[1].textContent === 'This is some text.');
-      });
-
-      test('Appends multiple types of nodes', () => {
-        const container = createContainer();
-        container.appendChild(document.createElement('div'));
-
-        const child1 = document.createElement('div');
-        const child3 = document.createElement('div');
-        container.append(child1, 'This is some text.', child3);
-
-        assert(container.childNodes.length === 4);
-        assert(container.childNodes[1] === child1);
-        assert(container.childNodes[2].nodeType === Node.TEXT_NODE);
-        assert(container.childNodes[2].textContent === 'This is some text.');
-        assert(container.childNodes[3] === child3);
-      });
-    };
-
     suite('ParentNode append', function() {
       suite('Document', function() {
         test('Appends an element', () => {
@@ -83,11 +43,83 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       });
 
       suite('DocumentFragment', function() {
-        testAppend(() => document.createDocumentFragment());
+        test('Appends an element', () => {
+          const container = document.createDocumentFragment();
+          container.appendChild(document.createElement('div'));
+
+          const child = document.createElement('div');
+          container.append(child);
+
+          assert(child.parentNode === container);
+          assert(container.childNodes.length === 2);
+          assert(container.childNodes[1] === child);
+        });
+
+        test('Appends a text node', () => {
+          const container = document.createDocumentFragment();
+          container.appendChild(document.createElement('div'));
+
+          container.append('This is some text.');
+
+          assert(container.childNodes.length === 2);
+          assert(container.childNodes[1].nodeType === Node.TEXT_NODE);
+          assert(container.childNodes[1].textContent === 'This is some text.');
+        });
+
+        test('Appends multiple types of nodes', () => {
+          const container = document.createDocumentFragment();
+          container.appendChild(document.createElement('div'));
+
+          const child1 = document.createElement('div');
+          const child3 = document.createElement('div');
+          container.append(child1, 'This is some text.', child3);
+
+          assert(container.childNodes.length === 4);
+          assert(container.childNodes[1] === child1);
+          assert(container.childNodes[2].nodeType === Node.TEXT_NODE);
+          assert(container.childNodes[2].textContent === 'This is some text.');
+          assert(container.childNodes[3] === child3);
+        });
       });
 
       suite('Element', function() {
-        testAppend(() => document.createElement('div'));
+        test('Appends an element', () => {
+          const container = document.createElement('div');
+          container.appendChild(document.createElement('div'));
+
+          const child = document.createElement('div');
+          container.append(child);
+
+          assert(child.parentNode === container);
+          assert(container.childNodes.length === 2);
+          assert(container.childNodes[1] === child);
+        });
+
+        test('Appends a text node', () => {
+          const container = document.createElement('div');
+          container.appendChild(document.createElement('div'));
+
+          container.append('This is some text.');
+
+          assert(container.childNodes.length === 2);
+          assert(container.childNodes[1].nodeType === Node.TEXT_NODE);
+          assert(container.childNodes[1].textContent === 'This is some text.');
+        });
+
+        test('Appends multiple types of nodes', () => {
+          const container = document.createElement('div');
+          container.appendChild(document.createElement('div'));
+
+          const child1 = document.createElement('div');
+          const child3 = document.createElement('div');
+          container.append(child1, 'This is some text.', child3);
+
+          assert(container.childNodes.length === 4);
+          assert(container.childNodes[1] === child1);
+          assert(container.childNodes[2].nodeType === Node.TEXT_NODE);
+          assert(container.childNodes[2].textContent === 'This is some text.');
+          assert(container.childNodes[3] === child3);
+        });
       });
     });
   </script>
