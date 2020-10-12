@@ -8,6 +8,8 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+- Polyfill `Element#getAttributeNames`.
+  ([#393](https://github.com/webcomponents/polyfills/pull/393))
 - Add new entrypoints to webcomponentsjs for the 'platform' polyfills.
   ([#385](https://github.com/webcomponents/polyfills/pull/385))
 
