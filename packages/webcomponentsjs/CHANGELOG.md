@@ -8,6 +8,8 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+- Add polyfills for newer parts of DOMTokenList.
+  ([#392](https://github.com/webcomponents/polyfills/pull/392))
 - Add new entrypoints to webcomponentsjs for the 'platform' polyfills.
   ([#385](https://github.com/webcomponents/polyfills/pull/385))
 

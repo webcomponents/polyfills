@@ -10,3 +10,4 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 import '../platform/custom-event.js';
 import '../platform/baseuri.js';
+import '../platform/dom-token-list.js';
