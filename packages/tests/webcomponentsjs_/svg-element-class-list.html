@@ -62,72 +62,30 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
         svgElement.classList.add('two');
         assert(svgElement.getAttribute('class') === 'one two');
-
-        svgElement.classList.add('three', 'four');
-        assert(svgElement.getAttribute('class') === 'one two three four');
       });
 
       test('remove()', () => {
         const svgElement = createSVGElement();
 
-        svgElement.classList.add('one', 'two', 'three');
+        svgElement.classList.add('one');
+        svgElement.classList.add('two');
+        svgElement.classList.add('three');
         assert(svgElement.getAttribute('class') === 'one two three');
 
         svgElement.classList.remove('one');
         assert(svgElement.getAttribute('class') === 'two three');
-
-        svgElement.classList.remove('three', 'two');
-        assert(svgElement.getAttribute('class') === '');
       });
 
-      suite('toggle()', () => {
-        test('toggle(x)', () => {
-          const svgElement = createSVGElement();
-
-          assert(svgElement.getAttribute('class') === null);
-
-          svgElement.classList.toggle('one');
-          assert(svgElement.getAttribute('class') === 'one');
-
-          svgElement.classList.toggle('one');
-          assert(svgElement.getAttribute('class') === '');
-        });
-
-        test('toggle(x, true)', () => {
-          const svgElement = createSVGElement();
-
-          svgElement.classList.add('one');
-          assert(svgElement.getAttribute('class') === 'one');
-
-          svgElement.classList.toggle('one', true);
-          assert(svgElement.getAttribute('class') === 'one');
-
-          svgElement.classList.toggle('two', true);
-          assert(svgElement.getAttribute('class') === 'one two');
-        });
-
-        test('toggle(x, false)', () => {
-          const svgElement = createSVGElement();
-
-          svgElement.classList.add('one');
-          assert(svgElement.getAttribute('class') === 'one');
-
-          svgElement.classList.toggle('one', false);
-          assert(svgElement.getAttribute('class') === '');
-
-          svgElement.classList.toggle('two', false);
-          assert(svgElement.getAttribute('class') === '');
-        });
-      });
-
-      test('replace()', () => {
+      test('toggle()', () => {
         const svgElement = createSVGElement();
 
-        svgElement.classList.add('one');
+        assert(svgElement.getAttribute('class') === null);
+
+        svgElement.classList.toggle('one');
         assert(svgElement.getAttribute('class') === 'one');
 
-        svgElement.classList.replace('one', 'two');
-        assert(svgElement.getAttribute('class') === 'two');
+        svgElement.classList.toggle('one');
+        assert(svgElement.getAttribute('class') === '');
       });
     });
   </script>

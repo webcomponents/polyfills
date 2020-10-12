@@ -1,0 +1,133 @@
+<!doctype html>
+<!--
+@license
+Copyright (c) 2020 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<html>
+<head>
+  <title>DOMTokenList</title>
+  <script src="../node_modules/@webcomponents/webcomponentsjs/bundles/webcomponents-pf_dom.js"></script>
+  <script src="./wct-config.js"></script>
+  <script src="../node_modules/wct-browser-legacy/browser.js"></script>
+</head>
+<body>
+  <script>
+    suite('DOMTokenList', function() {
+      test('length', () => {
+        const element = document.createElement('div');
+
+        assert(element.classList.length === 0);
+
+        element.classList.add('one');
+        assert(element.classList.length === 1);
+
+        element.classList.add('two');
+        assert(element.classList.length === 2);
+      });
+
+      test('item()', () => {
+        const element = document.createElement('div');
+
+        element.classList.add('one');
+        element.classList.add('two');
+        assert(element.classList.item(0) === 'one');
+        assert(element.classList.item(1) === 'two');
+        assert(element.classList.item(2) === null);
+      });
+
+      test('contains()', () => {
+        const element = document.createElement('div');
+
+        element.classList.add('one');
+        element.classList.add('two');
+        assert(element.classList.contains('one'));
+        assert(element.classList.contains('two'));
+        assert(!element.classList.contains('three'));
+      });
+
+      test('add()', () => {
+        const element = document.createElement('div');
+
+        element.classList.add('one');
+        // `SVGElement#className` is not a string like HTML.
+        // https://www.w3.org/TR/SVG2/idl.html
+        assert(element.getAttribute('class') === 'one');
+
+        element.classList.add('two');
+        assert(element.getAttribute('class') === 'one two');
+
+        element.classList.add('three', 'four');
+        assert(element.getAttribute('class') === 'one two three four');
+      });
+
+      test('remove()', () => {
+        const element = document.createElement('div');
+
+        element.classList.add('one', 'two', 'three');
+        assert(element.getAttribute('class') === 'one two three');
+
+        element.classList.remove('one');
+        assert(element.getAttribute('class') === 'two three');
+
+        element.classList.remove('three', 'two');
+        assert(element.getAttribute('class') === '');
+      });
+
+      suite('toggle()', () => {
+        test('toggle(x)', () => {
+          const element = document.createElement('div');
+
+          assert(element.getAttribute('class') === null);
+
+          element.classList.toggle('one');
+          assert(element.getAttribute('class') === 'one');
+
+          element.classList.toggle('one');
+          assert(element.getAttribute('class') === '');
+        });
+
+        test('toggle(x, true)', () => {
+          const element = document.createElement('div');
+
+          element.classList.add('one');
+          assert(element.getAttribute('class') === 'one');
+
+          element.classList.toggle('one', true);
+          assert(element.getAttribute('class') === 'one');
+
+          element.classList.toggle('two', true);
+          assert(element.getAttribute('class') === 'one two');
+        });
+
+        test('toggle(x, false)', () => {
+          const element = document.createElement('div');
+
+          element.classList.add('one');
+          assert(element.getAttribute('class') === 'one');
+
+          element.classList.toggle('one', false);
+          assert(element.getAttribute('class') === '');
+
+          element.classList.toggle('two', false);
+          assert(element.getAttribute('class') === '');
+        });
+      });
+
+      test('replace()', () => {
+        const element = document.createElement('div');
+
+        element.classList.add('one');
+        assert(element.getAttribute('class') === 'one');
+
+        element.classList.replace('one', 'two');
+        assert(element.getAttribute('class') === 'two');
+      });
+    });
+  </script>
+</body>
+</html>
