@@ -592,6 +592,17 @@ suite('Mutate light DOM', function() {
     assert.strictEqual(getComposedHTML(host), '<a>Hello</a><b></b>c<d></d>');
   });
 
+  test('after - mutate host - single string', function() {
+    ShadyDOM.wrapIfNeeded(host).innerHTML = '<a>Hello</a>';
+    const helloAnchor = ShadyDOM.wrapIfNeeded(host).querySelector('a');
+    ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(host).shadowRoot).innerHTML = '<slot></slot>';
+    ShadyDOM.flush();
+    assert.strictEqual(getComposedHTML(host), '<a>Hello</a>');
+    helloAnchor.after('b');
+    ShadyDOM.flush();
+    assert.strictEqual(getComposedHTML(host), '<a>Hello</a>b');
+  });
+
   test('after - mutate shadow', function() {
     ShadyDOM.wrapIfNeeded(host).innerHTML = '<a>Hello</a>';
     const helloAnchor = ShadyDOM.wrapIfNeeded(host).querySelector('a');
@@ -605,6 +616,18 @@ suite('Mutate light DOM', function() {
     assert.strictEqual(getComposedHTML(host), '<a>Hello</a><b></b>c<d></d>');
   });
 
+  test('after - mutate shadow - single string', function() {
+    ShadyDOM.wrapIfNeeded(host).innerHTML = '<a>Hello</a>';
+    const helloAnchor = ShadyDOM.wrapIfNeeded(host).querySelector('a');
+    ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(host).shadowRoot).innerHTML = '<slot></slot>';
+    const slot = ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(host).shadowRoot).querySelector('slot');
+    ShadyDOM.flush();
+    assert.strictEqual(getComposedHTML(host), '<a>Hello</a>');
+    ShadyDOM.wrapIfNeeded(slot).after('b');
+    ShadyDOM.flush();
+    assert.strictEqual(getComposedHTML(host), '<a>Hello</a>b');
+  });
+
   test('before - mutate host', function() {
     ShadyDOM.wrapIfNeeded(host).innerHTML = '<a>Hello</a>';
     const helloAnchor = ShadyDOM.wrapIfNeeded(host).querySelector('a');
@@ -614,6 +637,17 @@ suite('Mutate light DOM', function() {
     helloAnchor.before(document.createElement('b'), 'c', document.createElement('d'));
     ShadyDOM.flush();
     assert.strictEqual(getComposedHTML(host), '<b></b>c<d></d><a>Hello</a>');
+  });
+
+  test('before - mutate host - single string', function() {
+    ShadyDOM.wrapIfNeeded(host).innerHTML = '<a>Hello</a>';
+    const helloAnchor = ShadyDOM.wrapIfNeeded(host).querySelector('a');
+    ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(host).shadowRoot).innerHTML = '<slot></slot>';
+    ShadyDOM.flush();
+    assert.strictEqual(getComposedHTML(host), '<a>Hello</a>');
+    helloAnchor.before('b');
+    ShadyDOM.flush();
+    assert.strictEqual(getComposedHTML(host), 'b<a>Hello</a>');
   });
 
   test('before - mutate shadow', function() {
@@ -627,6 +661,18 @@ suite('Mutate light DOM', function() {
         document.createElement('b'), 'c', document.createElement('d'));
     ShadyDOM.flush();
     assert.strictEqual(getComposedHTML(host), '<b></b>c<d></d><a>Hello</a>');
+  });
+
+  test('before - mutate shadow - single string', function() {
+    ShadyDOM.wrapIfNeeded(host).innerHTML = '<a>Hello</a>';
+    const helloAnchor = ShadyDOM.wrapIfNeeded(host).querySelector('a');
+    ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(host).shadowRoot).innerHTML = '<slot></slot>';
+    const slot = ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(host).shadowRoot).querySelector('slot');
+    ShadyDOM.flush();
+    assert.strictEqual(getComposedHTML(host), '<a>Hello</a>');
+    ShadyDOM.wrapIfNeeded(slot).before('b');
+    ShadyDOM.flush();
+    assert.strictEqual(getComposedHTML(host), 'b<a>Hello</a>');
   });
 
   test('remove - mutate host', function() {
@@ -663,6 +709,17 @@ suite('Mutate light DOM', function() {
     assert.strictEqual(getComposedHTML(host), '<b></b>c<d></d>');
   });
 
+  test('replaceWith - mutate host - single string', function() {
+    ShadyDOM.wrapIfNeeded(host).innerHTML = '<a>Hello</a>';
+    const helloAnchor = ShadyDOM.wrapIfNeeded(host).querySelector('a');
+    ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(host).shadowRoot).innerHTML = '<slot></slot>';
+    ShadyDOM.flush();
+    assert.strictEqual(getComposedHTML(host), '<a>Hello</a>');
+    helloAnchor.replaceWith('b');
+    ShadyDOM.flush();
+    assert.strictEqual(getComposedHTML(host), 'b');
+  });
+
   test('replaceWith - mutate shadow', function() {
     ShadyDOM.wrapIfNeeded(host).innerHTML = '<a>Hello</a>';
     const helloAnchor = ShadyDOM.wrapIfNeeded(host).querySelector('a');
@@ -674,6 +731,18 @@ suite('Mutate light DOM', function() {
         document.createElement('b'), 'c', document.createElement('d'));
     ShadyDOM.flush();
     assert.strictEqual(getComposedHTML(host), '<b></b>c<d></d>');
+  });
+
+  test('replaceWith - mutate shadow - single string', function() {
+    ShadyDOM.wrapIfNeeded(host).innerHTML = '<a>Hello</a>';
+    const helloAnchor = ShadyDOM.wrapIfNeeded(host).querySelector('a');
+    ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(host).shadowRoot).innerHTML = '<slot></slot>';
+    const slot = ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(host).shadowRoot).querySelector('slot');
+    ShadyDOM.flush();
+    assert.strictEqual(getComposedHTML(host), '<a>Hello</a>');
+    ShadyDOM.wrapIfNeeded(slot).replaceWith('b');
+    ShadyDOM.flush();
+    assert.strictEqual(getComposedHTML(host), 'b');
   });
 
   test('querySelectorAll .shadowRoot', function() {
