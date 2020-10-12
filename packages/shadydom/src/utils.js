@@ -235,7 +235,7 @@ export const arrayFrom = (object) => {
 // https://dom.spec.whatwg.org/#converting-nodes-into-a-node
 export const convertNodesIntoANode = (...args) => {
   if (args.length === 1) {
-    return args[0];
+    return (typeof args[0] === 'string' ? document.createTextNode(args[0]) : args[0]);
   }
 
   const fragment = document.createDocumentFragment();
