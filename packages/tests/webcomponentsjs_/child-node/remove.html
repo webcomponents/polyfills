@@ -26,22 +26,18 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 </head>
 <body>
   <script>
-    const testRemove = (createChild) => {
-      test('Removes the node', () => {
-        const parent = document.createElement('div');
-        const child = createChild();
-
-        parent.appendChild(child);
-        assert.equal(child.parentNode, parent);
-
-        child.remove();
-        assert.equal(child.parentNode, null);
-      });
-    };
-
     suite('ChildNode remove', function() {
       suite('CharacterData', function() {
-        testRemove(() => document.createTextNode(''));
+        test('Removes the node', () => {
+          const parent = document.createElement('div');
+          const child = document.createTextNode('');
+
+          parent.appendChild(child);
+          assert.equal(child.parentNode, parent);
+
+          child.remove();
+          assert.equal(child.parentNode, null);
+        });
       });
 
       suite('DocumentType', function() {
@@ -61,7 +57,16 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       });
 
       suite('Element', function() {
-        testRemove(() => document.createElement('div'));
+        test('Removes the node', () => {
+          const parent = document.createElement('div');
+          const child = document.createElement('div');
+
+          parent.appendChild(child);
+          assert.equal(child.parentNode, parent);
+
+          child.remove();
+          assert.equal(child.parentNode, null);
+        });
       });
     });
   </script>

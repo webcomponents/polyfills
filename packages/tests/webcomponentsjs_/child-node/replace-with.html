@@ -26,52 +26,48 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 </head>
 <body>
   <script>
-    const testBefore = (createChildNode) => {
-      test('Replaces the target node with an element', () => {
-        const container = document.createElement('div');
-        const target = createChildNode();
-        container.appendChild(target);
-
-        const child = document.createElement('div');
-        target.replaceWith(child);
-
-        assert(child.parentNode === container);
-        assert(container.childNodes.length === 1);
-        assert(container.childNodes[0] === child);
-      });
-
-      test('Replaces the target node with a text node', () => {
-        const container = document.createElement('div');
-        const target = createChildNode();
-        container.appendChild(target);
-
-        target.replaceWith('This is some text.');
-
-        assert(container.childNodes.length === 1);
-        assert(container.childNodes[0].nodeType === Node.TEXT_NODE);
-        assert(container.childNodes[0].textContent === 'This is some text.');
-      });
-
-      test('Replaces the target node with multiple types of nodes', () => {
-        const container = document.createElement('div');
-        const target = createChildNode();
-        container.appendChild(target);
-
-        const child0 = document.createElement('div');
-        const child2 = document.createElement('div');
-        target.replaceWith(child0, 'This is some text.', child2);
-
-        assert(container.childNodes.length === 3);
-        assert(container.childNodes[0] === child0);
-        assert(container.childNodes[1].nodeType === Node.TEXT_NODE);
-        assert(container.childNodes[1].textContent === 'This is some text.');
-        assert(container.childNodes[2] === child2);
-      });
-    };
-
     suite('ChildNode replaceWith', function() {
       suite('CharacterData', function() {
-        testBefore(() => document.createTextNode(''));
+        test('Replaces the target node with an element', () => {
+          const container = document.createElement('div');
+          const target = document.createTextNode('');
+          container.appendChild(target);
+
+          const child = document.createElement('div');
+          target.replaceWith(child);
+
+          assert(child.parentNode === container);
+          assert(container.childNodes.length === 1);
+          assert(container.childNodes[0] === child);
+        });
+
+        test('Replaces the target node with a text node', () => {
+          const container = document.createElement('div');
+          const target = document.createTextNode('');
+          container.appendChild(target);
+
+          target.replaceWith('This is some text.');
+
+          assert(container.childNodes.length === 1);
+          assert(container.childNodes[0].nodeType === Node.TEXT_NODE);
+          assert(container.childNodes[0].textContent === 'This is some text.');
+        });
+
+        test('Replaces the target node with multiple types of nodes', () => {
+          const container = document.createElement('div');
+          const target = document.createTextNode('');
+          container.appendChild(target);
+
+          const child0 = document.createElement('div');
+          const child2 = document.createElement('div');
+          target.replaceWith(child0, 'This is some text.', child2);
+
+          assert(container.childNodes.length === 3);
+          assert(container.childNodes[0] === child0);
+          assert(container.childNodes[1].nodeType === Node.TEXT_NODE);
+          assert(container.childNodes[1].textContent === 'This is some text.');
+          assert(container.childNodes[2] === child2);
+        });
       });
 
       suite('DocumentType', function() {
@@ -113,7 +109,46 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       });
 
       suite('Element', function() {
-        testBefore(() => document.createElement('div'));
+        test('Replaces the target node with an element', () => {
+          const container = document.createElement('div');
+          const target = document.createElement('div');
+          container.appendChild(target);
+
+          const child = document.createElement('div');
+          target.replaceWith(child);
+
+          assert(child.parentNode === container);
+          assert(container.childNodes.length === 1);
+          assert(container.childNodes[0] === child);
+        });
+
+        test('Replaces the target node with a text node', () => {
+          const container = document.createElement('div');
+          const target = document.createElement('div');
+          container.appendChild(target);
+
+          target.replaceWith('This is some text.');
+
+          assert(container.childNodes.length === 1);
+          assert(container.childNodes[0].nodeType === Node.TEXT_NODE);
+          assert(container.childNodes[0].textContent === 'This is some text.');
+        });
+
+        test('Replaces the target node with multiple types of nodes', () => {
+          const container = document.createElement('div');
+          const target = document.createElement('div');
+          container.appendChild(target);
+
+          const child0 = document.createElement('div');
+          const child2 = document.createElement('div');
+          target.replaceWith(child0, 'This is some text.', child2);
+
+          assert(container.childNodes.length === 3);
+          assert(container.childNodes[0] === child0);
+          assert(container.childNodes[1].nodeType === Node.TEXT_NODE);
+          assert(container.childNodes[1].textContent === 'This is some text.');
+          assert(container.childNodes[2] === child2);
+        });
       });
     });
   </script>

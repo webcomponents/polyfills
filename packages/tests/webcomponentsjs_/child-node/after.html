@@ -26,55 +26,51 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 </head>
 <body>
   <script>
-    const testBefore = (createChildNode) => {
-      test('Inserts an element after the target node', () => {
-        const container = document.createElement('div');
-        const target = createChildNode();
-        container.appendChild(target);
-
-        const child = document.createElement('div');
-        target.after(child);
-
-        assert(child.parentNode === container);
-        assert(container.childNodes.length === 2);
-        assert(container.childNodes[0] === target);
-        assert(container.childNodes[1] === child);
-      });
-
-      test('Inserts a text node after the target node', () => {
-        const container = document.createElement('div');
-        const target = createChildNode();
-        container.appendChild(target);
-
-        target.after('This is some text.');
-
-        assert(container.childNodes.length === 2);
-        assert(container.childNodes[0] === target);
-        assert(container.childNodes[1].nodeType === Node.TEXT_NODE);
-        assert(container.childNodes[1].textContent === 'This is some text.');
-      });
-
-      test('Inserts multiple types of nodes after the target node', () => {
-        const container = document.createElement('div');
-        const target = createChildNode();
-        container.appendChild(target);
-
-        const child1 = document.createElement('div');
-        const child3 = document.createElement('div');
-        target.after(child1, 'This is some text.', child3);
-
-        assert(container.childNodes.length === 4);
-        assert(container.childNodes[0] === target);
-        assert(container.childNodes[1] === child1);
-        assert(container.childNodes[2].nodeType === Node.TEXT_NODE);
-        assert(container.childNodes[2].textContent === 'This is some text.');
-        assert(container.childNodes[3] === child3);
-      });
-    };
-
     suite('ChildNode after', function() {
       suite('CharacterData', function() {
-        testBefore(() => document.createTextNode(''));
+        test('Inserts an element after the target node', () => {
+          const container = document.createElement('div');
+          const target = document.createTextNode('');
+          container.appendChild(target);
+
+          const child = document.createElement('div');
+          target.after(child);
+
+          assert(child.parentNode === container);
+          assert(container.childNodes.length === 2);
+          assert(container.childNodes[0] === target);
+          assert(container.childNodes[1] === child);
+        });
+
+        test('Inserts a text node after the target node', () => {
+          const container = document.createElement('div');
+          const target = document.createTextNode('');
+          container.appendChild(target);
+
+          target.after('This is some text.');
+
+          assert(container.childNodes.length === 2);
+          assert(container.childNodes[0] === target);
+          assert(container.childNodes[1].nodeType === Node.TEXT_NODE);
+          assert(container.childNodes[1].textContent === 'This is some text.');
+        });
+
+        test('Inserts multiple types of nodes after the target node', () => {
+          const container = document.createElement('div');
+          const target = document.createTextNode('');
+          container.appendChild(target);
+
+          const child1 = document.createElement('div');
+          const child3 = document.createElement('div');
+          target.after(child1, 'This is some text.', child3);
+
+          assert(container.childNodes.length === 4);
+          assert(container.childNodes[0] === target);
+          assert(container.childNodes[1] === child1);
+          assert(container.childNodes[2].nodeType === Node.TEXT_NODE);
+          assert(container.childNodes[2].textContent === 'This is some text.');
+          assert(container.childNodes[3] === child3);
+        });
       });
 
       suite('DocumentType', function() {
@@ -118,7 +114,49 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       });
 
       suite('Element', function() {
-        testBefore(() => document.createElement('div'));
+        test('Inserts an element after the target node', () => {
+          const container = document.createElement('div');
+          const target = document.createElement('div');
+          container.appendChild(target);
+
+          const child = document.createElement('div');
+          target.after(child);
+
+          assert(child.parentNode === container);
+          assert(container.childNodes.length === 2);
+          assert(container.childNodes[0] === target);
+          assert(container.childNodes[1] === child);
+        });
+
+        test('Inserts a text node after the target node', () => {
+          const container = document.createElement('div');
+          const target = document.createElement('div');
+          container.appendChild(target);
+
+          target.after('This is some text.');
+
+          assert(container.childNodes.length === 2);
+          assert(container.childNodes[0] === target);
+          assert(container.childNodes[1].nodeType === Node.TEXT_NODE);
+          assert(container.childNodes[1].textContent === 'This is some text.');
+        });
+
+        test('Inserts multiple types of nodes after the target node', () => {
+          const container = document.createElement('div');
+          const target = document.createElement('div');
+          container.appendChild(target);
+
+          const child1 = document.createElement('div');
+          const child3 = document.createElement('div');
+          target.after(child1, 'This is some text.', child3);
+
+          assert(container.childNodes.length === 4);
+          assert(container.childNodes[0] === target);
+          assert(container.childNodes[1] === child1);
+          assert(container.childNodes[2].nodeType === Node.TEXT_NODE);
+          assert(container.childNodes[2].textContent === 'This is some text.');
+          assert(container.childNodes[3] === child3);
+        });
       });
     });
   </script>
