@@ -10,7 +10,11 @@ found at http://polymer.github.io/PATENTS.txt
 */
 
 const Element_prototype = Element.prototype;
-const getAttributes = Object.getOwnPropertyDescriptor(Element.prototype, 'attributes')!.get!;
+const attributesDescriptor =
+    Object.getOwnPropertyDescriptor(Element_prototype, 'attributes') ??
+    // In IE11, the `attributes` descriptor is on `Node.prototype`.
+    Object.getOwnPropertyDescriptor(Node.prototype, 'attributes');
+const getAttributes = attributesDescriptor!.get!;
 const map = Array.prototype.map;
 
 if (!Element_prototype.hasOwnProperty('getAttributeNames')) {
