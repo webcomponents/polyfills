@@ -14,7 +14,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <script>
     for (const item of [
       CharacterData.prototype,
-      DocumentType.prototype,
       Element.prototype,
     ]) {
       delete item.remove;
@@ -33,22 +32,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           const child = document.createTextNode('');
 
           parent.appendChild(child);
-          assert.equal(child.parentNode, parent);
-
-          child.remove();
-          assert.equal(child.parentNode, null);
-        });
-      });
-
-      suite('DocumentType', function() {
-        test('Removes the node', () => {
-          // Doctypes can only be inserted as children of documents.
-          const parent = document.implementation.createHTMLDocument('');
-          parent.removeChild(parent.doctype);
-          const child = document.implementation.createHTMLDocument('').doctype;
-
-          // The doctype must come before the document element.
-          parent.insertBefore(child, parent.documentElement);
           assert.equal(child.parentNode, parent);
 
           child.remove();

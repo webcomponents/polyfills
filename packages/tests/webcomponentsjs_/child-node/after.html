@@ -14,7 +14,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <script>
     for (const item of [
       CharacterData.prototype,
-      DocumentType.prototype,
       Element.prototype,
     ]) {
       delete item.after;
@@ -70,46 +69,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           assert(container.childNodes[2].nodeType === Node.TEXT_NODE);
           assert(container.childNodes[2].textContent === 'This is some text.');
           assert(container.childNodes[3] === child3);
-        });
-      });
-
-      suite('DocumentType', function() {
-        test('Inserts a comment after the target node', () => {
-          const container = document.implementation.createHTMLDocument('');
-          const target = container.doctype;
-          let firstChild;
-          while ((firstChild = container.firstChild) !== null) {
-            container.removeChild(firstChild);
-          }
-          container.appendChild(target);
-
-          const child = document.createComment('');
-          target.after(child);
-
-          assert(child.parentNode === container);
-          assert(container.childNodes.length === 2);
-          assert(container.childNodes[0] === target);
-          assert(container.childNodes[1] === child);
-        });
-
-        test('Inserts multiple nodes after the target node', () => {
-          const container = document.implementation.createHTMLDocument('');
-          const target = container.doctype;
-          let firstChild;
-          while ((firstChild = container.firstChild) !== null) {
-            container.removeChild(firstChild);
-          }
-          container.appendChild(target);
-
-          // Text nodes can't be inserted as children of documents.
-          const child1 = document.createComment('');
-          const child2 = document.createComment('');
-          target.after(child1, child2);
-
-          assert(container.childNodes.length === 3);
-          assert(container.childNodes[0] === target);
-          assert(container.childNodes[1] === child1);
-          assert(container.childNodes[2] === child2);
         });
       });
 

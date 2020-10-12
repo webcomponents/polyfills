@@ -14,7 +14,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <script>
     for (const item of [
       CharacterData.prototype,
-      DocumentType.prototype,
       Element.prototype,
     ]) {
       delete item.replaceWith;
@@ -67,44 +66,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           assert(container.childNodes[1].nodeType === Node.TEXT_NODE);
           assert(container.childNodes[1].textContent === 'This is some text.');
           assert(container.childNodes[2] === child2);
-        });
-      });
-
-      suite('DocumentType', function() {
-        test('Replaces the target node with a comment', () => {
-          const container = document.implementation.createHTMLDocument('');
-          const target = container.doctype;
-          let firstChild;
-          while ((firstChild = container.firstChild) !== null) {
-            container.removeChild(firstChild);
-          }
-          container.appendChild(target);
-
-          const child = document.createComment('');
-          target.replaceWith(child);
-
-          assert(child.parentNode === container);
-          assert(container.childNodes.length === 1);
-          assert(container.childNodes[0] === child);
-        });
-
-        test('Replaces the target node with multiple comments', () => {
-          const container = document.implementation.createHTMLDocument('');
-          const target = container.doctype;
-          let firstChild;
-          while ((firstChild = container.firstChild) !== null) {
-            container.removeChild(firstChild);
-          }
-          container.appendChild(target);
-
-          // Text nodes can't be inserted as children of documents.
-          const child0 = document.createComment('');
-          const child1 = document.createComment('');
-          target.replaceWith(child0, child1);
-
-          assert(container.childNodes.length === 2);
-          assert(container.childNodes[0] === child0);
-          assert(container.childNodes[1] === child1);
         });
       });
 

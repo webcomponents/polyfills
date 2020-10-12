@@ -46,5 +46,4 @@ function installBefore<T>(constructor: Constructor<T>) {
 }
 
 installBefore(CharacterData);
-installBefore(DocumentType);
 installBefore(Element);

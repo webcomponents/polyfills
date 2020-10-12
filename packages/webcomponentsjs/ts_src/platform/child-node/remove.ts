@@ -38,5 +38,4 @@ function installRemove<T>(constructor: Constructor<T>) {
 }
 
 installRemove(CharacterData);
-installRemove(DocumentType);
 installRemove(Element);

@@ -52,5 +52,4 @@ function installAfter<T>(constructor: Constructor<T>) {
 }
 
 installAfter(CharacterData);
-installAfter(DocumentType);
 installAfter(Element);

@@ -49,5 +49,4 @@ function installReplaceWith<T>(constructor: Constructor<T>) {
 }
 
 installReplaceWith(CharacterData);
-installReplaceWith(DocumentType);
 installReplaceWith(Element);

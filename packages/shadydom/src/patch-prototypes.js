@@ -67,7 +67,6 @@ const patchMap = {
   Document: [DocumentPatches, ParentNodeDocumentOrFragmentPatches, DocumentOrFragmentPatches, DocumentOrShadowRootPatches],
   Window: [WindowPatches],
   CharacterData: [ChildNodePatches],
-  DocumentType: [ChildNodePatches],
 }
 
 const getPatchPrototype = (name) => window[name] && window[name].prototype;
