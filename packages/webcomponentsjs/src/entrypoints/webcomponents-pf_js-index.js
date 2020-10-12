@@ -11,3 +11,4 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 import '../platform/es6-misc.js';
 import '../platform/promise.js';
 import '../platform/symbol.js';
+import '../platform/object-is.js';
