@@ -59,10 +59,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         // `SVGElement#className` is not a string like HTML.
         // https://www.w3.org/TR/SVG2/idl.html
         assert(svgElement.getAttribute('class') === 'one');
+        assert(svgElement.classList.contains('one'));
+        assert(!svgElement.classList.contains('two'));
         assert(svgElement.className.baseVal === 'one');
 
         svgElement.classList.add('two');
         assert(svgElement.getAttribute('class') === 'one two');
+        assert(svgElement.classList.contains('one'));
+        assert(svgElement.classList.contains('two'));
         assert(svgElement.className.baseVal === 'one two');
       });
 
@@ -77,6 +81,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
         svgElement.classList.remove('one');
         assert(svgElement.getAttribute('class') === 'two three');
+        assert(!svgElement.classList.contains('one'));
+        assert(svgElement.classList.contains('two'));
+        assert(svgElement.classList.contains('three'));
         assert(svgElement.className.baseVal === 'two three');
       });
 
@@ -84,14 +91,17 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         const svgElement = createSVGElement();
 
         assert(svgElement.getAttribute('class') === null);
+        assert(!svgElement.classList.contains('one'));
         assert(svgElement.className.baseVal === '');
 
         svgElement.classList.toggle('one');
         assert(svgElement.getAttribute('class') === 'one');
+        assert(svgElement.classList.contains('one'));
         assert(svgElement.className.baseVal === 'one');
 
         svgElement.classList.toggle('one');
         assert(svgElement.getAttribute('class') === '');
+        assert(!svgElement.classList.contains('one'));
         assert(svgElement.className.baseVal === '');
       });
     });
