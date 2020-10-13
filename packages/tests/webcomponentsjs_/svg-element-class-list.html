@@ -104,6 +104,29 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         assert(!svgElement.classList.contains('one'));
         assert(svgElement.className.baseVal === '');
       });
+
+      test('Setting the class attribute reflects to classList', () => {
+        const svgElement = createSVGElement();
+
+        assert(!svgElement.classList.contains('one'));
+        assert(!svgElement.classList.contains('two'));
+
+        svgElement.setAttribute('class', 'one');
+        assert(svgElement.classList.contains('one'));
+        assert(!svgElement.classList.contains('two'));
+
+        svgElement.setAttribute('class', 'one two');
+        assert(svgElement.classList.contains('one'));
+        assert(svgElement.classList.contains('two'));
+
+        svgElement.setAttribute('class', 'two');
+        assert(!svgElement.classList.contains('one'));
+        assert(svgElement.classList.contains('two'));
+
+        svgElement.removeAttribute('class');
+        assert(!svgElement.classList.contains('one'));
+        assert(!svgElement.classList.contains('two'));
+      });
     });
   </script>
 </body>
