@@ -59,9 +59,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         // `SVGElement#className` is not a string like HTML.
         // https://www.w3.org/TR/SVG2/idl.html
         assert(svgElement.getAttribute('class') === 'one');
+        assert(svgElement.className.baseVal === 'one');
 
         svgElement.classList.add('two');
         assert(svgElement.getAttribute('class') === 'one two');
+        assert(svgElement.className.baseVal === 'one two');
       });
 
       test('remove()', () => {
@@ -71,21 +73,26 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         svgElement.classList.add('two');
         svgElement.classList.add('three');
         assert(svgElement.getAttribute('class') === 'one two three');
+        assert(svgElement.className.baseVal === 'one two three');
 
         svgElement.classList.remove('one');
         assert(svgElement.getAttribute('class') === 'two three');
+        assert(svgElement.className.baseVal === 'two three');
       });
 
       test('toggle()', () => {
         const svgElement = createSVGElement();
 
         assert(svgElement.getAttribute('class') === null);
+        assert(svgElement.className.baseVal === '');
 
         svgElement.classList.toggle('one');
         assert(svgElement.getAttribute('class') === 'one');
+        assert(svgElement.className.baseVal === 'one');
 
         svgElement.classList.toggle('one');
         assert(svgElement.getAttribute('class') === '');
+        assert(svgElement.className.baseVal === '');
       });
     });
   </script>
