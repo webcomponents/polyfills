@@ -9,12 +9,17 @@ part of the polymer project is also subject to an additional IP rights grant
 found at http://polymer.github.io/PATENTS.txt
 */
 
+export {};
+
 const Element_prototype = Element.prototype;
+// In IE11, the `attributes` descriptor is on `Node.prototype`.
 const attributesDescriptor =
     Object.getOwnPropertyDescriptor(Element_prototype, 'attributes') ??
-    // In IE11, the `attributes` descriptor is on `Node.prototype`.
     Object.getOwnPropertyDescriptor(Node.prototype, 'attributes');
-const getAttributes = attributesDescriptor!.get!;
+// In Safari 9, the `attributes` descriptor's getter is undefined. In Chrome 41,
+// the `attributes` descriptor is a data descriptor on each Element instance.
+const getAttributes = attributesDescriptor?.get ??
+    function(this: Element) { return this.attributes; };
 const map = Array.prototype.map;
 
 if (!Element_prototype.hasOwnProperty('getAttributeNames')) {
