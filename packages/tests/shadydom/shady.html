@@ -458,6 +458,129 @@ suite('Mutate light DOM', function() {
     assert.strictEqual(getComposedHTML(host), '<b></b>');
   });
 
+  test('append - mutate host', function() {
+    ShadyDOM.wrapIfNeeded(host).innerHTML = '<a>Hello</a>';
+    ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(host).shadowRoot).innerHTML = '<slot></slot>';
+    ShadyDOM.flush();
+    assert.strictEqual(getComposedHTML(host), '<a>Hello</a>');
+    host.append(document.createElement('b'), 'c', document.createElement('d'));
+    ShadyDOM.flush();
+    assert.strictEqual(getComposedHTML(host), '<a>Hello</a><b></b>c<d></d>');
+  });
+
+  test('append - mutate host - single string', function() {
+    ShadyDOM.wrapIfNeeded(host).innerHTML = '<a>Hello</a>';
+    ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(host).shadowRoot).innerHTML = '<slot></slot>';
+    ShadyDOM.flush();
+    assert.strictEqual(getComposedHTML(host), '<a>Hello</a>');
+    host.append('b');
+    ShadyDOM.flush();
+    assert.strictEqual(getComposedHTML(host), '<a>Hello</a>b');
+  });
+
+  test('append - mutate shadow', function() {
+    ShadyDOM.wrapIfNeeded(host).innerHTML = '<a>Hello</a>';
+    ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(host).shadowRoot).innerHTML = '<slot></slot>';
+    ShadyDOM.flush();
+    assert.strictEqual(getComposedHTML(host), '<a>Hello</a>');
+    ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(host).shadowRoot).append(
+        document.createElement('b'), 'c', document.createElement('d'));
+    ShadyDOM.flush();
+    assert.strictEqual(getComposedHTML(host), '<a>Hello</a><b></b>c<d></d>');
+  });
+
+  test('append - mutate shadow - single string', function() {
+    ShadyDOM.wrapIfNeeded(host).innerHTML = '<a>Hello</a>';
+    ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(host).shadowRoot).innerHTML = '<slot></slot>';
+    ShadyDOM.flush();
+    assert.strictEqual(getComposedHTML(host), '<a>Hello</a>');
+    ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(host).shadowRoot).append('b');
+    ShadyDOM.flush();
+    assert.strictEqual(getComposedHTML(host), '<a>Hello</a>b');
+  });
+
+  test('prepend - mutate host', function() {
+    ShadyDOM.wrapIfNeeded(host).innerHTML = '<a>Hello</a>';
+    ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(host).shadowRoot).innerHTML = '<slot></slot>';
+    ShadyDOM.flush();
+    assert.strictEqual(getComposedHTML(host), '<a>Hello</a>');
+    host.prepend(document.createElement('b'), 'c', document.createElement('d'));
+    ShadyDOM.flush();
+    assert.strictEqual(getComposedHTML(host), '<b></b>c<d></d><a>Hello</a>');
+  });
+
+  test('prepend - mutate host - single string', function() {
+    ShadyDOM.wrapIfNeeded(host).innerHTML = '<a>Hello</a>';
+    ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(host).shadowRoot).innerHTML = '<slot></slot>';
+    ShadyDOM.flush();
+    assert.strictEqual(getComposedHTML(host), '<a>Hello</a>');
+    host.prepend('b');
+    ShadyDOM.flush();
+    assert.strictEqual(getComposedHTML(host), 'b<a>Hello</a>');
+  });
+
+  test('prepend - mutate shadow', function() {
+    ShadyDOM.wrapIfNeeded(host).innerHTML = '<a>Hello</a>';
+    ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(host).shadowRoot).innerHTML = '<slot></slot>';
+    ShadyDOM.flush();
+    assert.strictEqual(getComposedHTML(host), '<a>Hello</a>');
+    ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(host).shadowRoot).prepend(
+        document.createElement('b'), 'c', document.createElement('d'));
+    ShadyDOM.flush();
+    assert.strictEqual(getComposedHTML(host), '<b></b>c<d></d><a>Hello</a>');
+  });
+
+  test('prepend - mutate shadow - single string', function() {
+    ShadyDOM.wrapIfNeeded(host).innerHTML = '<a>Hello</a>';
+    ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(host).shadowRoot).innerHTML = '<slot></slot>';
+    ShadyDOM.flush();
+    assert.strictEqual(getComposedHTML(host), '<a>Hello</a>');
+    ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(host).shadowRoot).prepend('b');
+    ShadyDOM.flush();
+    assert.strictEqual(getComposedHTML(host), 'b<a>Hello</a>');
+  });
+
+  test('replaceChildren - mutate host', function() {
+    ShadyDOM.wrapIfNeeded(host).innerHTML = '<a>Hello</a>';
+    ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(host).shadowRoot).innerHTML = '<slot></slot>';
+    ShadyDOM.flush();
+    assert.strictEqual(getComposedHTML(host), '<a>Hello</a>');
+    host.replaceChildren(document.createElement('b'), 'c', document.createElement('d'));
+    ShadyDOM.flush();
+    assert.strictEqual(getComposedHTML(host), '<b></b>c<d></d>');
+  });
+
+  test('replaceChildren - mutate host - single string', function() {
+    ShadyDOM.wrapIfNeeded(host).innerHTML = '<a>Hello</a>';
+    ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(host).shadowRoot).innerHTML = '<slot></slot>';
+    ShadyDOM.flush();
+    assert.strictEqual(getComposedHTML(host), '<a>Hello</a>');
+    host.replaceChildren('b');
+    ShadyDOM.flush();
+    assert.strictEqual(getComposedHTML(host), 'b');
+  });
+
+  test('replaceChildren - mutate shadow', function() {
+    ShadyDOM.wrapIfNeeded(host).innerHTML = '<a>Hello</a>';
+    ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(host).shadowRoot).innerHTML = '<slot></slot>';
+    ShadyDOM.flush();
+    assert.strictEqual(getComposedHTML(host), '<a>Hello</a>');
+    ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(host).shadowRoot).replaceChildren(
+        document.createElement('b'), 'c', document.createElement('d'));
+    ShadyDOM.flush();
+    assert.strictEqual(getComposedHTML(host), '<b></b>c<d></d>');
+  });
+
+  test('replaceChildren - mutate shadow - single string', function() {
+    ShadyDOM.wrapIfNeeded(host).innerHTML = '<a>Hello</a>';
+    ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(host).shadowRoot).innerHTML = '<slot></slot>';
+    ShadyDOM.flush();
+    assert.strictEqual(getComposedHTML(host), '<a>Hello</a>');
+    ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(host).shadowRoot).replaceChildren('b');
+    ShadyDOM.flush();
+    assert.strictEqual(getComposedHTML(host), 'b');
+  });
+
   test('querySelectorAll .shadowRoot', function() {
     ShadyDOM.wrapIfNeeded(host).innerHTML = '<div id="main"></div>';
     ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(host).shadowRoot).innerHTML = '<slot></slot><span id="main"></span>' +
