@@ -238,7 +238,7 @@ export const arrayFrom = (object) => {
  * @return {!Node}
  */
 const convertIntoANode = (arg) => {
-  return !(arg instanceof Node) ? document.createTextNode(String(arg)) : arg;
+  return !(arg instanceof Node) ? document.createTextNode(arg) : arg;
 };
 
 /**
