@@ -10,6 +10,8 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Add polyfills for select ParentNode APIs.
   ([#389](https://github.com/webcomponents/polyfills/pull/389))
+- Add `classList` support to `SVGElement`.
+  ([#391](https://github.com/webcomponents/polyfills/pull/391))
 - Add new entrypoints to webcomponentsjs for the 'platform' polyfills.
   ([#385](https://github.com/webcomponents/polyfills/pull/385))
 
