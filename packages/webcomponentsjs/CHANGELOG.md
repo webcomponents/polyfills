@@ -8,6 +8,8 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+- Polyfill `Element#getAttributeNames`.
+  ([#393](https://github.com/webcomponents/polyfills/pull/393))
 - Add polyfills for ChildNode APIs.
   ([#390](https://github.com/webcomponents/polyfills/pull/390))
 - Add polyfills for select ParentNode APIs.
