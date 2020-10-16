@@ -8,9 +8,6 @@ Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 */
 
-import '../platform/custom-event.js';
-import '../platform/baseuri.js';
-import '../platform/get-attribute-names.js';
-import '../platform/parent-node/index.js';
-import '../platform/child-node/index.js';
-import '../platform/svg-element-class-list.js';
+import './append.js';
+import './prepend.js';
+import './replace-children.js';
