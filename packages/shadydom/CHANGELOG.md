@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fix HTMLCollection length incorrect issue
   ([#378](https://github.com/webcomponents/polyfills/pull/332))
+- Add support for ChildNode APIs.
+  ([#390](https://github.com/webcomponents/polyfills/pull/390))
+- Add support for select ParentNode APIs.
+  ([#389](https://github.com/webcomponents/polyfills/pull/389))
 
 ## [1.7.4] - 2020-07-20
 

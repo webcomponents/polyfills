@@ -15,9 +15,12 @@ export const prototype = constructor.prototype;
 
 export const methods = {
   initEvent: prototype.initEvent,
+  stopImmediatePropagation: prototype?.stopImmediatePropagation,
+  stopPropagation: prototype?.stopPropagation,
 };
 
 export const descriptors = {
-  target: Object.getOwnPropertyDescriptor(prototype, 'target')!,
   defaultPrevented: Object.getOwnPropertyDescriptor(prototype, 'defaultPrevented')!,
+  target: Object.getOwnPropertyDescriptor(prototype, 'target')!,
+  type: Object.getOwnPropertyDescriptor(prototype, 'type')!,
 };

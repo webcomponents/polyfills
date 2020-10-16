@@ -1,0 +1,124 @@
+<!doctype html>
+<!--
+@license
+Copyright (c) 2020 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<html>
+<head>
+  <title>ParentNode replaceChildren</title>
+  <script>
+    for (const item of [
+      Document.prototype,
+      DocumentFragment.prototype,
+      Element.prototype,
+    ]) {
+      delete item.replaceChildren;
+    }
+  </script>
+  <script src="../../node_modules/@webcomponents/webcomponentsjs/bundles/webcomponents-pf_dom.js"></script>
+  <script src="../wct-config.js"></script>
+  <script src="../../node_modules/wct-browser-legacy/browser.js"></script>
+</head>
+<body>
+  <script>
+    suite('ParentNode replaceChildren', function() {
+      suite('Document', function() {
+        test('Replaces with an element', () => {
+          const doc = document.implementation.createHTMLDocument('');
+
+          const child = document.createElement('html');
+          doc.replaceChildren(child);
+
+          assert(doc.childNodes.length === 1);
+          assert(doc.childNodes[0] === child);
+        });
+      });
+
+      suite('DocumentFragment', function() {
+        test('Replaces with an element', () => {
+          const container = document.createDocumentFragment();
+          container.appendChild(document.createElement('div'));
+
+          const child = document.createElement('div');
+          container.replaceChildren(child);
+
+          assert(child.parentNode === container);
+          assert(container.childNodes.length === 1);
+          assert(container.childNodes[0] === child);
+        });
+
+        test('Replaces with a text node', () => {
+          const container = document.createDocumentFragment();
+          container.appendChild(document.createElement('div'));
+
+          container.replaceChildren('This is some text.');
+
+          assert(container.childNodes.length === 1);
+          assert(container.childNodes[0].nodeType === Node.TEXT_NODE);
+          assert(container.childNodes[0].textContent === 'This is some text.');
+        });
+
+        test('Replaces with multiple types of nodes', () => {
+          const container = document.createDocumentFragment();
+          container.appendChild(document.createElement('div'));
+
+          const child0 = document.createElement('div');
+          const child2 = document.createElement('div');
+          container.replaceChildren(child0, 'This is some text.', child2);
+
+          assert(container.childNodes.length === 3);
+          assert(container.childNodes[0] === child0);
+          assert(container.childNodes[1].nodeType === Node.TEXT_NODE);
+          assert(container.childNodes[1].textContent === 'This is some text.');
+          assert(container.childNodes[2] === child2);
+        });
+      });
+
+      suite('Element', function() {
+        test('Replaces with an element', () => {
+          const container = document.createElement('div');
+          container.appendChild(document.createElement('div'));
+
+          const child = document.createElement('div');
+          container.replaceChildren(child);
+
+          assert(child.parentNode === container);
+          assert(container.childNodes.length === 1);
+          assert(container.childNodes[0] === child);
+        });
+
+        test('Replaces with a text node', () => {
+          const container = document.createElement('div');
+          container.appendChild(document.createElement('div'));
+
+          container.replaceChildren('This is some text.');
+
+          assert(container.childNodes.length === 1);
+          assert(container.childNodes[0].nodeType === Node.TEXT_NODE);
+          assert(container.childNodes[0].textContent === 'This is some text.');
+        });
+
+        test('Replaces with multiple types of nodes', () => {
+          const container = document.createElement('div');
+          container.appendChild(document.createElement('div'));
+
+          const child0 = document.createElement('div');
+          const child2 = document.createElement('div');
+          container.replaceChildren(child0, 'This is some text.', child2);
+
+          assert(container.childNodes.length === 3);
+          assert(container.childNodes[0] === child0);
+          assert(container.childNodes[1].nodeType === Node.TEXT_NODE);
+          assert(container.childNodes[1].textContent === 'This is some text.');
+          assert(container.childNodes[2] === child2);
+        });
+      });
+    });
+  </script>
+</body>
+</html>

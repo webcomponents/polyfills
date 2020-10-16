@@ -6,7 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic
 Versioning](https://semver.org/spec/v2.0.0.html).
 
-<!-- ## [Unreleased] -->
+## [Unreleased]
+
+- Add polyfills for ChildNode APIs.
+  ([#390](https://github.com/webcomponents/polyfills/pull/390))
+- Add polyfills for select ParentNode APIs.
+  ([#389](https://github.com/webcomponents/polyfills/pull/389))
+- Add `classList` support to `SVGElement`.
+  ([#391](https://github.com/webcomponents/polyfills/pull/391))
+- Add new entrypoints to webcomponentsjs for the 'platform' polyfills.
+  ([#385](https://github.com/webcomponents/polyfills/pull/385))
 
 ## [2.4.4] - 2020-07-20
 

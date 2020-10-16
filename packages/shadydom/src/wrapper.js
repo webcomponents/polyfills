@@ -245,6 +245,34 @@ class Wrapper {
     return this.node[utils.SHADY_PREFIX + 'className'] = value;
   }
 
+  append(...args) {
+    return this.node[utils.SHADY_PREFIX + 'append'](...args);
+  }
+
+  prepend(...args) {
+    return this.node[utils.SHADY_PREFIX + 'prepend'](...args);
+  }
+
+  replaceChildren(...args) {
+    return this.node[utils.SHADY_PREFIX + 'replaceChildren'](...args);
+  }
+
+  after(...args) {
+    return this.node[utils.SHADY_PREFIX + 'after'](...args);
+  }
+
+  before(...args) {
+    return this.node[utils.SHADY_PREFIX + 'before'](...args);
+  }
+
+  remove() {
+    return this.node[utils.SHADY_PREFIX + 'remove']();
+  }
+
+  replaceWith(...args) {
+    return this.node[utils.SHADY_PREFIX + 'replaceWith'](...args);
+  }
+
 }
 
 const addEventPropertyWrapper = (name) => {

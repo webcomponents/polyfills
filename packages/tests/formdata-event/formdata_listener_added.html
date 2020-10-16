@@ -162,6 +162,129 @@ suite('formdataListenerAdded', () => {
 
     iframeDoc.body.removeChild(form);
   });
+
+  test('Calling `stopPropagation` on a "submit" event should not cancel the ' +
+      '"formdata" event and the form should still be updated.', (done) => {
+    const form = iframeDoc.createElement('form');
+    iframeDoc.body.appendChild(form);
+
+    // See note above.
+    const submitButton = iframeDoc.createElement('input');
+    submitButton.type = 'submit';
+    form.appendChild(submitButton);
+
+    form.addEventListener('submit', (e) => {
+      e.stopPropagation();
+    });
+
+    iframeDoc.defaultView.addEventListener('formdata', (e) => {
+      e.formData.append('name', 'value');
+    });
+
+    submitButton.click();
+
+    iframe.addEventListener('load', () => {
+      // Explicitly retrieve `iframe.contentDocument` again because the
+      // document was replaced when submitting the form.
+      const newSearch = iframe.contentDocument.defaultView.location.search;
+      assert.strictEqual(newSearch, '?name=value');
+      done();
+    });
+  });
+
+  test('Calling `stopImmediatePropagation` on a "submit" event should not ' +
+      'cancel the "formdata" event and the form should still be updated.',
+      (done) => {
+    const form = iframeDoc.createElement('form');
+    iframeDoc.body.appendChild(form);
+
+    // See note above.
+    const submitButton = iframeDoc.createElement('input');
+    submitButton.type = 'submit';
+    form.appendChild(submitButton);
+
+    form.addEventListener('submit', (e) => {
+      e.stopImmediatePropagation();
+    });
+
+    iframeDoc.defaultView.addEventListener('formdata', (e) => {
+      e.formData.append('name', 'value');
+    });
+
+    submitButton.click();
+
+    iframe.addEventListener('load', () => {
+      // Explicitly retrieve `iframe.contentDocument` again because the
+      // document was replaced when submitting the form.
+      const newSearch = iframe.contentDocument.defaultView.location.search;
+      assert.strictEqual(newSearch, '?name=value');
+      done();
+    });
+  });
+
+  test('Calling `stopPropagation` on a "submit" event before it has reached ' +
+      'the capturing listener should still dispatch a "formdata" event.',
+      (done) => {
+    const container = iframeDoc.createElement('div');
+    iframeDoc.body.appendChild(container);
+
+    container.addEventListener('submit', (e) => {
+      e.stopPropagation();
+    }, true);
+
+    const form = iframeDoc.createElement('form');
+    container.appendChild(form);
+
+    form.addEventListener('formdata', (e) => {
+      e.formData.append('name', 'value');
+    });
+
+    // See note above.
+    const submitButton = iframeDoc.createElement('input');
+    submitButton.type = 'submit';
+    form.appendChild(submitButton);
+    submitButton.click();
+
+    iframe.addEventListener('load', () => {
+      // Explicitly retrieve `iframe.contentDocument` again because the
+      // document was replaced when submitting the form.
+      const newSearch = iframe.contentDocument.defaultView.location.search;
+      assert.strictEqual(newSearch, '?name=value');
+      done();
+    });
+  });
+
+  test('Calling `stopImmediatePropagation` on a "submit" event before it has ' +
+      'reached the capturing listener should still dispatch a "formdata" ' +
+      'event.', (done) => {
+    const container = iframeDoc.createElement('div');
+    iframeDoc.body.appendChild(container);
+
+    container.addEventListener('submit', (e) => {
+      e.stopImmediatePropagation();
+    }, true);
+
+    const form = iframeDoc.createElement('form');
+    container.appendChild(form);
+
+    form.addEventListener('formdata', (e) => {
+      e.formData.append('name', 'value');
+    });
+
+    // See note above.
+    const submitButton = iframeDoc.createElement('input');
+    submitButton.type = 'submit';
+    form.appendChild(submitButton);
+    submitButton.click();
+
+    iframe.addEventListener('load', () => {
+      // Explicitly retrieve `iframe.contentDocument` again because the
+      // document was replaced when submitting the form.
+      const newSearch = iframe.contentDocument.defaultView.location.search;
+      assert.strictEqual(newSearch, '?name=value');
+      done();
+    });
+  });
 });
 </script>
 </body>

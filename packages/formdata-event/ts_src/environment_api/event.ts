@@ -20,6 +20,8 @@ export const getTarget = targetGetter !== undefined
     ? (e: Event) => { return targetGetter.call(e); }
     : (e: Event) => { return e.target; };
 
+export const getType = (e: Event) => EventDescriptors.type.get!.call(e);
+
 // `Object.getOwnPropertyDescriptor(Event.prototype, 'defaultPrevented')` is undefined
 // in Chrome 41.
 // `Object.getOwnPropertyDescriptor(Event.prototype, 'defaultPrevented').get` is undefined

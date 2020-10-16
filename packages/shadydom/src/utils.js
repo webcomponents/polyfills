@@ -238,3 +238,35 @@ export const assign = (target, source) => {
 export const arrayFrom = (object) => {
   return [].slice.call(/** @type {IArrayLike} */(object));
 };
+
+/**
+ * Converts a single value to a node for `convertNodesIntoANode`.
+ *
+ * @param {*} arg
+ * @return {!Node}
+ */
+const convertIntoANode = (arg) => {
+  return !(arg instanceof Node) ? document.createTextNode(arg) : arg;
+};
+
+/**
+ * Implements 'convert nodes into a node'. The spec text indicates that strings
+ * become text nodes, but doesn't describe what should happen if a non-Node,
+ * non-string value is found in the arguments list. In practice, browsers coerce
+ * these values to strings and convert those to text nodes.
+ * https://dom.spec.whatwg.org/#converting-nodes-into-a-node
+ *
+ * @param {...*} args
+ * @return {!Node}
+ */
+export const convertNodesIntoANode = (...args) => {
+  if (args.length === 1) {
+    return convertIntoANode(args[0]);
+  }
+
+  const fragment = document.createDocumentFragment();
+  for (const arg of args) {
+    fragment.appendChild(convertIntoANode(arg));
+  }
+  return fragment;
+};

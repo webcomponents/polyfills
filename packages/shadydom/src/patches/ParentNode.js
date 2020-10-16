@@ -93,7 +93,27 @@ export const ParentNodePatches = utils.getOwnPropertyDescriptors({
       return children.length;
     }
     return 0;
-  }
+  },
+
+  /** @this {Element} */
+  append(...args) {
+    this[utils.SHADY_PREFIX + 'insertBefore'](utils.convertNodesIntoANode(...args), null);
+  },
+
+  /** @this {Element} */
+  prepend(...args) {
+    this[utils.SHADY_PREFIX + 'insertBefore'](
+        utils.convertNodesIntoANode(...args), this[utils.SHADY_PREFIX + 'firstChild']);
+  },
+
+  /** @this {Element} */
+  ['replaceChildren'](...args) {
+    let child;
+    while ((child = this[utils.SHADY_PREFIX + 'firstChild']) !== null) {
+      this[utils.SHADY_PREFIX + 'removeChild'](child);
+    }
+    this[utils.SHADY_PREFIX + 'insertBefore'](utils.convertNodesIntoANode(...args), null);
+  },
 
 });
 
