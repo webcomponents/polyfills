@@ -20,7 +20,7 @@ const nativeGetFirstChild =
     // In Safari 9, the `firstChild` descriptor's `get` and `set` are undefined.
     function(this: Node) { return this.firstChild; };
 
-function installPrepend<T>(constructor: Constructor<T>) {
+const installPrepend = <T>(constructor: Constructor<T>) => {
   const prototype = constructor.prototype;
   if (prototype.hasOwnProperty('prepend')) {
     return;
@@ -38,7 +38,7 @@ function installPrepend<T>(constructor: Constructor<T>) {
       }
     }
   });
-}
+};
 
 installPrepend(Document);
 installPrepend(DocumentFragment);
