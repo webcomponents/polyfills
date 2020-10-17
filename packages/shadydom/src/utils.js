@@ -129,24 +129,32 @@ export const createPolyfilledHTMLCollection = (nodes) => {
       nodes[name] = node;
     }
   }
-  nodes.item = function(index) {
-    return nodes[index];
-  }
-  nodes.namedItem = function(name) {
-    if (isValidHTMLCollectionName(name) && nodes[name]) {
-      return nodes[name];
-    }
-
-    for (const node of nodes) {
-      const nodeName = getNodeHTMLCollectionName(node);
-
-      if (nodeName == name) {
-        return node;
+  Object.defineProperty(nodes, 'item', {
+    value: function(index) {
+      return nodes[index];
+    },
+    writable: true,
+    configurable: true
+  });
+  Object.defineProperty(nodes, 'namedItem', {
+    value: function(name) {
+      if (isValidHTMLCollectionName(name) && nodes[name]) {
+        return nodes[name];
       }
-    }
-
-    return null;
-  };
+  
+      for (const node of nodes) {
+        const nodeName = getNodeHTMLCollectionName(node);
+  
+        if (nodeName == name) {
+          return node;
+        }
+      }
+  
+      return null;
+    },
+    writable: true,
+    configurable: true
+  });
   return nodes;
 }
 
