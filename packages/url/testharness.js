@@ -384,6 +384,7 @@ policies and contribution forms [3].
             else if (scripts[i].href)
             {
                 //SVG case
+                // eslint-disable-next-line no-redeclare
                 var src = scripts[i].href.baseVal;
             }
             if (src && src.slice(src.length - "testharness.js".length) === "testharness.js")
@@ -499,7 +500,7 @@ policies and contribution forms [3].
     function format_value(val, seen)
     {
 	if (!seen) {
-	    seen = [];
+        seen = [];
         }
         if (typeof val === "object" && val !== null)
         {
@@ -507,7 +508,7 @@ policies and contribution forms [3].
             {
                 return "[...]";
             }
-	    seen.push(val);
+        seen.push(val);
         }
         if (Array.isArray(val))
         {
@@ -564,6 +565,7 @@ policies and contribution forms [3].
         case "number":
             // In JavaScript, -0 === 0 and String(-0) == "0", so we have to
             // special-case.
+            // eslint-disable-next-line no-compare-neg-zero
             if (val === -0 && 1/val === -Infinity)
             {
                 return "-0";
@@ -589,6 +591,7 @@ policies and contribution forms [3].
                 {
                 case Node.ELEMENT_NODE:
                     var ret = "<" + val.tagName.toLowerCase();
+                    // eslint-disable-next-line no-redeclare
                     for (var i = 0; i < val.attributes.length; i++)
                     {
                         ret += " " + val.attributes[i].name + '="' + val.attributes[i].value + '"';
@@ -627,14 +630,14 @@ policies and contribution forms [3].
     {
         assert(actual === true, "assert_true", description,
                                 "expected true got ${actual}", {actual:actual});
-    };
+    }
     expose(assert_true, "assert_true");
 
     function assert_false(actual, description)
     {
         assert(actual === false, "assert_false", description,
                                  "expected false got ${actual}", {actual:actual});
-    };
+    }
     expose(assert_false, "assert_false");
 
     function same_value(x, y) {
@@ -670,7 +673,7 @@ policies and contribution forms [3].
         assert(same_value(actual, expected), "assert_equals", description,
                                              "expected ${expected} but got ${actual}",
                                              {expected:expected, actual:actual});
-    };
+    }
     expose(assert_equals, "assert_equals");
 
     function assert_not_equals(actual, expected, description)
@@ -682,7 +685,7 @@ policies and contribution forms [3].
         assert(!same_value(actual, expected), "assert_not_equals", description,
                                               "got disallowed value ${actual}",
                                               {actual:actual});
-    };
+    }
     expose(assert_not_equals, "assert_not_equals");
 
     function assert_in_array(actual, expected, description)
@@ -729,7 +732,7 @@ policies and contribution forms [3].
              stack.pop();
          }
          check_equal(actual, expected, []);
-    };
+    }
     expose(assert_object_equals, "assert_object_equals");
 
     function assert_array_equals(actual, expected, description)
@@ -768,7 +771,7 @@ policies and contribution forms [3].
                "assert_approx_equals", description,
                "expected ${expected} +/- ${epsilon} but got ${actual}",
                {expected:expected, actual:actual, epsilon:epsilon});
-    };
+    }
     expose(assert_approx_equals, "assert_approx_equals");
 
     function assert_less_than(actual, expected, description)
@@ -785,7 +788,7 @@ policies and contribution forms [3].
                "assert_less_than", description,
                "expected a number less than ${expected} but got ${actual}",
                {expected:expected, actual:actual});
-    };
+    }
     expose(assert_less_than, "assert_less_than");
 
     function assert_greater_than(actual, expected, description)
@@ -802,7 +805,7 @@ policies and contribution forms [3].
                "assert_greater_than", description,
                "expected a number greater than ${expected} but got ${actual}",
                {expected:expected, actual:actual});
-    };
+    }
     expose(assert_greater_than, "assert_greater_than");
 
     function assert_less_than_equal(actual, expected, description)
@@ -819,7 +822,7 @@ policies and contribution forms [3].
                "assert_less_than", description,
                "expected a number less than or equal to ${expected} but got ${actual}",
                {expected:expected, actual:actual});
-    };
+    }
     expose(assert_less_than_equal, "assert_less_than_equal");
 
     function assert_greater_than_equal(actual, expected, description)
@@ -836,7 +839,7 @@ policies and contribution forms [3].
                "assert_greater_than_equal", description,
                "expected a number greater than or equal to ${expected} but got ${actual}",
                {expected:expected, actual:actual});
-    };
+    }
     expose(assert_greater_than_equal, "assert_greater_than_equal");
 
     function assert_regexp_match(actual, expected, description) {
@@ -873,7 +876,7 @@ policies and contribution forms [3].
         assert(!object.hasOwnProperty(property_name),
                "assert_not_exists", description,
                "unexpected property ${p} found", {p:property_name});
-    };
+    }
     expose(assert_not_exists, "assert_not_exists");
 
     function _assert_inherits(name) {
@@ -917,7 +920,7 @@ policies and contribution forms [3].
          {
              object[property_name] = initial_value;
          }
-    };
+    }
     expose(assert_readonly, "assert_readonly");
 
     function assert_throws(code, func, description)
@@ -1079,6 +1082,7 @@ policies and contribution forms [3].
 
         this.message = null;
 
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         var this_obj = this;
         this.steps = [];
 
@@ -1346,7 +1350,7 @@ policies and contribution forms [3].
             {
                 this.status.status = this.status.ERROR;
                 this.status.message = e;
-            };
+            }
         }
         this.set_timeout();
     };
@@ -1646,6 +1650,7 @@ policies and contribution forms [3].
         }
     };
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     Output.prototype.show_status = function(test)
     {
         if (this.phase < this.STARTED)
@@ -1739,6 +1744,7 @@ policies and contribution forms [3].
 
         var summary_template = ["section", {"id":"summary"},
                                 ["h2", {}, "Summary"],
+                                // eslint-disable-next-line @typescript-eslint/no-unused-vars
                                 function(vars)
                                 {
                                     if (harness_status.status === harness_status.OK)
@@ -1768,6 +1774,7 @@ policies and contribution forms [3].
                                     }
                                 },
                                 ["p", {}, "Found ${num_tests} tests"],
+                                // eslint-disable-next-line @typescript-eslint/no-unused-vars
                                 function(vars) {
                                     var rv = [["div", {}]];
                                     var i=0;
@@ -1817,7 +1824,7 @@ policies and contribution forms [3].
         // large test suites (tens of thousands of tests).
         function escape_html(s)
         {
-            return s.replace(/\&/g, "&amp;")
+            return s.replace(/&/g, "&amp;")
                 .replace(/</g, "&lt;")
                 .replace(/"/g, "&quot;")
                 .replace(/'/g, "&#39;");
@@ -1876,6 +1883,7 @@ policies and contribution forms [3].
 
     var output = new Output();
     add_start_callback(function (properties) {output.init(properties);});
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     add_result_callback(function (test) {output.show_status(tests);});
     add_completion_callback(function (tests, harness_status) {output.show_results(tests, harness_status);});
 
@@ -1981,7 +1989,7 @@ policies and contribution forms [3].
                     var new_name = do_substitution(name).join("");
                     var new_value = do_substitution(attrs[name]).join("");
                     rv[1][new_name] = new_value;
-                };
+                }
             }
         }
 
@@ -2027,6 +2035,7 @@ policies and contribution forms [3].
      }
      else
      {
+         // eslint-disable-next-line no-redeclare
          var element = output_document.createElementNS(xhtml_ns, template[0]);
          for (var name in template[1]) {
              if (template[1].hasOwnProperty(name))
@@ -2034,6 +2043,7 @@ policies and contribution forms [3].
                  element.setAttribute(name, template[1][name]);
              }
          }
+         // eslint-disable-next-line no-redeclare
          for (var i=2; i<template.length; i++)
          {
              if (template[i] instanceof Object)

@@ -1,6 +1,7 @@
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function URLTestParser(input) {
   var relativeSchemes = ["ftp", "file", "gopher", "http", "https", "ws", "wss"],
-      tokenMap = { "\\": "\\", n: "\n", r: "\r", s: " ", t: "\t", f: "\f" }
+      tokenMap = { "\\": "\\", n: "\n", r: "\r", s: " ", t: "\t", f: "\f" },
       resultMap = { s: "scheme", u: "username", pass: "password", h: "host", port: "port", p: "path", q: "query", f: "fragment", o: "origin" },
       results = []
   function Test() {
@@ -62,7 +63,7 @@ function URLTestParser(input) {
         continue
       }
       var subpieces = piece.split(":"),
-          token = subpieces.shift()
+          token = subpieces.shift(),
           value = subpieces.join(":")
       result[resultMap[token]] = normalize(value)
     }

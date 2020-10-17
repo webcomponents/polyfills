@@ -23,20 +23,20 @@ if (!window.ShadyCSS) {
      * @param {string} elementName
      * @param {string=} elementExtends
      */
-    prepareTemplate(template, elementName, elementExtends) {}, // eslint-disable-line no-unused-vars
+    prepareTemplate(template, elementName, elementExtends) {}, // eslint-disable-line @typescript-eslint/no-unused-vars
 
     /**
      * @param {!HTMLTemplateElement} template
      * @param {string} elementName
      */
-    prepareTemplateDom(template, elementName) {}, // eslint-disable-line no-unused-vars
+    prepareTemplateDom(template, elementName) {}, // eslint-disable-line @typescript-eslint/no-unused-vars
 
     /**
      * @param {!HTMLTemplateElement} template
      * @param {string} elementName
      * @param {string=} elementExtends
      */
-    prepareTemplateStyles(template, elementName, elementExtends) {}, // eslint-disable-line no-unused-vars
+    prepareTemplateStyles(template, elementName, elementExtends) {}, // eslint-disable-line @typescript-eslint/no-unused-vars
 
     /**
      * @param {Element} element
@@ -50,7 +50,7 @@ if (!window.ShadyCSS) {
     /**
      * @param {Element} element
      */
-    styleElement(element) { // eslint-disable-line no-unused-vars
+    styleElement(element) { // eslint-disable-line @typescript-eslint/no-unused-vars
       customStyleInterface.processStyles();
     },
 

@@ -14,6 +14,7 @@ Window.prototype.forceJURL = false;
       var u = new URL('b', 'http://a');
       u.pathname = 'c%20d';
       hasWorkingUrl = u.href === 'http://a/c%20d';
+    // eslint-disable-next-line no-empty
     } catch(e) {}
   }
 
@@ -81,7 +82,7 @@ Window.prototype.forceJURL = false;
 
   var EOF = undefined,
       ALPHA = /[a-zA-Z]/,
-      ALPHANUMERIC = /[a-zA-Z0-9\+\-\.]/;
+      ALPHANUMERIC = /[a-zA-Z0-9+\-.]/;
 
   /**
    * @param {!string} input
@@ -406,6 +407,7 @@ Window.prototype.forceJURL = false;
               err('\\ not allowed in relative path.');
             }
             var tmp;
+            // eslint-disable-next-line no-cond-assign
             if (tmp = relativePathDotMapping[buffer.toLowerCase()]) {
               buffer = tmp;
             }
@@ -584,7 +586,7 @@ Window.prototype.forceJURL = false;
       if(!hash) {
         this._fragment = '';
         return;
-      } 
+      }
       this._fragment = '#';
       if ('#' == hash[0])
         hash = hash.slice(1);
@@ -619,6 +621,7 @@ Window.prototype.forceJURL = false;
   // Copy over the static methods
   var OriginalURL = scope.URL;
   if (OriginalURL) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     jURL['createObjectURL'] = function(blob) {
       // IE extension allows a second optional options argument.
       // http://msdn.microsoft.com/en-us/library/ie/hh772302(v=vs.85).aspx

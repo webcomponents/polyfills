@@ -10,15 +10,16 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 export {};
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Constructor<T> = new (...args: Array<any>) => T;
 
 const nativeInsertBefore = Node.prototype.insertBefore;
 const nativeGetParentNode =
-    Object.getOwnPropertyDescriptor(Node.prototype, 'parentNode')?.get! ??
+    Object.getOwnPropertyDescriptor(Node.prototype, 'parentNode')?.get ??
     // In Safari 9, the `parentNode` descriptor's `get` and `set` are undefined.
     function(this: Node) { return this.parentNode; };
 const nativeGetNextSibling =
-    Object.getOwnPropertyDescriptor(Node.prototype, 'nextSibling')?.get! ??
+    Object.getOwnPropertyDescriptor(Node.prototype, 'nextSibling')?.get ??
     // In Safari 9, the `nextSibling` descriptor's `get` and `set` are
     // undefined.
     function(this: Node) { return this.nextSibling; };

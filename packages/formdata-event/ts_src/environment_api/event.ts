@@ -34,8 +34,8 @@ export const getDefaultPrevented = defaultPreventedGetter !== undefined
 export const initEvent = (
   event: Event,
   type: string,
-  bubbles: boolean = false,
-  cancelable: boolean = false,
+  bubbles = false,
+  cancelable = false,
 ) => {
   EventMethods.initEvent.call(event, type, bubbles, cancelable);
 };

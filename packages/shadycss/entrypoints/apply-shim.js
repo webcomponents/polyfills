@@ -15,7 +15,7 @@ import templateMap from '../src/template-map.js';
 import {getIsExtends, toCssText, elementHasBuiltCss} from '../src/style-util.js';
 import * as ApplyShimUtils from '../src/apply-shim-utils.js';
 import {getComputedStyleValue, updateNativeProperties} from '../src/common-utils.js';
-import {CustomStyleInterfaceInterface} from '../src/custom-style-interface.js'; // eslint-disable-line no-unused-vars
+import {CustomStyleInterfaceInterface} from '../src/custom-style-interface.js'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import {nativeCssVariables, nativeShadow, cssBuild, disableRuntime} from '../src/style-settings.js';
 
 /** @const {ApplyShim} */
@@ -151,7 +151,7 @@ if (!window.ShadyCSS || !window.ShadyCSS.ScopingShim) {
      * @param {string} elementName
      * @param {string=} elementExtends
      */
-    prepareTemplate(template, elementName, elementExtends) { // eslint-disable-line no-unused-vars
+    prepareTemplate(template, elementName, elementExtends) { // eslint-disable-line @typescript-eslint/no-unused-vars
       applyShimInterface.flushCustomStyles();
       applyShimInterface.prepareTemplate(template, elementName);
     },
@@ -169,7 +169,7 @@ if (!window.ShadyCSS || !window.ShadyCSS.ScopingShim) {
      * @param {!HTMLTemplateElement} template
      * @param {string} elementName
      */
-    prepareTemplateDom(template, elementName) {}, // eslint-disable-line no-unused-vars
+    prepareTemplateDom(template, elementName) {}, // eslint-disable-line @typescript-eslint/no-unused-vars
 
     /**
      * @param {!HTMLElement} element

@@ -73,6 +73,7 @@ export const TextContentInnerHTMLDescriptors = utils.getOwnPropertyDescriptors({
 
   /** @this {Node} */
   set innerHTML(value) {
+    // eslint-disable-next-line no-setter-return
     return this[utils.SHADY_PREFIX + 'innerHTML'] = value;
   },
 });
@@ -116,6 +117,7 @@ export const OutsideDescriptors = utils.getOwnPropertyDescriptors({
 
   /** @this {Node} */
   set className(value) {
+    // eslint-disable-next-line no-setter-return
     return this[utils.SHADY_PREFIX + 'className'] = value;
   }
 

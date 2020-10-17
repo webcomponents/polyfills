@@ -149,6 +149,7 @@ export default class CustomElementRegistry {
       // `attributesChangedCallback` exists
       observedAttributes =
           (attributeChangedCallback && constructor['observedAttributes']) || [];
+    // eslint-disable-next-line no-useless-catch
     } catch (e) {
       throw e;
     } finally {
@@ -330,13 +331,19 @@ export default class CustomElementRegistry {
 window['CustomElementRegistry'] =
     CustomElementRegistry as unknown as typeof window['CustomElementRegistry'];
 CustomElementRegistry.prototype['define'] =
+    // eslint-disable-next-line no-self-assign
     CustomElementRegistry.prototype.define;
 CustomElementRegistry.prototype['upgrade'] =
+    // eslint-disable-next-line no-self-assign
     CustomElementRegistry.prototype.upgrade;
+// eslint-disable-next-line no-self-assign
 CustomElementRegistry.prototype['get'] = CustomElementRegistry.prototype.get;
 CustomElementRegistry.prototype['whenDefined'] =
+    // eslint-disable-next-line no-self-assign
     CustomElementRegistry.prototype.whenDefined;
 CustomElementRegistry.prototype['polyfillDefineLazy'] =
+    // eslint-disable-next-line no-self-assign
     CustomElementRegistry.prototype.polyfillDefineLazy;
 CustomElementRegistry.prototype['polyfillWrapFlushCallback'] =
+    // eslint-disable-next-line no-self-assign
     CustomElementRegistry.prototype.polyfillWrapFlushCallback;

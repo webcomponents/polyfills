@@ -9,6 +9,7 @@
  * additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Constructor<T> = new (...args: Array<any>) => T;
 
 /**
@@ -50,7 +51,7 @@ export function prepareWrapper<T extends Object>(
     enumerable: false,
     value: prototype.constructor,
   });
-};
+}
 
 /**
  * Sets a constructible function's `.prototype.constructor` to point to itself.
@@ -60,4 +61,4 @@ export function prepareWrapper<T extends Object>(
  */
 export function installWrapper<T extends Object>(Wrapper: Constructor<T>) {
   Wrapper.prototype.constructor = Wrapper;
-};
+}
