@@ -26,13 +26,12 @@ export const hasPolyfilledCustomElements =
 
 const desc = Object.getOwnPropertyDescriptor(Node.prototype, 'firstChild');
 
-/* eslint-disable */
 settings.hasDescriptors = Boolean(desc && desc.configurable && desc.get);
 settings.inUse = settings['force'] || !settings.hasNativeShadowDOM;
 settings.noPatch = /** @type {string|boolean} */(settings['noPatch'] || false);
+// eslint-disable-next-line no-self-assign
 settings.preferPerformance = settings['preferPerformance'];
 settings.patchOnDemand = (settings.noPatch === 'on-demand');
-/* eslint-enable */
 
 const IS_IE = navigator.userAgent.match('Trident');
 settings.IS_IE = IS_IE;

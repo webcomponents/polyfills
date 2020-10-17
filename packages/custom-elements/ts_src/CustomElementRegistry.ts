@@ -330,20 +330,16 @@ export default class CustomElementRegistry {
 // Closure compiler exports.
 window['CustomElementRegistry'] =
     CustomElementRegistry as unknown as typeof window['CustomElementRegistry'];
+/* eslint-disable no-self-assign */
 CustomElementRegistry.prototype['define'] =
-    // eslint-disable-next-line no-self-assign
     CustomElementRegistry.prototype.define;
 CustomElementRegistry.prototype['upgrade'] =
-    // eslint-disable-next-line no-self-assign
     CustomElementRegistry.prototype.upgrade;
-// eslint-disable-next-line no-self-assign
 CustomElementRegistry.prototype['get'] = CustomElementRegistry.prototype.get;
 CustomElementRegistry.prototype['whenDefined'] =
-    // eslint-disable-next-line no-self-assign
     CustomElementRegistry.prototype.whenDefined;
 CustomElementRegistry.prototype['polyfillDefineLazy'] =
-    // eslint-disable-next-line no-self-assign
     CustomElementRegistry.prototype.polyfillDefineLazy;
 CustomElementRegistry.prototype['polyfillWrapFlushCallback'] =
-    // eslint-disable-next-line no-self-assign
     CustomElementRegistry.prototype.polyfillWrapFlushCallback;
+/* eslint-enable no-self-assign */

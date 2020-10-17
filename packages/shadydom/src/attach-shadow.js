@@ -374,7 +374,7 @@ class ShadyRoot {
       d -= s.addedCount;
     }
     // process adds
-    for (let i=0, s, next; (i<splices.length) && (s=splices[i]); i++) { //eslint-disable-line no-redeclare
+    for (let i=0, s, next; (i<splices.length) && (s=splices[i]); i++) { // eslint-disable-line no-redeclare
       next = composed[s.index];
       for (let j=s.index, n; j < s.index + s.addedCount; j++) {
         n = children[j];
