@@ -22,7 +22,6 @@ if (!Object.assign) {
     const n$ = Object.keys(source);
     for (let i = 0; i < n$.length; i++) {
       const p = n$[i];
-      // tslint:disable-next-line:no-any
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (target as any)[p] = (source as any)[p];
     }
