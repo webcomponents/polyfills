@@ -5,7 +5,18 @@
   "globals": {
     "assert": false,
     "chai": false,
+    "defineTestElement": false,
+    "expect": false,
+    "HTMLImports": true,
+    "loaded": true,
+    "makeElement": false,
+    "makeFocusable": false,
+    "NATIVE": false,
     "remoteCurrentScriptExecuted": true,
-    "ShadyDOM": true
+    "ShadyCSS": true,
+    "ShadyDOM": true,
+    "sinon": false,
+    "WCT": true,
+    "WebComponents": true
   }
 }
