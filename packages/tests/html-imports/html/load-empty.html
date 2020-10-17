@@ -39,11 +39,13 @@
   </head>
   <body>
     <script>
+      /* global importLoadedWithCallback: false */
+
       test('load empty resource', function() {
-        chai.assert.equal(loadEvents, 3, 'expected # of load events');
+        chai.assert.equal(window.loadEvents, 3, 'expected # of load events');
       });
       test('load empty resource asynchronously', function(done) {
-        loadEvents = 0;
+        window.loadEvents = 0;
         setTimeout(function(){
           var anotherHTMLImport = document.createElement('link');
           anotherHTMLImport.rel = 'import';
@@ -53,7 +55,7 @@
         });
       });
       test('load empty resource second time', function(done) {
-        loadEvents = 0
+        window.loadEvents = 0
         setTimeout(function(){
           var anotherHTMLImport = document.createElement('link');
           anotherHTMLImport.rel = 'import';

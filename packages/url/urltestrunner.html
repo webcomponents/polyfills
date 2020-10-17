@@ -1,10 +1,12 @@
 <!doctype html>
 <base id=base>
 <meta charset=utf-8>
-<script>forceJURL = true</script>
+<script>window.forceJURL = true;</script>
 <script src=url.js></script>
 <script src=urltestparser.js></script>
 <script>
+/* global URLTestParser: false */
+
 function fetchTests() {
   var request = new XMLHttpRequest()
   request.open("GET", "urltests.txt")
@@ -17,6 +19,7 @@ function setBase(base) {
   document.getElementById("base").href = base
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function bURL(url, base) {
   base = base || "about:blank"
   setBase(base)

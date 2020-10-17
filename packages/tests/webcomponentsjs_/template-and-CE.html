@@ -66,6 +66,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       suite('Template', function() {
         var template;
         suiteSetup(function() {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
           template = document.querySelector('template');
         });
 
@@ -73,6 +74,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           var el = document.createElement('div');
           try {
             Object.defineProperty(el, 'innerHTML', {
+              // eslint-disable-next-line getter-return
               get: function(){},
               set: function(){}
             });

@@ -33,6 +33,8 @@
   </head>
   <body>
     <script>
+      /* global dedupe: false */
+
       test('imports deduped', function() {
         chai.assert.equal(dedupe, 1, 'import loaded');
       });

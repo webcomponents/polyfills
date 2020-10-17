@@ -481,6 +481,7 @@ suite('activeElement', function() {
     r_1_1.focus();
     try {
       document.activeElement = "abc";
+    // eslint-disable-next-line no-empty
     } catch(e) {}
     assert.equal(ShadyDOM.wrapIfNeeded(document)._activeElement, r, 'document.activeElement === r');
     assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r).shadowRoot).activeElement, r_1, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r).shadowRoot).activeElement === r_1');
@@ -496,6 +497,7 @@ suite('activeElement', function() {
     r_1_1.focus();
     try {
       ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1).shadowRoot).activeElement = "abc";
+    // eslint-disable-next-line no-empty
     } catch(e) {}
     assert.equal(ShadyDOM.wrapIfNeeded(document)._activeElement, r, 'document.activeElement === r');
     assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r).shadowRoot).activeElement, r_1, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r).shadowRoot).activeElement === r_1');
