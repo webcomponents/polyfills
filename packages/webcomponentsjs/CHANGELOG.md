@@ -8,6 +8,9 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+- Remove function declarations from platform polyfills to sastisfy internal lint
+  after import transforms.
+  ([#396](https://github.com/webcomponents/polyfills/pull/396))
 - Polyfill `Element#getAttributeNames`.
   ([#393](https://github.com/webcomponents/polyfills/pull/393))
 - Add polyfills for ChildNode APIs.

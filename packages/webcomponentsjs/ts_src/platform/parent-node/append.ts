@@ -14,7 +14,7 @@ type Constructor<T> = new (...args: Array<any>) => T;
 
 const nativeAppendChild = Node.prototype.appendChild;
 
-function installAppend<T>(constructor: Constructor<T>) {
+const installAppend = <T>(constructor: Constructor<T>) => {
   const prototype = constructor.prototype;
   if (prototype.hasOwnProperty('append')) {
     return;
@@ -30,7 +30,7 @@ function installAppend<T>(constructor: Constructor<T>) {
       }
     }
   });
-}
+};
 
 installAppend(Document);
 installAppend(DocumentFragment);

@@ -23,7 +23,7 @@ const nativeGetNextSibling =
     // undefined.
     function(this: Node) { return this.nextSibling; };
 
-function installAfter<T>(constructor: Constructor<T>) {
+const installAfter = <T>(constructor: Constructor<T>) => {
   const prototype = constructor.prototype;
   if (prototype.hasOwnProperty('after')) {
     return;
@@ -49,7 +49,7 @@ function installAfter<T>(constructor: Constructor<T>) {
       }
     }
   });
-}
+};
 
 installAfter(CharacterData);
 installAfter(Element);
