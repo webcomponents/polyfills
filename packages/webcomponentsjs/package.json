@@ -21,7 +21,6 @@
   "scripts": {
     "build": "tsc && gulp",
     "build:watch": "chokidar --initial --follow-symlinks 'src/entrypoints/**/*.js' 'ts_src/**/*.ts' 'node_modules/@webcomponents/**/*.js' -c 'npm run build'",
-    "lint": "eslint src",
     "regen-package-lock": "rm -rf node_modules package-lock.json; npm install",
     "prepack": "npm run build",
     "clean": "gulp clean"

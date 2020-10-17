@@ -1,0 +1,11 @@
+{
+  "env": {
+    "mocha": true
+  },
+  "globals": {
+    "assert": false,
+    "chai": false,
+    "remoteCurrentScriptExecuted": true,
+    "ShadyDOM": true
+  }
+}

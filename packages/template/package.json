@@ -15,7 +15,6 @@
   "scripts": {
     "build": "gulp",
     "build:watch": "chokidar --initial 'template.js' -c 'npm run build'",
-    "lint": "eslint template.js",
     "prepack": "npm run build"
   },
   "files": [
