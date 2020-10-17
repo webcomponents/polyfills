@@ -19,7 +19,7 @@ const nativeGetParentNode =
     // In Safari 9, the `parentNode` descriptor's `get` and `set` are undefined.
     function(this: Node) { return this.parentNode; };
 
-function installReplaceWith<T>(constructor: Constructor<T>) {
+const installReplaceWith = <T>(constructor: Constructor<T>) => {
   const prototype = constructor.prototype;
   if (prototype.hasOwnProperty('replaceWith')) {
     return;
@@ -46,7 +46,7 @@ function installReplaceWith<T>(constructor: Constructor<T>) {
       nativeRemoveChild.call(parentNode, this);
     }
   });
-}
+};
 
 installReplaceWith(CharacterData);
 installReplaceWith(Element);
