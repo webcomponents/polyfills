@@ -1,0 +1,10 @@
+<html>
+<body>
+<script src="../custom-elements-scoped.js"></script>
+<script type="module">
+  import { runTests } from '@web/test-runner-mocha';
+
+  runTests(async () => import('./Element.test.html.js'));
+</script>
+</body>
+</html>
