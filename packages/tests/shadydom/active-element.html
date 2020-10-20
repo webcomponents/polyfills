@@ -481,7 +481,7 @@ suite('activeElement', function() {
     r_1_1.focus();
     try {
       document.activeElement = "abc";
-    }
+    } catch(e) {} // eslint-disable-line no-empty
     assert.equal(ShadyDOM.wrapIfNeeded(document)._activeElement, r, 'document.activeElement === r');
     assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r).shadowRoot).activeElement, r_1, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r).shadowRoot).activeElement === r_1');
     assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0).shadowRoot).activeElement === null');
@@ -496,7 +496,7 @@ suite('activeElement', function() {
     r_1_1.focus();
     try {
       ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_1).shadowRoot).activeElement = "abc";
-    }
+    } catch(e) {} // eslint-disable-line no-empty
     assert.equal(ShadyDOM.wrapIfNeeded(document)._activeElement, r, 'document.activeElement === r');
     assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r).shadowRoot).activeElement, r_1, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r).shadowRoot).activeElement === r_1');
     assert.equal(ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0).shadowRoot).activeElement, null, 'ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(r_0).shadowRoot).activeElement === null');

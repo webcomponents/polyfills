@@ -117,7 +117,7 @@
           const u = new URL('b', 'http://a');
           u.pathname = 'c%20d';
           Path.__workingURL = (u.href === 'http://a/c%20d');
-        }
+        } catch(e) {} // eslint-disable-line no-empty
       }
 
       if (Path.__workingURL) {

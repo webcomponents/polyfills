@@ -14,7 +14,7 @@ Window.prototype.forceJURL = false;
       var u = new URL('b', 'http://a');
       u.pathname = 'c%20d';
       hasWorkingUrl = u.href === 'http://a/c%20d';
-    }
+    } catch(e) {} // eslint-disable-line no-empty
   }
 
   if (hasWorkingUrl)
