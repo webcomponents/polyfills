@@ -50,13 +50,13 @@ suite('polyfillLazyDefine', function() {
 
     test('name must contain a dash', function() {
       assert.throws(function () {
-        customElements.polyfillDefineLazy('xfoo', () => {Object.create(HTMLElement.prototype)});
+        customElements.polyfillDefineLazy('xfoo', () => ({prototype: Object.create(HTMLElement.prototype)}));
       }, '', 'customElements.define failed to throw when given no arguments');
     });
 
     test('name must not be a reserved name', function() {
       assert.throws(function() {
-        customElements.polyfillDefineLazy('font-face', () => {Object.create(HTMLElement.prototype)});
+        customElements.polyfillDefineLazy('font-face', () => ({prototype: Object.create(HTMLElement.prototype)}));
       }, '', 'Failed to execute \'defineElement\' on \'Document\': Registration failed for type \'font-face\'. The type name is invalid.');
     });
 

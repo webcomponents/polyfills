@@ -242,8 +242,7 @@ class Wrapper {
   }
 
   set className(value) {
-    // eslint-disable-next-line no-setter-return
-    return this.node[utils.SHADY_PREFIX + 'className'] = value;
+    this.node[utils.SHADY_PREFIX + 'className'] = value;
   }
 
   append(...args) {

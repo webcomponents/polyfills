@@ -1171,8 +1171,7 @@ suite('insertBefore', function() {
     assert.deepEqual(composed, [fallback, ref]);
     ShadyDOM.wrapIfNeeded(slot).removeChild(fallback);
     ShadyDOM.flush();
-    // eslint-disable-next-line no-redeclare
-    var composed = Array.from(ShadyDOM.nativeTree.childNodes(e));
+    composed = Array.from(ShadyDOM.nativeTree.childNodes(e));
     assert.deepEqual(composed, [ref]);
   });
 

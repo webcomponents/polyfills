@@ -1069,7 +1069,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       ShadyDOM.wrapIfNeeded(div).innerHTML = '<x-dist><div></div></x-dist>';
       var h1 = ShadyDOM.wrapIfNeeded(div).firstChild;
       var h2 = createPatchedDocumentFragment();
-    ShadyDOM.wrapIfNeeded(document.body).appendChild(h1);
+      ShadyDOM.wrapIfNeeded(document.body).appendChild(h1);
       ShadyDOM.flush();
       var d = ShadyDOM.wrapIfNeeded(h1).firstElementChild;
       assert.equal(d.localName, 'div');

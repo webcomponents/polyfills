@@ -14,11 +14,6 @@
 import {safariGCBugWorkaround} from "../../safari-gc-bug-workaround.js";
 suiteSetup(() => safariGCBugWorkaround());
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function generateLocalName() {
-  return 'test-element-' + Math.random().toString(32).substring(2);
-}
-
 function defineWithLocalName(localName) {
   const constructor = class extends HTMLElement {
     constructor() {

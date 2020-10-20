@@ -149,9 +149,6 @@ export default class CustomElementRegistry {
       // `attributesChangedCallback` exists
       observedAttributes =
           (attributeChangedCallback && constructor['observedAttributes']) || [];
-    // eslint-disable-next-line no-useless-catch
-    } catch (e) {
-      throw e;
     } finally {
       this._elementDefinitionIsRunning = false;
     }

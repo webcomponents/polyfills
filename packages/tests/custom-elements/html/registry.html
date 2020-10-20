@@ -118,8 +118,7 @@ suite('CustomElementsRegistry', function() {
     test('succeeds with named used for a failed definition with invalid class', function() {
       try {
         customElements.define('x-failed-define', {});
-      // eslint-disable-next-line no-empty
-      } catch (e) {}
+      }
       let error;
       try {
         customElements.define('x-failed-define', class extends HTMLElement {});
@@ -137,8 +136,7 @@ suite('CustomElementsRegistry', function() {
             throw new Error('no attributes');
           }
         });
-      // eslint-disable-next-line no-empty
-      } catch (e) {}
+      }
       let error;
       try {
         customElements.define('x-failed-define-callbacks', class extends HTMLElement {});
