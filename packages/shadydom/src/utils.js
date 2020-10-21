@@ -238,7 +238,10 @@ export const arrayFrom = (object) => {
  * @return {!Node}
  */
 const convertIntoANode = (arg) => {
-  return !(arg instanceof Node) ? document.createTextNode(arg) : arg;
+  // `"" + arg` is used to implicitly coerce the value to a string (coercing a
+  // symbol *should* fail here) before passing to `createTextNode`, which has
+  // argument type `(number|string)`.
+  return !(arg instanceof Node) ? document.createTextNode("" + arg) : arg;
 };
 
 /**
