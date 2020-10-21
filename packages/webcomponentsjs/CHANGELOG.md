@@ -8,6 +8,8 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+- Polyfill `Element#matches`.
+  ([#400](https://github.com/webcomponents/polyfills/pull/400))
 - Remove function declarations from platform polyfills to sastisfy internal lint
   after import transforms.
   ([#396](https://github.com/webcomponents/polyfills/pull/396))
