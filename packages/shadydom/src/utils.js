@@ -92,7 +92,17 @@ export const microtask = (callback) => {
   twiddle.textContent = content++;
 }
 
-export const hasDocumentContains = Boolean(document.contains);
+/** @type {function(!Document, !Node): boolean} */
+export const documentContains = (() => {
+  if (document.contains) {
+    return (doc, node) => doc[NATIVE_PREFIX + 'contains'](node);
+  } else {
+    return (doc, node) => (
+      doc === node ||
+      (doc.documentElement && doc.documentElement[NATIVE_PREFIX + 'contains'](node))
+    );
+  }
+})();
 
 export const contains = (container, node) => {
   while (node) {
@@ -199,11 +209,6 @@ export const patchExistingProperties = (proto, descriptors) => {
   }
 }
 
-/** @type {!function(new:HTMLElement)} */
-export const NativeHTMLElement =
-    (window['customElements'] && window['customElements']['nativeHTMLElement']) ||
-    HTMLElement;
-
 // note, this is not a perfect polyfill since it doesn't include symbols
 /** @return {!Object<!ObjectPropertyDescriptor>} */
 export const getOwnPropertyDescriptors = (obj) => {
@@ -224,4 +229,39 @@ export const assign = (target, source) => {
 
 export const arrayFrom = (object) => {
   return [].slice.call(/** @type {IArrayLike} */(object));
+};
+
+/**
+ * Converts a single value to a node for `convertNodesIntoANode`.
+ *
+ * @param {*} arg
+ * @return {!Node}
+ */
+const convertIntoANode = (arg) => {
+  // `"" + arg` is used to implicitly coerce the value to a string (coercing a
+  // symbol *should* fail here) before passing to `createTextNode`, which has
+  // argument type `(number|string)`.
+  return !(arg instanceof Node) ? document.createTextNode("" + arg) : arg;
+};
+
+/**
+ * Implements 'convert nodes into a node'. The spec text indicates that strings
+ * become text nodes, but doesn't describe what should happen if a non-Node,
+ * non-string value is found in the arguments list. In practice, browsers coerce
+ * these values to strings and convert those to text nodes.
+ * https://dom.spec.whatwg.org/#converting-nodes-into-a-node
+ *
+ * @param {...*} args
+ * @return {!Node}
+ */
+export const convertNodesIntoANode = (...args) => {
+  if (args.length === 1) {
+    return convertIntoANode(args[0]);
+  }
+
+  const fragment = document.createDocumentFragment();
+  for (const arg of args) {
+    fragment.appendChild(convertIntoANode(arg));
+  }
+  return fragment;
 };

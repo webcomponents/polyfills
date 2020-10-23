@@ -1,15 +1,20 @@
 {
   "name": "@webcomponents/template",
-  "version": "1.4.2",
-  "description": "Minimal template polyfills needed by webcomponents.js",
+  "version": "1.4.4",
+  "description": "HTML template element polyfill",
   "main": "template.js",
-  "repository": "github:webcomponents/polyfills",
-  "bugs": "https://github.com/webcomponents/polyfills/issues",
-  "homepage": "https://webcomponents.org/polyfills",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/webcomponents/polyfills.git",
+    "directory": "packages/template"
+  },
+  "bugs": "https://github.com/webcomponents/polyfills/issues?q=is%3Aissue+is%3Aopen+label%3A\"Package%3A+template\"",
+  "homepage": "https://github.com/webcomponents/polyfills/tree/master/packages/template",
   "author": "The Polymer Project Authors (https://polymer.github.io/AUTHORS.txt)",
   "license": "BSD-3-Clause",
   "scripts": {
     "build": "gulp",
+    "build:watch": "chokidar --initial 'template.js' -c 'npm run build'",
     "lint": "eslint template.js",
     "prepack": "npm run build"
   },

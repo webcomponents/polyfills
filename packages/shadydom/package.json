@@ -1,11 +1,15 @@
 {
   "name": "@webcomponents/shadydom",
-  "version": "1.7.3",
+  "version": "1.8.0",
   "description": "Shadow DOM polyfill",
   "main": "shadydom.min.js",
-  "repository": "github:webcomponents/polyfills",
-  "bugs": "https://github.com/webcomponents/polyfills/issues",
-  "homepage": "https://webcomponents.org/polyfills",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/webcomponents/polyfills.git",
+    "directory": "packages/shadydom"
+  },
+  "bugs": "https://github.com/webcomponents/polyfills/issues?q=is%3Aissue+is%3Aopen+label%3A\"Package%3A+shadydom\"",
+  "homepage": "https://github.com/webcomponents/polyfills/tree/master/packages/shadydom",
   "author": "The Polymer Project Authors (https://polymer.github.io/AUTHORS.txt)",
   "license": "BSD-3-Clause",
   "keywords": [
@@ -20,6 +24,7 @@
   ],
   "scripts": {
     "build": "gulp",
+    "build:watch": "chokidar --initial 'src/**/*.js' -c 'npm run build'",
     "debug": "rollup -c",
     "lint": "eslint src",
     "regen-package-lock": "rm -rf node_modules package-lock.json; npm install",

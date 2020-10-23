@@ -86,9 +86,10 @@ if (utils.settings.inUse) {
     // `insertBefore` (when the node is being moved from a location where it
     // was logically positioned in the DOM); when setting `className`/`class`;
     // when calling `querySelector|All`; when setting `textContent` or
-    // `innerHTML`; `addEventListener`; and all scope specific API's like
-    // `getRootNode`, `isConnected`, `slot`, `assignedSlot`, `assignedNodes`.
-    // Note, `wrapIfNeeded` falls back to a pass through to preserve optimal
+    // `innerHTML`; `addEventListener`, `removeEventListener` and
+    // `dispatchEvent`; and all scope specific API's like `getRootNode`,
+    // `isConnected`, `slot`, `assignedSlot`, `assignedNodes`. Note,
+    // `wrapIfNeeded` falls back to a pass through to preserve optimal
     // performance.
     'wrapIfNeeded': utils.settings.noPatch === true ? wrap : n => n,
     'Wrapper': Wrapper,
@@ -98,6 +99,16 @@ if (utils.settings.inUse) {
     // API using `ShadyDOM.wrap`, e.g. `ShadyDOM.wrap(element).shadowRoot`.
     // This setting provides a small performance boost, but requires all DOM API
     // access that requires Shadow DOM behavior to be proxied via `ShadyDOM.wrap`.
+    //
+    // WARNING: When `noPatch` is set and the Custom Elements polyfill is
+    // needed, the Custom Elements polyfill must be loaded before this
+    // polyfill; however, when `noPatch` is not used, this polyfill should be
+    // loaded before the Custom Elements polyfill. This is because
+    // ShadyDOM captures DOM mutation methods and when `noPatch` is used,
+    // ShadyDOM must call the mutation methods patched by the Custom Elements
+    // polyfill or custom elements will not function as expected. When `noPatch`
+    // is not used, the Custom Elements polyfill patches call through to the
+    // ShadyDOM patches so ShadyDOM should be loaded first.
     'noPatch': utils.settings.noPatch,
     'patchOnDemand': utils.settings.patchOnDemand,
     'nativeMethods': nativeMethods,

@@ -94,8 +94,10 @@ const ParentNodeAccessors = [
 
 const ParentNodeMethods = [
   'querySelector',
-  'querySelectorAll'
-  // 'append', 'prepend'
+  'querySelectorAll',
+  'append',
+  'prepend',
+  'replaceChildren',
 ];
 
 export const addNativePrefixedProperties = () => {

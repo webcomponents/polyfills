@@ -305,46 +305,54 @@ function fireHandlers(event, node, phase) {
   }
 }
 
-function retargetNonBubblingEvent(e) {
-  let path = e.composedPath();
-  let node;
+function shadyDispatchEvent(e) {
+  const path = e.composedPath();
+  const retargetedPath = path.map(node => retarget(node, path));
+  const bubbles = e.bubbles;
+
+  let currentTarget;
   // override `currentTarget` to let patched `target` calculate correctly
   Object.defineProperty(e, 'currentTarget', {
+    configurable: true,
+    enumerable: true,
     get: function() {
-      return node;
+      return currentTarget;
     },
-    configurable: true
   });
+
+  let eventPhase = Event.CAPTURING_PHASE;
+  Object.defineProperty(e, 'eventPhase', {
+    configurable: true,
+    enumerable: true,
+    get: function() {
+      return eventPhase;
+    },
+  });
+
   for (let i = path.length - 1; i >= 0; i--) {
-    node = path[i];
+    currentTarget = path[i];
+    eventPhase = currentTarget === retargetedPath[i] ? Event.AT_TARGET : Event.CAPTURING_PHASE;
     // capture phase fires all capture handlers
-    fireHandlers(e, node, 'capture');
+    fireHandlers(e, currentTarget, 'capture');
     if (e.__propagationStopped) {
       return;
     }
   }
 
-  // set the event phase to `AT_TARGET` as in spec
-  Object.defineProperty(e, 'eventPhase', {get() { return Event.AT_TARGET }});
-
-  // the event only needs to be fired when owner roots change when iterating the event path
-  // keep track of the last seen owner root
-  let lastFiredRoot;
   for (let i = 0; i < path.length; i++) {
-    node = path[i];
-    const nodeData = shadyDataForNode(node);
-    const root = nodeData && nodeData.root;
-    if (i === 0 || (root && root === lastFiredRoot)) {
-      fireHandlers(e, node, 'bubble');
-      // don't bother with window, it doesn't have `getRootNode` and will be last in the path anyway
-      if (node !== window) {
-        lastFiredRoot = node[utils.SHADY_PREFIX + 'getRootNode']();
-      }
+    currentTarget = path[i];
+    const atTarget = currentTarget === retargetedPath[i];
+    if (atTarget || bubbles) {
+      eventPhase = atTarget ? Event.AT_TARGET : Event.BUBBLING_PHASE;
+      fireHandlers(e, currentTarget, 'bubble');
       if (e.__propagationStopped) {
         return;
       }
     }
   }
+
+  eventPhase = 0; // `Event.NONE` is not available in IE11.
+  currentTarget = null;
 }
 
 function listenerSettingsEqual(savedListener, node, type, capture, once, passive) {
@@ -391,7 +399,18 @@ function targetNeedsPathCheck(node) {
 /** @this {Node} */
 export function dispatchEvent(event) {
   flush();
-  return this[utils.NATIVE_PREFIX + 'dispatchEvent'](event);
+  // If the target is disconnected from the real document, it might still be
+  // connected in the user-facing tree. To allow its path to potentially
+  // include both connected and disconnected parts, dispatch it manually.
+  if (!utils.settings.preferPerformance && this instanceof Node &&
+      !utils.documentContains(document, this)) {
+    if (!event['__target']) {
+      patchEvent(event, this);
+    }
+    return shadyDispatchEvent(event);
+  } else {
+    return this[utils.NATIVE_PREFIX + 'dispatchEvent'](event);
+  }
 }
 
 /**
@@ -454,10 +473,21 @@ export function addEventListener(type, fnOrObj, optionsOrCapture) {
       patchEvent(e);
     }
     let lastCurrentTargetDesc;
+    let lastEventPhaseDesc;
     if (target !== this) {
       // replace `currentTarget` to make `target` and `relatedTarget` correct for inside the shadowroot
       lastCurrentTargetDesc = Object.getOwnPropertyDescriptor(e, 'currentTarget');
       Object.defineProperty(e, 'currentTarget', {get() { return target }, configurable: true});
+      lastEventPhaseDesc = Object.getOwnPropertyDescriptor(e, 'eventPhase');
+      Object.defineProperty(e, 'eventPhase', {
+        configurable: true,
+        enumerable: true,
+        get() {
+          // Shady DOM doesn't support dispatching to a shadow root as the
+          // target, so we don't need to handle Event.AT_TARGET.
+          return capture ? Event.CAPTURING_PHASE : Event.BUBBLING_PHASE;
+        },
+      });
     }
     e['__previousCurrentTarget'] = e['currentTarget'];
     // Always check if a shadowRoot or slot is in the current event path.
@@ -484,12 +514,18 @@ export function addEventListener(type, fnOrObj, optionsOrCapture) {
         fnOrObj.call(target, e) :
         (fnOrObj.handleEvent && fnOrObj.handleEvent(e));
       if (target !== this) {
-        // replace the "correct" `currentTarget`
+        // Replace the original descriptors for `currentTarget` and `eventPhase`.
         if (lastCurrentTargetDesc) {
           Object.defineProperty(e, 'currentTarget', lastCurrentTargetDesc);
           lastCurrentTargetDesc = null;
         } else {
           delete e['currentTarget'];
+        }
+        if (lastEventPhaseDesc) {
+          Object.defineProperty(e, 'eventPhase', lastEventPhaseDesc);
+          lastEventPhaseDesc = null;
+        } else {
+          delete e['eventPhase'];
         }
       }
       return ret;
@@ -508,12 +544,12 @@ export function addEventListener(type, fnOrObj, optionsOrCapture) {
     wrapperFn: wrapperFn
   });
 
-  if (nonBubblingEventsToRetarget[type]) {
-    this.__handlers = this.__handlers || {};
-    this.__handlers[type] = this.__handlers[type] ||
-      {'capture': [], 'bubble': []};
-    this.__handlers[type][capture ? 'capture' : 'bubble'].push(wrapperFn);
-  } else {
+  this.__handlers = this.__handlers || {};
+  this.__handlers[type] = this.__handlers[type] ||
+    {'capture': [], 'bubble': []};
+  this.__handlers[type][capture ? 'capture' : 'bubble'].push(wrapperFn);
+
+  if (!nonBubblingEventsToRetarget[type]) {
     this[utils.NATIVE_PREFIX + 'addEventListener'](type, wrapperFn, nativeEventOptions);
   }
 }
@@ -546,8 +582,7 @@ export function removeEventListener(type, fnOrObj, optionsOrCapture) {
   }
   this[utils.NATIVE_PREFIX + 'removeEventListener'](type, wrapperFn || fnOrObj,
     nativeEventOptions);
-  if (wrapperFn && nonBubblingEventsToRetarget[type] &&
-      this.__handlers && this.__handlers[type]) {
+  if (wrapperFn && this.__handlers && this.__handlers[type]) {
     const arr = this.__handlers[type][capture ? 'capture' : 'bubble'];
     const idx = arr.indexOf(wrapperFn);
     if (idx > -1) {
@@ -561,7 +596,7 @@ function activateFocusEventOverrides() {
     window[utils.NATIVE_PREFIX + 'addEventListener'](ev, function(e) {
       if (!e['__target']) {
         patchEvent(e);
-        retargetNonBubblingEvent(e);
+        shadyDispatchEvent(e);
       }
     }, true);
   }
@@ -572,8 +607,8 @@ const EventPatchesDescriptors = utils.getOwnPropertyDescriptors(EventPatches);
 const SHADY_PROTO = '__shady_patchedProto';
 const SHADY_SOURCE_PROTO = '__shady_sourceProto';
 
-function patchEvent(event) {
-  event['__target'] = event.target;
+function patchEvent(event, target = event.target) {
+  event['__target'] = target;
   event.__relatedTarget = event.relatedTarget;
   // attempt to patch prototype (via cache)
   if (utils.settings.hasDescriptors) {

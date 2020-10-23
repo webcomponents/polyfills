@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<!--
+@license
+Copyright (c) 2020 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <script>
+      if (window.customElements) window.customElements.forcePolyfill = true;
+      ShadyDOM = { force: true };
+      ShadyCSS = { shimcssproperties: true };
+    </script>
+    <script src="../node_modules/wct-browser-legacy/browser.js"></script>
+    <script src="../node_modules/@webcomponents/webcomponentsjs/webcomponents-bundle.js"></script>
+    <title>Web Components Interface</title>
+  </head>
+  <body>
+    <script type="module">
+      import * as shadyCss from "../node_modules/@webcomponents/shadycss/src/interface.js";
+      import "../node_modules/@webcomponents/shadycss/entrypoints/custom-style-interface.js";
+
+      const template = document.createElement("template");
+      template.innerHTML = `
+<style>
+  :host {
+    --custom-color: red;
+    color: var(--custom-color);
+    background-color: var(--custom-background-color, black);
+    font-style: var(--custom-font-style);
+  }
+</style>
+
+Hello!
+`;
+
+      shadyCss.prepareTemplate(template, "test-element");
+
+      class TestElement extends HTMLElement {
+        constructor() {
+          super();
+          this.attachShadow({ mode: "open" });
+        }
+
+        connectedCallback() {
+          shadyCss.styleElement(this);
+          this.shadowRoot.appendChild(template.content.cloneNode(true));
+        }
+      }
+
+      customElements.define("test-element", TestElement);
+
+      const black = "rgb(0, 0, 0)";
+      const red = "rgb(255, 0, 0)";
+      const green = "rgb(0, 128, 0)";
+      const blue = "rgb(0, 0, 255)";
+
+      suite("interface", function () {
+        let el;
+
+        setup(() => {
+          el = document.createElement("test-element");
+          document.body.appendChild(el);
+        });
+
+        teardown(() => {
+          document.body.removeChild(el);
+        });
+
+        test("prepareTemplate and styleElement", () => {
+          assert.equal(window.getComputedStyle(el).color, red);
+        });
+
+        test("styleSubtree", () => {
+          assert.equal(window.getComputedStyle(el).color, red);
+          shadyCss.styleSubtree(el, { "--custom-color": "green" });
+          assert.equal(window.getComputedStyle(el).color, green);
+        });
+
+        test("styleSubtree(document.documentElement)", () => {
+          assert.equal(window.getComputedStyle(el).backgroundColor, black);
+          shadyCss.styleSubtree(
+              document.documentElement, { "--custom-background-color": "blue" });
+          assert.equal(window.getComputedStyle(el).backgroundColor, blue);
+        });
+      });
+    </script>
+  </body>
+</html>
