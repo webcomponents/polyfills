@@ -10,6 +10,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 export {};
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Constructor<T> = new (...args: Array<any>) => T;
 
 const nativeAppendChild = Node.prototype.appendChild;

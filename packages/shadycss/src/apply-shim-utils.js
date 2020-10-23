@@ -10,7 +10,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 'use strict';
 import templateMap from './template-map.js';
-import {StyleNode} from './css-parse.js'; // eslint-disable-line no-unused-vars
+import {StyleNode} from './css-parse.js'; // eslint-disable-line @typescript-eslint/no-unused-vars
 
 /*
  * Utilities for handling invalidating apply-shim mixins for a given template.

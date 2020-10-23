@@ -18,7 +18,7 @@ function generateLocalName() {
   return 'test-element-' + Math.random().toString(32).substring(2);
 }
 
-function defineWithLocalName(localName, observedAttributes) {
+function defineWithLocalName(localName) {
   const constructor = class extends HTMLElement {
     constructor() {
       super();
@@ -35,7 +35,7 @@ function defineWithLocalName(localName, observedAttributes) {
       this.disconnectedCallbackCount++;
     }
   }
-  
+
   customElements.define(localName, constructor);
 
   return constructor;

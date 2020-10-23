@@ -14,10 +14,6 @@
 import {safariGCBugWorkaround} from "../../safari-gc-bug-workaround.js";
 suiteSetup(() => safariGCBugWorkaround());
 
-function generateLocalName() {
-  return 'test-element-' + Math.random().toString(32).substring(2);
-}
-
 function defineWithLocalName(localName) {
   const constructor = class extends HTMLElement {
     constructor() {

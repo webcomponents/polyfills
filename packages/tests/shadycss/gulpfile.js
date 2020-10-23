@@ -10,9 +10,6 @@
 
 'use strict';
 
-/* eslint-env node */
-/* eslint-disable no-console */
-
 const gulp = require('gulp');
 const del = require('del');
 const rollup = require('rollup-stream');

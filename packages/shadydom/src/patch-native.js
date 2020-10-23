@@ -190,14 +190,15 @@ export const addNativePrefixedProperties = () => {
       textContent: {
         /** @this {Node} */
         get() {
-          /* eslint-disable no-case-declarations */
           switch (this.nodeType) {
             case Node.ELEMENT_NODE:
             case Node.DOCUMENT_FRAGMENT_NODE:
               // TODO(sorvell): This cannot be a single TreeWalker that's reused
               // at least for Safari 9, but it's unclear why.
+              // eslint-disable-next-line no-case-declarations
               const textWalker = document.createTreeWalker(this, NodeFilter.SHOW_TEXT,
                 null, false);
+              // eslint-disable-next-line no-case-declarations
               let content = '', n;
               while ( (n = textWalker.nextNode()) ) {
                 // TODO(sorvell): can't use textContent since we patch it on Node.prototype!

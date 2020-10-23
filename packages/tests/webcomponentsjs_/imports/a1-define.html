@@ -14,7 +14,7 @@
 
   class A1 extends HTMLElement {
     connectedCallback() {
-      a1DocsList.push(this.ownerDocument.baseURI.split('/').pop());
+      window.a1DocsList.push(this.ownerDocument.baseURI.split('/').pop());
       this.isA1 = true;
     }
   }

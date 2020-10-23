@@ -117,7 +117,7 @@
           const u = new URL('b', 'http://a');
           u.pathname = 'c%20d';
           Path.__workingURL = (u.href === 'http://a/c%20d');
-        } catch (e) {}
+        } catch(e) {} // eslint-disable-line no-empty
       }
 
       if (Path.__workingURL) {
@@ -706,6 +706,7 @@
         doc = doc.closest(importSelector);
       } else {
         // Walk up the parent tree until we find an import.
+        // eslint-disable-next-line no-empty
         while (!isImportLink(doc) && (doc = doc.parentNode)) {}
       }
       element['__importDoc'] = doc;

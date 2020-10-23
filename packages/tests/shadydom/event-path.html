@@ -283,6 +283,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <script>
   'use strict';
 
+  /* global ensureDocumentHasFocus: false */
+
   function createEnabledElement(tag) {
     let e = document.createElement(tag);
     ShadyDOM.wrapIfNeeded(document.body).appendChild(e);

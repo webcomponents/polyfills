@@ -242,7 +242,7 @@ class Wrapper {
   }
 
   set className(value) {
-    return this.node[utils.SHADY_PREFIX + 'className'] = value;
+    this.node[utils.SHADY_PREFIX + 'className'] = value;
   }
 
   append(...args) {

@@ -37,14 +37,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   </script>
   <script type="module">
     WebComponents.waitFor(() => {
-      return mockLoad(1000).then(() => {
+      return window.mockLoad(1000).then(() => {
         window.mockModule1Loaded = true;
       });
     });
   </script>
   <script type="module">
     WebComponents.waitFor(() => {
-      return mockLoad(500).then(() => {
+      return window.mockLoad(500).then(() => {
         window.mockModule2Loaded = true;
       })
     });

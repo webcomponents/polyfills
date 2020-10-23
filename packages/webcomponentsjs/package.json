@@ -21,7 +21,6 @@
   "scripts": {
     "build": "tsc && gulp",
     "build:watch": "chokidar --initial --follow-symlinks 'src/entrypoints/**/*.js' 'ts_src/**/*.ts' 'node_modules/@webcomponents/**/*.js' -c 'npm run build'",
-    "lint": "eslint src",
     "regen-package-lock": "rm -rf node_modules package-lock.json; npm install",
     "prepack": "npm run build",
     "clean": "gulp clean"
@@ -34,8 +33,7 @@
     "@webcomponents/url": "^0.7.7",
     "babel-preset-minify": "^0.4.3",
     "get-own-property-symbols": "^0.9.2",
-    "promise-polyfill": "^8.0.0",
-    "typescript": "^3.8.3"
+    "promise-polyfill": "^8.0.0"
   },
   "publishConfig": {
     "access": "public"

@@ -10,9 +10,6 @@
 
 'use strict';
 
-/* eslint-env node */
-/* eslint-disable no-console */
-
 const gulp = require('gulp');
 const sourcemaps = require('gulp-sourcemaps');
 const rename = require('gulp-rename');

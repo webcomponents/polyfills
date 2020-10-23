@@ -31,7 +31,7 @@ function generateLocalName() {
 
 function cancelAndReturnReportedErrors(fn) {
   const errors = [];
-  catchReportedErrors(fn, (e) => {
+  window.catchReportedErrors(fn, (e) => {
     e.preventDefault();
     e.stopImmediatePropagation();
     errors.push(e);

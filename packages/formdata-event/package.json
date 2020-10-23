@@ -30,7 +30,5 @@
     "formdata-event.min.js*",
     "src/"
   ],
-  "devDependencies": {
-    "typescript": "^3.9.3"
-  }
+  "devDependencies": {}
 }

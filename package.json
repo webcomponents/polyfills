@@ -8,7 +8,7 @@
     "bootstrap": "lerna bootstrap --ci --reject-cycles",
     "build": "lerna run build --stream",
     "build:watch": "lerna run build:watch --parallel",
-    "lint": "lerna run lint --stream",
+    "lint": "eslint \"**/*.{html,js,ts}\" --ignore-path .gitignore",
     "test": "wct",
     "test-pack": "lerna exec \"npm pack\"",
     "test-sauce": "wct -s 'windows 10/microsoftedge@17' -s 'windows 10/microsoftedge@15' -s 'windows 8.1/internet explorer@11' -s 'macos 10.13/safari@12' -s 'macos 10.13/safari@11' -s 'os x 10.11/safari@10' -s 'os x 10.11/safari@9' -s 'Linux/chrome@41'",
@@ -16,11 +16,13 @@
   },
   "devDependencies": {
     "@gulp-sourcemaps/sources-content": "^1.0.0",
+    "@typescript-eslint/eslint-plugin": "^4.4.1",
+    "@typescript-eslint/parser": "^4.4.1",
     "babel-core": "^6.26.3",
     "chokidar-cli": "^2.1.0",
     "del": "^3.0.0",
-    "eslint": "^5.9.0",
-    "eslint-plugin-html": "^5.0.3",
+    "eslint": "^7.11.0",
+    "eslint-plugin-html": "^6.1.0",
     "google-closure-compiler": "^20190819.0.0",
     "gulp": "^4.0.0",
     "gulp-babel": "^7.0.1",
@@ -33,6 +35,7 @@
     "rollup-plugin-babel": "^3.0.7",
     "rollup-plugin-commonjs": "^9.2.0",
     "rollup-plugin-license": "^0.8.1",
+    "typescript": "^4.0.3",
     "wct-browser-legacy": "^1.0.2",
     "web-component-tester": "^6.9.2"
   }

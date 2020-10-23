@@ -16,6 +16,8 @@
   </head>
   <body>
     <script>
+      /* global output: false */
+
       function log(str) {
         output.textContent += str + '\n';
       }
@@ -51,6 +53,8 @@
     <x-click id="ael"></x-click>
 
     <script>
+      /* global ael:false, log: false */
+
     ael.addEventListener('click', function() { log('addEventListener') });
     </script>
 

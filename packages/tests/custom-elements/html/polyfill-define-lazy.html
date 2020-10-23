@@ -50,13 +50,13 @@ suite('polyfillLazyDefine', function() {
 
     test('name must contain a dash', function() {
       assert.throws(function () {
-        customElements.polyfillDefineLazy('xfoo', () => {prototype: Object.create(HTMLElement.prototype)});
+        customElements.polyfillDefineLazy('xfoo', () => ({prototype: Object.create(HTMLElement.prototype)}));
       }, '', 'customElements.define failed to throw when given no arguments');
     });
 
     test('name must not be a reserved name', function() {
       assert.throws(function() {
-        customElements.polyfillDefineLazy('font-face', () => {prototype: Object.create(HTMLElement.prototype)});
+        customElements.polyfillDefineLazy('font-face', () => ({prototype: Object.create(HTMLElement.prototype)}));
       }, '', 'Failed to execute \'defineElement\' on \'Document\': Registration failed for type \'font-face\'. The type name is invalid.');
     });
 
@@ -89,7 +89,7 @@ suite('polyfillLazyDefine', function() {
     test('define succeeds with named used for a polyfillDefineLazy with an invalid class', function() {
       customElements.polyfillDefineLazy('x-failed-define-lazy', () => {});
       const errors = [];
-      catchReportedErrors(() => {
+      window.catchReportedErrors(() => {
         assert.doesNotThrow(function() {
           customElements.define('x-failed-define-lazy', class extends HTMLElement {});
         });
@@ -110,7 +110,7 @@ suite('polyfillLazyDefine', function() {
       });
 
       const errors = [];
-      catchReportedErrors(() => {
+      window.catchReportedErrors(() => {
         assert.doesNotThrow(function() {
           customElements.define('x-failed-define-lazy-callbacks', class extends HTMLElement {});
         });
@@ -153,7 +153,7 @@ suite('polyfillLazyDefine', function() {
 
       return customElements.whenDefined('x-when-defined-lazy-fail').then(() => {
         const errors = [];
-        catchReportedErrors(() => {
+        window.catchReportedErrors(() => {
           assert.doesNotThrow(function() {
             document.createElement('x-when-defined-lazy-fail');
           });
@@ -204,7 +204,7 @@ suite('polyfillLazyDefine', function() {
     test('creating an element reports an error if a constructor getter is used with `define`', function() {
       customElements.define('pass-getter-to-define', function() {});
       const errors = [];
-      catchReportedErrors(() => {
+      window.catchReportedErrors(() => {
         assert.doesNotThrow(function() {
           document.createElement('pass-getter-to-define');
         });

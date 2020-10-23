@@ -152,6 +152,7 @@ const submitCallback = (capturingEvent: Event) => {
  */
 export const wrapSubmitListener = (listener: EventListenerOrEventListenerObject): EventListener => {
   return function wrapper(this: EventTarget, e: Event, ...rest) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const result: any = typeof listener === "function" ?
         listener.call(this, e, ...rest) :
         listener.handleEvent(e, ...rest);

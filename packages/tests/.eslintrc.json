@@ -1,0 +1,25 @@
+{
+  "env": {
+    "mocha": true
+  },
+  "rules": {
+    "@typescript-eslint/no-unused-vars": "off"
+  },
+  "globals": {
+    "assert": false,
+    "chai": false,
+    "defineTestElement": false,
+    "expect": false,
+    "HTMLImports": true,
+    "loaded": true,
+    "makeElement": false,
+    "makeFocusable": false,
+    "NATIVE": false,
+    "remoteCurrentScriptExecuted": true,
+    "ShadyCSS": true,
+    "ShadyDOM": true,
+    "sinon": false,
+    "WCT": true,
+    "WebComponents": true
+  }
+}

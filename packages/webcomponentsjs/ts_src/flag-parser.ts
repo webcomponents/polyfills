@@ -37,11 +37,11 @@ const flagMatcher = /wc-(.+)/;
 //     then why check for noOpts, which can't possibly have been set?
 
 // Flags. Convert url arguments to flags
-let flags: Flags = {};
+const flags: Flags = {};
 if (!flags['noOpts']) {
   // from url
   location.search.slice(1).split('&').forEach(function(option) {
-    let parts = option.split('=');
+    const parts = option.split('=');
     let match;
     if (parts[0] && (match = parts[0].match(flagMatcher))) {
       flags[match[1]] = parts[1] || true;
@@ -58,7 +58,7 @@ if (!flags['noOpts']) {
   // log flags
   const log: Record<string, boolean> = {};
   if (flags['log'] && (flags['log'] as string)['split']) {
-    let parts = (flags['log'] as string).split(',');
+    const parts = (flags['log'] as string).split(',');
     parts.forEach(function(f) {
       log[f] = true;
     });
@@ -68,7 +68,7 @@ if (!flags['noOpts']) {
 
 // exports
 extendedWindow['WebComponents']['flags'] = flags;
-let forceShady = flags['shadydom'] as boolean|string;
+const forceShady = flags['shadydom'] as boolean|string;
 if (forceShady) {
   extendedWindow['ShadyDOM'] = extendedWindow['ShadyDOM'] || {};
   extendedWindow['ShadyDOM']['force'] = forceShady;
@@ -76,7 +76,7 @@ if (forceShady) {
   extendedWindow['ShadyDOM']['noPatch'] = noPatch === 'true' ? true : noPatch;
 }
 
-let forceCE = (flags['register'] || flags['ce']) as boolean|string;
+const forceCE = (flags['register'] || flags['ce']) as boolean|string;
 if (forceCE && window['customElements']) {
   extendedWindow['customElements']['forcePolyfill'] = forceCE;
 }

@@ -16,6 +16,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <div id="log"></div>
 
 <script>
+  /* global log: true */
+
   var properties = [
     'parentNode',
     'firstChild',
@@ -102,8 +104,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     out.push('<td>');
     for (var p in info) {
       var desc = info[p];
-      var c = Boolean(desc[check1]) ? '+' : '';
-      var o = Boolean(desc[check2]) ? '*' : '';
+      var c = desc[check1] ? '+' : '';
+      var o = desc[check2] ? '*' : '';
       out.push(p + c + o + '\n');
     }
     out.push('</td></tr>');

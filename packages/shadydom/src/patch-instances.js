@@ -73,7 +73,7 @@ export const TextContentInnerHTMLDescriptors = utils.getOwnPropertyDescriptors({
 
   /** @this {Node} */
   set innerHTML(value) {
-    return this[utils.SHADY_PREFIX + 'innerHTML'] = value;
+    this[utils.SHADY_PREFIX + 'innerHTML'] = value;
   },
 });
 
@@ -116,7 +116,7 @@ export const OutsideDescriptors = utils.getOwnPropertyDescriptors({
 
   /** @this {Node} */
   set className(value) {
-    return this[utils.SHADY_PREFIX + 'className'] = value;
+    this[utils.SHADY_PREFIX + 'className'] = value;
   }
 
 });

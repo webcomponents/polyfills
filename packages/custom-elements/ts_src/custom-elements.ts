@@ -53,4 +53,5 @@ if (!priorCustomElements || priorCustomElements['forcePolyfill'] ||
 
 // This is NOT public API and is only meant to work around a GC bug in older
 // versions of Safari that randomly removes the polyfill during tests.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 (window as any)['__CE_installPolyfill'] = installPolyfill;
