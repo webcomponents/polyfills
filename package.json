@@ -33,7 +33,9 @@
     "gulp-rollup": "^2.16.2",
     "gulp-size": "^3.0.0",
     "gulp-sourcemaps": "^2.6.4",
+    "husky": "^4.3.0",
     "lerna": "^3.13.3",
+    "lint-staged": "^10.4.2",
     "prettier": "^2.1.2",
     "rollup": "^0.62.0",
     "rollup-plugin-babel": "^3.0.7",
@@ -42,5 +44,14 @@
     "typescript": "^4.0.3",
     "wct-browser-legacy": "^1.0.2",
     "web-component-tester": "^6.9.2"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "**/*.{cjs,html,js,json,md,ts}": "prettier --ignore-path .gitignore --write",
+    "**/*.{js,ts}": "eslint --ignore-path .gitignore --fix"
   }
 }
