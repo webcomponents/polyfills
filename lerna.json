@@ -10,7 +10,6 @@
           "master"
         ],
         "ignoreChanges": [
-          ".clang-format",
           ".gitignore",
           ".travis.yml",
           "README.md",
