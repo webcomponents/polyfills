@@ -29,7 +29,6 @@
     "clean:interface": "rimraf 'src/interface.*' .tsbuildinfo",
     "build:watch": "chokidar --initial 'src/**/*.js' 'ts_src/**/*.ts' --ignore 'src/interface.js' -c 'npm run build'",
     "debug": "gulp debug",
-    "format:interface": "prettier --write 'ts_src/**/*.ts'",
     "prepack": "npm run build"
   },
   "files": [
@@ -48,7 +47,6 @@
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^2.31.0",
     "@typescript-eslint/parser": "^2.31.0",
-    "prettier": "^2.0.5",
     "rimraf": "^3.0.2",
     "rollup-stream": "=1.23.1",
     "vinyl-buffer": "^1.0.1",
