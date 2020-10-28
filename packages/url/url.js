@@ -18,7 +18,7 @@ Window.prototype.forceJURL = false;
   }
 
   if (hasWorkingUrl)
-    return;
+    {return;}
 
   var relative = Object.create(null);
   relative['ftp'] = 21;
@@ -189,7 +189,7 @@ Window.prototype.forceJURL = false;
         case 'relative':
           this._isRelative = true;
           if ('file' != this._scheme)
-            this._scheme = base._scheme;
+            {this._scheme = base._scheme;}
           if (EOF == c) {
             this._host = base._host;
             this._port = base._port;
@@ -200,7 +200,7 @@ Window.prototype.forceJURL = false;
             break loop;
           } else if ('/' == c || '\\' == c) {
             if ('\\' == c)
-              err('\\ is an invalid code point.');
+              {err('\\ is an invalid code point.');}
             state = 'relative slash';
           } else if ('?' == c) {
             this._host = base._host;
@@ -393,7 +393,7 @@ Window.prototype.forceJURL = false;
 
         case 'relative path start':
           if ('\\' == c)
-            err("'\\' not allowed in path.");
+            {err("'\\' not allowed in path.");}
           state = 'relative path';
           if ('/' != c && '\\' != c) {
             continue;
@@ -480,7 +480,7 @@ Window.prototype.forceJURL = false;
    */
   function jURL(url, base /* , encoding */) {
     if (base !== undefined && !(base instanceof jURL))
-      base = new jURL(String(base));
+      {base = new jURL(String(base));}
 
     this._url = '' + url;
     clear.call(this);
@@ -497,7 +497,7 @@ Window.prototype.forceJURL = false;
     },
     get href() {
       if (this._isInvalid)
-        return this._url;
+        {return this._url;}
 
       var authority = '';
       if ('' != this._username || null != this._password) {
@@ -519,7 +519,7 @@ Window.prototype.forceJURL = false;
     },
     set protocol(protocol) {
       if (this._isInvalid)
-        return;
+        {return;}
       parse.call(this, protocol + ':', 'scheme start');
     },
 
@@ -529,7 +529,7 @@ Window.prototype.forceJURL = false;
     },
     set host(host) {
       if (this._isInvalid || !this._isRelative)
-        return;
+        {return;}
       parse.call(this, host, 'host');
     },
 
@@ -538,7 +538,7 @@ Window.prototype.forceJURL = false;
     },
     set hostname(hostname) {
       if (this._isInvalid || !this._isRelative)
-        return;
+        {return;}
       parse.call(this, hostname, 'hostname');
     },
 
@@ -547,7 +547,7 @@ Window.prototype.forceJURL = false;
     },
     set port(port) {
       if (this._isInvalid || !this._isRelative)
-        return;
+        {return;}
       parse.call(this, port, 'port');
     },
 
@@ -557,7 +557,7 @@ Window.prototype.forceJURL = false;
     },
     set pathname(pathname) {
       if (this._isInvalid || !this._isRelative)
-        return;
+        {return;}
       this._path = [];
       parse.call(this, pathname, 'relative path start');
     },
@@ -568,10 +568,10 @@ Window.prototype.forceJURL = false;
     },
     set search(search) {
       if (this._isInvalid || !this._isRelative)
-        return;
+        {return;}
       this._query = '?';
       if ('?' == search[0])
-        search = search.slice(1);
+        {search = search.slice(1);}
       parse.call(this, search, 'query');
     },
 
@@ -581,14 +581,14 @@ Window.prototype.forceJURL = false;
     },
     set hash(hash) {
       if (this._isInvalid)
-        return;
+        {return;}
       if(!hash) {
         this._fragment = '';
         return;
       }
       this._fragment = '#';
       if ('#' == hash[0])
-        hash = hash.slice(1);
+        {hash = hash.slice(1);}
       parse.call(this, hash, 'fragment');
     },
 

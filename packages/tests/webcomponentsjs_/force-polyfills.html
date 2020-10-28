@@ -17,7 +17,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     window.ShadyDOM = {
       force: true
     };
-    if (window.customElements) customElements.forcePolyfill = true;
+    if (window.customElements) {customElements.forcePolyfill = true;}
     window.webComponentsReadyCount = 0;
     window.addEventListener('WebComponentsReady', function() {
       window.webComponentsReadyCount++;

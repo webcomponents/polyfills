@@ -13,7 +13,7 @@ window.catchReportedErrors = (() => {
   let currentHandler = undefined;
 
   window.addEventListener('error', e => {
-    if (currentHandler) currentHandler(e);
+    if (currentHandler) {currentHandler(e);}
   }, true);
 
   return (fn, handler) => {

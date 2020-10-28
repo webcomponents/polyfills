@@ -514,7 +514,7 @@
     // We must do this because only the source templates have proper .content.
     var fixClonedDom = function fixClonedDom(clone, source) {
       // do nothing if cloned node is not an element
-      if (!source.querySelectorAll) return;
+      if (!source.querySelectorAll) {return;}
       // these two lists should be coincident
       var s$ = QSA(source, TEMPLATE_TAG);
       if (s$.length === 0) {

@@ -398,7 +398,7 @@
      */
     processImportsIfLoadingDone() {
       // Wait until all resources are ready, then load import resources.
-      if (this.inflight) return;
+      if (this.inflight) {return;}
 
       // Stop observing, flatten & load resource, then restart observing <head>.
       this.dynamicImportsMO.disconnect();
@@ -417,7 +417,7 @@
           // Catch any imports that might have been added while we
           // weren't looking, wait for them as well.
           this.loadImports(document);
-          if (this.inflight) return;
+          if (this.inflight) {return;}
 
           // Restart observing.
           this.dynamicImportsMO.observe(document.head, {
@@ -771,9 +771,9 @@
     Object.defineProperty(klass.prototype, 'baseURI', {
       get() {
         const ownerDoc = /** @type {HTMLLinkElement} */ (isImportLink(this) ? this : importForElement(this));
-        if (ownerDoc) return ownerDoc.href;
+        if (ownerDoc) {return ownerDoc.href;}
         // Use native baseURI if possible.
-        if (native_baseURI && native_baseURI.get) return native_baseURI.get.call(this);
+        if (native_baseURI && native_baseURI.get) {return native_baseURI.get.call(this);}
         // Polyfill it if not available.
         const base = /** @type {HTMLBaseElement} */ (document.querySelector('base'));
         return (base || window.location).href;

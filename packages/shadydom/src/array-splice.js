@@ -47,12 +47,12 @@ function calcEditDistances(current, currentStart, currentEnd,
 
   // Initialize null row
   for (let j = 0; j < columnCount; j++)
-    distances[0][j] = j;
+    {distances[0][j] = j;}
 
   for (let i = 1; i < rowCount; i++) {
     for (let j = 1; j < columnCount; j++) {
       if (equals(current[currentStart + j - 1], old[oldStart + i - 1]))
-        distances[i][j] = distances[i - 1][j - 1];
+        {distances[i][j] = distances[i - 1][j - 1];}
       else {
         let north = distances[i - 1][j] + 1;
         let west = distances[i][j - 1] + 1;
@@ -89,9 +89,9 @@ function spliceOperationsFromEditDistances(distances) {
 
     let min;
     if (west < north)
-      min = west < northWest ? west : northWest;
+      {min = west < northWest ? west : northWest;}
     else
-      min = north < northWest ? north : northWest;
+      {min = north < northWest ? north : northWest;}
 
     if (min == northWest) {
       if (northWest == current) {
@@ -149,10 +149,10 @@ function calcSplices(current, currentStart, currentEnd,
 
   let minLength = Math.min(currentEnd - currentStart, oldEnd - oldStart);
   if (currentStart == 0 && oldStart == 0)
-    prefixCount = sharedPrefix(current, old, minLength);
+    {prefixCount = sharedPrefix(current, old, minLength);}
 
   if (currentEnd == current.length && oldEnd == old.length)
-    suffixCount = sharedSuffix(current, old, minLength - prefixCount);
+    {suffixCount = sharedSuffix(current, old, minLength - prefixCount);}
 
   currentStart += prefixCount;
   oldStart += prefixCount;
@@ -160,16 +160,16 @@ function calcSplices(current, currentStart, currentEnd,
   oldEnd -= suffixCount;
 
   if (currentEnd - currentStart == 0 && oldEnd - oldStart == 0)
-    return [];
+    {return [];}
 
   if (currentStart == currentEnd) {
     splice = newSplice(currentStart, [], 0);
     while (oldStart < oldEnd)
-      splice.removed.push(old[oldStart++]);
+      {splice.removed.push(old[oldStart++]);}
 
     return [ splice ];
   } else if (oldStart == oldEnd)
-    return [ newSplice(currentStart, [], currentEnd - currentStart) ];
+    {return [ newSplice(currentStart, [], currentEnd - currentStart) ];}
 
   let ops = spliceOperationsFromEditDistances(
       calcEditDistances(current, currentStart, currentEnd,
@@ -192,7 +192,7 @@ function calcSplices(current, currentStart, currentEnd,
         break;
       case EDIT_UPDATE:
         if (!splice)
-          splice = newSplice(index, [], 0);
+          {splice = newSplice(index, [], 0);}
 
         splice.addedCount++;
         index++;
@@ -202,14 +202,14 @@ function calcSplices(current, currentStart, currentEnd,
         break;
       case EDIT_ADD:
         if (!splice)
-          splice = newSplice(index, [], 0);
+          {splice = newSplice(index, [], 0);}
 
         splice.addedCount++;
         index++;
         break;
       case EDIT_DELETE:
         if (!splice)
-          splice = newSplice(index, [], 0);
+          {splice = newSplice(index, [], 0);}
 
         splice.removed.push(old[oldIndex]);
         oldIndex++;
@@ -225,8 +225,8 @@ function calcSplices(current, currentStart, currentEnd,
 
 function sharedPrefix(current, old, searchLength) {
   for (let i = 0; i < searchLength; i++)
-    if (!equals(current[i], old[i]))
-      return i;
+    {if (!equals(current[i], old[i]))
+      {return i;}}
   return searchLength;
 }
 
@@ -235,7 +235,7 @@ function sharedSuffix(current, old, searchLength) {
   let index2 = old.length;
   let count = 0;
   while (count < searchLength && equals(current[--index1], old[--index2]))
-    count++;
+    {count++;}
 
   return count;
 }

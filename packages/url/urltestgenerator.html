@@ -26,11 +26,11 @@ function serialize_components(url) {
         continue // only true for "_password"
       }
       if(output !== "")
-        output += " "
+        {output += " "}
       output += componentsKeys[i] + ":" + esc(val)
     } else if(components[i] == "_password") {
       if(output !== "")
-        output += " "
+        {output += " "}
       output += componentsKeys[i] + ":" // need to log empty string for "_password" as default is null
     }
   }
@@ -40,11 +40,11 @@ function serialize_components(url) {
 function serialize(input, base, components) {
   var output = esc(input)
   if(base || components)
-    output += " "
+    {output += " "}
   if(base)
-    output += base
+    {output += base}
   if(components)
-    output += " " + components
+    {output += " " + components}
   return output += "\n"
 }
 
