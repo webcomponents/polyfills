@@ -151,7 +151,8 @@ if (!window.ShadyCSS || !window.ShadyCSS.ScopingShim) {
      * @param {string} elementName
      * @param {string=} elementExtends
      */
-    prepareTemplate(template, elementName, elementExtends) { // eslint-disable-line @typescript-eslint/no-unused-vars
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    prepareTemplate(template, elementName, elementExtends) {
       applyShimInterface.flushCustomStyles();
       applyShimInterface.prepareTemplate(template, elementName);
     },

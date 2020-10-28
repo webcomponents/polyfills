@@ -35,8 +35,11 @@ suite('Closure ES5 Output', function() {
 
     // Closure standard library code
     var $jscomp = {scope:{}, getGlobal:function(a) {
-      // eslint-disable-next-line no-undef
-      return "undefined" != typeof window && window === a ? a : "undefined" != typeof global ? global : a;
+      return "undefined" != typeof window && window === a
+        ? a
+        : "undefined" != typeof global
+        ? global // eslint-disable-line no-undef
+        : a;
     }};
     $jscomp.global = $jscomp.getGlobal(this);
     $jscomp.inherits = function(a, b) {

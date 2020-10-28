@@ -50,7 +50,8 @@ if (!window.ShadyCSS) {
     /**
      * @param {Element} element
      */
-    styleElement(element) { // eslint-disable-line @typescript-eslint/no-unused-vars
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    styleElement(element) {
       customStyleInterface.processStyles();
     },
 
