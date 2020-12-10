@@ -16,7 +16,6 @@ const NativeHTMLElement = window.HTMLElement;
 const nativeDefine = window.customElements.define;
 const nativeGet = window.customElements.get;
 const nativeRegistry = window.customElements;
-const nativeCreate = Document.prototype.createElement;
 
 const definitionForElement = new WeakMap();
 const pendingRegistryForElement = new WeakMap();
@@ -26,7 +25,7 @@ const globalDefinitionForConstructor = new WeakMap();
 // register stand-in elements that can delegate out to CE classes registered
 // in scoped registries
 window.CustomElementRegistry = class {
-  constructor(options) {
+  constructor() {
     this._definitions = new Map();
     this._definedPromises = new Map();
     this._definedResolvers = new Map();
@@ -226,7 +225,7 @@ const patchAttributes = (elementClass, observedAttributes, attributeChangedCallb
       if (observedAttributes.has(name)) {
         const old = this.getAttribute(name);
         removeAttribute.call(this, name);
-        attributeChangedCallback.call(this, name, old, value);
+        attributeChangedCallback.call(this, name, old, null);
       } else {
         removeAttribute.call(this, name);
       }
@@ -280,7 +279,7 @@ const installScopedCreationSetter = (ctor, name) => {
     ...descriptor,
     set(value) {
       creationContext.push(this);
-      descriptor.set.apply(this, arguments);
+      descriptor.set.call(this, value);
       creationContext.pop();
     }
   })
