@@ -80,7 +80,7 @@ window.CustomElementRegistry = class {
   }
   get(tagName) {
     const definition = this._definitions.get(tagName);
-    return definition ? definition.elementClass : undefined;
+    return definition?.elementClass;
   }
   _getDefinition(tagName) {
     return this._definitions.get(tagName);
@@ -195,10 +195,7 @@ const createStandInElement = (tagName) => {
     }
     adoptedCallback() {
       const definition = definitionForElement.get(this);
-      if (definition && definition.adoptedCallback) {
-        // Delegate out to user callback
-        definition.adoptedCallback.apply(this, arguments);
-      }
+      definition?.adoptedCallback?.apply(this, arguments);
     }
     // no attributeChangedCallback or observedAttributes since these
     // are simulated via setAttribute/removeAttribute patches
