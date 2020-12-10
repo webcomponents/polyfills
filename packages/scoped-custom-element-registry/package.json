@@ -1,16 +1,16 @@
 {
-  "name": "@webcomponents/scoped-custom-elements-registry",
+  "name": "@webcomponents/scoped-custom-element-registry",
   "version": "0.0.1",
   "private": true,
   "description": "Scoped CustomElementRegistry Polyfill",
-  "main": "scoped-custom-elements-registry.js",
+  "main": "scoped-custom-element-registry.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/webcomponents/polyfills.git",
-    "directory": "packages/scoped-custom-elements-registry"
+    "directory": "packages/scoped-custom-element-registry"
   },
   "keywords": [
     "custom-elements",
@@ -19,7 +19,7 @@
     "scoped",
     "scoped-customelements",
     "scoped-custom-elements",
-    "scoped-custom-elements-registry",
+    "scoped-custom-element-registry",
     "webcomponents",
     "polyfill",
     "shim"

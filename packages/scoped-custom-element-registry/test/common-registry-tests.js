@@ -24,7 +24,9 @@ export const commonRegistryTests = registry => {
 
       registry.define(tagName, CustomElementClass);
 
-      expect(() => registry.define(secondTagName, CustomElementClass)).to.throw();
+      expect(() => 
+      registry.define(secondTagName, CustomElementClass)
+      ).to.throw();
     });
   });
 
