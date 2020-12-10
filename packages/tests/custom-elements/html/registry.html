@@ -5,7 +5,7 @@
 <script>
   (window.customElements = window.customElements || {}).forcePolyfill = true;
 </script>
-<script src="../../node_modules/es6-promise/dist/es6-promise.auto.min.js"></script>
+<script src="../../node_modules/@webcomponents/webcomponentsjs/bundles/webcomponents-pf_js.js"></script>
 <script src="../../node_modules/wct-browser-legacy/browser.js"></script>
 <script src="../../node_modules/@webcomponents/custom-elements/custom-elements.min.js"></script>
 </head>
@@ -118,7 +118,7 @@ suite('CustomElementsRegistry', function() {
     test('succeeds with named used for a failed definition with invalid class', function() {
       try {
         customElements.define('x-failed-define', {});
-      } catch (e) {}
+      } catch(e) {} // eslint-disable-line no-empty
       let error;
       try {
         customElements.define('x-failed-define', class extends HTMLElement {});
@@ -136,7 +136,7 @@ suite('CustomElementsRegistry', function() {
             throw new Error('no attributes');
           }
         });
-      } catch (e) {}
+      } catch(e) {} // eslint-disable-line no-empty
       let error;
       try {
         customElements.define('x-failed-define-callbacks', class extends HTMLElement {});

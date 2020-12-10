@@ -26,13 +26,12 @@ export const hasPolyfilledCustomElements =
 
 const desc = Object.getOwnPropertyDescriptor(Node.prototype, 'firstChild');
 
-/* eslint-disable */
 settings.hasDescriptors = Boolean(desc && desc.configurable && desc.get);
 settings.inUse = settings['force'] || !settings.hasNativeShadowDOM;
 settings.noPatch = /** @type {string|boolean} */(settings['noPatch'] || false);
+// eslint-disable-next-line no-self-assign
 settings.preferPerformance = settings['preferPerformance'];
 settings.patchOnDemand = (settings.noPatch === 'on-demand');
-/* eslint-enable */
 
 const IS_IE = navigator.userAgent.match('Trident');
 settings.IS_IE = IS_IE;
@@ -229,4 +228,39 @@ export const assign = (target, source) => {
 
 export const arrayFrom = (object) => {
   return [].slice.call(/** @type {IArrayLike} */(object));
+};
+
+/**
+ * Converts a single value to a node for `convertNodesIntoANode`.
+ *
+ * @param {*} arg
+ * @return {!Node}
+ */
+const convertIntoANode = (arg) => {
+  // `"" + arg` is used to implicitly coerce the value to a string (coercing a
+  // symbol *should* fail here) before passing to `createTextNode`, which has
+  // argument type `(number|string)`.
+  return !(arg instanceof Node) ? document.createTextNode("" + arg) : arg;
+};
+
+/**
+ * Implements 'convert nodes into a node'. The spec text indicates that strings
+ * become text nodes, but doesn't describe what should happen if a non-Node,
+ * non-string value is found in the arguments list. In practice, browsers coerce
+ * these values to strings and convert those to text nodes.
+ * https://dom.spec.whatwg.org/#converting-nodes-into-a-node
+ *
+ * @param {...*} args
+ * @return {!Node}
+ */
+export const convertNodesIntoANode = (...args) => {
+  if (args.length === 1) {
+    return convertIntoANode(args[0]);
+  }
+
+  const fragment = document.createDocumentFragment();
+  for (const arg of args) {
+    fragment.appendChild(convertIntoANode(arg));
+  }
+  return fragment;
 };

@@ -1,6 +1,6 @@
 {
   "name": "@webcomponents/shadydom",
-  "version": "1.7.4",
+  "version": "1.8.0",
   "description": "Shadow DOM polyfill",
   "main": "shadydom.min.js",
   "repository": {
@@ -26,7 +26,6 @@
     "build": "gulp",
     "build:watch": "chokidar --initial 'src/**/*.js' -c 'npm run build'",
     "debug": "rollup -c",
-    "lint": "eslint src",
     "regen-package-lock": "rm -rf node_modules package-lock.json; npm install",
     "prepack": "npm run build"
   },

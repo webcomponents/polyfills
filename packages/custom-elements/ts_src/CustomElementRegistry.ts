@@ -149,8 +149,6 @@ export default class CustomElementRegistry {
       // `attributesChangedCallback` exists
       observedAttributes =
           (attributeChangedCallback && constructor['observedAttributes']) || [];
-    } catch (e) {
-      throw e;
     } finally {
       this._elementDefinitionIsRunning = false;
     }
@@ -329,6 +327,7 @@ export default class CustomElementRegistry {
 // Closure compiler exports.
 window['CustomElementRegistry'] =
     CustomElementRegistry as unknown as typeof window['CustomElementRegistry'];
+/* eslint-disable no-self-assign */
 CustomElementRegistry.prototype['define'] =
     CustomElementRegistry.prototype.define;
 CustomElementRegistry.prototype['upgrade'] =
@@ -340,3 +339,4 @@ CustomElementRegistry.prototype['polyfillDefineLazy'] =
     CustomElementRegistry.prototype.polyfillDefineLazy;
 CustomElementRegistry.prototype['polyfillWrapFlushCallback'] =
     CustomElementRegistry.prototype.polyfillWrapFlushCallback;
+/* eslint-enable no-self-assign */

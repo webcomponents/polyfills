@@ -16,7 +16,7 @@
 <script>
   (window.customElements = window.customElements || {}).forcePolyfill = true;
 </script>
-<script src="../../../node_modules/es6-promise/dist/es6-promise.auto.min.js"></script>
+<script src="../../../node_modules/@webcomponents/webcomponentsjs/bundles/webcomponents-pf_js.js"></script>
 <script src="../../../node_modules/@webcomponents/template/template.js"></script>
 <script src="../../../node_modules/wct-browser-legacy/browser.js"></script>
 <script src="../../../node_modules/@webcomponents/custom-elements/custom-elements.min.js"></script>
@@ -30,7 +30,7 @@ function generateLocalName() {
   return 'test-element-' + Math.random().toString(32).substring(2);
 }
 
-function defineWithLocalName(localName, observedAttributes) {
+function defineWithLocalName(localName) {
   const customElementClass = class extends HTMLElement {
     constructor() {
       super();
@@ -98,6 +98,7 @@ test('Calling on `this` with position "afterend" while upgrading during a ' +
     // Clear the upgrade log and clone the div.
 
     log.length = 0;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const clone = div.cloneNode(true);
 
     // <ce-inserted> should have been upgraded before <ce-2>, even though it

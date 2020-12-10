@@ -1,7 +1,8 @@
 <!doctype html>
 <html>
   <head>
-    <script src="../../node_modules/@webcomponents/webcomponents-platform/webcomponents-platform.js"></script>
+    <script src="../node_modules/@webcomponents/webcomponentsjs/bundles/webcomponents-pf_js.js"></script>
+    <script src="../node_modules/@webcomponents/webcomponentsjs/bundles/webcomponents-pf_dom.js"></script>
     <script src="../../node_modules/@webcomponents/template/template.js"></script>
     <script>
       ShadyDOM = {force: true};
@@ -15,6 +16,8 @@
   </head>
   <body>
     <script>
+      /* global output: false */
+
       function log(str) {
         output.textContent += str + '\n';
       }
@@ -50,6 +53,8 @@
     <x-click id="ael"></x-click>
 
     <script>
+      /* global ael:false, log: false */
+
     ael.addEventListener('click', function() { log('addEventListener') });
     </script>
 

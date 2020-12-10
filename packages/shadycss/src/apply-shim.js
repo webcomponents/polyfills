@@ -74,7 +74,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 import {forEachRule, processVariableAndFallback, rulesForStyle, toCssText, gatherStyleText} from './style-util.js';
 import {MIXIN_MATCH, VAR_ASSIGN} from './common-regex.js';
 import {detectMixin} from './common-utils.js';
-import {StyleNode} from './css-parse.js'; // eslint-disable-line no-unused-vars
+import {StyleNode} from './css-parse.js'; // eslint-disable-line @typescript-eslint/no-unused-vars
 
 const APPLY_NAME_CLEAN = /;\s*/m;
 const INITIAL_INHERIT = /^\s*(initial)|(inherit)\s*$/;
@@ -87,19 +87,19 @@ const MIXIN_VAR_SEP = '_-_';
 /**
  * @typedef {!Object<string, string>}
  */
-let PropertyEntry; // eslint-disable-line no-unused-vars
+let PropertyEntry; // eslint-disable-line @typescript-eslint/no-unused-vars
 
 /**
  * @typedef {!Object<string, boolean>}
  */
-let DependantsEntry; // eslint-disable-line no-unused-vars
+let DependantsEntry; // eslint-disable-line @typescript-eslint/no-unused-vars
 
 /** @typedef {{
  *    properties: PropertyEntry,
  *    dependants: DependantsEntry
  * }}
  */
-let MixinMapEntry; // eslint-disable-line no-unused-vars
+let MixinMapEntry; // eslint-disable-line @typescript-eslint/no-unused-vars
 
 // map of mixin to property names
 // --foo: {border: 2px} -> {properties: {(--foo, ['border'])}, dependants: {'element-name': proto}}

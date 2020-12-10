@@ -14,8 +14,8 @@
     <script>
       (window.customElements = window.customElements || {}).forcePolyfill = true;
     </script>
-    <script src="../../node_modules/@webcomponents/webcomponents-platform/webcomponents-platform.js"></script>
-    <script src="../../node_modules/es6-promise/dist/es6-promise.auto.min.js"></script>
+    <script src="../../node_modules/@webcomponents/webcomponentsjs/bundles/webcomponents-pf_js.js"></script>
+    <script src="../../node_modules/@webcomponents/webcomponentsjs/bundles/webcomponents-pf_dom.js"></script>
     <script src="../../node_modules/@webcomponents/html-imports/html-imports.min.js"></script>
     <script src="../../node_modules/@webcomponents/custom-elements/custom-elements.min.js"></script>
     <script>
@@ -49,25 +49,25 @@
           class XFoo extends HTMLElement {
             constructor() {
               super();
-              elementsCreated++;
+              window.elementsCreated++;
             }
 
             connectedCallback() {
-              connectedCount++;
+              window.connectedCount++;
             }
           }
           customElements.define('x-foo', XFoo);
         });
 
         test('CustomElements upgrade', function() {
-          chai.assert.equal(elementsCreated, 2);
+          chai.assert.equal(window.elementsCreated, 2);
         });
 
         test('CustomElements do have connectedCallback called', function() {
           // Elements with any document as their root node are considered
           // connected. This includes elements inside imported and script-created
           // documents.
-          chai.assert.equal(connectedCount, 2);
+          chai.assert.equal(window.connectedCount, 2);
         });
 
         test('CustomElements only attempt to upgrade <link rel=import>', function() {

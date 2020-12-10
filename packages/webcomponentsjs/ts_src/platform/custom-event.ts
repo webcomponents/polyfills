@@ -52,9 +52,8 @@ if (!window.Event || isIE && (typeof window.Event !== 'function')) {
         return e;
       }) as unknown as typeof Event;
   if (origEvent) {
-    // tslint:disable-next-line:forin
     for (const i in origEvent) {
-      // tslint:disable-next-line:no-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (window['Event'] as any)[i] = (origEvent as any)[i];
     }
     window['Event'].prototype = origEvent.prototype;
@@ -90,9 +89,8 @@ if (!window.MouseEvent || isIE && (typeof window.MouseEvent !== 'function')) {
         return e;
       }) as unknown as typeof MouseEvent;
   if (origMouseEvent) {
-    // tslint:disable-next-line:forin
     for (const j in origMouseEvent) {
-      // tslint:disable-next-line:no-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (window.MouseEvent as any)[j] = (origMouseEvent as any)[j];
     }
   }

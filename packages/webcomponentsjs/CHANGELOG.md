@@ -8,6 +8,24 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 <!-- ## [Unreleased] -->
 
+## [2.5.0] - 2020-10-21
+
+- Polyfill `Element#matches`.
+  ([#400](https://github.com/webcomponents/polyfills/pull/400))
+- Remove function declarations from platform polyfills to sastisfy internal lint
+  after import transforms.
+  ([#396](https://github.com/webcomponents/polyfills/pull/396))
+- Polyfill `Element#getAttributeNames`.
+  ([#393](https://github.com/webcomponents/polyfills/pull/393))
+- Add polyfills for ChildNode APIs.
+  ([#390](https://github.com/webcomponents/polyfills/pull/390))
+- Add polyfills for select ParentNode APIs.
+  ([#389](https://github.com/webcomponents/polyfills/pull/389))
+- Add `classList` support to `SVGElement`.
+  ([#391](https://github.com/webcomponents/polyfills/pull/391))
+- Add new entrypoints to webcomponentsjs for the 'platform' polyfills.
+  ([#385](https://github.com/webcomponents/polyfills/pull/385))
+
 ## [2.4.4] - 2020-07-20
 
 - Fixed bug where Object.assign polyfill would copy non-enumerable properties.

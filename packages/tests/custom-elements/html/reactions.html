@@ -6,7 +6,7 @@
 <script>
   (window.customElements = window.customElements || {}).forcePolyfill = true;
 </script>
-<script src="../../node_modules/es6-promise/dist/es6-promise.auto.min.js"></script>
+<script src="../../node_modules/@webcomponents/webcomponentsjs/bundles/webcomponents-pf_js.js"></script>
 <script src="../../node_modules/wct-browser-legacy/browser.js"></script>
 <script src="../../node_modules/@webcomponents/custom-elements/custom-elements.min.js"></script>
 </head>
@@ -198,7 +198,7 @@ suite('Custom Element Reactions', function() {
       customElements.define('x-fail-to-be-html-element', XFail);
 
       const errors = [];
-      catchReportedErrors(() => {
+      window.catchReportedErrors(() => {
         assert.doesNotThrow(function() {
           document.createElement('x-fail-to-be-html-element');
         });
@@ -218,6 +218,7 @@ suite('Custom Element Reactions', function() {
 
     test('if not defined, observedAttributes is not read', function() {
       customElements.define('x-no-attr-callback', class extends HTMLElement {
+        // eslint-disable-next-line getter-return
         static get observedAttributes() {
           assert.fail();
         }

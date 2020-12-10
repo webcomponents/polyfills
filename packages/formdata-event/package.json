@@ -1,6 +1,6 @@
 {
   "name": "@webcomponents/formdata-event",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "private": true,
   "publishConfig": {
     "access": "public"
@@ -30,7 +30,5 @@
     "formdata-event.min.js*",
     "src/"
   ],
-  "devDependencies": {
-    "typescript": "^3.9.3"
-  }
+  "devDependencies": {}
 }

@@ -5,12 +5,15 @@
 <script src=testharness.js></script>
 <script src=testharnessreport.js></script>
 <script src=urltestparser.js></script>
-<script>forceJURL = true;</script>
+<script>window.forceJURL = true;</script>
 <script src="url.js"></script>
 <div id=log></div>
 <script>
+/* global assert_equals: false, test: false, async_test: false, URLTestParser: false */
+
 test(function() {
   var u = new URL('http://a/foo');
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   var u2 = new URL('bar', u);
   assert_equals(u.href, 'http://a/foo');
 }, 'Consistency Check');

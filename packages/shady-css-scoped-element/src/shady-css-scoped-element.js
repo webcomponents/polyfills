@@ -39,6 +39,6 @@ export default class ShadyCssScoped extends HTMLElement {
   }
 }
 
-ShadyCssScoped.prototype['getStyle'] = ShadyCssScoped.prototype.getStyle;// eslint-disable-line no-self-assign
+ShadyCssScoped.prototype['getStyle'] = ShadyCssScoped.prototype.getStyle; // eslint-disable-line no-self-assign
 window.customElements.define('shady-css-scoped', ShadyCssScoped);
 

@@ -14,8 +14,7 @@
           ".gitignore",
           ".travis.yml",
           "README.md",
-          "appveyor.yml",
-          "tslint.json"
+          "appveyor.yml"
         ]
       }
     }

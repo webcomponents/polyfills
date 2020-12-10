@@ -49,7 +49,7 @@
         test('load', function(done) {
           HTMLImports.whenReady(() => {
             assert.ok(window.foundScriptInLoad, 'load event target can be used to find element in import');
-            assert.equal(loadEvents, 4, 'expected # of load events');
+            assert.equal(window.loadEvents, 4, 'expected # of load events');
             var test1 = getComputedStyle(document.querySelector('#test1')).backgroundColor;
             assert.equal(test1, 'rgb(255, 0, 0)', 'test1 red background-color ok');
             var test2 = getComputedStyle(document.querySelector('#test2')).backgroundColor;

@@ -10,9 +10,6 @@
 
 'use strict';
 
-/* eslint-env node */
-/* eslint-disable no-console */
-
 let gulp = require('gulp');
 let compilerPackage = require('google-closure-compiler');
 let sourcemaps = require('gulp-sourcemaps');

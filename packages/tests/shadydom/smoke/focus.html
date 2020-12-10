@@ -31,6 +31,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   </style>
   <div id="host"></div>
   <script>
+    /* global host: true */
+
     host.tabIndex = 1;
     host.attachShadow({mode: 'open'});
     host.shadowRoot.appendChild(document.createElement('input'));

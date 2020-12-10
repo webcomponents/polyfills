@@ -10,7 +10,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 'use strict';
 
-import {removeCustomPropAssignment, StyleNode} from './css-parse.js'; // eslint-disable-line no-unused-vars
+import {removeCustomPropAssignment, StyleNode} from './css-parse.js'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import {nativeShadow} from './style-settings.js';
 import StyleTransformer from './style-transformer.js';
 import * as StyleUtil from './style-util.js';

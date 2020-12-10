@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- ## [Unreleased] -->
 
+## [1.8.0] - 2020-10-21
+
+- Implicitly coerce values passed to `createTextNode` to a string.
+  ([#401](https://github.com/webcomponents/polyfills/pull/401))
+- Add support for ChildNode APIs.
+  ([#390](https://github.com/webcomponents/polyfills/pull/390))
+- Add support for select ParentNode APIs.
+  ([#389](https://github.com/webcomponents/polyfills/pull/389))
+
 ## [1.7.4] - 2020-07-20
 
 - Manually dispatch events for connected, unassigned targets, if

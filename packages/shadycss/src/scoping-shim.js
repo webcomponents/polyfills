@@ -22,7 +22,7 @@ import {flush as watcherFlush, getOwnerScope, getCurrentScope} from './document-
 import templateMap from './template-map.js';
 import * as ApplyShimUtils from './apply-shim-utils.js';
 import {updateNativeProperties, detectMixin} from './common-utils.js';
-import {CustomStyleInterfaceInterface, CustomStyleProvider} from './custom-style-interface.js'; // eslint-disable-line no-unused-vars
+import {CustomStyleInterfaceInterface, CustomStyleProvider} from './custom-style-interface.js'; // eslint-disable-line @typescript-eslint/no-unused-vars
 
 /** @type {!Object<string, string>} */
 const adoptedCssTextMap = {};
