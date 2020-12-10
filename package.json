@@ -9,7 +9,7 @@
     "build": "lerna run build --stream",
     "build:watch": "lerna run build:watch --parallel",
     "lint": "eslint \"**/*.{html,js,ts}\" --ignore-path .gitignore",
-    "test": "test:wct",
+    "test": "npm run test:wct",
     "test:wtr": "web-test-runner",
     "test:wct": "wct",
     "test-pack": "lerna exec \"npm pack\"",
