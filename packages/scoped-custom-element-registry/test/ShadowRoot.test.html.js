@@ -37,9 +37,9 @@ describe('ShadowRoot', () => {
 
       it('should import a node tree with an upgraded custom element', () => {
         const { tagName, CustomElementClass } = getTestElement();
-        customElements.define(tagName, CustomElementClass);
 
         const registry = new CustomElementRegistry();
+        registry.define(tagName, CustomElementClass);
         const shadowRoot = getShadowRoot(registry);
         const $el = getHTML(`<${tagName}></${tagName}>`);
 
@@ -50,9 +50,9 @@ describe('ShadowRoot', () => {
       });
 
       it('should import a node tree with an upgraded custom element from another shadowRoot', () => {
-        const { tagName, Element } = getTestElement();
+        const { tagName, CustomElementClass } = getTestElement();
         const firstRegistry = new CustomElementRegistry();
-        firstRegistry.define(tagName, Element);
+        firstRegistry.define(tagName, CustomElementClass);
 
         const firstShadowRoot = getShadowRoot(firstRegistry);
         const $el = getHTML(`<${tagName}></${tagName}>`, firstShadowRoot);
@@ -202,9 +202,9 @@ describe('ShadowRoot', () => {
       });
 
       it('should import a node tree with an upgraded custom element from another shadowRoot', () => {
-        const { tagName, Element } = getTestElement();
+        const { tagName, CustomElementClass } = getTestElement();
         const firstRegistry = new CustomElementRegistry();
-        firstRegistry.define(tagName, Element);
+        firstRegistry.define(tagName, CustomElementClass);
 
         const firstShadowRoot = getShadowRoot(firstRegistry);
         const $el = getHTML(`<${tagName}></${tagName}>`, firstShadowRoot);

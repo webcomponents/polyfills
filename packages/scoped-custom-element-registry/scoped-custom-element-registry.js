@@ -20,21 +20,31 @@ const nativeRegistry = window.customElements;
 const definitionForElement = new WeakMap();
 const pendingRegistryForElement = new WeakMap();
 const globalDefinitionForConstructor = new WeakMap();
+// TBD: This part of the spec proposal is unclear:
+// > Another option for looking up registries is to store an element's
+// > originating registry with the element. The Chrome DOM team was concerned
+// > about the small additional memory overhead on all elements. Looking up the
+// > root avoids this.
+const scopeForElement = new WeakMap();
 
 // Constructable CE registry class, which uses the native CE registry to
 // register stand-in elements that can delegate out to CE classes registered
 // in scoped registries
 window.CustomElementRegistry = class {
   constructor() {
-    this._definitions = new Map();
+    this._definitionsByTag = new Map();
+    this._definitionsByClass = new Map();
     this._definedPromises = new Map();
     this._definedResolvers = new Map();
     this._awaitingUpgrade = new Map();
   }
   define(tagName, elementClass) {
     tagName = tagName.toLowerCase();
-    if (this._getDefinition(tagName)) {
+    if (this._getDefinition(tagName) !== undefined) {
       throw new DOMException(`Failed to execute 'define' on 'CustomElementRegistry': the name "${tagName}" has already been used with this registry`);
+    }
+    if (this._definitionsByClass.get(elementClass) !== undefined) {
+      throw new DOMException(`Failed to execute 'define' on 'CustomElementRegistry': this constructor has already been used with this registry`);
     }
     // Since observedAttributes can't change, we approximate it by patching
     // set/removeAttribute on the user's class
@@ -50,7 +60,8 @@ window.CustomElementRegistry = class {
       attributeChangedCallback,
       observedAttributes,
     };
-    this._definitions.set(tagName, definition);
+    this._definitionsByTag.set(tagName, definition);
+    this._definitionsByClass.set(elementClass, definition);
     // Register a stand-in class which will handle the registry lookup & delegation
     let standInClass = nativeGet.call(nativeRegistry, tagName);
     if (!standInClass) {
@@ -77,12 +88,17 @@ window.CustomElementRegistry = class {
     }
     return elementClass;
   }
+  upgrade() {
+    creationContext.push(this);
+    nativeRegistry.upgrade.apply(nativeRegistry, arguments);
+    creationContext.pop();
+  }
   get(tagName) {
-    const definition = this._definitions.get(tagName);
+    const definition = this._definitionsByTag.get(tagName);
     return definition?.elementClass;
   }
   _getDefinition(tagName) {
-    return this._definitions.get(tagName);
+    return this._definitionsByTag.get(tagName);
   }
   whenDefined(tagName) {
     let promise = this._definedPromises.get(tagName);
@@ -134,20 +150,33 @@ window.HTMLElement = function HTMLElement() {
 window.HTMLElement.prototype = NativeHTMLElement.prototype;
 
 // Helpers to return the scope for a node where its registry would be located
-const isValidScope = (node) => node == document || node instanceof ShadowRoot;
-const scopeForNode = (node) => {
-  // TODO: this is not per the proposal; assigning a one-time scope at creation
-  // time would require walking every tree ever created, which is avoided for now
+const isValidScope = (node) => node === document || node instanceof ShadowRoot;
+const registryForNode = (node) => {
+  // TODO: the algorithm for finding the scope is a bit up in the air; assigning
+  // a one-time scope at creation time would require walking every tree ever
+  // created, which is avoided for now
   let scope = node.getRootNode();
-  // If not, get the tree scope from the context that created the node;
-  // if that is not in a tree root, then bail
+  // If we're not attached to the document (i.e. in a disconnected tree or
+  // fragment), we need to get the scope from the creation context; that should
+  // be a Document or ShadowRoot, unless it was created via innerHTML
   if (!isValidScope(scope)) {
-    scope = creationContext[creationContext.length-1].getRootNode();
+    const context = creationContext[creationContext.length-1];
+    // When upgrading via registry.upgrade(), the registry itself is put on the
+    // creationContext stack
+    if (context instanceof CustomElementRegistry) {
+      return context;
+    }
+    // Otherwise, get the root node of the element this was created from
+    scope = context.getRootNode()
+    // The creation context wasn't a Document or ShadowRoot or in one; this
+    // means we're being innerHTML'ed into a disconnected element; for now, we
+    // hope that root node was created imperatively, where we stash _its_
+    // scopeForElement. Beyond that, we'd need more costly tracking.
     if (!isValidScope(scope)) {
-      throw new Error('Element is being upgraded outside of a valid tree scope');
+      scope = scopeForElement.get(scope)?.getRootNode() || document;
     }
   }
-  return scope;
+  return scope.customElements;
 };
 
 // Helper to create stand-in element for each tagName registered that delegates
@@ -162,8 +191,7 @@ const createStandInElement = (tagName) => {
       // upgrade will eventually install the full CE prototype
       Object.setPrototypeOf(instance, HTMLElement.prototype);
       // Get the node's scope, and its registry (falls back to global registry)
-      const scope = scopeForNode(instance);
-      const registry = scope.customElements || window.customElements;
+      const registry = registryForNode(instance) || window.customElements;
       const definition = registry._getDefinition(tagName);
       if (definition) {
         upgrade(instance, definition);
@@ -264,6 +292,7 @@ const installScopedCreationMethod = (ctor, method, from) => {
   ctor.prototype[method] = function() {
     creationContext.push(this);
     const ret = native.apply(from || this, arguments);
+    scopeForElement.set(ret, this);
     creationContext.pop();
     return ret;
   }
