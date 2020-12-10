@@ -7,9 +7,9 @@ currently a work in progress.
 
 ## Overview
 
-Scoped CustomElementRegistry polyfill based on discussion in
-https://github.com/w3c/webcomponents/issues/716 and spec proposal in 
-https://github.com/w3c/webcomponents/pull/865.
+Scoped CustomElementRegistry polyfill based on [Scoped Custom Element
+Registries](https://github.com/WICG/webcomponents/blob/gh-pages/proposals/Scoped-Custom-Element-Registries.md)
+WICG proposal.
 
 Technique: uses native CustomElements to register stand-in classes that
 delegate to the constructor in the registry for the element's scope; this
@@ -28,4 +28,4 @@ Notes/limitations:
   properties.
 - In theory, this should be able to be layered on top of the Custom Elements
   polyfill for use on older browsers, although iis yet to be tested. Use of
-  Reflect.construct may need to be modified in those cases
+  `Reflect.construct` may need to be modified in those cases

@@ -31,14 +31,10 @@ window.CustomElementRegistry = class {
     this._definedPromises = new Map();
     this._definedResolvers = new Map();
     this._awaitingUpgrade = new Map();
-    // Once the registry is patched, this is easy to allow (previously upgraded
-    // elements won't be affected, but new elements will be upgraded with the
-    // new definition)
-    this._allowRedefinition = options && options.allowRedefinition;
   }
   define(tagName, elementClass) {
     tagName = tagName.toLowerCase();
-    if (!this._allowRedefinition && this._getDefinition(tagName)) {
+    if (this._getDefinition(tagName)) {
       throw new DOMException(`Failed to execute 'define' on 'CustomElementRegistry': the name "${tagName}" has already been used with this registry`);
     }
     // Since observedAttributes can't change, we approximate it by patching
@@ -52,8 +48,8 @@ window.CustomElementRegistry = class {
       connectedCallback: elementClass.prototype.connectedCallback,
       disconnectedCallback: elementClass.prototype.disconnectedCallback,
       adoptedCallback: elementClass.prototype.adoptedCallback,
-      attributeChangedCallback: attributeChangedCallback,
-      observedAttributes: observedAttributes,
+      attributeChangedCallback,
+      observedAttributes,
     };
     this._definitions.set(tagName, definition);
     // Register a stand-in class which will handle the registry lookup & delegation
@@ -70,10 +66,10 @@ window.CustomElementRegistry = class {
     const awaiting = this._awaitingUpgrade.get(tagName);
     if (awaiting) {
       this._awaitingUpgrade.delete(tagName);
-      awaiting.forEach(element => {
+      for (const element of awaiting) {
         pendingRegistryForElement.delete(element);
         upgrade(element, definition);
-      });
+      }
     }
     // Flush whenDefined callbacks
     const resolver = this._definedResolvers.get(tagName);
@@ -149,7 +145,7 @@ const scopeForNode = (node) => {
   if (!isValidScope(scope)) {
     scope = creationContext[creationContext.length-1].getRootNode();
     if (!isValidScope(scope)) {
-      throw new Error('Element is being upgrade outside of a valid tree scope');
+      throw new Error('Element is being upgraded outside of a valid tree scope');
     }
   }
   return scope;
@@ -162,7 +158,7 @@ const createStandInElement = (tagName) => {
     constructor() {
       // Create a raw HTMLElement first
       const instance = Reflect.construct(NativeHTMLElement, [], this.constructor);
-      // We need to install the minimum the HTMLElement prototype so that
+      // We need to install the minimum HTMLElement prototype so that
       // scopeForNode can use DOM API to determine our construction scope;
       // upgrade will eventually install the full CE prototype
       Object.setPrototypeOf(instance, HTMLElement.prototype);
@@ -212,31 +208,32 @@ const createStandInElement = (tagName) => {
 // Helper to patch CE class setAttribute/getAttribute to implement
 // attributeChangedCallback
 const patchAttributes = (elementClass, observedAttributes, attributeChangedCallback) => {
-  if (observedAttributes.size && attributeChangedCallback) {
-    const setAttribute = elementClass.prototype.setAttribute;
-    if (setAttribute) {
-      elementClass.prototype.setAttribute = function(name, value) {
-        if (observedAttributes.has(name)) {
-          const old = this.getAttribute(name);
-          setAttribute.call(this, name, value);
-          attributeChangedCallback.call(this, name, old, value);
-        } else {
-          setAttribute.call(this, name, value);
-        }
-      };
-    }
-    const removeAttribute = elementClass.prototype.removeAttribute;
-    if (removeAttribute) {
-      elementClass.prototype.removeAttribute = function(name) {
-        if (observedAttributes.has(name)) {
-          const old = this.getAttribute(name);
-          removeAttribute.call(this, name);
-          attributeChangedCallback.call(this, name, old, value);
-        } else {
-          removeAttribute.call(this, name);
-        }
-      };
-    }
+  if (observedAttributes.size === 0 || attributeChangedCallback === undefined) {
+    return;
+  }
+  const setAttribute = elementClass.prototype.setAttribute;
+  if (setAttribute) {
+    elementClass.prototype.setAttribute = function(name, value) {
+      if (observedAttributes.has(name)) {
+        const old = this.getAttribute(name);
+        setAttribute.call(this, name, value);
+        attributeChangedCallback.call(this, name, old, value);
+      } else {
+        setAttribute.call(this, name, value);
+      }
+    };
+  }
+  const removeAttribute = elementClass.prototype.removeAttribute;
+  if (removeAttribute) {
+    elementClass.prototype.removeAttribute = function(name) {
+      if (observedAttributes.has(name)) {
+        const old = this.getAttribute(name);
+        removeAttribute.call(this, name);
+        attributeChangedCallback.call(this, name, old, value);
+      } else {
+        removeAttribute.call(this, name);
+      }
+    };
   }
 };
 
