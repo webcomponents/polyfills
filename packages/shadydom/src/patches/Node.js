@@ -9,14 +9,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 */
 
 import * as utils from '../utils.js';
-import {
-  getScopingShim,
-  removeShadyScoping,
-  replaceShadyScoping,
-  treeVisitor,
-  currentScopeForNode,
-  currentScopeIsCorrect,
-} from '../style-scoping.js';
+import {getScopingShim, removeShadyScoping, replaceShadyScoping,
+  treeVisitor, currentScopeForNode, currentScopeIsCorrect } from '../style-scoping.js';
 import {shadyDataForNode, ensureShadyDataForNode} from '../shady-data.js';
 import {recordInsertBefore, recordRemoveChild} from '../link-nodes.js';
 import {ownerShadyRootForNode} from '../attach-shadow.js';

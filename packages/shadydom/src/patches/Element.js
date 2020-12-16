@@ -12,10 +12,7 @@ import * as utils from '../utils.js';
 import {scopeClassAttribute} from '../style-scoping.js';
 import {shadyDataForNode} from '../shady-data.js';
 import {attachShadow, ownerShadyRootForNode} from '../attach-shadow.js';
-import {
-  eventPropertyNamesForElement,
-  wrappedDescriptorForEventProperty,
-} from '../patch-events.js';
+import {eventPropertyNamesForElement, wrappedDescriptorForEventProperty} from '../patch-events.js';
 
 const doc = window.document;
 

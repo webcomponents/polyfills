@@ -164,7 +164,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       test('lots of :matches()', function () {
         assert.equal(
           ast.rules[4].selector,
-          ':-webkit-any([baz], [zot="foo"]).x-foo :matches(foo, bar).x-foo > :-moz-any(:not(:defined), :unresolved).x-foo'
+          ":-webkit-any([baz], [zot='foo']).x-foo :matches(foo, bar).x-foo > :-moz-any(:not(:defined), :unresolved).x-foo"
         );
       });
 
@@ -283,12 +283,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
         test('native ShadowDOM', function () {
           window.StyleTransformer.normalizeRootSelector(rule);
-          assert.equal(rule.selector, '[foo="foo:bar"]');
+          assert.equal(rule.selector, "[foo='foo:bar']");
         });
 
         test('ShadyDOM', function () {
           window.StyleTransformer.documentRule(rule);
-          assert.equal(rule.selector, ':not(.style-scope)[foo="foo:bar"]');
+          assert.equal(rule.selector, ":not(.style-scope)[foo='foo:bar']");
         });
       });
 
@@ -306,14 +306,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
         test('native ShadowDOM', function () {
           window.StyleTransformer.normalizeRootSelector(rule);
-          assert.equal(rule.selector, '[foo="foo:bar"] [foo="foo:bar"]');
+          assert.equal(rule.selector, "[foo='foo:bar'] [foo='foo:bar']");
         });
 
         test('ShadyDOM', function () {
           window.StyleTransformer.documentRule(rule);
           assert.equal(
             rule.selector,
-            ':not(.style-scope)[foo="foo:bar"] :not(.style-scope)[foo="foo:bar"]'
+            ":not(.style-scope)[foo='foo:bar'] :not(.style-scope)[foo='foo:bar']"
           );
         });
       });
@@ -332,12 +332,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
         test('native ShadowDOM', function () {
           window.StyleTransformer.normalizeRootSelector(rule);
-          assert.equal(rule.selector, 'foo[foo="foo:bar"]');
+          assert.equal(rule.selector, "foo[foo='foo:bar']");
         });
 
         test('ShadyDOM', function () {
           window.StyleTransformer.documentRule(rule);
-          assert.equal(rule.selector, 'foo:not(.style-scope)[foo="foo:bar"]');
+          assert.equal(rule.selector, "foo:not(.style-scope)[foo='foo:bar']");
         });
       });
     });

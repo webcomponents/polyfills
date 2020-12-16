@@ -101,28 +101,20 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       defineTestElement('x-simple');
     </script>
 
-    <template id="x-host-simple"
-      ><x-simple><slot></slot></x-simple
-    ></template>
+    <!-- prettier-ignore -->
+    <template id="x-host-simple"><x-simple><slot></slot></x-simple></template>
     <script>
       defineTestElement('x-host-simple');
     </script>
 
-    <template id="x-dist"
-      >x-dist<span id="distWrapper"><slot id="content"></slot></span
-    ></template>
+    <!-- prettier-ignore -->
+    <template id="x-dist">x-dist<span id="distWrapper"><slot id="content"></slot></span></template>
     <script>
       defineTestElement('x-dist');
     </script>
 
-    <template id="x-dist-slot-name-change"
-      ><div id="c1">
-        <slot id="f1" name="foo">foo1</slot><slot id="f2" name="foo">foo2</slot>
-      </div>
-      <div id="c2">
-        <slot id="b1" name="bar">bar1</slot><slot id="b2" name="bar">bar2</slot>
-      </div></template
-    >
+    <!-- prettier-ignore -->
+    <template id="x-dist-slot-name-change"><div id="c1"><slot id="f1" name="foo">foo1</slot><slot id="f2" name="foo">foo2</slot></div><div id="c2"><slot id="b1" name="bar">bar1</slot><slot id="b2" name="bar">bar2</slot></div></template>
     <script>
       defineTestElement('x-dist-slot-name-change');
     </script>
@@ -137,23 +129,20 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       defineTestElement('x-dist-star');
     </script>
 
-    <template id="x-dist-two"
-      ><x-dist-simple><slot></slot></x-dist-simple
-    ></template>
+    <!-- prettier-ignore -->
+    <template id="x-dist-two"><x-dist-simple><slot></slot></x-dist-simple></template>
     <script>
       defineTestElement('x-dist-two');
     </script>
 
-    <template id="x-dist-three"
-      ><x-dist-two><slot></slot></x-dist-two
-    ></template>
+    <!-- prettier-ignore -->
+    <template id="x-dist-three"><x-dist-two><slot></slot></x-dist-two></template>
     <script>
       defineTestElement('x-dist-three');
     </script>
 
-    <template id="x-dist-four"
-      ><x-dist-three><slot></slot></x-dist-three
-    ></template>
+    <!-- prettier-ignore -->
+    <template id="x-dist-four"><x-dist-three><slot></slot></x-dist-three></template>
     <script>
       defineTestElement('x-dist-four');
     </script>
@@ -203,7 +192,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
     <x-compose-lazy-no-dist><span>Child</span></x-compose-lazy-no-dist>
 
-    <template id="x-lazy-no-dist"> Lazy no dist! </template>
+    <!-- prettier-ignore -->
+    <template id="x-lazy-no-dist">
+      Lazy no dist!
+    </template>
 
     <template id="x-compose-lazy-no-dist">
       <x-lazy-no-dist id="lazy">
