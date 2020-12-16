@@ -34,9 +34,7 @@ ShadyCSS = {
   styleElement(element) {},
   styleSubtree(element, overrideProperties) {},
   styleDocument(overrideProperties) {},
-  getComputedStyleValue(element, propertyName) {
-    return; // style value for property name on element
-  },
+  getComputedStyleValue(element, propertyName) {},
   nativeCss: Boolean,
   nativeShadow: Boolean,
 };
