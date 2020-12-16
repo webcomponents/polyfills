@@ -1,25 +1,20 @@
 {
   "name": "@webcomponents/custom-elements",
   "version": "1.4.3",
+  "publishConfig": {
+    "access": "public"
+  },
   "description": "HTML Custom Elements Polyfill",
-  "main": "custom-elements.min.js",
+  "license": "BSD-3-Clause",
   "repository": {
     "type": "git",
     "url": "https://github.com/webcomponents/polyfills.git",
     "directory": "packages/custom-elements"
   },
-  "bugs": "https://github.com/webcomponents/polyfills/issues?q=is%3Aissue+is%3Aopen+label%3A\"Package%3A+custom-elements\"",
-  "homepage": "https://github.com/webcomponents/polyfills/tree/master/packages/custom-elements",
   "author": "The Polymer Project Authors (https://polymer.github.io/AUTHORS.txt)",
-  "keywords": [
-    "custom-elements",
-    "customelements",
-    "web-components",
-    "webcomponents",
-    "polyfill",
-    "shim"
-  ],
-  "license": "BSD-3-Clause",
+  "homepage": "https://github.com/webcomponents/polyfills/tree/master/packages/custom-elements",
+  "bugs": "https://github.com/webcomponents/polyfills/issues?q=is%3Aissue+is%3Aopen+label%3A\"Package%3A+custom-elements\"",
+  "main": "custom-elements.min.js",
   "scripts": {
     "build": "tsc && gulp",
     "build:watch": "chokidar --initial 'ts_src/**/*.ts' -c 'npm run build'",
@@ -28,11 +23,15 @@
   },
   "files": [
     "custom-elements.min.js*",
-    "src/",
-    "externs/"
+    "externs/",
+    "src/"
   ],
-  "devDependencies": {},
-  "publishConfig": {
-    "access": "public"
-  }
+  "keywords": [
+    "custom-elements",
+    "customelements",
+    "web-components",
+    "webcomponents",
+    "polyfill",
+    "shim"
+  ]
 }
