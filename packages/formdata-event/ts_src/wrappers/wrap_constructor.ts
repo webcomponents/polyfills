@@ -23,7 +23,7 @@ type Constructor<T> = new (...args: Array<any>) => T;
 export function prepareWrapper<T extends Object>(
   Wrapper: Constructor<T>,
   Original: Constructor<T>,
-  prototype: Constructor<T>['prototype'],
+  prototype: Constructor<T>['prototype']
 ) {
   // Set `Wrapper`'s prototype to that of `Original`.
   Object.setPrototypeOf(Wrapper, Object.getPrototypeOf(Original));
@@ -36,8 +36,11 @@ export function prepareWrapper<T extends Object>(
       continue;
     }
 
-    Object.defineProperty(Wrapper, prop,
-        Object.getOwnPropertyDescriptor(Original, prop) as PropertyDescriptor);
+    Object.defineProperty(
+      Wrapper,
+      prop,
+      Object.getOwnPropertyDescriptor(Original, prop) as PropertyDescriptor
+    );
   }
 
   Wrapper.prototype = prototype;

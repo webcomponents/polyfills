@@ -50,7 +50,7 @@ export default class CustomStyleInterface {
       if (window['ShadyCSS']['flushCustomStyles']) {
         window['ShadyCSS']['flushCustomStyles']();
       }
-    })
+    });
   }
   /**
    * Queue a validation for new custom styles to batch style recalculations
@@ -102,7 +102,9 @@ export default class CustomStyleInterface {
       if (style) {
         // HTMLImports polyfill may have cloned the style into the main document,
         // which is referenced with __appliedElement.
-        const styleToTransform = /** @type {!HTMLStyleElement} */(style['__appliedElement'] || style);
+        const styleToTransform = /** @type {!HTMLStyleElement} */ (style[
+          '__appliedElement'
+        ] || style);
         if (transformFn) {
           transformFn(styleToTransform);
         }
@@ -114,9 +116,12 @@ export default class CustomStyleInterface {
 }
 
 /* eslint-disable no-self-assign */
-CustomStyleInterface.prototype['addCustomStyle'] = CustomStyleInterface.prototype.addCustomStyle;
-CustomStyleInterface.prototype['getStyleForCustomStyle'] = CustomStyleInterface.prototype.getStyleForCustomStyle;
-CustomStyleInterface.prototype['processStyles'] = CustomStyleInterface.prototype.processStyles;
+CustomStyleInterface.prototype['addCustomStyle'] =
+  CustomStyleInterface.prototype.addCustomStyle;
+CustomStyleInterface.prototype['getStyleForCustomStyle'] =
+  CustomStyleInterface.prototype.getStyleForCustomStyle;
+CustomStyleInterface.prototype['processStyles'] =
+  CustomStyleInterface.prototype.processStyles;
 /* eslint-enable no-self-assign */
 
 Object.defineProperties(CustomStyleInterface.prototype, {
@@ -128,7 +133,7 @@ Object.defineProperties(CustomStyleInterface.prototype, {
     /** @param {?function(!HTMLStyleElement)} fn */
     set(fn) {
       transformFn = fn;
-    }
+    },
   },
   'validateCallback': {
     /** @return {?function()} */
@@ -149,8 +154,8 @@ Object.defineProperties(CustomStyleInterface.prototype, {
         this.enqueueDocumentValidation();
       }
     },
-  }
-})
+  },
+});
 
 /** @typedef {{
  * customStyles: !Array<!CustomStyleProvider>,

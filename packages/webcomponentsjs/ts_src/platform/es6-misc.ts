@@ -37,5 +37,5 @@ if (!Object.assign) {
       }
     }
     return target;
-  }
+  };
 }

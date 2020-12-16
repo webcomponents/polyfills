@@ -7,8 +7,7 @@
  * Code distributed by Google as part of the polymer project is also
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
-(scope => {
-
+((scope) => {
   /********************* base setup *********************/
   const link = document.createElement('link');
   const useNative = Boolean('import' in link);
@@ -19,15 +18,18 @@
   if ('currentScript' in document === false) {
     Object.defineProperty(document, 'currentScript', {
       get() {
-        return currentScript ||
+        return (
+          currentScript ||
           // NOTE: only works when called in synchronously executing code.
           // readyState should check if `loading` but IE10 is
           // interactive when scripts run so we cheat. This is not needed by
           // html-imports polyfill but helps generally polyfill `currentScript`.
-          (document.readyState !== 'complete' ?
-            document.scripts[document.scripts.length - 1] : null);
+          (document.readyState !== 'complete'
+            ? document.scripts[document.scripts.length - 1]
+            : null)
+        );
       },
-      configurable: true
+      configurable: true,
     });
   }
 
@@ -63,11 +65,14 @@
    * @param {!DocumentFragment} fragment
    */
   const replaceScripts = (fragment) => {
-    forEach(QSA(fragment, 'template'), template => {
-      forEach(QSA(template.content, scriptsSelector), script => {
-        const clone = /** @type {!HTMLScriptElement} */
+    forEach(QSA(fragment, 'template'), (template) => {
+      forEach(QSA(template.content, scriptsSelector), (script) => {
+        const clone =
+          /** @type {!HTMLScriptElement} */
           (document.createElement('script'));
-        forEach(script.attributes, attr => clone.setAttribute(attr.name, attr.value));
+        forEach(script.attributes, (attr) =>
+          clone.setAttribute(attr.name, attr.value)
+        );
         clone.textContent = script.textContent;
         script.parentNode.replaceChild(clone, script);
       });
@@ -83,15 +88,18 @@
   // path fixup: style elements in imports must be made relative to the main
   // document. We fixup url's in url() and @import.
   const Path = {
-
     fixUrls(element, base) {
       if (element.href) {
-        element.setAttribute('href',
-          Path.resolveUrl(element.getAttribute('href'), base));
+        element.setAttribute(
+          'href',
+          Path.resolveUrl(element.getAttribute('href'), base)
+        );
       }
       if (element.src) {
-        element.setAttribute('src',
-          Path.resolveUrl(element.getAttribute('src'), base));
+        element.setAttribute(
+          'src',
+          Path.resolveUrl(element.getAttribute('src'), base)
+        );
       }
       if (element.localName === 'style') {
         const r = Path.replaceUrls(element.textContent, base, CSS_URL_REGEXP);
@@ -105,7 +113,7 @@
         if (linkUrl) {
           urlPath = Path.resolveUrl(urlPath, linkUrl);
         }
-        return pre + '\'' + urlPath + '\'' + post;
+        return pre + "'" + urlPath + "'" + post;
       });
     },
 
@@ -116,12 +124,12 @@
         try {
           const u = new URL('b', 'http://a');
           u.pathname = 'c%20d';
-          Path.__workingURL = (u.href === 'http://a/c%20d');
-        } catch(e) {} // eslint-disable-line no-empty
+          Path.__workingURL = u.href === 'http://a/c%20d';
+        } catch (e) {} // eslint-disable-line no-empty
       }
 
       if (Path.__workingURL) {
-        return (new URL(url, base)).href;
+        return new URL(url, base).href;
       }
 
       // Fallback to creating an anchor into a disconnected document.
@@ -136,12 +144,11 @@
       doc.__base.href = base;
       doc.__anchor.href = url;
       return doc.__anchor.href || url;
-    }
+    },
   };
 
   /********************* Xhr processor *********************/
   const Xhr = {
-
     async: true,
 
     /**
@@ -171,16 +178,22 @@
           // polyfill correctly. Handle relative and full paths.
           // Prefer responseURL which already resolves redirects
           // https://xhr.spec.whatwg.org/#the-responseurl-attribute
-          let redirectedUrl = request.responseURL || request.getResponseHeader('Location');
+          let redirectedUrl =
+            request.responseURL || request.getResponseHeader('Location');
           if (redirectedUrl && redirectedUrl.indexOf('/') === 0) {
             // In IE location.origin might not work
             // https://connect.microsoft.com/IE/feedback/details/1763802/location-origin-is-undefined-in-ie-11-on-windows-10-but-works-on-windows-7
-            const origin = (location.origin || location.protocol + '//' + location.host);
+            const origin =
+              location.origin || location.protocol + '//' + location.host;
             redirectedUrl = origin + redirectedUrl;
           }
-          const resource = /** @type {string} */ (request.response || request.responseText);
-          if (request.status === 304 || request.status === 0 ||
-            request.status >= 200 && request.status < 300) {
+          const resource = /** @type {string} */ (request.response ||
+            request.responseText);
+          if (
+            request.status === 304 ||
+            request.status === 0 ||
+            (request.status >= 200 && request.status < 300)
+          ) {
             success(resource, redirectedUrl);
           } else {
             fail(resource);
@@ -188,7 +201,7 @@
         };
         request.send();
       }
-    }
+    },
   };
 
   /********************* importer *********************/
@@ -204,11 +217,14 @@
 
   const disabledLinkSelector = `link[rel=stylesheet][href][type=${importDisableType}]`;
 
-  const scriptsSelector = `script:not([type]),script[type="application/javascript"],` +
+  const scriptsSelector =
+    `script:not([type]),script[type="application/javascript"],` +
     `script[type="text/javascript"],script[type="module"]`;
 
-  const importDependenciesSelector = `${importSelector},${disabledLinkSelector},` +
-    `style:not([type]),link[rel=stylesheet][href]:not([type]),` + scriptsSelector;
+  const importDependenciesSelector =
+    `${importSelector},${disabledLinkSelector},` +
+    `style:not([type]),link[rel=stylesheet][href]:not([type]),` +
+    scriptsSelector;
 
   const importDependencyAttr = 'import-dependency';
 
@@ -216,7 +232,8 @@
 
   const pendingScriptsSelector = `script[${importDependencyAttr}]`;
 
-  const pendingStylesSelector = `style[${importDependencyAttr}],` +
+  const pendingStylesSelector =
+    `style[${importDependencyAttr}],` +
     `link[rel=stylesheet][${importDependencyAttr}]`;
 
   /**
@@ -232,11 +249,13 @@
       // Used to keep track of pending loads, so that flattening and firing of
       // events can be done when all resources are ready.
       this.inflight = 0;
-      this.dynamicImportsMO = new MutationObserver(m => this.handleMutations(m));
+      this.dynamicImportsMO = new MutationObserver((m) =>
+        this.handleMutations(m)
+      );
       // Observe changes on <head>.
       this.dynamicImportsMO.observe(document.head, {
         childList: true,
-        subtree: true
+        subtree: true,
       });
       // 1. Load imports contents
       // 2. Assign them to first import links on the document
@@ -249,9 +268,10 @@
      * @param {!(HTMLDocument|DocumentFragment|Element)} doc
      */
     loadImports(doc) {
-      const links = /** @type {!NodeList<!HTMLLinkElement>} */
+      const links =
+        /** @type {!NodeList<!HTMLLinkElement>} */
         (QSA(doc, importSelector));
-      forEach(links, link => this.loadImport(link));
+      forEach(links, (link) => this.loadImport(link));
     }
 
     /**
@@ -273,19 +293,23 @@
       this.inflight++;
       // Mark it as pending to notify others this url is being loaded.
       this.documents[url] = 'pending';
-      Xhr.load(url, (resource, redirectedUrl) => {
-        const doc = this.makeDocument(resource, redirectedUrl || url);
-        this.documents[url] = doc;
-        this.inflight--;
-        // Load subtree.
-        this.loadImports(doc);
-        this.processImportsIfLoadingDone();
-      }, () => {
-        // If load fails, handle error.
-        this.documents[url] = null;
-        this.inflight--;
-        this.processImportsIfLoadingDone();
-      });
+      Xhr.load(
+        url,
+        (resource, redirectedUrl) => {
+          const doc = this.makeDocument(resource, redirectedUrl || url);
+          this.documents[url] = doc;
+          this.inflight--;
+          // Load subtree.
+          this.loadImports(doc);
+          this.processImportsIfLoadingDone();
+        },
+        () => {
+          // If load fails, handle error.
+          this.documents[url] = null;
+          this.inflight--;
+          this.processImportsIfLoadingDone();
+        }
+      );
     }
 
     /**
@@ -313,7 +337,8 @@
       }
 
       let content;
-      const template = /** @type {!HTMLTemplateElement} */
+      const template =
+        /** @type {!HTMLTemplateElement} */
         (document.createElement('template'));
       template.innerHTML = resource;
       if (template.content) {
@@ -336,11 +361,12 @@
         baseEl.removeAttribute('href');
       }
 
-      const n$ = /** @type {!NodeList<!(HTMLLinkElement|HTMLScriptElement|HTMLStyleElement)>} */
+      const n$ =
+        /** @type {!NodeList<!(HTMLLinkElement|HTMLScriptElement|HTMLStyleElement)>} */
         (QSA(content, importDependenciesSelector));
       // For source map hints.
       let inlineScriptIndex = 0;
-      forEach(n$, n => {
+      forEach(n$, (n) => {
         whenElementLoaded(n);
         Path.fixUrls(n, url);
         if (n.localName === 'style' && this.styleNeedsCloning(n)) {
@@ -353,14 +379,19 @@
         n.setAttribute(importDependencyAttr, '');
         // Generate source map hints for inline scripts.
         if (n.localName === 'script' && !n.src && n.textContent) {
-          if(n.type === 'module') {
-            throw new Error('Inline module scripts are not supported in HTML Imports.');
+          if (n.type === 'module') {
+            throw new Error(
+              'Inline module scripts are not supported in HTML Imports.'
+            );
           }
           const num = inlineScriptIndex ? `-${inlineScriptIndex}` : '';
           const content = n.textContent + `\n//# sourceURL=${url}${num}.js\n`;
           // We use the src attribute so it triggers load/error events, and it's
           // easier to capture errors (e.g. parsing) like this.
-          n.setAttribute('src', 'data:text/javascript;charset=utf-8,' + encodeURIComponent(content));
+          n.setAttribute(
+            'src',
+            'data:text/javascript;charset=utf-8,' + encodeURIComponent(content)
+          );
           n.textContent = '';
           inlineScriptIndex++;
         }
@@ -386,9 +417,13 @@
      * @return {!HTMLStyleElement}
      */
     cloneStyle(style) {
-      const clone = /** @type {!HTMLStyleElement} */(style.ownerDocument.createElement('style'));
+      const clone = /** @type {!HTMLStyleElement} */ (style.ownerDocument.createElement(
+        'style'
+      ));
       clone.textContent = style.textContent;
-      forEach(style.attributes, attr => clone.setAttribute(attr.name, attr.value));
+      forEach(style.attributes, (attr) =>
+        clone.setAttribute(attr.name, attr.value)
+      );
       return clone;
     }
 
@@ -398,7 +433,9 @@
      */
     processImportsIfLoadingDone() {
       // Wait until all resources are ready, then load import resources.
-      if (this.inflight) {return;}
+      if (this.inflight) {
+        return;
+      }
 
       // Stop observing, flatten & load resource, then restart observing <head>.
       this.dynamicImportsMO.disconnect();
@@ -417,16 +454,18 @@
           // Catch any imports that might have been added while we
           // weren't looking, wait for them as well.
           this.loadImports(document);
-          if (this.inflight) {return;}
+          if (this.inflight) {
+            return;
+          }
 
           // Restart observing.
           this.dynamicImportsMO.observe(document.head, {
             childList: true,
-            subtree: true
+            subtree: true,
           });
           this.fireEvents();
         }
-      }
+      };
       this.waitForStyles(() => {
         stylesOk = true;
         onLoadingDone();
@@ -441,9 +480,10 @@
      * @param {!HTMLDocument} doc
      */
     flatten(doc) {
-      const n$ = /** @type {!NodeList<!HTMLLinkElement>} */
+      const n$ =
+        /** @type {!NodeList<!HTMLLinkElement>} */
         (QSA(doc, importSelector));
-      forEach(n$, n => {
+      forEach(n$, (n) => {
         const imp = this.documents[n.href];
         n['__import'] = /** @type {!Document} */ (imp);
         if (imp && imp.nodeType === Node.DOCUMENT_FRAGMENT_NODE) {
@@ -466,18 +506,21 @@
     runScripts(callback) {
       const s$ = QSA(document, pendingScriptsSelector);
       const l = s$.length;
-      const cloneScript = i => {
+      const cloneScript = (i) => {
         if (i < l) {
           // The pending scripts have been generated through innerHTML and
           // browsers won't execute them for security reasons. We cannot use
           // s.cloneNode(true) either, the only way to run the script is manually
           // creating a new element and copying its attributes.
           const s = s$[i];
-          const clone = /** @type {!HTMLScriptElement} */
+          const clone =
+            /** @type {!HTMLScriptElement} */
             (document.createElement('script'));
           // Remove import-dependency attribute to avoid double cloning.
           s.removeAttribute(importDependencyAttr);
-          forEach(s.attributes, attr => clone.setAttribute(attr.name, attr.value));
+          forEach(s.attributes, (attr) =>
+            clone.setAttribute(attr.name, attr.value)
+          );
           // Update currentScript and replace original with clone script.
           currentScript = clone;
           s.parentNode.replaceChild(clone, s);
@@ -497,7 +540,8 @@
      * @param {!function()} callback
      */
     waitForStyles(callback) {
-      const s$ = /** @type {!NodeList<!(HTMLLinkElement|HTMLStyleElement)>} */
+      const s$ =
+        /** @type {!NodeList<!(HTMLLinkElement|HTMLStyleElement)>} */
         (QSA(document, pendingStylesSelector));
       let pending = s$.length;
       if (!pending) {
@@ -509,10 +553,15 @@
       // https://developer.microsoft.com/en-us/microsoft-edge/platform/issues/10472273/
       // If there is one <link rel=stylesheet> imported, we must move all imported
       // links and styles to <head>.
-      const needsMove = (isIE || isEdge) && !!document.querySelector(disabledLinkSelector);
-      forEach(s$, s => {
+      const needsMove =
+        (isIE || isEdge) && !!document.querySelector(disabledLinkSelector);
+      forEach(s$, (s) => {
         // Listen for load/error events, remove selector once is done loading.
-        if (needsMove && this.styleNeedsCloning(s) && s.ownerDocument.defaultView !== window.top) {
+        if (
+          needsMove &&
+          this.styleNeedsCloning(s) &&
+          s.ownerDocument.defaultView !== window.top
+        ) {
           // If a style is moved in Edge with an `@import` and there's a <link> in the page,
           // and the style is in an iframe, the style won't fire a load event.
           s['__loaded'] = true;
@@ -552,10 +601,11 @@
      * Fires load/error events for imports in the right order .
      */
     fireEvents() {
-      const n$ = /** @type {!NodeList<!HTMLLinkElement>} */
+      const n$ =
+        /** @type {!NodeList<!HTMLLinkElement>} */
         (QSA(document, importSelector));
       // Inverse order to have events firing bottom-up.
-      forEach(n$, n => this.fireEventIfNeeded(n), true);
+      forEach(n$, (n) => this.fireEventIfNeeded(n), true);
     }
 
     /**
@@ -569,11 +619,13 @@
         // Update link's import readyState.
         link.import && (link.import.readyState = 'complete');
         const eventType = link.import ? 'load' : 'error';
-        link.dispatchEvent(newCustomEvent(eventType, {
-          bubbles: false,
-          cancelable: false,
-          detail: undefined
-        }));
+        link.dispatchEvent(
+          newCustomEvent(eventType, {
+            bubbles: false,
+            cancelable: false,
+            detail: undefined,
+          })
+        );
       }
     }
 
@@ -581,16 +633,18 @@
      * @param {Array<MutationRecord>} mutations
      */
     handleMutations(mutations) {
-      forEach(mutations, m => forEach(m.addedNodes, elem => {
-        if (elem && elem.nodeType === Node.ELEMENT_NODE) {
-          // NOTE: added scripts are not updating currentScript in IE.
-          if (isImportLink(elem)) {
-            this.loadImport( /** @type {!HTMLLinkElement} */ (elem));
-          } else {
-            this.loadImports( /** @type {!Element} */ (elem));
+      forEach(mutations, (m) =>
+        forEach(m.addedNodes, (elem) => {
+          if (elem && elem.nodeType === Node.ELEMENT_NODE) {
+            // NOTE: added scripts are not updating currentScript in IE.
+            if (isImportLink(elem)) {
+              this.loadImport(/** @type {!HTMLLinkElement} */ (elem));
+            } else {
+              this.loadImports(/** @type {!Element} */ (elem));
+            }
           }
-        }
-      }));
+        })
+      );
     }
   }
 
@@ -598,9 +652,12 @@
    * @param {!Node} node
    * @return {boolean}
    */
-  const isImportLink = node => {
-    return node.nodeType === Node.ELEMENT_NODE && node.localName === 'link' &&
-      ( /** @type {!HTMLLinkElement} */ (node).rel === 'import');
+  const isImportLink = (node) => {
+    return (
+      node.nodeType === Node.ELEMENT_NODE &&
+      node.localName === 'link' &&
+      /** @type {!HTMLLinkElement} */ (node).rel === 'import'
+    );
   };
 
   /**
@@ -612,16 +669,18 @@
   const whenElementLoaded = (element, callback) => {
     if (element['__loaded']) {
       callback && callback();
-    } else if ((element.localName === 'script' && !element.src) ||
+    } else if (
+      (element.localName === 'script' && !element.src) ||
       (element.localName === 'style' && !element.firstChild) ||
       (element.localName === 'style' &&
-        element.namespaceURI === 'http://www.w3.org/2000/svg')) {
+        element.namespaceURI === 'http://www.w3.org/2000/svg')
+    ) {
       // Inline scripts,empty styles, and styles in <svg> don't trigger
       // load/error events, consider them already loaded.
       element['__loaded'] = true;
       callback && callback();
     } else {
-      const onLoadingDone = event => {
+      const onLoadingDone = (event) => {
         element.removeEventListener(event.type, onLoadingDone);
         element['__loaded'] = true;
         callback && callback();
@@ -635,7 +694,7 @@
         element.addEventListener('error', onLoadingDone);
       }
     }
-  }
+  };
 
   /**
    * Calls the callback when all imports in the document at call time
@@ -643,18 +702,18 @@
    * if imports are already done loading.
    * @param {function()=} callback
    */
-  const whenReady = callback => {
+  const whenReady = (callback) => {
     // 1. ensure the document is in a ready state (has dom), then
     // 2. watch for loading of imports and call callback when done
     whenDocumentReady(() => whenImportsReady(() => callback && callback()));
-  }
+  };
 
   /**
    * Invokes the callback when document is in ready state. Callback is called
    *  synchronously if document is already done loading.
    * @param {!function()} callback
    */
-  const whenDocumentReady = callback => {
+  const whenDocumentReady = (callback) => {
     const stateChanged = () => {
       // NOTE: Firefox can hit readystate interactive without document.body existing.
       // This is anti-spec, but we handle it here anyways by waiting for next change.
@@ -662,37 +721,40 @@
         document.removeEventListener('readystatechange', stateChanged);
         callback();
       }
-    }
+    };
     document.addEventListener('readystatechange', stateChanged);
     stateChanged();
-  }
+  };
 
   /**
    * Invokes the callback after all imports are loaded. Callback is called
    * synchronously if imports are already done loading.
    * @param {!function()} callback
    */
-  const whenImportsReady = callback => {
-    let imports = /** @type {!NodeList<!HTMLLinkElement>} */
+  const whenImportsReady = (callback) => {
+    let imports =
+      /** @type {!NodeList<!HTMLLinkElement>} */
       (QSA(document, rootImportSelector));
     let pending = imports.length;
     if (!pending) {
       callback();
       return;
     }
-    forEach(imports, imp => whenElementLoaded(imp, () => {
-      if (--pending === 0) {
-        callback();
-      }
-    }));
-  }
+    forEach(imports, (imp) =>
+      whenElementLoaded(imp, () => {
+        if (--pending === 0) {
+          callback();
+        }
+      })
+    );
+  };
 
   /**
    * Returns the import document containing the element.
    * @param {!Node} element
    * @return {HTMLLinkElement|Document|undefined}
    */
-  const importForElement = element => {
+  const importForElement = (element) => {
     if (useNative) {
       // Return only if not in the main doc!
       return element.ownerDocument !== document ? element.ownerDocument : null;
@@ -712,7 +774,7 @@
       element['__importDoc'] = doc;
     }
     return doc;
-  }
+  };
 
   let importer = null;
   /**
@@ -730,8 +792,15 @@
     if (typeof window.CustomEvent === 'function') {
       return new CustomEvent(type, params);
     }
-    const event = /** @type {!CustomEvent} */ (document.createEvent('CustomEvent'));
-    event.initCustomEvent(type, Boolean(params.bubbles), Boolean(params.cancelable), params.detail);
+    const event = /** @type {!CustomEvent} */ (document.createEvent(
+      'CustomEvent'
+    ));
+    event.initCustomEvent(
+      type,
+      Boolean(params.bubbles),
+      Boolean(params.cancelable),
+      params.detail
+    );
     return event;
   };
 
@@ -740,9 +809,10 @@
     // script is actually executed. Native imports are blocking, so the ones
     // available in the document by this time should already have failed
     // or have .import defined.
-    const imps = /** @type {!NodeList<!HTMLLinkElement>} */
+    const imps =
+      /** @type {!NodeList<!HTMLLinkElement>} */
       (QSA(document, importSelector));
-    forEach(imps, imp => {
+    forEach(imps, (imp) => {
       if (!imp.import || imp.import.readyState !== 'loading') {
         imp['__loaded'] = true;
       }
@@ -751,35 +821,47 @@
     /**
      * @type {!function(!Event)}
      */
-    const onLoadingDone = event => {
+    const onLoadingDone = (event) => {
       const elem = /** @type {!Element} */ (event.target);
       if (isImportLink(elem)) {
         elem['__loaded'] = true;
       }
     };
-    document.addEventListener('load', onLoadingDone, true /* useCapture */ );
-    document.addEventListener('error', onLoadingDone, true /* useCapture */ );
+    document.addEventListener('load', onLoadingDone, true /* useCapture */);
+    document.addEventListener('error', onLoadingDone, true /* useCapture */);
   } else {
     // Override baseURI so that imported elements' baseURI can be used seemlessly
     // on native or polyfilled html-imports.
     // NOTE: a <link rel=import> will have `link.baseURI === link.href`, as the link
     // itself is used as the `import` document.
     /** @type {Object|undefined} */
-    const native_baseURI = Object.getOwnPropertyDescriptor(Node.prototype, 'baseURI');
+    const native_baseURI = Object.getOwnPropertyDescriptor(
+      Node.prototype,
+      'baseURI'
+    );
     // NOTE: if not configurable (e.g. safari9), set it on the Element prototype.
-    const klass = !native_baseURI || native_baseURI.configurable ? Node : Element;
+    const klass =
+      !native_baseURI || native_baseURI.configurable ? Node : Element;
     Object.defineProperty(klass.prototype, 'baseURI', {
       get() {
-        const ownerDoc = /** @type {HTMLLinkElement} */ (isImportLink(this) ? this : importForElement(this));
-        if (ownerDoc) {return ownerDoc.href;}
+        const ownerDoc = /** @type {HTMLLinkElement} */ (isImportLink(this)
+          ? this
+          : importForElement(this));
+        if (ownerDoc) {
+          return ownerDoc.href;
+        }
         // Use native baseURI if possible.
-        if (native_baseURI && native_baseURI.get) {return native_baseURI.get.call(this);}
+        if (native_baseURI && native_baseURI.get) {
+          return native_baseURI.get.call(this);
+        }
         // Polyfill it if not available.
-        const base = /** @type {HTMLBaseElement} */ (document.querySelector('base'));
+        const base = /** @type {HTMLBaseElement} */ (document.querySelector(
+          'base'
+        ));
         return (base || window.location).href;
       },
       configurable: true,
-      enumerable: true
+      enumerable: true,
     });
 
     // Define 'import' read-only property.
@@ -788,11 +870,11 @@
         return /** @type {HTMLLinkElement} */ (this)['__import'] || null;
       },
       configurable: true,
-      enumerable: true
+      enumerable: true,
     });
 
     whenDocumentReady(() => {
-      importer = new Importer()
+      importer = new Importer();
     });
   }
 
@@ -807,16 +889,19 @@
     Therefore, if this file is loaded, the same code can be used under both
     the polyfill and native implementation.
    */
-  whenReady(() => document.dispatchEvent(newCustomEvent('HTMLImportsLoaded', {
-    cancelable: true,
-    bubbles: true,
-    detail: undefined
-  })));
+  whenReady(() =>
+    document.dispatchEvent(
+      newCustomEvent('HTMLImportsLoaded', {
+        cancelable: true,
+        bubbles: true,
+        detail: undefined,
+      })
+    )
+  );
 
   // exports
   scope.useNative = useNative;
   scope.whenReady = whenReady;
   scope.importForElement = importForElement;
   scope.loadImports = loadImports;
-
-})(window.HTMLImports = (window.HTMLImports || {}));
+})((window.HTMLImports = window.HTMLImports || {}));

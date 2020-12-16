@@ -15,14 +15,18 @@ type Constructor<T> = new (...args: Array<any>) => T;
 
 const nativeInsertBefore = Node.prototype.insertBefore;
 const nativeGetParentNode =
-    Object.getOwnPropertyDescriptor(Node.prototype, 'parentNode')?.get ??
-    // In Safari 9, the `parentNode` descriptor's `get` and `set` are undefined.
-    function(this: Node) { return this.parentNode; };
+  Object.getOwnPropertyDescriptor(Node.prototype, 'parentNode')?.get ??
+  // In Safari 9, the `parentNode` descriptor's `get` and `set` are undefined.
+  function (this: Node) {
+    return this.parentNode;
+  };
 const nativeGetNextSibling =
-    Object.getOwnPropertyDescriptor(Node.prototype, 'nextSibling')?.get ??
-    // In Safari 9, the `nextSibling` descriptor's `get` and `set` are
-    // undefined.
-    function(this: Node) { return this.nextSibling; };
+  Object.getOwnPropertyDescriptor(Node.prototype, 'nextSibling')?.get ??
+  // In Safari 9, the `nextSibling` descriptor's `get` and `set` are
+  // undefined.
+  function (this: Node) {
+    return this.nextSibling;
+  };
 
 const installAfter = <T>(constructor: Constructor<T>) => {
   const prototype = constructor.prototype;
@@ -34,7 +38,7 @@ const installAfter = <T>(constructor: Constructor<T>) => {
     configurable: true,
     enumerable: true,
     writable: true,
-    value: function after(...args: Array<Node|string>) {
+    value: function after(...args: Array<Node | string>) {
       const parentNode = nativeGetParentNode.call(this);
       if (parentNode === null) {
         return;
@@ -48,7 +52,7 @@ const installAfter = <T>(constructor: Constructor<T>) => {
           nextSibling
         );
       }
-    }
+    },
   });
 };
 

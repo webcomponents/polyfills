@@ -18,7 +18,10 @@ export const ChildNodePatches = utils.getOwnPropertyDescriptors({
       return;
     }
     const nextSibling = this[utils.SHADY_PREFIX + 'nextSibling'];
-    parentNode[utils.SHADY_PREFIX + 'insertBefore'](utils.convertNodesIntoANode(...args), nextSibling);
+    parentNode[utils.SHADY_PREFIX + 'insertBefore'](
+      utils.convertNodesIntoANode(...args),
+      nextSibling
+    );
   },
 
   /** @this {Element} */
@@ -27,7 +30,10 @@ export const ChildNodePatches = utils.getOwnPropertyDescriptors({
     if (parentNode === null) {
       return;
     }
-    parentNode[utils.SHADY_PREFIX + 'insertBefore'](utils.convertNodesIntoANode(...args), this);
+    parentNode[utils.SHADY_PREFIX + 'insertBefore'](
+      utils.convertNodesIntoANode(...args),
+      this
+    );
   },
 
   /** @this {Element} */
@@ -47,6 +53,9 @@ export const ChildNodePatches = utils.getOwnPropertyDescriptors({
     }
     const nextSibling = this[utils.SHADY_PREFIX + 'nextSibling'];
     parentNode[utils.SHADY_PREFIX + 'removeChild'](this);
-    parentNode[utils.SHADY_PREFIX + 'insertBefore'](utils.convertNodesIntoANode(...args), nextSibling);
+    parentNode[utils.SHADY_PREFIX + 'insertBefore'](
+      utils.convertNodesIntoANode(...args),
+      nextSibling
+    );
   },
 });

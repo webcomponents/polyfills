@@ -17,10 +17,12 @@ import PatchChildNode from './Interface/ChildNode.js';
 import PatchParentNode from './Interface/ParentNode.js';
 import * as Native from './Native.js';
 
-export default function(internals: CustomElementInternals) {
+export default function (internals: CustomElementInternals) {
   if (Native.Element_attachShadow) {
-    Element.prototype.attachShadow = function(
-        this: Element, init: ShadowRootInit) {
+    Element.prototype.attachShadow = function (
+      this: Element,
+      init: ShadowRootInit
+    ) {
       const shadowRoot = Native.Element_attachShadow.call(this, init);
       internals.patchNode(shadowRoot);
       this.__CE_shadowRoot = shadowRoot;
@@ -28,14 +30,15 @@ export default function(internals: CustomElementInternals) {
     };
   }
 
-
   function patch_innerHTML(
-      destination: Element, baseDescriptor: PropertyDescriptor) {
+    destination: Element,
+    baseDescriptor: PropertyDescriptor
+  ) {
     Object.defineProperty(destination, 'innerHTML', {
       enumerable: baseDescriptor.enumerable,
       configurable: true,
       get: baseDescriptor.get,
-      set: function(this: Element, htmlString) {
+      set: function (this: Element, htmlString) {
         const isConnected = Utilities.isConnected(this);
 
         // NOTE: In IE11, when using the native `innerHTML` setter, all nodes
@@ -43,10 +46,10 @@ export default function(internals: CustomElementInternals) {
         // their children removed as part of the set - the entire subtree is
         // 'disassembled'. This work around walks the subtree *before* using the
         // native setter.
-        let removedElements: undefined|Array<Element> = undefined;
+        let removedElements: undefined | Array<Element> = undefined;
         if (isConnected) {
           removedElements = [];
-          internals.forEachElement(this, element => {
+          internals.forEachElement(this, (element) => {
             if (element !== this) {
               removedElements!.push(element);
             }
@@ -81,36 +84,40 @@ export default function(internals: CustomElementInternals) {
   } else if (Native.HTMLElement_innerHTML && Native.HTMLElement_innerHTML.get) {
     patch_innerHTML(HTMLElement.prototype, Native.HTMLElement_innerHTML);
   } else {
-    internals.addElementPatch(function(element) {
+    internals.addElementPatch(function (element) {
       patch_innerHTML(element, {
         enumerable: true,
         configurable: true,
         // Implements getting `innerHTML` by performing an unpatched `cloneNode`
         // of the element and returning the resulting element's `innerHTML`.
         // TODO: Is this too expensive?
-        get: function(this: Element) {
+        get: function (this: Element) {
           return (Native.Node_cloneNode.call(this, true) as Element).innerHTML;
         },
         // Implements setting `innerHTML` by creating an unpatched element,
         // setting `innerHTML` of that element and replacing the target
         // element's children with those of the unpatched element.
-        set: function(this: Element, assignedValue) {
+        set: function (this: Element, assignedValue) {
           // NOTE: re-route to `content` for `template` elements.
           // We need to do this because `template.appendChild` does not
           // route into `template.content`.
-          const isTemplate = (this.localName === 'template');
-          const content =
-              isTemplate ? ((this) as HTMLTemplateElement).content : this;
+          const isTemplate = this.localName === 'template';
+          const content = isTemplate
+            ? (this as HTMLTemplateElement).content
+            : this;
           const rawElement = Native.Document_createElementNS.call(
-              document, this.namespaceURI, this.localName);
+            document,
+            this.namespaceURI,
+            this.localName
+          );
           rawElement.innerHTML = assignedValue;
 
           while (content.childNodes.length > 0) {
             Native.Node_removeChild.call(content, content.childNodes[0]);
           }
-          const container = isTemplate ?
-              (rawElement as HTMLTemplateElement).content :
-              rawElement;
+          const container = isTemplate
+            ? (rawElement as HTMLTemplateElement).content
+            : rawElement;
           while (container.childNodes.length > 0) {
             Native.Node_appendChild.call(content, container.childNodes[0]);
           }
@@ -119,8 +126,7 @@ export default function(internals: CustomElementInternals) {
     });
   }
 
-
-  Element.prototype.setAttribute = function(this: Element, name, newValue) {
+  Element.prototype.setAttribute = function (this: Element, name, newValue) {
     // Fast path for non-custom elements.
     if (this.__CE_state !== CEState.custom) {
       return Native.Element_setAttribute.call(this, name, newValue);
@@ -132,22 +138,35 @@ export default function(internals: CustomElementInternals) {
     internals.attributeChangedCallback(this, name, oldValue, newValue, null);
   };
 
-  Element.prototype.setAttributeNS = function(
-      this: Element, namespace, name, newValue) {
+  Element.prototype.setAttributeNS = function (
+    this: Element,
+    namespace,
+    name,
+    newValue
+  ) {
     // Fast path for non-custom elements.
     if (this.__CE_state !== CEState.custom) {
       return Native.Element_setAttributeNS.call(
-          this, namespace, name, newValue);
+        this,
+        namespace,
+        name,
+        newValue
+      );
     }
 
     const oldValue = Native.Element_getAttributeNS.call(this, namespace, name);
     Native.Element_setAttributeNS.call(this, namespace, name, newValue);
     newValue = Native.Element_getAttributeNS.call(this, namespace, name)!;
     internals.attributeChangedCallback(
-        this, name, oldValue, newValue, namespace);
+      this,
+      name,
+      oldValue,
+      newValue,
+      namespace
+    );
   };
 
-  Element.prototype.removeAttribute = function(this: Element, name) {
+  Element.prototype.removeAttribute = function (this: Element, name) {
     // Fast path for non-custom elements.
     if (this.__CE_state !== CEState.custom) {
       return Native.Element_removeAttribute.call(this, name);
@@ -160,8 +179,11 @@ export default function(internals: CustomElementInternals) {
     }
   };
 
-  Element.prototype.removeAttributeNS = function(
-      this: Element, namespace, name) {
+  Element.prototype.removeAttributeNS = function (
+    this: Element,
+    namespace,
+    name
+  ) {
     // Fast path for non-custom elements.
     if (this.__CE_state !== CEState.custom) {
       return Native.Element_removeAttributeNS.call(this, namespace, name);
@@ -175,15 +197,24 @@ export default function(internals: CustomElementInternals) {
     const newValue = Native.Element_getAttributeNS.call(this, namespace, name);
     if (oldValue !== newValue) {
       internals.attributeChangedCallback(
-          this, name, oldValue, newValue, namespace);
+        this,
+        name,
+        oldValue,
+        newValue,
+        namespace
+      );
     }
   };
 
-
   function patch_insertAdjacentElement(
-      destination: Element, baseMethod: Element['insertAdjacentElement']) {
-    destination.insertAdjacentElement = function(
-        this: Element, position, element) {
+    destination: Element,
+    baseMethod: Element['insertAdjacentElement']
+  ) {
+    destination.insertAdjacentElement = function (
+      this: Element,
+      position,
+      element
+    ) {
       const wasConnected = Utilities.isConnected(element);
       const insertedElement = baseMethod.call(this, position, element)!;
 
@@ -200,21 +231,26 @@ export default function(internals: CustomElementInternals) {
 
   if (Native.HTMLElement_insertAdjacentElement) {
     patch_insertAdjacentElement(
-        HTMLElement.prototype, Native.HTMLElement_insertAdjacentElement);
+      HTMLElement.prototype,
+      Native.HTMLElement_insertAdjacentElement
+    );
   } else if (Native.Element_insertAdjacentElement) {
     patch_insertAdjacentElement(
-        Element.prototype, Native.Element_insertAdjacentElement);
+      Element.prototype,
+      Native.Element_insertAdjacentElement
+    );
   }
 
-
   function patch_insertAdjacentHTML(
-      destination: Element, baseMethod: Element['insertAdjacentHTML']) {
+    destination: Element,
+    baseMethod: Element['insertAdjacentHTML']
+  ) {
     /**
      * Patches and upgrades all nodes which are siblings between `start`
      * (inclusive) and `end` (exclusive). If `end` is `null`, then all siblings
      * following `start` will be patched and upgraded.
      */
-    function upgradeNodesInRange(start: Node, end: Node|null) {
+    function upgradeNodesInRange(start: Node, end: Node | null) {
       const nodes = [];
       for (let node: Node = start; node !== end; node = node.nextSibling!) {
         nodes.push(node);
@@ -224,7 +260,7 @@ export default function(internals: CustomElementInternals) {
       }
     }
 
-    destination.insertAdjacentHTML = function(this: Element, position, text) {
+    destination.insertAdjacentHTML = function (this: Element, position, text) {
       const strPosition = position.toLowerCase();
 
       if (strPosition === 'beforebegin') {
@@ -245,20 +281,24 @@ export default function(internals: CustomElementInternals) {
         upgradeNodesInRange(this.nextSibling!, marker);
       } else {
         throw new SyntaxError(
-            `The value provided (${String(strPosition)}) is ` +
-            'not one of \'beforebegin\', \'afterbegin\', \'beforeend\', or \'afterend\'.');
+          `The value provided (${String(strPosition)}) is ` +
+            "not one of 'beforebegin', 'afterbegin', 'beforeend', or 'afterend'."
+        );
       }
     };
   }
 
   if (Native.HTMLElement_insertAdjacentHTML) {
     patch_insertAdjacentHTML(
-        HTMLElement.prototype, Native.HTMLElement_insertAdjacentHTML);
+      HTMLElement.prototype,
+      Native.HTMLElement_insertAdjacentHTML
+    );
   } else if (Native.Element_insertAdjacentHTML) {
     patch_insertAdjacentHTML(
-        Element.prototype, Native.Element_insertAdjacentHTML);
+      Element.prototype,
+      Native.Element_insertAdjacentHTML
+    );
   }
-
 
   PatchParentNode(internals, Element.prototype, {
     prepend: Native.Element_prepend,

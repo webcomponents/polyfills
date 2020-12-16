@@ -9,12 +9,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 -->
 <x-foo></x-foo>
 <script>
-(function() {
-  class XFoo extends HTMLElement {
-    connectedCallback() {
-      this.isCreated = true;
+  (function () {
+    class XFoo extends HTMLElement {
+      connectedCallback() {
+        this.isCreated = true;
+      }
     }
-  }
-  window.customElements.define('x-foo', XFoo);
-})();
+    window.customElements.define('x-foo', XFoo);
+  })();
 </script>

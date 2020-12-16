@@ -11,4 +11,4 @@ window.WCT = {
   ],
   environmentImports: [],
   // verbose: true
-}
+};

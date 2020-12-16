@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <!--
 @license
 Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
@@ -11,17 +11,26 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <html>
   <head>
     <title></title>
-    <meta charset="UTF-8">
-    <script src="../node_modules/@webcomponents/webcomponentsjs/webcomponents-bundle.js" log="foo,boo" squid="never" spoo></script>
+    <meta charset="UTF-8" />
+    <script
+      src="../node_modules/@webcomponents/webcomponentsjs/webcomponents-bundle.js"
+      log="foo,boo"
+      squid="never"
+      spoo
+    ></script>
     <script src="./wct-config.js"></script>
     <script src="../node_modules/wct-browser-legacy/browser.js"></script>
   </head>
   <body>
     <script>
-      suite('Development Loader', function() {
-        test('loader', function() {
+      suite('Development Loader', function () {
+        test('loader', function () {
           assert(window.WebComponents, 'WebComponents scope missing');
-          assert.equal(WebComponents.flags.squid, 'never', '"squid" flag missing');
+          assert.equal(
+            WebComponents.flags.squid,
+            'never',
+            '"squid" flag missing'
+          );
           assert(WebComponents.flags.spoo, '"spoo" flag missing');
           assert(WebComponents.flags.log, 'flags.log missing');
           assert(WebComponents.flags.log.foo, 'flags.log.foo missing');

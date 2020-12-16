@@ -12,9 +12,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <head>
     <meta charset="utf-8" />
     <script>
-      if (window.customElements) {window.customElements.forcePolyfill = true;}
-      ShadyDOM = { force: true };
-      ShadyCSS = { shimcssproperties: true };
+      if (window.customElements) {
+        window.customElements.forcePolyfill = true;
+      }
+      ShadyDOM = {force: true};
+      ShadyCSS = {shimcssproperties: true};
     </script>
     <script src="../node_modules/wct-browser-legacy/browser.js"></script>
     <script src="../node_modules/@webcomponents/webcomponentsjs/webcomponents-bundle.js"></script>
@@ -22,10 +24,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   </head>
   <body>
     <script type="module">
-      import * as shadyCss from "../node_modules/@webcomponents/shadycss/src/interface.js";
-      import "../node_modules/@webcomponents/shadycss/entrypoints/custom-style-interface.js";
+      import * as shadyCss from '../node_modules/@webcomponents/shadycss/src/interface.js';
+      import '../node_modules/@webcomponents/shadycss/entrypoints/custom-style-interface.js';
 
-      const template = document.createElement("template");
+      const template = document.createElement('template');
       template.innerHTML = `
 <style>
   :host {
@@ -39,12 +41,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 Hello!
 `;
 
-      shadyCss.prepareTemplate(template, "test-element");
+      shadyCss.prepareTemplate(template, 'test-element');
 
       class TestElement extends HTMLElement {
         constructor() {
           super();
-          this.attachShadow({ mode: "open" });
+          this.attachShadow({mode: 'open'});
         }
 
         connectedCallback() {
@@ -53,18 +55,18 @@ Hello!
         }
       }
 
-      customElements.define("test-element", TestElement);
+      customElements.define('test-element', TestElement);
 
-      const black = "rgb(0, 0, 0)";
-      const red = "rgb(255, 0, 0)";
-      const green = "rgb(0, 128, 0)";
-      const blue = "rgb(0, 0, 255)";
+      const black = 'rgb(0, 0, 0)';
+      const red = 'rgb(255, 0, 0)';
+      const green = 'rgb(0, 128, 0)';
+      const blue = 'rgb(0, 0, 255)';
 
-      suite("interface", function () {
+      suite('interface', function () {
         let el;
 
         setup(() => {
-          el = document.createElement("test-element");
+          el = document.createElement('test-element');
           document.body.appendChild(el);
         });
 
@@ -72,20 +74,21 @@ Hello!
           document.body.removeChild(el);
         });
 
-        test("prepareTemplate and styleElement", () => {
+        test('prepareTemplate and styleElement', () => {
           assert.equal(window.getComputedStyle(el).color, red);
         });
 
-        test("styleSubtree", () => {
+        test('styleSubtree', () => {
           assert.equal(window.getComputedStyle(el).color, red);
-          shadyCss.styleSubtree(el, { "--custom-color": "green" });
+          shadyCss.styleSubtree(el, {'--custom-color': 'green'});
           assert.equal(window.getComputedStyle(el).color, green);
         });
 
-        test("styleSubtree(document.documentElement)", () => {
+        test('styleSubtree(document.documentElement)', () => {
           assert.equal(window.getComputedStyle(el).backgroundColor, black);
-          shadyCss.styleSubtree(
-              document.documentElement, { "--custom-background-color": "blue" });
+          shadyCss.styleSubtree(document.documentElement, {
+            '--custom-background-color': 'blue',
+          });
           assert.equal(window.getComputedStyle(el).backgroundColor, blue);
         });
       });

@@ -12,7 +12,6 @@ import * as utils from './utils.js';
 import {ensureShadyDataForNode} from './shady-data.js';
 
 export const InsideDescriptors = utils.getOwnPropertyDescriptors({
-
   /** @this {Node} */
   get childNodes() {
     return this[utils.SHADY_PREFIX + 'childNodes'];
@@ -52,7 +51,6 @@ export const InsideDescriptors = utils.getOwnPropertyDescriptors({
   get shadowRoot() {
     return this[utils.SHADY_PREFIX + 'shadowRoot'];
   },
-
 });
 
 export const TextContentInnerHTMLDescriptors = utils.getOwnPropertyDescriptors({
@@ -78,7 +76,6 @@ export const TextContentInnerHTMLDescriptors = utils.getOwnPropertyDescriptors({
 });
 
 export const OutsideDescriptors = utils.getOwnPropertyDescriptors({
-
   /** @this {Node} */
   get parentElement() {
     return this[utils.SHADY_PREFIX + 'parentElement'];
@@ -117,8 +114,7 @@ export const OutsideDescriptors = utils.getOwnPropertyDescriptors({
   /** @this {Node} */
   set className(value) {
     this[utils.SHADY_PREFIX + 'className'] = value;
-  }
-
+  },
 });
 
 const makeNonEnumerable = (descriptors) => {
@@ -131,46 +127,52 @@ const makeNonEnumerable = (descriptors) => {
       descriptor.enumerable = false;
     }
   }
-}
+};
 
 makeNonEnumerable(InsideDescriptors);
 makeNonEnumerable(TextContentInnerHTMLDescriptors);
 makeNonEnumerable(OutsideDescriptors);
 
-const noInstancePatching = utils.settings.hasDescriptors || (utils.settings.noPatch === true);
+const noInstancePatching =
+  utils.settings.hasDescriptors || utils.settings.noPatch === true;
 
 // ensure an element has patched "outside" accessors; no-op when not needed
-export let patchOutsideElementAccessors = noInstancePatching ?
-  function() {} : function(element) {
-    const sd = ensureShadyDataForNode(element);
-    if (!sd.__outsideAccessors) {
-      sd.__outsideAccessors = true;
-      utils.patchExistingProperties(element, OutsideDescriptors);
-    }
-  }
+export let patchOutsideElementAccessors = noInstancePatching
+  ? function () {}
+  : function (element) {
+      const sd = ensureShadyDataForNode(element);
+      if (!sd.__outsideAccessors) {
+        sd.__outsideAccessors = true;
+        utils.patchExistingProperties(element, OutsideDescriptors);
+      }
+    };
 
 // ensure an element has patched "inside" accessors; no-op when not needed
-export let patchInsideElementAccessors = noInstancePatching ?
-  function() {} : function(element) {
-    const sd = ensureShadyDataForNode(element);
-    if (!sd.__insideAccessors) {
-      sd.__insideAccessors = true;
-      utils.patchExistingProperties(element, InsideDescriptors);
-      // NOTE: There are compatibility issues with patches for `textContent`
-      // and `innerHTML` between CE and SD. Since SD patches are applied
-      // via `ShadyDOM.patch` and CE patches are applied as the tree is walked,
-      // SD patches overwrite CE patches.
-      // * When SD is in patching mode, SD calls through to native
-      // methods not patched by CE (since SD is at the bottom) and CE does not
-      // upgrade, connect, or disconnect elements. Therefore do *not patch*
-      // these accessors in this case.
-      // * When SD is in `noPatch` mode, the SD patches call through to
-      // "native" methods that are patched by CE (since CE is at the bottom).
-      // Therefore continue to patch in this case.
-      // If the custom elements polyfill is not loaded, then these accessors
-      // should be patched so they work correctly.
-      if (!utils.hasPolyfilledCustomElements() || utils.settings.noPatch) {
-        utils.patchExistingProperties(element, TextContentInnerHTMLDescriptors);
+export let patchInsideElementAccessors = noInstancePatching
+  ? function () {}
+  : function (element) {
+      const sd = ensureShadyDataForNode(element);
+      if (!sd.__insideAccessors) {
+        sd.__insideAccessors = true;
+        utils.patchExistingProperties(element, InsideDescriptors);
+        // NOTE: There are compatibility issues with patches for `textContent`
+        // and `innerHTML` between CE and SD. Since SD patches are applied
+        // via `ShadyDOM.patch` and CE patches are applied as the tree is walked,
+        // SD patches overwrite CE patches.
+        // * When SD is in patching mode, SD calls through to native
+        // methods not patched by CE (since SD is at the bottom) and CE does not
+        // upgrade, connect, or disconnect elements. Therefore do *not patch*
+        // these accessors in this case.
+        // * When SD is in `noPatch` mode, the SD patches call through to
+        // "native" methods that are patched by CE (since CE is at the bottom).
+        // Therefore continue to patch in this case.
+        // If the custom elements polyfill is not loaded, then these accessors
+        // should be patched so they work correctly.
+        if (!utils.hasPolyfilledCustomElements() || utils.settings.noPatch) {
+          utils.patchExistingProperties(
+            element,
+            TextContentInnerHTMLDescriptors
+          );
+        }
       }
-    }
-  }
+    };

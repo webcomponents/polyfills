@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <!--
     @license
     Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
@@ -12,7 +12,8 @@
   <head>
     <title>Template polyfill integration</title>
     <script>
-      (window.customElements = window.customElements || {}).forcePolyfill = true;
+      (window.customElements =
+        window.customElements || {}).forcePolyfill = true;
       ShadyDOM = {force: true};
     </script>
     <script src="../../node_modules/@webcomponents/webcomponentsjs/bundles/webcomponents-pf_js.js"></script>
@@ -27,20 +28,27 @@
       import {safariGCBugWorkaround} from '../safari-gc-bug-workaround.js';
       suiteSetup(() => safariGCBugWorkaround());
 
-      suite('Template polyfill integration', function() {
-        test('defined custom elements do not upgrade when setting innerHTML of a template', function() {
+      suite('Template polyfill integration', function () {
+        test('defined custom elements do not upgrade when setting innerHTML of a template', function () {
           let upgraded = false;
 
-          customElements.define('inside-template-content', class extends HTMLElement {
-            constructor() {
-              super();
-              upgraded = true;
+          customElements.define(
+            'inside-template-content',
+            class extends HTMLElement {
+              constructor() {
+                super();
+                upgraded = true;
+              }
             }
-          });
+          );
 
           const template = document.createElement('template');
-          template.innerHTML = '<inside-template-content></inside-template-content>';
-          assert(!upgraded, 'A defined element in the HTML string was upgraded.');
+          template.innerHTML =
+            '<inside-template-content></inside-template-content>';
+          assert(
+            !upgraded,
+            'A defined element in the HTML string was upgraded.'
+          );
         });
       });
     </script>

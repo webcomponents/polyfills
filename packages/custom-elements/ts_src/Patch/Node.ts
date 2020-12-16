@@ -14,12 +14,15 @@ import * as Utilities from '../Utilities.js';
 
 import * as Native from './Native.js';
 
-export default function(internals: CustomElementInternals) {
+export default function (internals: CustomElementInternals) {
   // `Node#nodeValue` is implemented on `Attr`.
   // `Node#textContent` is implemented on `Attr`, `Element`.
 
-  Node.prototype.insertBefore = function<T extends Node>(
-      this: Node, node: T, refNode: Node|null) {
+  Node.prototype.insertBefore = function <T extends Node>(
+    this: Node,
+    node: T,
+    refNode: Node | null
+  ) {
     if (node instanceof DocumentFragment) {
       const insertedNodes = Utilities.childrenFromFragment(node);
       const nativeResult = Native.Node_insertBefore.call(this, node, refNode);
@@ -37,9 +40,12 @@ export default function(internals: CustomElementInternals) {
     }
 
     const nodeWasConnectedElement =
-        node instanceof Element && Utilities.isConnected(node);
-    const nativeResult =
-        Native.Node_insertBefore.call(this, node, refNode) as T;
+      node instanceof Element && Utilities.isConnected(node);
+    const nativeResult = Native.Node_insertBefore.call(
+      this,
+      node,
+      refNode
+    ) as T;
 
     if (nodeWasConnectedElement) {
       internals.disconnectTree(node);
@@ -52,7 +58,7 @@ export default function(internals: CustomElementInternals) {
     return nativeResult;
   };
 
-  Node.prototype.appendChild = function<T extends Node>(this: Node, node: T) {
+  Node.prototype.appendChild = function <T extends Node>(this: Node, node: T) {
     if (node instanceof DocumentFragment) {
       const insertedNodes = Utilities.childrenFromFragment(node);
       const nativeResult = Native.Node_appendChild.call(this, node) as T;
@@ -70,7 +76,7 @@ export default function(internals: CustomElementInternals) {
     }
 
     const nodeWasConnectedElement =
-        node instanceof Element && Utilities.isConnected(node);
+      node instanceof Element && Utilities.isConnected(node);
     const nativeResult = Native.Node_appendChild.call(this, node) as T;
 
     if (nodeWasConnectedElement) {
@@ -84,7 +90,7 @@ export default function(internals: CustomElementInternals) {
     return nativeResult;
   };
 
-  Node.prototype.cloneNode = function(this: Node, deep) {
+  Node.prototype.cloneNode = function (this: Node, deep) {
     const clone = Native.Node_cloneNode.call(this, !!deep);
     // Only create custom elements if this element's owner document is
     // associated with the registry.
@@ -96,9 +102,9 @@ export default function(internals: CustomElementInternals) {
     return clone;
   };
 
-  Node.prototype.removeChild = function<T extends Node>(this: Node, node: T) {
+  Node.prototype.removeChild = function <T extends Node>(this: Node, node: T) {
     const nodeWasConnectedElement =
-        node instanceof Element && Utilities.isConnected(node);
+      node instanceof Element && Utilities.isConnected(node);
     const nativeResult = Native.Node_removeChild.call(this, node) as T;
 
     if (nodeWasConnectedElement) {
@@ -108,12 +114,18 @@ export default function(internals: CustomElementInternals) {
     return nativeResult;
   };
 
-  Node.prototype.replaceChild = function<T extends Node>(
-      this: Node, nodeToInsert: Node, nodeToRemove: T) {
+  Node.prototype.replaceChild = function <T extends Node>(
+    this: Node,
+    nodeToInsert: Node,
+    nodeToRemove: T
+  ) {
     if (nodeToInsert instanceof DocumentFragment) {
       const insertedNodes = Utilities.childrenFromFragment(nodeToInsert);
-      const nativeResult =
-          Native.Node_replaceChild.call(this, nodeToInsert, nodeToRemove) as T;
+      const nativeResult = Native.Node_replaceChild.call(
+        this,
+        nodeToInsert,
+        nodeToRemove
+      ) as T;
 
       // DocumentFragments can't be connected, so `disconnectTree` will never
       // need to be called on a DocumentFragment's children after inserting it.
@@ -129,9 +141,12 @@ export default function(internals: CustomElementInternals) {
     }
 
     const nodeToInsertWasConnectedElement =
-        nodeToInsert instanceof Element && Utilities.isConnected(nodeToInsert);
-    const nativeResult =
-        Native.Node_replaceChild.call(this, nodeToInsert, nodeToRemove) as T;
+      nodeToInsert instanceof Element && Utilities.isConnected(nodeToInsert);
+    const nativeResult = Native.Node_replaceChild.call(
+      this,
+      nodeToInsert,
+      nodeToRemove
+    ) as T;
     const thisIsConnected = Utilities.isConnected(this);
 
     if (thisIsConnected) {
@@ -149,14 +164,15 @@ export default function(internals: CustomElementInternals) {
     return nativeResult;
   };
 
-
   function patch_textContent(
-      destination: Node, baseDescriptor: PropertyDescriptor) {
+    destination: Node,
+    baseDescriptor: PropertyDescriptor
+  ) {
     Object.defineProperty(destination, 'textContent', {
       enumerable: baseDescriptor.enumerable,
       configurable: true,
       get: baseDescriptor.get,
-      set: function(this: Node, assignedValue) {
+      set: function (this: Node, assignedValue) {
         // If this is a text node then there are no nodes to disconnect.
         if (this.nodeType === Node.TEXT_NODE) {
           baseDescriptor.set!.call(this, assignedValue);
@@ -194,14 +210,14 @@ export default function(internals: CustomElementInternals) {
   if (Native.Node_textContent && Native.Node_textContent.get) {
     patch_textContent(Node.prototype, Native.Node_textContent);
   } else {
-    internals.addNodePatch(function(element) {
+    internals.addNodePatch(function (element) {
       patch_textContent(element, {
         enumerable: true,
         configurable: true,
         // NOTE: This implementation of the `textContent` getter assumes that
         // text nodes' `textContent` getter will not be patched.
-        get: function(this: Node) {
-          const parts: Array<string|null> = [];
+        get: function (this: Node) {
+          const parts: Array<string | null> = [];
 
           for (let n = this.firstChild; n; n = n.nextSibling) {
             if (n.nodeType === Node.COMMENT_NODE) {
@@ -212,7 +228,7 @@ export default function(internals: CustomElementInternals) {
 
           return parts.join('');
         },
-        set: function(this: Node, assignedValue) {
+        set: function (this: Node, assignedValue) {
           while (this.firstChild) {
             Native.Node_removeChild.call(this, this.firstChild);
           }
@@ -220,7 +236,9 @@ export default function(internals: CustomElementInternals) {
           // a TextNode childNode
           if (assignedValue != null && assignedValue !== '') {
             Native.Node_appendChild.call(
-                this, document.createTextNode(assignedValue));
+              this,
+              document.createTextNode(assignedValue)
+            );
           }
         },
       });

@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <!--
 @license
 Copyright (c) 2020 The Polymer Project Authors. All rights reserved. This code
@@ -10,55 +10,60 @@ as part of the polymer project is also subject to an additional IP rights grant
 found at http://polymer.github.io/PATENTS.txt
 -->
 <html>
-<head>
-<script src="../../node_modules/wct-browser-legacy/browser.js"></script>
-</head>
-<body>
-<script>
-suite('Event', () => {
-  let iframe = undefined;
-  let iframeDoc = undefined;
-  let Event = undefined;
-  let FormDataEvent = undefined;
-  let FormData = undefined;
+  <head>
+    <script src="../../node_modules/wct-browser-legacy/browser.js"></script>
+  </head>
+  <body>
+    <script>
+      suite('Event', () => {
+        let iframe = undefined;
+        let iframeDoc = undefined;
+        let Event = undefined;
+        let FormDataEvent = undefined;
+        let FormData = undefined;
 
-  setup(done => {
-    iframe = document.createElement('iframe');
-    iframe.src = '../test_environment.html';
-    iframe.addEventListener('load', function listener() {
-      iframe.removeEventListener('load', listener);
-      iframeDoc = iframe.contentDocument;
-      Event = iframeDoc.defaultView.Event;
-      FormDataEvent = iframeDoc.defaultView.FormDataEvent;
-      FormData = iframeDoc.defaultView.FormData;
-      done();
-    });
-    document.body.appendChild(iframe);
-  });
+        setup((done) => {
+          iframe = document.createElement('iframe');
+          iframe.src = '../test_environment.html';
+          iframe.addEventListener('load', function listener() {
+            iframe.removeEventListener('load', listener);
+            iframeDoc = iframe.contentDocument;
+            Event = iframeDoc.defaultView.Event;
+            FormDataEvent = iframeDoc.defaultView.FormDataEvent;
+            FormData = iframeDoc.defaultView.FormData;
+            done();
+          });
+          document.body.appendChild(iframe);
+        });
 
-  teardown(() => {
-    document.body.removeChild(iframe);
-    iframe = undefined;
-  });
+        teardown(() => {
+          document.body.removeChild(iframe);
+          iframe = undefined;
+        });
 
-  test('Constructing an Event extension results in an instance of the ' +
-      'constructed class.', () => {
-    class SomeEvent extends Event {
-      constructor() {
-        super('some-event');
-        this._x = 123;
-      }
+        test(
+          'Constructing an Event extension results in an instance of the ' +
+            'constructed class.',
+          () => {
+            class SomeEvent extends Event {
+              constructor() {
+                super('some-event');
+                this._x = 123;
+              }
 
-      addToXAndReturn(y) { return this._x + y; }
-    }
+              addToXAndReturn(y) {
+                return this._x + y;
+              }
+            }
 
-    const event = new SomeEvent();
-    assert.instanceOf(event, Event);
-    assert.instanceOf(event, SomeEvent);
+            const event = new SomeEvent();
+            assert.instanceOf(event, Event);
+            assert.instanceOf(event, SomeEvent);
 
-    assert.strictEqual(event.addToXAndReturn(456), 123 + 456);
-  });
-});
-</script>
-</body>
+            assert.strictEqual(event.addToXAndReturn(456), 123 + 456);
+          }
+        );
+      });
+    </script>
+  </body>
 </html>

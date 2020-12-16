@@ -20,12 +20,15 @@ import PatchNode from './Patch/Node.js';
 const priorCustomElements = window['customElements'];
 
 function installPolyfill() {
-  const noDocumentConstructionObserver =
-      !!(priorCustomElements?.['noDocumentConstructionObserver']);
-  const shadyDomFastWalk = !!(priorCustomElements?.['shadyDomFastWalk']);
+  const noDocumentConstructionObserver = !!priorCustomElements?.[
+    'noDocumentConstructionObserver'
+  ];
+  const shadyDomFastWalk = !!priorCustomElements?.['shadyDomFastWalk'];
 
-  const internals = new CustomElementInternals(
-      {noDocumentConstructionObserver, shadyDomFastWalk});
+  const internals = new CustomElementInternals({
+    noDocumentConstructionObserver,
+    shadyDomFastWalk,
+  });
 
   PatchHTMLElement(internals);
   PatchDocument(internals);
@@ -45,9 +48,12 @@ function installPolyfill() {
   });
 }
 
-if (!priorCustomElements || priorCustomElements['forcePolyfill'] ||
-    (typeof priorCustomElements['define'] != 'function') ||
-    (typeof priorCustomElements['get'] != 'function')) {
+if (
+  !priorCustomElements ||
+  priorCustomElements['forcePolyfill'] ||
+  typeof priorCustomElements['define'] != 'function' ||
+  typeof priorCustomElements['get'] != 'function'
+) {
   installPolyfill();
 }
 

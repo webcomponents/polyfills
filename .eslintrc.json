@@ -30,10 +30,7 @@
   },
   "overrides": [
     {
-      "files": [
-        "gulpfile.js",
-        "rollup.config.js"
-      ],
+      "files": ["gulpfile.js", "rollup.config.js"],
       "env": {
         "node": true
       },
@@ -42,9 +39,7 @@
       }
     },
     {
-      "files": [
-        "packages/*/externs/**/*"
-      ],
+      "files": ["packages/*/externs/**/*"],
       "rules": {
         "@typescript-eslint/no-unused-vars": "off"
       }

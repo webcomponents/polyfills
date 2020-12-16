@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <!--
 @license
 Copyright (c) 2020 The Polymer Project Authors. All rights reserved. This code
@@ -10,60 +10,63 @@ as part of the polymer project is also subject to an additional IP rights grant
 found at http://polymer.github.io/PATENTS.txt
 -->
 <html>
-<head>
-<script src="../node_modules/wct-browser-legacy/browser.js"></script>
-</head>
-<body>
-<script>
-suite('FormDataEvent', () => {
-  let iframe = undefined;
-  let iframeDoc = undefined;
-  let Event = undefined;
-  let FormDataEvent = undefined;
-  let FormData = undefined;
+  <head>
+    <script src="../node_modules/wct-browser-legacy/browser.js"></script>
+  </head>
+  <body>
+    <script>
+      suite('FormDataEvent', () => {
+        let iframe = undefined;
+        let iframeDoc = undefined;
+        let Event = undefined;
+        let FormDataEvent = undefined;
+        let FormData = undefined;
 
-  setup(done => {
-    iframe = document.createElement('iframe');
-    iframe.src = './test_environment.html';
-    iframe.addEventListener('load', function listener() {
-      iframe.removeEventListener('load', listener);
-      iframeDoc = iframe.contentDocument;
-      Event = iframeDoc.defaultView.Event;
-      FormDataEvent = iframeDoc.defaultView.FormDataEvent;
-      FormData = iframeDoc.defaultView.FormData;
-      done();
-    });
-    document.body.appendChild(iframe);
-  });
+        setup((done) => {
+          iframe = document.createElement('iframe');
+          iframe.src = './test_environment.html';
+          iframe.addEventListener('load', function listener() {
+            iframe.removeEventListener('load', listener);
+            iframeDoc = iframe.contentDocument;
+            Event = iframeDoc.defaultView.Event;
+            FormDataEvent = iframeDoc.defaultView.FormDataEvent;
+            FormData = iframeDoc.defaultView.FormData;
+            done();
+          });
+          document.body.appendChild(iframe);
+        });
 
-  teardown(() => {
-    document.body.removeChild(iframe);
-    iframe = undefined;
-  });
+        teardown(() => {
+          document.body.removeChild(iframe);
+          iframe = undefined;
+        });
 
-  test('A `FormDataEvent` property is added to `window`.', () => {
-    assert.ok(FormDataEvent);
-  });
+        test('A `FormDataEvent` property is added to `window`.', () => {
+          assert.ok(FormDataEvent);
+        });
 
-  test('FormDataEvent must be constructed with a `formData` option.', () => {
-    assert.throws(() => {
-      new FormDataEvent('formdata');
-    });
+        test('FormDataEvent must be constructed with a `formData` option.', () => {
+          assert.throws(() => {
+            new FormDataEvent('formdata');
+          });
 
-    assert.throws(() => {
-      new FormDataEvent('formdata', {formData: "This isn't a FormData."});
-    });
+          assert.throws(() => {
+            new FormDataEvent('formdata', {formData: "This isn't a FormData."});
+          });
 
-    new FormDataEvent('formdata', {formData: new FormData()});
-  });
+          new FormDataEvent('formdata', {formData: new FormData()});
+        });
 
-  test('FormDataEvent\'s `formData` property returns the FormData used to ' +
-      'construct it.', () => {
-    const formData = new FormData();
-    const event = new FormDataEvent('formdata', {formData});
-    assert.strictEqual(event.formData, formData);
-  });
-});
-</script>
-</body>
+        test(
+          "FormDataEvent's `formData` property returns the FormData used to " +
+            'construct it.',
+          () => {
+            const formData = new FormData();
+            const event = new FormDataEvent('formdata', {formData});
+            assert.strictEqual(event.formData, formData);
+          }
+        );
+      });
+    </script>
+  </body>
 </html>

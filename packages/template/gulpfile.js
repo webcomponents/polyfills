@@ -17,20 +17,23 @@ const sourcemaps = require('gulp-sourcemaps');
 const closureCompiler = compilerPackage.gulp();
 
 gulp.task('default', () => {
-  return gulp.src('./template.js', {base: './'})
+  return gulp
+    .src('./template.js', {base: './'})
     .pipe(sourcemaps.init())
-    .pipe(closureCompiler({
-      compilation_level: 'ADVANCED',
-      warning_level: 'VERBOSE',
-      language_in: 'ECMASCRIPT6_STRICT',
-      language_out: 'ECMASCRIPT5_STRICT',
-      dependency_mode: 'STRICT',
-      entry_point: ['/template'],
-      js_output_file: 'template.min.js',
-      output_wrapper: '(function(){\n%output%\n}).call(self);',
-      assume_function_wrapper: true,
-      rewrite_polyfills: false
-    }))
+    .pipe(
+      closureCompiler({
+        compilation_level: 'ADVANCED',
+        warning_level: 'VERBOSE',
+        language_in: 'ECMASCRIPT6_STRICT',
+        language_out: 'ECMASCRIPT5_STRICT',
+        dependency_mode: 'STRICT',
+        entry_point: ['/template'],
+        js_output_file: 'template.min.js',
+        output_wrapper: '(function(){\n%output%\n}).call(self);',
+        assume_function_wrapper: true,
+        rewrite_polyfills: false,
+      })
+    )
     .pipe(sourcemaps.write('/'))
     .pipe(gulp.dest('./'));
 });

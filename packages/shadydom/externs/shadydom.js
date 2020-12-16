@@ -22,7 +22,7 @@ IWrapper.prototype._activeElement;
 // NOTE: For some reason, Closure likes to remove focus() from the IWrapper
 // class. Not yet clear why focus() is affected and not any other methods (e.g.
 // blur).
-IWrapper.prototype.focus = function() {};
+IWrapper.prototype.focus = function () {};
 
 /** @type {!boolean|undefined} */
 Event.prototype.__composed;
@@ -42,7 +42,7 @@ Event.prototype.__relatedTargetComposedPath;
 /**
  * Prevent renaming of this method on ShadyRoot for testing and debugging.
  */
-ShadowRoot.prototype._renderSelf = function(){};
+ShadowRoot.prototype._renderSelf = function () {};
 
 // Prevent renaming of properties used by Polymer templates with
 // shadyUpgradeFragment optimization

@@ -16,13 +16,17 @@ Then, start a MutationObserver for dynamically added styles.
 
 Caveat: ShadyCSS will add a `scope` attribute to styles it controls, so do not add those styles.
 */
-(function() {
+(function () {
   'use strict';
 
   const CustomStyleInterface = window.ShadyCSS.CustomStyleInterface;
 
   function shouldAddDocumentStyle(n) {
-    return n.nodeType === Node.ELEMENT_NODE && n.localName === 'style' && !n.hasAttribute('scope');
+    return (
+      n.nodeType === Node.ELEMENT_NODE &&
+      n.localName === 'style' &&
+      !n.hasAttribute('scope')
+    );
   }
 
   function handler(mxns) {
@@ -50,5 +54,7 @@ Caveat: ShadyCSS will add a `scope` attribute to styles it controls, so do not a
     observer.observe(document, {childList: true, subtree: true});
   });
 
-  window.documentStyleFlush = () => {handler(observer.takeRecords())};
+  window.documentStyleFlush = () => {
+    handler(observer.takeRecords());
+  };
 })();

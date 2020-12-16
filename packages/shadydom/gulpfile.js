@@ -19,26 +19,28 @@ const rename = require('gulp-rename');
 const rollup = require('gulp-rollup');
 
 gulp.task('default', () => {
-  return gulp.src('./src/**/*.js', {base: '.'})
+  return gulp
+    .src('./src/**/*.js', {base: '.'})
     .pipe(sourcemaps.init())
-    .pipe(closureCompiler({
-      compilation_level: 'ADVANCED',
-      language_in: 'ES6_STRICT',
-      language_out: 'ES5_STRICT',
-      isolation_mode: 'IIFE',
-      assume_function_wrapper: true,
-      js_output_file: 'shadydom.min.js',
-      warning_level: 'VERBOSE',
-      rewrite_polyfills: false,
-      externs: 'externs/shadydom.js'
-    }))
+    .pipe(
+      closureCompiler({
+        compilation_level: 'ADVANCED',
+        language_in: 'ES6_STRICT',
+        language_out: 'ES5_STRICT',
+        isolation_mode: 'IIFE',
+        assume_function_wrapper: true,
+        js_output_file: 'shadydom.min.js',
+        warning_level: 'VERBOSE',
+        rewrite_polyfills: false,
+        externs: 'externs/shadydom.js',
+      })
+    )
     .pipe(size({showFiles: true, showTotal: false, gzip: true}))
     .pipe(sourcemaps.write('.'))
-    .pipe(gulp.dest('./'))
+    .pipe(gulp.dest('./'));
 });
 
 gulp.task('debug', () => {
-
   const entry = `./src/shadydom.js`;
   const fileName = 'shadydom.min';
 
@@ -46,14 +48,15 @@ gulp.task('debug', () => {
     input: entry,
     output: {
       format: 'iife',
-      name: 'shadydom'
+      name: 'shadydom',
     },
     allowRealFiles: true,
-    rollup: require('rollup')
+    rollup: require('rollup'),
   };
 
-  return gulp.src(entry)
-  .pipe(rollup(options))
-  .pipe(rename(`${fileName}.js`))
-  .pipe(gulp.dest('.'))
+  return gulp
+    .src(entry)
+    .pipe(rollup(options))
+    .pipe(rename(`${fileName}.js`))
+    .pipe(gulp.dest('.'));
 });

@@ -12,5 +12,5 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 A simple shim to generate a testable module
 */
 
-import * as StyleSettings from '../../node_modules/@webcomponents/shadycss/src/style-settings'
+import * as StyleSettings from '../../node_modules/@webcomponents/shadycss/src/style-settings';
 window['StyleSettings'] = StyleSettings;

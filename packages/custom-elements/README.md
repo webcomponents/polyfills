@@ -4,49 +4,58 @@ A polyfill for the [custom elements](https://html.spec.whatwg.org/multipage/scri
 v1 spec.
 
 ## Using
+
 #### Standalone script tag
-Include a script tag at the beginning of your page, *before* any code that
+
+Include a script tag at the beginning of your page, _before_ any code that
 manipulates the DOM. The custom-elements.min.js can be loaded from a CDN:
+
 ```html
 <script src="https://unpkg.com/@webcomponents/custom-elements"></script>
 ```
 
 Or you can build it yourself and then load it:
+
 ```html
 <script src="custom-elements.min.js"></script>
 ```
 
 #### Via npm:
+
 If you're using npm, webpack, or similar tools, this package can be installed and imported:
+
 ```bash
 npm install @webcomponents/custom-elements
 ```
 
 ```js
 // Do this import before any code that manipulates the DOM.
-import '@webcomponents/custom-elements'
+import '@webcomponents/custom-elements';
 ```
 
 #### Via the webcomponents polyfill
+
 Alternatively, you can use this polyfill via the [webcomponentjs polyfills](https://github.com/webcomponents/webcomponentsjs).
 
 ## Developing
 
 1. Install and build
 
-  ```
-  npm install
-  npm run build
-  ```
-  (Or, `npm i && gulp`, if [gulp](https://github.com/gulpjs/gulp) is installed globally.)
+```
+npm install
+npm run build
+```
+
+(Or, `npm i && gulp`, if [gulp](https://github.com/gulpjs/gulp) is installed globally.)
 
 1. Test
 
-  ```
-  npm run test
-  ```
-  (Or, [`wct`](https://github.com/Polymer/web-component-tester), if installed
-  globally.)
+```
+npm run test
+```
+
+(Or, [`wct`](https://github.com/Polymer/web-component-tester), if installed
+globally.)
 
 ## Custom element reactions in the DOM and HTML specs
 
@@ -74,17 +83,17 @@ and [HTML](https://html.spec.whatwg.org/) specifications are marked with the
     element's callback performs another DOM operation that manipulates an area
     of the tree that was captured in the outer operation's list of elements.
     When this happens, the callbacks from the inner DOM operation will be called
-    *before* those of the outer DOM operation (typically, depending on the patch
+    _before_ those of the outer DOM operation (typically, depending on the patch
     implementation), as opposed to a spec-compliant implementation where the
     callbacks are always run in the order they were inserted into each
     particular element's reaction queue.
 - Custom elements created by the UA's parser are customized as if they were
   upgraded, rather than constructed.
-  - These elements are only learned about *after* they have been constructed,
+  - These elements are only learned about _after_ they have been constructed,
     and typically after their descendants have been constructed. When these
-    elements are constructed, their children are visible and editable *even
+    elements are constructed, their children are visible and editable _even
     though they would not yet exist and manipulating them would throw in a
-    spec-compliant implementation of custom elements!*
+    spec-compliant implementation of custom elements!_
 - The [requirements for custom element constructors](https://html.spec.whatwg.org/multipage/scripting.html#custom-element-conformance)
   are not enforced.
   - These requirements are not generally enforceable in user script because of
@@ -93,7 +102,7 @@ and [HTML](https://html.spec.whatwg.org/) specifications are marked with the
     finished.
 - Methods of the `ParentNode` and `ChildNode` interfaces do not support
   `DocumentFragment`s as arguments.
-- Your custom element constructor's prototype *must* have a property named
+- Your custom element constructor's prototype _must_ have a property named
   `constructor` which is that constructor.
   - By default, for every constructible function `F`, `F.prototype.constructor === F`.
     If you replace the prototype of your constructor `F`, you must make sure
@@ -119,7 +128,7 @@ that will improve the implementation and automatically detect if it's needed.
 
 [0] The spec requires that an element call the `HTMLElement` constructor.
 Typically an ES5 style class would do something like `HTMLElement.call(this)` to
-emulate `super()`. However, `HTMLElement` *must* be called as a constructor and
+emulate `super()`. However, `HTMLElement` _must_ be called as a constructor and
 not as a plain function, i.e. with `Reflect.construct(HTMLElement, [], MyCEConstructor)`,
 or it will throw.
 
@@ -128,6 +137,7 @@ or it will throw.
 By default, the polyfill uses a `MutationObserver` to learn about and upgrade
 elements in the main document as they are parsed. This `MutationObserver` is
 attached to `document` synchronously when the script is run.
+
 - If you attach a `MutationObserver` earlier before loading the polyfill, that
   mutation observer will not see upgraded custom elements.
 - If you move a node with descendants that have not yet been inserted by the
@@ -154,20 +164,20 @@ an extra method is added to the `CustomElementRegistry` prototype -
 upgrade attempts made when calling `define` and perform them later. Call
 `polyfillWrapFlushCallback` with a function; the next time `customElements.define`
 is called and a full-document upgrade would happen, your function will be called
-instead. The only argument to your function is *another* function which, when
+instead. The only argument to your function is _another_ function which, when
 called, will run the full-document upgrade attempt.
 
 For example, if you wanted to delay upgrades until the document's ready state
 was `'complete'`, you could use the following:
 
 ```javascript
-customElements.polyfillWrapFlushCallback(function(flush) {
+customElements.polyfillWrapFlushCallback(function (flush) {
   if (document.readyState === 'complete') {
     // If the document is already complete, flush synchronously.
     flush();
   } else {
     // Otherwise, wait until it is complete.
-    document.addEventListener('readystatechange', function() {
+    document.addEventListener('readystatechange', function () {
       if (document.readyState === 'complete') {
         flush();
       }
@@ -183,12 +193,12 @@ trigger upgrades, all of those definitions will apply when you trigger upgrades 
 don't call the provided function multiple times.
 
 Promises returned by `customElements.whenDefined` will not resolve until a
-full-document upgrade attempt has been performed *after* the given local name
+full-document upgrade attempt has been performed _after_ the given local name
 has been defined.
 
 ```javascript
 let flush;
-customElements.polyfillWrapFlushCallback(f => flush = f);
+customElements.polyfillWrapFlushCallback((f) => (flush = f));
 
 const p = customElements.whenDefined('c-e');
 p.then(() => console.log('c-e defined'));
@@ -213,12 +223,12 @@ You can call `polyfillWrapFlushCallback` multiple times, each function given
 will automatically wrap and delay any previous wrappers:
 
 ```javascript
-customElements.polyfillWrapFlushCallback(function(flush) {
+customElements.polyfillWrapFlushCallback(function (flush) {
   console.log('added first');
   flush();
 });
 
-customElements.polyfillWrapFlushCallback(function(flush) {
+customElements.polyfillWrapFlushCallback(function (flush) {
   console.log('added second');
   setTimeout(() => flush(), 1000);
 });
@@ -254,16 +264,16 @@ The polyfill provides a few settings to improve performance by tweaking behavior
 These settings typically have correctness trade-offs (noted below) and should be
 used with caution.
 
-* `customElements.noDocumentConstructionObserver`: Set this flag to true to
-prevent the polyfill from mutation observing and upgrading DOM as it is added
-to the main document. This provides a small performance improvement during
-document parsing. With this setting on, the polyfill will not upgrade elements
-created when parsing the main document's HTML. This setting should be
-used in conjunction with a `polyfillWrapFlushCallback` that defers element
-upgrades until the parser is complete.
+- `customElements.noDocumentConstructionObserver`: Set this flag to true to
+  prevent the polyfill from mutation observing and upgrading DOM as it is added
+  to the main document. This provides a small performance improvement during
+  document parsing. With this setting on, the polyfill will not upgrade elements
+  created when parsing the main document's HTML. This setting should be
+  used in conjunction with a `polyfillWrapFlushCallback` that defers element
+  upgrades until the parser is complete.
 
-* `customElements.shadyDomFastWalk`: Set this flag to true when using the
-ShadyDOM polyfill to optimize how elements are found in the DOM. There are a
-couple of limitations: (1) Elements that are children of Shadow DOM hosts and
-are not distributed to slots may not upgrade; (2) This setting is not compatible
-with using native HTML Imports.
+- `customElements.shadyDomFastWalk`: Set this flag to true when using the
+  ShadyDOM polyfill to optimize how elements are found in the DOM. There are a
+  couple of limitations: (1) Elements that are children of Shadow DOM hosts and
+  are not distributed to slots may not upgrade; (2) This setting is not compatible
+  with using native HTML Imports.

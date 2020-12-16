@@ -9,19 +9,29 @@
  * additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
-import {methods as NodeMethods, descriptors as NodeDescriptors} from '../environment/node.js';
+import {
+  methods as NodeMethods,
+  descriptors as NodeDescriptors,
+} from '../environment/node.js';
 
 // `Object.getOwnPropertyDescriptor(Node.prototype, 'parentNode')` is
 // undefined in Chrome 41.
 // `Object.getOwnPropertyDescriptor(Node.prototype, 'parentNode').get` is
 // undefined in Safari 9.
 const parentNodeGetter = NodeDescriptors.parentNode?.get;
-export const getParentNode = parentNodeGetter !== undefined
-    ? (node: Node) => { return parentNodeGetter.call(node); }
-    : (node: Node) => { return node.parentNode; };
+export const getParentNode =
+  parentNodeGetter !== undefined
+    ? (node: Node) => {
+        return parentNodeGetter.call(node);
+      }
+    : (node: Node) => {
+        return node.parentNode;
+      };
 
-export const getRootNode =
-    (node: Node, options: GetRootNodeOptions | undefined = undefined) => {
+export const getRootNode = (
+  node: Node,
+  options: GetRootNodeOptions | undefined = undefined
+) => {
   if (NodeMethods.getRootNode !== undefined) {
     return NodeMethods.getRootNode.call(node, options);
   }
@@ -43,7 +53,10 @@ export const appendChild = (node: Node, child: Node): Node | null => {
   return NodeMethods.appendChild.call(node, child);
 };
 
-export const insertBefore =
-    (node: Node, newNode: Node, refNode: Node | null): Node | null => {
+export const insertBefore = (
+  node: Node,
+  newNode: Node,
+  refNode: Node | null
+): Node | null => {
   return NodeMethods.insertBefore.call(node, newNode, refNode);
 };

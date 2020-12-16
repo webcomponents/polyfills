@@ -15,32 +15,35 @@
  * this.constructor so that the native HTMLElement constructor can access the
  * current under-construction element's definition.
  */
-(function() {
-if (
+(function () {
+  if (
     // No Reflect, no classes, no need for shim because native custom elements
     // require ES2015 classes or Reflect.
-    window.Reflect === undefined || window.customElements === undefined ||
+    window.Reflect === undefined ||
+    window.customElements === undefined ||
     // The webcomponentsjs custom elements polyfill doesn't require
     // ES2015-compatible construction (`super()` or `Reflect.construct`).
-    window.customElements.polyfillWrapFlushCallback) {
-  return;
-}
-const BuiltInHTMLElement = HTMLElement;
-
-/**
- * With jscompiler's RECOMMENDED_FLAGS the function name will be optimized away.
- * However, if we declare the function as a property on an object literal, and
- * use quotes for the property name, then closure will leave that much intact,
- * which is enough for the JS VM to correctly set Function.prototype.name.
- */
-const wrapperForTheName = {
-  'HTMLElement': function HTMLElement(this: HTMLElement) {
-    return Reflect.construct(BuiltInHTMLElement, [], this.constructor);
+    window.customElements.polyfillWrapFlushCallback
+  ) {
+    return;
   }
-};
-window.HTMLElement =
-    wrapperForTheName['HTMLElement'] as unknown as typeof HTMLElement;
-HTMLElement.prototype = BuiltInHTMLElement.prototype;
-HTMLElement.prototype.constructor = HTMLElement;
-Object.setPrototypeOf(HTMLElement, BuiltInHTMLElement);
+  const BuiltInHTMLElement = HTMLElement;
+
+  /**
+   * With jscompiler's RECOMMENDED_FLAGS the function name will be optimized away.
+   * However, if we declare the function as a property on an object literal, and
+   * use quotes for the property name, then closure will leave that much intact,
+   * which is enough for the JS VM to correctly set Function.prototype.name.
+   */
+  const wrapperForTheName = {
+    'HTMLElement': function HTMLElement(this: HTMLElement) {
+      return Reflect.construct(BuiltInHTMLElement, [], this.constructor);
+    },
+  };
+  window.HTMLElement = (wrapperForTheName[
+    'HTMLElement'
+  ] as unknown) as typeof HTMLElement;
+  HTMLElement.prototype = BuiltInHTMLElement.prototype;
+  HTMLElement.prototype.constructor = HTMLElement;
+  Object.setPrototypeOf(HTMLElement, BuiltInHTMLElement);
 })();

@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <html>
   <head>
     <script src="../node_modules/@webcomponents/webcomponentsjs/bundles/webcomponents-pf_js.js"></script>
@@ -24,12 +24,14 @@
     </script>
     <template id="x-click">
       <style>
-        :host{
+        :host {
           display: inline-block;
           border: 10px solid black;
         }
-        #child{
-          height: 50px; width: 50px; background: blue;
+        #child {
+          height: 50px;
+          width: 50px;
+          background: blue;
         }
       </style>
       <div id="child"></div>
@@ -43,7 +45,7 @@
           this.attachShadow({mode: 'open'});
           this.shadowRoot.appendChild(template.content.cloneNode(true));
         }
-        connectedCallback(){
+        connectedCallback() {
           ShadyCSS.styleElement(this);
         }
       }
@@ -55,7 +57,9 @@
     <script>
       /* global ael:false, log: false */
 
-    ael.addEventListener('click', function() { log('addEventListener') });
+      ael.addEventListener('click', function () {
+        log('addEventListener');
+      });
     </script>
 
     <h3>onclick=</h3>

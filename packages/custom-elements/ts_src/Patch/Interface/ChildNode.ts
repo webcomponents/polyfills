@@ -12,7 +12,7 @@
 import CustomElementInternals from '../../CustomElementInternals.js';
 import * as Utilities from '../../Utilities.js';
 
-type NativeMethod = (this: ChildNode, ...args: Array<Node|string>) => void;
+type NativeMethod = (this: ChildNode, ...args: Array<Node | string>) => void;
 
 interface ChildNodeNativeMethods {
   before: NativeMethod;
@@ -21,13 +21,14 @@ interface ChildNodeNativeMethods {
   remove: (this: ChildNode) => void;
 }
 
-export default function(
-    internals: CustomElementInternals,
-    destination: ChildNode,
-    builtIn: ChildNodeNativeMethods) {
+export default function (
+  internals: CustomElementInternals,
+  destination: ChildNode,
+  builtIn: ChildNodeNativeMethods
+) {
   function beforeAfterPatch(builtInMethod: NativeMethod): NativeMethod {
-    return function(this: ChildNode, ...nodes) {
-      const flattenedNodes: Array<string|Node> = [];
+    return function (this: ChildNode, ...nodes) {
+      const flattenedNodes: Array<string | Node> = [];
       const connectedElements: Array<Node> = [];
 
       for (let i = 0; i < nodes.length; i++) {
@@ -72,12 +73,14 @@ export default function(
   }
 
   if (builtIn.replaceWith !== undefined) {
-    destination.replaceWith = function(
-        this: ChildNode, ...nodes: Array<Node|string>) {
+    destination.replaceWith = function (
+      this: ChildNode,
+      ...nodes: Array<Node | string>
+    ) {
       /**
        * A copy of `nodes`, with any DocumentFragment replaced by its children.
        */
-      const flattenedNodes: Array<Node|string> = [];
+      const flattenedNodes: Array<Node | string> = [];
 
       /**
        * Elements in `nodes` that were connected before this call.
@@ -121,7 +124,7 @@ export default function(
   }
 
   if (builtIn.remove !== undefined) {
-    destination.remove = function(this: ChildNode) {
+    destination.remove = function (this: ChildNode) {
       const wasConnected = Utilities.isConnected(this);
 
       builtIn.remove.call(this);

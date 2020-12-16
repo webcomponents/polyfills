@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <!--
     @license
     Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
@@ -9,7 +9,7 @@
     subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 -->
 <title>All WebComponents Tests</title>
-<meta charset="utf-8">
+<meta charset="utf-8" />
 
 <!-- WebComponents -->
 <script src="./wct-config.js"></script>
@@ -53,15 +53,19 @@
   // Feature-detection tests are from `node_modules/@webcomponents/webcomponentsjs/webcomponents-loader.js`.
 
   var polyfills = [];
-  if (!('attachShadow' in Element.prototype && 'getRootNode' in Element.prototype) ||
-    (window.ShadyDOM && window.ShadyDOM.force)) {
+  if (
+    !(
+      'attachShadow' in Element.prototype && 'getRootNode' in Element.prototype
+    ) ||
+    (window.ShadyDOM && window.ShadyDOM.force)
+  ) {
     polyfills.push('sd');
   }
   if (!window.customElements || window.customElements.forcePolyfill) {
     polyfills.push('ce');
   }
 
-  var needsTemplate = (function() {
+  var needsTemplate = (function () {
     // no real <template> because no `content` property (IE and older browsers)
     var t = document.createElement('template');
     if (!('content' in t)) {
@@ -76,13 +80,21 @@
     t2.content.appendChild(document.createElement('div'));
     t.content.appendChild(t2);
     var clone = t.cloneNode(true);
-    return (clone.content.childNodes.length === 0 ||
-        clone.content.firstChild.content.childNodes.length === 0);
+    return (
+      clone.content.childNodes.length === 0 ||
+      clone.content.firstChild.content.childNodes.length === 0
+    );
   })();
 
   // NOTE: any browser that does not have template or ES6 features
   // must load the full suite of polyfills.
-  if (!window.Promise || !Array.from || !window.URL || !window.Symbol || needsTemplate) {
+  if (
+    !window.Promise ||
+    !Array.from ||
+    !window.URL ||
+    !window.Symbol ||
+    needsTemplate
+  ) {
     polyfills = ['sd-ce-pf'];
   }
 

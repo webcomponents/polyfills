@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <!--
 @license
 Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
@@ -9,7 +9,11 @@ Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 -->
 <script>
-WCT = {waitFor: function (cb) {HTMLImports.whenReady(cb)}}
+  WCT = {
+    waitFor: function (cb) {
+      HTMLImports.whenReady(cb);
+    },
+  };
 </script>
 <script src="./test-flags.js"></script>
 <script src="../node_modules/wct-browser-legacy/browser.js"></script>
@@ -27,24 +31,23 @@ WCT = {waitFor: function (cb) {HTMLImports.whenReady(cb)}}
 
 <custom-style>
   <style>
-  html {
-    --foo: rgb(123, 123, 123);
-    --bar: {
-      border: 2px solid red;
+    html {
+      --foo: rgb(123, 123, 123);
+      --bar: {
+        border: 2px solid red;
+      }
     }
-  }
-
   </style>
 </custom-style>
 <custom-style>
   <style>
-  :root {
-    --svg-icon: url("data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7");
-    --svg-icon-2: url("data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7");
-  }
-  .base64 {
-    background-image: var(--svg-icon);
-  }
+    :root {
+      --svg-icon: url('data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7');
+      --svg-icon-2: url('data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7');
+    }
+    .base64 {
+      background-image: var(--svg-icon);
+    }
   </style>
 </custom-style>
 
@@ -74,10 +77,10 @@ WCT = {waitFor: function (cb) {HTMLImports.whenReady(cb)}}
 
 <template id="x-outer">
   <style>
-  :host {
-    display: block;
-    @apply --bar;
-  }
+    :host {
+      display: block;
+      @apply --bar;
+    }
   </style>
   <x-inner></x-inner>
 </template>
@@ -100,57 +103,65 @@ WCT = {waitFor: function (cb) {HTMLImports.whenReady(cb)}}
 <div class="base64">base64</div>
 
 <script>
-  suite('Custom Style', function() {
-    suite('Custom Style upgrades', function() {
-      suiteSetup(function() {
+  suite('Custom Style', function () {
+    suite('Custom Style upgrades', function () {
+      suiteSetup(function () {
         makeElement('x-inner');
         makeElement('x-outer');
       });
-      test('custom-style applies to deeply nested elements', function() {
+      test('custom-style applies to deeply nested elements', function () {
         var target = document.querySelector('#target');
         var inner = target.shadowRoot.querySelector('x-inner');
-        assert.equal(getComputedStyle(inner).backgroundColor, 'rgb(123, 123, 123)');
+        assert.equal(
+          getComputedStyle(inner).backgroundColor,
+          'rgb(123, 123, 123)'
+        );
       });
-      test('custom-style applied mixins update', function() {
+      test('custom-style applied mixins update', function () {
         var target = document.querySelector('#target');
         var inner = target.shadowRoot.querySelector('x-inner');
         assert.equal(getComputedStyle(target).borderTopWidth.trim(), '2px');
         assert.equal(getComputedStyle(inner).borderTopWidth.trim(), '2px');
       });
-      test('custom-style with base64 in variable', function() {
+      test('custom-style with base64 in variable', function () {
         var target = document.querySelector('.base64');
-        assert.match(getComputedStyle(target).backgroundImage, /url\("?data:image\/gif;base64,R0lGODlhAQABAIAAAAAAAP\/\/\/yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"?\)/);
+        assert.match(
+          getComputedStyle(target).backgroundImage,
+          /url\("?data:image\/gif;base64,R0lGODlhAQABAIAAAAAAAP\/\/\/yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"?\)/
+        );
       });
     });
 
-    suite('top-level selectors', function() {
-        let el;
-        function assertComputed(selector, expected) {
-          const actual = getComputedStyle(el.shadowRoot.querySelector(selector)).getPropertyValue('border-top-width').trim();
-          assert.equal(expected, actual);
-        }
-        function activateSelectors() {
-          document.documentElement.setAttribute('foo', '');
-          window.ShadyCSS.ScopingShim.styleDocument();
-        }
-        suiteSetup(function() {
-          makeElement('x-top-selectors');
-          el = document.createElement('x-top-selectors');
-          document.body.appendChild(el);
-        });
-        teardown(function() {
-          document.documentElement.removeAttribute('foo');
-          window.ShadyCSS.ScopingShim.styleDocument();
-        });
-        test('html', function() {
-          assertComputed('#html', '10px');
-        });
-        test('html-foo', async function() {
-          assertComputed('#foo', '0px');
-          activateSelectors();
-          await new Promise((resolve) => setTimeout(resolve, 100));
-          assertComputed('#foo', '10px');
-        });
+    suite('top-level selectors', function () {
+      let el;
+      function assertComputed(selector, expected) {
+        const actual = getComputedStyle(el.shadowRoot.querySelector(selector))
+          .getPropertyValue('border-top-width')
+          .trim();
+        assert.equal(expected, actual);
+      }
+      function activateSelectors() {
+        document.documentElement.setAttribute('foo', '');
+        window.ShadyCSS.ScopingShim.styleDocument();
+      }
+      suiteSetup(function () {
+        makeElement('x-top-selectors');
+        el = document.createElement('x-top-selectors');
+        document.body.appendChild(el);
       });
+      teardown(function () {
+        document.documentElement.removeAttribute('foo');
+        window.ShadyCSS.ScopingShim.styleDocument();
+      });
+      test('html', function () {
+        assertComputed('#html', '10px');
+      });
+      test('html-foo', async function () {
+        assertComputed('#foo', '0px');
+        activateSelectors();
+        await new Promise((resolve) => setTimeout(resolve, 100));
+        assertComputed('#foo', '10px');
+      });
+    });
   });
 </script>

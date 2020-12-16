@@ -8,7 +8,7 @@
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
-test('imported scripts loaded under CSP', function() {
+test('imported scripts loaded under CSP', function () {
   chai.assert.ok(window.externalScriptParsed1, 'externalScriptParsed1');
   chai.assert.ok(window.externalScriptParsed2, 'externalScriptParsed2');
 });

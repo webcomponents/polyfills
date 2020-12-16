@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <!--
 @license
 Copyright (c) 2017 The Polymer Project Authors. All rights reserved.
@@ -11,7 +11,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <html>
   <head>
     <title>Test Promise Polyfill</title>
-    <script>window.Promise = null;</script>
+    <script>
+      window.Promise = null;
+    </script>
     <script src="../node_modules/@webcomponents/webcomponentsjs/webcomponents-loader.js"></script>
     <script src="./wct-config.js"></script>
     <script src="../node_modules/wct-browser-legacy/browser.js"></script>
@@ -26,7 +28,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           return Promise.resolve('hi!');
         });
         test('reject', () => {
-          return Promise.reject('foo').then(() => {throw 'nope!'}, () => {});
+          return Promise.reject('foo').then(
+            () => {
+              throw 'nope!';
+            },
+            () => {}
+          );
         });
         test('race', () => {
           return Promise.race([Promise.resolve(), Promise.resolve()]);
@@ -40,7 +47,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         test('then', () => {
           return Promise.resolve().then(() => {});
         });
-      })
+      });
     </script>
   </body>
 </html>

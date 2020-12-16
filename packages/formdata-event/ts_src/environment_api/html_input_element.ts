@@ -16,10 +16,11 @@ import {descriptors as HTMLInputElementDescriptors} from '../environment/html_in
 const typeDescriptor = HTMLInputElementDescriptors.type ?? {};
 // `Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'type').set` is
 // undefined in Safari 9.
-const typeSetter = typeDescriptor.set ??
-    function(this: HTMLInputElement, type: string) {
-  this.type = type;
-};
+const typeSetter =
+  typeDescriptor.set ??
+  function (this: HTMLInputElement, type: string) {
+    this.type = type;
+  };
 export const setType = (input: HTMLInputElement, type: string) => {
   return typeSetter.call(input, type);
 };
@@ -29,10 +30,11 @@ export const setType = (input: HTMLInputElement, type: string) => {
 const nameDescriptor = HTMLInputElementDescriptors.name ?? {};
 // `Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'name').set` is
 // undefined in Safari 9.
-const nameSetter = nameDescriptor.set ??
-    function(this: HTMLInputElement, name: string) {
-  this.name = name;
-};
+const nameSetter =
+  nameDescriptor.set ??
+  function (this: HTMLInputElement, name: string) {
+    this.name = name;
+  };
 export const setName = (input: HTMLInputElement, name: string) => {
   return nameSetter.call(input, name);
 };
@@ -42,10 +44,11 @@ export const setName = (input: HTMLInputElement, name: string) => {
 const valueDescriptor = HTMLInputElementDescriptors.value ?? {};
 // `Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set` is
 // undefined in Safari 9.
-const valueSetter = valueDescriptor.set ??
-    function(this: HTMLInputElement, value: string) {
-  this.value = value;
-};
+const valueSetter =
+  valueDescriptor.set ??
+  function (this: HTMLInputElement, value: string) {
+    this.value = value;
+  };
 export const setValue = (input: HTMLInputElement, value: string) => {
   return valueSetter.call(input, value);
 };

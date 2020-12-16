@@ -12,11 +12,23 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 import ApplyShim from '../src/apply-shim.js';
 import templateMap from '../src/template-map.js';
-import {getIsExtends, toCssText, elementHasBuiltCss} from '../src/style-util.js';
+import {
+  getIsExtends,
+  toCssText,
+  elementHasBuiltCss,
+} from '../src/style-util.js';
 import * as ApplyShimUtils from '../src/apply-shim-utils.js';
-import {getComputedStyleValue, updateNativeProperties} from '../src/common-utils.js';
+import {
+  getComputedStyleValue,
+  updateNativeProperties,
+} from '../src/common-utils.js';
 import {CustomStyleInterfaceInterface} from '../src/custom-style-interface.js'; // eslint-disable-line @typescript-eslint/no-unused-vars
-import {nativeCssVariables, nativeShadow, cssBuild, disableRuntime} from '../src/style-settings.js';
+import {
+  nativeCssVariables,
+  nativeShadow,
+  cssBuild,
+  disableRuntime,
+} from '../src/style-settings.js';
 
 /** @const {ApplyShim} */
 const applyShim = new ApplyShim();
@@ -32,9 +44,8 @@ class ApplyShimInterface {
       return;
     }
     if (window.ShadyCSS.CustomStyleInterface) {
-      this.customStyleInterface =
-          /** @type {!CustomStyleInterfaceInterface} */ (
-              window.ShadyCSS.CustomStyleInterface);
+      this.customStyleInterface = /** @type {!CustomStyleInterfaceInterface} */ (window
+        .ShadyCSS.CustomStyleInterface);
       this.customStyleInterface['transformCallback'] = (style) => {
         applyShim.transformCustomStyle(style);
       };
@@ -44,7 +55,7 @@ class ApplyShimInterface {
             this.flushCustomStyles();
           }
         });
-      }
+      };
     }
   }
   /**
@@ -70,7 +81,7 @@ class ApplyShimInterface {
     if (!this.customStyleInterface['enqueued']) {
       return;
     }
-    for (let i = 0; i < styles.length; i++ ) {
+    for (let i = 0; i < styles.length; i++) {
       let cs = styles[i];
       let style = this.customStyleInterface['getStyleForCustomStyle'](cs);
       if (style) {
@@ -91,15 +102,15 @@ class ApplyShimInterface {
     if (element.shadowRoot) {
       this.styleElement(element);
       let shadowChildren =
-          /** @type {!ParentNode} */ (element.shadowRoot).children ||
-          element.shadowRoot.childNodes;
+        /** @type {!ParentNode} */ (element.shadowRoot).children ||
+        element.shadowRoot.childNodes;
       for (let i = 0; i < shadowChildren.length; i++) {
-        this.styleSubtree(/** @type {HTMLElement} */(shadowChildren[i]));
+        this.styleSubtree(/** @type {HTMLElement} */ (shadowChildren[i]));
       }
     } else {
       let children = element.children || element.childNodes;
       for (let i = 0; i < children.length; i++) {
-        this.styleSubtree(/** @type {HTMLElement} */(children[i]));
+        this.styleSubtree(/** @type {HTMLElement} */ (children[i]));
       }
     }
   }
@@ -122,11 +133,13 @@ class ApplyShimInterface {
       // update this element instance
       let root = element.shadowRoot;
       if (root) {
-        let style = /** @type {HTMLStyleElement} */(root.querySelector('style'));
+        let style = /** @type {HTMLStyleElement} */ (root.querySelector(
+          'style'
+        ));
         if (style) {
           // reuse the template's style ast, it has all the original css text
           style['__cssRules'] = template['_styleAst'];
-          style.textContent = toCssText(template['_styleAst'])
+          style.textContent = toCssText(template['_styleAst']);
         }
       }
     }
@@ -142,7 +155,8 @@ class ApplyShimInterface {
 
 if (!window.ShadyCSS || !window.ShadyCSS.ScopingShim) {
   const applyShimInterface = new ApplyShimInterface();
-  let CustomStyleInterface = window.ShadyCSS && window.ShadyCSS.CustomStyleInterface;
+  let CustomStyleInterface =
+    window.ShadyCSS && window.ShadyCSS.CustomStyleInterface;
 
   /** @suppress {duplicate} */
   window.ShadyCSS = {

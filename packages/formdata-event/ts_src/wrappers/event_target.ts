@@ -9,25 +9,44 @@
  * additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
-import {prototype as EventTargetPrototype, methods as EventTargetMethods} from '../environment/event_target.js';
-import {prototype as NodePrototype, methods as NodeMethods} from '../environment/node.js';
-import {prototype as WindowPrototype, methods as WindowMethods} from '../environment/window.js';
-import {formdataListenerAdded, formdataListenerRemoved, wrapSubmitListener} from '../formdata_listener_added.js';
-import {submitListenerAdded, submitListenerRemoved} from '../submit_listener_added.js';
+import {
+  prototype as EventTargetPrototype,
+  methods as EventTargetMethods,
+} from '../environment/event_target.js';
+import {
+  prototype as NodePrototype,
+  methods as NodeMethods,
+} from '../environment/node.js';
+import {
+  prototype as WindowPrototype,
+  methods as WindowMethods,
+} from '../environment/window.js';
+import {
+  formdataListenerAdded,
+  formdataListenerRemoved,
+  wrapSubmitListener,
+} from '../formdata_listener_added.js';
+import {
+  submitListenerAdded,
+  submitListenerRemoved,
+} from '../submit_listener_added.js';
 
-const submitListenerToWrapper = new WeakMap<EventListenerOrEventListenerObject, EventListener>();
+const submitListenerToWrapper = new WeakMap<
+  EventListenerOrEventListenerObject,
+  EventListener
+>();
 
 export const wrapAddEventListener = (
   prototype: {
-    addEventListener: EventTarget['addEventListener'],
+    addEventListener: EventTarget['addEventListener'];
   },
-  original: EventTarget['addEventListener'],
+  original: EventTarget['addEventListener']
 ) => {
-  prototype.addEventListener = function(
+  prototype.addEventListener = function (
     this: EventTarget,
     type: string,
     listener: EventListenerOrEventListenerObject | null,
-    options?: boolean | AddEventListenerOptions,
+    options?: boolean | AddEventListenerOptions
   ) {
     if (type === 'submit' && listener !== null) {
       const wrapper = wrapSubmitListener(listener);
@@ -49,15 +68,15 @@ export const wrapAddEventListener = (
 
 export const wrapRemoveEventListener = (
   prototype: {
-    removeEventListener: EventTarget['removeEventListener'],
+    removeEventListener: EventTarget['removeEventListener'];
   },
-  original: EventTarget['removeEventListener'],
+  original: EventTarget['removeEventListener']
 ) => {
-  prototype.removeEventListener = function(
+  prototype.removeEventListener = function (
     this: EventTarget,
     type: string,
     listener: EventListenerOrEventListenerObject | null,
-    options?: boolean | EventListenerOptions,
+    options?: boolean | EventListenerOptions
   ) {
     if (type === 'submit' && listener !== null) {
       listener = submitListenerToWrapper.get(listener) ?? listener;
@@ -77,8 +96,14 @@ export const wrapRemoveEventListener = (
 
 export const install = () => {
   if (EventTargetPrototype) {
-    wrapAddEventListener(EventTargetPrototype, EventTargetMethods.addEventListener);
-    wrapRemoveEventListener(EventTargetPrototype, EventTargetMethods.removeEventListener);
+    wrapAddEventListener(
+      EventTargetPrototype,
+      EventTargetMethods.addEventListener
+    );
+    wrapRemoveEventListener(
+      EventTargetPrototype,
+      EventTargetMethods.removeEventListener
+    );
   }
 
   if (NodeMethods.addEventListener) {

@@ -14,16 +14,24 @@ export {};
 const Element_prototype = Element.prototype;
 // In IE11, the `attributes` descriptor is on `Node.prototype`.
 const attributesDescriptor =
-    Object.getOwnPropertyDescriptor(Element_prototype, 'attributes') ??
-    Object.getOwnPropertyDescriptor(Node.prototype, 'attributes');
+  Object.getOwnPropertyDescriptor(Element_prototype, 'attributes') ??
+  Object.getOwnPropertyDescriptor(Node.prototype, 'attributes');
 // In Safari 9, the `attributes` descriptor's getter is undefined. In Chrome 41,
 // the `attributes` descriptor is a data descriptor on each Element instance.
-const getAttributes = attributesDescriptor?.get ??
-    function(this: Element) { return this.attributes; };
+const getAttributes =
+  attributesDescriptor?.get ??
+  function (this: Element) {
+    return this.attributes;
+  };
 const map = Array.prototype.map;
 
 if (!Element_prototype.hasOwnProperty('getAttributeNames')) {
-  Element_prototype.getAttributeNames = function getAttributeNames(this: Element): Array<string> {
-    return map.call(getAttributes.call(this), attr => attr.name) as Array<string>;
+  Element_prototype.getAttributeNames = function getAttributeNames(
+    this: Element
+  ): Array<string> {
+    return map.call(
+      getAttributes.call(this),
+      (attr) => attr.name
+    ) as Array<string>;
   };
 }

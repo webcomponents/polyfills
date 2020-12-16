@@ -28,9 +28,8 @@ const closureOptions = {
 };
 
 gulp.task('default', () => {
-  return gulp.src([
-      './src/html-imports.js'
-    ], {base: './', follow: true})
+  return gulp
+    .src(['./src/html-imports.js'], {base: './', follow: true})
     .pipe(sourcemaps.init())
     .pipe(closure(closureOptions))
     .pipe(sourcemaps.write('.'))

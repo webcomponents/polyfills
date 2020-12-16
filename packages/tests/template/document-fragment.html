@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <!--
 @license
 Copyright (c) 2017 The Polymer Project Authors. All rights reserved.
@@ -16,35 +16,35 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   </head>
   <body>
     <script>
-      suite('Document Fragment', function() {
-        test('createDocumentFragment', function() {
+      suite('Document Fragment', function () {
+        test('createDocumentFragment', function () {
           var frag = document.createDocumentFragment();
           assert.equal(frag.nodeType, Node.DOCUMENT_FRAGMENT_NODE);
           assert.instanceOf(frag, DocumentFragment);
         });
 
-        test('localName', function() {
+        test('localName', function () {
           var frag = document.createDocumentFragment();
           // may be null or undefined depending on browser vendor
           assert(frag.localName == null);
         });
 
-        test('nodeType', function() {
+        test('nodeType', function () {
           var frag = document.createDocumentFragment();
           assert.equal(frag.nodeType, Node.DOCUMENT_FRAGMENT_NODE);
         });
 
-        test('nodeName', function() {
+        test('nodeName', function () {
           var frag = document.createDocumentFragment();
           assert.equal(frag.nodeName, '#document-fragment');
         });
 
-        test('tagName', function() {
+        test('tagName', function () {
           var frag = document.createDocumentFragment();
           assert(frag.tagName == null);
         });
 
-        test('cloneNode', function() {
+        test('cloneNode', function () {
           var frag = document.createDocumentFragment();
           var child = document.createElement('div');
           var grandChild = document.createElement('span');
@@ -60,7 +60,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           assert.equal(clone.firstChild.firstChild.textContent, 'Hi!');
         });
 
-        test('importNode', function() {
+        test('importNode', function () {
           var otherDoc = document.implementation.createHTMLDocument('other');
           var frag = otherDoc.createDocumentFragment();
           var child = otherDoc.createElement('div');
@@ -78,7 +78,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           assert.equal(newFrag.childNodes[0].innerHTML, '<span>foo!</span>');
         });
 
-        test('appendChild with DocumentFragment', function() {
+        test('appendChild with DocumentFragment', function () {
           var div = document.createElement('div');
           var frag = document.createDocumentFragment();
           var child = document.createElement('div');
@@ -88,7 +88,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           assert.equal(div.innerHTML, '<div><span>foo!</span></div>');
         });
 
-        test('insertBefore with DocumentFragment', function() {
+        test('insertBefore with DocumentFragment', function () {
           var div = document.createElement('div');
           var frag = document.createDocumentFragment();
           var child = document.createElement('div');
@@ -96,10 +96,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           frag.appendChild(child);
           div.innerHTML = '<bar></bar>';
           div.insertBefore(frag, div.firstChild);
-          assert.equal(div.innerHTML, '<div><span>foo!</span></div><bar></bar>');
+          assert.equal(
+            div.innerHTML,
+            '<div><span>foo!</span></div><bar></bar>'
+          );
         });
 
-        test('replaceChild with DocumentFragment', function() {
+        test('replaceChild with DocumentFragment', function () {
           var div = document.createElement('div');
           var frag = document.createDocumentFragment();
           var child = document.createElement('div');

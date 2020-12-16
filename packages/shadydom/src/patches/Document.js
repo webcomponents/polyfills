@@ -13,7 +13,6 @@ import * as utils from '../utils.js';
 const doc = window.document;
 
 export const DocumentPatches = utils.getOwnPropertyDescriptors({
-
   // note: Though not technically correct, we fast path `importNode`
   // when called on a node not owned by the main document.
   // This allows, for example, elements that cannot
@@ -32,12 +31,15 @@ export const DocumentPatches = utils.getOwnPropertyDescriptors({
     }
     let n = this[utils.NATIVE_PREFIX + 'importNode'](node, false);
     if (deep) {
-      for (let c=node[utils.SHADY_PREFIX + 'firstChild'], nc; c; c = c[utils.SHADY_PREFIX + 'nextSibling']) {
+      for (
+        let c = node[utils.SHADY_PREFIX + 'firstChild'], nc;
+        c;
+        c = c[utils.SHADY_PREFIX + 'nextSibling']
+      ) {
         nc = this[utils.SHADY_PREFIX + 'importNode'](c, true);
         n[utils.SHADY_PREFIX + 'appendChild'](nc);
       }
     }
     return n;
-  }
-
+  },
 });
