@@ -47,7 +47,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         :host {
           --mixin: {
             border: 2px solid black;
-          }
+          };
         }
         div {
           @apply --mixin;
@@ -82,12 +82,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         :host {
           --override: {
             padding: 2px;
-          }
+          };
         }
         :host([override]) {
           --override: {
             border: 2px solid black;
-          }
+          };
         }
         div {
           @apply --override;
@@ -100,7 +100,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         :root {
           --prop-mixin: {
             border: 2px solid black;
-          }
+          };
         }
         x-foo {
           --prop-mixin: blue;
@@ -117,7 +117,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         :root {
           --mixin-var: {
             border: 2px solid black;
-          }
+          };
         }
         div {
           --mixin-var2: var(--mixin-var);
@@ -143,11 +143,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           html {
             --my-mixin: {
               border: 2px solid black;
-            }
+            };
           }
         </style>
       </custom-style>
     </template>
+
     <template id="important">
       <style>
         :host {
@@ -155,12 +156,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             background-color: white;
             border: 2px solid black !important;
             color: white !important;
-          }
+          };
           --mixin: {
             background-color: red;
             border: 1px dotted orange;
             color: black !important;
-          }
+          };
         }
         div {
           @apply --mixin-important;
@@ -168,6 +169,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         }
       </style>
     </template>
+
     <script>
       suite('Apply Shim', function () {
         function copy(name) {
