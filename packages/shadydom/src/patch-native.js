@@ -110,6 +110,13 @@ export const addNativePrefixedProperties = () => {
   ];
   if (window.EventTarget) {
     copyProperties(window.EventTarget.prototype, eventProps);
+
+    // In Firefox 33, `EventTarget` exists, but `EventTarget.prototype` is not
+    // in the prototype chain of `window` and, strangely,
+    // `window instanceof EventTarget` still returns true.
+    if (window[NATIVE_PREFIX + 'addEventListener'] === undefined) {
+      copyProperties(Window.prototype, eventProps);
+    }
   } else {
     copyProperties(Node.prototype, eventProps);
     copyProperties(Window.prototype, eventProps);
