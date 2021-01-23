@@ -225,8 +225,7 @@ class StyleProperties {
         }
         parts[i] =
           p && p.lastIndexOf(';') === p.length - 1
-            ? // strip trailing ;
-              p.slice(0, -1)
+            ? p.slice(0, -1) // strip trailing ;
             : p || '';
       }
     }
