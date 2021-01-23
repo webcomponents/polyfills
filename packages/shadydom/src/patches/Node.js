@@ -540,7 +540,6 @@ export const NodePatches = utils.getOwnPropertyDescriptors({
    */
   // TODO(sorvell): implement `options` e.g. `{ composed: boolean }`
   getRootNode(options) {
-    // eslint-disable-line @typescript-eslint/no-unused-vars
     if (!this || !this.nodeType) {
       return;
     }
