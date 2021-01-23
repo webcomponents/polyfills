@@ -381,9 +381,10 @@ export const NodePatches = utils.getOwnPropertyDescriptors({
         if (utils.hasShadowRootWithSlot(this)) {
           parentData.root._asyncRender();
         }
-        // when inserting into a slot inside a shadowRoot, render the
-        // containing shadowRoot to update fallback content.
-      } else if (ownerRoot && this.localName === 'slot') {
+      }
+      // when inserting into a slot inside a shadowRoot, render the
+      // containing shadowRoot to update fallback content.
+      else if (ownerRoot && this.localName === 'slot') {
         allowNativeInsert = false;
         ownerRoot._asyncRender();
       }
@@ -400,11 +401,12 @@ export const NodePatches = utils.getOwnPropertyDescriptors({
       } else {
         container[utils.NATIVE_PREFIX + 'appendChild'](node);
       }
-      // Since ownerDocument is not patched, it can be incorrect after this call
-      // if the node is physically appended via distribution. This can result
-      // in the custom elements polyfill not upgrading the node if it's in an inert doc.
-      // We correct this by calling `adoptNode`.
-    } else if (node.ownerDocument !== this.ownerDocument) {
+    }
+    // Since ownerDocument is not patched, it can be incorrect after this call
+    // if the node is physically appended via distribution. This can result
+    // in the custom elements polyfill not upgrading the node if it's in an inert doc.
+    // We correct this by calling `adoptNode`.
+    else if (node.ownerDocument !== this.ownerDocument) {
       this.ownerDocument.adoptNode(node);
     }
     return node;

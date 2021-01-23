@@ -43,10 +43,11 @@ const patchShadyAccessors = (proto, prefix) => {
   if (utils.settings.noPatch && !prefix) {
     utils.patchProperties(proto, NodePatches, prefix);
     utils.patchProperties(proto, DocumentOrFragmentPatches, prefix);
-    // Case 2, bad descriptors: Ensure accessors are on ShadowRoot.
-    // These descriptors are normally used for instance patching but because
-    // ShadyRoot can always be patched, just do it to the prototype.
-  } else if (!utils.settings.hasDescriptors) {
+  }
+  // Case 2, bad descriptors: Ensure accessors are on ShadowRoot.
+  // These descriptors are normally used for instance patching but because
+  // ShadyRoot can always be patched, just do it to the prototype.
+  else if (!utils.settings.hasDescriptors) {
     utils.patchProperties(proto, OutsideDescriptors);
     utils.patchProperties(proto, InsideDescriptors);
     utils.patchProperties(proto, TextContentInnerHTMLDescriptors);

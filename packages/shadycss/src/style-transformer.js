@@ -421,9 +421,10 @@ class StyleTransformer {
         // if the type selector is our hostScope then avoid pre-pending it
         if (typeSelector === hostScope) {
           return paren;
-          // otherwise, this selector should not match in this scope so
-          // output a bogus selector.
-        } else {
+        }
+        // otherwise, this selector should not match in this scope so
+        // output a bogus selector.
+        else {
           return SELECTOR_NO_MATCH;
         }
       } else {
@@ -433,12 +434,13 @@ class StyleTransformer {
           return hostScope + paren;
         });
       }
-      // if no paren, do a straight :host replacement.
-      // TODO(sorvell): this should not strictly be necessary but
-      // it's needed to maintain support for `:host[foo]` type selectors
-      // which have been improperly used under Shady DOM. This should be
-      // deprecated.
-    } else {
+    }
+    // if no paren, do a straight :host replacement.
+    // TODO(sorvell): this should not strictly be necessary but
+    // it's needed to maintain support for `:host[foo]` type selectors
+    // which have been improperly used under Shady DOM. This should be
+    // deprecated.
+    else {
       return selector.replace(HOST, hostScope);
     }
   }

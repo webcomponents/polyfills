@@ -188,10 +188,11 @@ export const wrapSubmitListener = (
     // event.
     if (getEventPropagationImmediatelyStopped(e) && targetIsAForm) {
       maybeDispatchFormdataForEvent(e);
-      // If the event's propagation was stopped (potentially before being seen by
-      // the capturing 'submit' listener) and this is the _last_ callback for its
-      // event phase, dispatch a 'formdata' event.
-    } else if (getEventPropagationStopped(e) && targetIsAForm) {
+    }
+    // If the event's propagation was stopped (potentially before being seen by
+    // the capturing 'submit' listener) and this is the _last_ callback for its
+    // event phase, dispatch a 'formdata' event.
+    else if (getEventPropagationStopped(e) && targetIsAForm) {
       const submitListeners = targetToSubmitListeners.get(this)!;
       const {lastCapturingCallback, lastBubblingCallback} = submitListeners;
 
@@ -201,10 +202,11 @@ export const wrapSubmitListener = (
       ) {
         maybeDispatchFormdataForEvent(e);
       }
-      // If this listener is the _last_ bubbling 'submit' event listener attached
-      // to the shallow root of the event's target (possibly the one added by the
-      // capturing listener), dispatch a 'formdata' event.
-    } else if (submitEventToListenerInfo.has(e)) {
+    }
+    // If this listener is the _last_ bubbling 'submit' event listener attached
+    // to the shallow root of the event's target (possibly the one added by the
+    // capturing listener), dispatch a 'formdata' event.
+    else if (submitEventToListenerInfo.has(e)) {
       const listenerInfo = submitEventToListenerInfo.get(e);
       if (listenerInfo !== undefined && this === listenerInfo.target) {
         const submitListeners = targetToSubmitListeners.get(this)!;
