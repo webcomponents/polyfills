@@ -52,9 +52,7 @@ export default function (internals: CustomElementInternals) {
     if (element === AlreadyConstructedMarker) {
       const localName = definition.localName;
       throw new Error(
-        "Failed to construct '" +
-          localName +
-          "': " +
+        `Failed to construct '${localName}': ` +
           'This element was already constructed.'
       );
     }

@@ -452,9 +452,7 @@ export default class CustomElementInternals {
             result.__CE_definition === undefined
           ) {
             throw new Error(
-              "Failed to construct '" +
-                localName +
-                "': " +
+              `Failed to construct '${localName}': ` +
                 'The returned value was not constructed with the HTMLElement ' +
                 'constructor.'
             );
@@ -462,9 +460,7 @@ export default class CustomElementInternals {
 
           if (result.namespaceURI !== NS_HTML) {
             throw new Error(
-              "Failed to construct '" +
-                localName +
-                "': " +
+              `Failed to construct '${localName}': ` +
                 "The constructed element's namespace must be the HTML " +
                 'namespace.'
             );
@@ -475,9 +471,7 @@ export default class CustomElementInternals {
 
           if (result.hasAttributes()) {
             throw new Error(
-              "Failed to construct '" +
-                localName +
-                "': " +
+              `Failed to construct '${localName}': ` +
                 'The constructed element must not have any attributes.'
             );
           }
@@ -486,36 +480,28 @@ export default class CustomElementInternals {
           // instead.
           if (result.firstChild !== null) {
             throw new Error(
-              "Failed to construct '" +
-                localName +
-                "': " +
+              `Failed to construct '${localName}': ` +
                 'The constructed element must not have any children.'
             );
           }
 
           if (result.parentNode !== null) {
             throw new Error(
-              "Failed to construct '" +
-                localName +
-                "': " +
+              `Failed to construct '${localName}': ` +
                 'The constructed element must not have a parent node.'
             );
           }
 
           if (result.ownerDocument !== doc) {
             throw new Error(
-              "Failed to construct '" +
-                localName +
-                "': " +
+              `Failed to construct '${localName}': ` +
                 "The constructed element's owner document is incorrect."
             );
           }
 
           if (result.localName !== localName) {
             throw new Error(
-              "Failed to construct '" +
-                localName +
-                "': " +
+              `Failed to construct '${localName}': ` +
                 "The constructed element's local name is incorrect."
             );
           }
