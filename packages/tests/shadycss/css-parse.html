@@ -18,42 +18,26 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     <title>css-parse</title>
   </head>
   <body>
+    <!-- prettier-ignore -->
     <style id="test">
       :host {
         background: red;
       }
 
-      .foo .bar .baz,
-      zonk[happy]:focus {
+      .foo .bar .baz, zonk[happy]:focus {
         font-family: sans-serif;
         font-size: 15px;
       }
 
       @-webkit-keyframes fill-unfill-rotate {
-        12.5% {
-          transform: rotate(135deg);
-        }
-        25% {
-          transform: rotate(270deg);
-        }
-        37.5% {
-          transform: rotate(405deg);
-        }
-        50% {
-          transform: rotate(540deg);
-        }
-        62.5% {
-          transform: rotate(675deg);
-        }
-        75% {
-          transform: rotate(810deg);
-        }
-        87.5% {
-          transform: rotate(945deg);
-        }
-        to {
-          transform: rotate(1080deg);
-        }
+        12.5% { transform: rotate(135deg);  }
+        25%   { transform: rotate(270deg);  }
+        37.5% { transform: rotate(405deg);  }
+        50%   { transform: rotate(540deg);  }
+        62.5% { transform: rotate(675deg);  }
+        75%   { transform: rotate(810deg);  }
+        87.5% { transform: rotate(945deg);  }
+        to    { transform: rotate(1080deg); }
       }
 
       @media (max-width: 400px) {
@@ -63,6 +47,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       }
     </style>
 
+    <!-- prettier-ignore -->
     <style id="test-ignore">
       @import '';
 
@@ -73,14 +58,15 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       /* comment */
 
       /*
-      This is a multi-line comment
-    */
+        This is a multi-line comment
+      */
 
       /*.aclassThatShouldBeIgnored {
-      someProperty: thatMustNotShowUp
-    }*/
+        someProperty: thatMustNotShowUp
+      }*/
     </style>
 
+    <!-- prettier-ignore -->
     <style id="short-escape-sequence">
       .\33 d-model {
         border-top: 3px solid red;
@@ -102,16 +88,18 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       }
     </style>
 
+    <!-- prettier-ignore -->
     <style id="multiple-spaces">
-      .foo .bar {
-      }
-      .foo .bar {
-      }
-      .foo .bar {
-      }
+      .foo  .bar {}
+      .foo    .bar {}
+      .foo
+
+
+      .bar {}
     </style>
 
     <style id="empty"></style>
+
     <script>
       function sanitizeCss(text) {
         return text.replace(/[\s]+/g, ' ').trim();
