@@ -41,21 +41,21 @@ Alternatively, you can use this polyfill via the [webcomponentjs polyfills](http
 
 1. Install and build
 
-```
-npm install
-npm run build
-```
+   ```
+   npm install
+   npm run build
+   ```
 
-(Or, `npm i && gulp`, if [gulp](https://github.com/gulpjs/gulp) is installed globally.)
+   (Or, `npm i && gulp`, if [gulp](https://github.com/gulpjs/gulp) is installed globally.)
 
 1. Test
 
-```
-npm run test
-```
+   ```
+   npm run test
+   ```
 
-(Or, [`wct`](https://github.com/Polymer/web-component-tester), if installed
-globally.)
+   (Or, [`wct`](https://github.com/Polymer/web-component-tester), if installed
+   globally.)
 
 ## Custom element reactions in the DOM and HTML specs
 

@@ -241,9 +241,9 @@ To use ShadyCSS:
    the polyfill itself, rather it provides functions for interfacing with
    ShadyCSS _if_ it is loaded.)
 
-```typescript
-import * as shadyCss from '@webcomponents/shadycss';
-```
+   ```typescript
+   import * as shadyCss from '@webcomponents/shadycss';
+   ```
 
 2. First, call `shadyCss.prepareTemplate(template, name)` on a
    `<template>` element that will be imported into a `shadowRoot`.
