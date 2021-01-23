@@ -75,9 +75,7 @@
             suite('Element', function () {
               if (!(methodName in Element.prototype)) {
                 test.skip(
-                  'Element#' +
-                    methodName +
-                    ' is not implemented by this browser.'
+                  `Element#${methodName} is not implemented by this browser.`
                 );
                 return;
               }
