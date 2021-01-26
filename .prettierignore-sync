@@ -2,4 +2,6 @@
 .gitignore
 
 [inline]
+LICENSE
+packages/*/LICENSE.md
 packages/tests/html-imports/html/imports/unclosed-import.html
