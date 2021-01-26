@@ -28,6 +28,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <title>Style Transformer</title>
 
 <template id="host">
+  <!-- prettier-ignore -->
   <style>
     :host {
       color: blue;
@@ -41,7 +42,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     :host(.bar) :-webkit-any(.foo, .bar) {
       color: purple;
     }
-    :-webkit-any([baz], [zot='foo'])
+    :-webkit-any([baz], [zot="foo"])
       :matches(foo, bar)
       > :-moz-any(:not(:defined), :unresolved) {
       color: rgb(123, 123, 123);
@@ -101,24 +102,27 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 </template>
 
 <template id="attribute-style">
+  <!-- prettier-ignore -->
   <style>
-    [foo='foo:bar'] {
+    [foo="foo:bar"] {
       background-color: blue;
     }
   </style>
 </template>
 
 <template id="nested-attribute-style">
+  <!-- prettier-ignore -->
   <style>
-    [foo='foo:bar'] [foo='foo:bar'] {
+    [foo="foo:bar"] [foo="foo:bar"] {
       background-color: blue;
     }
   </style>
 </template>
 
 <template id="prepended-attribute-style">
+  <!-- prettier-ignore -->
   <style>
-    foo[foo='foo:bar'] {
+    foo[foo="foo:bar"] {
       background-color: blue;
     }
   </style>
@@ -164,7 +168,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       test('lots of :matches()', function () {
         assert.equal(
           ast.rules[4].selector,
-          ":-webkit-any([baz], [zot='foo']).x-foo :matches(foo, bar).x-foo > :-moz-any(:not(:defined), :unresolved).x-foo"
+          ':-webkit-any([baz], [zot="foo"]).x-foo :matches(foo, bar).x-foo > :-moz-any(:not(:defined), :unresolved).x-foo'
         );
       });
 
@@ -283,12 +287,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
         test('native ShadowDOM', function () {
           window.StyleTransformer.normalizeRootSelector(rule);
-          assert.equal(rule.selector, "[foo='foo:bar']");
+          assert.equal(rule.selector, '[foo="foo:bar"]');
         });
 
         test('ShadyDOM', function () {
           window.StyleTransformer.documentRule(rule);
-          assert.equal(rule.selector, ":not(.style-scope)[foo='foo:bar']");
+          assert.equal(rule.selector, ':not(.style-scope)[foo="foo:bar"]');
         });
       });
 
@@ -306,14 +310,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
         test('native ShadowDOM', function () {
           window.StyleTransformer.normalizeRootSelector(rule);
-          assert.equal(rule.selector, "[foo='foo:bar'] [foo='foo:bar']");
+          assert.equal(rule.selector, '[foo="foo:bar"] [foo="foo:bar"]');
         });
 
         test('ShadyDOM', function () {
           window.StyleTransformer.documentRule(rule);
           assert.equal(
             rule.selector,
-            ":not(.style-scope)[foo='foo:bar'] :not(.style-scope)[foo='foo:bar']"
+            ':not(.style-scope)[foo="foo:bar"] :not(.style-scope)[foo="foo:bar"]'
           );
         });
       });
@@ -332,12 +336,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
         test('native ShadowDOM', function () {
           window.StyleTransformer.normalizeRootSelector(rule);
-          assert.equal(rule.selector, "foo[foo='foo:bar']");
+          assert.equal(rule.selector, 'foo[foo="foo:bar"]');
         });
 
         test('ShadyDOM', function () {
           window.StyleTransformer.documentRule(rule);
-          assert.equal(rule.selector, "foo:not(.style-scope)[foo='foo:bar']");
+          assert.equal(rule.selector, 'foo:not(.style-scope)[foo="foo:bar"]');
         });
       });
     });
