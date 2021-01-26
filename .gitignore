@@ -1,5 +1,6 @@
 # global
 node_modules/
+coverage/
 lerna-debug.log
 
 # shared in packages

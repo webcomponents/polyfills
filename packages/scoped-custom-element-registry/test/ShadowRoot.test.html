@@ -1,0 +1,10 @@
+<html>
+<body>
+<script src="../scoped-custom-element-registry.js"></script>
+<script type="module">
+  import { runTests } from '@web/test-runner-mocha';
+
+  runTests(async () => import('./ShadowRoot.test.html.js'));
+</script>
+</body>
+</html>
