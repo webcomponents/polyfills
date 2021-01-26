@@ -10,8 +10,9 @@
     "build:watch": "lerna run build:watch --parallel",
     "format": "npm run format:eslint && npm run format:prettier",
     "format:eslint": "npm run lint -- --fix",
-    "format:prettier": "prettier \"**/*.{cjs,html,js,json,md,ts}\" --ignore-path .gitignore --write",
-    "lint": "eslint \"**/*.{html,js,ts}\" --ignore-path .gitignore",
+    "format:prettier": "prettier \"**/*.{cjs,html,js,json,md,ts}\" --write",
+    "ignore-sync": "ignore-sync .",
+    "lint": "eslint \"**/*.{html,js,ts}\"",
     "nuke": "rm -rf package-lock.json node_modules && npm install && lerna exec \"rm -f package-lock.json\" && lerna clean --yes && lerna bootstrap && lerna exec --stream -- \"test -f package-lock.json || npm install --package-lock-only\"",
     "test": "npm run test:wct",
     "test-pack": "lerna exec \"npm pack\"",
@@ -40,6 +41,7 @@
     "gulp-size": "^3.0.0",
     "gulp-sourcemaps": "^2.6.4",
     "husky": "^4.3.8",
+    "ignore-sync": "^3.0.1",
     "lerna": "^3.13.3",
     "lint-staged": "^10.5.3",
     "prettier": "^2.2.1",
@@ -54,11 +56,11 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "lint-staged"
+      "pre-commit": "npm run ignore-sync && lint-staged"
     }
   },
   "lint-staged": {
-    "**/*.{cjs,html,js,json,md,ts}": "prettier --ignore-path .gitignore --write",
-    "**/*.{js,ts}": "eslint --ignore-path .gitignore --fix"
+    "**/*.{cjs,html,js,json,md,ts}": "prettier --write",
+    "**/*.{js,ts}": "eslint --fix"
   }
 }

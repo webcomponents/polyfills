@@ -1,0 +1,5 @@
+[local]
+.gitignore
+
+[inline]
+packages/tests/html-imports/html/imports/unclosed-import.html
