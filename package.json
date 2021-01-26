@@ -10,7 +10,7 @@
     "build:watch": "lerna run build:watch --parallel",
     "format": "npm run format:eslint && npm run format:prettier",
     "format:eslint": "npm run lint -- --fix",
-    "format:prettier": "prettier \"**/*.{cjs,html,js,json,md,ts}\" --write",
+    "format:prettier": "prettier \"**/*.{cjs,html,js,json,md,ts,yml}\" --write",
     "ignore-sync": "ignore-sync .",
     "lint": "eslint \"**/*.{html,js,ts}\"",
     "nuke": "rm -rf package-lock.json node_modules && npm install && lerna exec \"rm -f package-lock.json\" && lerna clean --yes && lerna bootstrap && lerna exec --stream -- \"test -f package-lock.json || npm install --package-lock-only\"",
@@ -60,7 +60,7 @@
     }
   },
   "lint-staged": {
-    "**/*.{cjs,html,js,json,md,ts}": "prettier --write",
+    "**/*.{cjs,html,js,json,md,ts,yml}": "prettier --write",
     "**/*.{js,ts}": "eslint --fix"
   }
 }
