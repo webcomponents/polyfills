@@ -11,10 +11,14 @@
   },
   "plugins": ["@typescript-eslint", "html"],
   "env": {
-    "browser": true
+    "browser": true,
+    "es6": true,
+    "mocha": true,
+    "node": true
   },
   "rules": {
     "no-prototype-builtins": "off",
+    "@typescript-eslint/no-var-requires": "off",
     "@typescript-eslint/ban-types": "off",
     "@typescript-eslint/explicit-module-boundary-types": "off",
     "@typescript-eslint/no-empty-function": "off",
