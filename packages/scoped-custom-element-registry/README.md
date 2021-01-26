@@ -27,5 +27,11 @@ Notes/limitations:
   This means that native reflecting properties are not observable when set via
   properties.
 - In theory, this should be able to be layered on top of the Custom Elements
-  polyfill for use on older browsers, although iis yet to be tested. Use of
+  polyfill for use on older browsers, although this is yet to be tested. Use of
   `Reflect.construct` may need to be modified in those cases
+
+Outstanding TODOs:
+* [ ] [#419](https://github.com/webcomponents/polyfills/issues/419): Convert source to TS (to match convention in this monorepo)
+* [ ] [#420](https://github.com/webcomponents/polyfills/issues/420): Test and work out layering strategy with standard custom-elements polyfill
+* [ ] [#421](https://github.com/webcomponents/polyfills/issues/421): Test and work out layering strategy with shady-dom & shady-css polyfills
+* [ ] [#422](https://github.com/webcomponents/polyfills/issues/422): Add benchmarks
