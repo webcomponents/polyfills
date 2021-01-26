@@ -10,7 +10,6 @@ describe('ShadowRoot', () => {
       constructor() {
         super();
 
-        // TODO: rename customElements to registry?
         this.attachShadow({ mode: 'open', customElements: registry });
       }
     };
@@ -35,18 +34,22 @@ describe('ShadowRoot', () => {
         expect($clone.outerHTML).to.be.equal(html);
       });
 
-      it('should import a node tree with an upgraded custom element', () => {
+      it('should import a node tree with an upgraded custom element in global registry', () => {
         const { tagName, CustomElementClass } = getTestElement();
+        customElements.define(tagName, CustomElementClass);
 
         const registry = new CustomElementRegistry();
-        registry.define(tagName, CustomElementClass);
+        const AnotherCustomElementClass = class extends HTMLElement {};
+        registry.define(tagName, AnotherCustomElementClass);
+
         const shadowRoot = getShadowRoot(registry);
         const $el = getHTML(`<${tagName}></${tagName}>`);
 
         const $clone = shadowRoot.importNode($el, true);
 
         expect($clone.outerHTML).to.be.equal(`<${tagName}></${tagName}>`);
-        expect($clone).to.be.instanceof(CustomElementClass);
+        expect($clone).not.to.be.instanceof(CustomElementClass);
+        expect($clone).to.be.instanceof(AnotherCustomElementClass);
       });
 
       it('should import a node tree with an upgraded custom element from another shadowRoot', () => {
@@ -57,11 +60,15 @@ describe('ShadowRoot', () => {
         const firstShadowRoot = getShadowRoot(firstRegistry);
         const $el = getHTML(`<${tagName}></${tagName}>`, firstShadowRoot);
         const secondRegistry = new CustomElementRegistry();
+        const AnotherCustomElementClass = class extends HTMLElement {};
+        secondRegistry.define(tagName, AnotherCustomElementClass);
         const secondShadowRoot = getShadowRoot(secondRegistry);
 
         const $clone = secondShadowRoot.importNode($el, true);
 
         expect($clone.outerHTML).to.be.equal($el.outerHTML);
+        expect($clone).not.to.be.instanceof(CustomElementClass);
+        expect($clone).to.be.instanceof(AnotherCustomElementClass);
       });
 
       it('should import a node tree with a non upgraded custom element', () => {
