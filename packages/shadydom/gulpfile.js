@@ -29,6 +29,7 @@ gulp.task('default', () => {
         language_out: 'ES5_STRICT',
         isolation_mode: 'IIFE',
         assume_function_wrapper: true,
+        entry_point: ['/src/shadydom'],
         js_output_file: 'shadydom.min.js',
         warning_level: 'VERBOSE',
         rewrite_polyfills: false,
