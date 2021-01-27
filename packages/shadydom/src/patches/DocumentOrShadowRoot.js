@@ -20,7 +20,6 @@ function getDocumentActiveElement() {
 }
 
 export const DocumentOrShadowRootPatches = utils.getOwnPropertyDescriptors({
-
   /** @this {Document|ShadowRoot} */
   get activeElement() {
     let active = getDocumentActiveElement();
@@ -30,7 +29,7 @@ export const DocumentOrShadowRootPatches = utils.getOwnPropertyDescriptors({
     if (!active || !active.nodeType) {
       return null;
     }
-    let isShadyRoot = !!(utils.isShadyRoot(this));
+    let isShadyRoot = !!utils.isShadyRoot(this);
     if (this !== document) {
       // If this node isn't a document or shady root, then it doesn't have
       // an active element.
@@ -40,8 +39,10 @@ export const DocumentOrShadowRootPatches = utils.getOwnPropertyDescriptors({
       // If this shady root's host is the active element or the active
       // element is not a descendant of the host (in the composed tree),
       // then it doesn't have an active element.
-      if (this.host === active ||
-          !this.host[utils.NATIVE_PREFIX + 'contains'](active)) {
+      if (
+        this.host === active ||
+        !this.host[utils.NATIVE_PREFIX + 'contains'](active)
+      ) {
         return null;
       }
     }
@@ -61,5 +62,5 @@ export const DocumentOrShadowRootPatches = utils.getOwnPropertyDescriptors({
       // activeRoot.
       return activeRoot === this ? active : null;
     }
-  }
+  },
 });

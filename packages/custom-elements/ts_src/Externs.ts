@@ -71,35 +71,45 @@ declare global {
      * Used by IE to configure ErrorEvents.
      * @see https://docs.microsoft.com/en-us/openspecs/ie_standards/ms-html5e/30b18240-7be6-4379-9e0a-262c99ed9529
      */
-    initErrorEvent?
-        (type: string, canBubble: boolean, cancelable: boolean, message: string,
-         filename: string, lineno: number): void;
+    initErrorEvent?(
+      type: string,
+      canBubble: boolean,
+      cancelable: boolean,
+      message: string,
+      filename: string,
+      lineno: number
+    ): void;
   }
 
   // eslint-disable-next-line no-var
-  var ShadyDom: undefined|{
-    inUse: boolean,
-    nativeMethods: {querySelectorAll: typeof document.querySelectorAll}
-  };
+  var ShadyDom:
+    | undefined
+    | {
+        inUse: boolean;
+        nativeMethods: {querySelectorAll: typeof document.querySelectorAll};
+      };
 }
 
 export declare interface HTMLImportElement extends HTMLLinkElement {
-import?: Node;
+  import?: Node;
 }
 
 export interface CustomElementDefinition {
   localName: string;
-  constructorFunction: {new(): HTMLElement};
+  constructorFunction: {new (): HTMLElement};
   connectedCallback?(): void;
   disconnectedCallback?(): void;
   adoptedCallback?(): void;
-  attributeChangedCallback?
-      (name: string, oldValue?: string|null, newValue?: string|null,
-       namespace?: string|null): void;
+  attributeChangedCallback?(
+    name: string,
+    oldValue?: string | null,
+    newValue?: string | null,
+    namespace?: string | null
+  ): void;
   observedAttributes: Array<string>;
-  constructionStack: Array<HTMLElement|AlreadyConstructedMarkerType>;
+  constructionStack: Array<HTMLElement | AlreadyConstructedMarkerType>;
 }
 
 export interface Constructor<T> {
-  new(): T;
+  new (): T;
 }

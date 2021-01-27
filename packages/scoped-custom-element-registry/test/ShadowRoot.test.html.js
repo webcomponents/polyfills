@@ -1,6 +1,12 @@
-import { expect } from "@open-wc/testing";
+import {expect} from '@open-wc/testing';
 
-import { getTestTagName, getTestElement, getShadowRoot, getHTML, createTemplate } from "./utils.js";
+import {
+  getTestTagName,
+  getTestElement,
+  getShadowRoot,
+  getHTML,
+  createTemplate,
+} from './utils.js';
 
 describe('ShadowRoot', () => {
   it('should be able to be associate a custom registry', () => {
@@ -10,7 +16,7 @@ describe('ShadowRoot', () => {
       constructor() {
         super();
 
-        this.attachShadow({ mode: 'open', customElements: registry });
+        this.attachShadow({mode: 'open', customElements: registry});
       }
     };
     customElements.define(tagName, CustomElementClass);
@@ -35,7 +41,7 @@ describe('ShadowRoot', () => {
       });
 
       it('should import a node tree with an upgraded custom element in global registry', () => {
-        const { tagName, CustomElementClass } = getTestElement();
+        const {tagName, CustomElementClass} = getTestElement();
         customElements.define(tagName, CustomElementClass);
 
         const registry = new CustomElementRegistry();
@@ -53,7 +59,7 @@ describe('ShadowRoot', () => {
       });
 
       it('should import a node tree with an upgraded custom element from another shadowRoot', () => {
-        const { tagName, CustomElementClass } = getTestElement();
+        const {tagName, CustomElementClass} = getTestElement();
         const firstRegistry = new CustomElementRegistry();
         firstRegistry.define(tagName, CustomElementClass);
 
@@ -83,7 +89,7 @@ describe('ShadowRoot', () => {
       });
 
       it('should import a node tree with a non upgraded custom element defined in the custom registry', () => {
-        const { tagName, CustomElementClass } = getTestElement();
+        const {tagName, CustomElementClass} = getTestElement();
         const registry = new CustomElementRegistry();
         registry.define(tagName, CustomElementClass);
 
@@ -96,7 +102,7 @@ describe('ShadowRoot', () => {
       });
 
       it('should import a template with an undefined custom element', () => {
-        const { tagName } = getTestTagName();
+        const {tagName} = getTestTagName();
         const registry = new CustomElementRegistry();
         const shadowRoot = getShadowRoot(registry);
         const $template = createTemplate(`<${tagName}></${tagName}>`);
@@ -104,11 +110,13 @@ describe('ShadowRoot', () => {
         const $clone = shadowRoot.importNode($template.content, true);
 
         expect($clone).to.be.instanceof(DocumentFragment);
-        expect($clone.firstElementChild.outerHTML).to.be.equal(`<${tagName}></${tagName}>`);
+        expect($clone.firstElementChild.outerHTML).to.be.equal(
+          `<${tagName}></${tagName}>`
+        );
       });
 
       it('should import a template with a defined custom element', () => {
-        const { tagName, CustomElementClass } = getTestElement();
+        const {tagName, CustomElementClass} = getTestElement();
         const registry = new CustomElementRegistry();
         const shadowRoot = getShadowRoot(registry);
         const $template = createTemplate(`<${tagName}></${tagName}>`);
@@ -117,7 +125,9 @@ describe('ShadowRoot', () => {
         const $clone = shadowRoot.importNode($template.content, true);
 
         expect($clone).to.be.instanceof(DocumentFragment);
-        expect($clone.firstElementChild.outerHTML).to.be.equal(`<${tagName}></${tagName}>`);
+        expect($clone.firstElementChild.outerHTML).to.be.equal(
+          `<${tagName}></${tagName}>`
+        );
         expect($clone.firstElementChild).to.be.instanceof(CustomElementClass);
       });
     });
@@ -134,7 +144,7 @@ describe('ShadowRoot', () => {
       });
 
       it(`shouldn't upgrade an element defined in the global registry`, () => {
-        const { tagName, CustomElementClass } = getTestElement();
+        const {tagName, CustomElementClass} = getTestElement();
         customElements.define(tagName, CustomElementClass);
         const registry = new CustomElementRegistry();
         const shadowRoot = getShadowRoot(registry);
@@ -146,7 +156,7 @@ describe('ShadowRoot', () => {
       });
 
       it(`should upgrade an element defined in the custom registry`, () => {
-        const { tagName, CustomElementClass } = getTestElement();
+        const {tagName, CustomElementClass} = getTestElement();
         const registry = new CustomElementRegistry();
         registry.define(tagName, CustomElementClass);
         const shadowRoot = getShadowRoot(registry);
@@ -160,25 +170,29 @@ describe('ShadowRoot', () => {
 
     describe('innerHTML', () => {
       it(`shouldn't upgrade a defined custom element in the global registry`, () => {
-        const { tagName, CustomElementClass } = getTestElement();
+        const {tagName, CustomElementClass} = getTestElement();
         customElements.define(tagName, CustomElementClass);
         const registry = new CustomElementRegistry();
         const shadowRoot = getShadowRoot(registry);
 
         shadowRoot.innerHTML = `<${tagName}></${tagName}>`;
 
-        expect(shadowRoot.firstElementChild).to.not.be.instanceof(CustomElementClass);
+        expect(shadowRoot.firstElementChild).to.not.be.instanceof(
+          CustomElementClass
+        );
       });
 
       it('should upgrade a defined custom element in the custom registry', () => {
-        const { tagName, CustomElementClass } = getTestElement();
+        const {tagName, CustomElementClass} = getTestElement();
         const registry = new CustomElementRegistry();
         registry.define(tagName, CustomElementClass);
         const shadowRoot = getShadowRoot(registry);
 
         shadowRoot.innerHTML = `<${tagName}></${tagName}>`;
 
-        expect(shadowRoot.firstElementChild).to.be.instanceof(CustomElementClass);
+        expect(shadowRoot.firstElementChild).to.be.instanceof(
+          CustomElementClass
+        );
       });
     });
   });
@@ -196,7 +210,7 @@ describe('ShadowRoot', () => {
       });
 
       it('should import a node tree with an upgraded custom element', () => {
-        const { tagName, CustomElementClass } = getTestElement();
+        const {tagName, CustomElementClass} = getTestElement();
         customElements.define(tagName, CustomElementClass);
 
         const shadowRoot = getShadowRoot();
@@ -209,7 +223,7 @@ describe('ShadowRoot', () => {
       });
 
       it('should import a node tree with an upgraded custom element from another shadowRoot', () => {
-        const { tagName, CustomElementClass } = getTestElement();
+        const {tagName, CustomElementClass} = getTestElement();
         const firstRegistry = new CustomElementRegistry();
         firstRegistry.define(tagName, CustomElementClass);
 
@@ -233,18 +247,20 @@ describe('ShadowRoot', () => {
       });
 
       it('should import a template with an undefined custom element', () => {
-        const { tagName } = getTestTagName();
+        const {tagName} = getTestTagName();
         const shadowRoot = getShadowRoot();
         const $template = createTemplate(`<${tagName}></${tagName}>`);
 
         const $clone = shadowRoot.importNode($template.content, true);
 
         expect($clone).to.be.instanceof(DocumentFragment);
-        expect($clone.firstElementChild.outerHTML).to.be.equal(`<${tagName}></${tagName}>`);
+        expect($clone.firstElementChild.outerHTML).to.be.equal(
+          `<${tagName}></${tagName}>`
+        );
       });
 
       it('should import a template with a defined custom element', () => {
-        const { tagName, CustomElementClass } = getTestElement();
+        const {tagName, CustomElementClass} = getTestElement();
         const shadowRoot = getShadowRoot();
         const $template = createTemplate(`<${tagName}></${tagName}>`);
         customElements.define(tagName, CustomElementClass);
@@ -252,7 +268,9 @@ describe('ShadowRoot', () => {
         const $clone = shadowRoot.importNode($template.content, true);
 
         expect($clone).to.be.instanceof(DocumentFragment);
-        expect($clone.firstElementChild.outerHTML).to.be.equal(`<${tagName}></${tagName}>`);
+        expect($clone.firstElementChild.outerHTML).to.be.equal(
+          `<${tagName}></${tagName}>`
+        );
         expect($clone.firstElementChild).to.be.instanceof(CustomElementClass);
       });
     });
@@ -268,7 +286,7 @@ describe('ShadowRoot', () => {
       });
 
       it(`should upgrade an element defined in the global registry`, () => {
-        const { tagName, CustomElementClass } = getTestElement();
+        const {tagName, CustomElementClass} = getTestElement();
         customElements.define(tagName, CustomElementClass);
         const shadowRoot = getShadowRoot();
 
@@ -281,26 +299,29 @@ describe('ShadowRoot', () => {
 
     describe('innerHTML', () => {
       it(`shouldn't upgrade a defined custom element in a custom registry`, () => {
-        const { tagName, CustomElementClass } = getTestElement();
+        const {tagName, CustomElementClass} = getTestElement();
         const registry = new CustomElementRegistry();
         registry.define(tagName, CustomElementClass);
         const shadowRoot = getShadowRoot();
 
         shadowRoot.innerHTML = `<${tagName}></${tagName}>`;
 
-        expect(shadowRoot.firstElementChild).to.not.be.instanceof(CustomElementClass);
+        expect(shadowRoot.firstElementChild).to.not.be.instanceof(
+          CustomElementClass
+        );
       });
 
       it('should upgrade a defined custom element in the global registry', () => {
-        const { tagName, CustomElementClass } = getTestElement();
+        const {tagName, CustomElementClass} = getTestElement();
         customElements.define(tagName, CustomElementClass);
         const shadowRoot = getShadowRoot();
 
         shadowRoot.innerHTML = `<${tagName}></${tagName}>`;
 
-        expect(shadowRoot.firstElementChild).to.be.instanceof(CustomElementClass);
+        expect(shadowRoot.firstElementChild).to.be.instanceof(
+          CustomElementClass
+        );
       });
     });
   });
-
 });

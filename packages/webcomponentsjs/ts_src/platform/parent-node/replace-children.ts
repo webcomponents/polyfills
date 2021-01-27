@@ -16,11 +16,13 @@ type Constructor<T> = new (...args: Array<any>) => T;
 const nativeAppendChild = Node.prototype.appendChild;
 const nativeRemoveChild = Node.prototype.removeChild;
 const nativeGetFirstChild =
-    // In Chrome 41, `firstChild` is a data descriptor on every instance, not a
-    // accessor descriptor on `Node.prototype`.
-    Object.getOwnPropertyDescriptor(Node.prototype, 'firstChild')?.get ??
-    // In Safari 9, the `firstChild` descriptor's `get` and `set` are undefined.
-    function(this: Node) { return this.firstChild; };
+  // In Chrome 41, `firstChild` is a data descriptor on every instance, not a
+  // accessor descriptor on `Node.prototype`.
+  Object.getOwnPropertyDescriptor(Node.prototype, 'firstChild')?.get ??
+  // In Safari 9, the `firstChild` descriptor's `get` and `set` are undefined.
+  function (this: Node) {
+    return this.firstChild;
+  };
 
 const installReplaceChildren = <T>(constructor: Constructor<T>) => {
   const prototype = constructor.prototype;
@@ -32,16 +34,19 @@ const installReplaceChildren = <T>(constructor: Constructor<T>) => {
     configurable: true,
     enumerable: true,
     writable: true,
-    value: function replaceChildren(...args: Array<Node|string>) {
+    value: function replaceChildren(...args: Array<Node | string>) {
       let child;
       while ((child = nativeGetFirstChild.call(this)) !== null) {
         nativeRemoveChild.call(this, child);
       }
 
       for (const arg of args) {
-        nativeAppendChild.call(this, typeof arg === 'string' ? document.createTextNode(arg) : arg);
+        nativeAppendChild.call(
+          this,
+          typeof arg === 'string' ? document.createTextNode(arg) : arg
+        );
       }
-    }
+    },
   });
 };
 

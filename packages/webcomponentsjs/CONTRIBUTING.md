@@ -21,18 +21,20 @@ Other projects require a similar agreement: jQuery, Firefox, Apache, Node, and m
 
 ## Initial setup
 
-1. Setup Gulp: `sudo npm install -g gulp`
-1. Fork the project on github and pull down your copy.
-   > replace the {{ username }} with your username and {{ repository }} with the repository name
+1.  Setup Gulp: `sudo npm install -g gulp`
+1.  Fork the project on github and pull down your copy.
 
-        git clone git@github.com:{{ username }}/{{ repository }}.git
+    > replace the {{ username }} with your username and {{ repository }} with the repository name
 
-1. Test your change results in a working build.
-   > in the repo you've made changes to, try generating a build:
+         git clone git@github.com:{{ username }}/{{ repository }}.git
 
-        cd $REPO
-        npm install
-        gulp
+1.  Test your change results in a working build.
+
+    > in the repo you've made changes to, try generating a build:
+
+         cd $REPO
+         npm install
+         gulp
 
 The builds will be placed into the `dist/` directory if all goes well.
 

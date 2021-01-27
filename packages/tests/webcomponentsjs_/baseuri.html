@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <!--
 @license
 Copyright (c) 2017 The Polymer Project Authors. All rights reserved.
@@ -17,11 +17,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   </head>
   <body>
     <script>
-      suite('baseURI', function() {
-        test('document.baseURI works normally', function() {
+      suite('baseURI', function () {
+        test('document.baseURI works normally', function () {
           assert.equal(document.baseURI, window.location.href);
         });
-        test('document.baseURI respects <base> tag', function() {
+        test('document.baseURI respects <base> tag', function () {
           const base = document.createElement('base');
           base.href = 'http://example.com';
           document.head.appendChild(base);

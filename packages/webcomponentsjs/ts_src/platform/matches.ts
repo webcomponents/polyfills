@@ -15,8 +15,8 @@ const Element_prototype = Element.prototype;
 
 if (!Element_prototype.hasOwnProperty('matches')) {
   Element_prototype.matches =
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      ((Element_prototype as any).webkitMatchesSelector as Element['matches']) ??
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      ((Element_prototype as any).msMatchesSelector as Element['matches']);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ((Element_prototype as any).webkitMatchesSelector as Element['matches']) ??
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ((Element_prototype as any).msMatchesSelector as Element['matches']);
 }

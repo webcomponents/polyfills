@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <!--
     @license
     Copyright (c) 2019 The Polymer Project Authors. All rights reserved.
@@ -9,20 +9,18 @@
     subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 -->
 <title>custom-style-element Tests</title>
-<meta charset="utf-8">
+<meta charset="utf-8" />
 
 <script>
   WCT = {
     environmentImports: [],
-    waitFor: function(callback) {
+    waitFor: function (callback) {
       callback();
-    }
+    },
   };
 </script>
 <script src="../node_modules/wct-browser-legacy/browser.js"></script>
 <script>
-  let suites = [
-    'shady-css-scoped.html',
-  ];
+  let suites = ['shady-css-scoped.html'];
   WCT.loadSuites(suites);
 </script>

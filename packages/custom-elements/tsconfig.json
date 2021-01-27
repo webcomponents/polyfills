@@ -22,7 +22,5 @@
     "noFallthroughCasesInSwitch": true,
     "moduleResolution": "node"
   },
-  "include": [
-    "ts_src/"
-  ]
+  "include": ["ts_src/"]
 }

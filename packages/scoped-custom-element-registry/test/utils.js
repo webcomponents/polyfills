@@ -4,11 +4,11 @@ const leftPad = (number, size = 5) => {
   let s = String(number);
 
   while (s.length < size) {
-    s = "0" + s;
+    s = '0' + s;
   }
 
   return s;
-}
+};
 
 /**
  * Creates a unique test tag name.
@@ -36,9 +36,7 @@ export const getTestElement = () => ({
  * @param {CustomElementRegistry} [customElementRegistry]
  * @return {ShadowRoot}
  */
-export const getShadowRoot = (
-  customElementRegistry
-) => {
+export const getShadowRoot = (customElementRegistry) => {
   const tagName = getTestTagName();
   const CustomElementClass = class extends HTMLElement {
     constructor() {
@@ -58,7 +56,7 @@ export const getShadowRoot = (
 
   window.customElements.define(tagName, CustomElementClass);
 
-  const { shadowRoot } = new CustomElementClass();
+  const {shadowRoot} = new CustomElementClass();
 
   return shadowRoot;
 };
@@ -84,7 +82,7 @@ export const getHTML = (html, root = document) => {
  * @param {string} html - template's content
  * @return {HTMLTemplateElement}
  */
-export const createTemplate = html => {
+export const createTemplate = (html) => {
   const template = document.createElement('template');
 
   template.innerHTML = html;

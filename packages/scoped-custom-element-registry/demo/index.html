@@ -17,7 +17,6 @@
 <script src="../scoped-custom-element-registry.js"></script>
 
 <script type="module">
-
   const baseStyle = `
     :host {
       display: inline-block;
@@ -25,10 +24,12 @@
       padding: 5px;
       margin: 5px;
     }`;
-  
+
   class ChildElementA extends HTMLElement {
     static observedAttributes = ['attr'];
-    get name() { return `${this.localName} (ChildElementA)`; }
+    get name() {
+      return `${this.localName} (ChildElementA)`;
+    }
     constructor() {
       super();
       console.log('constructed', this.name);
@@ -47,7 +48,9 @@
 
   class ChildElementB extends HTMLElement {
     static observedAttributes = ['attr'];
-    get name() { return `${this.localName} (ChildElementB)`; }
+    get name() {
+      return `${this.localName} (ChildElementB)`;
+    }
     constructor() {
       super();
       console.log('constructed', this.name);
@@ -65,15 +68,30 @@
   }
 
   const hostRegistryA = new CustomElementRegistry();
-  hostRegistryA.whenDefined('child-element').then(() =>
-    console.log('child-element defined in hostRegistryA:', hostRegistryA.get('child-element')));
-  hostRegistryA.whenDefined('other-element').then(() =>
-    console.log('other-element defined in hostRegistryA:', hostRegistryA.get('other-element')));
+  hostRegistryA
+    .whenDefined('child-element')
+    .then(() =>
+      console.log(
+        'child-element defined in hostRegistryA:',
+        hostRegistryA.get('child-element')
+      )
+    );
+  hostRegistryA
+    .whenDefined('other-element')
+    .then(() =>
+      console.log(
+        'other-element defined in hostRegistryA:',
+        hostRegistryA.get('other-element')
+      )
+    );
   hostRegistryA.define('child-element', ChildElementA);
   class HostElementA extends HTMLElement {
     constructor() {
       super();
-      this.attachShadow({mode: 'open', customElements: hostRegistryA}).innerHTML = `
+      this.attachShadow({
+        mode: 'open',
+        customElements: hostRegistryA,
+      }).innerHTML = `
         <style>${baseStyle} :host { background: pink; }</style>
         HostElementA
         <child-element id="hostA" attr="child:hostA"></child-element>
@@ -86,12 +104,24 @@
     }
   }
   customElements.define('host-element-a', HostElementA);
-  
+
   const hostRegistryB = new CustomElementRegistry();
-  hostRegistryB.whenDefined('child-element').then(() =>
-    console.log('child-element defined in hostRegistryB:', hostRegistryB.get('child-element')));
-  hostRegistryB.whenDefined('other-element').then(() =>
-    console.log('other-element defined in hostRegistryB:', hostRegistryB.get('other-element')));
+  hostRegistryB
+    .whenDefined('child-element')
+    .then(() =>
+      console.log(
+        'child-element defined in hostRegistryB:',
+        hostRegistryB.get('child-element')
+      )
+    );
+  hostRegistryB
+    .whenDefined('other-element')
+    .then(() =>
+      console.log(
+        'other-element defined in hostRegistryB:',
+        hostRegistryB.get('other-element')
+      )
+    );
   hostRegistryB.define('child-element', ChildElementB);
   const hostElementBTemplate = document.createElement('template');
   hostElementBTemplate.innerHTML = `
@@ -105,16 +135,17 @@
     constructor() {
       super();
       this.attachShadow({mode: 'open', customElements: hostRegistryB});
-      this.shadowRoot.appendChild(this.shadowRoot.importNode(hostElementBTemplate.content, true));
+      this.shadowRoot.appendChild(
+        this.shadowRoot.importNode(hostElementBTemplate.content, true)
+      );
       this.shadowRoot.querySelector('button').addEventListener('click', () => {
         this.shadowRoot.customElements.define('other-element', ChildElementA);
       });
     }
   }
   customElements.define('host-element-b', HostElementB);
-  
 </script>
 
 <host-element-a></host-element-a>
-<hr>
+<hr />
 <host-element-b></host-element-b>

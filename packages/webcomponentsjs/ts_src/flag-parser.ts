@@ -12,20 +12,20 @@
 export {};
 
 interface ExtendedWindow extends Window {
-  WebComponents?: {flags?: Flags;};
-  ShadyDOM?: {force?: boolean|string; noPatch?: boolean | string;};
-  customElements: CustomElementRegistry&{
-    forcePolyfill?: string|boolean;
+  WebComponents?: {flags?: Flags};
+  ShadyDOM?: {force?: boolean | string; noPatch?: boolean | string};
+  customElements: CustomElementRegistry & {
+    forcePolyfill?: string | boolean;
   };
 }
 
-type Flags = Record<string, string|boolean|Record<string, boolean>>;
-
+type Flags = Record<string, string | boolean | Record<string, boolean>>;
 
 // Establish scope.
-const extendedWindow = (window as unknown as ExtendedWindow);
-extendedWindow['WebComponents'] =
-    extendedWindow['WebComponents'] || {'flags': {}};
+const extendedWindow = (window as unknown) as ExtendedWindow;
+extendedWindow['WebComponents'] = extendedWindow['WebComponents'] || {
+  'flags': {},
+};
 
 // loading script
 const file = 'webcomponents-bundle';
@@ -40,13 +40,16 @@ const flagMatcher = /wc-(.+)/;
 const flags: Flags = {};
 if (!flags['noOpts']) {
   // from url
-  location.search.slice(1).split('&').forEach(function(option) {
-    const parts = option.split('=');
-    let match;
-    if (parts[0] && (match = parts[0].match(flagMatcher))) {
-      flags[match[1]] = parts[1] || true;
-    }
-  });
+  location.search
+    .slice(1)
+    .split('&')
+    .forEach(function (option) {
+      const parts = option.split('=');
+      let match;
+      if (parts[0] && (match = parts[0].match(flagMatcher))) {
+        flags[match[1]] = parts[1] || true;
+      }
+    });
   // from script
   if (script) {
     for (let i = 0, a; (a = script.attributes[i]); i++) {
@@ -59,7 +62,7 @@ if (!flags['noOpts']) {
   const log: Record<string, boolean> = {};
   if (flags['log'] && (flags['log'] as string)['split']) {
     const parts = (flags['log'] as string).split(',');
-    parts.forEach(function(f) {
+    parts.forEach(function (f) {
       log[f] = true;
     });
   }
@@ -68,15 +71,15 @@ if (!flags['noOpts']) {
 
 // exports
 extendedWindow['WebComponents']['flags'] = flags;
-const forceShady = flags['shadydom'] as boolean|string;
+const forceShady = flags['shadydom'] as boolean | string;
 if (forceShady) {
   extendedWindow['ShadyDOM'] = extendedWindow['ShadyDOM'] || {};
   extendedWindow['ShadyDOM']['force'] = forceShady;
-  const noPatch = flags['noPatch'] as boolean|string;
+  const noPatch = flags['noPatch'] as boolean | string;
   extendedWindow['ShadyDOM']['noPatch'] = noPatch === 'true' ? true : noPatch;
 }
 
-const forceCE = (flags['register'] || flags['ce']) as boolean|string;
+const forceCE = (flags['register'] || flags['ce']) as boolean | string;
 if (forceCE && window['customElements']) {
   extendedWindow['customElements']['forcePolyfill'] = forceCE;
 }

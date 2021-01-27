@@ -9,11 +9,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 */
 
 import * as utils from '../utils.js';
-import {eventPropertyNamesForHTMLElement, wrappedDescriptorForEventProperty} from '../patch-events.js';
+import {
+  eventPropertyNamesForHTMLElement,
+  wrappedDescriptorForEventProperty,
+} from '../patch-events.js';
 import {shadyDataForNode} from '../shady-data.js';
 
 export const HTMLElementPatches = utils.getOwnPropertyDescriptors({
-
   /** @this {HTMLElement} */
   blur() {
     const nodeData = shadyDataForNode(this);
@@ -24,12 +26,11 @@ export const HTMLElementPatches = utils.getOwnPropertyDescriptors({
     } else {
       this[utils.NATIVE_PREFIX + 'blur']();
     }
-  }
-
+  },
 });
 
 if (!utils.settings.preferPerformance) {
-  eventPropertyNamesForHTMLElement.forEach(property => {
+  eventPropertyNamesForHTMLElement.forEach((property) => {
     HTMLElementPatches[property] = wrappedDescriptorForEventProperty(property);
   });
 }

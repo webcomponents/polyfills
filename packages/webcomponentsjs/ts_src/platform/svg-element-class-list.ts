@@ -23,9 +23,14 @@ const SVGElement_prototype = window['SVGElement'].prototype;
 // implemented generically enough such that copying it to something in the
 // prototype chain of `SVGElement` correctly adds support for `classList` (as
 // far as `DOMTokenList` implemented in IE11).
-if (HTMLElement_prototype.hasOwnProperty('classList') &&
-    !Element_prototype.hasOwnProperty('classList') &&
-    !SVGElement_prototype.hasOwnProperty('classList')) {
-  Object.defineProperty(Element_prototype, 'classList',
-      Object.getOwnPropertyDescriptor(HTMLElement_prototype, 'classList')!);
+if (
+  HTMLElement_prototype.hasOwnProperty('classList') &&
+  !Element_prototype.hasOwnProperty('classList') &&
+  !SVGElement_prototype.hasOwnProperty('classList')
+) {
+  Object.defineProperty(
+    Element_prototype,
+    'classList',
+    Object.getOwnPropertyDescriptor(HTMLElement_prototype, 'classList')!
+  );
 }

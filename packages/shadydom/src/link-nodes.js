@@ -10,7 +10,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 import * as utils from './utils.js';
 import {shadyDataForNode, ensureShadyDataForNode} from './shady-data.js';
-import {patchInsideElementAccessors, patchOutsideElementAccessors} from './patch-instances.js';
+import {
+  patchInsideElementAccessors,
+  patchOutsideElementAccessors,
+} from './patch-instances.js';
 import {patchNodeProto} from './patch-prototypes.js';
 
 const OutsideAccessors = 1;
@@ -38,14 +41,15 @@ function linkNode(node, container, containerData, ref_node) {
   const nodeData = ensureShadyDataForNode(node);
   const ref_nodeData = ref_node ? ensureShadyDataForNode(ref_node) : null;
   // update ref_node.previousSibling <-> node
-  nodeData.previousSibling = ref_node ? ref_nodeData.previousSibling :
-    container[utils.SHADY_PREFIX + 'lastChild'];
+  nodeData.previousSibling = ref_node
+    ? ref_nodeData.previousSibling
+    : container[utils.SHADY_PREFIX + 'lastChild'];
   let psd = shadyDataForNode(nodeData.previousSibling);
   if (psd) {
     psd.nextSibling = node;
   }
   // update node <-> ref_node
-  let nsd = shadyDataForNode(nodeData.nextSibling = ref_node);
+  let nsd = shadyDataForNode((nodeData.nextSibling = ref_node));
   if (nsd) {
     nsd.previousSibling = node;
   }
@@ -77,13 +81,13 @@ export const recordInsertBefore = (node, container, ref_node) => {
     // no need update that. It is possible to append a ShadowRoot, but we're
     // choosing not to support that.
     const first = node[utils.NATIVE_PREFIX + 'firstChild'];
-    for (let n = first; n; (n = n[utils.NATIVE_PREFIX + 'nextSibling'])) {
+    for (let n = first; n; n = n[utils.NATIVE_PREFIX + 'nextSibling']) {
       linkNode(n, container, containerData, ref_node);
     }
   } else {
     linkNode(node, container, containerData, ref_node);
   }
-}
+};
 
 export const recordRemoveChild = (node, container) => {
   const nodeData = ensureShadyDataForNode(node);
@@ -105,13 +109,12 @@ export const recordRemoveChild = (node, container) => {
   // When an element is removed, logical data is no longer tracked.
   // Explicitly set `undefined` here to indicate this. This is disginguished
   // from `null` which is set if info is null.
-  nodeData.parentNode = nodeData.previousSibling =
-  nodeData.nextSibling = undefined;
+  nodeData.parentNode = nodeData.previousSibling = nodeData.nextSibling = undefined;
   if (containerData.childNodes !== undefined) {
     // remove caching of childNodes
     containerData.childNodes = null;
   }
-}
+};
 
 /**
  * @param  {!Node|DocumentFragment} node
@@ -124,10 +127,11 @@ export const recordChildNodes = (node, adoptedParent) => {
   }
   // remove caching of childNodes
   nodeData.childNodes = null;
-  const first = nodeData.firstChild = node[utils.NATIVE_PREFIX + 'firstChild'];
+  const first = (nodeData.firstChild =
+    node[utils.NATIVE_PREFIX + 'firstChild']);
   nodeData.lastChild = node[utils.NATIVE_PREFIX + 'lastChild'];
   patchNode(node, InsideAcccessors);
-  for (let n = first, previous; n; (n = n[utils.NATIVE_PREFIX + 'nextSibling'])) {
+  for (let n = first, previous; n; n = n[utils.NATIVE_PREFIX + 'nextSibling']) {
     const sd = ensureShadyDataForNode(n);
     sd.parentNode = adoptedParent || node;
     sd.nextSibling = n[utils.NATIVE_PREFIX + 'nextSibling'];
@@ -135,4 +139,4 @@ export const recordChildNodes = (node, adoptedParent) => {
     previous = n;
     patchNode(n, OutsideAccessors);
   }
-}
+};

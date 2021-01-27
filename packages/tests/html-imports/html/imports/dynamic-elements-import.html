@@ -8,28 +8,28 @@
     subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 -->
 <script>
-(function() {
-  var doc = document.currentScript.ownerDocument;
-  setTimeout(function() {
-    var script = doc.createElement('script');
-    script.textContent = 'window.asyncScript = true;';
-    doc.body.appendChild(script);
+  (function () {
+    var doc = document.currentScript.ownerDocument;
+    setTimeout(function () {
+      var script = doc.createElement('script');
+      script.textContent = 'window.asyncScript = true;';
+      doc.body.appendChild(script);
 
-    var style = doc.createElement('style');
-    style.textContent = '#asyncStyled { background: red; }';
-    doc.body.appendChild(style);
+      var style = doc.createElement('style');
+      style.textContent = '#asyncStyled { background: red; }';
+      doc.body.appendChild(style);
 
-    // async for MO.
-    setTimeout(function() {
-      var event;
-      if (window.CustomEvent === 'function') {
-        event = new CustomEvent('asyncElementsAdded', {bubbles: true});
-      } else {
-        event = document.createEvent('CustomEvent');
-        event.initCustomEvent('asyncElementsAdded', true, false, undefined);
-      }
-      document.dispatchEvent(event);
-    }, 1);
-  }, 100);
-})();
+      // async for MO.
+      setTimeout(function () {
+        var event;
+        if (window.CustomEvent === 'function') {
+          event = new CustomEvent('asyncElementsAdded', {bubbles: true});
+        } else {
+          event = document.createEvent('CustomEvent');
+          event.initCustomEvent('asyncElementsAdded', true, false, undefined);
+        }
+        document.dispatchEvent(event);
+      }, 1);
+    }, 100);
+  })();
 </script>

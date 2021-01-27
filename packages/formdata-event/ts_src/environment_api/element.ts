@@ -23,6 +23,10 @@ export const removeAttribute = (element: Element, name: string): void => {
   ElementMethods.removeAttribute.call(element, name);
 };
 
-export const setAttribute = (element: Element, name: string, value: string): void => {
+export const setAttribute = (
+  element: Element,
+  name: string,
+  value: string
+): void => {
   ElementMethods.setAttribute.call(element, name, value);
 };

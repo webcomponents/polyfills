@@ -14,6 +14,7 @@ export const CustomElementState = {
   failed: 2,
 } as const;
 export type CustomElementState =
-    typeof CustomElementState.custom|typeof CustomElementState.failed;
+  | typeof CustomElementState.custom
+  | typeof CustomElementState.failed;
 
 export default CustomElementState;

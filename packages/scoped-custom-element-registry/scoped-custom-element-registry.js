@@ -41,14 +41,19 @@ window.CustomElementRegistry = class {
   define(tagName, elementClass) {
     tagName = tagName.toLowerCase();
     if (this._getDefinition(tagName) !== undefined) {
-      throw new DOMException(`Failed to execute 'define' on 'CustomElementRegistry': the name "${tagName}" has already been used with this registry`);
+      throw new DOMException(
+        `Failed to execute 'define' on 'CustomElementRegistry': the name "${tagName}" has already been used with this registry`
+      );
     }
     if (this._definitionsByClass.get(elementClass) !== undefined) {
-      throw new DOMException(`Failed to execute 'define' on 'CustomElementRegistry': this constructor has already been used with this registry`);
+      throw new DOMException(
+        `Failed to execute 'define' on 'CustomElementRegistry': this constructor has already been used with this registry`
+      );
     }
     // Since observedAttributes can't change, we approximate it by patching
     // set/removeAttribute on the user's class
-    const attributeChangedCallback = elementClass.prototype.attributeChangedCallback;
+    const attributeChangedCallback =
+      elementClass.prototype.attributeChangedCallback;
     const observedAttributes = new Set(elementClass.observedAttributes || []);
     patchAttributes(elementClass, observedAttributes, attributeChangedCallback);
     // Register the definition
@@ -104,7 +109,7 @@ window.CustomElementRegistry = class {
     let promise = this._definedPromises.get(tagName);
     if (!promise) {
       let resolve;
-      promise = new Promise(r => resolve = r);
+      promise = new Promise((r) => (resolve = r));
       this._definedPromises.set(tagName, promise);
       this._definedResolvers.set(tagName, resolve);
     }
@@ -113,7 +118,7 @@ window.CustomElementRegistry = class {
   _upgradeWhenDefined(element, tagName, shouldUpgrade) {
     let awaiting = this._awaitingUpgrade.get(tagName);
     if (!awaiting) {
-      this._awaitingUpgrade.set(tagName, awaiting = new Set());
+      this._awaitingUpgrade.set(tagName, (awaiting = new Set()));
     }
     if (shouldUpgrade) {
       awaiting.add(element);
@@ -121,7 +126,7 @@ window.CustomElementRegistry = class {
       awaiting.delete(element);
     }
   }
-}
+};
 
 // User extends this HTMLElement, which returns the CE being upgraded
 let upgradingInstance;
@@ -134,19 +139,21 @@ window.HTMLElement = function HTMLElement() {
   if (instance) {
     upgradingInstance = undefined;
     return instance;
-  } 
+  }
   // Construction case: we need to construct the StandInElement and return
   // it; note the current spec proposal only allows new'ing the constructor
   // of elements registered with the global registry
   const definition = globalDefinitionForConstructor.get(this.constructor);
   if (!definition) {
-    throw new TypeError('Illegal constructor (custom element class must be registered with global customElements registry to be newable)');
+    throw new TypeError(
+      'Illegal constructor (custom element class must be registered with global customElements registry to be newable)'
+    );
   }
   instance = Reflect.construct(NativeHTMLElement, [], definition.standInClass);
   Object.setPrototypeOf(instance, this.constructor.prototype);
   definitionForElement.set(instance, definition);
   return instance;
-}
+};
 window.HTMLElement.prototype = NativeHTMLElement.prototype;
 
 // Helpers to return the scope for a node where its registry would be located
@@ -160,14 +167,14 @@ const registryForNode = (node) => {
   // fragment), we need to get the scope from the creation context; that should
   // be a Document or ShadowRoot, unless it was created via innerHTML
   if (!isValidScope(scope)) {
-    const context = creationContext[creationContext.length-1];
+    const context = creationContext[creationContext.length - 1];
     // When upgrading via registry.upgrade(), the registry itself is put on the
     // creationContext stack
     if (context instanceof CustomElementRegistry) {
       return context;
     }
     // Otherwise, get the root node of the element this was created from
-    scope = context.getRootNode()
+    scope = context.getRootNode();
     // The creation context wasn't a Document or ShadowRoot or in one; this
     // means we're being innerHTML'ed into a disconnected element; for now, we
     // hope that root node was created imperatively, where we stash _its_
@@ -185,7 +192,11 @@ const createStandInElement = (tagName) => {
   return class ScopedCustomElementBase {
     constructor() {
       // Create a raw HTMLElement first
-      const instance = Reflect.construct(NativeHTMLElement, [], this.constructor);
+      const instance = Reflect.construct(
+        NativeHTMLElement,
+        [],
+        this.constructor
+      );
       // We need to install the minimum HTMLElement prototype so that
       // scopeForNode can use DOM API to determine our construction scope;
       // upgrade will eventually install the full CE prototype
@@ -204,20 +215,26 @@ const createStandInElement = (tagName) => {
       const definition = definitionForElement.get(this);
       if (definition) {
         // Delegate out to user callback
-        definition.connectedCallback && definition.connectedCallback.apply(this, arguments);
+        definition.connectedCallback &&
+          definition.connectedCallback.apply(this, arguments);
       } else {
         // Register for upgrade when defined (only when connected, so we don't leak)
-        pendingRegistryForElement.get(this)._upgradeWhenDefined(this, tagName, true);        
+        pendingRegistryForElement
+          .get(this)
+          ._upgradeWhenDefined(this, tagName, true);
       }
     }
     disconnectedCallback() {
       const definition = definitionForElement.get(this);
       if (definition) {
         // Delegate out to user callback
-        definition.disconnectedCallback && definition.disconnectedCallback.apply(this, arguments);
+        definition.disconnectedCallback &&
+          definition.disconnectedCallback.apply(this, arguments);
       } else {
         // Un-register for upgrade when defined (so we don't leak)
-        pendingRegistryForElement.get(this)._upgradeWhenDefined(this, tagName, false);        
+        pendingRegistryForElement
+          .get(this)
+          ._upgradeWhenDefined(this, tagName, false);
       }
     }
     adoptedCallback() {
@@ -227,17 +244,21 @@ const createStandInElement = (tagName) => {
     // no attributeChangedCallback or observedAttributes since these
     // are simulated via setAttribute/removeAttribute patches
   };
-}
+};
 
 // Helper to patch CE class setAttribute/getAttribute to implement
 // attributeChangedCallback
-const patchAttributes = (elementClass, observedAttributes, attributeChangedCallback) => {
+const patchAttributes = (
+  elementClass,
+  observedAttributes,
+  attributeChangedCallback
+) => {
   if (observedAttributes.size === 0 || attributeChangedCallback === undefined) {
     return;
   }
   const setAttribute = elementClass.prototype.setAttribute;
   if (setAttribute) {
-    elementClass.prototype.setAttribute = function(name, value) {
+    elementClass.prototype.setAttribute = function (name, value) {
       if (observedAttributes.has(name)) {
         const old = this.getAttribute(name);
         setAttribute.call(this, name, value);
@@ -249,7 +270,7 @@ const patchAttributes = (elementClass, observedAttributes, attributeChangedCallb
   }
   const removeAttribute = elementClass.prototype.removeAttribute;
   if (removeAttribute) {
-    elementClass.prototype.removeAttribute = function(name) {
+    elementClass.prototype.removeAttribute = function (name) {
       if (observedAttributes.has(name)) {
         const old = this.getAttribute(name);
         removeAttribute.call(this, name);
@@ -268,35 +289,40 @@ const upgrade = (instance, definition) => {
   upgradingInstance = instance;
   new definition.elementClass();
   // Approximate observedAttributes from the user class, since the stand-in element had none
-  definition.observedAttributes.forEach(attr => {
+  definition.observedAttributes.forEach((attr) => {
     if (instance.hasAttribute(attr)) {
-      definition.attributeChangedCallback.call(instance, attr, null, instance.getAttribute(attr));
+      definition.attributeChangedCallback.call(
+        instance,
+        attr,
+        null,
+        instance.getAttribute(attr)
+      );
     }
   });
 };
 
 // Patch attachShadow to set customElements on shadowRoot when provided
 const nativeAttachShadow = Element.prototype.attachShadow;
-Element.prototype.attachShadow = function(init) {
+Element.prototype.attachShadow = function (init) {
   const shadowRoot = nativeAttachShadow.apply(this, arguments);
   if (init.customElements) {
     shadowRoot.customElements = init.customElements;
   }
   return shadowRoot;
-}
+};
 
 // Install scoped creation API on Element & ShadowRoot
 let creationContext = [document];
 const installScopedCreationMethod = (ctor, method, from) => {
   const native = (from ? Object.getPrototypeOf(from) : ctor.prototype)[method];
-  ctor.prototype[method] = function() {
+  ctor.prototype[method] = function () {
     creationContext.push(this);
     const ret = native.apply(from || this, arguments);
     scopeForElement.set(ret, this);
     creationContext.pop();
     return ret;
-  }
-}
+  };
+};
 installScopedCreationMethod(ShadowRoot, 'createElement', document);
 installScopedCreationMethod(ShadowRoot, 'importNode', document);
 installScopedCreationMethod(Element, 'insertAdjacentHTML');
@@ -310,12 +336,15 @@ const installScopedCreationSetter = (ctor, name) => {
       creationContext.push(this);
       descriptor.set.call(this, value);
       creationContext.pop();
-    }
-  })
-}
+    },
+  });
+};
 installScopedCreationSetter(Element, 'innerHTML');
 installScopedCreationSetter(ShadowRoot, 'innerHTML');
 
 // Install global registry
-Object.defineProperty(window, 'customElements',
-  {value: new CustomElementRegistry(), configurable: true, writable: true});
+Object.defineProperty(window, 'customElements', {
+  value: new CustomElementRegistry(),
+  configurable: true,
+  writable: true,
+});

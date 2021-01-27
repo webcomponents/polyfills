@@ -1,12 +1,14 @@
-const { playwrightLauncher } = require('@web/test-runner-playwright');
+const {playwrightLauncher} = require('@web/test-runner-playwright');
 
 const defaultBrowsers = [
-  playwrightLauncher({ product: 'chromium' }),
-  playwrightLauncher({ product: 'webkit' }),
-  playwrightLauncher({ product: 'firefox', concurrency: 1 }),
+  playwrightLauncher({product: 'chromium'}),
+  playwrightLauncher({product: 'webkit'}),
+  playwrightLauncher({product: 'firefox', concurrency: 1}),
 ];
 
-const envBrowsers = process.env.BROWSERS?.split(',').map((product) => playwrightLauncher({product}));
+const envBrowsers = process.env.BROWSERS?.split(',').map((product) =>
+  playwrightLauncher({product})
+);
 
 const browsers = envBrowsers ?? defaultBrowsers;
 
@@ -24,6 +26,6 @@ module.exports = {
       branches: 80,
       functions: 80,
       lines: 80,
-    }
+    },
   },
 };

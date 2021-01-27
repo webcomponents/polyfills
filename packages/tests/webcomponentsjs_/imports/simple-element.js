@@ -10,8 +10,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 // Kick off shady CSS.
 var template = document.createElement('template');
-template.innerHTML =
-`
+template.innerHTML = `
 <style>:host {color: blue;} .red-text {color: red;} </style>
 <p class="red-text">Shadow DOM</p>
 <slot id="slot"></slot>
@@ -31,7 +30,7 @@ class SimpleElement extends HTMLElement {
     }
 
     if (template && !this.shadowRoot) {
-      this.attachShadow({ mode: 'open' });
+      this.attachShadow({mode: 'open'});
       this.shadowRoot.appendChild(document.importNode(template.content, true));
     }
   }

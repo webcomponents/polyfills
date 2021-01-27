@@ -13,15 +13,16 @@ import {HTMLImportElement} from './Externs.js';
 
 const reservedElementNameSet = new Set<string>();
 // IE11 does not support constructing a set using an iterable.
-['annotation-xml',
- 'color-profile',
- 'font-face',
- 'font-face-src',
- 'font-face-uri',
- 'font-face-format',
- 'font-face-name',
- 'missing-glyph',
-].forEach(item => reservedElementNameSet.add(item));
+[
+  'annotation-xml',
+  'color-profile',
+  'font-face',
+  'font-face-src',
+  'font-face-uri',
+  'font-face-format',
+  'font-face-name',
+  'missing-glyph',
+].forEach((item) => reservedElementNameSet.add(item));
 
 export function isValidCustomElementName(localName: string) {
   const reserved = reservedElementNameSet.has(localName);
@@ -30,9 +31,9 @@ export function isValidCustomElementName(localName: string) {
 }
 
 // Note, IE11 doesn't have `document.contains`.
-const nativeContains = document.contains ?
-    document.contains.bind(document) :
-    document.documentElement.contains.bind(document.documentElement);
+const nativeContains = document.contains
+  ? document.contains.bind(document)
+  : document.documentElement.contains.bind(document.documentElement);
 
 export function isConnected(node: Node) {
   // Use `Node#isConnected`, if defined.
@@ -46,19 +47,26 @@ export function isConnected(node: Node) {
     return true;
   }
 
-  let current: Node|undefined = node;
-  while (current &&
-         !(current.__CE_isImportDocument || current instanceof Document)) {
-    current = current.parentNode ||
-        (window.ShadowRoot && current instanceof ShadowRoot ? current.host :
-                                                              undefined);
+  let current: Node | undefined = node;
+  while (
+    current &&
+    !(current.__CE_isImportDocument || current instanceof Document)
+  ) {
+    current =
+      current.parentNode ||
+      (window.ShadowRoot && current instanceof ShadowRoot
+        ? current.host
+        : undefined);
   }
   return !!(
-      current &&
-      (current.__CE_isImportDocument || current instanceof Document));
+    current &&
+    (current.__CE_isImportDocument || current instanceof Document)
+  );
 }
 
-export function childrenFromFragment(fragment: DocumentFragment): Array<Element> {
+export function childrenFromFragment(
+  fragment: DocumentFragment
+): Array<Element> {
   // Note, IE doesn't have `children` on document fragments.
   const nativeChildren = fragment.children;
   if (nativeChildren) {
@@ -74,22 +82,25 @@ export function childrenFromFragment(fragment: DocumentFragment): Array<Element>
 }
 
 function nextSiblingOrAncestorSibling(root: Node, start: Node) {
-  let node: Node|null = start;
+  let node: Node | null = start;
   while (node && node !== root && !node.nextSibling) {
     node = node.parentNode;
   }
-  return (!node || node === root) ? null : node.nextSibling;
+  return !node || node === root ? null : node.nextSibling;
 }
 
-
 function nextNode(root: Node, start: Node) {
-  return start.firstChild ? start.firstChild :
-                            nextSiblingOrAncestorSibling(root, start);
+  return start.firstChild
+    ? start.firstChild
+    : nextSiblingOrAncestorSibling(root, start);
 }
 
 export function walkDeepDescendantElements(
-    root: Node, callback: (elem: Element) => void, visitedImports?: Set<Node>) {
-  let node: Node|null = root;
+  root: Node,
+  callback: (elem: Element) => void,
+  visitedImports?: Set<Node>
+) {
+  let node: Node | null = root;
   while (node) {
     if (node.nodeType === Node.ELEMENT_NODE) {
       const element = node as Element;
@@ -108,8 +119,11 @@ export function walkDeepDescendantElements(
           // Prevent multiple walks of the same import root.
           visitedImports.add(importNode);
 
-          for (let child = importNode.firstChild; child;
-               child = child.nextSibling) {
+          for (
+            let child = importNode.firstChild;
+            child;
+            child = child.nextSibling
+          ) {
             walkDeepDescendantElements(child, callback, visitedImports);
           }
         }
@@ -131,8 +145,11 @@ export function walkDeepDescendantElements(
       // Walk shadow roots.
       const shadowRoot = element.__CE_shadowRoot;
       if (shadowRoot) {
-        for (let child = shadowRoot.firstChild; child;
-             child = child.nextSibling) {
+        for (
+          let child = shadowRoot.firstChild;
+          child;
+          child = child.nextSibling
+        ) {
           walkDeepDescendantElements(child, callback, visitedImports);
         }
       }

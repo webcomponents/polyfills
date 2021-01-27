@@ -7,40 +7,40 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-node@v1
-      with:
-        node-version: 13
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 13
 
-    - name: NPM install
-      run: npm ci
+      - name: NPM install
+        run: npm ci
 
-    - name: Lerna bootstrap
-      run: npm run bootstrap
+      - name: Check lint
+        run: npm run lint
 
-    - name: Check lint
-      run: npm run lint
+      - name: Check formatting
+        run: npm run format && git diff --exit-code
 
   wct-local:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-node@v1
-      with:
-        node-version: 13
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 13
 
-    - name: NPM install
-      run: npm ci
+      - name: NPM install
+        run: npm ci
 
-    - name: Lerna bootstrap
-      run: npm run bootstrap
+      - name: Lerna bootstrap
+        run: npm run bootstrap
 
-    - name: Build
-      run: npm run build
+      - name: Build
+        run: npm run build
 
-    - name: WCT local (Chrome/Firefox)
-      run: npm test
+      - name: WCT local (Chrome/Firefox)
+        run: npm test
 
   wct-sauce:
     # Skip if this is from a forked repository because we can't access Sauce
@@ -50,22 +50,22 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-node@v1
-      with:
-        node-version: 13
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 13
 
-    - name: NPM install
-      run: npm ci
+      - name: NPM install
+        run: npm ci
 
-    - name: Lerna bootstrap
-      run: npm run bootstrap
+      - name: Lerna bootstrap
+        run: npm run bootstrap
 
-    - name: Build
-      run: npm run build
+      - name: Build
+        run: npm run build
 
-    - name: WCT sauce (Safari/Edge/IE11/Chrome 41)
-      env:
-        SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
-        SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
-      run: npm run test-sauce
+      - name: WCT sauce (Safari/Edge/IE11/Chrome 41)
+        env:
+          SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
+          SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
+        run: npm run test-sauce

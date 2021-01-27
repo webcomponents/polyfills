@@ -12,5 +12,10 @@
 import {descriptors as HTMLCollectionDescriptors} from '../environment/html_collection.js';
 
 const lengthDescriptor = HTMLCollectionDescriptors.length ?? {};
-const lengthGetter = lengthDescriptor.get ?? function(this: HTMLCollection) { return this.length; };
-export const getLength = (collection: HTMLCollection): number => lengthGetter.call(collection);
+const lengthGetter =
+  lengthDescriptor.get ??
+  function (this: HTMLCollection) {
+    return this.length;
+  };
+export const getLength = (collection: HTMLCollection): number =>
+  lengthGetter.call(collection);

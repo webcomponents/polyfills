@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <!--
     @license
     Copyright (c) 2017 The Polymer Project Authors. All rights reserved.
@@ -9,42 +9,39 @@
     subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 -->
 <html>
+  <head>
+    <title>loadImports</title>
+    <script>
+      WCT = {
+        waitFor: function (callback) {
+          callback();
+        },
+      };
+    </script>
+    <script src="../../node_modules/@webcomponents/html-imports/html-imports.min.js"></script>
+    <script src="../../node_modules/wct-browser-legacy/browser.js"></script>
+  </head>
 
-<head>
-  <title>loadImports</title>
-  <script>
-    WCT = {
-      waitFor: function(callback) {
-        callback();
-      }
-    };
-  </script>
-  <script src="../../node_modules/@webcomponents/html-imports/html-imports.min.js"></script>
-  <script src="../../node_modules/wct-browser-legacy/browser.js"></script>
-</head>
-
-<body>
-  <script>
-
-    test('loadImports defined', function() {
-      assert.isFunction(HTMLImports.loadImports, 'loadImports defined');
-    });
-
-    test('loadImports handles dynamically added imports', function(done) {
-      var link = document.createElement('link');
-      link.href = 'imports/load-a.html';
-      link.rel = 'import';
-      link.addEventListener('load', function(e) {
-        console.log('dynamic link loaded', e.target.href);
+  <body>
+    <script>
+      test('loadImports defined', function () {
+        assert.isFunction(HTMLImports.loadImports, 'loadImports defined');
       });
-      document.body.appendChild(link);
-      HTMLImports.loadImports(document.body);
-      HTMLImports.whenReady(function() {
-        assert.deepEqual(window.loaded, ['a', 'b', 'c', 'd']);
-        done();
-      });
-    });
-  </script>
-</body>
 
+      test('loadImports handles dynamically added imports', function (done) {
+        var link = document.createElement('link');
+        link.href = 'imports/load-a.html';
+        link.rel = 'import';
+        link.addEventListener('load', function (e) {
+          console.log('dynamic link loaded', e.target.href);
+        });
+        document.body.appendChild(link);
+        HTMLImports.loadImports(document.body);
+        HTMLImports.whenReady(function () {
+          assert.deepEqual(window.loaded, ['a', 'b', 'c', 'd']);
+          done();
+        });
+      });
+    </script>
+  </body>
 </html>

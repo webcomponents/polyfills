@@ -18,22 +18,24 @@ Example:
   </style>
 </shady-css-scoped>
 */
-const CustomStyleInterface = window.ShadyCSS && window.ShadyCSS.CustomStyleInterface;
+const CustomStyleInterface =
+  window.ShadyCSS && window.ShadyCSS.CustomStyleInterface;
 export default class ShadyCssScoped extends HTMLElement {
-
   constructor() {
     super();
     /** @type {HTMLStyleElement} */
     this._style = null;
     if (CustomStyleInterface) {
-     CustomStyleInterface.addCustomStyle(this);
+      CustomStyleInterface.addCustomStyle(this);
     }
   }
 
   /** @return {HTMLStyleElement} */
   getStyle() {
     if (!this._style) {
-      this._style = /** @type {HTMLStyleElement} */ (this.querySelector('style'));
+      this._style = /** @type {HTMLStyleElement} */ (this.querySelector(
+        'style'
+      ));
     }
     return this._style;
   }
@@ -41,4 +43,3 @@ export default class ShadyCssScoped extends HTMLElement {
 
 ShadyCssScoped.prototype['getStyle'] = ShadyCssScoped.prototype.getStyle; // eslint-disable-line no-self-assign
 window.customElements.define('shady-css-scoped', ShadyCssScoped);
-

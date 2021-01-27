@@ -8,25 +8,22 @@
     subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 -->
 <script>
-(function() {
+  (function () {
+    window.a1DocsList = [];
 
-  window.a1DocsList = [];
-
-  class A1 extends HTMLElement {
-    connectedCallback() {
-      window.a1DocsList.push(this.ownerDocument.baseURI.split('/').pop());
-      this.isA1 = true;
+    class A1 extends HTMLElement {
+      connectedCallback() {
+        window.a1DocsList.push(this.ownerDocument.baseURI.split('/').pop());
+        this.isA1 = true;
+      }
     }
-  }
-  window.customElements.define('a-1', A1);
+    window.customElements.define('a-1', A1);
 
-
-  class SpecialStyle extends HTMLStyleElement {
-    connectedCallback() {
-      window.styleAppliedToDocument = Boolean(this.__appliedElement);
+    class SpecialStyle extends HTMLStyleElement {
+      connectedCallback() {
+        window.styleAppliedToDocument = Boolean(this.__appliedElement);
+      }
     }
-  }
-  window.customElements.define('special-style', SpecialStyle);
-
-})();
+    window.customElements.define('special-style', SpecialStyle);
+  })();
 </script>

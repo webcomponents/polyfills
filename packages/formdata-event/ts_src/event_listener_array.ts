@@ -31,17 +31,23 @@ export class EventListenerArray {
   /**
    * Returns the total number of listeners in the array.
    */
-  get length() { return this._listeners.length; }
+  get length() {
+    return this._listeners.length;
+  }
 
   /**
    * Returns the number of capturing listeners in the array.
    */
-  get capturingCount() { return this._listeners.filter(record => record.capture).length; }
+  get capturingCount() {
+    return this._listeners.filter((record) => record.capture).length;
+  }
 
   /**
    * Returns the number of bubbling listeners in the array.
    */
-  get bubblingCount() { return this._listeners.filter(record => !record.capture).length; }
+  get bubblingCount() {
+    return this._listeners.filter((record) => !record.capture).length;
+  }
 
   /**
    * Returns the last capturing listener's callback, or `undefined` if no

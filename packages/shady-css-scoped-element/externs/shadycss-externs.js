@@ -70,5 +70,3 @@ HTMLTemplateElement.prototype._style;
  * @type {string | undefined}
  */
 DOMTokenList.prototype.value;
-
-

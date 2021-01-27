@@ -10,42 +10,42 @@ reactions. The source references old versions of the spec.
 
 ### To do
 
-  1. Implement Node#isConnected
-  2. Implement built-in element extension (is=)
-  3. Add reaction callback ordering tests
-  4. Reorganize tests to be closer to spec structure
-  5. Performance tests
+1. Implement Node#isConnected
+2. Implement built-in element extension (is=)
+3. Add reaction callback ordering tests
+4. Reorganize tests to be closer to spec structure
+5. Performance tests
 
 ## Building & Running Tests
 
-  1. Install web-component-tester
+1. Install web-component-tester
 
-    ```bash
-    $ npm i -g web-component-tester
-    ```
+   ```bash
+   $ npm i -g web-component-tester
+   ```
 
-  2. Checkout the webcomponentsjs v1 branch
+2. Checkout the webcomponentsjs v1 branch
 
-    ```bash
-    $ git clone https://github.com/webcomponents/webcomponentsjs.git
-    $ cd webcomponentsjs
-    $ npm i
-    $ gulp build
-    ```
+   ```bash
+   $ git clone https://github.com/webcomponents/webcomponentsjs.git
+   $ cd webcomponentsjs
+   $ npm i
+   $ gulp build
+   ```
 
-  3. Run tests
+3. Run tests
 
-    ```bash
-    $ wct --npm tests/CustomElements/v1/index.html -l chrome
-    ```
+   ```bash
+   $ wct --npm tests/CustomElements/v1/index.html -l chrome
+   ```
 
-  4. npm link to use in another project
+4. npm link to use in another project
 
-    ```bash
-    $ npm link
-    $ cd {your project directory}
-    $ npm link @webcomponents/custom-elements
-    ```
+   ```bash
+   $ npm link
+   $ cd {your project directory}
+   $ npm link @webcomponents/custom-elements
+   ```
 
 ## Implementation approach and browser support
 
@@ -86,17 +86,17 @@ This creates a `custom-elements.min.js` file in the main directory.
 
 https://dom.spec.whatwg.org/#mutation-algorithms
 
- * insert 6.5.2.1: call connectedCallback
- * insert 6.5.2.2: upgrade
- * remove 14: call disconnectedCallback
- * remove 15.2: call disconnectedCallback
+- insert 6.5.2.1: call connectedCallback
+- insert 6.5.2.2: upgrade
+- remove 14: call disconnectedCallback
+- remove 15.2: call disconnectedCallback
 
 ### 4.4 Node
 
 https://dom.spec.whatwg.org/#concept-node-clone
 
- * clone 2.1: performs create-element
- * clone 2.2: append attributes
+- clone 2.1: performs create-element
+- clone 2.2: append attributes
 
 isConnected looks like it's Custom Elements related, but it's actually part of Shadow DOM. We might want to implement it for on non-native Shadow DOM environments, since we already watch for all connections and disconnections.
 
@@ -104,12 +104,12 @@ isConnected looks like it's Custom Elements related, but it's actually part of S
 
 https://dom.spec.whatwg.org/#interface-document
 
-  * createElement and createElementNS take ElementCreationOptions
+- createElement and createElementNS take ElementCreationOptions
 
 https://dom.spec.whatwg.org/#dom-document-createelement
 
-  * createElement 3, 4, 5, 7
-  * createElementNS 2, 3, 4, 5
+- createElement 3, 4, 5, 7
+- createElementNS 2, 3, 4, 5
 
 ### 4.9 Element
 
@@ -117,36 +117,35 @@ https://dom.spec.whatwg.org/#concept-element-custom-element-state
 
 https://dom.spec.whatwg.org/#concept-create-element
 
-  * create an element 2, 3, 4, 5, 6
+- create an element 2, 3, 4, 5, 6
 
 https://dom.spec.whatwg.org/#concept-element-attributes-change
 
-  * change an attribute 2
+- change an attribute 2
 
 https://dom.spec.whatwg.org/#concept-element-attributes-append
 
-  * append an attribute 2
+- append an attribute 2
 
 https://dom.spec.whatwg.org/#concept-element-attributes-remove
 
-  * remove an attribute 2
+- remove an attribute 2
 
 https://dom.spec.whatwg.org/#concept-element-attributes-replace
 
-  * replace an attribute 2
+- replace an attribute 2
 
 https://dom.spec.whatwg.org/#dom-element-attachshadow
 
-  * attachShadow 2 (nothing to implement)
+- attachShadow 2 (nothing to implement)
 
 ## Custom Elements in the HTML Spec
-
 
 ### 3.2.3 HTML element constructors
 
 https://html.spec.whatwg.org/multipage/dom.html#html-element-constructors
 
-  * HTML element constructors 1-9
+- HTML element constructors 1-9
 
 ### 4.13 Custom Elements
 
@@ -160,8 +159,8 @@ https://html.spec.whatwg.org/multipage/scripting.html#customelementsregistry
 
 https://html.spec.whatwg.org/multipage/browsers.html#window
 
- * Window#customElements
+- Window#customElements
 
 https://html.spec.whatwg.org/multipage/syntax.html#create-an-element-for-the-token
 
- * create an element for a token 3, 4, 5, 6, 7, 8, 9
+- create an element for a token 3, 4, 5, 6, 7, 8, 9

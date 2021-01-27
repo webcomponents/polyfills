@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <!--
 @license
 Copyright (c) 2020 The Polymer Project Authors. All rights reserved.
@@ -9,26 +9,26 @@ Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 -->
 <html>
-<head>
-  <title>Element matches</title>
-  <script src="../node_modules/@webcomponents/webcomponentsjs/bundles/webcomponents-pf_dom.js"></script>
-  <script src="./wct-config.js"></script>
-  <script src="../node_modules/wct-browser-legacy/browser.js"></script>
-</head>
-<body>
-  <script>
-    suite('Element matches', function() {
-      test('Returns an array of attribute names', () => {
-        const element = document.createElement('div');
-        element.className = 'a b';
+  <head>
+    <title>Element matches</title>
+    <script src="../node_modules/@webcomponents/webcomponentsjs/bundles/webcomponents-pf_dom.js"></script>
+    <script src="./wct-config.js"></script>
+    <script src="../node_modules/wct-browser-legacy/browser.js"></script>
+  </head>
+  <body>
+    <script>
+      suite('Element matches', function () {
+        test('Returns an array of attribute names', () => {
+          const element = document.createElement('div');
+          element.className = 'a b';
 
-        assert.isTrue(element.matches('div'));
-        assert.isTrue(element.matches('.a'));
-        assert.isTrue(element.matches('.b'));
-        assert.isTrue(element.matches('div.a.b'));
-        assert.isFalse(element.matches('.c'));
+          assert.isTrue(element.matches('div'));
+          assert.isTrue(element.matches('.a'));
+          assert.isTrue(element.matches('.b'));
+          assert.isTrue(element.matches('div.a.b'));
+          assert.isFalse(element.matches('.c'));
+        });
       });
-    });
-  </script>
-</body>
+    </script>
+  </body>
 </html>

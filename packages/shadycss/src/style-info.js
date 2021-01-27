@@ -44,7 +44,14 @@ export default class StyleInfo {
    * @param {string=} typeExtension
    * @param {string=} cssBuild
    */
-  constructor(ast, placeholder, ownStylePropertyNames, elementName, typeExtension, cssBuild) {
+  constructor(
+    ast,
+    placeholder,
+    ownStylePropertyNames,
+    elementName,
+    typeExtension,
+    cssBuild
+  ) {
     /** @type {StyleNode} */
     this.styleRules = ast || null;
     /** @type {Node} */

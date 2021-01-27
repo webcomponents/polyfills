@@ -9,11 +9,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 */
 
 import * as utils from './utils.js';
-import {eventPropertyNamesForElement, eventPropertyNamesForHTMLElement} from './patch-events.js';
+import {
+  eventPropertyNamesForElement,
+  eventPropertyNamesForHTMLElement,
+} from './patch-events.js';
 
 /** @implements {IWrapper} */
 class Wrapper {
-
   /** @param {!Node} node */
   constructor(node) {
     this.node = node;
@@ -21,11 +23,19 @@ class Wrapper {
 
   // node
   addEventListener(name, fn, options) {
-    return this.node[utils.SHADY_PREFIX + 'addEventListener'](name, fn, options);
+    return this.node[utils.SHADY_PREFIX + 'addEventListener'](
+      name,
+      fn,
+      options
+    );
   }
 
   removeEventListener(name, fn, options) {
-    return this.node[utils.SHADY_PREFIX + 'removeEventListener'](name, fn, options);
+    return this.node[utils.SHADY_PREFIX + 'removeEventListener'](
+      name,
+      fn,
+      options
+    );
   }
 
   appendChild(node) {
@@ -85,7 +95,10 @@ class Wrapper {
 
   /** @return {!Node|undefined} */
   get activeElement() {
-    if (utils.isShadyRoot(this.node) || this.node.nodeType === Node.DOCUMENT_NODE) {
+    if (
+      utils.isShadyRoot(this.node) ||
+      this.node.nodeType === Node.DOCUMENT_NODE
+    ) {
       const e = this.node[utils.SHADY_PREFIX + 'activeElement'];
       return e;
     }
@@ -132,7 +145,10 @@ class Wrapper {
   }
 
   querySelectorAll(selector, useNative) {
-    return this.node[utils.SHADY_PREFIX + 'querySelectorAll'](selector, useNative);
+    return this.node[utils.SHADY_PREFIX + 'querySelectorAll'](
+      selector,
+      useNative
+    );
   }
 
   // slot
@@ -144,7 +160,7 @@ class Wrapper {
 
   get host() {
     if (utils.isShadyRoot(this.node)) {
-      return /** @type {!ShadowRoot} */(this.node).host;
+      return /** @type {!ShadowRoot} */ (this.node).host;
     }
     return undefined;
   }
@@ -272,7 +288,6 @@ class Wrapper {
   replaceWith(...args) {
     return this.node[utils.SHADY_PREFIX + 'replaceWith'](...args);
   }
-
 }
 
 const addEventPropertyWrapper = (name) => {
@@ -285,12 +300,14 @@ const addEventPropertyWrapper = (name) => {
     set(value) {
       this.node[utils.SHADY_PREFIX + name] = value;
     },
-    configurable: true
+    configurable: true,
   });
 };
 
-eventPropertyNamesForElement.forEach(name => addEventPropertyWrapper(name));
-eventPropertyNamesForHTMLElement.forEach(name => addEventPropertyWrapper(name));
+eventPropertyNamesForElement.forEach((name) => addEventPropertyWrapper(name));
+eventPropertyNamesForHTMLElement.forEach((name) =>
+  addEventPropertyWrapper(name)
+);
 
 export {Wrapper};
 
@@ -300,7 +317,7 @@ export function wrap(obj) {
   if (utils.isShadyRoot(obj) || obj instanceof Wrapper) {
     return obj;
   }
-  let wrapper = wrapperMap.get(obj)
+  let wrapper = wrapperMap.get(obj);
   if (!wrapper) {
     wrapper = new Wrapper(obj);
     wrapperMap.set(obj, wrapper);

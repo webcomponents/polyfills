@@ -12,7 +12,10 @@ import * as utils from './utils.js';
 import {EventTargetPatches} from './patches/EventTarget.js';
 import {NodePatches} from './patches/Node.js';
 import {SlotablePatches} from './patches/Slotable.js';
-import {ParentNodePatches, ParentNodeDocumentOrFragmentPatches} from './patches/ParentNode.js';
+import {
+  ParentNodePatches,
+  ParentNodeDocumentOrFragmentPatches,
+} from './patches/ParentNode.js';
 import {ChildNodePatches} from './patches/ChildNode.js';
 import {ElementPatches, ElementShadowPatches} from './patches/Element.js';
 import {ElementOrShadowRootPatches} from './patches/ElementOrShadowRoot.js';
@@ -48,7 +51,8 @@ if (Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'className')) {
 
 // Avoid patching `innerHTML` if it does not exist on Element (IE)
 // and we can patch accessors (hasDescriptors).
-const ElementShouldHaveInnerHTML = !utils.settings.hasDescriptors || 'innerHTML' in Element.prototype;
+const ElementShouldHaveInnerHTML =
+  !utils.settings.hasDescriptors || 'innerHTML' in Element.prototype;
 
 // setup patching
 const patchMap = {
@@ -58,23 +62,38 @@ const patchMap = {
   Comment: [SlotablePatches],
   CDATASection: [SlotablePatches],
   ProcessingInstruction: [SlotablePatches],
-  Element: [ElementPatches, ParentNodePatches, ChildNodePatches, SlotablePatches,
+  Element: [
+    ElementPatches,
+    ParentNodePatches,
+    ChildNodePatches,
+    SlotablePatches,
     ElementShouldHaveInnerHTML ? ElementOrShadowRootPatches : null,
-    !window.HTMLSlotElement ? SlotPatches : null],
+    !window.HTMLSlotElement ? SlotPatches : null,
+  ],
   HTMLElement: [HTMLElementPatches, NonStandardHTMLElement],
   HTMLSlotElement: [SlotPatches],
-  DocumentFragment: [ParentNodeDocumentOrFragmentPatches, DocumentOrFragmentPatches],
-  Document: [DocumentPatches, ParentNodeDocumentOrFragmentPatches, DocumentOrFragmentPatches, DocumentOrShadowRootPatches],
+  DocumentFragment: [
+    ParentNodeDocumentOrFragmentPatches,
+    DocumentOrFragmentPatches,
+  ],
+  Document: [
+    DocumentPatches,
+    ParentNodeDocumentOrFragmentPatches,
+    DocumentOrFragmentPatches,
+    DocumentOrShadowRootPatches,
+  ],
   Window: [WindowPatches],
   CharacterData: [ChildNodePatches],
-}
+};
 
 const getPatchPrototype = (name) => window[name] && window[name].prototype;
 
 // Note, must avoid patching accessors on prototypes when descriptors are not correct
 // because the CustomElements polyfill checks if these exist before patching instances.
 // CustomElements polyfill *only* cares about these accessors.
-const disallowedNativePatches = utils.settings.hasDescriptors ? null : ['innerHTML', 'textContent'];
+const disallowedNativePatches = utils.settings.hasDescriptors
+  ? null
+  : ['innerHTML', 'textContent'];
 
 /**
  * Patch a group of accessors on an object.
@@ -84,8 +103,10 @@ const disallowedNativePatches = utils.settings.hasDescriptors ? null : ['innerHT
  * @param {Array=} disallowed
  */
 function applyPatchList(proto, list, prefix, disallowed) {
-  list.forEach(patch => proto && patch &&
-    utils.patchProperties(proto, patch, prefix, disallowed));
+  list.forEach(
+    (patch) =>
+      proto && patch && utils.patchProperties(proto, patch, prefix, disallowed)
+  );
 }
 
 /** @param {string=} prefix */
@@ -95,7 +116,7 @@ export const applyPatches = (prefix) => {
     const proto = getPatchPrototype(p);
     applyPatchList(proto, patchMap[p], prefix, disallowed);
   }
-}
+};
 
 const PROTO_IS_PATCHED = utils.SHADY_PREFIX + 'protoIsPatched';
 
@@ -110,7 +131,7 @@ const PATCHED_PROTO = utils.SHADY_PREFIX + 'patchedProto';
 
 // Patch non-element prototypes up front so that we don't have to check
 // the type of Node when patching an can always assume we're patching an element.
-['Text', 'Comment', 'CDATASection', 'ProcessingInstruction'].forEach(name => {
+['Text', 'Comment', 'CDATASection', 'ProcessingInstruction'].forEach((name) => {
   const ctor = window[name];
   const patchedProto = Object.create(ctor.prototype);
   patchedProto[PROTO_IS_PATCHED] = true;
@@ -130,7 +151,7 @@ export const patchElementProto = (proto) => {
   applyPatchList(proto, patchMap.HTMLElement);
   applyPatchList(proto, patchMap.HTMLSlotElement);
   return proto;
-}
+};
 
 export const patchNodeProto = (node) => {
   if (node[PROTO_IS_PATCHED] || utils.isShadyRoot(node)) {
@@ -140,18 +161,19 @@ export const patchNodeProto = (node) => {
   // Note, this hasOwnProperty check is critical to avoid seeing a patched
   // prototype lower in the prototype chain, e.g. if an <s> element has been
   // patched, without this check, an <input> element would get the wrong patch.
-  let proto = nativeProto.hasOwnProperty(PATCHED_PROTO) && nativeProto[PATCHED_PROTO];
+  let proto =
+    nativeProto.hasOwnProperty(PATCHED_PROTO) && nativeProto[PATCHED_PROTO];
   if (!proto) {
     proto = Object.create(nativeProto);
     patchElementProto(proto);
     nativeProto[PATCHED_PROTO] = proto;
   }
   Object.setPrototypeOf(node, proto);
-}
+};
 
 export const patchShadowOnElement = () => {
   utils.patchProperties(Element.prototype, ElementShadowPatches);
-}
+};
 
 export const addShadyPrefixedProperties = () => {
   // perform shady patches

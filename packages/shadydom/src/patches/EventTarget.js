@@ -9,14 +9,16 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 */
 
 import * as utils from '../utils.js';
-import {addEventListener, removeEventListener, dispatchEvent} from '../patch-events.js';
+import {
+  addEventListener,
+  removeEventListener,
+  dispatchEvent,
+} from '../patch-events.js';
 
 export const EventTargetPatches = utils.getOwnPropertyDescriptors({
-
   dispatchEvent,
 
   addEventListener,
 
-  removeEventListener
-
+  removeEventListener,
 });

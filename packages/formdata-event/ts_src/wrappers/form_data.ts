@@ -9,35 +9,45 @@
  * additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
-import {constructor as FormDataConstructor, prototype as FormDataPrototype, methods as FormDataMethods} from '../environment/form_data.js';
+import {
+  constructor as FormDataConstructor,
+  prototype as FormDataPrototype,
+  methods as FormDataMethods,
+} from '../environment/form_data.js';
 import {dispatchEvent} from '../environment_api/event_target.js';
 import {FormDataEvent} from '../form_data_event.js';
 import {prepareWrapper, installWrapper} from './wrap_constructor.js';
 
 interface FormDataAppendEntry {
-  operation: 'append',
-  name: string,
-  value: string,
+  operation: 'append';
+  name: string;
+  value: string;
 }
 
 interface FormDataDeleteEntry {
-  operation: 'delete',
-  name: string,
+  operation: 'delete';
+  name: string;
 }
 
 interface FormDataSetEntry {
-  operation: 'set',
-  name: string,
-  value: string,
+  operation: 'set';
+  name: string;
+  value: string;
 }
 
-type FormDataEntry = FormDataAppendEntry | FormDataDeleteEntry | FormDataSetEntry;
+type FormDataEntry =
+  | FormDataAppendEntry
+  | FormDataDeleteEntry
+  | FormDataSetEntry;
 
 const private_entries = new WeakMap<FormData, Array<FormDataEntry>>();
 
 export const getEntries = (formData: FormData) => private_entries.get(formData);
 
-export const FormData: typeof window.FormData = function FormData(this: FormData, form?: HTMLFormElement) {
+export const FormData: typeof window.FormData = (function FormData(
+  this: FormData,
+  form?: HTMLFormElement
+) {
   const _this = new FormDataConstructor(form);
   Object.setPrototypeOf(_this, Object.getPrototypeOf(this));
 
@@ -51,25 +61,28 @@ export const FormData: typeof window.FormData = function FormData(this: FormData
     // list associated with it after the event has finished propagating. The
     // FormData constructor then takes this returned entry list and associates
     // it with itself.
-    dispatchEvent.call(form, new FormDataEvent('formdata', {
-      bubbles: true,
-      formData: _this,
-    }));
+    dispatchEvent.call(
+      form,
+      new FormDataEvent('formdata', {
+        bubbles: true,
+        formData: _this,
+      })
+    );
   }
 
   return _this;
-} as Function as typeof window.FormData;
+} as Function) as typeof window.FormData;
 
 prepareWrapper(FormData, FormDataConstructor, FormDataPrototype);
 
 export const install = () => {
   installWrapper(FormData);
 
-  FormData.prototype['append'] = function(
+  FormData.prototype['append'] = function (
     this: FormData,
     name: string,
     value: string | Blob,
-    _filename?: string,
+    _filename?: string
   ) {
     const entries = private_entries.get(this)!;
 
@@ -82,10 +95,7 @@ export const install = () => {
   };
 
   if (FormDataMethods.delete !== undefined) {
-    FormData.prototype['delete'] = function(
-      this: FormData,
-      name: string,
-    ) {
+    FormData.prototype['delete'] = function (this: FormData, name: string) {
       const entries = private_entries.get(this)!;
 
       entries.push({operation: 'delete', name});
@@ -94,11 +104,11 @@ export const install = () => {
   }
 
   if (FormDataMethods.set !== undefined) {
-    FormData.prototype['set'] = function(
+    FormData.prototype['set'] = function (
       this: FormData,
       name: string,
       value: string | Blob,
-      _filename?: string,
+      _filename?: string
     ) {
       const entries = private_entries.get(this)!;
 

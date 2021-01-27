@@ -37,17 +37,17 @@ if (!window.Promise) {
   };
   /** @type {!Array<function():void>} */
   const callbacks: Array<() => void> = [];
-  (new MutationObserver(() => {
-     const len = callbacks.length;
-     for (let i = 0; i < len; i++) {
-       callbacks[i]();
-     }
-     callbacks.splice(0, len);
-   }).observe(node, {characterData: true}));
+  new MutationObserver(() => {
+    const len = callbacks.length;
+    for (let i = 0; i < len; i++) {
+      callbacks[i]();
+    }
+    callbacks.splice(0, len);
+  }).observe(node, {characterData: true});
 
   // set _immediateFn to a MutationObserver for close-to-native timing
   PromisePolyfill._immediateFn = (fn: () => void) => {
     callbacks.push(fn);
     twiddleNode();
-  }
+  };
 }

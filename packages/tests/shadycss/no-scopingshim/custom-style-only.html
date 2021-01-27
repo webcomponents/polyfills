@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <!--
 @license
 Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
@@ -14,7 +14,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <script src="../../node_modules/@webcomponents/template/template.js"></script>
 <script src="../../node_modules/@webcomponents/html-imports/html-imports.min.js"></script>
 <script>
-  WCT = { waitFor: function (cb) { HTMLImports.whenReady(cb) } }
+  WCT = {
+    waitFor: function (cb) {
+      HTMLImports.whenReady(cb);
+    },
+  };
 </script>
 <script src="../../node_modules/@webcomponents/custom-elements/custom-elements.min.js"></script>
 <script src="../../node_modules/@webcomponents/shadycss/apply-shim.min.js"></script>
@@ -31,7 +35,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <script src="../module/generated/custom-style-element.js"></script>
 <script src="../../node_modules/wct-browser-legacy/browser.js"></script>
 
-
 <custom-style>
   <style>
     #target {
@@ -43,12 +46,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 <template id="late">
   <custom-style class="late-style">
+    <!-- prettier-ignore -->
     <style>
-    html {
-      --late: {
-        border: 2px solid red;
-      };
-    }
+      html {
+        --late: {
+          border: 2px solid red;
+        };
+      }
     </style>
   </custom-style>
 </template>
@@ -56,21 +60,26 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <div id="target"></div>
 
 <script>
-suite('custom-style only', function() {
-  var host = document.querySelector('#target');
-  test('custom-style by itself works as expected', function() {
-    assert.equal(getComputedStyle(host).getPropertyValue('display').trim(), 'block');
-  });
-  test('late custom-style updates styling', function(done) {
-    var lateTemplate = document.querySelector('template#late');
-    document.body.appendChild(document.importNode(lateTemplate.content, true));
-    // two rAF to wait for after custom-style-interface's batching
-    requestAnimationFrame(function() {
-      requestAnimationFrame(function() {
-        assert.equal(getComputedStyle(host).borderTopWidth.trim(), '2px');
-        done();
+  suite('custom-style only', function () {
+    var host = document.querySelector('#target');
+    test('custom-style by itself works as expected', function () {
+      assert.equal(
+        getComputedStyle(host).getPropertyValue('display').trim(),
+        'block'
+      );
+    });
+    test('late custom-style updates styling', function (done) {
+      var lateTemplate = document.querySelector('template#late');
+      document.body.appendChild(
+        document.importNode(lateTemplate.content, true)
+      );
+      // two rAF to wait for after custom-style-interface's batching
+      requestAnimationFrame(function () {
+        requestAnimationFrame(function () {
+          assert.equal(getComputedStyle(host).borderTopWidth.trim(), '2px');
+          done();
+        });
       });
     });
-  })
-})
+  });
 </script>
