@@ -20,6 +20,9 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "files": [
+    "scoped-custom-element-registry.js"
+  ],
   "keywords": [
     "custom-elements",
     "customelements",
