@@ -1,7 +1,9 @@
 {
   "name": "@webcomponents/scoped-custom-element-registry",
   "version": "0.0.1",
-  "private": true,
+  "publishConfig": {
+    "access": "public"
+  },
   "description": "Scoped CustomElementRegistry Polyfill",
   "license": "BSD-3-Clause",
   "repository": {
