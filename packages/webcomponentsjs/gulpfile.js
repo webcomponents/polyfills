@@ -69,7 +69,7 @@ function closurify(sourceName, fileName) {
     rewrite_polyfills: false,
     module_resolution: 'NODE',
     entry_point: `src/entrypoints/${sourceName}-index.js`,
-    dependency_mode: 'STRICT',
+    dependency_mode: 'PRUNE',
     process_common_js_modules: true,
     externs: [
       'externs/webcomponents.js',

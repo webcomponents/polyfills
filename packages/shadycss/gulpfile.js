@@ -33,7 +33,7 @@ function closurify(entry) {
           assume_function_wrapper: true,
           js_output_file: `${entry}.min.js`,
           entry_point: `./entrypoints/${entry}.js`,
-          dependency_mode: 'STRICT',
+          dependency_mode: 'PRUNE',
           warning_level: 'VERBOSE',
           rewrite_polyfills: false,
           externs: 'externs/shadycss-externs.js',
