@@ -19,7 +19,7 @@ const closureCompiler = compilerPackage.gulp();
 
 gulp.task('default', () => {
   return gulp
-    .src('./scoped-custom-element-registry.js', {base: './'})
+    .src('./src/**/*.js', {base: './'})
     .pipe(sourcemaps.init())
     .pipe(
       closureCompiler({
@@ -28,7 +28,7 @@ gulp.task('default', () => {
         language_in: 'STABLE',
         language_out: 'ECMASCRIPT5_STRICT',
         dependency_mode: 'PRUNE',
-        entry_point: ['/scoped-custom-element-registry.js'],
+        entry_point: ['/src/scoped-custom-element-registry.js'],
         js_output_file: 'scoped-custom-element-registry.min.js',
         output_wrapper: '(function(){\n%output%\n}).call(self);',
         assume_function_wrapper: true,
