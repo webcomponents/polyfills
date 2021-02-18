@@ -1,7 +1,9 @@
 {
   "name": "@webcomponents/scoped-custom-element-registry",
   "version": "0.0.1",
-  "private": true,
+  "publishConfig": {
+    "access": "public"
+  },
   "description": "Scoped CustomElementRegistry Polyfill",
   "license": "BSD-3-Clause",
   "repository": {
@@ -14,10 +16,15 @@
   "bugs": {
     "url": "https://github.com/webcomponents/polyfills/issues"
   },
-  "main": "scoped-custom-element-registry.js",
+  "main": "scoped-custom-element-registry.min.js",
   "scripts": {
+    "build": "gulp",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "files": [
+    "scoped-custom-element-registry.min.js*",
+    "src/"
+  ],
   "keywords": [
     "custom-elements",
     "customelements",
