@@ -18,10 +18,12 @@
   },
   "main": "scoped-custom-element-registry.js",
   "scripts": {
+    "build": "gulp",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "files": [
-    "scoped-custom-element-registry.js"
+    "scoped-custom-element-registry.js",
+    "scoped-custom-element-registry.min.js*"
   ],
   "keywords": [
     "custom-elements",
