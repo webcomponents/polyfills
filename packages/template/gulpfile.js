@@ -26,7 +26,7 @@ gulp.task('default', () => {
         warning_level: 'VERBOSE',
         language_in: 'ECMASCRIPT6_STRICT',
         language_out: 'ECMASCRIPT5_STRICT',
-        dependency_mode: 'STRICT',
+        dependency_mode: 'PRUNE',
         entry_point: ['/template'],
         js_output_file: 'template.min.js',
         output_wrapper: '(function(){\n%output%\n}).call(self);',
