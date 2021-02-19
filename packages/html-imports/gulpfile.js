@@ -16,7 +16,7 @@ const closure = require('google-closure-compiler').gulp();
 const closureOptions = {
   compilation_level: 'ADVANCED',
   warning_level: 'VERBOSE',
-  language_in: 'ES6_STRICT',
+  language_in: 'STABLE',
   language_out: 'ES5_STRICT',
   externs: ['externs/html-imports.js'],
   js_output_file: 'html-imports.min.js',
