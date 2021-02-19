@@ -12,7 +12,7 @@
     "directory": "packages/scoped-custom-element-registry"
   },
   "author": "The Polymer Project Authors (https://polymer.github.io/AUTHORS.txt)",
-  "homepage": "https://github.com/webcomponents/polyfills/tree/master/packages/custom-elements-scoped#readme",
+  "homepage": "https://github.com/webcomponents/polyfills/tree/master/packages/scoped-custom-element-registry",
   "bugs": {
     "url": "https://github.com/webcomponents/polyfills/issues"
   },
