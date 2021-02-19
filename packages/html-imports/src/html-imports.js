@@ -179,7 +179,8 @@
           // Prefer responseURL which already resolves redirects
           // https://xhr.spec.whatwg.org/#the-responseurl-attribute
           let redirectedUrl =
-            request.responseURL || request.getResponseHeader('Location');
+            (request.responseURL || request.getResponseHeader('Location')) ??
+            undefined;
           if (redirectedUrl && redirectedUrl.indexOf('/') === 0) {
             // In IE location.origin might not work
             // https://connect.microsoft.com/IE/feedback/details/1763802/location-origin-is-undefined-in-ie-11-on-windows-10-but-works-on-windows-7
