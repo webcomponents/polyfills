@@ -41,7 +41,7 @@ the composed dom will be available 1 microtask after the dom mutation occurs.
 For testing, `ShadyDOM.flush` may be called to force syncronous composition.
 
 ShadowDOM compatible styling is _not_ provided with the ShadyDOM shim. To
-shim ShadowDOM styling, use the [shadycss](https://github.com/webcomponents/shadycss) shim.
+shim ShadowDOM styling, use the [shadycss](https://github.com/webcomponents/polyfills/tree/master/packages/shadycss) shim.
 
 On very old versions of Chrome and Safari, in rare cases `ShadyDOM.patch(node)`
 must be called to properly set `textContent` or `innerHTML`. On these browsers,
