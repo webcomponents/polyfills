@@ -307,12 +307,31 @@ if (!ShadowRoot.prototype.createElement) {
     }
   };
 
+  // Helper to patch CE class hierarchy changing those CE classes created before applying the polyfill
+  // to make them work with the new patched CustomElementsRegistry
+  const patchHTMLElement = (elementClass) => {
+    const parentClass = Object.getPrototypeOf(elementClass);
+
+    if (parentClass !== window.HTMLElement) {
+      if (parentClass === NativeHTMLElement) {
+        return Object.setPrototypeOf(elementClass, window.HTMLElement);
+      }
+
+      return patchHTMLElement(parentClass);
+    }
+  };
+
   // Helper to upgrade an instance with a CE definition using "constructor call trick"
   const customize = (instance, definition, isUpgrade = false) => {
     Object.setPrototypeOf(instance, definition.elementClass.prototype);
     definitionForElement.set(instance, definition);
     upgradingInstance = instance;
-    new definition.elementClass();
+    try {
+      new definition.elementClass();
+    } catch (_) {
+      patchHTMLElement(definition.elementClass);
+      new definition.elementClass();
+    }
     // Approximate observedAttributes from the user class, since the stand-in element had none
     definition.observedAttributes.forEach((attr) => {
       if (instance.hasAttribute(attr)) {
