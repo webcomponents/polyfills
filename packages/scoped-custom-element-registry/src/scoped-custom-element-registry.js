@@ -88,7 +88,7 @@ if (!ShadowRoot.prototype.createElement) {
         this._awaitingUpgrade.delete(tagName);
         for (const element of awaiting) {
           pendingRegistryForElement.delete(element);
-          upgrade(element, definition);
+          customize(element, definition, true);
         }
       }
       // Flush whenDefined callbacks
@@ -220,7 +220,7 @@ if (!ShadowRoot.prototype.createElement) {
         const registry = registryForNode(instance) || window.customElements;
         const definition = registry._getDefinition(tagName);
         if (definition) {
-          upgrade(instance, definition);
+          customize(instance, definition);
         } else {
           pendingRegistryForElement.set(instance, registry);
         }
@@ -305,7 +305,7 @@ if (!ShadowRoot.prototype.createElement) {
   };
 
   // Helper to upgrade an instance with a CE definition using "constructor call trick"
-  const upgrade = (instance, definition) => {
+  const customize = (instance, definition, isUpgrade = false) => {
     Object.setPrototypeOf(instance, definition.elementClass.prototype);
     definitionForElement.set(instance, definition);
     upgradingInstance = instance;
@@ -321,6 +321,9 @@ if (!ShadowRoot.prototype.createElement) {
         );
       }
     });
+    if (isUpgrade && definition.connectedCallback && instance.isConnected) {
+      definition.connectedCallback.call(instance);
+    }
   };
 
   // Patch attachShadow to set customElements on shadowRoot when provided
@@ -335,7 +338,7 @@ if (!ShadowRoot.prototype.createElement) {
 
   // Install scoped creation API on Element & ShadowRoot
   let creationContext = [document];
-  const installScopedCreationMethod = (ctor, method, from) => {
+  const installScopedCreationMethod = (ctor, method, from = undefined) => {
     const native = (from ? Object.getPrototypeOf(from) : ctor.prototype)[
       method
     ];
