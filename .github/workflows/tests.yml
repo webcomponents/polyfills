@@ -42,6 +42,27 @@ jobs:
       - name: WCT local (Chrome/Firefox)
         run: npm test
 
+  wtr-local:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 13
+
+      - name: NPM install
+        run: npm ci
+
+      - name: Lerna bootstrap
+        run: npm run bootstrap
+
+      - name: Build
+        run: npm run build
+
+      - name: WTR local (Chrome/Webkit/Firefox)
+        run: npm test:wtr
+
   wct-sauce:
     # Skip if this is from a forked repository because we can't access Sauce
     # secrets.

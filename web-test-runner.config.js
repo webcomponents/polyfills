@@ -6,9 +6,11 @@ const defaultBrowsers = [
   playwrightLauncher({product: 'firefox', concurrency: 1}),
 ];
 
-const envBrowsers = process.env.BROWSERS?.split(',').map((product) =>
-  playwrightLauncher({product})
-);
+const envBrowsers =
+  process.env.BROWSERS &&
+  process.env.BROWSERS.split(',').map((product) =>
+    playwrightLauncher({product})
+  );
 
 const browsers = envBrowsers ?? defaultBrowsers;
 
