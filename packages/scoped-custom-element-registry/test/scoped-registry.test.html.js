@@ -90,6 +90,9 @@ describe('Scoped Registry', () => {
       expect(scopedEl).to.be.instanceOf(CustomElementClass);
       expect(scopedEl.connected).to.be.true;
       expect(scopedEl.attributeChanged).to.equal('attr:scoped');
+
+      document.body.removeChild(container);
+      document.body.removeChild(shadowRoot.host);
     });
   });
 });
