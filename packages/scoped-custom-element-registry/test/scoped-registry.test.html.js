@@ -1,7 +1,7 @@
 import {expect} from '@open-wc/testing';
 
 import {commonRegistryTests} from './common-registry-tests.js';
-import {getShadowRoot, getTestElement} from './utils.js';
+import {getShadowRoot, getTestElement, getTestTagName} from './utils.js';
 
 describe('Scoped Registry', () => {
   commonRegistryTests(new CustomElementRegistry());
@@ -53,6 +53,46 @@ describe('Scoped Registry', () => {
       registry.define(tagName, CustomElementClass);
 
       expect(() => new CustomElementClass()).to.throw();
+    });
+
+    it('should allow defining in global registry and scoped registery', () => {
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+
+      const tagName = getTestTagName();
+      class CustomElementClass extends HTMLElement {
+        static get observedAttributes() {
+          return ['attr'];
+        }
+        connectedCallback() {
+          this.connected = true;
+        }
+        attributeChangedCallback(name, old, val) {
+          this.attributeChanged = `${name}:${val}`;
+        }
+      }
+
+      // Define in global registry first
+      customElements.define(tagName, CustomElementClass);
+      container.innerHTML = `<${tagName} attr="doc"></${tagName}`;
+      const docEl = container.firstChild;
+      expect(docEl).to.be.instanceOf(CustomElementClass);
+      expect(docEl.connected).to.be.true;
+      expect(docEl.attributeChanged).to.equal('attr:doc');
+
+      // Create scoped element, then upgrade via scoped registry
+      const registry = new CustomElementRegistry();
+      const shadowRoot = getShadowRoot(registry);
+      document.body.appendChild(shadowRoot.host);
+      shadowRoot.innerHTML = `<${tagName} attr="scoped"></${tagName}`;
+      const scopedEl = shadowRoot.firstChild;
+      registry.define(tagName, CustomElementClass);
+      expect(scopedEl).to.be.instanceOf(CustomElementClass);
+      expect(scopedEl.connected).to.be.true;
+      expect(scopedEl.attributeChanged).to.equal('attr:scoped');
+
+      document.body.removeChild(container);
+      document.body.removeChild(shadowRoot.host);
     });
   });
 });

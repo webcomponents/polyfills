@@ -19,7 +19,7 @@
   "main": "scoped-custom-element-registry.min.js",
   "scripts": {
     "build": "gulp",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "cd ../.. && wtr 'packages/scoped-custom-element-registry/test/**/*.test.(js|html)'"
   },
   "files": [
     "scoped-custom-element-registry.min.js*",
