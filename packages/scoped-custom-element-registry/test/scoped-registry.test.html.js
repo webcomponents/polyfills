@@ -95,4 +95,23 @@ describe('Scoped Registry', () => {
       document.body.removeChild(shadowRoot.host);
     });
   });
+
+  describe('whenDefined', () => {
+    it('should resolve whenDefined when defined after calling whenDefined', async () => {
+      const registry = new CustomElementRegistry();
+      const {tagName, CustomElementClass} = getTestElement();
+      const whenDefined = registry.whenDefined(tagName);
+      registry.define(tagName, CustomElementClass);
+      const ctor = await whenDefined;
+      expect(ctor).to.equal(CustomElementClass);
+    });
+
+    it('should resolve whenDefined when defined before calling whenDefined', async () => {
+      const registry = new CustomElementRegistry();
+      const {tagName, CustomElementClass} = getTestElement();
+      registry.define(tagName, CustomElementClass);
+      const ctor = await registry.whenDefined(tagName);
+      expect(ctor).to.equal(CustomElementClass);
+    });
+  });
 });

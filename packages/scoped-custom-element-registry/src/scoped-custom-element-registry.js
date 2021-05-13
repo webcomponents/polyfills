@@ -34,8 +34,7 @@ if (!ShadowRoot.prototype.createElement) {
     constructor() {
       this._definitionsByTag = new Map();
       this._definitionsByClass = new Map();
-      this._definedPromises = new Map();
-      this._definedResolvers = new Map();
+      this._whenDefinedPromises = new Map();
       this._awaitingUpgrade = new Map();
     }
 
@@ -92,9 +91,10 @@ if (!ShadowRoot.prototype.createElement) {
         }
       }
       // Flush whenDefined callbacks
-      const resolver = this._definedResolvers.get(tagName);
-      if (resolver) {
-        resolver();
+      const info = this._whenDefinedPromises.get(tagName);
+      if (info !== undefined) {
+        info.resolve(elementClass);
+        this._whenDefinedPromises.delete(tagName);
       }
       return elementClass;
     }
@@ -115,14 +115,17 @@ if (!ShadowRoot.prototype.createElement) {
     }
 
     whenDefined(tagName) {
-      let promise = this._definedPromises.get(tagName);
-      if (!promise) {
-        let resolve;
-        promise = new Promise((r) => (resolve = r));
-        this._definedPromises.set(tagName, promise);
-        this._definedResolvers.set(tagName, resolve);
+      const definition = this._getDefinition(tagName);
+      if (definition !== undefined) {
+        return Promise.resolve(definition.elementClass);
       }
-      return promise;
+      let info = this._whenDefinedPromises.get(tagName);
+      if (info === undefined) {
+        info = {};
+        info.promise = new Promise((r) => (info.resolve = r));
+        this._whenDefinedPromises.set(tagName, info);
+      }
+      return info.promise;
     }
 
     _upgradeWhenDefined(element, tagName, shouldUpgrade) {
