@@ -94,7 +94,7 @@ if (!ShadowRoot.prototype.createElement) {
       // Flush whenDefined callbacks
       const resolver = this._definedResolvers.get(tagName);
       if (resolver) {
-        resolver();
+        resolver(elementClass);
       }
       return elementClass;
     }
@@ -121,6 +121,10 @@ if (!ShadowRoot.prototype.createElement) {
         promise = new Promise((r) => (resolve = r));
         this._definedPromises.set(tagName, promise);
         this._definedResolvers.set(tagName, resolve);
+        const definition = this._getDefinition(tagName);
+        if (definition !== undefined) {
+          resolve(definition.elementClass);
+        }
       }
       return promise;
     }

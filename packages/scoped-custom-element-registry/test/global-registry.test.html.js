@@ -23,4 +23,21 @@ describe('Global Registry', () => {
       expect(() => new CustomElementClass()).to.throw();
     });
   });
+
+  describe('whenDefined', () => {
+    it('should resolve whenDefined when defined after calling whenDefined', async () => {
+      const {tagName, CustomElementClass} = getTestElement();
+      const whenDefined = customElements.whenDefined(tagName);
+      customElements.define(tagName, CustomElementClass);
+      const ctor = await whenDefined;
+      expect(ctor).to.equal(CustomElementClass);
+    });
+
+    it('should resolve whenDefined when defined before calling whenDefined', async () => {
+      const {tagName, CustomElementClass} = getTestElement();
+      customElements.define(tagName, CustomElementClass);
+      const ctor = await customElements.whenDefined(tagName);
+      expect(ctor).to.equal(CustomElementClass);
+    });
+  });
 });
