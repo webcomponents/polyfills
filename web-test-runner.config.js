@@ -12,7 +12,7 @@ const envBrowsers =
     playwrightLauncher({product})
   );
 
-const browsers = envBrowsers ?? defaultBrowsers;
+const browsers = envBrowsers || defaultBrowsers;
 
 module.exports = {
   files: `packages/scoped-custom-element-registry/test/**/*.test.(js|html)`,
