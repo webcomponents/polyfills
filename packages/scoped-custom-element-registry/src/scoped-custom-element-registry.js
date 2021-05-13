@@ -345,7 +345,13 @@ if (!ShadowRoot.prototype.createElement) {
     ctor.prototype[method] = function () {
       creationContext.push(this);
       const ret = native.apply(from || this, arguments);
-      scopeForElement.set(ret, this);
+      // For disconnected elements, note their creation scope so that e.g.
+      // innerHTML into them will use the correct scope; note that
+      // insertAdjacentHTML doesn't return an element, but that's fine since
+      // it will have a parent that should have a scope
+      if (ret !== undefined) {
+        scopeForElement.set(ret, this);
+      }
       creationContext.pop();
       return ret;
     };
