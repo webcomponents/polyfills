@@ -60,8 +60,8 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: WTR local (Chrome/Webkit/Firefox)
-        run: npm run test:wtr
+      - name: WTR local (Chrome/Firefox)
+        run: BROWSERS=chromium,firefox npm run test:wtr
 
   wct-sauce:
     # Skip if this is from a forked repository because we can't access Sauce
