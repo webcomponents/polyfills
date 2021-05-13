@@ -8,9 +8,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-node@v1
+      - uses: actions/setup-node@v2
         with:
-          node-version: 13
+          node-version: 14
 
       - name: NPM install
         run: npm ci
@@ -26,9 +26,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-node@v1
+      - uses: actions/setup-node@v2
         with:
-          node-version: 13
+          node-version: 14
 
       - name: NPM install
         run: npm ci
@@ -47,9 +47,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-node@v1
+      - uses: actions/setup-node@v2
         with:
-          node-version: 13
+          node-version: 14
 
       - name: NPM install
         run: npm ci
@@ -72,9 +72,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-node@v1
+      - uses: actions/setup-node@v2
         with:
-          node-version: 13
+          node-version: 14
 
       - name: NPM install
         run: npm ci
