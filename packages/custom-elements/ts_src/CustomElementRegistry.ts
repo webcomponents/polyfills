@@ -66,9 +66,10 @@ export default class CustomElementRegistry {
 
   constructor(internals: CustomElementInternals) {
     this._internals = internals;
-    this._documentConstructionObserver = internals.useDocumentConstructionObserver
-      ? new DocumentConstructionObserver(internals, document)
-      : undefined;
+    this._documentConstructionObserver =
+      internals.useDocumentConstructionObserver
+        ? new DocumentConstructionObserver(internals, document)
+        : undefined;
   }
 
   polyfillDefineLazy(localName: string, constructorGetter: ConstructorGetter) {
@@ -248,9 +249,8 @@ export default class CustomElementRegistry {
     // defined.
     for (let i = 0; i < unflushedLocalNames.length; i++) {
       const localName = unflushedLocalNames[i];
-      const pendingUpgradableElements = elementsWithPendingDefinitions.get(
-        localName
-      )!;
+      const pendingUpgradableElements =
+        elementsWithPendingDefinitions.get(localName)!;
 
       // Attempt to upgrade all applicable elements.
       for (let i = 0; i < pendingUpgradableElements.length; i++) {
@@ -349,9 +349,8 @@ export default class CustomElementRegistry {
 }
 
 // Closure compiler exports.
-window[
-  'CustomElementRegistry'
-] = (CustomElementRegistry as unknown) as typeof window['CustomElementRegistry'];
+window['CustomElementRegistry'] =
+  CustomElementRegistry as unknown as typeof window['CustomElementRegistry'];
 /* eslint-disable no-self-assign */
 CustomElementRegistry.prototype['define'] =
   CustomElementRegistry.prototype.define;

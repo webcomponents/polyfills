@@ -44,8 +44,10 @@ class ApplyShimInterface {
       return;
     }
     if (window.ShadyCSS.CustomStyleInterface) {
-      this.customStyleInterface = /** @type {!CustomStyleInterfaceInterface} */ (window
-        .ShadyCSS.CustomStyleInterface);
+      this.customStyleInterface =
+        /** @type {!CustomStyleInterfaceInterface} */ (
+          window.ShadyCSS.CustomStyleInterface
+        );
       this.customStyleInterface['transformCallback'] = (style) => {
         applyShim.transformCustomStyle(style);
       };
@@ -133,9 +135,9 @@ class ApplyShimInterface {
       // update this element instance
       let root = element.shadowRoot;
       if (root) {
-        let style = /** @type {HTMLStyleElement} */ (root.querySelector(
-          'style'
-        ));
+        let style = /** @type {HTMLStyleElement} */ (
+          root.querySelector('style')
+        );
         if (style) {
           // reuse the template's style ast, it has all the original css text
           style['__cssRules'] = template['_styleAst'];

@@ -1979,9 +1979,8 @@ policies and contribution forms [3].
     } catch (e) {
       log.appendChild(document.createElementNS(xhtml_ns, 'p')).textContent =
         'Setting innerHTML for the log threw an exception.';
-      log.appendChild(
-        document.createElementNS(xhtml_ns, 'pre')
-      ).textContent = html;
+      log.appendChild(document.createElementNS(xhtml_ns, 'pre')).textContent =
+        html;
     }
   };
 

@@ -2033,9 +2033,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         });
 
         test('shadowRoot set via innerHTML that contains a <slot> and a custom element that also sets shadowRoot content via innerHTML', function () {
-          var el = ShadyDOM.wrapIfNeeded(document).querySelector(
-            'use-inner-html'
-          );
+          var el =
+            ShadyDOM.wrapIfNeeded(document).querySelector('use-inner-html');
           assert.equal(ShadyDOM.nativeTree.textContent(el), '[I][A]');
         });
 

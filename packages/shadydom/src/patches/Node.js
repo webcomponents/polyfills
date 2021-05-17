@@ -25,10 +25,9 @@ const doc = window.document;
 
 const preferPerformance = utils.settings.preferPerformance;
 
-const nativeIsConnectedAccessors = /** @type {ObjectPropertyDescriptor} */ (Object.getOwnPropertyDescriptor(
-  Node.prototype,
-  'isConnected'
-));
+const nativeIsConnectedAccessors = /** @type {ObjectPropertyDescriptor} */ (
+  Object.getOwnPropertyDescriptor(Node.prototype, 'isConnected')
+);
 
 const nativeIsConnected =
   nativeIsConnectedAccessors && nativeIsConnectedAccessors.get;

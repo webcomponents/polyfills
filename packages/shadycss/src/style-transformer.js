@@ -224,14 +224,8 @@ class StyleTransformer {
   _transformRule(rule, transformer, scope, hostScope) {
     // NOTE: save transformedSelector for subsequent matching of elements
     // against selectors (e.g. when calculating style properties)
-    rule[
-      'selector'
-    ] = /** @type {?} */ (rule).transformedSelector = this._transformRuleCss(
-      rule,
-      transformer,
-      scope,
-      hostScope
-    );
+    rule['selector'] = /** @type {?} */ (rule).transformedSelector =
+      this._transformRuleCss(rule, transformer, scope, hostScope);
   }
 
   /**

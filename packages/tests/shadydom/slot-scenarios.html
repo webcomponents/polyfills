@@ -64,15 +64,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     <script>
       suite('Slot distribution in various scenarios', function () {
         test('slot distribution is not interrupted by events', function (done) {
-          let innerTemplate = ShadyDOM.wrapIfNeeded(document).querySelector(
-            'template#inner'
-          );
-          let outerTemplate = ShadyDOM.wrapIfNeeded(document).querySelector(
-            'template#outer'
-          );
-          let failureTemplate = ShadyDOM.wrapIfNeeded(document).querySelector(
-            'template#failure'
-          );
+          let innerTemplate =
+            ShadyDOM.wrapIfNeeded(document).querySelector('template#inner');
+          let outerTemplate =
+            ShadyDOM.wrapIfNeeded(document).querySelector('template#outer');
+          let failureTemplate =
+            ShadyDOM.wrapIfNeeded(document).querySelector('template#failure');
 
           class XInner extends HTMLElement {
             connectedCallback() {
@@ -196,9 +193,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
               outerWithChildTemplate.content,
               true
             );
-            const outer = ShadyDOM.wrapIfNeeded(dom).querySelector(
-              'outer-element'
-            );
+            const outer =
+              ShadyDOM.wrapIfNeeded(dom).querySelector('outer-element');
             const inner = ShadyDOM.wrapIfNeeded(
               ShadyDOM.wrapIfNeeded(outer).shadowRoot
             ).querySelector('inner-element');

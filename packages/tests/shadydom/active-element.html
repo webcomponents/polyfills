@@ -248,9 +248,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
         suiteSetup(function () {
           // NOTE: need to patch document for `activeElement`
-          r = ShadyDOM.wrapIfNeeded(document).querySelector(
-            'x-shadow-host-root'
-          );
+          r =
+            ShadyDOM.wrapIfNeeded(document).querySelector('x-shadow-host-root');
           r_l = ShadyDOM.wrapIfNeeded(r).querySelector(
             'x-shadow-host-root-light'
           );

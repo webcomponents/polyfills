@@ -38,9 +38,8 @@
           'The DocumentConstructionObserver constructs parser-created ' +
             'elements in the document body.',
           function () {
-            const parserCreatedElement = document.body.querySelector(
-              'dco-created'
-            );
+            const parserCreatedElement =
+              document.body.querySelector('dco-created');
             assert(parserCreatedElement.wasConstructed);
           }
         );

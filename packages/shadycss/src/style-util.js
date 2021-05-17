@@ -287,9 +287,9 @@ export function getIsExtends(element) {
 export function gatherStyleText(element) {
   /** @type {!Array<string>} */
   const styleTextParts = [];
-  const styles = /** @type {!NodeList<!HTMLStyleElement>} */ (element.querySelectorAll(
-    'style'
-  ));
+  const styles = /** @type {!NodeList<!HTMLStyleElement>} */ (
+    element.querySelectorAll('style')
+  );
   for (let i = 0; i < styles.length; i++) {
     const style = styles[i];
     if (isUnscopedStyle(style)) {

@@ -33,9 +33,9 @@ export default class ShadyCssScoped extends HTMLElement {
   /** @return {HTMLStyleElement} */
   getStyle() {
     if (!this._style) {
-      this._style = /** @type {HTMLStyleElement} */ (this.querySelector(
-        'style'
-      ));
+      this._style = /** @type {HTMLStyleElement} */ (
+        this.querySelector('style')
+      );
     }
     return this._style;
   }

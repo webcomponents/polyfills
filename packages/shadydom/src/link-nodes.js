@@ -109,7 +109,10 @@ export const recordRemoveChild = (node, container) => {
   // When an element is removed, logical data is no longer tracked.
   // Explicitly set `undefined` here to indicate this. This is disginguished
   // from `null` which is set if info is null.
-  nodeData.parentNode = nodeData.previousSibling = nodeData.nextSibling = undefined;
+  nodeData.parentNode =
+    nodeData.previousSibling =
+    nodeData.nextSibling =
+      undefined;
   if (containerData.childNodes !== undefined) {
     // remove caching of childNodes
     containerData.childNodes = null;

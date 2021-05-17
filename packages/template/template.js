@@ -101,11 +101,12 @@
         return oldChild;
       };
 
-      Document.prototype.createDocumentFragment = function createDocumentFragment() {
-        var frag = this.createElement('df');
-        frag.__proto__ = DocumentFragment.prototype;
-        return frag;
-      };
+      Document.prototype.createDocumentFragment =
+        function createDocumentFragment() {
+          var frag = this.createElement('df');
+          frag.__proto__ = DocumentFragment.prototype;
+          return frag;
+        };
 
       var origImportNode = Document.prototype.importNode;
       Document.prototype.importNode = function importNode(impNode, deep) {

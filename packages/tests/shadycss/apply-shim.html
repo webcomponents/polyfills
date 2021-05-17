@@ -198,9 +198,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             var info = prep('basic');
             style = info.style;
             ast = info.ast;
-            style.textContent = window.ShadyCSS.ScopingShim.styleAstToString(
-              ast
-            );
+            style.textContent =
+              window.ShadyCSS.ScopingShim.styleAstToString(ast);
           });
 
           test('style is transformed', function () {
@@ -339,9 +338,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           });
 
           test('element initially has no definition', function () {
-            var ast = window.ShadyCSS.ScopingShim._styleInfoForNode(
-              element
-            )._getStyleRules();
+            var ast =
+              window.ShadyCSS.ScopingShim._styleInfoForNode(
+                element
+              )._getStyleRules();
             assert.equal(ast.rules[0].cssText, ';');
           });
 
@@ -349,9 +349,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             var nodes = copy('x-element2');
             document.body.appendChild(nodes);
             window.ShadyCSS.styleDocument();
-            var ast = window.ShadyCSS.ScopingShim._styleInfoForNode(
-              element
-            )._getStyleRules();
+            var ast =
+              window.ShadyCSS.ScopingShim._styleInfoForNode(
+                element
+              )._getStyleRules();
             if (window.ShadyCSS.nativeCss) {
               assert.match(
                 ast.rules[0].cssText,

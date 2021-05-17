@@ -218,8 +218,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
               .firstElementChild
           ).attachShadow({mode: 'open'});
           // force upgrade on polyfilled browsers
-          var p = ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(host).shadowRoot)
-            .firstChild;
+          var p = ShadyDOM.wrapIfNeeded(
+            ShadyDOM.wrapIfNeeded(host).shadowRoot
+          ).firstChild;
           ShadyDOM.wrapIfNeeded(p).innerHTML =
             '<b slot="b"></b><slot slot="a"></slot>';
           var b = ShadyDOM.wrapIfNeeded(p).firstChild;
@@ -485,8 +486,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           ShadyDOM.wrapIfNeeded(
             ShadyDOM.wrapIfNeeded(host).shadowRoot
           ).innerHTML = '<slot></slot><b>after</b>';
-          var b = ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(host).shadowRoot)
-            .lastChild;
+          var b = ShadyDOM.wrapIfNeeded(
+            ShadyDOM.wrapIfNeeded(host).shadowRoot
+          ).lastChild;
           ShadyDOM.flush();
           assert.strictEqual(getComposedHTML(host), '<a>Hello</a><b>after</b>');
 

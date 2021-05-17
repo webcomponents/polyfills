@@ -79,5 +79,5 @@ export default function (internals: CustomElementInternals) {
     value: PatchedHTMLElement,
   });
 
-  window['HTMLElement'] = (PatchedHTMLElement as unknown) as typeof HTMLElement;
+  window['HTMLElement'] = PatchedHTMLElement as unknown as typeof HTMLElement;
 }

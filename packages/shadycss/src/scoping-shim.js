@@ -51,7 +51,9 @@ const styleCache = new StyleCache();
 export default class ScopingShim {
   constructor() {
     this._scopeCounter = {};
-    this._documentOwner = /** @type {!HTMLElement} */ (document.documentElement);
+    this._documentOwner = /** @type {!HTMLElement} */ (
+      document.documentElement
+    );
     let ast = new StyleNode();
     ast['rules'] = [];
     this._documentOwnerStyleInfo = StyleInfo.set(
@@ -237,8 +239,10 @@ export default class ScopingShim {
     if (this._customStyleInterface) {
       return;
     } else if (window.ShadyCSS && window.ShadyCSS.CustomStyleInterface) {
-      this._customStyleInterface = /** @type {!CustomStyleInterfaceInterface} */ (window
-        .ShadyCSS.CustomStyleInterface);
+      this._customStyleInterface =
+        /** @type {!CustomStyleInterfaceInterface} */ (
+          window.ShadyCSS.CustomStyleInterface
+        );
       /** @type {function(!HTMLStyleElement)} */
       this._customStyleInterface['transformCallback'] = (style) => {
         this.transformCustomStyleForDocument(style);
