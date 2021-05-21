@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- ## Unreleased -->
 
+- Fix to allow definition of custom elements whose classes have been created before applying the polyfill.
 - Run `connectedCallback` on upgraded elements. Fixes #442.
 - Checks if ShadowRoot prototype supports the createElement method to determine if the polyfill should be applied or not.
 
