@@ -9,10 +9,8 @@
  * additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
-import {
-  constructor as EventTargetConstructor,
-  methods as EventTargetMethods,
-} from '../environment/event_target.js';
+// prettier-ignore
+import {constructor as EventTargetConstructor, methods as EventTargetMethods} from '../environment/event_target.js';
 import {methods as NodeMethods} from '../environment/node.js';
 import {methods as WindowMethods} from '../environment/window.js';
 

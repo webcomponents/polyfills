@@ -17,23 +17,12 @@
 
 import {document} from './environment/globals.js';
 import {createElement} from './environment_api/document.js';
-import {
-  setType,
-  setName,
-  setValue,
-} from './environment_api/html_input_element.js';
-import {
-  appendChild,
-  getParentNode,
-  insertBefore,
-  removeChild,
-} from './environment_api/node.js';
-import {
-  hasAttribute,
-  getAttribute,
-  removeAttribute,
-  setAttribute,
-} from './environment_api/element.js';
+// prettier-ignore
+import {setType, setName, setValue} from './environment_api/html_input_element.js';
+// prettier-ignore
+import {appendChild, getParentNode, insertBefore, removeChild} from './environment_api/node.js';
+// prettier-ignore
+import {hasAttribute, getAttribute, removeAttribute, setAttribute} from './environment_api/element.js';
 import {getLength} from './environment_api/html_collection.js';
 import {getElements} from './environment_api/html_form_element.js';
 import {FormData, getEntries} from './wrappers/form_data.js';

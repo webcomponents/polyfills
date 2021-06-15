@@ -9,10 +9,8 @@
  * additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
-import {
-  descriptors as EventDescriptors,
-  methods as EventMethods,
-} from '../environment/event.js';
+// prettier-ignore
+import {descriptors as EventDescriptors, methods as EventMethods} from '../environment/event.js';
 
 // `Object.getOwnPropertyDescriptor(Event.prototype, 'target')` is undefined
 // in Chrome 41.

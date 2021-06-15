@@ -9,27 +9,16 @@
  * additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
-import {
-  prototype as EventTargetPrototype,
-  methods as EventTargetMethods,
-} from '../environment/event_target.js';
-import {
-  prototype as NodePrototype,
-  methods as NodeMethods,
-} from '../environment/node.js';
-import {
-  prototype as WindowPrototype,
-  methods as WindowMethods,
-} from '../environment/window.js';
-import {
-  formdataListenerAdded,
-  formdataListenerRemoved,
-  wrapSubmitListener,
-} from '../formdata_listener_added.js';
-import {
-  submitListenerAdded,
-  submitListenerRemoved,
-} from '../submit_listener_added.js';
+// prettier-ignore
+import {prototype as EventTargetPrototype, methods as EventTargetMethods} from '../environment/event_target.js';
+// prettier-ignore
+import {prototype as NodePrototype, methods as NodeMethods} from '../environment/node.js';
+// prettier-ignore
+import {prototype as WindowPrototype, methods as WindowMethods} from '../environment/window.js';
+// prettier-ignore
+import {formdataListenerAdded, formdataListenerRemoved, wrapSubmitListener} from '../formdata_listener_added.js';
+// prettier-ignore
+import {submitListenerAdded, submitListenerRemoved} from '../submit_listener_added.js';
 
 const submitListenerToWrapper = new WeakMap<
   EventListenerOrEventListenerObject,

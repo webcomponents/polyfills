@@ -9,10 +9,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 */
 
 import * as utils from './utils.js';
-import {
-  eventPropertyNamesForElement,
-  eventPropertyNamesForHTMLElement,
-} from './patch-events.js';
+// prettier-ignore
+import {eventPropertyNamesForElement, eventPropertyNamesForHTMLElement} from './patch-events.js';
 
 /** @implements {IWrapper} */
 class Wrapper {

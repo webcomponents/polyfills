@@ -10,11 +10,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 import * as utils from './utils.js';
 import {NodePatches} from './patches/Node.js';
-import {
-  OutsideDescriptors,
-  InsideDescriptors,
-  TextContentInnerHTMLDescriptors,
-} from './patch-instances.js';
+// prettier-ignore
+import {OutsideDescriptors, InsideDescriptors, TextContentInnerHTMLDescriptors} from './patch-instances.js';
 import {ParentNodePatches} from './patches/ParentNode.js';
 import {DocumentOrFragmentPatches} from './patches/DocumentOrFragment.js';
 import {DocumentOrShadowRootPatches} from './patches/DocumentOrShadowRoot.js';
