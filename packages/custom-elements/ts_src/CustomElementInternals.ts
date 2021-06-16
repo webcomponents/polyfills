@@ -37,7 +37,7 @@ export default class CustomElementInternals {
     callback: (elem: Element) => void,
     visitedImports?: Set<Node>
   ) {
-    const sd = window['ShadyDom'];
+    const sd = window['ShadyDOM'];
     if (this.shadyDomFastWalk && sd && sd['inUse']) {
       if (node.nodeType === Node.ELEMENT_NODE) {
         const element = node as Element;
