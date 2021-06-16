@@ -59,7 +59,7 @@ function closurify(sourceName, fileName) {
 
   const closureOptions = {
     compilation_level: 'ADVANCED',
-    language_in: 'ES6_STRICT',
+    language_in: 'STABLE',
     language_out: 'ES5_STRICT',
     isolation_mode: 'NONE',
     output_wrapper_file: 'closure-output.txt',
