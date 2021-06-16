@@ -37,3 +37,4 @@ packages/webcomponentsjs/src/flag-parser.*
 packages/webcomponentsjs/src/unresolved.*
 packages/webcomponentsjs/custom-elements-es5-adapter.js
 packages/webcomponentsjs/webcomponents-bundle.js*
+packages/webcomponentsjs/webcomponents-bundle-with-hi.js*
