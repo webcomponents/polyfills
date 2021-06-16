@@ -29,7 +29,10 @@ window.registerSVGElement = () => {
     }
 
     addCircle() {
-      const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      const circle = document.createElementNS(
+        'http://www.w3.org/2000/svg',
+        'circle'
+      );
       const x = 10 + Math.floor(80 * Math.random());
       const y = 10 + Math.floor(80 * Math.random());
       circle.setAttribute('cx', String(x));

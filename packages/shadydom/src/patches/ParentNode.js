@@ -18,15 +18,20 @@ import {shadyDataForNode} from '../shady-data.js';
  */
 export function query(node, matcher, halter) {
   let list = [];
-  queryChildNodes(node, matcher,
-    halter, list);
+  queryChildNodes(node, matcher, halter, list);
   return list;
 }
 
 function queryChildNodes(parent, matcher, halter, list) {
-  for (let n = parent[utils.SHADY_PREFIX + 'firstChild']; n; n = n[utils.SHADY_PREFIX + 'nextSibling']) {
-    if (n.nodeType === Node.ELEMENT_NODE &&
-        queryElement(n, matcher, halter, list)) {
+  for (
+    let n = parent[utils.SHADY_PREFIX + 'firstChild'];
+    n;
+    n = n[utils.SHADY_PREFIX + 'nextSibling']
+  ) {
+    if (
+      n.nodeType === Node.ELEMENT_NODE &&
+      queryElement(n, matcher, halter, list)
+    ) {
       return true;
     }
   }
@@ -40,13 +45,11 @@ function queryElement(node, matcher, halter, list) {
   if (halter && halter(result)) {
     return result;
   }
-  queryChildNodes(node, matcher,
-    halter, list);
+  queryChildNodes(node, matcher, halter, list);
 }
 
 // Needed on Element, DocumentFragment, Document
 export const ParentNodePatches = utils.getOwnPropertyDescriptors({
-
   /** @this {Element} */
   get firstElementChild() {
     const nodeData = shadyDataForNode(this);
@@ -80,16 +83,17 @@ export const ParentNodePatches = utils.getOwnPropertyDescriptors({
     if (!utils.isTrackingLogicalChildNodes(this)) {
       return this[utils.NATIVE_PREFIX + 'children'];
     }
-    return utils.createPolyfilledHTMLCollection(Array.prototype.filter.call(
-        utils.childNodesArray(this), (n) => {
-      return (n.nodeType === Node.ELEMENT_NODE);
-    }));
+    return utils.createPolyfilledHTMLCollection(
+      Array.prototype.filter.call(utils.childNodesArray(this), (n) => {
+        return n.nodeType === Node.ELEMENT_NODE;
+      })
+    );
   },
 
   /** @this {Element} */
   get childElementCount() {
     let children = this[utils.SHADY_PREFIX + 'children'];
-    if(children) {
+    if (children) {
       return children.length;
     }
     return 0;
@@ -97,13 +101,18 @@ export const ParentNodePatches = utils.getOwnPropertyDescriptors({
 
   /** @this {Element} */
   append(...args) {
-    this[utils.SHADY_PREFIX + 'insertBefore'](utils.convertNodesIntoANode(...args), null);
+    this[utils.SHADY_PREFIX + 'insertBefore'](
+      utils.convertNodesIntoANode(...args),
+      null
+    );
   },
 
   /** @this {Element} */
   prepend(...args) {
     this[utils.SHADY_PREFIX + 'insertBefore'](
-        utils.convertNodesIntoANode(...args), this[utils.SHADY_PREFIX + 'firstChild']);
+      utils.convertNodesIntoANode(...args),
+      this[utils.SHADY_PREFIX + 'firstChild']
+    );
   },
 
   /** @this {Element} */
@@ -112,9 +121,11 @@ export const ParentNodePatches = utils.getOwnPropertyDescriptors({
     while ((child = this[utils.SHADY_PREFIX + 'firstChild']) !== null) {
       this[utils.SHADY_PREFIX + 'removeChild'](child);
     }
-    this[utils.SHADY_PREFIX + 'insertBefore'](utils.convertNodesIntoANode(...args), null);
+    this[utils.SHADY_PREFIX + 'insertBefore'](
+      utils.convertNodesIntoANode(...args),
+      null
+    );
   },
-
 });
 
 export const QueryPatches = utils.getOwnPropertyDescriptors({
@@ -125,11 +136,15 @@ export const QueryPatches = utils.getOwnPropertyDescriptors({
    */
   querySelector(selector) {
     // match selector and halt on first result.
-    let result = query(this, function(n) {
-      return utils.matchesSelector(n, selector);
-    }, function(n) {
-      return Boolean(n);
-    })[0];
+    let result = query(
+      this,
+      function (n) {
+        return utils.matchesSelector(n, selector);
+      },
+      function (n) {
+        return Boolean(n);
+      }
+    )[0];
     return result || null;
   },
 
@@ -143,15 +158,20 @@ export const QueryPatches = utils.getOwnPropertyDescriptors({
   // https://github.com/webcomponents/shadydom/pull/210#issuecomment-361435503
   querySelectorAll(selector, useNative) {
     if (useNative) {
-      const o = Array.prototype.slice.call(this[utils.NATIVE_PREFIX + 'querySelectorAll'](selector));
+      const o = Array.prototype.slice.call(
+        this[utils.NATIVE_PREFIX + 'querySelectorAll'](selector)
+      );
       const root = this[utils.SHADY_PREFIX + 'getRootNode']();
-      return utils.createPolyfilledHTMLCollection(o.filter(e => e[utils.SHADY_PREFIX + 'getRootNode']() == root));
+      return utils.createPolyfilledHTMLCollection(
+        o.filter((e) => e[utils.SHADY_PREFIX + 'getRootNode']() == root)
+      );
     }
-    return utils.createPolyfilledHTMLCollection(query(this, function(n) {
-      return utils.matchesSelector(n, selector);
-    }));
-  }
-
+    return utils.createPolyfilledHTMLCollection(
+      query(this, function (n) {
+        return utils.matchesSelector(n, selector);
+      })
+    );
+  },
 });
 
 // In preferPerformance mode, create a custom `ParentNodeDocumentOrFragment`
@@ -159,7 +179,8 @@ export const QueryPatches = utils.getOwnPropertyDescriptors({
 // optimization. In noPatch, we need to keep the query patches here in order to
 // ensure the query API is available on the wrapper
 export const ParentNodeDocumentOrFragmentPatches =
-  (utils.settings.preferPerformance && !utils.settings.noPatch) ?
-  utils.assign({}, ParentNodePatches) : ParentNodePatches;
+  utils.settings.preferPerformance && !utils.settings.noPatch
+    ? utils.assign({}, ParentNodePatches)
+    : ParentNodePatches;
 
 utils.assign(ParentNodePatches, QueryPatches);

@@ -14,14 +14,19 @@ import CustomElementInternals from '../CustomElementInternals.js';
 import PatchParentNode from './Interface/ParentNode.js';
 import * as Native from './Native.js';
 
-export default function(internals: CustomElementInternals) {
-  Document.prototype.createElement = function(
-                                         this: Document, localName: string) {
+export default function (internals: CustomElementInternals) {
+  Document.prototype.createElement = function (
+    this: Document,
+    localName: string
+  ) {
     return internals.createAnElement(this, localName, null);
   } as typeof Document.prototype.createElement;
 
-  Document.prototype.importNode = function<T extends Node>(
-      this: Document, node: T, deep?: boolean): T {
+  Document.prototype.importNode = function <T extends Node>(
+    this: Document,
+    node: T,
+    deep?: boolean
+  ): T {
     const clone = Native.Document_importNode.call(this, node, !!deep) as T;
     // Only create custom elements if this document is associated with the
     // registry.
@@ -33,8 +38,11 @@ export default function(internals: CustomElementInternals) {
     return clone;
   };
 
-  Document.prototype.createElementNS =
-      function(this: Document, namespace: string|null, localName: string) {
+  Document.prototype.createElementNS = function (
+    this: Document,
+    namespace: string | null,
+    localName: string
+  ) {
     return internals.createAnElement(this, localName, namespace);
   } as typeof Document.prototype.createElementNS;
 

@@ -17,9 +17,23 @@
 
 import {document} from './environment/globals.js';
 import {createElement} from './environment_api/document.js';
-import {setType, setName, setValue} from './environment_api/html_input_element.js';
-import {appendChild, getParentNode, insertBefore, removeChild} from './environment_api/node.js';
-import {hasAttribute, getAttribute, removeAttribute, setAttribute} from './environment_api/element.js';
+import {
+  setType,
+  setName,
+  setValue,
+} from './environment_api/html_input_element.js';
+import {
+  appendChild,
+  getParentNode,
+  insertBefore,
+  removeChild,
+} from './environment_api/node.js';
+import {
+  hasAttribute,
+  getAttribute,
+  removeAttribute,
+  setAttribute,
+} from './environment_api/element.js';
 import {getLength} from './environment_api/html_collection.js';
 import {getElements} from './environment_api/html_form_element.js';
 import {FormData, getEntries} from './wrappers/form_data.js';
@@ -98,7 +112,10 @@ export const dispatchFormdataForSubmission = (form: HTMLFormElement) => {
     const length = getLength(elements);
     for (let i = 0; i < length; i++) {
       const element = elements[i];
-      if (getAttribute(element, 'name') === name && !hasAttribute(element, 'disabled')) {
+      if (
+        getAttribute(element, 'name') === name &&
+        !hasAttribute(element, 'disabled')
+      ) {
         return element;
       }
     }
@@ -108,31 +125,37 @@ export const dispatchFormdataForSubmission = (form: HTMLFormElement) => {
   // Update the form to match the entries in `formData`.
   for (const entry of getEntries(formData)!) {
     switch (entry.operation) {
-      case 'append': {
-        insertEntry(entry.name, entry.value);
-      } break;
-
-      case 'delete': {
-        disableExistingEntries(entry.name);
-      } break;
-
-      case 'set': {
-        const {name, value} = entry;
-        const first = findFirstEnabledElement(name);
-
-        // If there are no entries (i.e. enabled, form-associated elements) with
-        // the given name, then setting an entry is the same as appending it.
-        if (first === undefined) {
-          insertEntry(name, value);
-        // Otherwise, setting an entry means overwriting the _first_ entry in
-        // the list with that name and delete all other entries.
-        } else {
-          disableExistingEntries(name);
-          // Insert before `first` so that the new input appears in `first`'s
-          // old position in the entry list.
-          insertEntry(name, value, first);
+      case 'append':
+        {
+          insertEntry(entry.name, entry.value);
         }
-      } break;
+        break;
+
+      case 'delete':
+        {
+          disableExistingEntries(entry.name);
+        }
+        break;
+
+      case 'set':
+        {
+          const {name, value} = entry;
+          const first = findFirstEnabledElement(name);
+
+          // If there are no entries (i.e. enabled, form-associated elements) with
+          // the given name, then setting an entry is the same as appending it.
+          if (first === undefined) {
+            insertEntry(name, value);
+            // Otherwise, setting an entry means overwriting the _first_ entry in
+            // the list with that name and delete all other entries.
+          } else {
+            disableExistingEntries(name);
+            // Insert before `first` so that the new input appears in `first`'s
+            // old position in the entry list.
+            insertEntry(name, value, first);
+          }
+        }
+        break;
 
       default:
         throw new Error('UNREACHABLE');

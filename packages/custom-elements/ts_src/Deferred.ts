@@ -10,13 +10,13 @@
  */
 
 export default class Deferred<T> {
-  private _value: T|undefined = undefined;
+  private _value: T | undefined = undefined;
 
   private _resolve!: (val: T) => void;
 
   private readonly _promise: Promise<T>;
   constructor() {
-    this._promise = new Promise(resolve => {
+    this._promise = new Promise((resolve) => {
       this._resolve = resolve;
     });
   }

@@ -8,14 +8,46 @@ Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 */
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+function _classCallCheck(instance, Constructor) {
+  if (!(instance instanceof Constructor)) {
+    throw new TypeError('Cannot call a class as a function');
+  }
+}
+function _possibleConstructorReturn(self, call) {
+  if (!self) {
+    throw new ReferenceError(
+      "this hasn't been initialised - super() hasn't been called"
+    );
+  }
+  return call && (typeof call === 'object' || typeof call === 'function')
+    ? call
+    : self;
+}
+function _inherits(subClass, superClass) {
+  if (typeof superClass !== 'function' && superClass !== null) {
+    throw new TypeError(
+      'Super expression must either be null or a function, not ' +
+        typeof superClass
+    );
+  }
+  subClass.prototype = Object.create(superClass && superClass.prototype, {
+    constructor: {
+      value: subClass,
+      enumerable: false,
+      writable: true,
+      configurable: true,
+    },
+  });
+  if (superClass) {
+    Object.setPrototypeOf
+      ? Object.setPrototypeOf(subClass, superClass)
+      : (subClass.__proto__ = superClass);
+  }
+}
 
 // Kick off shady CSS.
 var template = document.createElement('template');
-template.innerHTML =
-  `
+template.innerHTML = `
       <style>:host {color: blue;} .red-text {color: red;} </style>
     <p class="red-text">Shadow DOM</p>
     <slot id="slot"></slot>
@@ -26,13 +58,18 @@ if (template) {
   }
 }
 
-var SimpleElement = function (_HTMLElement) {
+var SimpleElement = (function (_HTMLElement) {
   _inherits(SimpleElement, _HTMLElement);
 
   function SimpleElement() {
     _classCallCheck(this, SimpleElement);
 
-    var _this = _possibleConstructorReturn(this, (SimpleElement.__proto__ || Object.getPrototypeOf(SimpleElement)).call(this));
+    var _this = _possibleConstructorReturn(
+      this,
+      (SimpleElement.__proto__ || Object.getPrototypeOf(SimpleElement)).call(
+        this
+      )
+    );
 
     _this.bestName = 'batman';
     if (window.ShadyCSS) {
@@ -40,13 +77,13 @@ var SimpleElement = function (_HTMLElement) {
     }
 
     if (template && !_this.shadowRoot) {
-      _this.attachShadow({ mode: 'open' });
+      _this.attachShadow({mode: 'open'});
       _this.shadowRoot.appendChild(document.importNode(template.content, true));
     }
     return _this;
   }
 
   return SimpleElement;
-}(HTMLElement);
+})(HTMLElement);
 
 window.customElements.define('simple-element', SimpleElement);

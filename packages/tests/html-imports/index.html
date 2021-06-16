@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <!--
     @license
     Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
@@ -9,14 +9,14 @@
     subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 -->
 <title>HTMLImports Tests</title>
-<meta charset="utf-8">
+<meta charset="utf-8" />
 
 <script>
   WCT = {
     environmentImports: [],
-    waitFor: function(callback) {
+    waitFor: function (callback) {
       callback();
-    }
+    },
   };
 </script>
 <script src="../node_modules/wct-browser-legacy/browser.js"></script>
@@ -61,7 +61,7 @@
   if (edgeVersion === 15) {
     // edge 15 has a really hard time loading this test consistently
     // the requests are made for the @import styles, but they never return...
-    suites = suites.filter(s => s.indexOf('style-paths') === -1);
+    suites = suites.filter((s) => s.indexOf('style-paths') === -1);
   }
   WCT.loadSuites(suites);
 </script>

@@ -11,7 +11,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 import * as utils from '../utils.js';
 
 export const ShadowRootPatches = utils.getOwnPropertyDescriptors({
-
   /**
    * @this {ShadowRoot}
    * @param {string} type
@@ -21,12 +20,16 @@ export const ShadowRootPatches = utils.getOwnPropertyDescriptors({
   addEventListener(type, fn, optionsOrCapture) {
     if (typeof optionsOrCapture !== 'object') {
       optionsOrCapture = {
-        capture: Boolean(optionsOrCapture)
-      }
+        capture: Boolean(optionsOrCapture),
+      };
     }
     // Note, `__shadyTarget` may already be set if an event was added on a <slot> child
     optionsOrCapture.__shadyTarget = optionsOrCapture.__shadyTarget || this;
-    this.host[utils.SHADY_PREFIX + 'addEventListener'](type, fn, optionsOrCapture);
+    this.host[utils.SHADY_PREFIX + 'addEventListener'](
+      type,
+      fn,
+      optionsOrCapture
+    );
   },
 
   /**
@@ -38,12 +41,15 @@ export const ShadowRootPatches = utils.getOwnPropertyDescriptors({
   removeEventListener(type, fn, optionsOrCapture) {
     if (typeof optionsOrCapture !== 'object') {
       optionsOrCapture = {
-        capture: Boolean(optionsOrCapture)
-      }
+        capture: Boolean(optionsOrCapture),
+      };
     }
     // Note, `__shadyTarget` may already be set if an event was added on a <slot> child
     optionsOrCapture.__shadyTarget = optionsOrCapture.__shadyTarget || this;
-    this.host[utils.SHADY_PREFIX + 'removeEventListener'](type, fn, optionsOrCapture);
-  }
-
+    this.host[utils.SHADY_PREFIX + 'removeEventListener'](
+      type,
+      fn,
+      optionsOrCapture
+    );
+  },
 });

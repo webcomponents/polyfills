@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <!--
     @license
     Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
@@ -14,26 +14,28 @@
     <script src="../../node_modules/@webcomponents/html-imports/html-imports.min.js"></script>
     <script>
       WCT = {
-        waitFor: function(callback) {
+        waitFor: function (callback) {
           HTMLImports.whenReady(callback);
-        }
+        },
       };
     </script>
     <script src="../../node_modules/wct-browser-legacy/browser.js"></script>
-    <link rel="import" href="imports/dedupe.html">
+    <link rel="import" href="imports/dedupe.html" />
     <script>
       var link = document.createElement('link');
       link.href = 'imports/dedupe.html';
       link.rel = 'import';
-      link.addEventListener('load', function(e) {
+      link.addEventListener('load', function (e) {
         console.log('dynamic link loaded', e.target.href);
-      })
+      });
       document.head.appendChild(link);
     </script>
   </head>
   <body>
     <script>
-      test('imports deduped', function() {
+      /* global dedupe: false */
+
+      test('imports deduped', function () {
         chai.assert.equal(dedupe, 1, 'import loaded');
       });
     </script>

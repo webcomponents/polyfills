@@ -10,15 +10,18 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 export {};
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Constructor<T> = new (...args: Array<any>) => T;
 
 const nativeInsertBefore = Node.prototype.insertBefore;
 const nativeGetFirstChild =
-    // In Chrome 41, `firstChild` is a data descriptor on every instance, not a
-    // accessor descriptor on `Node.prototype`.
-    Object.getOwnPropertyDescriptor(Node.prototype, 'firstChild')?.get! ??
-    // In Safari 9, the `firstChild` descriptor's `get` and `set` are undefined.
-    function(this: Node) { return this.firstChild; };
+  // In Chrome 41, `firstChild` is a data descriptor on every instance, not a
+  // accessor descriptor on `Node.prototype`.
+  Object.getOwnPropertyDescriptor(Node.prototype, 'firstChild')?.get ??
+  // In Safari 9, the `firstChild` descriptor's `get` and `set` are undefined.
+  function (this: Node) {
+    return this.firstChild;
+  };
 
 const installPrepend = <T>(constructor: Constructor<T>) => {
   const prototype = constructor.prototype;
@@ -30,13 +33,14 @@ const installPrepend = <T>(constructor: Constructor<T>) => {
     configurable: true,
     enumerable: true,
     writable: true,
-    value: function prepend(...args: Array<Node|string>) {
+    value: function prepend(...args: Array<Node | string>) {
       const firstChild = nativeGetFirstChild.call(this);
       for (const arg of args) {
-        const newNode = typeof arg === 'string' ? document.createTextNode(arg) : arg;
+        const newNode =
+          typeof arg === 'string' ? document.createTextNode(arg) : arg;
         nativeInsertBefore.call(this, newNode, firstChild);
       }
-    }
+    },
   });
 };
 

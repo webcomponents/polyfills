@@ -4,7 +4,7 @@
  * addCustomStyle: function(!HTMLElement)
  * }}
  */
-let CustomStyleInterface;//eslint-disable-line no-unused-vars
+let CustomStyleInterface;
 
 /** @typedef {{
  * styleElement: function(!HTMLElement),
@@ -24,7 +24,7 @@ let CustomStyleInterface;//eslint-disable-line no-unused-vars
  * disableRuntime: boolean,
  * }}
  */
-let ShadyCSSInterface; //eslint-disable-line no-unused-vars
+let ShadyCSSInterface;
 
 /**
  * @typedef {{
@@ -34,7 +34,7 @@ let ShadyCSSInterface; //eslint-disable-line no-unused-vars
  * disableRuntime: (boolean | undefined),
  * }}
  */
-let ShadyCSSOptions; //eslint-disable-line no-unused-vars
+let ShadyCSSOptions;
 
 /** @type {(ShadyCSSInterface | ShadyCSSOptions | undefined)} */
 window.ShadyCSS;
@@ -70,5 +70,3 @@ HTMLTemplateElement.prototype._style;
  * @type {string | undefined}
  */
 DOMTokenList.prototype.value;
-
-

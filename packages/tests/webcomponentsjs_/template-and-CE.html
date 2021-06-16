@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <!--
 @license
 Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
@@ -15,8 +15,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     <script src="./wct-config.js"></script>
     <script src="../node_modules/wct-browser-legacy/browser.js"></script>
   </head>
-<body>
-
+  <body>
     <template>
       <x-child></x-child>
     </template>
@@ -53,31 +52,33 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       window.customElements.define('x-child', XChild);
       window.customElements.define('x-after', XAfter);
 
-      suite('template and custom elements', function() {
-        test('elements within templates not upgraded', function() {
+      suite('template and custom elements', function () {
+        test('elements within templates not upgraded', function () {
           assert(!childCreated);
         });
 
-        test('templates before elements are bootstrapped before createdCallback', function() {
+        test('templates before elements are bootstrapped before createdCallback', function () {
           assert.equal(foundTemplate, true);
         });
       });
 
-      suite('Template', function() {
+      suite('Template', function () {
         var template;
-        suiteSetup(function() {
+        suiteSetup(function () {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
           template = document.querySelector('template');
         });
 
-        var canInnerHTML = (function() {
+        var canInnerHTML = (function () {
           var el = document.createElement('div');
           try {
             Object.defineProperty(el, 'innerHTML', {
-              get: function(){},
-              set: function(){}
+              // eslint-disable-next-line getter-return
+              get: function () {},
+              set: function () {},
             });
             return true;
-          } catch(e) {
+          } catch (e) {
             return false;
           }
         })();
@@ -95,77 +96,126 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           }
         }
 
-        test('clone', function() {
+        test('clone', function () {
           var imp = document.createElement('template');
           var s = '<div>Hi</div>';
           setupTemplate(imp, s);
           var clone = imp.cloneNode();
           assert.notEqual(clone, imp, 'element is not cloned');
           assert.isDefined(clone.content, 'cloned template content dne');
-          assert.equal(clone.content.childNodes.length, 0,
-              'non-deep cloned template.content is not empty');
+          assert.equal(
+            clone.content.childNodes.length,
+            0,
+            'non-deep cloned template.content is not empty'
+          );
           var deepClone = imp.cloneNode(true);
-          assert.equal(deepClone.content.childNodes.length, 1,
-              'deep cloned template.content is empty');
-          assert.notEqual(imp.content.firstChild, deepClone.content.firstChild,
-              'cloned content is not different from source');
+          assert.equal(
+            deepClone.content.childNodes.length,
+            1,
+            'deep cloned template.content is empty'
+          );
+          assert.notEqual(
+            imp.content.firstChild,
+            deepClone.content.firstChild,
+            'cloned content is not different from source'
+          );
         });
 
-        test('clone nested', function() {
+        test('clone nested', function () {
           var imp = document.createElement('template');
-          var s = 'a<template id="a">b<template id="b">c<template id="c">d</template></template></template>';
+          var s =
+            'a<template id="a">b<template id="b">c<template id="c">d</template></template></template>';
           setupTemplate(imp, s);
           var clone = imp.cloneNode(false);
           assert.notEqual(clone, imp, 'element is not cloned');
           assert.isDefined(clone.content, 'cloned template content dne');
-          assert.equal(clone.content.childNodes.length, 0,
-              'non-deep cloned template.content is not empty');
+          assert.equal(
+            clone.content.childNodes.length,
+            0,
+            'non-deep cloned template.content is not empty'
+          );
           var deepClone = imp.cloneNode(true);
-          assert.equal(deepClone.content.childNodes.length, 2,
-              'deep cloned template.content is empty');
-          assert.notEqual(imp.content.firstChild, deepClone.content.firstChild,
-              'cloned content is not different from source');
+          assert.equal(
+            deepClone.content.childNodes.length,
+            2,
+            'deep cloned template.content is empty'
+          );
+          assert.notEqual(
+            imp.content.firstChild,
+            deepClone.content.firstChild,
+            'cloned content is not different from source'
+          );
           var nested = deepClone.content.lastChild;
-          assert.isDefined(nested.content, 'nested cloned template content dne');
-          assert.equal(nested.content.childNodes.length, 2,
-              'deep cloned template.content is empty');
+          assert.isDefined(
+            nested.content,
+            'nested cloned template content dne'
+          );
+          assert.equal(
+            nested.content.childNodes.length,
+            2,
+            'deep cloned template.content is empty'
+          );
           nested = nested.content.lastChild;
           assert.isDefined(nested, 'nested cloned template content dne');
-          assert.equal(nested.content.childNodes.length, 2,
-              'deep cloned template.content is empty');
+          assert.equal(
+            nested.content.childNodes.length,
+            2,
+            'deep cloned template.content is empty'
+          );
           nested = nested.content.lastChild;
           assert.isDefined(nested, 'nested cloned template content dne');
-          assert.equal(nested.content.childNodes.length, 1,
-              'deep cloned template.content is empty');
+          assert.equal(
+            nested.content.childNodes.length,
+            1,
+            'deep cloned template.content is empty'
+          );
         });
 
-        test('clone node containing templates', function() {
+        test('clone node containing templates', function () {
           var imp = document.createElement('div');
           var t = document.createElement('template');
-          var s = 'a<template id="a">b<template id="b">c<template id="c">d</template></template></template>';
+          var s =
+            'a<template id="a">b<template id="b">c<template id="c">d</template></template></template>';
           setupTemplate(t, s);
           imp.appendChild(t);
           var impClone = imp.cloneNode(true);
           imp = imp.firstChild;
           var deepClone = impClone.firstChild;
-          assert.equal(deepClone.content.childNodes.length, 2,
-              'deep cloned template.content is empty');
-          assert.notEqual(imp.content.firstChild, deepClone.content.firstChild,
-              'cloned content is not different from source');
+          assert.equal(
+            deepClone.content.childNodes.length,
+            2,
+            'deep cloned template.content is empty'
+          );
+          assert.notEqual(
+            imp.content.firstChild,
+            deepClone.content.firstChild,
+            'cloned content is not different from source'
+          );
           var nested = deepClone.content.lastChild;
-          assert.isDefined(nested.content, 'nested cloned template content dne');
-          assert.equal(nested.content.childNodes.length, 2,
-              'deep cloned template.content is empty');
+          assert.isDefined(
+            nested.content,
+            'nested cloned template content dne'
+          );
+          assert.equal(
+            nested.content.childNodes.length,
+            2,
+            'deep cloned template.content is empty'
+          );
           nested = nested.content.lastChild;
           assert.isDefined(nested, 'nested cloned template content dne');
-          assert.equal(nested.content.childNodes.length, 2,
-              'deep cloned template.content is empty');
+          assert.equal(
+            nested.content.childNodes.length,
+            2,
+            'deep cloned template.content is empty'
+          );
           nested = nested.content.lastChild;
           assert.isDefined(nested, 'nested cloned template content dne');
-          assert.equal(nested.content.childNodes.length, 1,
-              'deep cloned template.content is empty');
+          assert.equal(
+            nested.content.childNodes.length,
+            1,
+            'deep cloned template.content is empty'
+          );
         });
-
       });
     </script>
   </body>

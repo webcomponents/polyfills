@@ -21,7 +21,7 @@ interface ShadyCSS {
   styleSubtree(element: HTMLElement, properties?: CustomPropertyValues): void;
 }
 
-type CustomPropertyValues = { [property: string]: string };
+type CustomPropertyValues = {[property: string]: string};
 
 // eslint-disable-next-line no-var
 declare var window: PolyfillsWindow;

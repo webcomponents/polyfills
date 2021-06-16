@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <!--
 @license
 Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
@@ -9,7 +9,11 @@ Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 -->
 <script>
-WCT = {waitFor: function (cb) {HTMLImports.whenReady(cb)}}
+  WCT = {
+    waitFor: function (cb) {
+      HTMLImports.whenReady(cb);
+    },
+  };
 </script>
 <script src="../../node_modules/@webcomponents/webcomponentsjs/bundles/webcomponents-pf_js.js"></script>
 <script src="../../node_modules/@webcomponents/webcomponentsjs/bundles/webcomponents-pf_dom.js"></script>
@@ -25,12 +29,13 @@ WCT = {waitFor: function (cb) {HTMLImports.whenReady(cb)}}
 
 <template id="late">
   <custom-style class="late-style">
+    <!-- prettier-ignore -->
     <style>
-    html {
-      --late: {
-        border: 2px solid red;
-      };
-    }
+      html {
+        --late: {
+          border: 2px solid red;
+        };
+      }
     </style>
   </custom-style>
 </template>
@@ -47,10 +52,10 @@ WCT = {waitFor: function (cb) {HTMLImports.whenReady(cb)}}
 
 <template id="x-host">
   <style>
-  :host {
-    display: block;
-    padding: 4px;
-  }
+    :host {
+      display: block;
+      padding: 4px;
+    }
   </style>
   <x-late></x-late>
 </template>
@@ -58,22 +63,24 @@ WCT = {waitFor: function (cb) {HTMLImports.whenReady(cb)}}
 <x-host></x-host>
 
 <script>
-suite('Async custom-style', function() {
-  suiteSetup(function() {
-    makeElement('x-host');
-  });
-  test('late custom-style updates elements', function(done) {
-    var lateTemplate = document.querySelector('template#late');
-    var host = document.querySelector('x-host');
-    var inner = host.shadowRoot.querySelector('x-late');
-    requestAnimationFrame(function() {
-      document.body.appendChild(document.importNode(lateTemplate.content, true));
-      makeElement('x-late');
-      requestAnimationFrame(function() {
-        assert.equal(getComputedStyle(inner).borderTopWidth.trim(), '2px');
-        done();
+  suite('Async custom-style', function () {
+    suiteSetup(function () {
+      makeElement('x-host');
+    });
+    test('late custom-style updates elements', function (done) {
+      var lateTemplate = document.querySelector('template#late');
+      var host = document.querySelector('x-host');
+      var inner = host.shadowRoot.querySelector('x-late');
+      requestAnimationFrame(function () {
+        document.body.appendChild(
+          document.importNode(lateTemplate.content, true)
+        );
+        makeElement('x-late');
+        requestAnimationFrame(function () {
+          assert.equal(getComputedStyle(inner).borderTopWidth.trim(), '2px');
+          done();
+        });
       });
     });
-  })
-})
+  });
 </script>

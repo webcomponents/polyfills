@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <!--
 @license
 Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
@@ -9,7 +9,11 @@ Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 -->
 <script>
-WCT = {waitFor: function (cb) {HTMLImports.whenReady(cb)}}
+  WCT = {
+    waitFor: function (cb) {
+      HTMLImports.whenReady(cb);
+    },
+  };
 </script>
 <script src="./test-flags.js"></script>
 <script src="../node_modules/wct-browser-legacy/browser.js"></script>
@@ -24,24 +28,24 @@ WCT = {waitFor: function (cb) {HTMLImports.whenReady(cb)}}
 <script src="../node_modules/@webcomponents/shadycss/custom-style-interface.min.js"></script>
 <script src="module/generated/make-element.js"></script>
 <script src="module/generated/custom-style-element.js"></script>
-<link rel="import" href="html-imports/custom-style-import.html">
+<link rel="import" href="html-imports/custom-style-import.html" />
 
 <template id="x-import">
   <style>
-  :host {
-    border: 2px solid var(--color, black);
-  }
+    :host {
+      border: 2px solid var(--color, black);
+    }
   </style>
 </template>
 
 <x-import id="target"></x-import>
 
 <script>
-  suite('Custom Style upgrades', function() {
-    suiteSetup(function() {
+  suite('Custom Style upgrades', function () {
+    suiteSetup(function () {
       makeElement('x-import');
     });
-    test('custom-style in import provides styling', function() {
+    test('custom-style in import provides styling', function () {
       var target = document.querySelector('#target');
       assert.equal(getComputedStyle(target).borderColor, 'rgb(0, 0, 255)');
     });

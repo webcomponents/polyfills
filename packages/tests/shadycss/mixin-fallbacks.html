@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <!--
 @license
 Copyright (c) 2018 The Polymer Project Authors. All rights reserved.
@@ -9,7 +9,11 @@ Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 -->
 <script>
-  WCT = { waitFor: function (cb) { HTMLImports.whenReady(cb) } }
+  WCT = {
+    waitFor: function (cb) {
+      HTMLImports.whenReady(cb);
+    },
+  };
 </script>
 <script src="./test-flags.js"></script>
 <script src="../node_modules/wct-browser-legacy/browser.js"></script>
@@ -49,23 +53,27 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 </template>
 
 <script>
-  suite('Mixin Fallbacks', function() {
-    suiteSetup(function() {
+  suite('Mixin Fallbacks', function () {
+    suiteSetup(function () {
       makeElement('mixin-element');
       makeElement('outer-element');
     });
 
-    test('outer-element sets mixin color', function() {
+    test('outer-element sets mixin color', function () {
       const el = document.createElement('outer-element');
       document.body.appendChild(el);
       const inner = el.shadowRoot.querySelector('mixin-element');
-      const color = getComputedStyle(inner).getPropertyValue('background-color').trim();
+      const color = getComputedStyle(inner)
+        .getPropertyValue('background-color')
+        .trim();
       assert.equal(color, 'rgb(255, 0, 0)');
     });
-    test('mixin-element by itself falls back correctly', function() {
+    test('mixin-element by itself falls back correctly', function () {
       const mixinOnly = document.createElement('mixin-element');
       document.body.appendChild(mixinOnly);
-      const color = getComputedStyle(mixinOnly).getPropertyValue('background-color').trim();
+      const color = getComputedStyle(mixinOnly)
+        .getPropertyValue('background-color')
+        .trim();
       assert.equal(color, 'rgb(0, 0, 255)');
     });
   });

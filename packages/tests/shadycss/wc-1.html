@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <!--
 @license
 Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
@@ -27,14 +27,16 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <div>Hi!</div>
 </template>
 <script>
-  suite('WC v1 compat', function() {
-    suiteSetup(function() {
+  suite('WC v1 compat', function () {
+    suiteSetup(function () {
       makeElement('my-element');
     });
-    test('element renders correctly', function() {
+    test('element renders correctly', function () {
       const el = document.createElement('my-element');
       document.body.appendChild(el);
-      const color = getComputedStyle(el.shadowRoot.querySelector('div')).getPropertyValue('color').trim();
+      const color = getComputedStyle(el.shadowRoot.querySelector('div'))
+        .getPropertyValue('color')
+        .trim();
       assert.equal(color, 'rgb(255, 0, 0)');
       document.body.removeChild(el);
     });

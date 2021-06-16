@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <!--
 @license
 Copyright (c) 2017 The Polymer Project Authors. All rights reserved.
@@ -15,13 +15,16 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <script src="../node_modules/@webcomponents/shadydom/shadydom.min.js"></script>
 <script>
   suite('Settings', () => {
-    window.ShadyCSS = { cssBuild: 'shady' }
+    window.ShadyCSS = {cssBuild: 'shady'};
     let origCss;
     let origShady;
     let origCssBuild;
-    test(`settings remain correct no matter the order of components loaded ${JSON.stringify(window.WebComponents.flags)}`, (done) => {
+    test(`settings remain correct no matter the order of components loaded ${JSON.stringify(
+      window.WebComponents.flags
+    )}`, (done) => {
       let script = document.createElement('script');
-      script.src = '../node_modules/@webcomponents/shadycss/custom-style-interface.min.js';
+      script.src =
+        '../node_modules/@webcomponents/shadycss/custom-style-interface.min.js';
       script.onerror = (err) => done(err);
       script.onload = () => {
         origCss = window.ShadyCSS.nativeCss;
@@ -31,14 +34,16 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         assert.notEqual(origShady, undefined, 'nativeShadow should be defined');
         assert.equal(origCssBuild, 'shady', 'cssBuild should be defined');
         let script = document.createElement('script');
-        script.src = '../node_modules/@webcomponents/shadycss/apply-shim.min.js';
+        script.src =
+          '../node_modules/@webcomponents/shadycss/apply-shim.min.js';
         script.onerror = (err) => done(err);
         script.onload = () => {
           assert.equal(origCss, window.ShadyCSS.nativeCss);
           assert.equal(origShady, window.ShadyCSS.nativeShadow);
           assert.equal(origCssBuild, window.ShadyCSS.cssBuild);
           let script = document.createElement('script');
-          script.src = '../node_modules/@webcomponents/shadycss/scoping-shim.min.js';
+          script.src =
+            '../node_modules/@webcomponents/shadycss/scoping-shim.min.js';
           script.onerrer = (err) => done(err);
           script.onload = () => {
             assert.equal(origCss, window.ShadyCSS.nativeCss);
@@ -47,15 +52,18 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             done();
           };
           document.head.appendChild(script);
-        }
+        };
         document.head.appendChild(script);
-      }
+      };
       document.head.appendChild(script);
     });
     test('Native CSS Custom Properties disabled if ShadyDOM is in use', () => {
       if (!window.ShadyDOM || !window.ShadyDOM.inUse) {
-        assert.isTrue(window.ShadyCSS.nativeCss, 'nativeCss should be enabled if not using ShadyDOM');
+        assert.isTrue(
+          window.ShadyCSS.nativeCss,
+          'nativeCss should be enabled if not using ShadyDOM'
+        );
       }
-    })
+    });
   });
 </script>

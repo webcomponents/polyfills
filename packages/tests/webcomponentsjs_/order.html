@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <!--
 @license
 Copyright (c) 2017 The Polymer Project Authors. All rights reserved.
@@ -9,28 +9,25 @@ Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 -->
 <html>
+  <head>
+    <title>Test Promise Polyfill</title>
+    <script>
+      function logEvent(eventType) {
+        addEventListener(eventType, function () {
+          console.log(eventType);
+        });
+      }
+      logEvent('DOMContentLoaded');
+      logEvent('load');
+      logEvent('HTMLImportsLoaded');
+      logEvent('WebComponentsReady');
+      window.WebComponents = {loadHTMLImports: true};
+    </script>
+    <script src="../webcomponents-loader.js"></script>
+    <script src="./wct-config.js"></script>
+    <script src="../node_modules/wct-browser-legacy/browser.js"></script>
+    <link rel="import" href="imports/a1-import.html" />
+  </head>
 
-<head>
-  <title>Test Promise Polyfill</title>
-  <script>
-    function logEvent(eventType) {
-      addEventListener(eventType, function() {
-        console.log(eventType);
-      })
-    }
-    logEvent('DOMContentLoaded');
-    logEvent('load');
-    logEvent('HTMLImportsLoaded');
-    logEvent('WebComponentsReady');
-    window.WebComponents = {loadHTMLImports: true};
-  </script>
-  <script src="../webcomponents-loader.js"></script>
-  <script src="./wct-config.js"></script>
-  <script src="../node_modules/wct-browser-legacy/browser.js"></script>
-  <link rel="import" href="imports/a1-import.html">
-</head>
-
-<body>
-</body>
-
+  <body></body>
 </html>

@@ -22,7 +22,7 @@ const workingDefaultPrevented = (() => {
 
 if (!workingDefaultPrevented) {
   const origPreventDefault = Event.prototype.preventDefault;
-  Event.prototype.preventDefault = function(this: Event) {
+  Event.prototype.preventDefault = function (this: Event) {
     if (!this.cancelable) {
       return;
     }
@@ -33,7 +33,7 @@ if (!workingDefaultPrevented) {
       get() {
         return true;
       },
-      configurable: true
+      configurable: true,
     });
   };
 }
@@ -41,20 +41,17 @@ if (!workingDefaultPrevented) {
 const isIE = /Trident/.test(navigator.userAgent);
 
 // Event constructor shim
-if (!window.Event || isIE && (typeof window.Event !== 'function')) {
+if (!window.Event || (isIE && typeof window.Event !== 'function')) {
   const origEvent = window.Event as typeof Event;
-  window['Event'] =
-      ((inType: string, params?: EventInit) => {
-        params = params || {};
-        const e = document.createEvent('Event');
-        e.initEvent(
-            inType, Boolean(params.bubbles), Boolean(params.cancelable));
-        return e;
-      }) as unknown as typeof Event;
+  window['Event'] = (((inType: string, params?: EventInit) => {
+    params = params || {};
+    const e = document.createEvent('Event');
+    e.initEvent(inType, Boolean(params.bubbles), Boolean(params.cancelable));
+    return e;
+  }) as unknown) as typeof Event;
   if (origEvent) {
-    // tslint:disable-next-line:forin
     for (const i in origEvent) {
-      // tslint:disable-next-line:no-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (window['Event'] as any)[i] = (origEvent as any)[i];
     }
     window['Event'].prototype = origEvent.prototype;
@@ -62,37 +59,51 @@ if (!window.Event || isIE && (typeof window.Event !== 'function')) {
 }
 
 // CustomEvent constructor shim
-if (!window.CustomEvent || isIE && (typeof window.CustomEvent !== 'function')) {
-  window['CustomEvent'] =
-      (<T extends unknown>(inType: string, params?: CustomEventInit<T>) => {
-        params = params || {};
-        const e: CustomEvent<T> = document.createEvent('CustomEvent');
-        e.initCustomEvent(
-            inType, Boolean(params.bubbles), Boolean(params.cancelable),
-            params.detail!);
-        return e;
-      }) as unknown as typeof CustomEvent;
+if (!window.CustomEvent || (isIE && typeof window.CustomEvent !== 'function')) {
+  window['CustomEvent'] = ((<T extends unknown>(
+    inType: string,
+    params?: CustomEventInit<T>
+  ) => {
+    params = params || {};
+    const e: CustomEvent<T> = document.createEvent('CustomEvent');
+    e.initCustomEvent(
+      inType,
+      Boolean(params.bubbles),
+      Boolean(params.cancelable),
+      params.detail!
+    );
+    return e;
+  }) as unknown) as typeof CustomEvent;
   window['CustomEvent'].prototype = window.Event.prototype as CustomEvent;
 }
 
-if (!window.MouseEvent || isIE && (typeof window.MouseEvent !== 'function')) {
+if (!window.MouseEvent || (isIE && typeof window.MouseEvent !== 'function')) {
   const origMouseEvent = window.MouseEvent as typeof MouseEvent;
-  window['MouseEvent'] =
-      ((inType: string, params?: MouseEventInit) => {
-        params = params || {};
-        const e = document.createEvent('MouseEvent');
-        e.initMouseEvent(
-            inType, Boolean(params.bubbles), Boolean(params.cancelable),
-            params.view || window, params.detail!, params.screenX!,
-            params.screenY!, params.clientX!, params.clientY!, params.ctrlKey!,
-            params.altKey!, params.shiftKey!, params.metaKey!, params.button!,
-            params.relatedTarget!);
-        return e;
-      }) as unknown as typeof MouseEvent;
+  window['MouseEvent'] = (((inType: string, params?: MouseEventInit) => {
+    params = params || {};
+    const e = document.createEvent('MouseEvent');
+    e.initMouseEvent(
+      inType,
+      Boolean(params.bubbles),
+      Boolean(params.cancelable),
+      params.view || window,
+      params.detail!,
+      params.screenX!,
+      params.screenY!,
+      params.clientX!,
+      params.clientY!,
+      params.ctrlKey!,
+      params.altKey!,
+      params.shiftKey!,
+      params.metaKey!,
+      params.button!,
+      params.relatedTarget!
+    );
+    return e;
+  }) as unknown) as typeof MouseEvent;
   if (origMouseEvent) {
-    // tslint:disable-next-line:forin
     for (const j in origMouseEvent) {
-      // tslint:disable-next-line:no-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (window.MouseEvent as any)[j] = (origMouseEvent as any)[j];
     }
   }

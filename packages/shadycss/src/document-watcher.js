@@ -14,7 +14,7 @@ import {nativeShadow} from './style-settings.js';
 import StyleTransformer from './style-transformer.js';
 import {getIsExtends, elementHasBuiltCss, wrap} from './style-util.js';
 
-export let flush = function() {};
+export let flush = function () {};
 
 /**
  * @param {!Element} element
@@ -53,7 +53,7 @@ export function getOwnerScope(node) {
   if (ownerRoot === node || ownerRoot === node.ownerDocument) {
     return '';
   }
-  const host = /** @type {!ShadowRoot} */(ownerRoot).host;
+  const host = /** @type {!ShadowRoot} */ (ownerRoot).host;
   if (!host) {
     // this may actually be a document fragment
     return '';
@@ -87,8 +87,9 @@ export function ensureCorrectScope(element) {
  */
 export function ensureCorrectSubtreeScoping(element) {
   // find unscoped subtree nodes
-  const unscopedNodes = window['ShadyDOM']['nativeMethods']['querySelectorAll'].call(
-    element, `:not(.${StyleTransformer.SCOPE_NAME})`);
+  const unscopedNodes = window['ShadyDOM']['nativeMethods'][
+    'querySelectorAll'
+  ].call(element, `:not(.${StyleTransformer.SCOPE_NAME})`);
 
   for (let j = 0; j < unscopedNodes.length; j++) {
     // it's possible, during large batch inserts, that nodes that aren't
@@ -122,24 +123,30 @@ function isElementWithBuiltCss(el) {
  * @param {Array<MutationRecord|null>|null} mxns
  */
 function handler(mxns) {
-  for (let x=0; x < mxns.length; x++) {
+  for (let x = 0; x < mxns.length; x++) {
     let mxn = mxns[x];
-    if (mxn.target === document.documentElement ||
-      mxn.target === document.head) {
+    if (
+      mxn.target === document.documentElement ||
+      mxn.target === document.head
+    ) {
       continue;
     }
-    for (let i=0; i < mxn.addedNodes.length; i++) {
+    for (let i = 0; i < mxn.addedNodes.length; i++) {
       let n = mxn.addedNodes[i];
       if (n.nodeType !== Node.ELEMENT_NODE) {
         continue;
       }
-      n = /** @type {HTMLElement} */(n); // eslint-disable-line no-self-assign
+      n = /** @type {HTMLElement} */ (n); // eslint-disable-line no-self-assign
       let root = n.getRootNode();
       let currentScope = getCurrentScope(n);
       // node was scoped, but now is in document
       // If this element has built css, we must not remove scoping as this node
       // will be used as a template or style without re - applying scoping as an optimization
-      if (currentScope && root === n.ownerDocument && !isElementWithBuiltCss(n)) {
+      if (
+        currentScope &&
+        root === n.ownerDocument &&
+        !isElementWithBuiltCss(n)
+      ) {
         StyleTransformer.domRemoveScope(n, currentScope);
       } else if (root instanceof ShadowRoot) {
         const newScope = getOwnerScope(n);
@@ -155,13 +162,17 @@ function handler(mxns) {
 }
 
 // if native Shadow DOM is being used, or ShadyDOM handles dynamic scoiping, do not activate the MutationObserver
-if (!nativeShadow && !(window['ShadyDOM'] && window['ShadyDOM']['handlesDynamicScoping'])) {
+if (
+  !nativeShadow &&
+  !(window['ShadyDOM'] && window['ShadyDOM']['handlesDynamicScoping'])
+) {
   let observer = new MutationObserver(handler);
   let start = (node) => {
     observer.observe(node, {childList: true, subtree: true});
-  }
-  let nativeCustomElements = (window['customElements'] &&
-    !window['customElements']['polyfillWrapFlushCallback']);
+  };
+  let nativeCustomElements =
+    window['customElements'] &&
+    !window['customElements']['polyfillWrapFlushCallback'];
   // need to start immediately with native custom elements
   // TODO(dfreedm): with polyfilled HTMLImports and native custom elements
   // excessive mutations may be observed; this can be optimized via cooperation
@@ -171,19 +182,19 @@ if (!nativeShadow && !(window['ShadyDOM'] && window['ShadyDOM']['handlesDynamicS
   } else {
     let delayedStart = () => {
       start(document.body);
-    }
+    };
     // use polyfill timing if it's available
     if (window['HTMLImports']) {
       window['HTMLImports']['whenReady'](delayedStart);
-    // otherwise push beyond native imports being ready
-    // which requires RAF + readystate interactive.
+      // otherwise push beyond native imports being ready
+      // which requires RAF + readystate interactive.
     } else {
-      requestAnimationFrame(function() {
+      requestAnimationFrame(function () {
         if (document.readyState === 'loading') {
-          let listener = function() {
+          let listener = function () {
             delayedStart();
             document.removeEventListener('readystatechange', listener);
-          }
+          };
           document.addEventListener('readystatechange', listener);
         } else {
           delayedStart();
@@ -192,7 +203,7 @@ if (!nativeShadow && !(window['ShadyDOM'] && window['ShadyDOM']['handlesDynamicS
     }
   }
 
-  flush = function() {
+  flush = function () {
     handler(observer.takeRecords());
-  }
+  };
 }

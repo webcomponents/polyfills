@@ -12,27 +12,30 @@ import {shadyDataForNode} from './shady-data.js';
 /** @type {!Object} */
 export const settings = window['ShadyDOM'] || {};
 
-settings.hasNativeShadowDOM = Boolean(Element.prototype.attachShadow && Node.prototype.getRootNode);
+settings.hasNativeShadowDOM = Boolean(
+  Element.prototype.attachShadow && Node.prototype.getRootNode
+);
 
 // The user might need to pass the custom elements polyfill a flag by setting an
 // object to `customElements`, so check for `customElements.define` also.
-export const hasCustomElements =
-    () => Boolean(window.customElements && window.customElements.define);
+export const hasCustomElements = () =>
+  Boolean(window.customElements && window.customElements.define);
 // The custom elements polyfill is typically loaded after Shady DOM, so this
 // check isn't reliable during initial evaluation. However, because the
 // polyfills are loaded immediately after one another, it works at runtime.
-export const hasPolyfilledCustomElements =
-    () => Boolean(window.customElements && window.customElements['polyfillWrapFlushCallback']);
+export const hasPolyfilledCustomElements = () =>
+  Boolean(
+    window.customElements && window.customElements['polyfillWrapFlushCallback']
+  );
 
 const desc = Object.getOwnPropertyDescriptor(Node.prototype, 'firstChild');
 
-/* eslint-disable */
 settings.hasDescriptors = Boolean(desc && desc.configurable && desc.get);
 settings.inUse = settings['force'] || !settings.hasNativeShadowDOM;
-settings.noPatch = /** @type {string|boolean} */(settings['noPatch'] || false);
+settings.noPatch = /** @type {string|boolean} */ (settings['noPatch'] || false);
+// eslint-disable-next-line no-self-assign
 settings.preferPerformance = settings['preferPerformance'];
-settings.patchOnDemand = (settings.noPatch === 'on-demand');
-/* eslint-enable */
+settings.patchOnDemand = settings.noPatch === 'on-demand';
 
 const IS_IE = navigator.userAgent.match('Trident');
 settings.IS_IE = IS_IE;
@@ -41,32 +44,36 @@ export const canUpgrade = () => !settings.IS_IE;
 
 export const isTrackingLogicalChildNodes = (node) => {
   const nodeData = shadyDataForNode(node);
-  return (nodeData && nodeData.firstChild !== undefined);
-}
+  return nodeData && nodeData.firstChild !== undefined;
+};
 
-export const isShadyRoot = obj => obj instanceof ShadowRoot;
+export const isShadyRoot = (obj) => obj instanceof ShadowRoot;
 
 export const hasShadowRootWithSlot = (node) => {
   const nodeData = shadyDataForNode(node);
   let root = nodeData && nodeData.root;
-  return (root && root._hasInsertionPoint());
-}
+  return root && root._hasInsertionPoint();
+};
 
 let p = Element.prototype;
-let matches = p.matches || p.matchesSelector ||
-  p.mozMatchesSelector || p.msMatchesSelector ||
-  p.oMatchesSelector || p.webkitMatchesSelector;
+let matches =
+  p.matches ||
+  p.matchesSelector ||
+  p.mozMatchesSelector ||
+  p.msMatchesSelector ||
+  p.oMatchesSelector ||
+  p.webkitMatchesSelector;
 
 export const matchesSelector = (element, selector) => {
   return matches.call(element, selector);
-}
+};
 
 export const mixin = (target, source) => {
   for (var i in source) {
     target[i] = source[i];
   }
   return target;
-}
+};
 
 // NOTE, prefer MutationObserver over Promise for microtask timing
 // for consistency x-platform.
@@ -78,10 +85,10 @@ new MutationObserver(() => {
     // catch errors in user code...
     try {
       queue.shift()();
-    } catch(e) {
+    } catch (e) {
       // enqueue another record and throw
       twiddle.textContent = content++;
-      throw(e);
+      throw e;
     }
   }
 }).observe(twiddle, {characterData: true});
@@ -90,17 +97,17 @@ new MutationObserver(() => {
 export const microtask = (callback) => {
   queue.push(callback);
   twiddle.textContent = content++;
-}
+};
 
 /** @type {function(!Document, !Node): boolean} */
 export const documentContains = (() => {
   if (document.contains) {
     return (doc, node) => doc[NATIVE_PREFIX + 'contains'](node);
   } else {
-    return (doc, node) => (
+    return (doc, node) =>
       doc === node ||
-      (doc.documentElement && doc.documentElement[NATIVE_PREFIX + 'contains'](node))
-    );
+      (doc.documentElement &&
+        doc.documentElement[NATIVE_PREFIX + 'contains'](node));
   }
 })();
 
@@ -112,10 +119,10 @@ export const contains = (container, node) => {
     node = node[SHADY_PREFIX + 'parentNode'];
   }
   return false;
-}
+};
 
 const getNodeHTMLCollectionName = (node) =>
-    node.getAttribute('id') || node.getAttribute('name');
+  node.getAttribute('id') || node.getAttribute('name');
 
 const isValidHTMLCollectionName = (name) => name !== 'length' && isNaN(name);
 
@@ -129,10 +136,10 @@ export const createPolyfilledHTMLCollection = (nodes) => {
       nodes[name] = node;
     }
   }
-  nodes.item = function(index) {
+  nodes.item = function (index) {
     return nodes[index];
-  }
-  nodes.namedItem = function(name) {
+  };
+  nodes.namedItem = function (name) {
     if (isValidHTMLCollectionName(name) && nodes[name]) {
       return nodes[name];
     }
@@ -148,26 +155,34 @@ export const createPolyfilledHTMLCollection = (nodes) => {
     return null;
   };
   return nodes;
-}
+};
 
 export const NATIVE_PREFIX = '__shady_native_';
 export const SHADY_PREFIX = '__shady_';
 
 export const nativeChildNodesArray = (parent) => {
   const result = [];
-  for (let n=parent[NATIVE_PREFIX + 'firstChild']; n; n = n[NATIVE_PREFIX + 'nextSibling']) {
+  for (
+    let n = parent[NATIVE_PREFIX + 'firstChild'];
+    n;
+    n = n[NATIVE_PREFIX + 'nextSibling']
+  ) {
     result.push(n);
   }
   return result;
-}
+};
 
 export const childNodesArray = (parent) => {
   const result = [];
-  for (let n=parent[SHADY_PREFIX + 'firstChild']; n; n = n[SHADY_PREFIX + 'nextSibling']) {
+  for (
+    let n = parent[SHADY_PREFIX + 'firstChild'];
+    n;
+    n = n[SHADY_PREFIX + 'nextSibling']
+  ) {
     result.push(n);
   }
   return result;
-}
+};
 
 const patchProperty = (proto, name, descriptor) => {
   descriptor.configurable = true;
@@ -179,11 +194,11 @@ const patchProperty = (proto, name, descriptor) => {
   } else {
     try {
       Object.defineProperty(proto, name, descriptor);
-    } catch(e) {
+    } catch (e) {
       // this error is harmless so we just trap it.
     }
   }
-}
+};
 
 /**
  * Patch a group of accessors on an object. By default this overrides
@@ -192,22 +207,27 @@ const patchProperty = (proto, name, descriptor) => {
  * @param {string=} prefix
  * @param {Array=} disallowedPatches
  */
-export const patchProperties = (proto, descriptors, prefix = '', disallowedPatches) => {
+export const patchProperties = (
+  proto,
+  descriptors,
+  prefix = '',
+  disallowedPatches
+) => {
   for (let name in descriptors) {
     if (disallowedPatches && disallowedPatches.indexOf(name) >= 0) {
       continue;
     }
-    patchProperty(proto,  prefix + name, descriptors[name]);
+    patchProperty(proto, prefix + name, descriptors[name]);
   }
-}
+};
 
 export const patchExistingProperties = (proto, descriptors) => {
   for (let name in descriptors) {
     if (name in proto) {
-      patchProperty(proto,  name, descriptors[name]);
+      patchProperty(proto, name, descriptors[name]);
     }
   }
-}
+};
 
 // note, this is not a perfect polyfill since it doesn't include symbols
 /** @return {!Object<!ObjectPropertyDescriptor>} */
@@ -228,7 +248,7 @@ export const assign = (target, source) => {
 };
 
 export const arrayFrom = (object) => {
-  return [].slice.call(/** @type {IArrayLike} */(object));
+  return [].slice.call(/** @type {IArrayLike} */ (object));
 };
 
 /**
@@ -241,7 +261,7 @@ const convertIntoANode = (arg) => {
   // `"" + arg` is used to implicitly coerce the value to a string (coercing a
   // symbol *should* fail here) before passing to `createTextNode`, which has
   // argument type `(number|string)`.
-  return !(arg instanceof Node) ? document.createTextNode("" + arg) : arg;
+  return !(arg instanceof Node) ? document.createTextNode('' + arg) : arg;
 };
 
 /**

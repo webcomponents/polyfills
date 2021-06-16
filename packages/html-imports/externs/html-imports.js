@@ -24,18 +24,18 @@ HTMLImports.useNative = false;
  * if imports are already done loading.
  * @param {function()=} callback
  */
-HTMLImports.whenReady = function(callback) {};
+HTMLImports.whenReady = function (callback) {};
 
 /**
  * Returns the import document containing the element.
  * @param {!Node} element
  * @return {?HTMLLinkElement|?Document|undefined}
  */
-HTMLImports.importForElement = function(element) {};
+HTMLImports.importForElement = function (element) {};
 
 /**
  * Ensures imports contained in the element are imported.
  * Use this to handle dynamic imports attached to body.
  * @param {!(HTMLDocument|Element)} doc
  */
-HTMLImports.loadImports = function(doc) {};
+HTMLImports.loadImports = function (doc) {};

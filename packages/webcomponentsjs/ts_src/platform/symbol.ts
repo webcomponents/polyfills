@@ -15,7 +15,7 @@ import 'get-own-property-symbols/build/get-own-property-symbols.max';
 // Fix issue in toString patch when compiled into strict mode via closure
 // https://github.com/es-shims/get-own-property-symbols/issues/16
 const toString = Object.prototype.toString;
-Object.prototype.toString = function() {
+Object.prototype.toString = function () {
   if (this === undefined) {
     return '[object Undefined]';
   } else if (this === null) {
@@ -26,7 +26,7 @@ Object.prototype.toString = function() {
 };
 
 // overwrite Object.keys to filter out symbols
-Object.keys = function(obj: object) {
+Object.keys = function (obj: object) {
   return Object.getOwnPropertyNames(obj).filter((name) => {
     const prop = Object.getOwnPropertyDescriptor(obj, name);
     return prop && prop.enumerable;
@@ -35,15 +35,15 @@ Object.keys = function(obj: object) {
 
 // implement iterators for IE 11
 if (!String.prototype[Symbol.iterator] || !String.prototype.codePointAt) {
-  String.prototype[Symbol.iterator] = function*(this: string) {
+  String.prototype[Symbol.iterator] = function* (this: string) {
     for (let i = 0; i < this.length; i++) {
       yield this[i];
     }
-  }
+  };
 }
 
 if (!Set.prototype[Symbol.iterator]) {
-  Set.prototype[Symbol.iterator] = function*<T>(this: Set<T>) {
+  Set.prototype[Symbol.iterator] = function* <T>(this: Set<T>) {
     const temp: T[] = [];
     this.forEach((value) => {
       temp.push(value);
@@ -55,7 +55,7 @@ if (!Set.prototype[Symbol.iterator]) {
 }
 
 if (!Map.prototype[Symbol.iterator]) {
-  Map.prototype[Symbol.iterator] = function*<K, V>(this: Map<K, V>) {
+  Map.prototype[Symbol.iterator] = function* <K, V>(this: Map<K, V>) {
     const entries: Array<[K, V]> = [];
     this.forEach((value, key) => {
       entries.push([key, value]);

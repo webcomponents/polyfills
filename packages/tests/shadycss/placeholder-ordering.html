@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <!--
 @license
 Copyright (c) 2017 The Polymer Project Authors. All rights reserved.
@@ -9,58 +9,68 @@ Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 -->
 <html>
-<head>
-  <meta charset="utf-8">
-  <script>
-  WCT = {waitFor: function (cb) {HTMLImports.whenReady(cb)}}
-  </script>
-  <script src="./test-flags.js"></script>
-  <script src="../node_modules/wct-browser-legacy/browser.js"></script>
-  <script src="../node_modules/@webcomponents/webcomponentsjs/bundles/webcomponents-pf_js.js"></script>
-  <script src="../node_modules/@webcomponents/webcomponentsjs/bundles/webcomponents-pf_dom.js"></script>
-  <script src="../node_modules/@webcomponents/template/template.js"></script>
-  <script src="../node_modules/@webcomponents/html-imports/html-imports.min.js"></script>
-  <script src="../node_modules/@webcomponents/shadydom/shadydom.min.js"></script>
-  <script src="../node_modules/@webcomponents/custom-elements/custom-elements.min.js"></script>
-  <script src="../node_modules/@webcomponents/shadycss/scoping-shim.min.js"></script>
-  <script src="module/generated/make-element.js"></script>
-</head>
-<body>
-  <template id="x-a">
-    <style>
-    :host {
-      display: block;
-    }
-    </style>
-  </template>
-  <template id="x-b">
-    <style>
-    :host {
-      display: block;
-    }
-    </style>
-  </template>
-  <template id="x-c">
-    <style>
-    :host {
-      display: block;
-    }
-    </style>
-  </template>
-  <script>
-  suite('placeholder ordering', function() {
-    test.skip('placeholders are in order', function() {
-      makeElement('x-a');
-      makeElement('x-b');
-      var el = document.createElement('x-a');
-      document.body.appendChild(el);
-      makeElement('x-c');
-      var styles = Array.from(document.querySelectorAll('style[scope]')).map(function(style) {
-        return style.getAttribute('scope');
+  <head>
+    <meta charset="utf-8" />
+    <script>
+      WCT = {
+        waitFor: function (cb) {
+          HTMLImports.whenReady(cb);
+        },
+      };
+    </script>
+    <script src="./test-flags.js"></script>
+    <script src="../node_modules/wct-browser-legacy/browser.js"></script>
+    <script src="../node_modules/@webcomponents/webcomponentsjs/bundles/webcomponents-pf_js.js"></script>
+    <script src="../node_modules/@webcomponents/webcomponentsjs/bundles/webcomponents-pf_dom.js"></script>
+    <script src="../node_modules/@webcomponents/template/template.js"></script>
+    <script src="../node_modules/@webcomponents/html-imports/html-imports.min.js"></script>
+    <script src="../node_modules/@webcomponents/shadydom/shadydom.min.js"></script>
+    <script src="../node_modules/@webcomponents/custom-elements/custom-elements.min.js"></script>
+    <script src="../node_modules/@webcomponents/shadycss/scoping-shim.min.js"></script>
+    <script src="module/generated/make-element.js"></script>
+  </head>
+  <body>
+    <template id="x-a">
+      <style>
+        :host {
+          display: block;
+        }
+      </style>
+    </template>
+    <template id="x-b">
+      <style>
+        :host {
+          display: block;
+        }
+      </style>
+    </template>
+    <template id="x-c">
+      <style>
+        :host {
+          display: block;
+        }
+      </style>
+    </template>
+    <script>
+      suite('placeholder ordering', function () {
+        test.skip('placeholders are in order', function () {
+          makeElement('x-a');
+          makeElement('x-b');
+          var el = document.createElement('x-a');
+          document.body.appendChild(el);
+          makeElement('x-c');
+          var styles = Array.from(
+            document.querySelectorAll('style[scope]')
+          ).map(function (style) {
+            return style.getAttribute('scope');
+          });
+          assert.deepEqual(
+            styles,
+            ['x-a', 'x-b', 'x-c'],
+            'styles are not in order'
+          );
+        });
       });
-      assert.deepEqual(styles, ['x-a', 'x-b', 'x-c'], 'styles are not in order');
-    })
-  });
-  </script>
-</body>
+    </script>
+  </body>
 </html>
