@@ -9,10 +9,8 @@
  * additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
-import {
-  methods as NodeMethods,
-  descriptors as NodeDescriptors,
-} from '../environment/node.js';
+// prettier-ignore
+import {methods as NodeMethods, descriptors as NodeDescriptors} from '../environment/node.js';
 
 // `Object.getOwnPropertyDescriptor(Node.prototype, 'parentNode')` is
 // undefined in Chrome 41.

@@ -13,10 +13,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 import {nativeShadow, nativeCssVariables, cssBuild} from './style-settings.js';
 import {parse, stringify, types, StyleNode} from './css-parse.js'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import {MEDIA_MATCH} from './common-regex.js';
-import {
-  processUnscopedStyle,
-  isUnscopedStyle,
-} from './unscoped-style-handler.js';
+// prettier-ignore
+import {processUnscopedStyle, isUnscopedStyle} from './unscoped-style-handler.js';
 
 /**
  * @param {string|StyleNode} rules

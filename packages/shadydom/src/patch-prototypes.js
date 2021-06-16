@@ -12,10 +12,8 @@ import * as utils from './utils.js';
 import {EventTargetPatches} from './patches/EventTarget.js';
 import {NodePatches} from './patches/Node.js';
 import {SlotablePatches} from './patches/Slotable.js';
-import {
-  ParentNodePatches,
-  ParentNodeDocumentOrFragmentPatches,
-} from './patches/ParentNode.js';
+// prettier-ignore
+import {ParentNodePatches, ParentNodeDocumentOrFragmentPatches} from './patches/ParentNode.js';
 import {ChildNodePatches} from './patches/ChildNode.js';
 import {ElementPatches, ElementShadowPatches} from './patches/Element.js';
 import {ElementOrShadowRootPatches} from './patches/ElementOrShadowRoot.js';
