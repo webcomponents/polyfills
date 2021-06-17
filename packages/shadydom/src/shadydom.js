@@ -20,29 +20,17 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 import * as utils from './utils.js';
 import {flush, enqueue} from './flush.js';
-import {
-  observeChildren,
-  unobserveChildren,
-  filterMutations,
-} from './observe-changes.js';
-import {
-  addNativePrefixedProperties,
-  nativeMethods,
-  nativeTree,
-} from './patch-native.js';
-import {
-  patchInsideElementAccessors,
-  patchOutsideElementAccessors,
-} from './patch-instances.js';
+// prettier-ignore
+import {observeChildren, unobserveChildren, filterMutations} from './observe-changes.js';
+// prettier-ignore
+import {addNativePrefixedProperties, nativeMethods, nativeTree} from './patch-native.js';
+// prettier-ignore
+import {patchInsideElementAccessors, patchOutsideElementAccessors} from './patch-instances.js';
 import {patchEvents, patchClick, composedPath} from './patch-events.js';
 import {ShadyRoot} from './attach-shadow.js';
 import {wrap, Wrapper} from './wrapper.js';
-import {
-  addShadyPrefixedProperties,
-  applyPatches,
-  patchShadowOnElement,
-  patchElementProto,
-} from './patch-prototypes.js';
+// prettier-ignore
+import {addShadyPrefixedProperties, applyPatches, patchShadowOnElement, patchElementProto} from './patch-prototypes.js';
 
 if (utils.settings.inUse) {
   const patch = utils.settings.hasDescriptors

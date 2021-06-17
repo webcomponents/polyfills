@@ -9,11 +9,8 @@
  * additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
-import {
-  constructor as FormDataConstructor,
-  prototype as FormDataPrototype,
-  methods as FormDataMethods,
-} from '../environment/form_data.js';
+// prettier-ignore
+import {constructor as FormDataConstructor, prototype as FormDataPrototype, methods as FormDataMethods} from '../environment/form_data.js';
 import {dispatchEvent} from '../environment_api/event_target.js';
 import {FormDataEvent} from '../form_data_event.js';
 import {prepareWrapper, installWrapper} from './wrap_constructor.js';

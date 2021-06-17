@@ -12,23 +12,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 import ApplyShim from '../src/apply-shim.js';
 import templateMap from '../src/template-map.js';
-import {
-  getIsExtends,
-  toCssText,
-  elementHasBuiltCss,
-} from '../src/style-util.js';
+// prettier-ignore
+import {getIsExtends, toCssText, elementHasBuiltCss} from '../src/style-util.js';
 import * as ApplyShimUtils from '../src/apply-shim-utils.js';
-import {
-  getComputedStyleValue,
-  updateNativeProperties,
-} from '../src/common-utils.js';
+// prettier-ignore
+import {getComputedStyleValue, updateNativeProperties} from '../src/common-utils.js';
 import {CustomStyleInterfaceInterface} from '../src/custom-style-interface.js'; // eslint-disable-line @typescript-eslint/no-unused-vars
-import {
-  nativeCssVariables,
-  nativeShadow,
-  cssBuild,
-  disableRuntime,
-} from '../src/style-settings.js';
+// prettier-ignore
+import {nativeCssVariables, nativeShadow, cssBuild, disableRuntime} from '../src/style-settings.js';
 
 /** @const {ApplyShim} */
 const applyShim = new ApplyShim();

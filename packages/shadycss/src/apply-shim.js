@@ -71,13 +71,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 'use strict';
 
-import {
-  forEachRule,
-  processVariableAndFallback,
-  rulesForStyle,
-  toCssText,
-  gatherStyleText,
-} from './style-util.js';
+// prettier-ignore
+import {forEachRule, processVariableAndFallback, rulesForStyle, toCssText, gatherStyleText} from './style-util.js';
 import {MIXIN_MATCH, VAR_ASSIGN} from './common-regex.js';
 import {detectMixin} from './common-utils.js';
 import {StyleNode} from './css-parse.js'; // eslint-disable-line @typescript-eslint/no-unused-vars

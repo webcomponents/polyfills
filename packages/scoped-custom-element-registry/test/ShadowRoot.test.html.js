@@ -1,12 +1,7 @@
 import {expect} from '@open-wc/testing';
 
-import {
-  getTestTagName,
-  getTestElement,
-  getShadowRoot,
-  getHTML,
-  createTemplate,
-} from './utils.js';
+// prettier-ignore
+import {getTestTagName, getTestElement, getShadowRoot, getHTML, createTemplate} from './utils.js';
 
 describe('ShadowRoot', () => {
   it('should be able to be associate a custom registry', () => {
