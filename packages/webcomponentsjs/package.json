@@ -25,6 +25,7 @@
   "files": [
     "bundles/**/*",
     "custom-elements-es5-adapter.js",
+    "externs/**/*.d.ts",
     "src/**/*.js",
     "webcomponents-bundle.js*",
     "webcomponents-loader.js"
@@ -43,6 +44,7 @@
     "@webcomponents/url": "^0.7.7",
     "babel-preset-minify": "^0.4.3",
     "get-own-property-symbols": "^0.9.2",
+    "gulp-concat": "^2.6.1",
     "promise-polyfill": "^8.0.0"
   }
 }

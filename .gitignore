@@ -27,6 +27,7 @@ packages/tests/shadycss/module/generated/
 
 # webcomponentsjs package
 packages/webcomponentsjs/bundles/
+packages/webcomponentsjs/externs/**/*.d.ts
 packages/webcomponentsjs/src/platform/
 packages/webcomponentsjs/src/flag-parser.*
 packages/webcomponentsjs/src/unresolved.*

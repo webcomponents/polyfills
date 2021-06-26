@@ -20,6 +20,7 @@ const closure = require('google-closure-compiler').gulp();
 const babel = require('rollup-plugin-babel');
 const commonjs = require('rollup-plugin-commonjs');
 const license = require('rollup-plugin-license');
+const concat = require('gulp-concat');
 
 function debugify(sourceName, fileName, extraRollupOptions) {
   const outDir = fileName ? '.' : './bundles';
@@ -108,6 +109,16 @@ function closurify(sourceName, fileName) {
     .pipe(sourcemaps.write('.'))
     .pipe(gulp.dest(outDir));
 }
+
+gulp.task('concat-ts-externs', () => {
+  return gulp
+    .src(['./node_modules/@webcomponents/*/externs/**/*.d.ts'], {
+      base: './',
+      follow: true,
+    })
+    .pipe(concat('webcomponents.d.ts'))
+    .pipe(gulp.dest('./externs'));
+});
 
 gulp.task('debugify-pf_js', () => {
   const rollupOptions = {
@@ -237,7 +248,7 @@ gulp.task(
   ])
 );
 
-gulp.task('default', gulp.series('closure'));
+gulp.task('default', gulp.series('closure', 'concat-ts-externs'));
 
 process.on('unhandledRejection', (err) => {
   console.error('Unhandled Promise Rejection:', err);
