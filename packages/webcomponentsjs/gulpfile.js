@@ -112,10 +112,16 @@ function closurify(sourceName, fileName) {
 
 gulp.task('concat-ts-externs', () => {
   return gulp
-    .src(['./node_modules/@webcomponents/*/externs/**/*.d.ts'], {
-      base: './',
-      follow: true,
-    })
+    .src(
+      [
+        './externs/**/*.d.ts',
+        './node_modules/@webcomponents/*/externs/**/*.d.ts',
+      ],
+      {
+        base: './',
+        follow: true,
+      }
+    )
     .pipe(concat('webcomponents-bundle.d.ts'))
     .pipe(gulp.dest('.'));
 });
