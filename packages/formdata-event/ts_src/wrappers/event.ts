@@ -10,11 +10,8 @@
  */
 
 import {methods as DocumentMethods} from '../environment/document.js';
-import {
-  constructor as EventConstructor,
-  prototype as EventPrototype,
-  methods as EventMethods,
-} from '../environment/event.js';
+// prettier-ignore
+import {constructor as EventConstructor, prototype as EventPrototype, methods as EventMethods} from '../environment/event.js';
 import {document} from '../environment/globals.js';
 import {initEvent} from '../environment_api/event.js';
 import {prepareWrapper, installWrapper} from './wrap_constructor.js';

@@ -10,10 +10,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 import * as utils from './utils.js';
 import {shadyDataForNode, ensureShadyDataForNode} from './shady-data.js';
-import {
-  patchInsideElementAccessors,
-  patchOutsideElementAccessors,
-} from './patch-instances.js';
+// prettier-ignore
+import {patchInsideElementAccessors, patchOutsideElementAccessors} from './patch-instances.js';
 import {patchNodeProto} from './patch-prototypes.js';
 
 const OutsideAccessors = 1;

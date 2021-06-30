@@ -8,11 +8,8 @@ Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 */
 import * as utils from '../utils.js';
-import {
-  addEventListener,
-  removeEventListener,
-  dispatchEvent,
-} from '../patch-events.js';
+// prettier-ignore
+import {addEventListener, removeEventListener, dispatchEvent} from '../patch-events.js';
 
 export const WindowPatches = utils.getOwnPropertyDescriptors({
   // Ensure that `dispatchEvent` is patched directly on Window since on

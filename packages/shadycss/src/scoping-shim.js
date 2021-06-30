@@ -11,34 +11,23 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 'use strict';
 
 import {parse, StyleNode} from './css-parse.js';
-import {
-  nativeShadow,
-  nativeCssVariables,
-  disableRuntime,
-} from './style-settings.js';
+// prettier-ignore
+import {nativeShadow, nativeCssVariables, disableRuntime} from './style-settings.js';
 import StyleTransformer from './style-transformer.js';
 import * as StyleUtil from './style-util.js';
 import StyleProperties from './style-properties.js';
-import {
-  ensureStylePlaceholder,
-  getStylePlaceholder,
-} from './style-placeholder.js';
+// prettier-ignore
+import {ensureStylePlaceholder, getStylePlaceholder} from './style-placeholder.js';
 import StyleInfo from './style-info.js';
 import StyleCache from './style-cache.js';
-import {
-  flush as watcherFlush,
-  getOwnerScope,
-  getCurrentScope,
-} from './document-watcher.js';
+// prettier-ignore
+import {flush as watcherFlush, getOwnerScope, getCurrentScope} from './document-watcher.js';
 import templateMap from './template-map.js';
 import * as ApplyShimUtils from './apply-shim-utils.js';
 import {updateNativeProperties, detectMixin} from './common-utils.js';
-import {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  CustomStyleInterfaceInterface,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  CustomStyleProvider,
-} from './custom-style-interface.js';
+// prettier-ignore
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import {CustomStyleInterfaceInterface, CustomStyleProvider} from './custom-style-interface.js';
 
 /** @type {!Object<string, string>} */
 const adoptedCssTextMap = {};

@@ -15,23 +15,16 @@
  * submissions that should dispatch a 'formdata' event.
  */
 
-import {
-  getEventPropagationStopped,
-  getEventPropagationImmediatelyStopped,
-} from './wrappers/event.js';
+// prettier-ignore
+import {getEventPropagationStopped, getEventPropagationImmediatelyStopped} from './wrappers/event.js';
 import {getTarget, getDefaultPrevented} from './environment_api/event.js';
-import {
-  addEventListener,
-  removeEventListener,
-} from './environment_api/event_target.js';
+// prettier-ignore
+import {addEventListener, removeEventListener} from './environment_api/event_target.js';
 import {getRootNode} from './environment_api/node.js';
 import {dispatchFormdataForSubmission} from './dispatch_formdata_for_submission.js';
 import {EventListenerArray} from './event_listener_array.js';
-import {
-  submitListenerAdded,
-  submitListenerRemoved,
-  targetToSubmitListeners,
-} from './submit_listener_added.js';
+// prettier-ignore
+import {submitListenerAdded, submitListenerRemoved, targetToSubmitListeners} from './submit_listener_added.js';
 
 /**
  * The set of 'formdata' event listeners for an event target.
