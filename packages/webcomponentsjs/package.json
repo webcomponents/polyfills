@@ -25,8 +25,8 @@
   "files": [
     "bundles/**/*",
     "custom-elements-es5-adapter.js",
-    "externs/**/*.d.ts",
     "src/**/*.js",
+    "webcomponents-bundle.d.ts",
     "webcomponents-bundle.js*",
     "webcomponents-loader.js"
   ],

@@ -116,8 +116,8 @@ gulp.task('concat-ts-externs', () => {
       base: './',
       follow: true,
     })
-    .pipe(concat('webcomponents.d.ts'))
-    .pipe(gulp.dest('./externs'));
+    .pipe(concat('webcomponents-bundle.d.ts'))
+    .pipe(gulp.dest('.'));
 });
 
 gulp.task('debugify-pf_js', () => {
