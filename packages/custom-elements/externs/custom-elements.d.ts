@@ -64,10 +64,8 @@ interface DocumentFragment {
 interface Error {
   // Non-standard Safari property.
   sourceURL?: string;
-  fileName?: string;
   // Non-standard Safari property.
   line?: number;
-  lineNumber?: number;
   // Non-standard Safari property.
   column?: number;
   // Non-standard Firefox property.
