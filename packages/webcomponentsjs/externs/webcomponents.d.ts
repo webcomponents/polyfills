@@ -13,10 +13,6 @@
 // eslint-disable-next-line no-var
 declare var WebComponents;
 
-interface Promise {
-  cast: Function;
-}
-
 interface HTMLTemplateElement {
   bootstrap(): void;
 }
