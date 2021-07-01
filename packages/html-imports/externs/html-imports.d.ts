@@ -38,3 +38,7 @@ interface HTMLImportsInterface {
 type HTMLImports = HTMLImportsInterface;
 // eslint-disable-next-line no-var
 declare var HTMLImports: HTMLImports;
+
+interface HTMLLinkElement {
+  import?: Node;
+}

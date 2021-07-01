@@ -33,5 +33,9 @@
     "webcomponents",
     "polyfill",
     "shim"
-  ]
+  ],
+  "devDependencies": {
+    "@webcomponents/html-imports": "^1.2.6",
+    "@webcomponents/shadydom": "^1.8.0"
+  }
 }

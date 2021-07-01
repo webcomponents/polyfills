@@ -12,9 +12,9 @@
 
 interface CustomElementRegistry {
   forcePolyfill?: boolean;
+  polyfillWrapFlushCallback?(outer: (fn: () => void) => void): void;
   noDocumentConstructionObserver?: boolean;
   shadyDomFastWalk?: boolean;
-  polyfillWrapFlushCallback?: (outer: (fn: () => void) => void) => void;
 }
 
 interface AlreadyConstructedMarkerType {
@@ -23,17 +23,22 @@ interface AlreadyConstructedMarkerType {
 
 interface CustomElementDefinition {
   localName: string;
-  constructorFunction: Function;
-  connectedCallback: Function;
-  disconnectedCallback: Function;
-  adoptedCallback: Function;
-  attributeChangedCallback: Function;
+  constructorFunction: {new (): HTMLElement};
+  connectedCallback?(): void;
+  disconnectedCallback?(): void;
+  adoptedCallback?(): void;
+  attributeChangedCallback?(
+    name: string,
+    oldValue?: string | null,
+    newValue?: string | null,
+    namespace?: string | null
+  ): void;
   observedAttributes: Array<string>;
   constructionStack: Array<HTMLElement | AlreadyConstructedMarkerType>;
 }
 
-// These properties are defined in the externs so that they will not be
-// renamed during minification.
+// These properties are defined with 'declare' in a ts file so that they will
+// not be renamed by Closure Compiler.
 
 // Used for both Documents and Nodes which represent documents in the HTML
 // Imports polyfill.
@@ -43,7 +48,6 @@ interface Node {
   __CE_isImportDocument?: boolean;
   __CE_documentLoadHandled?: boolean;
   __CE_patched?: boolean;
-  readyState: string;
 }
 
 interface Element {
@@ -60,8 +64,10 @@ interface DocumentFragment {
 interface Error {
   // Non-standard Safari property.
   sourceURL?: string;
+  fileName?: string;
   // Non-standard Safari property.
   line?: number;
+  lineNumber?: number;
   // Non-standard Safari property.
   column?: number;
   // Non-standard Firefox property.
@@ -71,12 +77,12 @@ interface Error {
 interface ErrorEvent {
   // Used by IE to configure ErrorEvents.
   // https://docs.microsoft.com/en-us/openspecs/ie_standards/ms-html5e/30b18240-7be6-4379-9e0a-262c99ed9529
-  initErrorEvent?: (
-    typeArg: string,
-    canBubbleArg: boolean,
-    cancelableArg: boolean,
-    messageArg: string,
-    filenameArg: string,
-    linenoArg: number
-  ) => void;
+  initErrorEvent?(
+    type: string,
+    canBubble: boolean,
+    cancelable: boolean,
+    message: string,
+    filename: string,
+    lineno: number
+  ): void;
 }

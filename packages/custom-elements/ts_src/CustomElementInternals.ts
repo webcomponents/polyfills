@@ -9,9 +9,8 @@
  * rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
-import './Externs.js';
+import CustomElementRegistry from './CustomElementRegistry.js';
 import {CustomElementState as CEState} from './CustomElementState.js';
-import {CustomElementDefinition, HTMLImportElement} from './Externs.js';
 import * as Native from './Patch/Native.js';
 import * as Utilities from './Utilities.js';
 
@@ -37,7 +36,7 @@ export default class CustomElementInternals {
     callback: (elem: Element) => void,
     visitedImports?: Set<Node>
   ) {
-    const sd = window['ShadyDom'];
+    const sd = window.ShadyDOM;
     if (this.shadyDomFastWalk && sd && sd['inUse']) {
       if (node.nodeType === Node.ELEMENT_NODE) {
         const element = node as Element;
@@ -217,7 +216,7 @@ export default class CustomElementInternals {
         element.localName === 'link' &&
         element.getAttribute('rel') === 'import'
       ) {
-        const importElem = element as HTMLImportElement;
+        const importElem = element as HTMLLinkElement;
         // The HTML Imports polyfill sets a descendant element of the link to
         // the `import` property, specifically this is *not* a Document.
         const importNode = importElem.import;
@@ -417,7 +416,9 @@ export default class CustomElementInternals {
       return;
     }
 
-    return registry.internal_localNameToDefinition(localName);
+    return (registry as CustomElementRegistry).internal_localNameToDefinition(
+      localName
+    );
   }
 
   /**
@@ -438,7 +439,9 @@ export default class CustomElementInternals {
     // Only create custom elements if the document is associated with a
     // registry.
     if (registry && (namespace === null || namespace === NS_HTML)) {
-      const definition = registry.internal_localNameToDefinition(localName);
+      const definition = (registry as CustomElementRegistry).internal_localNameToDefinition(
+        localName
+      );
       if (definition) {
         try {
           const result = new definition.constructorFunction();

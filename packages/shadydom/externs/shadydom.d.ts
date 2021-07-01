@@ -13,6 +13,9 @@
 interface ShadyDOMInterface {
   flush: () => void;
   inUse: boolean;
+  nativeMethods: {
+    querySelectorAll: typeof document.querySelectorAll;
+  };
   noPatch: boolean | string;
   patchElementProto: (node: Object) => void;
   wrap: (node: Node) => Node;
