@@ -40,5 +40,7 @@ type HTMLImports = HTMLImportsInterface;
 declare var HTMLImports: HTMLImports;
 
 interface HTMLLinkElement {
-  import?: Node;
+  import?: Node & {
+    readyState?: 'complete' | string;
+  };
 }

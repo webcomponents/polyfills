@@ -227,10 +227,7 @@ export default class CustomElementInternals {
           importNode.__CE_registry = document.__CE_registry;
         }
 
-        if (
-          importNode &&
-          (importNode as HTMLImportDocument).readyState === 'complete'
-        ) {
+        if (importNode && importNode.readyState === 'complete') {
           importNode.__CE_documentLoadHandled = true;
         } else {
           // If this link's import root is not available, its contents can't
@@ -606,8 +603,4 @@ export default class CustomElementInternals {
       console.error(error);
     }
   }
-}
-
-declare interface HTMLImportDocument extends Node {
-  readyState: 'complete' | string;
 }
