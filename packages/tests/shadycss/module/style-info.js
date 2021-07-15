@@ -12,5 +12,5 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 A simple shim to generate a testable module
 */
 
-import StyleInfo from '../../node_modules/@webcomponents/shadycss/src/style-info'
+import StyleInfo from '../../node_modules/@webcomponents/shadycss/src/style-info';
 window['StyleInfo'] = StyleInfo;

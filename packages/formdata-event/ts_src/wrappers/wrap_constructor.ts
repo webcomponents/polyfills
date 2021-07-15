@@ -9,6 +9,7 @@
  * additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Constructor<T> = new (...args: Array<any>) => T;
 
 /**
@@ -22,7 +23,7 @@ type Constructor<T> = new (...args: Array<any>) => T;
 export function prepareWrapper<T extends Object>(
   Wrapper: Constructor<T>,
   Original: Constructor<T>,
-  prototype: Constructor<T>['prototype'],
+  prototype: Constructor<T>['prototype']
 ) {
   // Set `Wrapper`'s prototype to that of `Original`.
   Object.setPrototypeOf(Wrapper, Object.getPrototypeOf(Original));
@@ -35,8 +36,11 @@ export function prepareWrapper<T extends Object>(
       continue;
     }
 
-    Object.defineProperty(Wrapper, prop,
-        Object.getOwnPropertyDescriptor(Original, prop) as PropertyDescriptor);
+    Object.defineProperty(
+      Wrapper,
+      prop,
+      Object.getOwnPropertyDescriptor(Original, prop) as PropertyDescriptor
+    );
   }
 
   Wrapper.prototype = prototype;
@@ -50,7 +54,7 @@ export function prepareWrapper<T extends Object>(
     enumerable: false,
     value: prototype.constructor,
   });
-};
+}
 
 /**
  * Sets a constructible function's `.prototype.constructor` to point to itself.
@@ -60,4 +64,4 @@ export function prepareWrapper<T extends Object>(
  */
 export function installWrapper<T extends Object>(Wrapper: Constructor<T>) {
   Wrapper.prototype.constructor = Wrapper;
-};
+}

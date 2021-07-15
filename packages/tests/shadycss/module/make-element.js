@@ -18,18 +18,21 @@ window.makeElement = (name, connectedCallback) => {
   if (template && window.ShadyCSS) {
     window.ShadyCSS.prepareTemplate(template, name);
   }
-  window.customElements.define(name, class extends window.HTMLElement {
-    connectedCallback() {
-      window.ShadyCSS && window.ShadyCSS.styleElement(this);
-      if (!this.shadowRoot) {
-        this.attachShadow({mode: 'open'});
-        if (template) {
-          this.shadowRoot.appendChild(template.content.cloneNode(true));
+  window.customElements.define(
+    name,
+    class extends window.HTMLElement {
+      connectedCallback() {
+        window.ShadyCSS && window.ShadyCSS.styleElement(this);
+        if (!this.shadowRoot) {
+          this.attachShadow({mode: 'open'});
+          if (template) {
+            this.shadowRoot.appendChild(template.content.cloneNode(true));
+          }
+        }
+        if (connectedCallback) {
+          connectedCallback.call(this);
         }
       }
-      if (connectedCallback) {
-        connectedCallback.call(this);
-      }
     }
-  });
+  );
 };

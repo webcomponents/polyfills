@@ -10,7 +10,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 'use strict';
 
-export const nativeShadow = !(window['ShadyDOM'] && window['ShadyDOM']['inUse']);
+export const nativeShadow = !(
+  window['ShadyDOM'] && window['ShadyDOM']['inUse']
+);
 let nativeCssVariables_;
 
 /**
@@ -26,8 +28,14 @@ function calcCssVariables(settings) {
     // so fall back on native if we do not detect ShadyDOM
     // Edge 15: custom properties used in ::before and ::after will also be used in the parent element
     // https://developer.microsoft.com/en-us/microsoft-edge/platform/issues/12414257/
-    nativeCssVariables_ = nativeShadow || Boolean(!navigator.userAgent.match(/AppleWebKit\/601|Edge\/15/) &&
-      window.CSS && CSS.supports && CSS.supports('box-shadow', '0 0 0 var(--foo)'));
+    nativeCssVariables_ =
+      nativeShadow ||
+      Boolean(
+        !navigator.userAgent.match(/AppleWebKit\/601|Edge\/15/) &&
+          window.CSS &&
+          CSS.supports &&
+          CSS.supports('box-shadow', '0 0 0 var(--foo)')
+      );
   }
 }
 
@@ -38,7 +46,9 @@ if (window.ShadyCSS && window.ShadyCSS.cssBuild !== undefined) {
 }
 
 /** @type {boolean} */
-export const disableRuntime = Boolean(window.ShadyCSS && window.ShadyCSS.disableRuntime);
+export const disableRuntime = Boolean(
+  window.ShadyCSS && window.ShadyCSS.disableRuntime
+);
 
 if (window.ShadyCSS && window.ShadyCSS.nativeCss !== undefined) {
   nativeCssVariables_ = window.ShadyCSS.nativeCss;
@@ -53,4 +63,4 @@ if (window.ShadyCSS && window.ShadyCSS.nativeCss !== undefined) {
 // Hack for type error under new type inference which doesn't like that
 // nativeCssVariables is updated in a function and assigns the type
 // `function(): ?` instead of `boolean`.
-export const nativeCssVariables = /** @type {boolean} */(nativeCssVariables_);
+export const nativeCssVariables = /** @type {boolean} */ (nativeCssVariables_);

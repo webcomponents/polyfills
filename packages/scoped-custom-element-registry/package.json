@@ -1,0 +1,40 @@
+{
+  "name": "@webcomponents/scoped-custom-element-registry",
+  "version": "0.0.2",
+  "publishConfig": {
+    "access": "public"
+  },
+  "description": "Scoped CustomElementRegistry Polyfill",
+  "license": "BSD-3-Clause",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/webcomponents/polyfills.git",
+    "directory": "packages/scoped-custom-element-registry"
+  },
+  "author": "The Polymer Project Authors (https://polymer.github.io/AUTHORS.txt)",
+  "homepage": "https://github.com/webcomponents/polyfills/tree/master/packages/scoped-custom-element-registry",
+  "bugs": {
+    "url": "https://github.com/webcomponents/polyfills/issues"
+  },
+  "main": "scoped-custom-element-registry.min.js",
+  "scripts": {
+    "build": "gulp",
+    "test": "cd ../.. && wtr 'packages/scoped-custom-element-registry/test/**/*.test.(js|html)'"
+  },
+  "files": [
+    "scoped-custom-element-registry.min.js*",
+    "src/"
+  ],
+  "keywords": [
+    "custom-elements",
+    "customelements",
+    "web-components",
+    "scoped",
+    "scoped-customelements",
+    "scoped-custom-elements",
+    "scoped-custom-element-registry",
+    "webcomponents",
+    "polyfill",
+    "shim"
+  ]
+}

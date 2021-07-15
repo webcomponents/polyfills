@@ -17,21 +17,24 @@ const sourcemaps = require('gulp-sourcemaps');
 const closureCompiler = compilerPackage.gulp();
 
 gulp.task('default', () => {
-  return gulp.src('./src/**/*.js', {base: './'})
+  return gulp
+    .src('./src/**/*.js', {base: './'})
     .pipe(sourcemaps.init())
-    .pipe(closureCompiler({
-      compilation_level: 'ADVANCED',
-      warning_level: 'VERBOSE',
-      language_in: 'ECMASCRIPT6_STRICT',
-      language_out: 'ECMASCRIPT5_STRICT',
-      externs: ['externs/custom-elements.js'],
-      dependency_mode: 'STRICT',
-      entry_point: ['/src/custom-elements'],
-      js_output_file: 'custom-elements.min.js',
-      output_wrapper: '(function(){\n%output%\n}).call(self);',
-      assume_function_wrapper: true,
-      rewrite_polyfills: false,
-    }))
+    .pipe(
+      closureCompiler({
+        compilation_level: 'ADVANCED',
+        warning_level: 'VERBOSE',
+        language_in: 'ECMASCRIPT6_STRICT',
+        language_out: 'ECMASCRIPT5_STRICT',
+        externs: ['externs/custom-elements.js'],
+        dependency_mode: 'PRUNE',
+        entry_point: ['/src/custom-elements'],
+        js_output_file: 'custom-elements.min.js',
+        output_wrapper: '(function(){\n%output%\n}).call(self);',
+        assume_function_wrapper: true,
+        rewrite_polyfills: false,
+      })
+    )
     .pipe(sourcemaps.write('/'))
     .pipe(gulp.dest('./'));
 });

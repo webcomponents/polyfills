@@ -1,8 +1,0 @@
-custom-elements-es5-adapter.js
-webcomponents-bundle.js*
-webcomponents-bundle-with-hi.js*
-bundles/**/*
-src/flag-parser.*
-src/platform/
-src/unresolved.*
-/buildcache

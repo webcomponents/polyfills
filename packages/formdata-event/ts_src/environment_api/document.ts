@@ -14,7 +14,11 @@ import {methods as DocumentMethods} from '../environment/document.js';
 export const createElement = <K extends keyof HTMLElementTagNameMap>(
   doc: Document,
   localName: K,
-  options?: ElementCreationOptions,
+  options?: ElementCreationOptions
 ): HTMLElementTagNameMap[K] => {
-  return DocumentMethods.createElement.call(doc, localName, options) as HTMLElementTagNameMap[K];
+  return DocumentMethods.createElement.call(
+    doc,
+    localName,
+    options
+  ) as HTMLElementTagNameMap[K];
 };

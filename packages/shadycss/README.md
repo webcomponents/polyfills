@@ -3,6 +3,7 @@
 ShadyCSS provides a library to simulate ShadowDOM style encapsulation (ScopingShim), a shim for the proposed CSS mixin `@apply` syntax (ApplyShim), and a library to integrate document-level stylesheets with both of the former libraries (CustomStyleInterface).
 
 ## Requirements
+
 ShadyCSS requires support for the `<template>` element, ShadowDOM, MutationObserver, Promise, and Object.assign
 
 ## Loading
@@ -10,6 +11,7 @@ ShadyCSS requires support for the `<template>` element, ShadowDOM, MutationObser
 ShadyCSS can be used by loading the ScopingShim, ApplyShim, CustomStyleInterface, or any combination of those.
 
 The most-supported loading order is:
+
 1. ScopingShim
 1. ApplyShim
 1. CustomStyleInterface
@@ -28,16 +30,14 @@ the `@webcomponents/shadycss` module described above.
 
 ```js
 ShadyCSS = {
-  prepareTemplate(templateElement, elementName, elementExtension){},
-  styleElement(element){},
-  styleSubtree(element, overrideProperties){},
-  styleDocument(overrideProperties){},
-  getComputedStyleValue(element, propertyName){
-    return // style value for property name on element
-  },
+  prepareTemplate(templateElement, elementName, elementExtension) {},
+  styleElement(element) {},
+  styleSubtree(element, overrideProperties) {},
+  styleDocument(overrideProperties) {},
+  getComputedStyleValue(element, propertyName) {},
   nativeCss: Boolean,
-  nativeShadow: Boolean
-}
+  nativeShadow: Boolean,
+};
 ```
 
 ## About ScopingShim
@@ -48,21 +48,22 @@ ScopingShim works by rewriting style contents and transforming selectors to enfo
 Additionally, if CSS Custom Properties is not detected, ScopingShim will replace CSS Custom Property usage with realized values.
 
 ### Example:
+
 Here's an example of a custom element when Scoping Shim is not needed.
 
 ```html
 <my-element>
   <!-- shadow-root -->
   <style>
-  :host {
-    display: block;
-  }
-  #container slot::slotted(*) {
-    color: gray;
-  }
-  #foo {
-    color: black;
-  }
+    :host {
+      display: block;
+    }
+    #container slot::slotted(*) {
+      color: gray;
+    }
+    #foo {
+      color: black;
+    }
   </style>
   <div id="foo">Shadow</div>
   <div id="container">
@@ -79,21 +80,21 @@ becomes:
 
 ```html
 <style scope="my-element">
-my-element {
-  display: block;
-}
-my-element#container > * {
-  color: gray;
-}
-my-element#foo {
-  color: black;
-}
+  my-element {
+    display: block;
+  }
+  my-element#container > * {
+    color: gray;
+  }
+  my-element#foo {
+    color: black;
+  }
 </style>
 <my-element>
-<div id="foo">Shadow</div>
-<div id="container">
-  <span>Light</span>
-</div>
+  <div id="foo">Shadow</div>
+  <div id="container">
+    <span>Light</span>
+  </div>
 </my-element>
 ```
 
@@ -109,30 +110,33 @@ The `@apply` proposal has been abandoned in favor of the ::part/::theme [Shadow 
 
 ### Known Issues:
 
-* Mixin properties cannot be modified at runtime.
-* Nested mixins are not supported.
-* Shorthand properties are not expanded and may conflict with more explicit properties. Whenever shorthand notations are used in conjunction with their expanded forms in `@apply`, depending in the order of usage of the mixins, properties can be overridden. This means that using both `background-color: green;` and `background: red;` in two separate CSS selectors
- can result in `background-color: transparent` in the selector that `background: red;` is specified.
+- Mixin properties cannot be modified at runtime.
+- Nested mixins are not supported.
+- Shorthand properties are not expanded and may conflict with more explicit properties. Whenever shorthand notations are used in conjunction with their expanded forms in `@apply`, depending in the order of usage of the mixins, properties can be overridden. This means that using both `background-color: green;` and `background: red;` in two separate CSS selectors
+  can result in `background-color: transparent` in the selector that `background: red;` is specified.
 
-   ```css
-   #nonexistent {
-     --my-mixin: {
-       background: red;
-     }
-   }
-   ```
-   with an element style definition of
-   ```css
-   :host {
-     display: block;
-     background-color: green;
-     @apply(--my-mixin);
-   }
-   ```
-   results in the background being `transparent`, as an empty `background` definition replaces
-   the `@apply` definition.
+  ```css
+  #nonexistent {
+    --my-mixin: {
+      background: red;
+    }
+  }
+  ```
 
-   For this reason, we recommend avoiding shorthand properties.
+  with an element style definition of
+
+  ```css
+  :host {
+    display: block;
+    background-color: green;
+    @apply (--my-mixin);
+  }
+  ```
+
+  results in the background being `transparent`, as an empty `background` definition replaces
+  the `@apply` definition.
+
+  For this reason, we recommend avoiding shorthand properties.
 
 ### Example:
 
@@ -179,13 +183,15 @@ An example usage of the document-level styling api can be found in `examples/doc
 
 ```html
 <style class="document-style">
-html {
-  --content-color: brown;
-}
+  html {
+    --content-color: brown;
+  }
 </style>
 <my-element>This text will be brown!</my-element>
 <script>
-CustomStyleInterface.addCustomStyle(document.querySelector('style.document-style'));
+  CustomStyleInterface.addCustomStyle(
+    document.querySelector('style.document-style')
+  );
 </script>
 ```
 
@@ -194,20 +200,20 @@ Another example with a wrapper `<custom-style>` element
 ```html
 <custom-style>
   <style>
-  html {
-    --content-color: brown;
-  }
+    html {
+      --content-color: brown;
+    }
   </style>
 </custom-style>
 <script>
-class CustomStyle extends HTMLElement {
-  constructor() {
-    CustomStyleInterface.addCustomStyle(this);
+  class CustomStyle extends HTMLElement {
+    constructor() {
+      CustomStyleInterface.addCustomStyle(this);
+    }
+    getStyle() {
+      return this.querySelector('style');
+    }
   }
-  getStyle() {
-    return this.querySelector('style');
-  }
-}
 </script>
 <my-element>This this text will be brown!</my-element>
 ```
@@ -217,13 +223,13 @@ Another example with a function that produces style elements
 ```html
 <my-element>This this text will be brown!</my-element>
 <script>
-CustomStyleInterface.addCustomStyle({
-  getStyle() {
-    const s = document.createElement('style');
-    s.textContent = 'html{ --content-color: brown }';
-    return s;
-  }
-});
+  CustomStyleInterface.addCustomStyle({
+    getStyle() {
+      const s = document.createElement('style');
+      s.textContent = 'html{ --content-color: brown }';
+      return s;
+    },
+  });
 </script>
 ```
 
@@ -235,12 +241,12 @@ To use ShadyCSS:
    the polyfill itself, rather it provides functions for interfacing with
    ShadyCSS _if_ it is loaded.)
 
-  ```typescript
-  import * as shadyCss from '@webcomponents/shadycss';
-  ```
+   ```typescript
+   import * as shadyCss from '@webcomponents/shadycss';
+   ```
 
 2. First, call `shadyCss.prepareTemplate(template, name)` on a
-`<template>` element that will be imported into a `shadowRoot`.
+   `<template>` element that will be imported into a `shadowRoot`.
 
 3. When the element instance is connected, call `shadyCss.styleElement(element)`.
 
@@ -249,7 +255,7 @@ To use ShadyCSS:
 5. Whenever dynamic updates are required, call `shadyCss.styleSubtree(element)`.
 
 6. If a styling change is made that may affect the whole document, call
-`shadyCss.styleSubtree(document.documentElement)`.
+   `shadyCss.styleSubtree(document.documentElement)`.
 
 The following example uses ShadyCSS and ShadyDOM to define a custom element.
 
@@ -287,7 +293,8 @@ The following example uses ShadyCSS and ShadyDOM to define a custom element.
       if (!this.shadowRoot) {
         this.attachShadow({mode: 'open'});
         this.shadowRoot.appendChild(
-          document.importNode(myElementTemplate.content, true));
+          document.importNode(myElementTemplate.content, true)
+        );
       }
     }
   }
@@ -307,18 +314,19 @@ When using ApplyShim, defining new mixins or new values for current mixins imper
 supported.
 
 ### Example
+
 ```html
 <my-element id="a">Text</my-element>
 <my-element>Text</my-element>
 
 <script type="module">
-import * as shadyCSS from '@webcomponents/shadycss';
+  import * as shadyCSS from '@webcomponents/shadycss';
 
-const el = document.querySelector('my-element#a');
-// Set the color of all my-element instances to 'green'
-shadyCss.styleSubtree(document.documentElement, {'--content-color' : 'green'});
-// Set the color my-element#a's text to 'red'
-shadyCss.styleSubtree(el, {'--content-color' : 'red'});
+  const el = document.querySelector('my-element#a');
+  // Set the color of all my-element instances to 'green'
+  shadyCss.styleSubtree(document.documentElement, {'--content-color': 'green'});
+  // Set the color my-element#a's text to 'red'
+  shadyCss.styleSubtree(el, {'--content-color': 'red'});
 </script>
 ```
 
@@ -360,7 +368,7 @@ polyfilled CSS Mixins and polyfilled CSS Custom Properties.
 
 External stylesheets loaded via `<link rel="stylesheet">` within a shadow root or
 `@import` syntax inside a shadow root's stylesheet are not currently shimmed by
-the polyfill.  This is mainly due to the fact that shimming them would require
+the polyfill. This is mainly due to the fact that shimming them would require
 a fetch of the stylesheet text that is async cannot be easily coordinated with
 the upgrade timing of custom elements using them, making it impossible to avoid
 "flash of unstyled content" when running on polyfill.

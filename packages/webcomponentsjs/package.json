@@ -1,45 +1,26 @@
 {
   "name": "@webcomponents/webcomponentsjs",
-  "version": "2.4.4",
+  "version": "2.5.0",
+  "publishConfig": {
+    "access": "public"
+  },
   "description": "Web Components Polyfills",
-  "main": "webcomponents-bundle.js",
+  "license": "BSD-3-Clause",
   "repository": {
     "type": "git",
     "url": "https://github.com/webcomponents/polyfills.git",
     "directory": "packages/webcomponentsjs"
   },
-  "bugs": "https://github.com/webcomponents/polyfills/issues?q=is%3Aissue+is%3Aopen+label%3A\"Package%3A+webcomponentsjs\"",
-  "homepage": "https://github.com/webcomponents/polyfills/tree/master/packages/webcomponentsjs",
   "author": "The Polymer Project Authors (https://polymer.github.io/AUTHORS.txt)",
-  "license": "BSD-3-Clause",
-  "keywords": [
-    "webcomponents",
-    "web-components",
-    "polyfill",
-    "shim"
-  ],
+  "homepage": "https://github.com/webcomponents/polyfills/tree/master/packages/webcomponentsjs",
+  "bugs": "https://github.com/webcomponents/polyfills/issues?q=is%3Aissue+is%3Aopen+label%3A\"Package%3A+webcomponentsjs\"",
+  "main": "webcomponents-bundle.js",
   "scripts": {
     "build": "tsc && gulp",
     "build:watch": "chokidar --initial --follow-symlinks 'src/entrypoints/**/*.js' 'ts_src/**/*.ts' 'node_modules/@webcomponents/**/*.js' -c 'npm run build'",
-    "lint": "eslint src",
-    "regen-package-lock": "rm -rf node_modules package-lock.json; npm install",
+    "clean": "gulp clean",
     "prepack": "npm run build",
-    "clean": "gulp clean"
-  },
-  "devDependencies": {
-    "@webcomponents/custom-elements": "^1.4.2",
-    "@webcomponents/html-imports": "^1.2.0",
-    "@webcomponents/shadycss": "^1.10.1",
-    "@webcomponents/shadydom": "^1.7.4",
-    "@webcomponents/template": "^1.4.3",
-    "@webcomponents/url": "^0.7.6",
-    "babel-preset-minify": "^0.4.3",
-    "get-own-property-symbols": "^0.9.2",
-    "promise-polyfill": "^8.0.0",
-    "typescript": "^3.8.3"
-  },
-  "publishConfig": {
-    "access": "public"
+    "regen-package-lock": "rm -rf node_modules package-lock.json; npm install"
   },
   "files": [
     "bundles/**/*",
@@ -47,5 +28,22 @@
     "src/**/*.js",
     "webcomponents-bundle.js*",
     "webcomponents-loader.js"
-  ]
+  ],
+  "keywords": [
+    "webcomponents",
+    "web-components",
+    "polyfill",
+    "shim"
+  ],
+  "devDependencies": {
+    "@webcomponents/custom-elements": "^1.4.3",
+    "@webcomponents/html-imports": "^1.2.0",
+    "@webcomponents/shadycss": "^1.10.2",
+    "@webcomponents/shadydom": "^1.8.0",
+    "@webcomponents/template": "^1.4.4",
+    "@webcomponents/url": "^0.7.7",
+    "babel-preset-minify": "^0.4.3",
+    "get-own-property-symbols": "^0.9.2",
+    "promise-polyfill": "^8.0.0"
+  }
 }

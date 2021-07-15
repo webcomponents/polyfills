@@ -9,6 +9,7 @@
  * additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
+// prettier-ignore
 import {constructor as EventTargetConstructor, methods as EventTargetMethods} from '../environment/event_target.js';
 import {methods as NodeMethods} from '../environment/node.js';
 import {methods as WindowMethods} from '../environment/window.js';
@@ -18,11 +19,11 @@ export const addEventListener: EventTarget['addEventListener'] = (() => {
     return EventTargetMethods.addEventListener;
   }
 
-  return function(
+  return function (
     this: EventTarget,
     type: string,
     listener: EventListener | EventListenerObject | null,
-    options?: boolean | AddEventListenerOptions | undefined,
+    options?: boolean | AddEventListenerOptions | undefined
   ) {
     if (this instanceof Node) {
       return NodeMethods.addEventListener.call(this, type, listener, options);
@@ -30,7 +31,11 @@ export const addEventListener: EventTarget['addEventListener'] = (() => {
 
     if (this instanceof Window) {
       return WindowMethods.addEventListener.call(
-          this, type, listener as EventListenerOrEventListenerObject, options);
+        this,
+        type,
+        listener as EventListenerOrEventListenerObject,
+        options
+      );
     }
 
     throw new TypeError('Unsupported.');
@@ -42,19 +47,28 @@ export const removeEventListener: EventTarget['removeEventListener'] = (() => {
     return EventTargetMethods.removeEventListener;
   }
 
-  return function(
+  return function (
     this: EventTarget,
     type: string,
     listener: EventListener | EventListenerObject | null,
-    options?: boolean | AddEventListenerOptions | undefined,
+    options?: boolean | AddEventListenerOptions | undefined
   ) {
     if (this instanceof Node) {
-      return NodeMethods.removeEventListener.call(this, type, listener, options);
+      return NodeMethods.removeEventListener.call(
+        this,
+        type,
+        listener,
+        options
+      );
     }
 
     if (this instanceof Window) {
       return WindowMethods.removeEventListener.call(
-          this, type, listener as EventListenerOrEventListenerObject, options);
+        this,
+        type,
+        listener as EventListenerOrEventListenerObject,
+        options
+      );
     }
 
     throw new TypeError('Unsupported.');
@@ -66,7 +80,7 @@ export const dispatchEvent: EventTarget['dispatchEvent'] = (() => {
     return EventTargetMethods.dispatchEvent;
   }
 
-  return function(this: EventTarget, event: Event): boolean {
+  return function (this: EventTarget, event: Event): boolean {
     if (this instanceof Node) {
       return NodeMethods.dispatchEvent.call(this, event);
     }

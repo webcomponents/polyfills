@@ -54,15 +54,19 @@ In IE/Edge, appending `<link rel=stylesheet>` in a node that is not `<head>` bre
 `my-element.html` imports a stylesheet and applies a style:
 
 ```html
-<link rel="stylesheet" href="my-linked-style.css">
-<style> .blue { color: blue }; </style>
+<link rel="stylesheet" href="my-linked-style.css" />
+<style>
+  .blue {
+    color: blue;
+  }
+</style>
 ```
 
 And is imported in index.html:
 
 ```html
 <head>
-  <link rel="import" href="my-element.html">
+  <link rel="import" href="my-element.html" />
 </head>
 ```
 

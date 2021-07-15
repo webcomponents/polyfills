@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <!--
 @license
 Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
@@ -11,10 +11,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <html>
   <head>
     <title></title>
-    <meta charset="UTF-8">
+    <meta charset="UTF-8" />
     <script>
       window.webComponentsReadyCount = 0;
-      document.addEventListener('WebComponentsReady', function() {
+      document.addEventListener('WebComponentsReady', function () {
         window.webComponentsReadyCount++;
       });
     </script>
@@ -27,19 +27,26 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     <script>
       window.addEventListener('WebComponentsReady', () => {
         class MyElement extends HTMLElement {
-          connectedCallback(){
+          connectedCallback() {
             this.textContent = 'upgraded!';
           }
         }
         customElements.define('my-element', MyElement);
       });
-      suite('Loader', function() {
-        test('expected boot', function() {
-          assert.equal(window.webComponentsReadyCount, 1, 'failed to fire WebComponentsReady');
+      suite('Loader', function () {
+        test('expected boot', function () {
+          assert.equal(
+            window.webComponentsReadyCount,
+            1,
+            'failed to fire WebComponentsReady'
+          );
         });
-        test('WebComponentsReady was fired on document and bubbled', function() {
-          assert.equal(document.querySelector('my-element').textContent, 'upgraded!');
-        })
+        test('WebComponentsReady was fired on document and bubbled', function () {
+          assert.equal(
+            document.querySelector('my-element').textContent,
+            'upgraded!'
+          );
+        });
       });
     </script>
   </body>

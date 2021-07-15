@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <!--
 @license
 Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
@@ -9,7 +9,11 @@ Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 -->
 <script>
-WCT = {waitFor: function (cb) {HTMLImports.whenReady(cb)}}
+  WCT = {
+    waitFor: function (cb) {
+      HTMLImports.whenReady(cb);
+    },
+  };
 </script>
 <script src="../../node_modules/wct-browser-legacy/browser.js"></script>
 <script src="../../node_modules/@webcomponents/webcomponentsjs/bundles/webcomponents-pf_js.js"></script>
@@ -24,13 +28,14 @@ WCT = {waitFor: function (cb) {HTMLImports.whenReady(cb)}}
 <script src="../module/generated/custom-style-element.js"></script>
 
 <custom-style>
+  <!-- prettier-ignore -->
   <style>
-  html {
-    --foo: rgb(123, 123, 123);
-    --bar: {
-      border: 2px solid red;
+    html {
+      --foo: rgb(123, 123, 123);
+      --bar: {
+        border: 2px solid red;
+      };
     }
-  }
   </style>
 </custom-style>
 
@@ -49,10 +54,10 @@ WCT = {waitFor: function (cb) {HTMLImports.whenReady(cb)}}
 
 <template id="x-outer">
   <style>
-  :host {
-    display: block;
-    @apply --bar;
-  }
+    :host {
+      display: block;
+      @apply --bar;
+    }
   </style>
   <x-inner></x-inner>
 </template>
@@ -60,17 +65,20 @@ WCT = {waitFor: function (cb) {HTMLImports.whenReady(cb)}}
 <x-outer id="target"></x-outer>
 
 <script>
-  suite('Custom Style upgrades', function() {
-    suiteSetup(function() {
+  suite('Custom Style upgrades', function () {
+    suiteSetup(function () {
       makeElement('x-inner');
       makeElement('x-outer');
     });
-    test('custom-style applies to deeply nested elements', function() {
+    test('custom-style applies to deeply nested elements', function () {
       var target = document.querySelector('#target');
       var inner = target.shadowRoot.querySelector('x-inner');
-      assert.equal(getComputedStyle(inner).backgroundColor, 'rgb(123, 123, 123)');
+      assert.equal(
+        getComputedStyle(inner).backgroundColor,
+        'rgb(123, 123, 123)'
+      );
     });
-    test('custom-style applied mixins update', function() {
+    test('custom-style applied mixins update', function () {
       var target = document.querySelector('#target');
       var inner = target.shadowRoot.querySelector('x-inner');
       assert.equal(getComputedStyle(target).borderTopWidth.trim(), '2px');

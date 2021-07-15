@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <!--
 @license
 Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
@@ -9,43 +9,41 @@ Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 -->
 <html>
-<head>
-  <meta charset="utf-8">
-  <script>
-    ShadyDOM = {force: true};
-  </script>
-  <script src="../../node_modules/@webcomponents/shadydom/shadydom.min.js"></script>
-</head>
-<body>
+  <head>
+    <meta charset="utf-8" />
+    <script>
+      ShadyDOM = {force: true};
+    </script>
+    <script src="../../node_modules/@webcomponents/shadydom/shadydom.min.js"></script>
+  </head>
+  <body>
+    <div id="simple"><div>simple</div></div>
 
-<div id="simple"><div>simple</div></div>
+    <hr />
+    <div id="dist">distribution content</div>
 
-<hr>
-<div id="dist">
-  distribution content
-</div>
+    <hr />
 
-<hr>
+    <script>
+      /* global simple: false, dist: false */
 
-<script>
-  simple.attachShadow({mode: 'open'});
-  var d = document.createElement('div');
-  d.textContent = 'shadowRoot!';
-  simple.shadowRoot.appendChild(d);
+      simple.attachShadow({mode: 'open'});
+      var d = document.createElement('div');
+      d.textContent = 'shadowRoot!';
+      simple.shadowRoot.appendChild(d);
 
-  dist.attachShadow({mode: 'open'});
-  //dist.shadowRoot.appendChild(document.createElement('slot'));
-  dist.shadowRoot.innerHTML = 'before [<slot></slot>] after';
+      dist.attachShadow({mode: 'open'});
+      //dist.shadowRoot.appendChild(document.createElement('slot'));
+      dist.shadowRoot.innerHTML = 'before [<slot></slot>] after';
 
-  var host = document.createElement('div');
-  host.id = 'host';
-  host.attachShadow({mode: 'open'});
-  // Populate the initial pool of light DOM children.
-  host.innerHTML = 'abc';
-  document.body.appendChild(host);
-  host.shadowRoot.innerHTML = '<slot>fallback</slot>';
-  ShadyDOM.flush();
-</script>
-
-</body>
+      var host = document.createElement('div');
+      host.id = 'host';
+      host.attachShadow({mode: 'open'});
+      // Populate the initial pool of light DOM children.
+      host.innerHTML = 'abc';
+      document.body.appendChild(host);
+      host.shadowRoot.innerHTML = '<slot>fallback</slot>';
+      ShadyDOM.flush();
+    </script>
+  </body>
 </html>

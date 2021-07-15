@@ -18,7 +18,7 @@
  * disableRuntime: boolean,
  * }}
  */
-let ShadyCSSInterface; //eslint-disable-line no-unused-vars
+let ShadyCSSInterface;
 
 /**
  * @typedef {{
@@ -28,7 +28,7 @@ let ShadyCSSInterface; //eslint-disable-line no-unused-vars
  * disableRuntime: (boolean | undefined),
  * }}
  */
-let ShadyCSSOptions; //eslint-disable-line no-unused-vars
+let ShadyCSSOptions;
 
 /** @type {(ShadyCSSInterface | ShadyCSSOptions | undefined)} */
 window.ShadyCSS;

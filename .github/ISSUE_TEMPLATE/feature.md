@@ -1,7 +1,7 @@
 ---
 name: Feature
 about: Request a new polyfill feature
-labels: "Type: Feature, Focus Area: Standards & Polyfills"
+labels: 'Type: Feature, Focus Area: Standards & Polyfills'
 ---
 
 ## Description

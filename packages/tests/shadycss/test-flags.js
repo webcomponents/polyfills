@@ -9,11 +9,10 @@
  */
 
 (function () {
-
   'use strict';
 
   // Establish scope.
-  window['WebComponents'] = window['WebComponents'] || { 'flags': {} };
+  window['WebComponents'] = window['WebComponents'] || {'flags': {}};
 
   var flagMatcher = /wc-(.+)/;
 
@@ -21,13 +20,16 @@
   var flags = {};
   if (!flags['noOpts']) {
     // from url
-    location.search.slice(1).split('&').forEach(function (option) {
-      var parts = option.split('=');
-      var match;
-      if (parts[0] && (match = parts[0].match(flagMatcher))) {
-        flags[match[1]] = parts[1] || true;
-      }
-    });
+    location.search
+      .slice(1)
+      .split('&')
+      .forEach(function (option) {
+        var parts = option.split('=');
+        var match;
+        if (parts[0] && (match = parts[0].match(flagMatcher))) {
+          flags[match[1]] = parts[1] || true;
+        }
+      });
   }
 
   // exports
@@ -50,5 +52,4 @@
   }
 
   window['WebComponents']['ready'] = true;
-
 })();

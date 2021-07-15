@@ -20,22 +20,26 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 import * as utils from './utils.js';
 import {flush, enqueue} from './flush.js';
+// prettier-ignore
 import {observeChildren, unobserveChildren, filterMutations} from './observe-changes.js';
+// prettier-ignore
 import {addNativePrefixedProperties, nativeMethods, nativeTree} from './patch-native.js';
+// prettier-ignore
 import {patchInsideElementAccessors, patchOutsideElementAccessors} from './patch-instances.js';
 import {patchEvents, patchClick, composedPath} from './patch-events.js';
 import {ShadyRoot} from './attach-shadow.js';
 import {wrap, Wrapper} from './wrapper.js';
+// prettier-ignore
 import {addShadyPrefixedProperties, applyPatches, patchShadowOnElement, patchElementProto} from './patch-prototypes.js';
 
-
 if (utils.settings.inUse) {
-
-  const patch = utils.settings.hasDescriptors ? n => n : (node) => {
-    patchInsideElementAccessors(node);
-    patchOutsideElementAccessors(node);
-    return node;
-  };
+  const patch = utils.settings.hasDescriptors
+    ? (n) => n
+    : (node) => {
+        patchInsideElementAccessors(node);
+        patchOutsideElementAccessors(node);
+        return node;
+      };
 
   let ShadyDOM = {
     // TODO(sorvell): remove when Polymer does not depend on this.
@@ -91,7 +95,7 @@ if (utils.settings.inUse) {
     // `isConnected`, `slot`, `assignedSlot`, `assignedNodes`. Note,
     // `wrapIfNeeded` falls back to a pass through to preserve optimal
     // performance.
-    'wrapIfNeeded': utils.settings.noPatch === true ? wrap : n => n,
+    'wrapIfNeeded': utils.settings.noPatch === true ? wrap : (n) => n,
     'Wrapper': Wrapper,
     'composedPath': composedPath,
     // Set to true to avoid patching regular platform property names. When set,
@@ -113,7 +117,7 @@ if (utils.settings.inUse) {
     'patchOnDemand': utils.settings.patchOnDemand,
     'nativeMethods': nativeMethods,
     'nativeTree': nativeTree,
-    'patchElementProto': patchElementProto
+    'patchElementProto': patchElementProto,
   };
 
   window['ShadyDOM'] = ShadyDOM;
@@ -149,7 +153,7 @@ if (utils.settings.inUse) {
   if (!utils.settings.noPatch) {
     applyPatches();
     // Patch click event behavior only if we're patching
-    patchClick()
+    patchClick();
   } else if (utils.settings.patchOnDemand) {
     // In `on-demand` patching, do patch `attachShadow` and `shadowRoot`.
     // These are the only patched properties in `on-demand` mode and these
@@ -164,5 +168,5 @@ if (utils.settings.inUse) {
   // (e.g. `ShadyDOM.wrap(element).addEventListener(...)`).
   patchEvents();
 
-  window.ShadowRoot = /** @type {function(new:ShadowRoot)} */(ShadyRoot);
+  window.ShadowRoot = /** @type {function(new:ShadowRoot)} */ (ShadyRoot);
 }

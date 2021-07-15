@@ -10,9 +10,6 @@
 
 'use strict';
 
-/* eslint-env node */
-/* eslint-disable no-console */
-
 const gulp = require('gulp');
 const del = require('del');
 const rollup = require('rollup-stream');
@@ -25,7 +22,7 @@ const modules = [
   'svg-in-shadow',
   'style-util',
   'style-transformer',
-  'style-settings'
+  'style-settings',
 ];
 
 const moduleTasks = modules.map((m) => {
@@ -33,10 +30,10 @@ const moduleTasks = modules.map((m) => {
     return rollup({
       entry: `module/${m}.js`,
       format: 'iife',
-      moduleName: m.replace(/-/g, '_')
+      moduleName: m.replace(/-/g, '_'),
     })
-    .pipe(source(`${m}.js`, 'module'))
-    .pipe(gulp.dest('./module/generated'))
+      .pipe(source(`${m}.js`, 'module'))
+      .pipe(gulp.dest('./module/generated'));
   });
   return `test-module-${m}`;
 });

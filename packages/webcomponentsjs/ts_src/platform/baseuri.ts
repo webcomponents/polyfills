@@ -15,17 +15,19 @@ export {};
 // adapted from
 // https://github.com/webcomponents/html-imports/blob/v1.2.0/src/html-imports.js
 
-const native_baseURI =
-    Object.getOwnPropertyDescriptor(Node.prototype, 'baseURI');
+const native_baseURI = Object.getOwnPropertyDescriptor(
+  Node.prototype,
+  'baseURI'
+);
 if (!native_baseURI) {
   Object.defineProperty(Node.prototype, 'baseURI', {
     get(this: Node): string {
       // this.ownerDocument is `null` for documents
-      const doc = this.ownerDocument || this as Document;
+      const doc = this.ownerDocument || (this as Document);
       const base = doc.querySelector('base[href]') as HTMLBaseElement;
-      return base && base.href || window.location.href;
+      return (base && base.href) || window.location.href;
     },
     configurable: true,
-    enumerable: true
+    enumerable: true,
   });
 }

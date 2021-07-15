@@ -13,7 +13,6 @@ import {shadyDataForNode} from '../shady-data.js';
 import {addEventListener, removeEventListener} from '../patch-events.js';
 
 export const SlotPatches = utils.getOwnPropertyDescriptors({
-
   /**
    * @this {HTMLSlotElement}
    * @param {Object=} options
@@ -27,10 +26,11 @@ export const SlotPatches = utils.getOwnPropertyDescriptors({
         root._render();
       }
       const nodeData = shadyDataForNode(this);
-      return nodeData ?
-        ((options && options.flatten ? nodeData.flattenedNodes :
-          nodeData.assignedNodes) || []) :
-        [];
+      return nodeData
+        ? (options && options.flatten
+            ? nodeData.flattenedNodes
+            : nodeData.assignedNodes) || []
+        : [];
     }
   },
 
@@ -48,15 +48,21 @@ export const SlotPatches = utils.getOwnPropertyDescriptors({
     } else {
       if (typeof optionsOrCapture !== 'object') {
         optionsOrCapture = {
-          capture: Boolean(optionsOrCapture)
-        }
+          capture: Boolean(optionsOrCapture),
+        };
       }
       const parent = this[utils.SHADY_PREFIX + 'parentNode'];
       if (!parent) {
-        throw new Error('ShadyDOM cannot attach event to slot unless it has a `parentNode`');
+        throw new Error(
+          'ShadyDOM cannot attach event to slot unless it has a `parentNode`'
+        );
       }
       optionsOrCapture.__shadyTarget = this;
-      parent[utils.SHADY_PREFIX + 'addEventListener'](type, fn, optionsOrCapture);
+      parent[utils.SHADY_PREFIX + 'addEventListener'](
+        type,
+        fn,
+        optionsOrCapture
+      );
     }
   },
 
@@ -74,16 +80,21 @@ export const SlotPatches = utils.getOwnPropertyDescriptors({
     } else {
       if (typeof optionsOrCapture !== 'object') {
         optionsOrCapture = {
-          capture: Boolean(optionsOrCapture)
-        }
+          capture: Boolean(optionsOrCapture),
+        };
       }
       const parent = this[utils.SHADY_PREFIX + 'parentNode'];
       if (!parent) {
-        throw new Error('ShadyDOM cannot attach event to slot unless it has a `parentNode`');
+        throw new Error(
+          'ShadyDOM cannot attach event to slot unless it has a `parentNode`'
+        );
       }
       optionsOrCapture.__shadyTarget = this;
-      parent[utils.SHADY_PREFIX + 'removeEventListener'](type, fn, optionsOrCapture);
+      parent[utils.SHADY_PREFIX + 'removeEventListener'](
+        type,
+        fn,
+        optionsOrCapture
+      );
     }
-  }
-
+  },
 });

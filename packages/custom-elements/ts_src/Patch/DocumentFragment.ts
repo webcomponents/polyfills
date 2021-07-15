@@ -14,7 +14,7 @@ import CustomElementInternals from '../CustomElementInternals.js';
 import PatchParentNode from './Interface/ParentNode.js';
 import * as Native from './Native.js';
 
-export default function(internals: CustomElementInternals) {
+export default function (internals: CustomElementInternals) {
   PatchParentNode(internals, DocumentFragment.prototype, {
     prepend: Native.DocumentFragment_prepend,
     append: Native.DocumentFragment_append,

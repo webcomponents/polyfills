@@ -10,6 +10,7 @@
  */
 
 import {methods as DocumentMethods} from '../environment/document.js';
+// prettier-ignore
 import {constructor as EventConstructor, prototype as EventPrototype, methods as EventMethods} from '../environment/event.js';
 import {document} from '../environment/globals.js';
 import {initEvent} from '../environment_api/event.js';
@@ -36,7 +37,11 @@ export const getEventPropagationImmediatelyStopped = (e: Event) => {
 // const s = new SpecialEvent("type");
 // console.assert(s instanceof SpecialEvent); // fails in Safari 13.1
 // ```
-export const Event: typeof window.Event = function Event(this: Event, type: string, eventInit: EventInit = {}) {
+export const Event: typeof window.Event = (function Event(
+  this: Event,
+  type: string,
+  eventInit: EventInit = {}
+) {
   let _this;
   // When running in a browser where Event isn't constructible (e.g. IE11) this
   // throws and we fall back to the old `createEvent` API.
@@ -48,7 +53,7 @@ export const Event: typeof window.Event = function Event(this: Event, type: stri
   }
   Object.setPrototypeOf(_this, Object.getPrototypeOf(this));
   return _this;
-} as Function as typeof window.Event;
+} as Function) as typeof window.Event;
 
 prepareWrapper(Event, EventConstructor, EventPrototype);
 
@@ -59,12 +64,12 @@ export const install = () => {
   // was copied by `prepareWrapper` from `window.Event` to `Event` above.
   Object.setPrototypeOf(Event, Function.prototype);
 
-  Event.prototype['stopImmediatePropagation'] = function() {
+  Event.prototype['stopImmediatePropagation'] = function () {
     propagationImmediatelyStopped.set(this, true);
     return EventMethods.stopImmediatePropagation.call(this);
   };
 
-  Event.prototype['stopPropagation'] = function() {
+  Event.prototype['stopPropagation'] = function () {
     propagationStopped.set(this, true);
     return EventMethods.stopPropagation.call(this);
   };

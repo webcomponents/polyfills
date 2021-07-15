@@ -25,7 +25,7 @@ export const nativeMethods = {
   /** @this {Element} */
   querySelectorAll(selector) {
     return this[NATIVE_PREFIX + 'querySelectorAll'](selector);
-  }
+  },
 };
 // Object on which raw native accessors are available via `accessorName(node)`.
 // e.g. `nativeTree.firstChild(node)`
@@ -34,14 +34,13 @@ export const nativeTree = {};
 
 const installNativeAccessor = (name) => {
   nativeTree[name] = (node) => node[NATIVE_PREFIX + name];
-}
+};
 
 const installNativeMethod = (name, fn) => {
   if (!nativeMethods[name]) {
     nativeMethods[name] = fn;
   }
-}
-
+};
 
 const defineNativeAccessors = (proto, descriptors) => {
   patchProperties(proto, descriptors, NATIVE_PREFIX);
@@ -49,7 +48,7 @@ const defineNativeAccessors = (proto, descriptors) => {
   for (let prop in descriptors) {
     installNativeAccessor(prop);
   }
-}
+};
 
 const copyProperties = (proto, list = []) => {
   for (let i = 0; i < list.length; i++) {
@@ -65,25 +64,33 @@ const copyProperties = (proto, list = []) => {
       }
     }
   }
-}
+};
 
 /** @type {!TreeWalker} */
-const nodeWalker = document.createTreeWalker(document, NodeFilter.SHOW_ALL,
-  null, false);
+const nodeWalker = document.createTreeWalker(
+  document,
+  NodeFilter.SHOW_ALL,
+  null,
+  false
+);
 
 /** @type {!TreeWalker} */
-const elementWalker = document.createTreeWalker(document, NodeFilter.SHOW_ELEMENT,
-  null, false);
+const elementWalker = document.createTreeWalker(
+  document,
+  NodeFilter.SHOW_ELEMENT,
+  null,
+  false
+);
 
 /** @type {!Document} */
 const inertDoc = document.implementation.createHTMLDocument('inert');
 
-const clearNode = node => {
+const clearNode = (node) => {
   let firstChild;
   while ((firstChild = node[NATIVE_PREFIX + 'firstChild'])) {
     node[NATIVE_PREFIX + 'removeChild'](firstChild);
   }
-}
+};
 
 const ParentNodeAccessors = [
   'firstElementChild',
@@ -101,20 +108,25 @@ const ParentNodeMethods = [
 ];
 
 export const addNativePrefixedProperties = () => {
-
   // EventTarget
   const eventProps = [
     'dispatchEvent',
     'addEventListener',
-    'removeEventListener'
+    'removeEventListener',
   ];
   if (window.EventTarget) {
     copyProperties(window.EventTarget.prototype, eventProps);
+
+    // In Firefox 31, `EventTarget` exists, but `EventTarget.prototype` is not
+    // in the prototype chain of `window` and, strangely,
+    // `window instanceof EventTarget` still returns true.
+    if (window[NATIVE_PREFIX + 'addEventListener'] === undefined) {
+      copyProperties(Window.prototype, eventProps);
+    }
   } else {
     copyProperties(Node.prototype, eventProps);
     copyProperties(Window.prototype, eventProps);
   }
-
 
   // Node
   if (hasDescriptors) {
@@ -135,36 +147,35 @@ export const addNativePrefixedProperties = () => {
         get() {
           nodeWalker.currentNode = this;
           return nodeWalker.parentNode();
-        }
+        },
       },
       firstChild: {
         /** @this {Node} */
         get() {
           nodeWalker.currentNode = this;
           return nodeWalker.firstChild();
-        }
+        },
       },
       lastChild: {
         /** @this {Node} */
         get() {
           nodeWalker.currentNode = this;
           return nodeWalker.lastChild();
-        }
-
+        },
       },
       previousSibling: {
         /** @this {Node} */
         get() {
           nodeWalker.currentNode = this;
           return nodeWalker.previousSibling();
-        }
+        },
       },
       nextSibling: {
         /** @this {Node} */
         get() {
           nodeWalker.currentNode = this;
           return nodeWalker.nextSibling();
-        }
+        },
       },
       // TODO(sorvell): make this a NodeList or whatever
       childNodes: {
@@ -178,28 +189,34 @@ export const addNativePrefixedProperties = () => {
             n = nodeWalker.nextSibling();
           }
           return nodes;
-        }
+        },
       },
       parentElement: {
         /** @this {Node} */
         get() {
           elementWalker.currentNode = this;
           return elementWalker.parentNode();
-        }
+        },
       },
       textContent: {
         /** @this {Node} */
         get() {
-          /* eslint-disable no-case-declarations */
           switch (this.nodeType) {
             case Node.ELEMENT_NODE:
             case Node.DOCUMENT_FRAGMENT_NODE:
               // TODO(sorvell): This cannot be a single TreeWalker that's reused
               // at least for Safari 9, but it's unclear why.
-              const textWalker = document.createTreeWalker(this, NodeFilter.SHOW_TEXT,
-                null, false);
-              let content = '', n;
-              while ( (n = textWalker.nextNode()) ) {
+              // eslint-disable-next-line no-case-declarations
+              const textWalker = document.createTreeWalker(
+                this,
+                NodeFilter.SHOW_TEXT,
+                null,
+                false
+              );
+              // eslint-disable-next-line no-case-declarations
+              let content = '',
+                n;
+              while ((n = textWalker.nextNode())) {
                 // TODO(sorvell): can't use textContent since we patch it on Node.prototype!
                 // However, should probably patch it only on element.
                 content += n.nodeValue;
@@ -213,7 +230,7 @@ export const addNativePrefixedProperties = () => {
         /** @this {Node} */
         set(value) {
           if (typeof value === 'undefined' || value === null) {
-            value = ''
+            value = '';
           }
           switch (this.nodeType) {
             case Node.ELEMENT_NODE:
@@ -222,7 +239,10 @@ export const addNativePrefixedProperties = () => {
               // Document fragments must have no childnodes if setting a blank string
               if (value.length > 0 || this.nodeType === Node.ELEMENT_NODE) {
                 // Note: old Chrome versions require 2nd argument here
-                this[NATIVE_PREFIX + 'insertBefore'](document.createTextNode(value), undefined);
+                this[NATIVE_PREFIX + 'insertBefore'](
+                  document.createTextNode(value),
+                  undefined
+                );
               }
               break;
             default:
@@ -230,8 +250,8 @@ export const addNativePrefixedProperties = () => {
               this.nodeValue = value;
               break;
           }
-        }
-      }
+        },
+      },
     });
   }
 
@@ -241,14 +261,11 @@ export const addNativePrefixedProperties = () => {
     'removeChild',
     'replaceChild',
     'cloneNode',
-    'contains'
+    'contains',
   ]);
 
   // NOTE, on some browsers IE 11 / Edge 15 some properties are incorrectly on HTMLElement
-  copyProperties(HTMLElement.prototype, [
-    'parentElement',
-    'contains'
-  ]);
+  copyProperties(HTMLElement.prototype, ['parentElement', 'contains']);
 
   const ParentNodeWalkerDescriptors = {
     firstElementChild: {
@@ -256,14 +273,14 @@ export const addNativePrefixedProperties = () => {
       get() {
         elementWalker.currentNode = this;
         return elementWalker.firstChild();
-      }
+      },
     },
     lastElementChild: {
       /** @this {ParentNode} */
       get() {
         elementWalker.currentNode = this;
         return elementWalker.lastChild();
-      }
+      },
     },
     children: {
       /** @this {ParentNode} */
@@ -276,7 +293,7 @@ export const addNativePrefixedProperties = () => {
           n = elementWalker.nextSibling();
         }
         return utils.createPolyfilledHTMLCollection(nodes);
-      }
+      },
     },
     childElementCount: {
       /** @this {ParentNode} */
@@ -285,8 +302,8 @@ export const addNativePrefixedProperties = () => {
           return this.children.length;
         }
         return 0;
-      }
-    }
+      },
+    },
   };
 
   // Element
@@ -297,14 +314,14 @@ export const addNativePrefixedProperties = () => {
       'previousElementSibling',
       'nextElementSibling',
       'innerHTML',
-      'className'
+      'className',
     ]);
 
     // NOTE, on some browsers IE 11 / Edge 15 some properties are incorrectly on HTMLElement
     copyProperties(HTMLElement.prototype, [
       'children',
       'innerHTML',
-      'className'
+      'className',
     ]);
   } else {
     defineNativeAccessors(Element.prototype, ParentNodeWalkerDescriptors);
@@ -314,14 +331,14 @@ export const addNativePrefixedProperties = () => {
         get() {
           elementWalker.currentNode = this;
           return elementWalker.previousSibling();
-        }
+        },
       },
       nextElementSibling: {
         /** @this {Element} */
         get() {
           elementWalker.currentNode = this;
           return elementWalker.nextSibling();
-        }
+        },
       },
       innerHTML: {
         /** @this {Element} */
@@ -331,25 +348,35 @@ export const addNativePrefixedProperties = () => {
         // Needed on browsers that do not proper accessors (e.g. old versions of Chrome)
         /** @this {Element} */
         set(value) {
-          const content = this.localName === 'template' ?
-          /** @type {HTMLTemplateElement} */(this).content : this;
+          const content =
+            this.localName === 'template'
+              ? /** @type {HTMLTemplateElement} */ (this).content
+              : this;
           clearNode(content);
           const containerName = this.localName || 'div';
           let htmlContainer;
-          if (!this.namespaceURI || this.namespaceURI === inertDoc.namespaceURI) {
+          if (
+            !this.namespaceURI ||
+            this.namespaceURI === inertDoc.namespaceURI
+          ) {
             htmlContainer = inertDoc.createElement(containerName);
           } else {
-            htmlContainer = inertDoc.createElementNS(this.namespaceURI, containerName);
+            htmlContainer = inertDoc.createElementNS(
+              this.namespaceURI,
+              containerName
+            );
           }
           htmlContainer.innerHTML = value;
-          const newContent = this.localName === 'template' ?
-            /** @type {HTMLTemplateElement} */(htmlContainer).content : htmlContainer;
+          const newContent =
+            this.localName === 'template'
+              ? /** @type {HTMLTemplateElement} */ (htmlContainer).content
+              : htmlContainer;
           let firstChild;
           while ((firstChild = newContent[NATIVE_PREFIX + 'firstChild'])) {
             // Note: old Chrome versions require 2nd argument here
             content[NATIVE_PREFIX + 'insertBefore'](firstChild, undefined);
           }
-        }
+        },
       },
       className: {
         /** @this {Element} */
@@ -359,8 +386,8 @@ export const addNativePrefixedProperties = () => {
         /** @this {Element} */
         set(value) {
           this.setAttribute('class', value);
-        }
-      }
+        },
+      },
     });
   }
 
@@ -376,10 +403,7 @@ export const addNativePrefixedProperties = () => {
   copyProperties(Element.prototype, ParentNodeMethods);
 
   // HTMLElement
-  copyProperties(HTMLElement.prototype, [
-    'focus',
-    'blur'
-  ]);
+  copyProperties(HTMLElement.prototype, ['focus', 'blur']);
 
   // HTMLTemplateElement
   if (window.HTMLTemplateElement) {
@@ -393,7 +417,10 @@ export const addNativePrefixedProperties = () => {
     // lastElementChild
     copyProperties(DocumentFragment.prototype, ParentNodeAccessors);
   } else {
-    defineNativeAccessors(DocumentFragment.prototype, ParentNodeWalkerDescriptors);
+    defineNativeAccessors(
+      DocumentFragment.prototype,
+      ParentNodeWalkerDescriptors
+    );
   }
 
   copyProperties(DocumentFragment.prototype, ParentNodeMethods);
@@ -401,17 +428,11 @@ export const addNativePrefixedProperties = () => {
   // Document
   if (hasDescriptors) {
     copyProperties(Document.prototype, ParentNodeAccessors);
-    copyProperties(Document.prototype, [
-      'activeElement'
-    ]);
+    copyProperties(Document.prototype, ['activeElement']);
   } else {
     defineNativeAccessors(Document.prototype, ParentNodeWalkerDescriptors);
   }
 
-  copyProperties(Document.prototype, [
-    'importNode',
-    'getElementById'
-  ]);
+  copyProperties(Document.prototype, ['importNode', 'getElementById']);
   copyProperties(Document.prototype, ParentNodeMethods);
-
 };

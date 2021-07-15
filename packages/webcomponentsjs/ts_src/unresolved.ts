@@ -20,13 +20,14 @@ export {};
 //
 // NOTE: position: relative fixes IE's failure to inherit opacity
 // when a child is not statically positioned.
-let style = document.createElement('style');
-style.textContent = '' +
-    'body {' +
-    'transition: opacity ease-in 0.2s;' +
-    ' } \n' +
-    'body[unresolved] {' +
-    'opacity: 0; display: block; overflow: hidden; position: relative;' +
-    ' } \n';
-let head = document.querySelector('head')!;
+const style = document.createElement('style');
+style.textContent =
+  '' +
+  'body {' +
+  'transition: opacity ease-in 0.2s;' +
+  ' } \n' +
+  'body[unresolved] {' +
+  'opacity: 0; display: block; overflow: hidden; position: relative;' +
+  ' } \n';
+const head = document.querySelector('head')!;
 head.insertBefore(style, head.firstChild);

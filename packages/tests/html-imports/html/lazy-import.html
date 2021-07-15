@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <!--
     @license
     Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
@@ -9,45 +9,44 @@
     subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 -->
 <html>
+  <head>
+    <title>HTML Lazy Imports</title>
+    <script src="../../node_modules/@webcomponents/html-imports/html-imports.min.js"></script>
+    <script>
+      var ready;
+      WCT = {
+        waitFor: function (cb) {
+          cb();
+        },
+      };
+    </script>
+    <script src="../../node_modules/wct-browser-legacy/browser.js"></script>
+    <link rel="import" href="imports/load-1.html" id="load1Link" />
+  </head>
 
-<head>
-  <title>HTML Lazy Imports</title>
-  <script src="../../node_modules/@webcomponents/html-imports/html-imports.min.js"></script>
-  <script>
-    var ready;
-    WCT = {
-      waitFor: function(cb) {
-        cb();
-      }
-    };
-  </script>
-  <script src="../../node_modules/wct-browser-legacy/browser.js"></script>
-  <link rel="import" href="imports/load-1.html" id="load1Link">
-</head>
+  <body>
+    <script>
+      /* global load1Link: false */
 
-<body>
-
-  <script>
-    test('Import lazy-loading another import', function(done) {
-      if (HTMLImports.useNative) {
-        done();
-        return;
-      } else {
-        HTMLImports.whenReady(() => {
-          // Some time later..
-          setTimeout(function() {
-            var link = document.createElement('link');
-            link.setAttribute('rel', 'import');
-            link.setAttribute('href', 'imports/load-2.html');
-            link.addEventListener('load', function() {
-              done();
+      test('Import lazy-loading another import', function (done) {
+        if (HTMLImports.useNative) {
+          done();
+          return;
+        } else {
+          HTMLImports.whenReady(() => {
+            // Some time later..
+            setTimeout(function () {
+              var link = document.createElement('link');
+              link.setAttribute('rel', 'import');
+              link.setAttribute('href', 'imports/load-2.html');
+              link.addEventListener('load', function () {
+                done();
+              });
+              load1Link.import.appendChild(link);
             });
-            load1Link.import.appendChild(link);
           });
-        });
-      }
-    });
-  </script>
-</body>
-
+        }
+      });
+    </script>
+  </body>
 </html>

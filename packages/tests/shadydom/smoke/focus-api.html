@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <!--
 @license
 Copyright (c) 2017 The Polymer Project Authors. All rights reserved.
@@ -9,31 +9,37 @@ Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 -->
 <html>
-<head>
-  <meta charset="utf-8">
-  <script>
-    ShadyDOM = {force: true};
-  </script>
-  <script src="../../node_modules/@webcomponents/webcomponentsjs/bundles/webcomponents-pf_js.js"></script>
-  <script src="../../node_modules/@webcomponents/shadydom/shadydom.min.js"></script>
-</head>
-<body>
-  <div id="host"></div>
-  <script>
-    host.tabIndex = 1;
-    host.attachShadow({mode: 'open'});
-    host.shadowRoot.appendChild(document.createElement('input'));
-    host.shadowRoot.firstElementChild.addEventListener('focus', function(e) {
-      console.log('focused '+ performance.now());
-    })
-    console.log('before '+ performance.now());
-    host.shadowRoot.firstElementChild.focus();
-    setTimeout(function(){console.log('timeout ' + performance.now())});
-    requestAnimationFrame(function() {
-      console.log('raf ' + performance.now())
-    });
-    Promise.resolve().then(function() {console.log('promise ' + performance.now());});
-    console.log('after ' + performance.now());
-  </script>
-</body>
+  <head>
+    <meta charset="utf-8" />
+    <script>
+      ShadyDOM = {force: true};
+    </script>
+    <script src="../../node_modules/@webcomponents/webcomponentsjs/bundles/webcomponents-pf_js.js"></script>
+    <script src="../../node_modules/@webcomponents/shadydom/shadydom.min.js"></script>
+  </head>
+  <body>
+    <div id="host"></div>
+    <script>
+      /* global host: true */
+
+      host.tabIndex = 1;
+      host.attachShadow({mode: 'open'});
+      host.shadowRoot.appendChild(document.createElement('input'));
+      host.shadowRoot.firstElementChild.addEventListener('focus', function (e) {
+        console.log('focused ' + performance.now());
+      });
+      console.log('before ' + performance.now());
+      host.shadowRoot.firstElementChild.focus();
+      setTimeout(function () {
+        console.log('timeout ' + performance.now());
+      });
+      requestAnimationFrame(function () {
+        console.log('raf ' + performance.now());
+      });
+      Promise.resolve().then(function () {
+        console.log('promise ' + performance.now());
+      });
+      console.log('after ' + performance.now());
+    </script>
+  </body>
 </html>

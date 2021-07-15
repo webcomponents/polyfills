@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <!--
 @license
 Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
@@ -11,31 +11,37 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <html>
   <head>
     <title></title>
-    <meta charset="UTF-8">
+    <meta charset="UTF-8" />
   </head>
   <body>
     <script>
       // Force all polyfills on
-      if (window.customElements) window.customElements.forcePolyfill = true;
-      ShadyDOM = { force: true };
-      ShadyCSS = { shimcssproperties: true};
+      if (window.customElements) {
+        window.customElements.forcePolyfill = true;
+      }
+      ShadyDOM = {force: true};
+      ShadyCSS = {shimcssproperties: true};
 
       window.errored = false;
 
-      window.onerror = function() {
+      window.onerror = function () {
         window.errored = true;
-      }
+      };
 
       window.WebComponents = window.WebComponents || {};
-      window.WebComponents.root = '../node_modules/@webcomponents/webcomponentsjs/';
+      window.WebComponents.root =
+        '../node_modules/@webcomponents/webcomponentsjs/';
     </script>
     <script src="../node_modules/@webcomponents/webcomponentsjs/webcomponents-loader.js"></script>
     <script src="./wct-config.js"></script>
     <script src="../node_modules/wct-browser-legacy/browser.js"></script>
     <script>
-      suite('loader with root defined', function() {
-        test('should load without an error', function() {
-          assert.isFalse(window.errored, 'Script should not have errored when loading');
+      suite('loader with root defined', function () {
+        test('should load without an error', function () {
+          assert.isFalse(
+            window.errored,
+            'Script should not have errored when loading'
+          );
         });
       });
     </script>

@@ -12,23 +12,24 @@
 import CustomElementInternals from '../../CustomElementInternals.js';
 import * as Utilities from '../../Utilities.js';
 
-type NativeMethod = (this: Node, ...args: Array<Node|string>) => void;
+type NativeMethod = (this: Node, ...args: Array<Node | string>) => void;
 
 interface ParentNodeNativeMethods {
   prepend: NativeMethod;
   append: NativeMethod;
 }
 
-export default function(
-    internals: CustomElementInternals,
-    destination: ParentNode,
-    builtIn: ParentNodeNativeMethods) {
+export default function (
+  internals: CustomElementInternals,
+  destination: ParentNode,
+  builtIn: ParentNodeNativeMethods
+) {
   function appendPrependPatch(builtInMethod: NativeMethod): NativeMethod {
-    return function(this: Node, ...nodes) {
+    return function (this: Node, ...nodes) {
       /**
        * A copy of `nodes`, with any DocumentFragment replaced by its children.
        */
-      const flattenedNodes: Array<Node|string> = [];
+      const flattenedNodes: Array<Node | string> = [];
 
       /**
        * Elements in `nodes` that were connected before this call.

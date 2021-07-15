@@ -9,8 +9,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 */
 
 import * as utils from '../utils.js';
-import {getScopingShim, removeShadyScoping, replaceShadyScoping,
-  treeVisitor, currentScopeForNode, currentScopeIsCorrect } from '../style-scoping.js';
+// prettier-ignore
+import {getScopingShim, removeShadyScoping, replaceShadyScoping, treeVisitor, currentScopeForNode, currentScopeIsCorrect} from '../style-scoping.js';
 import {shadyDataForNode, ensureShadyDataForNode} from '../shady-data.js';
 import {recordInsertBefore, recordRemoveChild} from '../link-nodes.js';
 import {ownerShadyRootForNode} from '../attach-shadow.js';
@@ -19,12 +19,13 @@ const doc = window.document;
 
 const preferPerformance = utils.settings.preferPerformance;
 
-const nativeIsConnectedAccessors =
-/** @type {ObjectPropertyDescriptor} */(
-  Object.getOwnPropertyDescriptor(Node.prototype, 'isConnected')
-);
+const nativeIsConnectedAccessors = /** @type {ObjectPropertyDescriptor} */ (Object.getOwnPropertyDescriptor(
+  Node.prototype,
+  'isConnected'
+));
 
-const nativeIsConnected = nativeIsConnectedAccessors && nativeIsConnectedAccessors.get;
+const nativeIsConnected =
+  nativeIsConnectedAccessors && nativeIsConnectedAccessors.get;
 
 export function clearNode(node) {
   let firstChild;
@@ -36,7 +37,11 @@ export function clearNode(node) {
 function removeOwnerShadyRoot(node) {
   // optimization: only reset the tree if node is actually in a root
   if (hasCachedOwnerRoot(node)) {
-    for (let n=node[utils.SHADY_PREFIX + 'firstChild']; n; n = n[utils.SHADY_PREFIX + 'nextSibling']) {
+    for (
+      let n = node[utils.SHADY_PREFIX + 'firstChild'];
+      n;
+      n = n[utils.SHADY_PREFIX + 'nextSibling']
+    ) {
       removeOwnerShadyRoot(n);
     }
   }
@@ -67,8 +72,9 @@ function firstComposedNode(node) {
     // has not rendered and therefore the `<slot>` is still in the composed
     // DOM. If that's the case the `<slot>` is the first composed node.
     if (flattened) {
-      composed = flattened.length ? flattened[0] :
-        firstComposedNode(node[utils.SHADY_PREFIX + 'nextSibling']);
+      composed = flattened.length
+        ? flattened[0]
+        : firstComposedNode(node[utils.SHADY_PREFIX + 'nextSibling']);
     }
   }
   return composed;
@@ -100,7 +106,6 @@ function scheduleObserver(node, addedNode, removedNode) {
 }
 
 export const NodePatches = utils.getOwnPropertyDescriptors({
-
   /** @this {Node} */
   get parentNode() {
     const nodeData = shadyDataForNode(this);
@@ -143,7 +148,11 @@ export const NodePatches = utils.getOwnPropertyDescriptors({
       const nodeData = shadyDataForNode(this);
       if (!nodeData.childNodes) {
         nodeData.childNodes = [];
-        for (let n=this[utils.SHADY_PREFIX + 'firstChild']; n; n=n[utils.SHADY_PREFIX + 'nextSibling']) {
+        for (
+          let n = this[utils.SHADY_PREFIX + 'firstChild'];
+          n;
+          n = n[utils.SHADY_PREFIX + 'nextSibling']
+        ) {
           nodeData.childNodes.push(n);
         }
       }
@@ -151,9 +160,9 @@ export const NodePatches = utils.getOwnPropertyDescriptors({
     } else {
       childNodes = this[utils.NATIVE_PREFIX + 'childNodes'];
     }
-    childNodes.item = function(index) {
+    childNodes.item = function (index) {
       return childNodes[index];
-    }
+    };
     return childNodes;
   },
 
@@ -183,7 +192,11 @@ export const NodePatches = utils.getOwnPropertyDescriptors({
     // Slow path for non-distributed nodes.
     let node = this;
     while (node && !(node instanceof Document)) {
-      node = node[utils.SHADY_PREFIX + 'parentNode'] || (utils.isShadyRoot(node) ? /** @type {ShadowRoot} */(node).host : undefined);
+      node =
+        node[utils.SHADY_PREFIX + 'parentNode'] ||
+        (utils.isShadyRoot(node)
+          ? /** @type {ShadowRoot} */ (node).host
+          : undefined);
     }
     return !!(node && node instanceof Document);
   },
@@ -192,7 +205,11 @@ export const NodePatches = utils.getOwnPropertyDescriptors({
   get textContent() {
     if (utils.isTrackingLogicalChildNodes(this)) {
       let tc = [];
-      for (let n=this[utils.SHADY_PREFIX + 'firstChild']; n; n = n[utils.SHADY_PREFIX + 'nextSibling']) {
+      for (
+        let n = this[utils.SHADY_PREFIX + 'firstChild'];
+        n;
+        n = n[utils.SHADY_PREFIX + 'nextSibling']
+      ) {
         if (n.nodeType !== Node.COMMENT_NODE) {
           tc.push(n[utils.SHADY_PREFIX + 'textContent']);
         }
@@ -209,16 +226,21 @@ export const NodePatches = utils.getOwnPropertyDescriptors({
    */
   set textContent(value) {
     if (typeof value === 'undefined' || value === null) {
-      value = ''
+      value = '';
     }
     switch (this.nodeType) {
       case Node.ELEMENT_NODE:
       case Node.DOCUMENT_FRAGMENT_NODE:
-        if (!utils.isTrackingLogicalChildNodes(this) && utils.settings.hasDescriptors) {
+        if (
+          !utils.isTrackingLogicalChildNodes(this) &&
+          utils.settings.hasDescriptors
+        ) {
           // may be removing a nested slot but fast path if we know we are not.
           const firstChild = this[utils.SHADY_PREFIX + 'firstChild'];
-          if (firstChild != this[utils.SHADY_PREFIX + 'lastChild'] ||
-            (firstChild && firstChild.nodeType != Node.TEXT_NODE)) {
+          if (
+            firstChild != this[utils.SHADY_PREFIX + 'lastChild'] ||
+            (firstChild && firstChild.nodeType != Node.TEXT_NODE)
+          ) {
             clearNode(this);
           }
           this[utils.NATIVE_PREFIX + 'textContent'] = value;
@@ -226,7 +248,9 @@ export const NodePatches = utils.getOwnPropertyDescriptors({
           clearNode(this);
           // Document fragments must have no childNodes if setting a blank string
           if (value.length > 0 || this.nodeType === Node.ELEMENT_NODE) {
-            this[utils.SHADY_PREFIX + 'insertBefore'](document.createTextNode(value))
+            this[utils.SHADY_PREFIX + 'insertBefore'](
+              document.createTextNode(value)
+            );
           }
         }
         break;
@@ -254,15 +278,22 @@ export const NodePatches = utils.getOwnPropertyDescriptors({
       return node;
     }
     if (node === this) {
-      throw Error(`Failed to execute 'appendChild' on 'Node': The new child element contains the parent.`);
+      throw Error(
+        `Failed to execute 'appendChild' on 'Node': The new child element contains the parent.`
+      );
     }
     if (ref_node) {
       const refData = shadyDataForNode(ref_node);
       const p = refData && refData.parentNode;
-      if ((p !== undefined && p !== this) ||
-        (p === undefined && ref_node[utils.NATIVE_PREFIX + 'parentNode'] !== this)) {
-        throw Error(`Failed to execute 'insertBefore' on 'Node': The node ` +
-        `before which the new node is to be inserted is not a child of this node.`);
+      if (
+        (p !== undefined && p !== this) ||
+        (p === undefined &&
+          ref_node[utils.NATIVE_PREFIX + 'parentNode'] !== this)
+      ) {
+        throw Error(
+          `Failed to execute 'insertBefore' on 'Node': The node ` +
+            `before which the new node is to be inserted is not a child of this node.`
+        );
       }
     }
     if (ref_node === node) {
@@ -273,7 +304,9 @@ export const NodePatches = utils.getOwnPropertyDescriptors({
     const slotsAdded = [];
     const ownerRoot = ownerShadyRootForNode(this);
     /** @type {string} */
-    const newScopeName = ownerRoot ? ownerRoot.host.localName : currentScopeForNode(this);
+    const newScopeName = ownerRoot
+      ? ownerRoot.host.localName
+      : currentScopeForNode(this);
     /** @type {string} */
     let oldScopeName;
     // remove from existing location
@@ -295,14 +328,17 @@ export const NodePatches = utils.getOwnPropertyDescriptors({
     }
     // add to new parent
     let allowNativeInsert = true;
-    const needsScoping = (!preferPerformance ||
+    const needsScoping =
+      (!preferPerformance ||
         // Under preferPerformance, only re-scope if we're not coming from a
         // pre-scoped doc fragment or back into a pre-scoped doc fragment
         (node['__noInsertionPoint'] === undefined &&
-         this['__noInsertionPoint'] === undefined)) &&
-        !currentScopeIsCorrect(node, newScopeName);
-    const needsSlotFinding = ownerRoot && !node['__noInsertionPoint'] &&
-        (!preferPerformance || node.nodeType === Node.DOCUMENT_FRAGMENT_NODE);
+          this['__noInsertionPoint'] === undefined)) &&
+      !currentScopeIsCorrect(node, newScopeName);
+    const needsSlotFinding =
+      ownerRoot &&
+      !node['__noInsertionPoint'] &&
+      (!preferPerformance || node.nodeType === Node.DOCUMENT_FRAGMENT_NODE);
     if (needsSlotFinding || needsScoping) {
       // NOTE: avoid node.removeChild as this *can* trigger another patched
       // method (e.g. custom elements) and we want only the shady method to run.
@@ -319,7 +355,7 @@ export const NodePatches = utils.getOwnPropertyDescriptors({
       }
       treeVisitor(node, (node) => {
         if (needsSlotFinding && node.localName === 'slot') {
-          slotsAdded.push(/** @type {!HTMLSlotElement} */(node));
+          slotsAdded.push(/** @type {!HTMLSlotElement} */ (node));
         }
         if (needsScoping) {
           replaceShadyScoping(node, newScopeName, oldScopeName);
@@ -345,17 +381,19 @@ export const NodePatches = utils.getOwnPropertyDescriptors({
         if (utils.hasShadowRootWithSlot(this)) {
           parentData.root._asyncRender();
         }
+      }
       // when inserting into a slot inside a shadowRoot, render the
       // containing shadowRoot to update fallback content.
-      } else if (ownerRoot && this.localName === 'slot') {
+      else if (ownerRoot && this.localName === 'slot') {
         allowNativeInsert = false;
         ownerRoot._asyncRender();
       }
     }
     if (allowNativeInsert) {
       // if adding to a shadyRoot, add to host instead
-      let container = utils.isShadyRoot(this) ?
-        /** @type {ShadowRoot} */(this).host : this;
+      let container = utils.isShadyRoot(this)
+        ? /** @type {ShadowRoot} */ (this).host
+        : this;
       // if ref_node, get the ref_node that's actually in composed dom.
       if (ref_node) {
         ref_node = firstComposedNode(ref_node);
@@ -363,11 +401,12 @@ export const NodePatches = utils.getOwnPropertyDescriptors({
       } else {
         container[utils.NATIVE_PREFIX + 'appendChild'](node);
       }
+    }
     // Since ownerDocument is not patched, it can be incorrect after this call
     // if the node is physically appended via distribution. This can result
     // in the custom elements polyfill not upgrading the node if it's in an inert doc.
     // We correct this by calling `adoptNode`.
-    } else if (node.ownerDocument !== this.ownerDocument) {
+    else if (node.ownerDocument !== this.ownerDocument) {
       this.ownerDocument.adoptNode(node);
     }
     return node;
@@ -398,13 +437,15 @@ export const NodePatches = utils.getOwnPropertyDescriptors({
       return this[utils.NATIVE_PREFIX + 'removeChild'](node);
     }
     if (node[utils.SHADY_PREFIX + 'parentNode'] !== this) {
-      throw Error('The node to be removed is not a child of this node: ' +
-        node);
+      throw Error(
+        'The node to be removed is not a child of this node: ' + node
+      );
     }
     scheduleObserver(this, null, node);
     let preventNativeRemove;
     let ownerRoot = ownerShadyRootForNode(node);
-    const removingInsertionPoint = ownerRoot && ownerRoot._removeContainedSlots(node);
+    const removingInsertionPoint =
+      ownerRoot && ownerRoot._removeContainedSlots(node);
     const parentData = shadyDataForNode(this);
     if (utils.isTrackingLogicalChildNodes(this)) {
       recordRemoveChild(node, this);
@@ -415,8 +456,12 @@ export const NodePatches = utils.getOwnPropertyDescriptors({
     }
     // unscope a node leaving a ShadowRoot if ShadyCSS is present, and this node
     // is not going to be rescoped in `insertBefore`
-    if (getScopingShim() && !skipUnscoping && ownerRoot
-      && node.nodeType !== Node.TEXT_NODE) {
+    if (
+      getScopingShim() &&
+      !skipUnscoping &&
+      ownerRoot &&
+      node.nodeType !== Node.TEXT_NODE
+    ) {
       const oldScopeName = currentScopeForNode(node);
       treeVisitor(node, (node) => {
         removeShadyScoping(node, oldScopeName);
@@ -435,15 +480,17 @@ export const NodePatches = utils.getOwnPropertyDescriptors({
     }
     if (!preventNativeRemove) {
       // if removing from a shadyRoot, remove from host instead
-      let container = utils.isShadyRoot(this) ?
-        /** @type {ShadowRoot} */(this).host :
-        this;
+      let container = utils.isShadyRoot(this)
+        ? /** @type {ShadowRoot} */ (this).host
+        : this;
       // not guaranteed to physically be in container; e.g.
       // (1) if parent has a shadyRoot, element may or may not at distributed
       // location (could be undistributed)
       // (2) if parent is a slot, element may not ben in composed dom
-      if (!(parentData.root || node.localName === 'slot') ||
-        (container === node[utils.NATIVE_PREFIX + 'parentNode'])) {
+      if (
+        !(parentData.root || node.localName === 'slot') ||
+        container === node[utils.NATIVE_PREFIX + 'parentNode']
+      ) {
         container[utils.NATIVE_PREFIX + 'removeChild'](node);
       }
     }
@@ -474,7 +521,11 @@ export const NodePatches = utils.getOwnPropertyDescriptors({
       // been removed from the spec.
       // Make sure we do not do a deep clone on them for old browsers (IE11)
       if (deep && n.nodeType !== Node.ATTRIBUTE_NODE) {
-        for (let c=this[utils.SHADY_PREFIX + 'firstChild'], nc; c; c = c[utils.SHADY_PREFIX + 'nextSibling']) {
+        for (
+          let c = this[utils.SHADY_PREFIX + 'firstChild'], nc;
+          c;
+          c = c[utils.SHADY_PREFIX + 'nextSibling']
+        ) {
           nc = c[utils.SHADY_PREFIX + 'cloneNode'](true);
           n[utils.SHADY_PREFIX + 'appendChild'](nc);
         }
@@ -488,7 +539,7 @@ export const NodePatches = utils.getOwnPropertyDescriptors({
    * @param {Object=} options
    */
   // TODO(sorvell): implement `options` e.g. `{ composed: boolean }`
-  getRootNode(options) { // eslint-disable-line no-unused-vars
+  getRootNode(options) {
     if (!this || !this.nodeType) {
       return;
     }
@@ -500,7 +551,9 @@ export const NodePatches = utils.getOwnPropertyDescriptors({
         nodeData.ownerShadyRoot = root;
       } else {
         let parent = this[utils.SHADY_PREFIX + 'parentNode'];
-        root = parent ? parent[utils.SHADY_PREFIX + 'getRootNode'](options) : this;
+        root = parent
+          ? parent[utils.SHADY_PREFIX + 'getRootNode'](options)
+          : this;
         // memo-ize result for performance but only memo-ize
         // result if node is in the document. This avoids a problem where a root
         // can be cached while an element is inside a fragment.
@@ -510,7 +563,6 @@ export const NodePatches = utils.getOwnPropertyDescriptors({
           nodeData.ownerShadyRoot = root;
         }
       }
-
     }
     return root;
   },
@@ -518,6 +570,5 @@ export const NodePatches = utils.getOwnPropertyDescriptors({
   /** @this {Node} */
   contains(node) {
     return utils.contains(this, node);
-  }
-
+  },
 });

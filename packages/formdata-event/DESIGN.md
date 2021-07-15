@@ -32,7 +32,6 @@ submitted, (b) dispatch a `formdata` event to the form to potentially collect
 updates to the submitted data, and (c) cause the submitted data to reflect the
 updates given during the `formdata` event dispatch.
 
-
 ### Learning about form submissions
 
 The `formdata` event is defined to be dispatched during [HTML's "construct the
@@ -51,7 +50,6 @@ can detect that a form is about to be submitted by listening for `submit` events
 as well as modifying forms' `submit` methods and respond by dispatching the
 `formdata` event.
 
-
 #### Handling forms' `submit` function
 
 When a script calls a form's `submit` function, that form is submitted without
@@ -59,7 +57,6 @@ dispatching a `submit` event.[<sup>2</sup>](#footnote-2) To dispatch the
 `formdata` event in this case, forms' `submit` function
 (`HTMLFormElement.prototype.submit`) will be overwritten to dispatch the event
 before the wrapped, original function is called.
-
 
 #### Listening for `submit` events
 
@@ -93,7 +90,6 @@ listener and wrapping all `submit` listeners guarantees that every form
 submission that should cause a `formdata` event to be triggered that has an
 event target with a `formdata` event listener in its path will be detected.
 
-
 #### The `submit` event and timing
 
 The time at which the browser collects the data it will submit is critical to
@@ -114,7 +110,6 @@ listeners and, in addition to handling `stopPropagation`, the wrapper will also
 dispatch a `formdata` event after calling the wrapped function if both the event
 is at the last target in its path and it wraps the last bubbling `submit`
 listener added to that target.
-
 
 ### Dispatching the `formdata` event and collecting data
 
@@ -142,7 +137,6 @@ updates, the polyfill wraps all functions it finds on the `FormData` prototype
 that can modify the data and keeps track of any modifications made. Then, in the
 next step, it reflects these changes to the DOM.
 
-
 ### Reflecting FormData updates to the submitted data
 
 After the `formdata` event has finished propagating, the polyfill will look at
@@ -157,7 +151,6 @@ send.
 Again, these modifications are made synchronously, before either the `submit`
 event finishes propagating or the form's wrapped `submit` method is called.
 
-
 #### Cleaning up form modifications
 
 When a form is submitted, the browsing context navigates, which discards the
@@ -165,7 +158,6 @@ state of the page from which the form was submitted - there's normally no need
 to clean up the form. However, as a precaution, the polyfill queues a task that
 removes any hidden inputs and resets the disabled state of any elements it
 modified earlier.
-
 
 ## Other Notes
 
@@ -181,7 +173,6 @@ form to their component in the same root and add their `formdata` listener
 there. If the component is only targeting newer browsers (i.e. Safari), it can
 use `Element.prototype.closest` (i.e. as `this.closest('form')`).
 
-
 ### The polyfill does not add new methods to `FormData`
 
 This polyfill only adds support for the `formdata` event itself - it does not
@@ -194,7 +185,6 @@ be used to implement `set` and `delete`. 'Adding' these functions would mean
 that incorrect data would be sent if a `FormData` instance modified with them
 was passed to an XHR.
 
-
 ---
 
 <sup id="footnote-1">1</sup> The FormData API is supported at various levels
@@ -206,7 +196,6 @@ least support appending additional data.
 
 <sup id="footnote-3">3</sup> 'Submittable elements' is used in a generic sense
 here, not strictly as the definition from the HTML spec.
-
 
 [concept-form-submit]: https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#concept-form-submit
 [construct-the-entry-list]: https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#constructing-the-form-data-set

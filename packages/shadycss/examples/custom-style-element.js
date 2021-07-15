@@ -18,7 +18,7 @@ Example:
   </style>
 </custom-style>
 */
-(function() {
+(function () {
   'use strict';
 
   const CustomStyleInterface = window.ShadyCSS.CustomStyleInterface;
