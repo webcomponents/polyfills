@@ -11,4 +11,6 @@
  */
 
 // eslint-disable-next-line no-var
-declare var WebComponents: {};
+declare var HTMLTemplateElement: {
+  bootstrap(): void;
+};
