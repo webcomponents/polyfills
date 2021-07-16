@@ -10,7 +10,10 @@
  * rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
-// eslint-disable-next-line no-var
-declare var HTMLTemplateElement: {
-  bootstrap(): void;
-};
+declare global {
+  interface HTMLTemplateElementConstructor {
+    bootstrap(): void;
+  }
+}
+
+export {};
