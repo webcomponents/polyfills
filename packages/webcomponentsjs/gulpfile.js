@@ -114,8 +114,11 @@ gulp.task('concat-ts-externs', () => {
   return gulp
     .src(
       [
-        './externs/**/*.d.ts',
-        './node_modules/@webcomponents/*/externs/**/*.d.ts',
+        './externs/webcomponents.d.ts',
+        './node_modules/@webcomponents/custom-elements/externs/custom-elements.d.ts',
+        './node_modules/@webcomponents/shadycss/externs/shadycss.d.ts',
+        './node_modules/@webcomponents/shadydom/externs/shadydom.d.ts',
+        './node_modules/@webcomponents/template/externs/template.d.ts',
       ],
       {
         base: './',
