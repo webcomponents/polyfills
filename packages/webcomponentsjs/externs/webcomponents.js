@@ -12,5 +12,8 @@
 var ShadyDOM;
 var WebComponents;
 
+/** @type {!Function} */
+Promise.cast;
+
 /** @type {function()} */
 HTMLTemplateElement.bootstrap;
