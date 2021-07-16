@@ -35,6 +35,12 @@ interface HTMLImportsInterface {
   loadImports(doc: HTMLDocument | Element): void;
 }
 
+// This type alias exists because Tsickle will replace any type name used in the
+// type of something with the same name with `?`. (Maybe a Closure limitation?)
+// Making `HTMLImports` an alias to an underlying type with a different name
+// works around this because Tsickle appears to resolve type aliases in its
+// output: it writes `undefined|HTMLImportsInterface` instead of `undefined|?`
+// as the type for the `HTMLImports` global.
 type HTMLImports = HTMLImportsInterface;
 // eslint-disable-next-line no-var
 declare var HTMLImports: HTMLImports;
