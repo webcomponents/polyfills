@@ -10,5 +10,10 @@
  * rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
-// eslint-disable-next-line no-var
-declare var WebComponents: {};
+// This file needs to be a module for the declarations to apply globally.
+export {};
+
+declare global {
+  // eslint-disable-next-line no-var
+  var WebComponents: {};
+}

@@ -10,10 +10,11 @@
  * rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
+// This file needs to be a module for the declarations to apply globally.
+export {};
+
 declare global {
   interface HTMLTemplateElementConstructor {
     bootstrap(): void;
   }
 }
-
-export {};
