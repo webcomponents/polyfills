@@ -82,7 +82,7 @@ declare global {
   }
 
   // eslint-disable-next-line no-var
-  var ShadyDom:
+  var ShadyDOM:
     | undefined
     | {
         inUse: boolean;
