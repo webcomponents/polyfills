@@ -68,19 +68,4 @@ declare global {
   type ShadyCSS = ShadyCSSInterface;
   // eslint-disable-next-line no-var
   var ShadyCSS: ShadyCSS | undefined;
-
-  interface Element {
-    extends?: string;
-    _element?: Element | null;
-    __cssBuild?: string;
-  }
-
-  interface HTMLTemplateElement {
-    _validating?: boolean;
-    _prepared?: boolean;
-    _domPrepared?: boolean;
-    _content?: DocumentFragment | null;
-    _gatheredStyle?: HTMLStyleElement | null;
-    _style?: HTMLStyleElement | null;
-  }
 }
