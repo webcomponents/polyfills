@@ -22,6 +22,7 @@
     "test": "cd ../.. && wtr 'packages/scoped-custom-element-registry/test/**/*.test.(js|html)'"
   },
   "files": [
+    "CHANGELOG.md",
     "scoped-custom-element-registry.min.js*",
     "src/"
   ],
