@@ -22,6 +22,7 @@
     "prepack": "npm run build"
   },
   "files": [
+    "CHANGELOG.md",
     "custom-elements.min.js*",
     "externs/",
     "src/"

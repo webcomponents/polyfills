@@ -27,6 +27,7 @@
   "files": [
     "apply-shim.html",
     "apply-shim.min.js*",
+    "CHANGELOG.md",
     "custom-style-interface.html",
     "custom-style-interface.min.js*",
     "entrypoints/**/*.js",
