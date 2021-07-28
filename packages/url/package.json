@@ -21,6 +21,7 @@
     "prepack": "npm run build"
   },
   "files": [
+    "CHANGELOG.md",
     "url.js",
     "url.min.js*"
   ]

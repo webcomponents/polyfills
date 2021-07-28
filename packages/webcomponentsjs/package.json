@@ -24,6 +24,7 @@
   },
   "files": [
     "bundles/**/*",
+    "CHANGELOG.md",
     "custom-elements-es5-adapter.js",
     "src/**/*.js",
     "webcomponents-bundle.js*",
