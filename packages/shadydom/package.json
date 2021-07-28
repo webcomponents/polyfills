@@ -23,6 +23,8 @@
     "regen-package-lock": "rm -rf node_modules package-lock.json; npm install"
   },
   "files": [
+    "CHANGELOG.md",
+    "externs/**/*.d.ts",
     "externs/**/*.js",
     "LICENSE.md",
     "shadydom.min.js*",

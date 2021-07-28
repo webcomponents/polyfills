@@ -20,6 +20,7 @@ const closure = require('google-closure-compiler').gulp();
 const babel = require('rollup-plugin-babel');
 const commonjs = require('rollup-plugin-commonjs');
 const license = require('rollup-plugin-license');
+const concat = require('gulp-concat');
 
 function debugify(sourceName, fileName, extraRollupOptions) {
   const outDir = fileName ? '.' : './bundles';
@@ -109,6 +110,25 @@ function closurify(sourceName, fileName) {
     .pipe(sourcemaps.write('.'))
     .pipe(gulp.dest(outDir));
 }
+
+gulp.task('concat-ts-externs', () => {
+  return gulp
+    .src(
+      [
+        './externs/webcomponents.d.ts',
+        './node_modules/@webcomponents/custom-elements/externs/custom-elements.d.ts',
+        './node_modules/@webcomponents/shadycss/externs/shadycss.d.ts',
+        './node_modules/@webcomponents/shadydom/externs/shadydom.d.ts',
+        './node_modules/@webcomponents/template/externs/template.d.ts',
+      ],
+      {
+        base: './',
+        follow: true,
+      }
+    )
+    .pipe(concat('webcomponents-bundle.d.ts'))
+    .pipe(gulp.dest('.'));
+});
 
 gulp.task('debugify-pf_js', () => {
   const rollupOptions = {
@@ -294,7 +314,7 @@ gulp.task(
   ])
 );
 
-gulp.task('default', gulp.series('closure'));
+gulp.task('default', gulp.series('closure', 'concat-ts-externs'));
 
 process.on('unhandledRejection', (err) => {
   console.error('Unhandled Promise Rejection:', err);

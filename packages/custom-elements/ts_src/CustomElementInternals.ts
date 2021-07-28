@@ -9,9 +9,8 @@
  * rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
-import './Externs.js';
+import CustomElementRegistry from './CustomElementRegistry.js';
 import {CustomElementState as CEState} from './CustomElementState.js';
-import {CustomElementDefinition, HTMLImportElement} from './Externs.js';
 import * as Native from './Patch/Native.js';
 import * as Utilities from './Utilities.js';
 
@@ -37,7 +36,7 @@ export default class CustomElementInternals {
     callback: (elem: Element) => void,
     visitedImports?: Set<Node>
   ) {
-    const sd = window['ShadyDom'];
+    const sd = window['ShadyDOM'];
     if (this.shadyDomFastWalk && sd && sd['inUse']) {
       if (node.nodeType === Node.ELEMENT_NODE) {
         const element = node as Element;
@@ -217,7 +216,7 @@ export default class CustomElementInternals {
         element.localName === 'link' &&
         element.getAttribute('rel') === 'import'
       ) {
-        const importElem = element as HTMLImportElement;
+        const importElem = element as HTMLLinkElement;
         // The HTML Imports polyfill sets a descendant element of the link to
         // the `import` property, specifically this is *not* a Document.
         const importNode = importElem.import;
@@ -228,10 +227,7 @@ export default class CustomElementInternals {
           importNode.__CE_registry = document.__CE_registry;
         }
 
-        if (
-          importNode &&
-          (importNode as HTMLImportDocument).readyState === 'complete'
-        ) {
+        if (importNode && importNode.readyState === 'complete') {
           importNode.__CE_documentLoadHandled = true;
         } else {
           // If this link's import root is not available, its contents can't
@@ -417,7 +413,9 @@ export default class CustomElementInternals {
       return;
     }
 
-    return registry.internal_localNameToDefinition(localName);
+    return (registry as CustomElementRegistry).internal_localNameToDefinition(
+      localName
+    );
   }
 
   /**
@@ -438,7 +436,9 @@ export default class CustomElementInternals {
     // Only create custom elements if the document is associated with a
     // registry.
     if (registry && (namespace === null || namespace === NS_HTML)) {
-      const definition = registry.internal_localNameToDefinition(localName);
+      const definition = (registry as CustomElementRegistry).internal_localNameToDefinition(
+        localName
+      );
       if (definition) {
         try {
           const result = new definition.constructorFunction();
@@ -539,14 +539,24 @@ export default class CustomElementInternals {
    *
    * @see https://html.spec.whatwg.org/multipage/webappapis.html#report-the-exception
    */
-  reportTheException(error: Error) {
+  reportTheException(errorArg: Error) {
+    interface ExtendedError extends Error {
+      // Non-standard Safari properties.
+      sourceURL?: string;
+      line?: number;
+      column?: number;
+
+      // Non-standard Firefox properties.
+      fileName?: string;
+      lineNumber?: number;
+      columnNumber?: number;
+    }
+
+    const error = errorArg as ExtendedError;
     const message = error.message;
-    const filename =
-      /* Safari */ error.sourceURL || /* Firefox */ error.fileName || '';
-    const lineno =
-      /* Safari */ error.line || /* Firefox */ error.lineNumber || 0;
-    const colno =
-      /* Safari */ error.column || /* Firefox */ error.columnNumber || 0;
+    const filename = error.sourceURL || error.fileName || '';
+    const lineno = error.line || error.lineNumber || 0;
+    const colno = error.column || error.columnNumber || 0;
 
     let event: ErrorEvent | undefined = undefined;
     if (ErrorEvent.prototype.initErrorEvent === undefined) {
@@ -593,8 +603,4 @@ export default class CustomElementInternals {
       console.error(error);
     }
   }
-}
-
-declare interface HTMLImportDocument extends Node {
-  readyState: 'complete' | string;
 }

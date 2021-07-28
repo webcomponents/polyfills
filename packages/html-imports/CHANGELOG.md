@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Add TS externs. ([#457](https://github.com/webcomponents/polyfills/pull/457))
 - Upstream cl/345169174: Fix calls to XMLHttpRequest#getResponseHeader to accept
   null as a return value.
   ([#433](https://github.com/webcomponents/polyfills/pull/433))
