@@ -22,5 +22,10 @@
     "noFallthroughCasesInSwitch": true,
     "moduleResolution": "node"
   },
-  "include": ["ts_src/"]
+  "include": [
+    "externs/**/*.d.ts",
+    "node_modules/@webcomponents/html-imports/externs/html-imports.d.ts",
+    "node_modules/@webcomponents/shadydom/externs/shadydom.d.ts",
+    "ts_src/"
+  ]
 }

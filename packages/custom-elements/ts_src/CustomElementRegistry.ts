@@ -13,7 +13,6 @@ import {AlreadyConstructedMarkerType} from './AlreadyConstructedMarker.js';
 import CustomElementInternals from './CustomElementInternals.js';
 import Deferred from './Deferred.js';
 import DocumentConstructionObserver from './DocumentConstructionObserver.js';
-import {Constructor, CustomElementDefinition} from './Externs.js';
 import * as Utilities from './Utilities.js';
 
 interface ElementConstructor {
@@ -35,7 +34,7 @@ export default class CustomElementRegistry {
     CustomElementDefinition
   >();
   private readonly _constructorToDefinition = new Map<
-    Constructor<HTMLElement>,
+    ElementConstructor,
     CustomElementDefinition
   >();
   private _elementDefinitionIsRunning = false;

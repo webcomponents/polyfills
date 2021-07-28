@@ -11,8 +11,8 @@
 
 import AlreadyConstructedMarker from '../AlreadyConstructedMarker.js';
 import CustomElementInternals from '../CustomElementInternals.js';
+import CustomElementRegistry from '../CustomElementRegistry.js';
 import CEState from '../CustomElementState.js';
-import {Constructor} from '../Externs.js';
 import * as Native from './Native.js';
 
 export default function (internals: CustomElementInternals) {
@@ -21,11 +21,13 @@ export default function (internals: CustomElementInternals) {
     // emulated in ES5. Assuming the user keeps the default value of the
     // constructor's prototype's `constructor` property, this is
     // equivalent.
-    const constructor = this.constructor as Constructor<HTMLElement>;
+    const constructor = this.constructor as {new (): HTMLElement};
 
     // Always look up the definition from the global registry.
     const registry = document.__CE_registry!;
-    const definition = registry.internal_constructorToDefinition(constructor);
+    const definition = (registry as CustomElementRegistry).internal_constructorToDefinition(
+      constructor
+    );
     if (!definition) {
       throw new Error(
         'Failed to construct a custom element: ' +
