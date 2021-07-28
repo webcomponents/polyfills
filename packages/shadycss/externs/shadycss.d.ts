@@ -1,5 +1,4 @@
 /**
- * @externs
  * @license
  * Copyright (c) 2021 The Polymer Project Authors. All rights reserved. This
  * code may only be used under the BSD style license found at
