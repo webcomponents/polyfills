@@ -137,6 +137,14 @@ class Wrapper {
     }
   }
 
+  elementsFromPoint(x, y) {
+    return this.node[utils.SHADY_PREFIX + 'elementsFromPoint'](x, y);
+  }
+
+  elementFromPoint(x, y) {
+    return this.node[utils.SHADY_PREFIX + 'elementFromPoint'](x, y);
+  }
+
   // query
   querySelector(selector) {
     return this.node[utils.SHADY_PREFIX + 'querySelector'](selector);
