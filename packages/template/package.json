@@ -21,6 +21,7 @@
     "prepack": "npm run build"
   },
   "files": [
+    "CHANGELOG.md",
     "template.min.js*"
   ]
 }
