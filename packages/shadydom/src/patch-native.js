@@ -433,6 +433,11 @@ export const addNativePrefixedProperties = () => {
     defineNativeAccessors(Document.prototype, ParentNodeWalkerDescriptors);
   }
 
-  copyProperties(Document.prototype, ['importNode', 'getElementById']);
+  copyProperties(Document.prototype, [
+    'importNode',
+    'getElementById',
+    'elementFromPoint',
+    utils.getPropertyName(Document.prototype, 'elementsFromPoint'),
+  ]);
   copyProperties(Document.prototype, ParentNodeMethods);
 };

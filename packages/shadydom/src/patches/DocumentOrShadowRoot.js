@@ -19,6 +19,32 @@ function getDocumentActiveElement() {
   }
 }
 
+// Get the element within the given set of roots.
+function getElInRoot(roots, el) {
+  let elRoot;
+  while (
+    el &&
+    !roots.has((elRoot = el[utils.SHADY_PREFIX + 'getRootNode']()))
+  ) {
+    el = elRoot.host;
+  }
+  return el;
+}
+
+function getAncestorRoots(docOrRoot) {
+  const roots = new Set();
+  roots.add(docOrRoot);
+  while (utils.isShadyRoot(docOrRoot) && docOrRoot.host) {
+    docOrRoot = docOrRoot.host[utils.SHADY_PREFIX + 'getRootNode']();
+    roots.add(docOrRoot);
+  }
+  return roots;
+}
+
+const elementsFromPointProperty =
+  utils.NATIVE_PREFIX +
+  utils.getPropertyName(Document.prototype, 'elementsFromPoint');
+
 export const DocumentOrShadowRootPatches = utils.getOwnPropertyDescriptors({
   /** @this {Document|ShadowRoot} */
   get activeElement() {
@@ -62,5 +88,28 @@ export const DocumentOrShadowRootPatches = utils.getOwnPropertyDescriptors({
       // activeRoot.
       return activeRoot === this ? active : null;
     }
+  },
+
+  elementsFromPoint(x, y) {
+    const nativeResult = utils.arrayFrom(
+      document[elementsFromPointProperty](x, y)
+    );
+    // Filter native result to return the element in this root
+    // OR an above root.
+    // Set containing this root and its ancestor roots.
+    const ancestorRoots = getAncestorRoots(this);
+    // Use a Set since the elements can repeat.
+    const rootedResult = new Set();
+    for (let i = 0; i < nativeResult.length; i++) {
+      rootedResult.add(getElInRoot(ancestorRoots, nativeResult[i]));
+    }
+    // Note, for IE compat avoid Array.from(set).
+    const r = [];
+    rootedResult.forEach((x) => r.push(x));
+    return r;
+  },
+
+  elementFromPoint(x, y) {
+    return this[utils.SHADY_PREFIX + 'elementsFromPoint'](x, y)[0] || null;
   },
 });
