@@ -9,8 +9,6 @@
  * rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
-import {HTMLImportElement} from './Externs.js';
-
 const reservedElementNameSet = new Set<string>();
 // IE11 does not support constructing a set using an iterable.
 [
@@ -111,7 +109,7 @@ export function walkDeepDescendantElements(
       if (localName === 'link' && element.getAttribute('rel') === 'import') {
         // If this import (polyfilled or not) has its root node available,
         // walk it.
-        const importNode = (element as HTMLImportElement).import;
+        const importNode = (element as HTMLLinkElement).import;
         if (visitedImports === undefined) {
           visitedImports = new Set();
         }

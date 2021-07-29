@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Adds `element(s)FromPoint` to `document` and `shadowRoot`
   ([#463]https://github.com/webcomponents/polyfills/pull/463)
-
+- Add TS externs. ([#457](https://github.com/webcomponents/polyfills/pull/457))
 - When `EventTarget.prototype` exists but is not in the prototype chain of
   `window`, polyfill installation breaks.
   ([#416](https://github.com/webcomponents/polyfills/pull/416))
