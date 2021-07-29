@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Add `@this` annotation to new `elementFromPoint` wrappers.
+  ([#464]https://github.com/webcomponents/polyfills/pull/464)
 - Adds `element(s)FromPoint` to `document` and `shadowRoot`
   ([#463]https://github.com/webcomponents/polyfills/pull/463)
 - Add TS externs. ([#457](https://github.com/webcomponents/polyfills/pull/457))
