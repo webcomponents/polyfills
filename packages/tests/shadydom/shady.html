@@ -36,6 +36,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     <script src="../node_modules/@webcomponents/shadydom/shadydom.min.js"></script>
 
     <script src="../node_modules/wct-browser-legacy/browser.js"></script>
+    <style>
+      body {
+        margin: 0;
+      }
+    </style>
   </head>
   <body>
     <script>
@@ -1459,6 +1464,143 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           });
         });
       });
+
+      const supportsElementsFromPoint = !!(
+        ShadyDOM.nativeMethods.elementsFromPoint ||
+        ShadyDOM.nativeMethods.msElementsFromPoint
+      );
+
+      (supportsElementsFromPoint ? suite : suite.skip)(
+        'element(s)FromPoint',
+        function () {
+          const position = (e, x, y) => {
+            y = y === undefined ? x : y;
+            e.setAttribute(
+              'style',
+              `position: fixed; display: inline-block; background: gray; height: 10px; width: 10px; left: ${x}px; top: ${y}px;`
+            );
+          };
+
+          const createAndPosition = (container, x, y) => {
+            const d = document.createElement('div');
+            position(d, x, y);
+            return ShadyDOM.wrapIfNeeded(container).appendChild(d);
+          };
+
+          const createAndPositionEls = (container, count = 5, offset = 0) => {
+            const els = [];
+            for (let i = 0; i < count; i++) {
+              const at = offset + i;
+              els.push(createAndPosition(container, at, at));
+            }
+            return els;
+          };
+
+          test('elementFromPoint', function () {
+            const host = createAndPosition(document.body, 10);
+            const shadowRoot = ShadyDOM.wrapIfNeeded(host).attachShadow({
+              mode: 'open',
+            });
+            const inner = createAndPosition(shadowRoot, 0);
+            // Does not see element in SR but sees host.
+            let e = ShadyDOM.wrap(document).elementFromPoint(5, 5);
+            assert.equal(e, host);
+            e = ShadyDOM.wrap(document).elementFromPoint(15, 15);
+            assert.equal(e, host);
+            // Sees element in SR
+            e = ShadyDOM.wrap(shadowRoot).elementFromPoint(5, 5);
+            assert.equal(e, inner);
+            // SR see element in ancestor scope
+            e = ShadyDOM.wrap(shadowRoot).elementFromPoint(50, 50);
+            assert.equal(e, document.body);
+            ShadyDOM.wrapIfNeeded(host).remove();
+          });
+
+          test('elementsFromPoint', function () {
+            // elements:
+            // 1. with .shadowRoot with 2 elements each with shadowRoot + 1 el
+            // 2. with .shadowRoot with 1 element each with shadowRoot + 1 el
+            const el1 = createAndPosition(document.body, 1);
+            el1.id = 'el1';
+            el1.el1 = createAndPosition(
+              ShadyDOM.wrapIfNeeded(el1).attachShadow({
+                mode: 'open',
+              }),
+              1
+            );
+            el1.el1.id = 'el1.el1';
+            el1.el1.el = createAndPosition(
+              ShadyDOM.wrapIfNeeded(el1.el1).attachShadow({
+                mode: 'open',
+              }),
+              20
+            );
+            el1.el1.el.id = 'el1.el1.el';
+            el1.el2 = createAndPosition(
+              ShadyDOM.wrapIfNeeded(el1).shadowRoot,
+              20
+            );
+            el1.el2.id = 'el1.el2';
+            el1.el2.el = createAndPosition(
+              ShadyDOM.wrapIfNeeded(el1.el2).attachShadow({
+                mode: 'open',
+              }),
+              1
+            );
+            el1.el2.el.id = 'el1.el2.el';
+
+            const el2 = createAndPosition(document.body, 100);
+            el2.id = 'el2';
+            el2.el = createAndPosition(
+              ShadyDOM.wrapIfNeeded(el2).attachShadow({
+                mode: 'open',
+              }),
+              100
+            );
+            el2.el.id = 'el2.el';
+            el2.el.el = createAndPosition(
+              ShadyDOM.wrapIfNeeded(el2.el).attachShadow({
+                mode: 'open',
+              }),
+              100
+            );
+            el2.el.el.id = 'el2.el.el';
+            const background = [document.body, document.documentElement];
+            let els = ShadyDOM.wrap(document).elementsFromPoint(0, 0);
+            assert.deepEqual(els, background);
+            // Does not see elements in SR
+            els = ShadyDOM.wrap(document).elementsFromPoint(2, 2);
+            assert.deepEqual(els, [el1, ...background]);
+            els = ShadyDOM.wrap(document).elementsFromPoint(105, 105);
+            assert.deepEqual(els, [el2, ...background]);
+            // Sees dynamically positioned elements
+            position(el2, 1, 1);
+            els = ShadyDOM.wrap(document).elementsFromPoint(2, 2);
+            assert.deepEqual(els, [el2, el1, ...background]);
+            // Inside shadowRoots...
+            els = ShadyDOM.wrap(el1).shadowRoot.elementsFromPoint(2, 2);
+            assert.deepEqual(els, [el2, el1.el2, el1.el1, el1, ...background]);
+            // Sees dynamically positioned elements
+            position(el2, 100, 100);
+            els = ShadyDOM.wrap(el1).shadowRoot.elementsFromPoint(2, 2);
+            assert.deepEqual(els, [el1.el2, el1.el1, el1, ...background]);
+            // Inside nested shadowRoots...
+            els = ShadyDOM.wrap(el1.el1).shadowRoot.elementsFromPoint(2, 2);
+            assert.deepEqual(els, [el1.el2, el1.el1, el1, ...background]);
+            els = ShadyDOM.wrap(el1.el1).shadowRoot.elementsFromPoint(22, 22);
+            assert.deepEqual(els, [el1.el2, el1.el1.el, ...background]);
+            // Sees dynamically positioned elements
+            position(el1.el2, 100, 100);
+            position(el1.el2.el, 100, 100);
+            els = ShadyDOM.wrap(el1.el1).shadowRoot.elementsFromPoint(2, 2);
+            assert.deepEqual(els, [el1.el1, el1, ...background]);
+            els = ShadyDOM.wrap(el1.el1).shadowRoot.elementsFromPoint(22, 22);
+            assert.deepEqual(els, [el1.el1.el, ...background]);
+            ShadyDOM.wrapIfNeeded(el1).remove();
+            ShadyDOM.wrapIfNeeded(el2).remove();
+          });
+        }
+      );
 
       suite('Patch of innerHTML setter', function () {
         test('support top-level table elements in template', function () {
