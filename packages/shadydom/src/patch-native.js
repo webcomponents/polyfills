@@ -437,7 +437,7 @@ export const addNativePrefixedProperties = () => {
     'importNode',
     'getElementById',
     'elementFromPoint',
-    'elementsFromPoint',
+    utils.getPropertyName('elementsFromPoint'),
   ]);
   copyProperties(Document.prototype, ParentNodeMethods);
 };

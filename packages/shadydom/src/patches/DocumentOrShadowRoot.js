@@ -41,6 +41,9 @@ function getAncestorRoots(docOrRoot) {
   return roots;
 }
 
+const elementsFromPointProperty =
+  utils.NATIVE_PREFIX + utils.getPropertyName('elementsFromPoint');
+
 export const DocumentOrShadowRootPatches = utils.getOwnPropertyDescriptors({
   /** @this {Document|ShadowRoot} */
   get activeElement() {
@@ -88,7 +91,7 @@ export const DocumentOrShadowRootPatches = utils.getOwnPropertyDescriptors({
 
   elementsFromPoint(x, y) {
     const nativeResult = utils.arrayFrom(
-      document[utils.NATIVE_PREFIX + 'elementsFromPoint'](x, y)
+      document[elementsFromPointProperty](x, y)
     );
     // Filter native result to return the element in this root
     // OR an above root.

@@ -40,6 +40,10 @@ settings.patchOnDemand = settings.noPatch === 'on-demand';
 const IS_IE = navigator.userAgent.match('Trident');
 settings.IS_IE = IS_IE;
 
+// Helper for prefixed properties.
+export const getPropertyName = (name) =>
+  IS_IE && name === 'elementsFromPoint' ? 'msElementsFromPoint' : name;
+
 export const canUpgrade = () => !settings.IS_IE;
 
 export const isTrackingLogicalChildNodes = (node) => {
