@@ -103,7 +103,10 @@ export const DocumentOrShadowRootPatches = utils.getOwnPropertyDescriptors({
     for (let i = 0; i < nativeResult.length; i++) {
       rootedResult.add(getElInRoot(ancestorRoots, nativeResult[i]));
     }
-    return Array.from(rootedResult);
+    // Note, for IE compat avoid Array.from(set).
+    const r = [];
+    rootedResult.forEach((x) => r.push(x));
+    return r;
   },
 
   elementFromPoint(x, y) {

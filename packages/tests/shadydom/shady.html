@@ -1475,7 +1475,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         function () {
           const position = (e, x, y) => {
             y = y === undefined ? x : y;
-            e.style = `position: fixed; display: inline-block; background: gray; height: 10px; width: 10px; left: ${x}px; top: ${y}px;`;
+            e.setAttribute(
+              'style',
+              `position: fixed; display: inline-block; background: gray; height: 10px; width: 10px; left: ${x}px; top: ${y}px;`
+            );
           };
 
           const createAndPosition = (container, x, y) => {
