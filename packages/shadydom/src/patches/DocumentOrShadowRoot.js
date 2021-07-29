@@ -90,6 +90,7 @@ export const DocumentOrShadowRootPatches = utils.getOwnPropertyDescriptors({
     }
   },
 
+  /** @this {Document|ShadowRoot} */
   elementsFromPoint(x, y) {
     const nativeResult = utils.arrayFrom(
       document[elementsFromPointProperty](x, y)
@@ -109,6 +110,7 @@ export const DocumentOrShadowRootPatches = utils.getOwnPropertyDescriptors({
     return r;
   },
 
+  /** @this {Document|ShadowRoot} */
   elementFromPoint(x, y) {
     return this[utils.SHADY_PREFIX + 'elementsFromPoint'](x, y)[0] || null;
   },
