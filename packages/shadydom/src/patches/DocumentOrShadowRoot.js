@@ -42,7 +42,8 @@ function getAncestorRoots(docOrRoot) {
 }
 
 const elementsFromPointProperty =
-  utils.NATIVE_PREFIX + utils.getPropertyName('elementsFromPoint');
+  utils.NATIVE_PREFIX +
+  utils.getPropertyName(Document.prototype, 'elementsFromPoint');
 
 export const DocumentOrShadowRootPatches = utils.getOwnPropertyDescriptors({
   /** @this {Document|ShadowRoot} */

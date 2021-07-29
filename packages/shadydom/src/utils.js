@@ -41,8 +41,10 @@ const IS_IE = navigator.userAgent.match('Trident');
 settings.IS_IE = IS_IE;
 
 // Helper for prefixed properties.
-export const getPropertyName = (name) =>
-  IS_IE && name === 'elementsFromPoint' ? 'msElementsFromPoint' : name;
+export const getPropertyName = (obj, name) => {
+  const prefixed = `ms${name[0].toUpperCase() + name.slice(1)}`;
+  return obj[prefixed] ? prefixed : name;
+};
 
 export const canUpgrade = () => !settings.IS_IE;
 
