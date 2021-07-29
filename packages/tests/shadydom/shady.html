@@ -1506,7 +1506,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           ShadyDOM.wrapIfNeeded(host).remove();
         });
 
-        test('elementsFromPoint', function () {
+        const supportsElementsFromPoint = !!(
+          ShadyDOM.nativeMethods.elementsFromPoint ||
+          ShadyDOM.nativeMethods.msElementsFromPoint
+        );
+
+        (supportsElementsFromPoint
+          ? test
+          : test.skip)('elementsFromPoint', function () {
           // elements:
           // 1. with .shadowRoot with 2 elements each with shadowRoot + 1 el
           // 2. with .shadowRoot with 1 element each with shadowRoot + 1 el
