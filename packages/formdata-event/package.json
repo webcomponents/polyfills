@@ -1,6 +1,6 @@
 {
   "name": "@webcomponents/formdata-event",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "private": true,
   "publishConfig": {
     "access": "public"
@@ -30,6 +30,5 @@
     "formdata",
     "event",
     "polyfill"
-  ],
-  "devDependencies": {}
+  ]
 }
