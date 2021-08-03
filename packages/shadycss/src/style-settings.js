@@ -13,13 +13,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 export const nativeShadow = !(
   window['ShadyDOM'] && window['ShadyDOM']['inUse']
 );
+/** @type {boolean} */
 let nativeCssVariables_;
 
 /**
  * @param {(ShadyCSSOptions | ShadyCSSInterface)=} settings
  */
 function calcCssVariables(settings) {
-  if (settings && settings['shimcssproperties']) {
+  if (settings && settings.shimcssproperties) {
     nativeCssVariables_ = false;
   } else {
     // chrome 49 has semi-working css vars, check if box-shadow works
