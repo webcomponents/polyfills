@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- ## Unreleased -->
 
+## Unreleased
+
+- Allow event listener options to be specified using a function in addition to
+  an object ([#469]https://github.com/webcomponents/polyfills/pull/469)
+
 ## [1.9.0] - 2021-08-02
 
 - Add `@this` annotation to new `elementFromPoint` wrappers.
