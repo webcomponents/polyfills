@@ -1259,7 +1259,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       });
 
       suite('Patch of addEventListener/removeEventListener', function () {
-        var el1, el2, callback;
+        var el1, el2, parent, child, gchild, callback;
 
         setup(function () {
           el1 = document.createElement('button');
@@ -1269,6 +1269,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           el2 = document.createElement('button');
           ShadyDOM.wrapIfNeeded(el2).textContent = 'hi again';
           ShadyDOM.wrapIfNeeded(document.body).appendChild(el2);
+
+          parent = document.createElement('div');
+          child = document.createElement('div');
+          gchild = document.createElement('div');
+          ShadyDOM.wrapIfNeeded(child).appendChild(gchild);
+          ShadyDOM.wrapIfNeeded(parent).appendChild(child);
+          ShadyDOM.wrapIfNeeded(document.body).appendChild(parent);
 
           callback = sinon.stub();
         });
@@ -1282,6 +1289,62 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             ShadyDOM.wrapIfNeeded(
               ShadyDOM.wrapIfNeeded(el2).parentNode
             ).removeChild(el2);
+          ShadyDOM.wrapIfNeeded(parent).parentNode &&
+            ShadyDOM.wrapIfNeeded(
+              ShadyDOM.wrapIfNeeded(parent).parentNode
+            ).removeChild(parent);
+        });
+
+        test('events bubble as expected with different listener options', function () {
+          const test = (options) => {
+            const targets = [];
+            const listener = (e) => targets.push(e.currentTarget);
+            const event = 'test-bubble-event';
+            ShadyDOM.wrap(parent).addEventListener(event, listener, options);
+            ShadyDOM.wrap(child).addEventListener(event, listener, options);
+            ShadyDOM.wrap(gchild).addEventListener(event, listener, options);
+            ShadyDOM.wrap(gchild).dispatchEvent(
+              new CustomEvent(event, {bubbles: true})
+            );
+            assert.deepEqual(targets, [gchild, child, parent]);
+            ShadyDOM.wrap(parent).removeEventListener(event, listener, options);
+            ShadyDOM.wrap(child).removeEventListener(event, listener, options);
+            ShadyDOM.wrap(gchild).removeEventListener(event, listener, options);
+          };
+          // no options
+          test();
+          // options as boolean
+          test(false);
+          // options as object
+          test({capture: false});
+          // options as function
+          const f = () => {};
+          f.capture = false;
+          test(f);
+        });
+
+        test('events capture as expected with different listener options', function () {
+          const test = (options) => {
+            const targets = [];
+            const listener = (e) => targets.push(e.currentTarget);
+            const event = 'test-event';
+            ShadyDOM.wrap(parent).addEventListener(event, listener, options);
+            ShadyDOM.wrap(child).addEventListener(event, listener, options);
+            ShadyDOM.wrap(gchild).addEventListener(event, listener, options);
+            ShadyDOM.wrap(gchild).dispatchEvent(new CustomEvent(event));
+            assert.deepEqual(targets, [parent, child, gchild]);
+            ShadyDOM.wrap(parent).removeEventListener(event, listener, options);
+            ShadyDOM.wrap(child).removeEventListener(event, listener, options);
+            ShadyDOM.wrap(gchild).removeEventListener(event, listener, options);
+          };
+          // options as boolean
+          test(true);
+          // options as object
+          test({capture: true});
+          // options as function
+          const f = () => {};
+          f.capture = true;
+          test(f);
         });
 
         test('different events, same callback', function () {
