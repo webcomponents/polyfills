@@ -29,7 +29,12 @@ const supportsEventOptions = (() => {
   return supported;
 })();
 
-if (!supportsEventOptions) {
+const nativeEventTarget = window.EventTarget ?? window.Node;
+
+if (
+  !supportsEventOptions &&
+  'addEventListener' in nativeEventTarget.prototype
+) {
   const parseEventOptions = (
     optionsOrCapture?: boolean | AddEventListenerOptions
   ) => {
@@ -50,10 +55,11 @@ if (!supportsEventOptions) {
     };
   };
 
-  const origAddEventListener = EventTarget.prototype.addEventListener;
-  const origRemoveEventListener = EventTarget.prototype.removeEventListener;
+  const origAddEventListener = nativeEventTarget.prototype.addEventListener;
+  const origRemoveEventListener =
+    nativeEventTarget.prototype.removeEventListener;
 
-  EventTarget.prototype.addEventListener = function (
+  nativeEventTarget.prototype.addEventListener = function (
     type: string,
     listener: EventListenerOrEventListenerObject | null,
     options?: boolean | AddEventListenerOptions | undefined
@@ -68,7 +74,7 @@ if (!supportsEventOptions) {
     origAddEventListener.call(this, type, nativeListener, capture);
   };
 
-  EventTarget.prototype.removeEventListener = function (
+  nativeEventTarget.prototype.removeEventListener = function (
     type: string,
     listener: EventListenerOrEventListenerObject | null,
     options?: boolean | AddEventListenerOptions | undefined
