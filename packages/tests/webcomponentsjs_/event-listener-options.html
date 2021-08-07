@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<!--
+@license
+Copyright (c) 2020 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<html>
+  <head>
+    <title>Event Listener Options</title>
+    <script src="../node_modules/@webcomponents/webcomponentsjs/bundles/webcomponents-pf_dom.js"></script>
+    <script src="./wct-config.js"></script>
+    <script src="../node_modules/wct-browser-legacy/browser.js"></script>
+  </head>
+  <body>
+    <script>
+      suite(
+        'addEventListener/removeEventListener with event listener options',
+        function () {
+          var el1, el2, parent, child, gchild, callback;
+
+          setup(function () {
+            el1 = document.createElement('button');
+            el1.textContent = 'hi';
+            document.body.appendChild(el1);
+
+            el2 = document.createElement('button');
+            el2.textContent = 'hi again';
+            document.body.appendChild(el2);
+
+            parent = document.createElement('div');
+            child = document.createElement('div');
+            gchild = document.createElement('div');
+            child.appendChild(gchild);
+            parent.appendChild(child);
+            document.body.appendChild(parent);
+
+            callback = sinon.stub();
+          });
+
+          teardown(function () {
+            el1.parentNode && el1.parentNode.removeChild(el1);
+            el2.parentNode && el2.parentNode.removeChild(el2);
+            parent.parentNode && parent.parentNode.removeChild(parent);
+          });
+
+          test('events bubble as expected with different listener options', function () {
+            const test = (options) => {
+              const targets = [];
+              const listener = (e) => targets.push(e.currentTarget);
+              const event = 'test-bubble-event';
+              parent.addEventListener(event, listener, options);
+              child.addEventListener(event, listener, options);
+              gchild.addEventListener(event, listener, options);
+              gchild.dispatchEvent(new CustomEvent(event, {bubbles: true}));
+              assert.deepEqual(targets, [gchild, child, parent]);
+              parent.removeEventListener(event, listener, options);
+              child.removeEventListener(event, listener, options);
+              gchild.removeEventListener(event, listener, options);
+            };
+            // no options
+            test();
+            // options as boolean
+            test(false);
+            // options as object
+            test({capture: false});
+            // options as function
+            const f = () => {};
+            f.capture = false;
+            test(f);
+          });
+
+          test('events capture as expected with different listener options', function () {
+            const test = (options) => {
+              const targets = [];
+              const listener = (e) => targets.push(e.currentTarget);
+              const event = 'test-event';
+              parent.addEventListener(event, listener, options);
+              child.addEventListener(event, listener, options);
+              gchild.addEventListener(event, listener, options);
+              gchild.dispatchEvent(new CustomEvent(event));
+              assert.deepEqual(targets, [parent, child, gchild]);
+              parent.removeEventListener(event, listener, options);
+              child.removeEventListener(event, listener, options);
+              gchild.removeEventListener(event, listener, options);
+            };
+            // options as boolean
+            test(true);
+            // options as object
+            test({capture: true});
+            // options as function
+            const f = () => {};
+            f.capture = true;
+            test(f);
+          });
+
+          test('different events, same callback', function () {
+            el1.addEventListener('test-event-1', callback);
+            el1.addEventListener('test-event-2', callback);
+            el1.dispatchEvent(new CustomEvent('test-event-1'));
+            el1.dispatchEvent(new CustomEvent('test-event-2'));
+            assert.equal(callback.callCount, 2, 'called twice');
+            el1.removeEventListener('test-event-1', callback);
+            el1.removeEventListener('test-event-2', callback);
+            el1.dispatchEvent(new CustomEvent('test-event-1'));
+            el1.dispatchEvent(new CustomEvent('test-event-2'));
+            assert.equal(
+              callback.callCount,
+              2,
+              'listeners removed (callCount did not increase)'
+            );
+          });
+
+          test('support `once` option', function () {
+            el1.addEventListener('click', callback, {once: true});
+            el1.click();
+            assert.equal(callback.callCount, 1, 'listener called once');
+            el1.click();
+            assert.equal(
+              callback.callCount,
+              1,
+              'listener automatically removed (callCount did not increase)'
+            );
+          });
+
+          test('same event, same callback, different options', function () {
+            el1.addEventListener('click', callback, {
+              passive: true,
+            });
+            el1.addEventListener('click', callback, {
+              capture: true,
+            });
+            el1.click();
+            assert.equal(callback.callCount, 2, 'called twice');
+            el1.removeEventListener('click', callback, {
+              passive: true,
+            });
+            el1.click();
+            assert.equal(callback.callCount, 3, 'called by capturing listener');
+            el1.removeEventListener('click', callback, {
+              capture: true,
+            });
+            el1.click();
+            assert.equal(
+              callback.callCount,
+              3,
+              'listeners removed (callCount did not increase)'
+            );
+          });
+
+          test('add same listener twice, invoke callback once', function () {
+            el1.addEventListener('click', callback);
+            el1.addEventListener('click', callback);
+            el1.click();
+            assert.equal(callback.callCount, 1, 'called once');
+            el1.removeEventListener('click', callback);
+            el1.click();
+            assert.equal(
+              callback.callCount,
+              1,
+              'listener removed (callCount did not increase)'
+            );
+          });
+
+          test('add same listener twice, invoke callback once (different useCapture notation)', function () {
+            el1.addEventListener('click', callback, true /* useCapture */);
+            el1.addEventListener('click', callback, {
+              capture: true,
+            });
+            el1.click();
+            assert.equal(callback.callCount, 1, 'listener called once');
+            el1.removeEventListener('click', callback, {
+              capture: true,
+            });
+            el1.click();
+            assert.equal(
+              callback.callCount,
+              1,
+              'listener removed (callCount did not increase)'
+            );
+          });
+
+          test('add same listener twice, different order of options keys', function () {
+            el1.addEventListener('click', callback, {
+              capture: false,
+              passive: true,
+            });
+            el1.addEventListener('click', callback, {
+              passive: true,
+              capture: false,
+            });
+            el1.click();
+            assert.equal(callback.callCount, 1, 'listener called once');
+            el1.removeEventListener('click', callback, {
+              passive: true,
+              capture: false,
+            });
+            el1.click();
+            assert.equal(
+              callback.callCount,
+              1,
+              'listener removed (callCount did not increase)'
+            );
+          });
+
+          test('add same listener on two different nodes', function () {
+            el1.addEventListener('click', callback);
+            el2.addEventListener('click', callback);
+            el1.click();
+            assert.equal(callback.callCount, 1, 'called once');
+            el2.click();
+            assert.equal(callback.callCount, 2, 'called twice');
+            el1.removeEventListener('click', callback);
+            el2.removeEventListener('click', callback);
+            el1.click();
+            el2.click();
+            assert.equal(
+              callback.callCount,
+              2,
+              'listeners removed (callCount did not increase)'
+            );
+          });
+
+          test('add listener with `handleEvent` function', function () {
+            var obj = {handleEvent: sinon.stub()};
+            el1.addEventListener('click', obj);
+            el2.addEventListener('click', obj);
+            el1.click();
+            assert.isTrue(
+              obj.handleEvent.calledOn(obj),
+              'called on object listened'
+            );
+            assert.isTrue(
+              obj.handleEvent.args[0][0] instanceof Event,
+              'called with event argument'
+            );
+            assert.equal(obj.handleEvent.callCount, 1, 'called once');
+            el2.click();
+            assert.equal(obj.handleEvent.callCount, 2, 'called twice');
+            el1.removeEventListener('click', obj);
+            el2.removeEventListener('click', obj);
+            el1.click();
+            el2.click();
+            assert.equal(
+              obj.handleEvent.callCount,
+              2,
+              'listeners removed (callCount did not increase)'
+            );
+          });
+
+          test('add null listener', function () {
+            assert.doesNotThrow(function () {
+              el1.addEventListener('baz', null);
+            });
+          });
+        }
+      );
+    </script>
+  </body>
+</html>

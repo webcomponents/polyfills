@@ -9,6 +9,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 */
 
 import '../platform/custom-event.js';
+import '../platform/event-listener-options.js';
 import '../platform/baseuri.js';
 import '../platform/get-attribute-names.js';
 import '../platform/matches.js';
