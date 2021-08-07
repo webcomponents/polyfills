@@ -67,7 +67,7 @@ if (
     const {capture, once} = parseEventOptions(options);
     const nativeListener = once
       ? (e: Event) => {
-          this.removeEventListener(type, nativeListener, capture);
+          origRemoveEventListener.call(this, type, nativeListener, capture);
           ((listener as EventListenerObject).handleEvent ?? listener)(e);
         }
       : listener;

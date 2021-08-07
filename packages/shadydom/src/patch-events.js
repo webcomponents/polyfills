@@ -514,7 +514,7 @@ export function addEventListener(type, fnOrObj, optionsOrCapture) {
    * @this {HTMLElement}
    * @param {Event} e
    */
-  const wrapperFn = function (e) {
+  const wrapperFn = (e) => {
     // Support `once` option.
     if (once) {
       this[utils.SHADY_PREFIX + 'removeEventListener'](
