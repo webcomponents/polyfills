@@ -1364,6 +1364,58 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           );
         });
 
+        test('listener adding de-duplicate based only on capture option', function () {
+          ShadyDOM.wrap(el1).addEventListener('click', callback);
+          ShadyDOM.wrap(el1).addEventListener('click', callback);
+          el1.click();
+          assert.equal(callback.callCount, 1, 'listener called once');
+          ShadyDOM.wrap(el1).addEventListener('click', callback, {
+            passive: true,
+          });
+          el1.click();
+          assert.equal(callback.callCount, 2, 'listener called once');
+          ShadyDOM.wrap(el1).addEventListener('click', callback, {once: true});
+          el1.click();
+          assert.equal(callback.callCount, 3, 'listener called once');
+          // once not honored because listener not added.
+          el1.click();
+          assert.equal(callback.callCount, 4, 'listener called once');
+          ShadyDOM.wrap(el1).addEventListener('click', callback, true);
+          el1.click();
+          assert.equal(callback.callCount, 6, 'listener called 2x');
+          ShadyDOM.wrap(el1).addEventListener('click', callback, true);
+          el1.click();
+          assert.equal(callback.callCount, 8, 'listener called 2x');
+        });
+
+        test('listener removing de-duplicate based only on capture option', function () {
+          ShadyDOM.wrap(el1).addEventListener('click', callback);
+          ShadyDOM.wrap(el1).addEventListener('click', callback);
+          ShadyDOM.wrap(el1).removeEventListener('click', callback);
+          el1.click();
+          assert.equal(callback.callCount, 0, 'listener not called');
+          ShadyDOM.wrap(el1).addEventListener('click', callback, {
+            passive: true,
+          });
+          ShadyDOM.wrap(el1).removeEventListener('click', callback);
+          el1.click();
+          assert.equal(callback.callCount, 0, 'listener not called');
+          ShadyDOM.wrap(el1).addEventListener('click', callback);
+          ShadyDOM.wrap(el1).removeEventListener('click', callback, true);
+          el1.click();
+          assert.equal(callback.callCount, 1, 'listener called');
+          ShadyDOM.wrap(el1).removeEventListener('click', callback);
+          el1.click();
+          assert.equal(callback.callCount, 1, 'listener not called');
+          ShadyDOM.wrap(el1).addEventListener('click', callback, true);
+          ShadyDOM.wrap(el1).removeEventListener('click', callback);
+          el1.click();
+          assert.equal(callback.callCount, 2, 'listener called');
+          ShadyDOM.wrap(el1).removeEventListener('click', callback, true);
+          el1.click();
+          assert.equal(callback.callCount, 2, 'listener not called');
+        });
+
         test('support `once` option', function () {
           ShadyDOM.wrap(el1).addEventListener('click', callback, {once: true});
           el1.click();

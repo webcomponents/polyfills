@@ -43,25 +43,22 @@ const supportsEventOptions = (() => {
 })();
 
 const parseEventOptions = (optionsOrCapture) => {
-  let capture, once, passive, shadyTarget;
+  let capture, once, shadyTarget;
   if (
     optionsOrCapture &&
     (typeof optionsOrCapture === 'object' || optionsOrCapture instanceof Object)
   ) {
     capture = Boolean(optionsOrCapture.capture);
     once = Boolean(optionsOrCapture.once);
-    passive = Boolean(optionsOrCapture.passive);
     shadyTarget = optionsOrCapture.__shadyTarget;
   } else {
     capture = Boolean(optionsOrCapture);
     once = false;
-    passive = false;
   }
   return {
     shadyTarget,
     capture,
     once,
-    passive,
     nativeEventOptions: supportsEventOptions ? optionsOrCapture : capture,
   };
 };
@@ -382,35 +379,14 @@ function shadyDispatchEvent(e) {
   currentTarget = null;
 }
 
-function listenerSettingsEqual(
-  savedListener,
-  node,
-  type,
-  capture,
-  once,
-  passive
-) {
-  let {
-    node: savedNode,
-    type: savedType,
-    capture: savedCapture,
-    once: savedOnce,
-    passive: savedPassive,
-  } = savedListener;
-  return (
-    node === savedNode &&
-    type === savedType &&
-    capture === savedCapture &&
-    once === savedOnce &&
-    passive === savedPassive
-  );
+function listenerSettingsEqual(savedListener, node, type, capture) {
+  let {node: savedNode, type: savedType, capture: savedCapture} = savedListener;
+  return node === savedNode && type === savedType && capture === savedCapture;
 }
 
-export function findListener(wrappers, node, type, capture, once, passive) {
+export function findListener(wrappers, node, type, capture) {
   for (let i = 0; i < wrappers.length; i++) {
-    if (
-      listenerSettingsEqual(wrappers[i], node, type, capture, once, passive)
-    ) {
+    if (listenerSettingsEqual(wrappers[i], node, type, capture)) {
       return i;
     }
   }
@@ -458,13 +434,9 @@ export function dispatchEvent(event) {
  * @this {EventTarget}
  */
 export function addEventListener(type, fnOrObj, optionsOrCapture) {
-  const {
-    capture,
-    once,
-    passive,
-    shadyTarget,
-    nativeEventOptions,
-  } = parseEventOptions(optionsOrCapture);
+  const {capture, once, shadyTarget, nativeEventOptions} = parseEventOptions(
+    optionsOrCapture
+  );
   if (!fnOrObj) {
     return;
   }
@@ -506,7 +478,7 @@ export function addEventListener(type, fnOrObj, optionsOrCapture) {
     // for few nodes at most, whereas a node will likely have many event listeners).
     // NOTE(valdrin) invoking external functions is costly, inline has better perf.
     // Stop if the wrapper function has already been created.
-    if (findListener(wrappers, target, type, capture, once, passive) > -1) {
+    if (findListener(wrappers, target, type, capture) > -1) {
       return;
     }
   } else {
@@ -613,8 +585,6 @@ export function addEventListener(type, fnOrObj, optionsOrCapture) {
     node: target,
     type: type,
     capture: capture,
-    once: once,
-    passive: passive,
     wrapperFn: wrapperFn,
   });
 
@@ -641,13 +611,9 @@ export function removeEventListener(type, fnOrObj, optionsOrCapture) {
   if (!fnOrObj) {
     return;
   }
-  const {
-    capture,
-    once,
-    passive,
-    shadyTarget,
-    nativeEventOptions,
-  } = parseEventOptions(optionsOrCapture);
+  const {capture, shadyTarget, nativeEventOptions} = parseEventOptions(
+    optionsOrCapture
+  );
   if (unpatchedEvents[type]) {
     return this[utils.NATIVE_PREFIX + 'removeEventListener'](
       type,
@@ -660,7 +626,7 @@ export function removeEventListener(type, fnOrObj, optionsOrCapture) {
   let wrapperFn = undefined;
   let wrappers = getEventWrappers(fnOrObj);
   if (wrappers) {
-    let idx = findListener(wrappers, target, type, capture, once, passive);
+    let idx = findListener(wrappers, target, type, capture);
     if (idx > -1) {
       wrapperFn = wrappers.splice(idx, 1)[0].wrapperFn;
       // Cleanup.
