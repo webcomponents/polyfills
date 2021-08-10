@@ -14,20 +14,21 @@ export {};
 // Older browsers like IE do not support an object as the options parameter
 // to add/removeEventListener.
 // https://connect.microsoft.com/IE/feedback/details/790389/event-defaultprevented-returns-false-after-preventdefault-was-called
-const supportsEventOptions = (() => {
-  let supported = false;
-  const eventOptions = {
-    get capture() {
-      supported = true;
-      return false;
-    },
-  };
-  const listener = () => {};
-  // NOTE: These will be unpatched at this point.
-  window.addEventListener('test', listener, eventOptions);
-  window.removeEventListener('test', listener, eventOptions);
-  return supported;
-})();
+// const supportsEventOptions = (() => {
+//   let supported = false;
+//   const eventOptions = {
+//     get capture() {
+//       supported = true;
+//       return false;
+//     },
+//   };
+//   const listener = () => {};
+//   // NOTE: These will be unpatched at this point.
+//   window.addEventListener('test', listener, eventOptions);
+//   window.removeEventListener('test', listener, eventOptions);
+//   return supported;
+// })();
+const supportsEventOptions = false;
 
 const nativeEventTarget = window.EventTarget ?? window.Node;
 
@@ -91,19 +92,19 @@ if (
     }
     const {capture, once} = parseEventOptions(options);
     const map = getListenerMap(this, type, capture);
-    let wrapper = map.get(listener);
-    if (wrapper === undefined) {
-      wrapper = (e: Event) => {
-        map.delete(listener);
-        // Try to remove both listener and wrapper since `once` state
-        // is not used as a unique key and we don't track which was added.
-        origRemoveEventListener.call(this, type, wrapper, capture);
-        origRemoveEventListener.call(this, type, listener, capture);
-        ((listener as EventListenerObject).handleEvent ?? listener)(e);
-      };
-      map.set(listener, wrapper);
-      const nativeListener = once ? wrapper : listener;
-      origAddEventListener.call(this, type, nativeListener, capture);
+    let cachedListener = map.get(listener);
+    if (cachedListener === undefined) {
+      if (once) {
+        cachedListener = (e: Event) => {
+          map.delete(listener);
+          origRemoveEventListener.call(this, type, cachedListener, capture);
+          ((listener as EventListenerObject).handleEvent ?? listener)(e);
+        };
+      } else {
+        cachedListener = listener;
+      }
+      map.set(listener, cachedListener);
+      origAddEventListener.call(this, type, cachedListener, capture);
     }
   };
 
@@ -117,13 +118,10 @@ if (
     }
     const {capture} = parseEventOptions(options);
     const map = getListenerMap(this, type, capture);
-    const wrapper = map.get(listener);
-    if (wrapper !== undefined) {
+    const cachedListener = map.get(listener);
+    if (cachedListener !== undefined) {
       map.delete(listener);
-      // Try to remove both listener and wrapper since `once` state
-      // is not used as a unique key and we don't track which was added.
-      origRemoveEventListener.call(this, type, listener, capture);
-      origRemoveEventListener.call(this, type, wrapper, capture);
+      origRemoveEventListener.call(this, type, cachedListener, capture);
     }
   };
 }
