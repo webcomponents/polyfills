@@ -38,20 +38,22 @@ if (
   const parseEventOptions = (
     optionsOrCapture?: boolean | AddEventListenerOptions
   ) => {
-    let capture, once, passive;
-    if (optionsOrCapture && optionsOrCapture instanceof Object) {
-      capture = Boolean(optionsOrCapture.capture);
-      once = Boolean(optionsOrCapture.once);
-      passive = Boolean(optionsOrCapture.passive);
+    let capture, once;
+    if (
+      optionsOrCapture &&
+      (typeof optionsOrCapture === 'object' ||
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (optionsOrCapture as any) instanceof Object)
+    ) {
+      capture = Boolean((optionsOrCapture as AddEventListenerOptions).capture);
+      once = Boolean((optionsOrCapture as AddEventListenerOptions).once);
     } else {
       capture = Boolean(optionsOrCapture);
       once = false;
-      passive = false;
     }
     return {
       capture,
       once,
-      passive,
     };
   };
 

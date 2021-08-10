@@ -44,7 +44,10 @@ const supportsEventOptions = (() => {
 
 const parseEventOptions = (optionsOrCapture) => {
   let capture, once, passive, shadyTarget;
-  if (optionsOrCapture && optionsOrCapture instanceof Object) {
+  if (
+    optionsOrCapture &&
+    (typeof optionsOrCapture === 'object' || optionsOrCapture instanceof Object)
+  ) {
     capture = Boolean(optionsOrCapture.capture);
     once = Boolean(optionsOrCapture.once);
     passive = Boolean(optionsOrCapture.passive);
