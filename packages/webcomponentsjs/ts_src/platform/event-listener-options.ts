@@ -14,21 +14,20 @@ export {};
 // Older browsers like IE do not support an object as the options parameter
 // to add/removeEventListener.
 // https://connect.microsoft.com/IE/feedback/details/790389/event-defaultprevented-returns-false-after-preventdefault-was-called
-// const supportsEventOptions = (() => {
-//   let supported = false;
-//   const eventOptions = {
-//     get capture() {
-//       supported = true;
-//       return false;
-//     },
-//   };
-//   const listener = () => {};
-//   // NOTE: These will be unpatched at this point.
-//   window.addEventListener('test', listener, eventOptions);
-//   window.removeEventListener('test', listener, eventOptions);
-//   return supported;
-// })();
-const supportsEventOptions = false;
+const supportsEventOptions = (() => {
+  let supported = false;
+  const eventOptions = {
+    get capture() {
+      supported = true;
+      return false;
+    },
+  };
+  const listener = () => {};
+  // NOTE: These will be unpatched at this point.
+  window.addEventListener('test', listener, eventOptions);
+  window.removeEventListener('test', listener, eventOptions);
+  return supported;
+})();
 
 const nativeEventTarget = window.EventTarget ?? window.Node;
 
@@ -92,17 +91,14 @@ if (
     }
     const {capture, once} = parseEventOptions(options);
     const map = getListenerMap(this, type, capture);
-    let cachedListener = map.get(listener);
-    if (cachedListener === undefined) {
-      if (once) {
-        cachedListener = (e: Event) => {
-          map.delete(listener);
-          origRemoveEventListener.call(this, type, cachedListener, capture);
-          ((listener as EventListenerObject).handleEvent ?? listener)(e);
-        };
-      } else {
-        cachedListener = listener;
-      }
+    if (!map.has(listener)) {
+      const cachedListener = once
+        ? (e: Event) => {
+            map.delete(listener);
+            origRemoveEventListener.call(this, type, cachedListener, capture);
+            ((listener as EventListenerObject).handleEvent ?? listener)(e);
+          }
+        : listener;
       map.set(listener, cachedListener);
       origAddEventListener.call(this, type, cachedListener, capture);
     }
