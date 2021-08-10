@@ -107,48 +107,24 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             el1.removeEventListener('test-event-2', callback);
             el1.dispatchEvent(new CustomEvent('test-event-1'));
             el1.dispatchEvent(new CustomEvent('test-event-2'));
-            assert.equal(
-              callback.callCount,
-              2,
-              'listeners removed (callCount did not increase)'
-            );
+            assert.equal(callback.callCount, 2, 'not called after removal');
           });
 
-          test('support `once` option', function () {
-            el1.addEventListener('click', callback, {once: true});
-            el1.click();
-            assert.equal(callback.callCount, 1, 'listener called once');
-            el1.click();
-            assert.equal(
-              callback.callCount,
-              1,
-              'listener automatically removed (callCount did not increase)'
-            );
-          });
-
-          test('same event, same callback, different options', function () {
-            el1.addEventListener('click', callback, {
-              passive: true,
-            });
+          test('same event, same callback, different capture options', function () {
+            el1.addEventListener('click', callback, {});
             el1.addEventListener('click', callback, {
               capture: true,
             });
             el1.click();
             assert.equal(callback.callCount, 2, 'called twice');
-            el1.removeEventListener('click', callback, {
-              passive: true,
-            });
+            el1.removeEventListener('click', callback, {});
             el1.click();
             assert.equal(callback.callCount, 3, 'called by capturing listener');
             el1.removeEventListener('click', callback, {
               capture: true,
             });
             el1.click();
-            assert.equal(
-              callback.callCount,
-              3,
-              'listeners removed (callCount did not increase)'
-            );
+            assert.equal(callback.callCount, 3, 'not called after removal');
           });
 
           test('add same listener twice, invoke callback once', function () {
@@ -158,11 +134,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             assert.equal(callback.callCount, 1, 'called once');
             el1.removeEventListener('click', callback);
             el1.click();
-            assert.equal(
-              callback.callCount,
-              1,
-              'listener removed (callCount did not increase)'
-            );
+            assert.equal(callback.callCount, 1, 'not called after removal');
           });
 
           test('add same listener twice, invoke callback once (different useCapture notation)', function () {
@@ -176,11 +148,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
               capture: true,
             });
             el1.click();
-            assert.equal(
-              callback.callCount,
-              1,
-              'listener removed (callCount did not increase)'
-            );
+            assert.equal(callback.callCount, 1, 'not called after removal');
           });
 
           test('add same listener twice, different order of options keys', function () {
@@ -199,11 +167,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
               capture: false,
             });
             el1.click();
-            assert.equal(
-              callback.callCount,
-              1,
-              'listener removed (callCount did not increase)'
-            );
+            assert.equal(callback.callCount, 1, 'not called after removal');
           });
 
           test('add same listener on two different nodes', function () {
@@ -217,11 +181,23 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             el2.removeEventListener('click', callback);
             el1.click();
             el2.click();
-            assert.equal(
-              callback.callCount,
-              2,
-              'listeners removed (callCount did not increase)'
-            );
+            assert.equal(callback.callCount, 2, 'not called after removal');
+          });
+
+          test('add same listener on two different events types', function () {
+            el1.addEventListener('click', callback);
+            el1.addEventListener('foo', callback);
+            el1.click();
+            assert.equal(callback.callCount, 1, 'called once');
+            el1.dispatchEvent(new Event('foo'));
+            assert.equal(callback.callCount, 2, 'called twice');
+            el1.removeEventListener('click', callback);
+            el1.dispatchEvent(new Event('foo'));
+            assert.equal(callback.callCount, 3, 'called 3x');
+            el1.removeEventListener('foo', callback);
+            el1.click();
+            el1.dispatchEvent(new Event('foo'));
+            assert.equal(callback.callCount, 3, 'not called after removal');
           });
 
           test('add listener with `handleEvent` function', function () {
@@ -247,8 +223,96 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             assert.equal(
               obj.handleEvent.callCount,
               2,
-              'listeners removed (callCount did not increase)'
+              'not called after removal'
             );
+          });
+
+          test('support `once` option', function () {
+            el1.addEventListener('click', callback, {once: true});
+            el1.click();
+            assert.equal(callback.callCount, 1, 'listener called once');
+            el1.click();
+            assert.equal(callback.callCount, 1, 'respects once option');
+          });
+
+          test('same listener with different `once` options', function () {
+            // same listener adds only once
+            el1.addEventListener('click', callback, {once: true});
+            el1.addEventListener('click', callback);
+            el1.dispatchEvent(new Event('click'));
+            assert.equal(callback.callCount, 1, 'listener called once');
+            // same listener different event
+            el1.addEventListener('foo', callback, {once: true});
+            el1.addEventListener('foo', callback);
+            el1.dispatchEvent(new Event('foo'));
+            assert.equal(callback.callCount, 2, 'listener called twice');
+            el1.dispatchEvent(new Event('click'));
+            assert.equal(callback.callCount, 2, 'listener called twice');
+            // can re-add listener
+            el1.addEventListener('click', callback);
+            el1.dispatchEvent(new Event('click'));
+            assert.equal(callback.callCount, 3, 'called after re-listening');
+            el1.dispatchEvent(new Event('click'));
+            assert.equal(callback.callCount, 4, 'called when once not used');
+            // changing once state doesn't affect listener
+            el1.addEventListener('click', callback, {once: true});
+            el1.dispatchEvent(new Event('click'));
+            el1.dispatchEvent(new Event('click'));
+            assert.equal(callback.callCount, 6, 'changing `once` does nothing');
+          });
+
+          test('`once` option can remove listener early and be re-used', function () {
+            el1.addEventListener('click', callback, {once: true});
+            el1.removeEventListener('click', callback);
+            el1.dispatchEvent(new Event('click'));
+            assert.equal(callback.callCount, 0, 'not called if removed early');
+            el1.addEventListener('click', callback, {once: true});
+            el1.removeEventListener('click', callback, {once: true});
+            el2.addEventListener('click', callback, {once: true});
+            el1.dispatchEvent(new Event('click'));
+            assert.equal(callback.callCount, 0, 'not called if removed early');
+            el2.dispatchEvent(new Event('click'));
+            el2.dispatchEvent(new Event('click'));
+            assert.equal(callback.callCount, 1, 'not called if removed early');
+          });
+
+          test('same listener with different `once` and `capture` options', function () {
+            // same listener adds 2x with change of capture state
+            el1.addEventListener('click', callback, {once: true});
+            el1.addEventListener('click', callback, {
+              capture: true,
+              once: true,
+            });
+            el1.dispatchEvent(new Event('click'));
+            assert.equal(callback.callCount, 2, 'called 2x');
+            el1.dispatchEvent(new Event('click'));
+            assert.equal(callback.callCount, 2, 'calls not increased');
+            // can capture and non-capture can have different once options
+            el1.addEventListener('click', callback, {once: true});
+            el1.addEventListener('click', callback, {
+              capture: true,
+            });
+            el1.dispatchEvent(new Event('click'));
+            assert.equal(callback.callCount, 4, 'called 2x again');
+            el1.dispatchEvent(new Event('click'));
+            assert.equal(callback.callCount, 5, 'called for capture only');
+            el1.removeEventListener('click', callback, {
+              capture: true,
+            });
+            el1.dispatchEvent(new Event('click'));
+            assert.equal(callback.callCount, 5, 'not called after removed');
+            // can remove captured event early.
+            el1.addEventListener('click', callback, {once: true});
+            el1.addEventListener('click', callback, true);
+            el1.removeEventListener('click', callback, true);
+            el1.dispatchEvent(new Event('click'));
+            assert.equal(callback.callCount, 6, 'called 1x after early remove');
+            // can remove non-captured event early.
+            el1.addEventListener('click', callback, {once: true});
+            el1.addEventListener('click', callback, true);
+            el1.removeEventListener('click', callback);
+            el1.dispatchEvent(new Event('click'));
+            assert.equal(callback.callCount, 7, 'called 1x after early remove');
           });
 
           test('add null listener', function () {

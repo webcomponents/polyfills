@@ -59,19 +59,50 @@ if (
   const origRemoveEventListener =
     nativeEventTarget.prototype.removeEventListener;
 
+  const captureListenerMap = new WeakMap();
+  const listenerMap = new WeakMap();
+
+  const getListenerMap = (
+    target: EventTarget,
+    type: string,
+    capture: boolean
+  ) => {
+    const elMap = capture ? captureListenerMap : listenerMap;
+    let typeMap = elMap.get(target);
+    if (typeMap === undefined) {
+      elMap.set(target, (typeMap = new Map()));
+    }
+    let listeners = typeMap.get(type);
+    if (listeners === undefined) {
+      typeMap.set(type, (listeners = new WeakMap()));
+    }
+    return listeners;
+  };
+
   nativeEventTarget.prototype.addEventListener = function (
     type: string,
     listener: EventListenerOrEventListenerObject | null,
     options?: boolean | AddEventListenerOptions | undefined
   ) {
+    if (listener == null) {
+      return;
+    }
     const {capture, once} = parseEventOptions(options);
-    const nativeListener = once
-      ? (e: Event) => {
-          origRemoveEventListener.call(this, type, nativeListener, capture);
-          ((listener as EventListenerObject).handleEvent ?? listener)(e);
-        }
-      : listener;
-    origAddEventListener.call(this, type, nativeListener, capture);
+    const map = getListenerMap(this, type, capture);
+    let wrapper = map.get(listener);
+    if (wrapper === undefined) {
+      wrapper = (e: Event) => {
+        map.delete(listener);
+        // Try to remove both listener and wrapper since `once` state
+        // is not used as a unique key and we don't track which was added.
+        origRemoveEventListener.call(this, type, wrapper, capture);
+        origRemoveEventListener.call(this, type, listener, capture);
+        ((listener as EventListenerObject).handleEvent ?? listener)(e);
+      };
+      map.set(listener, wrapper);
+      const nativeListener = once ? wrapper : listener;
+      origAddEventListener.call(this, type, nativeListener, capture);
+    }
   };
 
   nativeEventTarget.prototype.removeEventListener = function (
@@ -79,7 +110,18 @@ if (
     listener: EventListenerOrEventListenerObject | null,
     options?: boolean | AddEventListenerOptions | undefined
   ) {
+    if (listener == null) {
+      return;
+    }
     const {capture} = parseEventOptions(options);
-    origRemoveEventListener.call(this, type, listener, capture);
+    const map = getListenerMap(this, type, capture);
+    const wrapper = map.get(listener);
+    if (wrapper !== undefined) {
+      map.delete(listener);
+      // Try to remove both listener and wrapper since `once` state
+      // is not used as a unique key and we don't track which was added.
+      origRemoveEventListener.call(this, type, listener, capture);
+      origRemoveEventListener.call(this, type, wrapper, capture);
+    }
   };
 }
