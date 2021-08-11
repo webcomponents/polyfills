@@ -193,18 +193,7 @@ function retarget(refNode, path) {
   }
 }
 
-const eventPhaseDescriptor = Object.getOwnPropertyDescriptor(
-  Event.prototype,
-  'eventPhase'
-);
-
 let EventPatches = {
-  get eventPhase() {
-    return this.currentTarget === this.target
-      ? Event.AT_TARGET
-      : this[utils.NATIVE_PREFIX + 'eventPhase'];
-  },
-
   /**
    * @this {Event}
    */
@@ -282,11 +271,27 @@ let EventPatches = {
   },
 };
 
-Object.defineProperty(
-  EventPatches,
-  utils.NATIVE_PREFIX + 'eventPhase',
-  eventPhaseDescriptor
+const eventPhaseDescriptor = Object.getOwnPropertyDescriptor(
+  Event.prototype,
+  'eventPhase'
 );
+if (eventPhaseDescriptor !== undefined) {
+  Object.defineProperty(EventPatches, 'eventPhase', {
+    get() {
+      return this.currentTarget === this.target
+        ? Event.AT_TARGET
+        : this[utils.NATIVE_PREFIX + 'eventPhase'];
+    },
+    enumerable: true,
+    configurable: true,
+  });
+
+  Object.defineProperty(
+    EventPatches,
+    utils.NATIVE_PREFIX + 'eventPhase',
+    eventPhaseDescriptor
+  );
+}
 
 function mixinComposedFlag(Base) {
   // NOTE: avoiding use of `class` here so that transpiled output does not
