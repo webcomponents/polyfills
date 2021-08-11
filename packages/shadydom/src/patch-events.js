@@ -193,7 +193,22 @@ function retarget(refNode, path) {
   }
 }
 
+const nativeEventPhase = Object.getOwnPropertyDescriptor(
+  Event.prototype,
+  'eventPhase'
+);
+
 let EventPatches = {
+  get [utils.NATIVE_PREFIX + 'eventPhase']() {
+    return nativeEventPhase.get.call(this);
+  },
+
+  get eventPhase() {
+    return this.currentTarget === this.target
+      ? Event.AT_TARGET
+      : this[utils.NATIVE_PREFIX + 'eventPhase'];
+  },
+
   /**
    * @this {Event}
    */

@@ -1260,6 +1260,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
       suite('Patch of addEventListener/removeEventListener', function () {
         var el1, el2, parent, child, gchild, callback;
+        var h1, h1_c, h1_c_h2, h1_c_h2_c, h1_c_h2_c_h3, h1_c_h2_c_h3_c;
 
         setup(function () {
           el1 = document.createElement('button');
@@ -1277,22 +1278,31 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           ShadyDOM.wrapIfNeeded(parent).appendChild(child);
           ShadyDOM.wrapIfNeeded(document.body).appendChild(parent);
 
+          h1 = document.createElement('div');
+          h1_c = document.createElement('div');
+          h1_c_h2 = document.createElement('div');
+          h1_c_h2_c = document.createElement('div');
+          h1_c_h2_c_h3 = document.createElement('div');
+          h1_c_h2_c_h3_c = document.createElement('div');
+          ShadyDOM.wrapIfNeeded(h1).attachShadow({mode: 'open'});
+          ShadyDOM.wrapIfNeeded(h1_c_h2).attachShadow({mode: 'open'});
+          ShadyDOM.wrapIfNeeded(h1_c_h2_c_h3).attachShadow({mode: 'open'});
+          ShadyDOM.wrapIfNeeded(h1_c_h2_c_h3).shadowRoot.appendChild(
+            h1_c_h2_c_h3_c
+          );
+          ShadyDOM.wrapIfNeeded(h1_c_h2_c).appendChild(h1_c_h2_c_h3);
+          ShadyDOM.wrapIfNeeded(h1_c_h2).shadowRoot.appendChild(h1_c_h2_c);
+          ShadyDOM.wrapIfNeeded(h1_c).appendChild(h1_c_h2);
+          ShadyDOM.wrapIfNeeded(h1).shadowRoot.appendChild(h1_c);
+          ShadyDOM.wrapIfNeeded(document.body).appendChild(h1);
           callback = sinon.stub();
         });
 
         teardown(function () {
-          ShadyDOM.wrapIfNeeded(el1).parentNode &&
-            ShadyDOM.wrapIfNeeded(
-              ShadyDOM.wrapIfNeeded(el1).parentNode
-            ).removeChild(el1);
-          ShadyDOM.wrapIfNeeded(el2).parentNode &&
-            ShadyDOM.wrapIfNeeded(
-              ShadyDOM.wrapIfNeeded(el2).parentNode
-            ).removeChild(el2);
-          ShadyDOM.wrapIfNeeded(parent).parentNode &&
-            ShadyDOM.wrapIfNeeded(
-              ShadyDOM.wrapIfNeeded(parent).parentNode
-            ).removeChild(parent);
+          ShadyDOM.wrapIfNeeded(el1).remove();
+          ShadyDOM.wrapIfNeeded(el2).remove();
+          ShadyDOM.wrapIfNeeded(parent).remove();
+          ShadyDOM.wrapIfNeeded(h1).remove();
         });
 
         test('events bubble as expected with different listener options', function () {
@@ -1577,6 +1587,40 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           assert.doesNotThrow(function () {
             ShadyDOM.wrapIfNeeded(el1).addEventListener('baz', null);
           });
+        });
+
+        test.only('bubbling eventPhase', function () {
+          const eventPhases = [];
+          const listener = (e) => {
+            eventPhases.push(e.eventPhase);
+          };
+          h1.addEventListener('click', listener);
+          h1_c.addEventListener('click', listener);
+          h1_c_h2.addEventListener('click', listener);
+          h1_c_h2_c.addEventListener('click', listener);
+          h1_c_h2_c_h3.addEventListener('click', listener);
+          h1_c_h2_c_h3_c.addEventListener('click', listener);
+          h1_c_h2_c_h3_c.click();
+          const t = Event.AT_TARGET;
+          const b = Event.BUBBLING_PHASE;
+          assert.deepEqual(eventPhases, [t, t, b, t, b, t]);
+        });
+
+        test.only('capturing eventPhase', function () {
+          const eventPhases = [];
+          const listener = (e) => {
+            eventPhases.push(e.eventPhase);
+          };
+          h1.addEventListener('click', listener, true);
+          h1_c.addEventListener('click', listener, true);
+          h1_c_h2.addEventListener('click', listener, true);
+          h1_c_h2_c.addEventListener('click', listener, true);
+          h1_c_h2_c_h3.addEventListener('click', listener, true);
+          h1_c_h2_c_h3_c.addEventListener('click', listener, true);
+          h1_c_h2_c_h3_c.click();
+          const t = Event.AT_TARGET;
+          const c = Event.CAPTURING_PHASE;
+          assert.deepEqual(eventPhases, [t, c, t, c, t, t]);
         });
       });
 
