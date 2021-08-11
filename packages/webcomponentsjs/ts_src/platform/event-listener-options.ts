@@ -32,7 +32,6 @@ const supportsEventOptions = (() => {
   const listener = () => {
     callCount++;
   };
-
   const d = document.createElement('div');
   // NOTE: These will be unpatched at this point.
   d.addEventListener('click', listener, eventOptions);
@@ -60,8 +59,7 @@ if (
     if (
       optionsOrCapture &&
       (typeof optionsOrCapture === 'object' ||
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (optionsOrCapture as any) instanceof Object)
+        typeof optionsOrCapture === 'function')
     ) {
       capture = Boolean((optionsOrCapture as AddEventListenerOptions).capture);
       once = Boolean((optionsOrCapture as AddEventListenerOptions).once);
@@ -114,7 +112,10 @@ if (
         ? (e: Event) => {
             map.delete(listener);
             origRemoveEventListener.call(this, type, cachedListener, capture);
-            ((listener as EventListenerObject).handleEvent ?? listener)(e);
+            ((listener as EventListenerObject).handleEvent ?? listener).call(
+              this,
+              e
+            );
           }
         : listener;
       map.set(listener, cachedListener);

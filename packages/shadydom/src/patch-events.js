@@ -46,7 +46,8 @@ const parseEventOptions = (optionsOrCapture) => {
   let capture, once, shadyTarget;
   if (
     optionsOrCapture &&
-    (typeof optionsOrCapture === 'object' || optionsOrCapture instanceof Object)
+    (typeof optionsOrCapture === 'object' ||
+      typeof optionsOrCapture === 'function')
   ) {
     capture = Boolean(optionsOrCapture.capture);
     once = Boolean(optionsOrCapture.once);

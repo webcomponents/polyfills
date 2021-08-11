@@ -315,6 +315,26 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             assert.equal(callback.callCount, 7, 'called 1x after early remove');
           });
 
+          test('`once` listener called with correct this', function () {
+            let pThisRef, pCurrentTarget;
+            const pListener = function (e) {
+              pThisRef = this;
+              pCurrentTarget = e.currentTarget;
+            };
+            let cThisRef, cCurrentTarget;
+            const cListener = function (e) {
+              cThisRef = this;
+              cCurrentTarget = e.currentTarget;
+            };
+            parent.addEventListener('test', pListener, {once: true});
+            child.addEventListener('test', cListener, {once: true});
+            gchild.dispatchEvent(new Event('test', {bubbles: true}));
+            assert.ok(pThisRef);
+            assert.equal(pThisRef, pCurrentTarget);
+            assert.ok(cThisRef);
+            assert.equal(cThisRef, cCurrentTarget);
+          });
+
           test('add null listener', function () {
             assert.doesNotThrow(function () {
               el1.addEventListener('baz', null);
