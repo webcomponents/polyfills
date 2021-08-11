@@ -1589,7 +1589,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           });
         });
 
-        test.only('bubbling eventPhase', function () {
+        test('bubbling eventPhase', function () {
           const eventPhases = [];
           const listener = (e) => {
             eventPhases.push(e.eventPhase);
@@ -1606,7 +1606,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           assert.deepEqual(eventPhases, [t, t, b, t, b, t]);
         });
 
-        test.only('capturing eventPhase', function () {
+        test('capturing eventPhase', function () {
           const eventPhases = [];
           const listener = (e) => {
             eventPhases.push(e.eventPhase);
