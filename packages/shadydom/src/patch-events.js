@@ -272,10 +272,12 @@ let EventPatches = {
   },
 };
 
-const hasDescriptors = utils.settings.hasDescriptors;
-
+// Some browsers have missing or broken descriptors. If this is the case
+// eventPhase can't be polyfilled. For example, Chrome 41 does not
+// have prototypical descriptors on DOM objects and Safari 9 has broken ones
+// that cannot be used.
 const eventPhaseDescriptor =
-  hasDescriptors &&
+  utils.settings.hasDescriptors &&
   Object.getOwnPropertyDescriptor(Event.prototype, 'eventPhase');
 if (eventPhaseDescriptor) {
   Object.defineProperty(EventPatches, 'eventPhase', {
