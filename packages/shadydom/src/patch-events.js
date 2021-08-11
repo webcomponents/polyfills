@@ -271,11 +271,12 @@ let EventPatches = {
   },
 };
 
-const eventPhaseDescriptor = Object.getOwnPropertyDescriptor(
-  Event.prototype,
-  'eventPhase'
-);
-if (eventPhaseDescriptor !== undefined) {
+const hasDescriptors = utils.settings.hasDescriptors;
+
+const eventPhaseDescriptor =
+  hasDescriptors &&
+  Object.getOwnPropertyDescriptor(Event.prototype, 'eventPhase');
+if (eventPhaseDescriptor) {
   Object.defineProperty(EventPatches, 'eventPhase', {
     get() {
       return this.currentTarget === this.target

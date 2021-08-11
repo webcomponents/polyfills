@@ -21,9 +21,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         ).filter((x) => x.substring(0, 2) === 'on'),
       };
 
-      window.canTestEventPhase = !!Object.getOwnPropertyDescriptor(
+      const eventPhaseDescriptor = Object.getOwnPropertyDescriptor(
         Event.prototype,
         'eventPhase'
+      );
+
+      window.canTestEventPhase = !!(
+        eventPhaseDescriptor && eventPhaseDescriptor.get
       );
     </script>
     <script src="wct-browser-config.js"></script>
