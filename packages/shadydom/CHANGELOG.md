@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- ## Unreleased -->
 
+## Unreleased
+
+- Adds an opt-out for polyfilling `element(s)FromPoint` on `document` via setting `ShadyDOM.noPatchDocumentEFP` to `true`.
+
 ## [1.9.0] - 2021-08-02
 
 - Add `@this` annotation to new `elementFromPoint` wrappers.
