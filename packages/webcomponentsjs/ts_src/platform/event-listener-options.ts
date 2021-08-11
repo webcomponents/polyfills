@@ -16,17 +16,35 @@ export {};
 // https://connect.microsoft.com/IE/feedback/details/790389/event-defaultprevented-returns-false-after-preventdefault-was-called
 const supportsEventOptions = (() => {
   let supported = false;
+  let onceSupported = false;
   const eventOptions = {
     get capture() {
       supported = true;
-      return false;
+      return true;
+    },
+
+    get once() {
+      onceSupported = true;
+      return true;
     },
   };
-  const listener = () => {};
+  let callCount = 0;
+  const listener = () => {
+    callCount++;
+  };
+
+  const d = document.createElement('div');
   // NOTE: These will be unpatched at this point.
-  window.addEventListener('test', listener, eventOptions);
-  window.removeEventListener('test', listener, eventOptions);
-  return supported;
+  d.addEventListener('click', listener, eventOptions);
+  let fullySupported = supported && onceSupported;
+  // Once + capture broken on Edge >= 17 < 79.
+  if (fullySupported) {
+    d.dispatchEvent(new Event('click'));
+    d.dispatchEvent(new Event('click'));
+    fullySupported = callCount == 1;
+  }
+  d.removeEventListener('click', listener, eventOptions);
+  return fullySupported;
 })();
 
 const nativeEventTarget = window.EventTarget ?? window.Node;
