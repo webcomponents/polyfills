@@ -193,16 +193,12 @@ function retarget(refNode, path) {
   }
 }
 
-const nativeEventPhase = Object.getOwnPropertyDescriptor(
+const eventPhaseDescriptor = Object.getOwnPropertyDescriptor(
   Event.prototype,
   'eventPhase'
 );
 
 let EventPatches = {
-  get [utils.NATIVE_PREFIX + 'eventPhase']() {
-    return nativeEventPhase.get.call(this);
-  },
-
   get eventPhase() {
     return this.currentTarget === this.target
       ? Event.AT_TARGET
@@ -285,6 +281,12 @@ let EventPatches = {
     this.__propagationStopped = true;
   },
 };
+
+Object.defineProperty(
+  EventPatches,
+  utils.NATIVE_PREFIX + 'eventPhase',
+  eventPhaseDescriptor
+);
 
 function mixinComposedFlag(Base) {
   // NOTE: avoiding use of `class` here so that transpiled output does not
