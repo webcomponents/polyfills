@@ -1594,12 +1594,18 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           const listener = (e) => {
             eventPhases.push(e.eventPhase);
           };
-          h1.addEventListener('click', listener);
-          h1_c.addEventListener('click', listener);
-          h1_c_h2.addEventListener('click', listener);
-          h1_c_h2_c.addEventListener('click', listener);
-          h1_c_h2_c_h3.addEventListener('click', listener);
-          h1_c_h2_c_h3_c.addEventListener('click', listener);
+          ShadyDOM.wrapIfNeeded(h1).addEventListener('click', listener);
+          ShadyDOM.wrapIfNeeded(h1_c).addEventListener('click', listener);
+          ShadyDOM.wrapIfNeeded(h1_c_h2).addEventListener('click', listener);
+          ShadyDOM.wrapIfNeeded(h1_c_h2_c).addEventListener('click', listener);
+          ShadyDOM.wrapIfNeeded(h1_c_h2_c_h3).addEventListener(
+            'click',
+            listener
+          );
+          ShadyDOM.wrapIfNeeded(h1_c_h2_c_h3_c).addEventListener(
+            'click',
+            listener
+          );
           h1_c_h2_c_h3_c.click();
           const t = Event.AT_TARGET;
           const b = Event.BUBBLING_PHASE;
@@ -1611,12 +1617,28 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           const listener = (e) => {
             eventPhases.push(e.eventPhase);
           };
-          h1.addEventListener('click', listener, true);
-          h1_c.addEventListener('click', listener, true);
-          h1_c_h2.addEventListener('click', listener, true);
-          h1_c_h2_c.addEventListener('click', listener, true);
-          h1_c_h2_c_h3.addEventListener('click', listener, true);
-          h1_c_h2_c_h3_c.addEventListener('click', listener, true);
+          ShadyDOM.wrapIfNeeded(h1).addEventListener('click', listener, true);
+          ShadyDOM.wrapIfNeeded(h1_c).addEventListener('click', listener, true);
+          ShadyDOM.wrapIfNeeded(h1_c_h2).addEventListener(
+            'click',
+            listener,
+            true
+          );
+          ShadyDOM.wrapIfNeeded(h1_c_h2_c).addEventListener(
+            'click',
+            listener,
+            true
+          );
+          ShadyDOM.wrapIfNeeded(h1_c_h2_c_h3).addEventListener(
+            'click',
+            listener,
+            true
+          );
+          ShadyDOM.wrapIfNeeded(h1_c_h2_c_h3_c).addEventListener(
+            'click',
+            listener,
+            true
+          );
           h1_c_h2_c_h3_c.click();
           const t = Event.AT_TARGET;
           const c = Event.CAPTURING_PHASE;
