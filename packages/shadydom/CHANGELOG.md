@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
-- Adds an opt-out for polyfilling `element(s)FromPoint` on `document` via setting `ShadyDOM.noPatchDocumentEFP` to `true`.
+- Adds an opt-out for polyfilling `element(s)FromPoint` on `document` via setting `ShadyDOM.useNativeDocumentEFP` to `true`.
 
 ## [1.9.0] - 2021-08-02
 

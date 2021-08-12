@@ -41,7 +41,7 @@ function getAncestorRoots(docOrRoot) {
   return roots;
 }
 
-const NO_PATCH_DOCUMENT_EFP = 'noPatchDocumentEFP';
+const USE_NATIVE_DOCUMENT_EFP = 'useNativeDocumentEFP';
 
 const elementsFromPointProperty =
   utils.NATIVE_PREFIX +
@@ -96,7 +96,7 @@ export const DocumentOrShadowRootPatches = utils.getOwnPropertyDescriptors({
   elementsFromPoint(x, y) {
     const nativeResult = document[elementsFromPointProperty](x, y);
     // support optionally opt-ing out for document
-    if (this === document && utils.settings[NO_PATCH_DOCUMENT_EFP]) {
+    if (this === document && utils.settings[USE_NATIVE_DOCUMENT_EFP]) {
       return nativeResult;
     }
     const nativeArray = utils.arrayFrom(nativeResult);
@@ -118,7 +118,7 @@ export const DocumentOrShadowRootPatches = utils.getOwnPropertyDescriptors({
   /** @this {Document|ShadowRoot} */
   elementFromPoint(x, y) {
     // support optionally opt-ing out for document
-    return this === document && utils.settings[NO_PATCH_DOCUMENT_EFP]
+    return this === document && utils.settings[USE_NATIVE_DOCUMENT_EFP]
       ? this[utils.NATIVE_PREFIX + 'elementFromPoint'](x, y)
       : this[utils.SHADY_PREFIX + 'elementsFromPoint'](x, y)[0] || null;
   },
