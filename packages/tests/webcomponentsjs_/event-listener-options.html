@@ -227,6 +227,30 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             );
           });
 
+          test('add listener with function that has `handleEvent` function', function () {
+            let functionCalled = false;
+            let handleEventCalled = false;
+            var listener = () => {
+              functionCalled = true;
+            };
+            listener.handleEvent = () => {
+              handleEventCalled = true;
+            };
+
+            el1.addEventListener('click', listener, {
+              once: true,
+            });
+            el1.click();
+            assert.isTrue(
+              functionCalled,
+              'function called when handleEvent is defined on it'
+            );
+            assert.isFalse(
+              handleEventCalled,
+              'handleEvent not called when on listener function'
+            );
+          });
+
           test('support `once` option', function () {
             el1.addEventListener('click', callback, {once: true});
             el1.click();

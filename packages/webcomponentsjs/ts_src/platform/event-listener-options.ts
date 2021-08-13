@@ -77,8 +77,15 @@ if (
   const origRemoveEventListener =
     nativeEventTarget.prototype.removeEventListener;
 
-  const captureListenerMap = new WeakMap();
-  const listenerMap = new WeakMap();
+  type ListenerMap = WeakMap<
+    EventListenerOrEventListenerObject,
+    EventListenerOrEventListenerObject | null
+  >;
+  type TypeMap = Map<string, ListenerMap>;
+  type ElementListenerMap = WeakMap<EventTarget, TypeMap>;
+
+  const captureListenerMap: ElementListenerMap = new WeakMap();
+  const listenerMap: ElementListenerMap = new WeakMap();
 
   const getListenerMap = (
     target: EventTarget,
@@ -121,9 +128,16 @@ if (
               return handleEvent.call(e.currentTarget, e);
             }
           }
-        : listener;
+        : null;
       map.set(listener, cachedListener);
-      origAddEventListener.call(this, type, cachedListener, capture);
+      // Note, the cached listener is null if no wrapper is used to avoid
+      // a strong ref to it;
+      origAddEventListener.call(
+        this,
+        type,
+        cachedListener ?? listener,
+        capture
+      );
     }
   };
 
@@ -140,7 +154,14 @@ if (
     const cachedListener = map.get(listener);
     if (cachedListener !== undefined) {
       map.delete(listener);
-      origRemoveEventListener.call(this, type, cachedListener, capture);
+      // Note, the cached listener is null if no wrapper was used so that a
+      // strong ref to it is not kept.
+      origRemoveEventListener.call(
+        this,
+        type,
+        cachedListener ?? listener,
+        capture
+      );
     }
   };
 }
