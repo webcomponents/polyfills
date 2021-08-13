@@ -1776,6 +1776,21 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             ShadyDOM.wrapIfNeeded(host).remove();
           });
 
+          test('elementFromPoint (useNative)', function () {
+            const host = createAndPosition(document.body, 10);
+            const shadowRoot = ShadyDOM.wrapIfNeeded(host).attachShadow({
+              mode: 'open',
+            });
+            const inner = createAndPosition(shadowRoot, 0);
+            ShadyDOM.settings.useNativeDocumentEFP = true;
+            let e = ShadyDOM.wrap(document).elementFromPoint(5, 5);
+            assert.equal(e, inner);
+            ShadyDOM.settings.useNativeDocumentEFP = false;
+            e = ShadyDOM.wrap(document).elementFromPoint(5, 5);
+            assert.equal(e, host);
+            ShadyDOM.wrapIfNeeded(host).remove();
+          });
+
           test('elementsFromPoint', function () {
             // elements:
             // 1. with .shadowRoot with 2 elements each with shadowRoot + 1 el
@@ -1858,6 +1873,23 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             assert.deepEqual(els, [el1.el1.el, ...background]);
             ShadyDOM.wrapIfNeeded(el1).remove();
             ShadyDOM.wrapIfNeeded(el2).remove();
+          });
+
+          test('elementsFromPoint (useNative)', function () {
+            const host = createAndPosition(document.body, 0);
+            const shadowRoot = ShadyDOM.wrapIfNeeded(host).attachShadow({
+              mode: 'open',
+            });
+            const inner1 = createAndPosition(shadowRoot, 0);
+            const inner2 = createAndPosition(shadowRoot, 0);
+            const background = [document.body, document.documentElement];
+            ShadyDOM.settings.useNativeDocumentEFP = true;
+            let e = Array.from(ShadyDOM.wrap(document).elementsFromPoint(5, 5));
+            assert.deepEqual(e, [inner2, inner1, host, ...background]);
+            ShadyDOM.settings.useNativeDocumentEFP = false;
+            e = Array.from(ShadyDOM.wrap(document).elementsFromPoint(5, 5));
+            assert.deepEqual(e, [host, ...background]);
+            ShadyDOM.wrapIfNeeded(host).remove();
           });
         }
       );

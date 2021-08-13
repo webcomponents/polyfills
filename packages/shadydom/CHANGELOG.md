@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Allow event listener options to be specified using a function in addition to
   an object ([#469]https://github.com/webcomponents/polyfills/pull/469)
+- Adds an opt-out for polyfilling `element(s)FromPoint` on `document` via setting `ShadyDOM.useNativeDocumentEFP` to `true`.
 
 ## [1.9.0] - 2021-08-02
 
