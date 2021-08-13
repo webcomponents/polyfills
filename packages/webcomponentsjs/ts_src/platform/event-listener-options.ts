@@ -112,10 +112,14 @@ if (
         ? (e: Event) => {
             map.delete(listener);
             origRemoveEventListener.call(this, type, cachedListener, capture);
-            ((listener as EventListenerObject).handleEvent ?? listener).call(
-              this,
-              e
-            );
+            if (typeof listener === 'function') {
+              return listener.call(this, e);
+            }
+
+            const handleEvent = listener?.handleEvent;
+            if (typeof handleEvent === 'function') {
+              return handleEvent.call(e.currentTarget, e);
+            }
           }
         : listener;
       map.set(listener, cachedListener);
