@@ -41,6 +41,8 @@ function getAncestorRoots(docOrRoot) {
   return roots;
 }
 
+const USE_NATIVE_DOCUMENT_EFP = 'useNativeDocumentEFP';
+
 const elementsFromPointProperty =
   utils.NATIVE_PREFIX +
   utils.getPropertyName(Document.prototype, 'elementsFromPoint');
@@ -92,17 +94,20 @@ export const DocumentOrShadowRootPatches = utils.getOwnPropertyDescriptors({
 
   /** @this {Document|ShadowRoot} */
   elementsFromPoint(x, y) {
-    const nativeResult = utils.arrayFrom(
-      document[elementsFromPointProperty](x, y)
-    );
+    const nativeResult = document[elementsFromPointProperty](x, y);
+    // support optionally opt-ing out for document
+    if (this === document && utils.settings[USE_NATIVE_DOCUMENT_EFP]) {
+      return nativeResult;
+    }
+    const nativeArray = utils.arrayFrom(nativeResult);
     // Filter native result to return the element in this root
     // OR an above root.
     // Set containing this root and its ancestor roots.
     const ancestorRoots = getAncestorRoots(this);
     // Use a Set since the elements can repeat.
     const rootedResult = new Set();
-    for (let i = 0; i < nativeResult.length; i++) {
-      rootedResult.add(getElInRoot(ancestorRoots, nativeResult[i]));
+    for (let i = 0; i < nativeArray.length; i++) {
+      rootedResult.add(getElInRoot(ancestorRoots, nativeArray[i]));
     }
     // Note, for IE compat avoid Array.from(set).
     const r = [];
@@ -112,6 +117,9 @@ export const DocumentOrShadowRootPatches = utils.getOwnPropertyDescriptors({
 
   /** @this {Document|ShadowRoot} */
   elementFromPoint(x, y) {
-    return this[utils.SHADY_PREFIX + 'elementsFromPoint'](x, y)[0] || null;
+    // support optionally opt-ing out for document
+    return this === document && utils.settings[USE_NATIVE_DOCUMENT_EFP]
+      ? this[utils.NATIVE_PREFIX + 'elementFromPoint'](x, y)
+      : this[utils.SHADY_PREFIX + 'elementsFromPoint'](x, y)[0] || null;
   },
 });
