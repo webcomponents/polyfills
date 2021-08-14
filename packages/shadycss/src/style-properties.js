@@ -471,9 +471,8 @@ class StyleProperties {
         keyframesRule = keyframesRules[++i]
       ) {
         this._scopeKeyframes(keyframesRule, scopeSelector);
-        keyframeTransforms[
-          keyframesRule['keyframesName']
-        ] = this._keyframesRuleTransformer(keyframesRule);
+        keyframeTransforms[keyframesRule['keyframesName']] =
+          this._keyframesRuleTransformer(keyframesRule);
       }
     }
     return keyframeTransforms;
@@ -649,27 +648,28 @@ class StyleProperties {
       /** @type {HTMLStyleElement} */ (style)
     );
     let self = this;
-    style.textContent = StyleUtil.toCssText(rules, function (
-      /** StyleNode */ rule
-    ) {
-      let css = (rule['cssText'] = rule['parsedCssText']);
-      if (
-        /** @type {?} */ (rule.propertyInfo) &&
-        /** @type {?} */ (rule.propertyInfo).cssText
-      ) {
-        // remove property assignments
-        // so next function isn't confused
-        // NOTE: we have 3 categories of css:
-        // (1) normal properties,
-        // (2) custom property assignments (--foo: red;),
-        // (3) custom property usage: border: var(--foo); @apply(--foo);
-        // In elements, 1 and 3 are separated for efficiency; here they
-        // are not and this makes this case unique.
-        css = removeCustomPropAssignment(/** @type {string} */ (css));
-        // replace with reified properties, scenario is same as mixin
-        rule['cssText'] = self.valueForProperties(css, properties);
+    style.textContent = StyleUtil.toCssText(
+      rules,
+      function (/** StyleNode */ rule) {
+        let css = (rule['cssText'] = rule['parsedCssText']);
+        if (
+          /** @type {?} */ (rule.propertyInfo) &&
+          /** @type {?} */ (rule.propertyInfo).cssText
+        ) {
+          // remove property assignments
+          // so next function isn't confused
+          // NOTE: we have 3 categories of css:
+          // (1) normal properties,
+          // (2) custom property assignments (--foo: red;),
+          // (3) custom property usage: border: var(--foo); @apply(--foo);
+          // In elements, 1 and 3 are separated for efficiency; here they
+          // are not and this makes this case unique.
+          css = removeCustomPropAssignment(/** @type {string} */ (css));
+          // replace with reified properties, scenario is same as mixin
+          rule['cssText'] = self.valueForProperties(css, properties);
+        }
       }
-    });
+    );
   }
 }
 

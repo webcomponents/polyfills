@@ -41,7 +41,7 @@ const private_entries = new WeakMap<FormData, Array<FormDataEntry>>();
 
 export const getEntries = (formData: FormData) => private_entries.get(formData);
 
-export const FormData: typeof window.FormData = (function FormData(
+export const FormData: typeof window.FormData = function FormData(
   this: FormData,
   form?: HTMLFormElement
 ) {
@@ -68,7 +68,7 @@ export const FormData: typeof window.FormData = (function FormData(
   }
 
   return _this;
-} as Function) as typeof window.FormData;
+} as Function as typeof window.FormData;
 
 prepareWrapper(FormData, FormDataConstructor, FormDataPrototype);
 

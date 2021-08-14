@@ -455,13 +455,8 @@ export function dispatchEvent(event) {
  * @this {EventTarget}
  */
 export function addEventListener(type, fnOrObj, optionsOrCapture) {
-  const {
-    capture,
-    once,
-    passive,
-    shadyTarget,
-    nativeEventOptions,
-  } = parseEventOptions(optionsOrCapture);
+  const {capture, once, passive, shadyTarget, nativeEventOptions} =
+    parseEventOptions(optionsOrCapture);
   if (!fnOrObj) {
     return;
   }
@@ -638,13 +633,8 @@ export function removeEventListener(type, fnOrObj, optionsOrCapture) {
   if (!fnOrObj) {
     return;
   }
-  const {
-    capture,
-    once,
-    passive,
-    shadyTarget,
-    nativeEventOptions,
-  } = parseEventOptions(optionsOrCapture);
+  const {capture, once, passive, shadyTarget, nativeEventOptions} =
+    parseEventOptions(optionsOrCapture);
   if (unpatchedEvents[type]) {
     return this[utils.NATIVE_PREFIX + 'removeEventListener'](
       type,

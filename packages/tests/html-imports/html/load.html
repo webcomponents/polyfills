@@ -66,15 +66,17 @@
               'load event target can be used to find element in import'
             );
             assert.equal(window.loadEvents, 4, 'expected # of load events');
-            var test1 = getComputedStyle(document.querySelector('#test1'))
-              .backgroundColor;
+            var test1 = getComputedStyle(
+              document.querySelector('#test1')
+            ).backgroundColor;
             assert.equal(
               test1,
               'rgb(255, 0, 0)',
               'test1 red background-color ok'
             );
-            var test2 = getComputedStyle(document.querySelector('#test2'))
-              .backgroundColor;
+            var test2 = getComputedStyle(
+              document.querySelector('#test2')
+            ).backgroundColor;
             assert.equal(
               test2,
               'rgb(0, 0, 255)',

@@ -188,8 +188,9 @@
               location.origin || location.protocol + '//' + location.host;
             redirectedUrl = origin + redirectedUrl;
           }
-          const resource = /** @type {string} */ (request.response ||
-            request.responseText);
+          const resource = /** @type {string} */ (
+            request.response || request.responseText
+          );
           if (
             request.status === 304 ||
             request.status === 0 ||
@@ -418,9 +419,9 @@
      * @return {!HTMLStyleElement}
      */
     cloneStyle(style) {
-      const clone = /** @type {!HTMLStyleElement} */ (style.ownerDocument.createElement(
-        'style'
-      ));
+      const clone = /** @type {!HTMLStyleElement} */ (
+        style.ownerDocument.createElement('style')
+      );
       clone.textContent = style.textContent;
       forEach(style.attributes, (attr) =>
         clone.setAttribute(attr.name, attr.value)
@@ -793,9 +794,9 @@
     if (typeof window.CustomEvent === 'function') {
       return new CustomEvent(type, params);
     }
-    const event = /** @type {!CustomEvent} */ (document.createEvent(
-      'CustomEvent'
-    ));
+    const event = /** @type {!CustomEvent} */ (
+      document.createEvent('CustomEvent')
+    );
     event.initCustomEvent(
       type,
       Boolean(params.bubbles),
@@ -845,9 +846,9 @@
       !native_baseURI || native_baseURI.configurable ? Node : Element;
     Object.defineProperty(klass.prototype, 'baseURI', {
       get() {
-        const ownerDoc = /** @type {HTMLLinkElement} */ (isImportLink(this)
-          ? this
-          : importForElement(this));
+        const ownerDoc = /** @type {HTMLLinkElement} */ (
+          isImportLink(this) ? this : importForElement(this)
+        );
         if (ownerDoc) {
           return ownerDoc.href;
         }
@@ -856,9 +857,9 @@
           return native_baseURI.get.call(this);
         }
         // Polyfill it if not available.
-        const base = /** @type {HTMLBaseElement} */ (document.querySelector(
-          'base'
-        ));
+        const base = /** @type {HTMLBaseElement} */ (
+          document.querySelector('base')
+        );
         return (base || window.location).href;
       },
       configurable: true,

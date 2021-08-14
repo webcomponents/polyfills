@@ -40,9 +40,9 @@
       return Reflect.construct(BuiltInHTMLElement, [], this.constructor);
     },
   };
-  window.HTMLElement = (wrapperForTheName[
+  window.HTMLElement = wrapperForTheName[
     'HTMLElement'
-  ] as unknown) as typeof HTMLElement;
+  ] as unknown as typeof HTMLElement;
   HTMLElement.prototype = BuiltInHTMLElement.prototype;
   HTMLElement.prototype.constructor = HTMLElement;
   Object.setPrototypeOf(HTMLElement, BuiltInHTMLElement);

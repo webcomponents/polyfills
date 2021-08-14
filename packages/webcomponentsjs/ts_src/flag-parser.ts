@@ -22,7 +22,7 @@ interface ExtendedWindow extends Window {
 type Flags = Record<string, string | boolean | Record<string, boolean>>;
 
 // Establish scope.
-const extendedWindow = (window as unknown) as ExtendedWindow;
+const extendedWindow = window as unknown as ExtendedWindow;
 extendedWindow['WebComponents'] = extendedWindow['WebComponents'] || {
   'flags': {},
 };

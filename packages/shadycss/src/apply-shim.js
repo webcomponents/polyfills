@@ -162,9 +162,9 @@ class ApplyShim {
   gatherStyles(template) {
     const styleText = gatherStyleText(template.content);
     if (styleText) {
-      const style = /** @type {!HTMLStyleElement} */ (document.createElement(
-        'style'
-      ));
+      const style = /** @type {!HTMLStyleElement} */ (
+        document.createElement('style')
+      );
       style.textContent = styleText;
       template.content.insertBefore(style, template.content.firstChild);
       return style;
@@ -260,9 +260,9 @@ class ApplyShim {
    */
   _getInitialValueForProperty(property) {
     if (!this._measureElement) {
-      this._measureElement = /** @type {HTMLMetaElement} */ (document.createElement(
-        'meta'
-      ));
+      this._measureElement = /** @type {HTMLMetaElement} */ (
+        document.createElement('meta')
+      );
       this._measureElement.setAttribute('apply-shim-measure', '');
       this._measureElement.style.all = 'initial';
       document.head.appendChild(this._measureElement);

@@ -102,9 +102,9 @@ export default class CustomStyleInterface {
       if (style) {
         // HTMLImports polyfill may have cloned the style into the main document,
         // which is referenced with __appliedElement.
-        const styleToTransform = /** @type {!HTMLStyleElement} */ (style[
-          '__appliedElement'
-        ] || style);
+        const styleToTransform = /** @type {!HTMLStyleElement} */ (
+          style['__appliedElement'] || style
+        );
         if (transformFn) {
           transformFn(styleToTransform);
         }

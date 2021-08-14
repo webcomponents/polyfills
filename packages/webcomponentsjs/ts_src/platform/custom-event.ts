@@ -43,12 +43,12 @@ const isIE = /Trident/.test(navigator.userAgent);
 // Event constructor shim
 if (!window.Event || (isIE && typeof window.Event !== 'function')) {
   const origEvent = window.Event as typeof Event;
-  window['Event'] = (((inType: string, params?: EventInit) => {
+  window['Event'] = ((inType: string, params?: EventInit) => {
     params = params || {};
     const e = document.createEvent('Event');
     e.initEvent(inType, Boolean(params.bubbles), Boolean(params.cancelable));
     return e;
-  }) as unknown) as typeof Event;
+  }) as unknown as typeof Event;
   if (origEvent) {
     for (const i in origEvent) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -60,7 +60,7 @@ if (!window.Event || (isIE && typeof window.Event !== 'function')) {
 
 // CustomEvent constructor shim
 if (!window.CustomEvent || (isIE && typeof window.CustomEvent !== 'function')) {
-  window['CustomEvent'] = ((<T extends unknown>(
+  window['CustomEvent'] = (<T extends unknown>(
     inType: string,
     params?: CustomEventInit<T>
   ) => {
@@ -73,13 +73,13 @@ if (!window.CustomEvent || (isIE && typeof window.CustomEvent !== 'function')) {
       params.detail!
     );
     return e;
-  }) as unknown) as typeof CustomEvent;
+  }) as unknown as typeof CustomEvent;
   window['CustomEvent'].prototype = window.Event.prototype as CustomEvent;
 }
 
 if (!window.MouseEvent || (isIE && typeof window.MouseEvent !== 'function')) {
   const origMouseEvent = window.MouseEvent as typeof MouseEvent;
-  window['MouseEvent'] = (((inType: string, params?: MouseEventInit) => {
+  window['MouseEvent'] = ((inType: string, params?: MouseEventInit) => {
     params = params || {};
     const e = document.createEvent('MouseEvent');
     e.initMouseEvent(
@@ -100,7 +100,7 @@ if (!window.MouseEvent || (isIE && typeof window.MouseEvent !== 'function')) {
       params.relatedTarget!
     );
     return e;
-  }) as unknown) as typeof MouseEvent;
+  }) as unknown as typeof MouseEvent;
   if (origMouseEvent) {
     for (const j in origMouseEvent) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any

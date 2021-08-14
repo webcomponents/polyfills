@@ -71,7 +71,12 @@ class ShadyRoot {
     hostData.publicRoot = this.mode !== MODE_CLOSED ? this : null;
     // setup root
     const rootData = ensureShadyDataForNode(this);
-    rootData.firstChild = rootData.lastChild = rootData.parentNode = rootData.nextSibling = rootData.previousSibling = null;
+    rootData.firstChild =
+      rootData.lastChild =
+      rootData.parentNode =
+      rootData.nextSibling =
+      rootData.previousSibling =
+        null;
     // NOTE: optimization flag, only require an asynchronous render
     // to record parsed children if flag is not set.
     if (utils.settings['preferPerformance']) {

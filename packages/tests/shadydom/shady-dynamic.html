@@ -391,9 +391,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
         suiteSetup(function () {
           testElement = ShadyDOM.wrapIfNeeded(document).querySelector('x-test');
-          testElementEsc = ShadyDOM.wrapIfNeeded(document).querySelector(
-            'x-test-esc'
-          );
+          testElementEsc =
+            ShadyDOM.wrapIfNeeded(document).querySelector('x-test-esc');
         });
 
         test('mode `open` exposes `.shadowRoot`', function () {
@@ -416,9 +415,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             ShadyDOM.wrapIfNeeded(projected).textContent,
             'projected'
           );
-          var p2 = ShadyDOM.wrapIfNeeded(testElement).querySelector(
-            '#projected'
-          );
+          var p2 =
+            ShadyDOM.wrapIfNeeded(testElement).querySelector('#projected');
           assert.isNull(p2);
           var rere = ShadyDOM.wrapIfNeeded(
             ShadyDOM.wrapIfNeeded(testElement).shadowRoot
@@ -636,9 +634,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         });
 
         test('without a host setting host attributes/reflecting properties provokes distribution', function () {
-          var e = ShadyDOM.wrapIfNeeded(document).querySelector(
-            'x-select-attr'
-          );
+          var e =
+            ShadyDOM.wrapIfNeeded(document).querySelector('x-select-attr');
           var ip$ = ShadyDOM.wrapIfNeeded(
             ShadyDOM.wrapIfNeeded(e).shadowRoot
           ).querySelectorAll('slot');
@@ -963,9 +960,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         });
 
         test('appendChild interacts with unmanaged parent tree', function () {
-          var container = ShadyDOM.wrapIfNeeded(document).querySelector(
-            '#container'
-          );
+          var container =
+            ShadyDOM.wrapIfNeeded(document).querySelector('#container');
           var echo = ShadyDOM.wrapIfNeeded(container).firstElementChild;
           assert.equal(echo.localName, 'x-echo');
           var s1 = ShadyDOM.wrapIfNeeded(echo).nextElementSibling;
@@ -1104,9 +1100,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             ShadyDOM.wrapIfNeeded(test).shadowRoot
           ).querySelector('#projected');
           assert.equal(ShadyDOM.wrapIfNeeded(projected).childElementCount, 0);
-          var emptySvg = ShadyDOM.wrapIfNeeded(document).querySelector(
-            '#emptySvg'
-          );
+          var emptySvg =
+            ShadyDOM.wrapIfNeeded(document).querySelector('#emptySvg');
           assert.equal(ShadyDOM.wrapIfNeeded(emptySvg).childElementCount, 0);
         });
 
@@ -1434,9 +1429,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         });
 
         test('shadowRoot.appendChild element with slot child and shadowRoot with slot pending distribution', function () {
-          var outerElement = ShadyDOM.wrapIfNeeded(document).querySelector(
-            'outer-element'
-          );
+          var outerElement =
+            ShadyDOM.wrapIfNeeded(document).querySelector('outer-element');
           assert.equal(
             ShadyDOM.nativeTree.innerHTML(outerElement),
             '<inner-element>hello</inner-element>'
@@ -1462,9 +1456,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         test('non-basic elements ok regardless of patching mode', function () {
           var e = document.createElement('x-has-input');
           ShadyDOM.wrapIfNeeded(document.body).appendChild(e);
-          var input = ShadyDOM.wrapIfNeeded(e).shadowRoot.querySelector(
-            'input'
-          );
+          var input =
+            ShadyDOM.wrapIfNeeded(e).shadowRoot.querySelector('input');
           assert.equal(input.value, 'hi');
           ShadyDOM.wrapIfNeeded(document.body).removeChild(e);
         });
@@ -2895,9 +2888,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           ShadyDOM.flush();
           const el = d.firstElementChild;
           assert.equal(el.childNodes.length, 4);
-          const slot = ShadyDOM.wrapIfNeeded(el).shadowRoot.querySelector(
-            'slot'
-          );
+          const slot =
+            ShadyDOM.wrapIfNeeded(el).shadowRoot.querySelector('slot');
           for (let i = 0; i < el.childNodes.length; i++) {
             const child = el.childNodes[i];
             assert.equal(ShadyDOM.wrapIfNeeded(child).parentNode, el);

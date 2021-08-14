@@ -711,9 +711,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         });
 
         test('event patching (add and remove) works on any elements', function () {
-          let el = ShadyDOM.wrapIfNeeded(document).querySelector(
-            '#globalpatch'
-          );
+          let el =
+            ShadyDOM.wrapIfNeeded(document).querySelector('#globalpatch');
           let path;
           const fn = function (e) {
             path = e.composedPath();
@@ -1318,12 +1317,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           };
 
           test('bubbling, non-composed events', () => {
-            const {
-              fixtureRoot,
-              outerDiv,
-              innerNoSlot,
-              target,
-            } = getDispatchTestElement();
+            const {fixtureRoot, outerDiv, innerNoSlot, target} =
+              getDispatchTestElement();
             ShadyDOM.wrap(document.body).appendChild(fixtureRoot);
             assert.strictEqual(ShadyDOM.wrap(target).assignedSlot, null);
 
@@ -1352,12 +1347,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           });
 
           test('non-bubbling, non-composed events', () => {
-            const {
-              fixtureRoot,
-              outerDiv,
-              innerNoSlot,
-              target,
-            } = getDispatchTestElement();
+            const {fixtureRoot, outerDiv, innerNoSlot, target} =
+              getDispatchTestElement();
             ShadyDOM.wrap(document.body).appendChild(fixtureRoot);
             assert.strictEqual(ShadyDOM.wrap(target).assignedSlot, null);
 
@@ -1387,12 +1378,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           });
 
           test('non-bubbling, composed events', () => {
-            const {
-              fixtureRoot,
-              outerDiv,
-              innerNoSlot,
-              target,
-            } = getDispatchTestElement();
+            const {fixtureRoot, outerDiv, innerNoSlot, target} =
+              getDispatchTestElement();
             ShadyDOM.wrap(document.body).appendChild(fixtureRoot);
             assert.strictEqual(ShadyDOM.wrap(target).assignedSlot, null);
 
@@ -1422,12 +1409,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           });
 
           test('bubbling, composed events', () => {
-            const {
-              fixtureRoot,
-              outerDiv,
-              innerNoSlot,
-              target,
-            } = getDispatchTestElement();
+            const {fixtureRoot, outerDiv, innerNoSlot, target} =
+              getDispatchTestElement();
             ShadyDOM.wrap(document.body).appendChild(fixtureRoot);
             assert.strictEqual(ShadyDOM.wrap(target).assignedSlot, null);
 
@@ -1456,12 +1439,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           });
 
           test('events have the correct phase during dispatch', () => {
-            const {
-              fixtureRoot,
-              outerDiv,
-              innerNoSlot,
-              target,
-            } = getDispatchTestElement();
+            const {fixtureRoot, outerDiv, innerNoSlot, target} =
+              getDispatchTestElement();
             ShadyDOM.wrap(document.body).appendChild(fixtureRoot);
             assert.strictEqual(ShadyDOM.wrap(target).assignedSlot, null);
 
@@ -1603,12 +1582,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           );
 
           test('removed bubbling event listeners are no longer called during manual dispatch', () => {
-            const {
-              fixtureRoot,
-              outerDiv,
-              innerNoSlot,
-              target,
-            } = getDispatchTestElement();
+            const {fixtureRoot, outerDiv, innerNoSlot, target} =
+              getDispatchTestElement();
             ShadyDOM.wrap(document.body).appendChild(fixtureRoot);
             assert.strictEqual(ShadyDOM.wrap(target).assignedSlot, null);
 
