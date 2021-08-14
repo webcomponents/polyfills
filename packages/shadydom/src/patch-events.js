@@ -512,7 +512,7 @@ export function addEventListener(type, fnOrObj, optionsOrCapture) {
   }
 
   /**
-   * @this {HTMLElement}
+   * @this {EventTarget}
    * @param {Event} e
    */
   const wrapperFn = (e) => {
@@ -609,9 +609,9 @@ export function addEventListener(type, fnOrObj, optionsOrCapture) {
     // note: use target here which is either a shadowRoot
     // (when the host element is proxy'ing the event) or this element
     node: target,
-    type: type,
-    capture: capture,
-    wrapperFn: wrapperFn,
+    type,
+    capture,
+    wrapperFn,
   });
 
   this.__handlers = this.__handlers || {};

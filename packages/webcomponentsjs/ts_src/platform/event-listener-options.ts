@@ -123,9 +123,8 @@ if (
               return listener.call(this, e);
             }
 
-            const handleEvent = listener?.handleEvent;
-            if (typeof handleEvent === 'function') {
-              return handleEvent.call(e.currentTarget, e);
+            if (typeof listener?.handleEvent === 'function') {
+              return listener.handleEvent(e);
             }
           }
         : null;

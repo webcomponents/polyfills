@@ -1664,17 +1664,33 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           ? test
           : test.skip)('bubbling eventPhase', function () {
           const eventPhases = [];
-          const listener = (e) => {
+          const listener = function (e) {
             eventPhases.push(e.eventPhase);
           };
+          // Note, order of propagation between listeners on shadowRoots
+          // and hosts is known to be incorrect; ensure correct ordering
+          // by adding shadowRoot listeners first.
+          ShadyDOM.wrapIfNeeded(h1).shadowRoot.addEventListener(
+            'click',
+            listener
+          );
           ShadyDOM.wrapIfNeeded(h1).addEventListener('click', listener);
           ShadyDOM.wrapIfNeeded(h1_c).addEventListener('click', listener);
+          ShadyDOM.wrapIfNeeded(h1_c_h2).shadowRoot.addEventListener(
+            'click',
+            listener
+          );
           ShadyDOM.wrapIfNeeded(h1_c_h2).addEventListener('click', listener);
           ShadyDOM.wrapIfNeeded(h1_c_h2_c).addEventListener('click', listener);
+          ShadyDOM.wrapIfNeeded(h1_c_h2_c_h3).shadowRoot.addEventListener(
+            'click',
+            listener
+          );
           ShadyDOM.wrapIfNeeded(h1_c_h2_c_h3).addEventListener(
             'click',
             listener
           );
+
           ShadyDOM.wrapIfNeeded(h1_c_h2_c_h3_c).addEventListener(
             'click',
             listener
@@ -1684,7 +1700,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           );
           const t = Event.AT_TARGET;
           const b = Event.BUBBLING_PHASE;
-          assert.deepEqual(eventPhases, [t, t, b, t, b, t]);
+          assert.deepEqual(eventPhases, [t, b, t, b, b, t, b, b, t]);
         });
 
         (window.canTestEventPhase
@@ -1695,8 +1711,18 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             eventPhases.push(e.eventPhase);
           };
           ShadyDOM.wrapIfNeeded(h1).addEventListener('click', listener, true);
+          ShadyDOM.wrapIfNeeded(h1).shadowRoot.addEventListener(
+            'click',
+            listener,
+            true
+          );
           ShadyDOM.wrapIfNeeded(h1_c).addEventListener('click', listener, true);
           ShadyDOM.wrapIfNeeded(h1_c_h2).addEventListener(
+            'click',
+            listener,
+            true
+          );
+          ShadyDOM.wrapIfNeeded(h1_c_h2).shadowRoot.addEventListener(
             'click',
             listener,
             true
@@ -1711,6 +1737,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             listener,
             true
           );
+          ShadyDOM.wrapIfNeeded(h1_c_h2_c_h3).shadowRoot.addEventListener(
+            'click',
+            listener,
+            true
+          );
           ShadyDOM.wrapIfNeeded(h1_c_h2_c_h3_c).addEventListener(
             'click',
             listener,
@@ -1721,7 +1752,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           );
           const t = Event.AT_TARGET;
           const c = Event.CAPTURING_PHASE;
-          assert.deepEqual(eventPhases, [t, c, t, c, t, t]);
+          assert.deepEqual(eventPhases, [t, c, c, t, c, c, t, c, t]);
         });
       });
 

@@ -292,12 +292,17 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             assert.equal(callback.callCount, 0, 'not called if removed early');
             el1.addEventListener('click', callback, {once: true});
             el1.removeEventListener('click', callback, {once: true});
+            // use listener on another element
             el2.addEventListener('click', callback, {once: true});
             el1.dispatchEvent(new Event('click'));
-            assert.equal(callback.callCount, 0, 'not called if removed early');
+            assert.equal(
+              callback.callCount,
+              0,
+              'not called when re-used and event dispatched on previous element'
+            );
             el2.dispatchEvent(new Event('click'));
             el2.dispatchEvent(new Event('click'));
-            assert.equal(callback.callCount, 1, 'not called if removed early');
+            assert.equal(callback.callCount, 1, 'called once when re-used');
           });
 
           test('same listener with different `once` and `capture` options', function () {
@@ -357,6 +362,30 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             assert.equal(pThisRef, pCurrentTarget);
             assert.ok(cThisRef);
             assert.equal(cThisRef, cCurrentTarget);
+          });
+
+          test('`once` listener called with correct this when using listener with `handleEvent` function', function () {
+            let pThisRef, pCurrentTarget;
+            const pListener = {
+              handleEvent: function (e) {
+                pThisRef = this;
+                pCurrentTarget = e.currentTarget;
+              },
+            };
+            let cThisRef, cCurrentTarget;
+            const cListener = {
+              handleEvent: function (e) {
+                cThisRef = this;
+                cCurrentTarget = e.currentTarget;
+              },
+            };
+            parent.addEventListener('test', pListener, {once: true});
+            child.addEventListener('test', cListener, {once: true});
+            gchild.dispatchEvent(new Event('test', {bubbles: true}));
+            assert.ok(pThisRef);
+            assert.equal(pThisRef, pListener);
+            assert.ok(cThisRef);
+            assert.equal(cThisRef, cListener);
           });
 
           test('add null listener', function () {
