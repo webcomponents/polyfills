@@ -21,9 +21,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.9.0] - 2021-08-02
 
 - Add `@this` annotation to new `elementFromPoint` wrappers.
-  ([#464]https://github.com/webcomponents/polyfills/pull/464)
+  ([#464](https://github.com/webcomponents/polyfills/pull/464))
 - Adds `element(s)FromPoint` to `document` and `shadowRoot`
-  ([#463]https://github.com/webcomponents/polyfills/pull/463)
+  ([#463](https://github.com/webcomponents/polyfills/pull/463))
 - Add TS externs. ([#457](https://github.com/webcomponents/polyfills/pull/457))
 - When `EventTarget.prototype` exists but is not in the prototype chain of
   `window`, polyfill installation breaks.
