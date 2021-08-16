@@ -9,7 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
-- Adds an opt-out for polyfilling `element(s)FromPoint` on `document` via setting `ShadyDOM.useNativeDocumentEFP` to `true`.
+- Allow event listener options to be specified using a function in addition to
+  an object. ([#469](https://github.com/webcomponents/polyfills/pull/469))
+- The `eventPhase` property of events is now properly set to `Event.AT_TARGET`
+  when events are re-targeted to hosts of shadowRoots.
+  ([#469](https://github.com/webcomponents/polyfills/pull/469))
+- Adds an opt-out for polyfilling `element(s)FromPoint` on `document` via
+  setting `ShadyDOM.useNativeDocumentEFP` to `true`.
+  ([#472](https://github.com/webcomponents/polyfills/pull/472))
 
 ## [1.9.0] - 2021-08-02
 

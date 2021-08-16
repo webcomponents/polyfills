@@ -20,6 +20,15 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           HTMLElement.prototype
         ).filter((x) => x.substring(0, 2) === 'on'),
       };
+
+      const eventPhaseDescriptor = Object.getOwnPropertyDescriptor(
+        Event.prototype,
+        'eventPhase'
+      );
+
+      window.canTestEventPhase = !!(
+        eventPhaseDescriptor && eventPhaseDescriptor.get
+      );
     </script>
     <script src="wct-browser-config.js"></script>
     <script src="../node_modules/@webcomponents/webcomponentsjs/bundles/webcomponents-pf_js.js"></script>
@@ -1259,7 +1268,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       });
 
       suite('Patch of addEventListener/removeEventListener', function () {
-        var el1, el2, callback;
+        var el1, el2, parent, child, gchild, callback;
+        var h1, h1_c, h1_c_h2, h1_c_h2_c, h1_c_h2_c_h3, h1_c_h2_c_h3_c;
 
         setup(function () {
           el1 = document.createElement('button');
@@ -1270,18 +1280,90 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           ShadyDOM.wrapIfNeeded(el2).textContent = 'hi again';
           ShadyDOM.wrapIfNeeded(document.body).appendChild(el2);
 
+          parent = document.createElement('div');
+          child = document.createElement('div');
+          gchild = document.createElement('div');
+          ShadyDOM.wrapIfNeeded(child).appendChild(gchild);
+          ShadyDOM.wrapIfNeeded(parent).appendChild(child);
+          ShadyDOM.wrapIfNeeded(document.body).appendChild(parent);
+
+          h1 = document.createElement('div');
+          h1_c = document.createElement('div');
+          h1_c_h2 = document.createElement('div');
+          h1_c_h2_c = document.createElement('div');
+          h1_c_h2_c_h3 = document.createElement('div');
+          h1_c_h2_c_h3_c = document.createElement('div');
+          ShadyDOM.wrapIfNeeded(h1).attachShadow({mode: 'open'});
+          ShadyDOM.wrapIfNeeded(h1_c_h2).attachShadow({mode: 'open'});
+          ShadyDOM.wrapIfNeeded(h1_c_h2_c_h3).attachShadow({mode: 'open'});
+          ShadyDOM.wrapIfNeeded(h1_c_h2_c_h3).shadowRoot.appendChild(
+            h1_c_h2_c_h3_c
+          );
+          ShadyDOM.wrapIfNeeded(h1_c_h2_c).appendChild(h1_c_h2_c_h3);
+          ShadyDOM.wrapIfNeeded(h1_c_h2).shadowRoot.appendChild(h1_c_h2_c);
+          ShadyDOM.wrapIfNeeded(h1_c).appendChild(h1_c_h2);
+          ShadyDOM.wrapIfNeeded(h1).shadowRoot.appendChild(h1_c);
+          ShadyDOM.wrapIfNeeded(document.body).appendChild(h1);
           callback = sinon.stub();
         });
 
         teardown(function () {
-          ShadyDOM.wrapIfNeeded(el1).parentNode &&
-            ShadyDOM.wrapIfNeeded(
-              ShadyDOM.wrapIfNeeded(el1).parentNode
-            ).removeChild(el1);
-          ShadyDOM.wrapIfNeeded(el2).parentNode &&
-            ShadyDOM.wrapIfNeeded(
-              ShadyDOM.wrapIfNeeded(el2).parentNode
-            ).removeChild(el2);
+          ShadyDOM.wrapIfNeeded(el1).remove();
+          ShadyDOM.wrapIfNeeded(el2).remove();
+          ShadyDOM.wrapIfNeeded(parent).remove();
+          ShadyDOM.wrapIfNeeded(h1).remove();
+        });
+
+        test('events bubble as expected with different listener options', function () {
+          const test = (options) => {
+            const targets = [];
+            const listener = (e) => targets.push(e.currentTarget);
+            const event = 'test-bubble-event';
+            ShadyDOM.wrap(parent).addEventListener(event, listener, options);
+            ShadyDOM.wrap(child).addEventListener(event, listener, options);
+            ShadyDOM.wrap(gchild).addEventListener(event, listener, options);
+            ShadyDOM.wrap(gchild).dispatchEvent(
+              new CustomEvent(event, {bubbles: true})
+            );
+            assert.deepEqual(targets, [gchild, child, parent]);
+            ShadyDOM.wrap(parent).removeEventListener(event, listener, options);
+            ShadyDOM.wrap(child).removeEventListener(event, listener, options);
+            ShadyDOM.wrap(gchild).removeEventListener(event, listener, options);
+          };
+          // no options
+          test();
+          // options as boolean
+          test(false);
+          // options as object
+          test({capture: false});
+          // options as function
+          const f = () => {};
+          f.capture = false;
+          test(f);
+        });
+
+        test('events capture as expected with different listener options', function () {
+          const test = (options) => {
+            const targets = [];
+            const listener = (e) => targets.push(e.currentTarget);
+            const event = 'test-event';
+            ShadyDOM.wrap(parent).addEventListener(event, listener, options);
+            ShadyDOM.wrap(child).addEventListener(event, listener, options);
+            ShadyDOM.wrap(gchild).addEventListener(event, listener, options);
+            ShadyDOM.wrap(gchild).dispatchEvent(new CustomEvent(event));
+            assert.deepEqual(targets, [parent, child, gchild]);
+            ShadyDOM.wrap(parent).removeEventListener(event, listener, options);
+            ShadyDOM.wrap(child).removeEventListener(event, listener, options);
+            ShadyDOM.wrap(gchild).removeEventListener(event, listener, options);
+          };
+          // options as boolean
+          test(true);
+          // options as object
+          test({capture: true});
+          // options as function
+          const f = () => {};
+          f.capture = true;
+          test(f);
         });
 
         test('different events, same callback', function () {
@@ -1301,11 +1383,91 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           );
         });
 
+        test('listener adding de-duplicate based only on capture option', function () {
+          ShadyDOM.wrap(el1).addEventListener('click', callback);
+          ShadyDOM.wrap(el1).addEventListener('click', callback);
+          ShadyDOM.wrapIfNeeded(el1).dispatchEvent(
+            new Event('click', {bubbles: true, composed: true})
+          );
+          assert.equal(callback.callCount, 1, 'listener called once');
+          ShadyDOM.wrap(el1).addEventListener('click', callback, {
+            passive: true,
+          });
+          ShadyDOM.wrapIfNeeded(el1).dispatchEvent(
+            new Event('click', {bubbles: true, composed: true})
+          );
+          assert.equal(callback.callCount, 2, 'listener called once');
+          ShadyDOM.wrap(el1).addEventListener('click', callback, {once: true});
+          ShadyDOM.wrapIfNeeded(el1).dispatchEvent(
+            new Event('click', {bubbles: true, composed: true})
+          );
+          assert.equal(callback.callCount, 3, 'listener called once');
+          // once not honored because listener not added.
+          ShadyDOM.wrapIfNeeded(el1).dispatchEvent(
+            new Event('click', {bubbles: true, composed: true})
+          );
+          assert.equal(callback.callCount, 4, 'listener called once');
+          ShadyDOM.wrap(el1).addEventListener('click', callback, true);
+          ShadyDOM.wrapIfNeeded(el1).dispatchEvent(
+            new Event('click', {bubbles: true, composed: true})
+          );
+          assert.equal(callback.callCount, 6, 'listener called 2x');
+          ShadyDOM.wrap(el1).addEventListener('click', callback, true);
+          ShadyDOM.wrapIfNeeded(el1).dispatchEvent(
+            new Event('click', {bubbles: true, composed: true})
+          );
+          assert.equal(callback.callCount, 8, 'listener called 2x');
+        });
+
+        test('listener removing de-duplicate based only on capture option', function () {
+          ShadyDOM.wrap(el1).addEventListener('click', callback);
+          ShadyDOM.wrap(el1).addEventListener('click', callback);
+          ShadyDOM.wrap(el1).removeEventListener('click', callback);
+          ShadyDOM.wrapIfNeeded(el1).dispatchEvent(
+            new Event('click', {bubbles: true, composed: true})
+          );
+          assert.equal(callback.callCount, 0, 'listener not called');
+          ShadyDOM.wrap(el1).addEventListener('click', callback, {
+            passive: true,
+          });
+          ShadyDOM.wrap(el1).removeEventListener('click', callback);
+          ShadyDOM.wrapIfNeeded(el1).dispatchEvent(
+            new Event('click', {bubbles: true, composed: true})
+          );
+          assert.equal(callback.callCount, 0, 'listener not called');
+          ShadyDOM.wrap(el1).addEventListener('click', callback);
+          ShadyDOM.wrap(el1).removeEventListener('click', callback, true);
+          ShadyDOM.wrapIfNeeded(el1).dispatchEvent(
+            new Event('click', {bubbles: true, composed: true})
+          );
+          assert.equal(callback.callCount, 1, 'listener called');
+          ShadyDOM.wrap(el1).removeEventListener('click', callback);
+          ShadyDOM.wrapIfNeeded(el1).dispatchEvent(
+            new Event('click', {bubbles: true, composed: true})
+          );
+          assert.equal(callback.callCount, 1, 'listener not called');
+          ShadyDOM.wrap(el1).addEventListener('click', callback, true);
+          ShadyDOM.wrap(el1).removeEventListener('click', callback);
+          ShadyDOM.wrapIfNeeded(el1).dispatchEvent(
+            new Event('click', {bubbles: true, composed: true})
+          );
+          assert.equal(callback.callCount, 2, 'listener called');
+          ShadyDOM.wrap(el1).removeEventListener('click', callback, true);
+          ShadyDOM.wrapIfNeeded(el1).dispatchEvent(
+            new Event('click', {bubbles: true, composed: true})
+          );
+          assert.equal(callback.callCount, 2, 'listener not called');
+        });
+
         test('support `once` option', function () {
           ShadyDOM.wrap(el1).addEventListener('click', callback, {once: true});
-          el1.click();
+          ShadyDOM.wrapIfNeeded(el1).dispatchEvent(
+            new Event('click', {bubbles: true, composed: true})
+          );
           assert.equal(callback.callCount, 1, 'listener called once');
-          el1.click();
+          ShadyDOM.wrapIfNeeded(el1).dispatchEvent(
+            new Event('click', {bubbles: true, composed: true})
+          );
           assert.equal(
             callback.callCount,
             1,
@@ -1320,17 +1482,23 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           ShadyDOM.wrap(el1).addEventListener('click', callback, {
             capture: true,
           });
-          el1.click();
+          ShadyDOM.wrapIfNeeded(el1).dispatchEvent(
+            new Event('click', {bubbles: true, composed: true})
+          );
           assert.equal(callback.callCount, 2, 'called twice');
           ShadyDOM.wrap(el1).removeEventListener('click', callback, {
             passive: true,
           });
-          el1.click();
+          ShadyDOM.wrapIfNeeded(el1).dispatchEvent(
+            new Event('click', {bubbles: true, composed: true})
+          );
           assert.equal(callback.callCount, 3, 'called by capturing listener');
           ShadyDOM.wrap(el1).removeEventListener('click', callback, {
             capture: true,
           });
-          el1.click();
+          ShadyDOM.wrapIfNeeded(el1).dispatchEvent(
+            new Event('click', {bubbles: true, composed: true})
+          );
           assert.equal(
             callback.callCount,
             3,
@@ -1341,10 +1509,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         test('add same listener twice, invoke callback once', function () {
           ShadyDOM.wrap(el1).addEventListener('click', callback);
           ShadyDOM.wrap(el1).addEventListener('click', callback);
-          el1.click();
+          ShadyDOM.wrapIfNeeded(el1).dispatchEvent(
+            new Event('click', {bubbles: true, composed: true})
+          );
           assert.equal(callback.callCount, 1, 'called once');
           ShadyDOM.wrap(el1).removeEventListener('click', callback);
-          el1.click();
+          ShadyDOM.wrapIfNeeded(el1).dispatchEvent(
+            new Event('click', {bubbles: true, composed: true})
+          );
           assert.equal(
             callback.callCount,
             1,
@@ -1361,12 +1533,16 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           ShadyDOM.wrap(el1).addEventListener('click', callback, {
             capture: true,
           });
-          el1.click();
+          ShadyDOM.wrapIfNeeded(el1).dispatchEvent(
+            new Event('click', {bubbles: true, composed: true})
+          );
           assert.equal(callback.callCount, 1, 'listener called once');
           ShadyDOM.wrap(el1).removeEventListener('click', callback, {
             capture: true,
           });
-          el1.click();
+          ShadyDOM.wrapIfNeeded(el1).dispatchEvent(
+            new Event('click', {bubbles: true, composed: true})
+          );
           assert.equal(
             callback.callCount,
             1,
@@ -1383,13 +1559,17 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             passive: true,
             capture: false,
           });
-          el1.click();
+          ShadyDOM.wrapIfNeeded(el1).dispatchEvent(
+            new Event('click', {bubbles: true, composed: true})
+          );
           assert.equal(callback.callCount, 1, 'listener called once');
           ShadyDOM.wrap(el1).removeEventListener('click', callback, {
             passive: true,
             capture: false,
           });
-          el1.click();
+          ShadyDOM.wrapIfNeeded(el1).dispatchEvent(
+            new Event('click', {bubbles: true, composed: true})
+          );
           assert.equal(
             callback.callCount,
             1,
@@ -1400,14 +1580,22 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         test('add same listener on two different nodes', function () {
           ShadyDOM.wrap(el1).addEventListener('click', callback);
           ShadyDOM.wrap(el2).addEventListener('click', callback);
-          el1.click();
+          ShadyDOM.wrapIfNeeded(el1).dispatchEvent(
+            new Event('click', {bubbles: true, composed: true})
+          );
           assert.equal(callback.callCount, 1, 'called once');
-          el2.click();
+          ShadyDOM.wrapIfNeeded(el2).dispatchEvent(
+            new Event('click', {bubbles: true, composed: true})
+          );
           assert.equal(callback.callCount, 2, 'called twice');
           ShadyDOM.wrap(el1).removeEventListener('click', callback);
           ShadyDOM.wrap(el2).removeEventListener('click', callback);
-          el1.click();
-          el2.click();
+          ShadyDOM.wrapIfNeeded(el1).dispatchEvent(
+            new Event('click', {bubbles: true, composed: true})
+          );
+          ShadyDOM.wrapIfNeeded(el2).dispatchEvent(
+            new Event('click', {bubbles: true, composed: true})
+          );
           assert.equal(
             callback.callCount,
             2,
@@ -1419,7 +1607,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           var obj = {handleEvent: sinon.stub()};
           ShadyDOM.wrap(el1).addEventListener('click', obj);
           ShadyDOM.wrap(el2).addEventListener('click', obj);
-          el1.click();
+          ShadyDOM.wrapIfNeeded(el1).dispatchEvent(
+            new Event('click', {bubbles: true, composed: true})
+          );
           assert.isTrue(
             obj.handleEvent.calledOn(obj),
             'called on object listened'
@@ -1429,12 +1619,18 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             'called with event argument'
           );
           assert.equal(obj.handleEvent.callCount, 1, 'called once');
-          el2.click();
+          ShadyDOM.wrapIfNeeded(el2).dispatchEvent(
+            new Event('click', {bubbles: true, composed: true})
+          );
           assert.equal(obj.handleEvent.callCount, 2, 'called twice');
           ShadyDOM.wrap(el1).removeEventListener('click', obj);
           ShadyDOM.wrap(el2).removeEventListener('click', obj);
-          el1.click();
-          el2.click();
+          ShadyDOM.wrapIfNeeded(el1).dispatchEvent(
+            new Event('click', {bubbles: true, composed: true})
+          );
+          ShadyDOM.wrapIfNeeded(el2).dispatchEvent(
+            new Event('click', {bubbles: true, composed: true})
+          );
           assert.equal(
             obj.handleEvent.callCount,
             2,
@@ -1462,6 +1658,101 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           assert.doesNotThrow(function () {
             ShadyDOM.wrapIfNeeded(el1).addEventListener('baz', null);
           });
+        });
+
+        (window.canTestEventPhase
+          ? test
+          : test.skip)('bubbling eventPhase', function () {
+          const eventPhases = [];
+          const listener = function (e) {
+            eventPhases.push(e.eventPhase);
+          };
+          // Note, order of propagation between listeners on shadowRoots
+          // and hosts is known to be incorrect; ensure correct ordering
+          // by adding shadowRoot listeners first.
+          ShadyDOM.wrapIfNeeded(h1).shadowRoot.addEventListener(
+            'click',
+            listener
+          );
+          ShadyDOM.wrapIfNeeded(h1).addEventListener('click', listener);
+          ShadyDOM.wrapIfNeeded(h1_c).addEventListener('click', listener);
+          ShadyDOM.wrapIfNeeded(h1_c_h2).shadowRoot.addEventListener(
+            'click',
+            listener
+          );
+          ShadyDOM.wrapIfNeeded(h1_c_h2).addEventListener('click', listener);
+          ShadyDOM.wrapIfNeeded(h1_c_h2_c).addEventListener('click', listener);
+          ShadyDOM.wrapIfNeeded(h1_c_h2_c_h3).shadowRoot.addEventListener(
+            'click',
+            listener
+          );
+          ShadyDOM.wrapIfNeeded(h1_c_h2_c_h3).addEventListener(
+            'click',
+            listener
+          );
+
+          ShadyDOM.wrapIfNeeded(h1_c_h2_c_h3_c).addEventListener(
+            'click',
+            listener
+          );
+          ShadyDOM.wrapIfNeeded(h1_c_h2_c_h3_c).dispatchEvent(
+            new Event('click', {bubbles: true, composed: true})
+          );
+          const t = Event.AT_TARGET;
+          const b = Event.BUBBLING_PHASE;
+          assert.deepEqual(eventPhases, [t, b, t, b, b, t, b, b, t]);
+        });
+
+        (window.canTestEventPhase
+          ? test
+          : test.skip)('capturing eventPhase', function () {
+          const eventPhases = [];
+          const listener = (e) => {
+            eventPhases.push(e.eventPhase);
+          };
+          ShadyDOM.wrapIfNeeded(h1).addEventListener('click', listener, true);
+          ShadyDOM.wrapIfNeeded(h1).shadowRoot.addEventListener(
+            'click',
+            listener,
+            true
+          );
+          ShadyDOM.wrapIfNeeded(h1_c).addEventListener('click', listener, true);
+          ShadyDOM.wrapIfNeeded(h1_c_h2).addEventListener(
+            'click',
+            listener,
+            true
+          );
+          ShadyDOM.wrapIfNeeded(h1_c_h2).shadowRoot.addEventListener(
+            'click',
+            listener,
+            true
+          );
+          ShadyDOM.wrapIfNeeded(h1_c_h2_c).addEventListener(
+            'click',
+            listener,
+            true
+          );
+          ShadyDOM.wrapIfNeeded(h1_c_h2_c_h3).addEventListener(
+            'click',
+            listener,
+            true
+          );
+          ShadyDOM.wrapIfNeeded(h1_c_h2_c_h3).shadowRoot.addEventListener(
+            'click',
+            listener,
+            true
+          );
+          ShadyDOM.wrapIfNeeded(h1_c_h2_c_h3_c).addEventListener(
+            'click',
+            listener,
+            true
+          );
+          ShadyDOM.wrapIfNeeded(h1_c_h2_c_h3_c).dispatchEvent(
+            new Event('click', {bubbles: true, composed: true})
+          );
+          const t = Event.AT_TARGET;
+          const c = Event.CAPTURING_PHASE;
+          assert.deepEqual(eventPhases, [t, c, c, t, c, c, t, c, t]);
         });
       });
 

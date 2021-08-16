@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<!--
+@license
+Copyright (c) 2020 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<html>
+  <head>
+    <title>Event Listener Options</title>
+    <script src="../node_modules/@webcomponents/webcomponentsjs/bundles/webcomponents-pf_dom.js"></script>
+    <script src="./wct-config.js"></script>
+    <script src="../node_modules/wct-browser-legacy/browser.js"></script>
+  </head>
+  <body>
+    <script>
+      suite(
+        'addEventListener/removeEventListener with event listener options',
+        function () {
+          var el1, el2, parent, child, gchild, callback;
+
+          setup(function () {
+            el1 = document.createElement('button');
+            el1.textContent = 'hi';
+            document.body.appendChild(el1);
+
+            el2 = document.createElement('button');
+            el2.textContent = 'hi again';
+            document.body.appendChild(el2);
+
+            parent = document.createElement('div');
+            child = document.createElement('div');
+            gchild = document.createElement('div');
+            child.appendChild(gchild);
+            parent.appendChild(child);
+            document.body.appendChild(parent);
+
+            callback = sinon.stub();
+          });
+
+          teardown(function () {
+            el1.parentNode && el1.parentNode.removeChild(el1);
+            el2.parentNode && el2.parentNode.removeChild(el2);
+            parent.parentNode && parent.parentNode.removeChild(parent);
+          });
+
+          test('events bubble as expected with different listener options', function () {
+            const test = (options) => {
+              const targets = [];
+              const listener = (e) => targets.push(e.currentTarget);
+              const event = 'test-bubble-event';
+              parent.addEventListener(event, listener, options);
+              child.addEventListener(event, listener, options);
+              gchild.addEventListener(event, listener, options);
+              gchild.dispatchEvent(new CustomEvent(event, {bubbles: true}));
+              assert.deepEqual(targets, [gchild, child, parent]);
+              parent.removeEventListener(event, listener, options);
+              child.removeEventListener(event, listener, options);
+              gchild.removeEventListener(event, listener, options);
+            };
+            // no options
+            test();
+            // options as boolean
+            test(false);
+            // options as object
+            test({capture: false});
+            // options as function
+            const f = () => {};
+            f.capture = false;
+            test(f);
+          });
+
+          test('events capture as expected with different listener options', function () {
+            const test = (options) => {
+              const targets = [];
+              const listener = (e) => targets.push(e.currentTarget);
+              const event = 'test-event';
+              parent.addEventListener(event, listener, options);
+              child.addEventListener(event, listener, options);
+              gchild.addEventListener(event, listener, options);
+              gchild.dispatchEvent(new CustomEvent(event));
+              assert.deepEqual(targets, [parent, child, gchild]);
+              parent.removeEventListener(event, listener, options);
+              child.removeEventListener(event, listener, options);
+              gchild.removeEventListener(event, listener, options);
+            };
+            // options as boolean
+            test(true);
+            // options as object
+            test({capture: true});
+            // options as function
+            const f = () => {};
+            f.capture = true;
+            test(f);
+          });
+
+          test('different events, same callback', function () {
+            el1.addEventListener('test-event-1', callback);
+            el1.addEventListener('test-event-2', callback);
+            el1.dispatchEvent(new CustomEvent('test-event-1'));
+            el1.dispatchEvent(new CustomEvent('test-event-2'));
+            assert.equal(callback.callCount, 2, 'called twice');
+            el1.removeEventListener('test-event-1', callback);
+            el1.removeEventListener('test-event-2', callback);
+            el1.dispatchEvent(new CustomEvent('test-event-1'));
+            el1.dispatchEvent(new CustomEvent('test-event-2'));
+            assert.equal(callback.callCount, 2, 'not called after removal');
+          });
+
+          test('same event, same callback, different capture options', function () {
+            el1.addEventListener('click', callback, {});
+            el1.addEventListener('click', callback, {
+              capture: true,
+            });
+            el1.click();
+            assert.equal(callback.callCount, 2, 'called twice');
+            el1.removeEventListener('click', callback, {});
+            el1.click();
+            assert.equal(callback.callCount, 3, 'called by capturing listener');
+            el1.removeEventListener('click', callback, {
+              capture: true,
+            });
+            el1.click();
+            assert.equal(callback.callCount, 3, 'not called after removal');
+          });
+
+          test('add same listener twice, invoke callback once', function () {
+            el1.addEventListener('click', callback);
+            el1.addEventListener('click', callback);
+            el1.click();
+            assert.equal(callback.callCount, 1, 'called once');
+            el1.removeEventListener('click', callback);
+            el1.click();
+            assert.equal(callback.callCount, 1, 'not called after removal');
+          });
+
+          test('add same listener twice, invoke callback once (different useCapture notation)', function () {
+            el1.addEventListener('click', callback, true /* useCapture */);
+            el1.addEventListener('click', callback, {
+              capture: true,
+            });
+            el1.click();
+            assert.equal(callback.callCount, 1, 'listener called once');
+            el1.removeEventListener('click', callback, {
+              capture: true,
+            });
+            el1.click();
+            assert.equal(callback.callCount, 1, 'not called after removal');
+          });
+
+          test('add same listener twice, different order of options keys', function () {
+            el1.addEventListener('click', callback, {
+              capture: false,
+              passive: true,
+            });
+            el1.addEventListener('click', callback, {
+              passive: true,
+              capture: false,
+            });
+            el1.click();
+            assert.equal(callback.callCount, 1, 'listener called once');
+            el1.removeEventListener('click', callback, {
+              passive: true,
+              capture: false,
+            });
+            el1.click();
+            assert.equal(callback.callCount, 1, 'not called after removal');
+          });
+
+          test('add same listener on two different nodes', function () {
+            el1.addEventListener('click', callback);
+            el2.addEventListener('click', callback);
+            el1.click();
+            assert.equal(callback.callCount, 1, 'called once');
+            el2.click();
+            assert.equal(callback.callCount, 2, 'called twice');
+            el1.removeEventListener('click', callback);
+            el2.removeEventListener('click', callback);
+            el1.click();
+            el2.click();
+            assert.equal(callback.callCount, 2, 'not called after removal');
+          });
+
+          test('add same listener on two different events types', function () {
+            el1.addEventListener('click', callback);
+            el1.addEventListener('foo', callback);
+            el1.click();
+            assert.equal(callback.callCount, 1, 'called once');
+            el1.dispatchEvent(new Event('foo'));
+            assert.equal(callback.callCount, 2, 'called twice');
+            el1.removeEventListener('click', callback);
+            el1.dispatchEvent(new Event('foo'));
+            assert.equal(callback.callCount, 3, 'called 3x');
+            el1.removeEventListener('foo', callback);
+            el1.click();
+            el1.dispatchEvent(new Event('foo'));
+            assert.equal(callback.callCount, 3, 'not called after removal');
+          });
+
+          test('add listener with `handleEvent` function', function () {
+            var obj = {handleEvent: sinon.stub()};
+            el1.addEventListener('click', obj);
+            el2.addEventListener('click', obj);
+            el1.click();
+            assert.isTrue(
+              obj.handleEvent.calledOn(obj),
+              'called on object listened'
+            );
+            assert.isTrue(
+              obj.handleEvent.args[0][0] instanceof Event,
+              'called with event argument'
+            );
+            assert.equal(obj.handleEvent.callCount, 1, 'called once');
+            el2.click();
+            assert.equal(obj.handleEvent.callCount, 2, 'called twice');
+            el1.removeEventListener('click', obj);
+            el2.removeEventListener('click', obj);
+            el1.click();
+            el2.click();
+            assert.equal(
+              obj.handleEvent.callCount,
+              2,
+              'not called after removal'
+            );
+          });
+
+          test('add listener with function that has `handleEvent` function', function () {
+            let functionCalled = false;
+            let handleEventCalled = false;
+            var listener = () => {
+              functionCalled = true;
+            };
+            listener.handleEvent = () => {
+              handleEventCalled = true;
+            };
+
+            el1.addEventListener('click', listener, {
+              once: true,
+            });
+            el1.click();
+            assert.isTrue(
+              functionCalled,
+              'function called when handleEvent is defined on it'
+            );
+            assert.isFalse(
+              handleEventCalled,
+              'handleEvent not called when on listener function'
+            );
+          });
+
+          test('support `once` option', function () {
+            el1.addEventListener('click', callback, {once: true});
+            el1.click();
+            assert.equal(callback.callCount, 1, 'listener called once');
+            el1.click();
+            assert.equal(callback.callCount, 1, 'respects once option');
+          });
+
+          test('same listener with different `once` options', function () {
+            // same listener adds only once
+            el1.addEventListener('click', callback, {once: true});
+            el1.addEventListener('click', callback);
+            el1.dispatchEvent(new Event('click'));
+            assert.equal(callback.callCount, 1, 'listener called once');
+            // same listener different event
+            el1.addEventListener('foo', callback, {once: true});
+            el1.addEventListener('foo', callback);
+            el1.dispatchEvent(new Event('foo'));
+            assert.equal(callback.callCount, 2, 'listener called twice');
+            el1.dispatchEvent(new Event('click'));
+            assert.equal(callback.callCount, 2, 'listener called twice');
+            // can re-add listener
+            el1.addEventListener('click', callback);
+            el1.dispatchEvent(new Event('click'));
+            assert.equal(callback.callCount, 3, 'called after re-listening');
+            el1.dispatchEvent(new Event('click'));
+            assert.equal(callback.callCount, 4, 'called when once not used');
+            // changing once state doesn't affect listener
+            el1.addEventListener('click', callback, {once: true});
+            el1.dispatchEvent(new Event('click'));
+            el1.dispatchEvent(new Event('click'));
+            assert.equal(callback.callCount, 6, 'changing `once` does nothing');
+          });
+
+          test('`once` option can remove listener early and be re-used', function () {
+            el1.addEventListener('click', callback, {once: true});
+            el1.removeEventListener('click', callback);
+            el1.dispatchEvent(new Event('click'));
+            assert.equal(callback.callCount, 0, 'not called if removed early');
+            el1.addEventListener('click', callback, {once: true});
+            el1.removeEventListener('click', callback, {once: true});
+            // use listener on another element
+            el2.addEventListener('click', callback, {once: true});
+            el1.dispatchEvent(new Event('click'));
+            assert.equal(
+              callback.callCount,
+              0,
+              'not called when re-used and event dispatched on previous element'
+            );
+            el2.dispatchEvent(new Event('click'));
+            el2.dispatchEvent(new Event('click'));
+            assert.equal(callback.callCount, 1, 'called once when re-used');
+          });
+
+          test('same listener with different `once` and `capture` options', function () {
+            // same listener adds 2x with change of capture state
+            el1.addEventListener('click', callback, {once: true});
+            el1.addEventListener('click', callback, {
+              capture: true,
+              once: true,
+            });
+            el1.dispatchEvent(new Event('click'));
+            assert.equal(callback.callCount, 2, 'called 2x');
+            el1.dispatchEvent(new Event('click'));
+            assert.equal(callback.callCount, 2, 'calls not increased');
+            // can capture and non-capture can have different once options
+            el1.addEventListener('click', callback, {once: true});
+            el1.addEventListener('click', callback, {
+              capture: true,
+            });
+            el1.dispatchEvent(new Event('click'));
+            assert.equal(callback.callCount, 4, 'called 2x again');
+            el1.dispatchEvent(new Event('click'));
+            assert.equal(callback.callCount, 5, 'called for capture only');
+            el1.removeEventListener('click', callback, {
+              capture: true,
+            });
+            el1.dispatchEvent(new Event('click'));
+            assert.equal(callback.callCount, 5, 'not called after removed');
+            // can remove captured event early.
+            el1.addEventListener('click', callback, {once: true});
+            el1.addEventListener('click', callback, true);
+            el1.removeEventListener('click', callback, true);
+            el1.dispatchEvent(new Event('click'));
+            assert.equal(callback.callCount, 6, 'called 1x after early remove');
+            // can remove non-captured event early.
+            el1.addEventListener('click', callback, {once: true});
+            el1.addEventListener('click', callback, true);
+            el1.removeEventListener('click', callback);
+            el1.dispatchEvent(new Event('click'));
+            assert.equal(callback.callCount, 7, 'called 1x after early remove');
+          });
+
+          test('`once` listener called with correct this', function () {
+            let pThisRef, pCurrentTarget;
+            const pListener = function (e) {
+              pThisRef = this;
+              pCurrentTarget = e.currentTarget;
+            };
+            let cThisRef, cCurrentTarget;
+            const cListener = function (e) {
+              cThisRef = this;
+              cCurrentTarget = e.currentTarget;
+            };
+            parent.addEventListener('test', pListener, {once: true});
+            child.addEventListener('test', cListener, {once: true});
+            gchild.dispatchEvent(new Event('test', {bubbles: true}));
+            assert.ok(pThisRef);
+            assert.equal(pThisRef, pCurrentTarget);
+            assert.ok(cThisRef);
+            assert.equal(cThisRef, cCurrentTarget);
+          });
+
+          test('`once` listener called with correct this when using listener with `handleEvent` function', function () {
+            let pThisRef, pCurrentTarget;
+            const pListener = {
+              handleEvent: function (e) {
+                pThisRef = this;
+                pCurrentTarget = e.currentTarget;
+              },
+            };
+            let cThisRef, cCurrentTarget;
+            const cListener = {
+              handleEvent: function (e) {
+                cThisRef = this;
+                cCurrentTarget = e.currentTarget;
+              },
+            };
+            parent.addEventListener('test', pListener, {once: true});
+            child.addEventListener('test', cListener, {once: true});
+            gchild.dispatchEvent(new Event('test', {bubbles: true}));
+            assert.ok(pThisRef);
+            assert.equal(pThisRef, pListener);
+            assert.ok(cThisRef);
+            assert.equal(cThisRef, cListener);
+          });
+
+          test('add null listener', function () {
+            assert.doesNotThrow(function () {
+              el1.addEventListener('baz', null);
+            });
+          });
+        }
+      );
+    </script>
+  </body>
+</html>

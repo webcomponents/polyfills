@@ -43,22 +43,23 @@ const supportsEventOptions = (() => {
 })();
 
 const parseEventOptions = (optionsOrCapture) => {
-  let capture, once, passive, shadyTarget;
-  if (optionsOrCapture && typeof optionsOrCapture === 'object') {
+  let capture, once, shadyTarget;
+  if (
+    optionsOrCapture !== null &&
+    (typeof optionsOrCapture === 'object' ||
+      typeof optionsOrCapture === 'function')
+  ) {
     capture = Boolean(optionsOrCapture.capture);
     once = Boolean(optionsOrCapture.once);
-    passive = Boolean(optionsOrCapture.passive);
     shadyTarget = optionsOrCapture.__shadyTarget;
   } else {
     capture = Boolean(optionsOrCapture);
     once = false;
-    passive = false;
   }
   return {
     shadyTarget,
     capture,
     once,
-    passive,
     nativeEventOptions: supportsEventOptions ? optionsOrCapture : capture,
   };
 };
@@ -271,6 +272,31 @@ let EventPatches = {
   },
 };
 
+// Some browsers have missing or broken descriptors. If this is the case
+// eventPhase can't be polyfilled. For example, Chrome 41 does not
+// have prototypical descriptors on DOM objects and Safari 9 has broken ones
+// that cannot be used.
+const eventPhaseDescriptor =
+  utils.settings.hasDescriptors &&
+  Object.getOwnPropertyDescriptor(Event.prototype, 'eventPhase');
+if (eventPhaseDescriptor) {
+  Object.defineProperty(EventPatches, 'eventPhase', {
+    get() {
+      return this.currentTarget === this.target
+        ? Event.AT_TARGET
+        : this[utils.NATIVE_PREFIX + 'eventPhase'];
+    },
+    enumerable: true,
+    configurable: true,
+  });
+
+  Object.defineProperty(
+    EventPatches,
+    utils.NATIVE_PREFIX + 'eventPhase',
+    eventPhaseDescriptor
+  );
+}
+
 function mixinComposedFlag(Base) {
   // NOTE: avoiding use of `class` here so that transpiled output does not
   // try to do `Base.call` with a dom construtor.
@@ -379,35 +405,14 @@ function shadyDispatchEvent(e) {
   currentTarget = null;
 }
 
-function listenerSettingsEqual(
-  savedListener,
-  node,
-  type,
-  capture,
-  once,
-  passive
-) {
-  let {
-    node: savedNode,
-    type: savedType,
-    capture: savedCapture,
-    once: savedOnce,
-    passive: savedPassive,
-  } = savedListener;
-  return (
-    node === savedNode &&
-    type === savedType &&
-    capture === savedCapture &&
-    once === savedOnce &&
-    passive === savedPassive
-  );
+function listenerSettingsEqual(savedListener, node, type, capture) {
+  let {node: savedNode, type: savedType, capture: savedCapture} = savedListener;
+  return node === savedNode && type === savedType && capture === savedCapture;
 }
 
-export function findListener(wrappers, node, type, capture, once, passive) {
+export function findListener(wrappers, node, type, capture) {
   for (let i = 0; i < wrappers.length; i++) {
-    if (
-      listenerSettingsEqual(wrappers[i], node, type, capture, once, passive)
-    ) {
+    if (listenerSettingsEqual(wrappers[i], node, type, capture)) {
       return i;
     }
   }
@@ -455,13 +460,9 @@ export function dispatchEvent(event) {
  * @this {EventTarget}
  */
 export function addEventListener(type, fnOrObj, optionsOrCapture) {
-  const {
-    capture,
-    once,
-    passive,
-    shadyTarget,
-    nativeEventOptions,
-  } = parseEventOptions(optionsOrCapture);
+  const {capture, once, shadyTarget, nativeEventOptions} = parseEventOptions(
+    optionsOrCapture
+  );
   if (!fnOrObj) {
     return;
   }
@@ -503,7 +504,7 @@ export function addEventListener(type, fnOrObj, optionsOrCapture) {
     // for few nodes at most, whereas a node will likely have many event listeners).
     // NOTE(valdrin) invoking external functions is costly, inline has better perf.
     // Stop if the wrapper function has already been created.
-    if (findListener(wrappers, target, type, capture, once, passive) > -1) {
+    if (findListener(wrappers, target, type, capture) > -1) {
       return;
     }
   } else {
@@ -511,10 +512,10 @@ export function addEventListener(type, fnOrObj, optionsOrCapture) {
   }
 
   /**
-   * @this {HTMLElement}
+   * @this {EventTarget}
    * @param {Event} e
    */
-  const wrapperFn = function (e) {
+  const wrapperFn = (e) => {
     // Support `once` option.
     if (once) {
       this[utils.SHADY_PREFIX + 'removeEventListener'](
@@ -608,11 +609,9 @@ export function addEventListener(type, fnOrObj, optionsOrCapture) {
     // note: use target here which is either a shadowRoot
     // (when the host element is proxy'ing the event) or this element
     node: target,
-    type: type,
-    capture: capture,
-    once: once,
-    passive: passive,
-    wrapperFn: wrapperFn,
+    type,
+    capture,
+    wrapperFn,
   });
 
   this.__handlers = this.__handlers || {};
@@ -638,13 +637,9 @@ export function removeEventListener(type, fnOrObj, optionsOrCapture) {
   if (!fnOrObj) {
     return;
   }
-  const {
-    capture,
-    once,
-    passive,
-    shadyTarget,
-    nativeEventOptions,
-  } = parseEventOptions(optionsOrCapture);
+  const {capture, shadyTarget, nativeEventOptions} = parseEventOptions(
+    optionsOrCapture
+  );
   if (unpatchedEvents[type]) {
     return this[utils.NATIVE_PREFIX + 'removeEventListener'](
       type,
@@ -657,7 +652,7 @@ export function removeEventListener(type, fnOrObj, optionsOrCapture) {
   let wrapperFn = undefined;
   let wrappers = getEventWrappers(fnOrObj);
   if (wrappers) {
-    let idx = findListener(wrappers, target, type, capture, once, passive);
+    let idx = findListener(wrappers, target, type, capture);
     if (idx > -1) {
       wrapperFn = wrappers.splice(idx, 1)[0].wrapperFn;
       // Cleanup.

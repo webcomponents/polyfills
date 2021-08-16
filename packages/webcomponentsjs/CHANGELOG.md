@@ -8,6 +8,12 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 <!-- ## [Unreleased] -->
 
+## [Unreleased]
+
+- Polyfill `addEventListener/removeEventListener` event listener options,
+  including `{capture: boolean, once: boolean}`.
+  ([#469]https://github.com/webcomponents/polyfills/pull/469)
+
 ## [2.6.0] - 2021-08-02
 
 - Add TS externs. ([#457](https://github.com/webcomponents/polyfills/pull/457))
