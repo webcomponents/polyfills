@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Add type annotations for JSCompiler to `eventPhase` property descriptor.
+  ([#473](https://github.com/webcomponents/polyfills/pull/473))
 - Allow event listener options to be specified using a function in addition to
   an object. ([#469](https://github.com/webcomponents/polyfills/pull/469))
 - The `eventPhase` property of events is now properly set to `Event.AT_TARGET`

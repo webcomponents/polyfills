@@ -280,15 +280,22 @@ const eventPhaseDescriptor =
   utils.settings.hasDescriptors &&
   Object.getOwnPropertyDescriptor(Event.prototype, 'eventPhase');
 if (eventPhaseDescriptor) {
-  Object.defineProperty(EventPatches, 'eventPhase', {
-    get() {
-      return this.currentTarget === this.target
-        ? Event.AT_TARGET
-        : this[utils.NATIVE_PREFIX + 'eventPhase'];
-    },
-    enumerable: true,
-    configurable: true,
-  });
+  Object.defineProperty(
+    EventPatches,
+    'eventPhase',
+    /** @type {!ObjectPropertyDescriptor<!Event>} */ ({
+      /**
+       * @this {Event}
+       */
+      get() {
+        return this.currentTarget === this.target
+          ? Event.AT_TARGET
+          : this[utils.NATIVE_PREFIX + 'eventPhase'];
+      },
+      enumerable: true,
+      configurable: true,
+    })
+  );
 
   Object.defineProperty(
     EventPatches,
