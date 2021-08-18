@@ -5,12 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+<!-- ## Unreleased -->
+
+## Unreleased
+
+- Add type annotations for JSCompiler to `eventPhase` property descriptor.
+  ([#473](https://github.com/webcomponents/polyfills/pull/473))
+- Allow event listener options to be specified using a function in addition to
+  an object. ([#469](https://github.com/webcomponents/polyfills/pull/469))
+- The `eventPhase` property of events is now properly set to `Event.AT_TARGET`
+  when events are re-targeted to hosts of shadowRoots.
+  ([#469](https://github.com/webcomponents/polyfills/pull/469))
+- Adds an opt-out for polyfilling `element(s)FromPoint` on `document` via
+  setting `ShadyDOM.useNativeDocumentEFP` to `true`.
+  ([#472](https://github.com/webcomponents/polyfills/pull/472))
+
+## [1.9.0] - 2021-08-02
 
 - Add `@this` annotation to new `elementFromPoint` wrappers.
-  ([#464]https://github.com/webcomponents/polyfills/pull/464)
+  ([#464](https://github.com/webcomponents/polyfills/pull/464))
 - Adds `element(s)FromPoint` to `document` and `shadowRoot`
-  ([#463]https://github.com/webcomponents/polyfills/pull/463)
+  ([#463](https://github.com/webcomponents/polyfills/pull/463))
 - Add TS externs. ([#457](https://github.com/webcomponents/polyfills/pull/457))
 - When `EventTarget.prototype` exists but is not in the prototype chain of
   `window`, polyfill installation breaks.
