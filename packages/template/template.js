@@ -323,7 +323,15 @@
     var defineOuterHTML = function defineOuterHTML(obj) {
       Object.defineProperty(obj, 'outerHTML', {
         get: function () {
-          return `<${TEMPLATE_TAG}>${this.innerHTML}</${TEMPLATE_TAG}>`;
+          return (
+            '<' +
+            TEMPLATE_TAG +
+            '>' +
+            this.innerHTML +
+            '</' +
+            TEMPLATE_TAG +
+            '>'
+          );
         },
         set: function (innerHTML) {
           if (this.parentNode) {
