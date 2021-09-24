@@ -10,6 +10,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 import * as utils from './utils.js';
 import {NodePatches} from './patches/Node.js';
+// prettier-ignore
 import {OutsideDescriptors, InsideDescriptors, TextContentInnerHTMLDescriptors} from './patch-instances.js';
 import {ParentNodePatches} from './patches/ParentNode.js';
 import {DocumentOrFragmentPatches} from './patches/DocumentOrFragment.js';
@@ -39,15 +40,16 @@ const patchShadyAccessors = (proto, prefix) => {
   if (utils.settings.noPatch && !prefix) {
     utils.patchProperties(proto, NodePatches, prefix);
     utils.patchProperties(proto, DocumentOrFragmentPatches, prefix);
+  }
   // Case 2, bad descriptors: Ensure accessors are on ShadowRoot.
   // These descriptors are normally used for instance patching but because
   // ShadyRoot can always be patched, just do it to the prototype.
-  } else if (!utils.settings.hasDescriptors) {
+  else if (!utils.settings.hasDescriptors) {
     utils.patchProperties(proto, OutsideDescriptors);
     utils.patchProperties(proto, InsideDescriptors);
     utils.patchProperties(proto, TextContentInnerHTMLDescriptors);
   }
-}
+};
 
 export const patchShadyRoot = (proto) => {
   proto.__proto__ = DocumentFragment.prototype;
@@ -61,42 +63,34 @@ export const patchShadyRoot = (proto) => {
   Object.defineProperties(proto, {
     nodeType: {
       value: Node.DOCUMENT_FRAGMENT_NODE,
-      configurable: true
+      configurable: true,
     },
     nodeName: {
       value: '#document-fragment',
-      configurable: true
+      configurable: true,
     },
     nodeValue: {
       value: null,
-      configurable: true
-    }
+      configurable: true,
+    },
   });
 
   // make undefined
-  [
-    'localName',
-    'namespaceURI',
-    'prefix'
-  ].forEach((prop) => {
+  ['localName', 'namespaceURI', 'prefix'].forEach((prop) => {
     Object.defineProperty(proto, prop, {
       value: undefined,
-      configurable: true
+      configurable: true,
     });
   });
 
   // defer properties to host
-  [
-    'ownerDocument',
-    'baseURI',
-    'isConnected'
-  ].forEach((prop) => {
+  ['ownerDocument', 'baseURI', 'isConnected'].forEach((prop) => {
     Object.defineProperty(proto, prop, {
       /** @this {ShadowRoot} */
       get() {
         return this.host[prop];
       },
-      configurable: true
+      configurable: true,
     });
   });
-}
+};

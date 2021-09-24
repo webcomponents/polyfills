@@ -11,8 +11,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 'use strict';
 
 import {nativeShadow, nativeCssVariables, cssBuild} from './style-settings.js';
-import {parse, stringify, types, StyleNode} from './css-parse.js'; // eslint-disable-line no-unused-vars
+import {parse, stringify, types, StyleNode} from './css-parse.js'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import {MEDIA_MATCH} from './common-regex.js';
+// prettier-ignore
 import {processUnscopedStyle, isUnscopedStyle} from './unscoped-style-handler.js';
 
 /**
@@ -20,7 +21,7 @@ import {processUnscopedStyle, isUnscopedStyle} from './unscoped-style-handler.js
  * @param {function(StyleNode)=} callback
  * @return {string}
  */
-export function toCssText (rules, callback) {
+export function toCssText(rules, callback) {
   if (!rules) {
     return '';
   }
@@ -52,8 +53,9 @@ export function rulesForStyle(style) {
  * @return {boolean}
  */
 export function isKeyframesSelector(rule) {
-  return Boolean(rule['parent']) &&
-  rule['parent']['type'] === types.KEYFRAMES_RULE;
+  return (
+    Boolean(rule['parent']) && rule['parent']['type'] === types.KEYFRAMES_RULE
+  );
 }
 
 /**
@@ -62,7 +64,12 @@ export function isKeyframesSelector(rule) {
  * @param {Function=} keyframesRuleCallback
  * @param {boolean=} onlyActiveRules
  */
-export function forEachRule(node, styleRuleCallback, keyframesRuleCallback, onlyActiveRules) {
+export function forEachRule(
+  node,
+  styleRuleCallback,
+  keyframesRuleCallback,
+  onlyActiveRules
+) {
   if (!node) {
     return;
   }
@@ -81,15 +88,14 @@ export function forEachRule(node, styleRuleCallback, keyframesRuleCallback, only
   }
   if (type === types.STYLE_RULE) {
     styleRuleCallback(node);
-  } else if (keyframesRuleCallback &&
-    type === types.KEYFRAMES_RULE) {
+  } else if (keyframesRuleCallback && type === types.KEYFRAMES_RULE) {
     keyframesRuleCallback(node);
   } else if (type === types.MIXIN_RULE) {
     skipRules = true;
   }
   let r$ = node['rules'];
   if (r$ && !skipRules) {
-    for (let i=0, l=r$.length, r; (i<l) && (r=r$[i]); i++) {
+    for (let i = 0, l = r$.length, r; i < l && (r = r$[i]); i++) {
       forEachRule(r, styleRuleCallback, keyframesRuleCallback, onlyActiveRules);
     }
   }
@@ -115,7 +121,7 @@ export function applyCss(cssText, moniker, target, contextNode) {
  * @return {!HTMLStyleElement}
  */
 export function createScopeStyle(cssText, moniker) {
-  let style = /** @type {HTMLStyleElement} */(document.createElement('style'));
+  let style = /** @type {HTMLStyleElement} */ (document.createElement('style'));
   if (moniker) {
     style.setAttribute('scope', moniker);
   }
@@ -135,10 +141,10 @@ let lastHeadApplyNode = null;
  * @return {!Comment}
  */
 export function applyStylePlaceHolder(moniker) {
-  let placeHolder = document.createComment(' Shady DOM styles for ' +
-    moniker + ' ');
-  let after = lastHeadApplyNode ?
-    lastHeadApplyNode['nextSibling'] : null;
+  let placeHolder = document.createComment(
+    ' Shady DOM styles for ' + moniker + ' '
+  );
+  let after = lastHeadApplyNode ? lastHeadApplyNode['nextSibling'] : null;
   let scope = document.head;
   scope.insertBefore(placeHolder, after || scope.firstChild);
   lastHeadApplyNode = placeHolder;
@@ -152,8 +158,7 @@ export function applyStylePlaceHolder(moniker) {
  */
 export function applyStyle(style, target, contextNode) {
   target = target || document.head;
-  let after = (contextNode && contextNode.nextSibling) ||
-    target.firstChild;
+  let after = (contextNode && contextNode.nextSibling) || target.firstChild;
   target.insertBefore(style, after);
   if (!lastHeadApplyNode) {
     lastHeadApplyNode = style;
@@ -183,7 +188,7 @@ export function isTargetedBuild(buildType) {
  */
 export function findMatchingParen(text, start) {
   let level = 0;
-  for (let i=start, l=text.length; i < l; i++) {
+  for (let i = start, l = text.length; i < l; i++) {
     if (text[i] === '(') {
       level++;
     } else if (text[i] === ')') {
@@ -233,14 +238,19 @@ export function setElementClassRaw(element, value) {
   if (nativeShadow) {
     element.setAttribute('class', value);
   } else {
-    window['ShadyDOM']['nativeMethods']['setAttribute'].call(element, 'class', value);
+    window['ShadyDOM']['nativeMethods']['setAttribute'].call(
+      element,
+      'class',
+      value
+    );
   }
 }
 
 /**
  * @type {function(*):*}
  */
-export const wrap = window['ShadyDOM'] && window['ShadyDOM']['wrap'] || ((node) => node);
+export const wrap =
+  (window['ShadyDOM'] && window['ShadyDOM']['wrap']) || ((node) => node);
 
 /**
  * @param {Element | {is: string, extends: string}} element
@@ -248,7 +258,8 @@ export const wrap = window['ShadyDOM'] && window['ShadyDOM']['wrap'] || ((node) 
  */
 export function getIsExtends(element) {
   let localName = element['localName'];
-  let is = '', typeExtension = '';
+  let is = '',
+    typeExtension = '';
   /*
   NOTE: technically, this can be wrong for certain svg elements
   with `-` in the name like `<font-face>`
@@ -261,8 +272,8 @@ export function getIsExtends(element) {
       is = (element.getAttribute && element.getAttribute('is')) || '';
     }
   } else {
-    is = /** @type {?} */(element).is;
-    typeExtension = /** @type {?} */(element).extends;
+    is = /** @type {?} */ (element).is;
+    typeExtension = /** @type {?} */ (element).extends;
   }
   return {is, typeExtension};
 }
@@ -274,7 +285,9 @@ export function getIsExtends(element) {
 export function gatherStyleText(element) {
   /** @type {!Array<string>} */
   const styleTextParts = [];
-  const styles = /** @type {!NodeList<!HTMLStyleElement>} */(element.querySelectorAll('style'));
+  const styles = /** @type {!NodeList<!HTMLStyleElement>} */ (element.querySelectorAll(
+    'style'
+  ));
   for (let i = 0; i < styles.length; i++) {
     const style = styles[i];
     if (isUnscopedStyle(style)) {
@@ -331,7 +344,7 @@ const CSS_BUILD_ATTR = 'css-build';
  */
 export function getCssBuild(element) {
   if (cssBuild !== undefined) {
-    return /** @type {string} */(cssBuild);
+    return /** @type {string} */ (cssBuild);
   }
   if (element.__cssBuild === undefined) {
     // try attribute first, as it is the common case
@@ -377,9 +390,10 @@ export function elementHasBuiltCss(element) {
  * @return {string}
  */
 export function getBuildComment(element) {
-  const buildComment = element.localName === 'template' ?
-      /** @type {!HTMLTemplateElement} */ (element).content.firstChild :
-      element.firstChild;
+  const buildComment =
+    element.localName === 'template'
+      ? /** @type {!HTMLTemplateElement} */ (element).content.firstChild
+      : element.firstChild;
   if (buildComment instanceof Comment) {
     const commentParts = buildComment.textContent.trim().split(':');
     if (commentParts[0] === CSS_BUILD_ATTR) {
@@ -407,8 +421,9 @@ export function isOptimalCssBuild(cssBuild = '') {
  * @param {!HTMLElement} element
  */
 function removeBuildComment(element) {
-  const buildComment = element.localName === 'template' ?
-      /** @type {!HTMLTemplateElement} */ (element).content.firstChild :
-      element.firstChild;
+  const buildComment =
+    element.localName === 'template'
+      ? /** @type {!HTMLTemplateElement} */ (element).content.firstChild
+      : element.firstChild;
   buildComment.parentNode.removeChild(buildComment);
 }

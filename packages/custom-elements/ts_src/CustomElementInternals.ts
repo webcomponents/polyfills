@@ -9,9 +9,8 @@
  * rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
-import './Externs.js';
+import CustomElementRegistry from './CustomElementRegistry.js';
 import {CustomElementState as CEState} from './CustomElementState.js';
-import {CustomElementDefinition, HTMLImportElement} from './Externs.js';
 import * as Native from './Patch/Native.js';
 import * as Utilities from './Utilities.js';
 
@@ -25,18 +24,19 @@ export default class CustomElementInternals {
   public readonly useDocumentConstructionObserver: boolean;
 
   constructor(options: {
-    shadyDomFastWalk: boolean,
-    noDocumentConstructionObserver: boolean
+    shadyDomFastWalk: boolean;
+    noDocumentConstructionObserver: boolean;
   }) {
     this.shadyDomFastWalk = options.shadyDomFastWalk;
-    this.useDocumentConstructionObserver =
-        !options.noDocumentConstructionObserver;
+    this.useDocumentConstructionObserver = !options.noDocumentConstructionObserver;
   }
 
   forEachElement(
-      node: Node, callback: (elem: Element) => void,
-      visitedImports?: Set<Node>) {
-    const sd = window['ShadyDom'];
+    node: Node,
+    callback: (elem: Element) => void,
+    visitedImports?: Set<Node>
+  ) {
+    const sd = window['ShadyDOM'];
     if (this.shadyDomFastWalk && sd && sd['inUse']) {
       if (node.nodeType === Node.ELEMENT_NODE) {
         const element = node as Element;
@@ -69,7 +69,7 @@ export default class CustomElementInternals {
       return;
     }
 
-    this.forEachElement(node, element => this.patchElement(element));
+    this.forEachElement(node, (element) => this.patchElement(element));
   }
 
   patchNode(node: Node) {
@@ -109,7 +109,7 @@ export default class CustomElementInternals {
   connectTree(root: Node) {
     const elements: Array<Element> = [];
 
-    this.forEachElement(root, element => elements.push(element));
+    this.forEachElement(root, (element) => elements.push(element));
 
     for (let i = 0; i < elements.length; i++) {
       const element = elements[i];
@@ -124,7 +124,7 @@ export default class CustomElementInternals {
   disconnectTree(root: Node) {
     const elements: Array<Element> = [];
 
-    this.forEachElement(root, element => elements.push(element));
+    this.forEachElement(root, (element) => elements.push(element));
 
     for (let i = 0; i < elements.length; i++) {
       const element = elements[i];
@@ -195,13 +195,16 @@ export default class CustomElementInternals {
    *   - (Element queue popped from the custom element reactions stack.
    *     Reactions in the popped stack are invoked.)
    */
-  patchAndUpgradeTree(root: Node, options: {
-    visitedImports?: Set<Node>,
-    upgrade?: (elem: HTMLElement) => void
-  } = {}) {
+  patchAndUpgradeTree(
+    root: Node,
+    options: {
+      visitedImports?: Set<Node>;
+      upgrade?: (elem: HTMLElement) => void;
+    } = {}
+  ) {
     const visitedImports = options.visitedImports;
     const upgrade =
-        options.upgrade || (element => this.upgradeReaction(element));
+      options.upgrade || ((element) => this.upgradeReaction(element));
 
     const elements: Array<Element> = [];
 
@@ -209,9 +212,11 @@ export default class CustomElementInternals {
       if (this._hasPatches) {
         this.patchElement(element);
       }
-      if (element.localName === 'link' &&
-          element.getAttribute('rel') === 'import') {
-        const importElem = element as HTMLImportElement;
+      if (
+        element.localName === 'link' &&
+        element.getAttribute('rel') === 'import'
+      ) {
+        const importElem = element as HTMLLinkElement;
         // The HTML Imports polyfill sets a descendant element of the link to
         // the `import` property, specifically this is *not* a Document.
         const importNode = importElem.import;
@@ -222,10 +227,7 @@ export default class CustomElementInternals {
           importNode.__CE_registry = document.__CE_registry;
         }
 
-
-
-        if (importNode &&
-            (importNode as HTMLImportDocument).readyState === 'complete') {
+        if (importNode && importNode.readyState === 'complete') {
           importNode.__CE_documentLoadHandled = true;
         } else {
           // If this link's import root is not available, its contents can't
@@ -246,11 +248,13 @@ export default class CustomElementInternals {
             const clonedVisitedImports = new Set<Node>();
             if (visitedImports) {
               // IE11 does not support constructing a set using an iterable.
-              visitedImports.forEach(item => clonedVisitedImports.add(item));
+              visitedImports.forEach((item) => clonedVisitedImports.add(item));
               clonedVisitedImports.delete(importNode);
             }
-            this.patchAndUpgradeTree(
-                importNode, {visitedImports: clonedVisitedImports, upgrade});
+            this.patchAndUpgradeTree(importNode, {
+              visitedImports: clonedVisitedImports,
+              upgrade,
+            });
           });
         }
       } else {
@@ -270,7 +274,9 @@ export default class CustomElementInternals {
   upgradeReaction(element: HTMLElement) {
     try {
       const definition = this._lookupACustomElementDefinition(
-          element.ownerDocument!, element.localName);
+        element.ownerDocument!,
+        element.localName
+      );
       if (definition) {
         this._upgradeAnElement(element, definition);
       }
@@ -283,7 +289,9 @@ export default class CustomElementInternals {
    * @see https://html.spec.whatwg.org/multipage/custom-elements.html#concept-upgrade-an-element
    */
   private _upgradeAnElement(
-      element: HTMLElement, definition: CustomElementDefinition) {
+    element: HTMLElement,
+    definition: CustomElementDefinition
+  ) {
     const currentState = element.__CE_state;
     if (currentState !== undefined) {
       return;
@@ -293,10 +301,11 @@ export default class CustomElementInternals {
 
     try {
       try {
-        const result = new (definition.constructorFunction)();
+        const result = new definition.constructorFunction();
         if (result !== element) {
           throw new Error(
-              'The custom element constructor did not produce the element being upgraded.');
+            'The custom element constructor did not produce the element being upgraded.'
+          );
         }
       } finally {
         definition.constructionStack.pop();
@@ -349,14 +358,25 @@ export default class CustomElementInternals {
   }
 
   attributeChangedCallback(
-      element: Element, name: string, oldValue?: string|null,
-      newValue?: string|null, namespace?: string|null) {
+    element: Element,
+    name: string,
+    oldValue?: string | null,
+    newValue?: string | null,
+    namespace?: string | null
+  ) {
     const definition = element.__CE_definition!;
-    if (definition.attributeChangedCallback &&
-        definition.observedAttributes.indexOf(name) > -1) {
+    if (
+      definition.attributeChangedCallback &&
+      definition.observedAttributes.indexOf(name) > -1
+    ) {
       try {
         definition.attributeChangedCallback.call(
-            element, name, oldValue, newValue, namespace);
+          element,
+          name,
+          oldValue,
+          newValue,
+          namespace
+        );
       } catch (e) {
         this.reportTheException(e);
       }
@@ -369,8 +389,10 @@ export default class CustomElementInternals {
    *
    * @see https://html.spec.whatwg.org/multipage/custom-elements.html#look-up-a-custom-element-definition
    */
-  private _lookupACustomElementDefinition(doc: Document, localName: string):
-      CustomElementDefinition|undefined {
+  private _lookupACustomElementDefinition(
+    doc: Document,
+    localName: string
+  ): CustomElementDefinition | undefined {
     // The document must be associated with a registry.
     const registry = doc.__CE_registry;
     if (!registry) {
@@ -391,7 +413,9 @@ export default class CustomElementInternals {
       return;
     }
 
-    return registry.internal_localNameToDefinition(localName);
+    return (registry as CustomElementRegistry).internal_localNameToDefinition(
+      localName
+    );
   }
 
   /**
@@ -403,34 +427,43 @@ export default class CustomElementInternals {
    *
    * @see https://dom.spec.whatwg.org/#concept-create-element
    */
-  createAnElement(doc: Document, localName: string, namespace: string|null):
-      Element {
+  createAnElement(
+    doc: Document,
+    localName: string,
+    namespace: string | null
+  ): Element {
     const registry = doc.__CE_registry;
     // Only create custom elements if the document is associated with a
     // registry.
     if (registry && (namespace === null || namespace === NS_HTML)) {
-      const definition = registry.internal_localNameToDefinition(localName);
+      const definition = (registry as CustomElementRegistry).internal_localNameToDefinition(
+        localName
+      );
       if (definition) {
         try {
-          const result = new (definition.constructorFunction)();
+          const result = new definition.constructorFunction();
 
           // These conformance checks can't be performed when the user calls
           // the element's constructor themselves. However, this also true in
           // native implementations.
 
-          if (result.__CE_state === undefined ||
-              result.__CE_definition === undefined) {
+          if (
+            result.__CE_state === undefined ||
+            result.__CE_definition === undefined
+          ) {
             throw new Error(
-                'Failed to construct \'' + localName + '\': ' +
+              `Failed to construct '${localName}': ` +
                 'The returned value was not constructed with the HTMLElement ' +
-                'constructor.');
+                'constructor.'
+            );
           }
 
           if (result.namespaceURI !== NS_HTML) {
             throw new Error(
-                'Failed to construct \'' + localName + '\': ' +
-                'The constructed element\'s namespace must be the HTML ' +
-                'namespace.');
+              `Failed to construct '${localName}': ` +
+                "The constructed element's namespace must be the HTML " +
+                'namespace.'
+            );
           }
 
           // The following Errors should be DOMExceptions but DOMException
@@ -438,34 +471,39 @@ export default class CustomElementInternals {
 
           if (result.hasAttributes()) {
             throw new Error(
-                'Failed to construct \'' + localName + '\': ' +
-                'The constructed element must not have any attributes.');
+              `Failed to construct '${localName}': ` +
+                'The constructed element must not have any attributes.'
+            );
           }
 
           // ShadyDOM doesn't wrap `#hasChildNodes`, so we check `#firstChild`
           // instead.
           if (result.firstChild !== null) {
             throw new Error(
-                'Failed to construct \'' + localName + '\': ' +
-                'The constructed element must not have any children.');
+              `Failed to construct '${localName}': ` +
+                'The constructed element must not have any children.'
+            );
           }
 
           if (result.parentNode !== null) {
             throw new Error(
-                'Failed to construct \'' + localName + '\': ' +
-                'The constructed element must not have a parent node.');
+              `Failed to construct '${localName}': ` +
+                'The constructed element must not have a parent node.'
+            );
           }
 
           if (result.ownerDocument !== doc) {
             throw new Error(
-                'Failed to construct \'' + localName + '\': ' +
-                'The constructed element\'s owner document is incorrect.');
+              `Failed to construct '${localName}': ` +
+                "The constructed element's owner document is incorrect."
+            );
           }
 
           if (result.localName !== localName) {
             throw new Error(
-                'Failed to construct \'' + localName + '\': ' +
-                'The constructed element\'s local name is incorrect.');
+              `Failed to construct '${localName}': ` +
+                "The constructed element's local name is incorrect."
+            );
           }
 
           return result;
@@ -475,9 +513,10 @@ export default class CustomElementInternals {
           // When construction fails, a new HTMLUnknownElement is produced.
           // However, there's no direct way to create one, so we create a
           // regular HTMLElement and replace its prototype.
-          const result = namespace === null ?
-              Native.Document_createElement.call(doc, localName) :
-              Native.Document_createElementNS.call(doc, namespace, localName);
+          const result =
+            namespace === null
+              ? Native.Document_createElement.call(doc, localName)
+              : Native.Document_createElementNS.call(doc, namespace, localName);
           Object.setPrototypeOf(result, HTMLUnknownElement.prototype);
           result.__CE_state = CEState.failed;
           result.__CE_definition = undefined;
@@ -487,9 +526,10 @@ export default class CustomElementInternals {
       }
     }
 
-    const result = namespace === null ?
-        Native.Document_createElement.call(doc, localName) :
-        Native.Document_createElementNS.call(doc, namespace, localName);
+    const result =
+      namespace === null
+        ? Native.Document_createElement.call(doc, localName)
+        : Native.Document_createElementNS.call(doc, namespace, localName);
     this.patchElement(result);
     return result;
   }
@@ -499,29 +539,45 @@ export default class CustomElementInternals {
    *
    * @see https://html.spec.whatwg.org/multipage/webappapis.html#report-the-exception
    */
-  reportTheException(error: Error) {
-    const message = error.message;
-    const filename =
-        /* Safari */ error.sourceURL || /* Firefox */ error.fileName || '';
-    const lineno =
-        /* Safari */ error.line || /* Firefox */ error.lineNumber || 0;
-    const colno =
-        /* Safari */ error.column || /* Firefox */ error.columnNumber || 0;
+  reportTheException(errorArg: Error) {
+    interface ExtendedError extends Error {
+      // Non-standard Safari properties.
+      sourceURL?: string;
+      line?: number;
+      column?: number;
 
-    let event: ErrorEvent|undefined = undefined;
+      // Non-standard Firefox properties.
+      fileName?: string;
+      lineNumber?: number;
+      columnNumber?: number;
+    }
+
+    const error = errorArg as ExtendedError;
+    const message = error.message;
+    const filename = error.sourceURL || error.fileName || '';
+    const lineno = error.line || error.lineNumber || 0;
+    const colno = error.column || error.columnNumber || 0;
+
+    let event: ErrorEvent | undefined = undefined;
     if (ErrorEvent.prototype.initErrorEvent === undefined) {
-      event = new ErrorEvent(
-          'error', {cancelable: true, message, filename, lineno, colno, error});
+      event = new ErrorEvent('error', {
+        cancelable: true,
+        message,
+        filename,
+        lineno,
+        colno,
+        error,
+      });
     } else {
       event = document.createEvent('ErrorEvent') as ErrorEvent;
       // initErrorEvent(type, bubbles, cancelable, message, filename, line)
       event.initErrorEvent!('error', false, true, message, filename, lineno);
       // Hack for IE, where ErrorEvent#preventDefault does not set
       // #defaultPrevented to true.
-      event.preventDefault = function(this: ErrorEvent) {
+      event.preventDefault = function (this: ErrorEvent) {
         Object.defineProperty(this, 'defaultPrevented', {
           configurable: true,
-          get: function(this: ErrorEvent) {
+          get: function (this: ErrorEvent) {
             return true;
           },
         });
@@ -532,7 +588,7 @@ export default class CustomElementInternals {
       Object.defineProperty(event, 'error', {
         configurable: true,
         enumerable: true,
-        get: function() {
+        get: function () {
           return error;
         },
       });
@@ -547,8 +603,4 @@ export default class CustomElementInternals {
       console.error(error);
     }
   }
-}
-
-declare interface HTMLImportDocument extends Node {
-  readyState: 'complete'|string;
 }

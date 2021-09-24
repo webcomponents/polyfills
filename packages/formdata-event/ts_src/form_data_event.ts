@@ -14,7 +14,7 @@ import {Event} from './wrappers/event.js';
 interface FormEventInit extends EventInit {
   // `formData` is required, but user-supplied outside of TS, so it's marked as
   // optional here and is manually checked in the `FormDataEvent` constructor.
-  formData?: FormData,
+  formData?: FormData;
 }
 
 const private_formData: WeakMap<FormDataEvent, FormData> = new WeakMap();
@@ -24,8 +24,10 @@ export class FormDataEvent extends Event {
     super(type, formEventInit);
     const formData = formEventInit.formData;
     if (!(formData instanceof FormData)) {
-      throw new TypeError('Failed to construct \'FormDataEvent\': member ' +
-          'formData is not of type FormData.');
+      throw new TypeError(
+        "Failed to construct 'FormDataEvent': member " +
+          'formData is not of type FormData.'
+      );
     }
     private_formData.set(this, formData);
   }
@@ -34,7 +36,6 @@ export class FormDataEvent extends Event {
     return private_formData.get(this);
   }
 }
-
 
 declare global {
   interface Window {

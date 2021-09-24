@@ -12,6 +12,7 @@ import * as utils from '../utils.js';
 import {scopeClassAttribute} from '../style-scoping.js';
 import {shadyDataForNode} from '../shady-data.js';
 import {attachShadow, ownerShadyRootForNode} from '../attach-shadow.js';
+// prettier-ignore
 import {eventPropertyNamesForElement, wrappedDescriptorForEventProperty} from '../patch-events.js';
 
 const doc = window.document;
@@ -39,7 +40,6 @@ function distributeAttributeChange(node, name) {
 }
 
 export const ElementPatches = utils.getOwnPropertyDescriptors({
-
   /** @this {Element} */
   get previousElementSibling() {
     const nodeData = shadyDataForNode(this);
@@ -119,12 +119,11 @@ export const ElementPatches = utils.getOwnPropertyDescriptors({
       // ensure that "class" attribute is fully removed if ShadyCSS does not keep scoping
       this[utils.NATIVE_PREFIX + 'removeAttribute'](attr);
     }
-  }
-
+  },
 });
 
 if (!utils.settings.preferPerformance) {
-  eventPropertyNamesForElement.forEach(property => {
+  eventPropertyNamesForElement.forEach((property) => {
     ElementPatches[property] = wrappedDescriptorForEventProperty(property);
   });
 }
@@ -152,7 +151,7 @@ export const ElementShadowPatches = utils.getOwnPropertyDescriptors({
   /** @this {Element} */
   get shadowRoot() {
     const nodeData = shadyDataForNode(this);
-    return nodeData && nodeData.publicRoot || null;
+    return (nodeData && nodeData.publicRoot) || null;
   },
 });
 

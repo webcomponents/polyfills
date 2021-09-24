@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <!--
     @license
     Copyright (c) 2019 The Polymer Project Authors. All rights reserved.
@@ -11,15 +11,21 @@
 <html>
   <head>
     <title>Style in SVG loads</title>
-    <script>WCT = {waitFor: function(cb){ cb() }}</script>
+    <script>
+      WCT = {
+        waitFor: function (cb) {
+          cb();
+        },
+      };
+    </script>
     <script src="../../node_modules/@webcomponents/html-imports/html-imports.min.js"></script>
     <script src="../../node_modules/wct-browser-legacy/browser.js"></script>
-    <link rel="import" href="imports/svg-style.html">
+    <link rel="import" href="imports/svg-style.html" />
   </head>
   <body>
     <script>
-      suite('style in svg', function() {
-        test('style in svg loads', function(done) {
+      suite('style in svg', function () {
+        test('style in svg loads', function (done) {
           HTMLImports.whenReady(() => {
             done();
           });

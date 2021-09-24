@@ -1,16 +1,25 @@
-<!doctype html>
+<!DOCTYPE html>
 <script>
-  WCT = { waitFor: function (cb) { HTMLImports.whenReady(cb) } }
+  WCT = {
+    waitFor: function (cb) {
+      HTMLImports.whenReady(cb);
+    },
+  };
 </script>
 <script src="./test-flags.js"></script>
 <script src="../node_modules/wct-browser-legacy/browser.js"></script>
 <script src="../node_modules/@webcomponents/webcomponentsjs/bundles/webcomponents-pf_js.js"></script>
 <script src="../node_modules/@webcomponents/webcomponentsjs/bundles/webcomponents-pf_dom.js"></script>
-<script src="../node_modules/@webcomponents/html-imports/html-imports.min.js" defer></script>
-<script src="../node_modules/@webcomponents/shadycss/scoping-shim.min.js" defer></script>
+<script
+  src="../node_modules/@webcomponents/html-imports/html-imports.min.js"
+  defer
+></script>
+<script
+  src="../node_modules/@webcomponents/shadycss/scoping-shim.min.js"
+  defer
+></script>
 <script>
   suite('defered loading', () => {
-    test('Loading works as expected', () => {
-    });
-  })
+    test('Loading works as expected', () => {});
+  });
 </script>

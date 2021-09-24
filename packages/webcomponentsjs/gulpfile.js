@@ -10,9 +10,6 @@
 
 'use strict';
 
-/* eslint-env node */
-/* eslint-disable no-console */
-
 const gulp = require('gulp');
 const sourcemaps = require('gulp-sourcemaps');
 const sourcesContent = require('@gulp-sourcemaps/sources-content');
@@ -23,6 +20,7 @@ const closure = require('google-closure-compiler').gulp();
 const babel = require('rollup-plugin-babel');
 const commonjs = require('rollup-plugin-commonjs');
 const license = require('rollup-plugin-license');
+const concat = require('gulp-concat');
 
 function debugify(sourceName, fileName, extraRollupOptions) {
   const outDir = fileName ? '.' : './bundles';
@@ -37,18 +35,19 @@ function debugify(sourceName, fileName, extraRollupOptions) {
     input: entry,
     output: {
       format: 'iife',
-      name: 'webcomponentsjs'
+      name: 'webcomponentsjs',
     },
     allowRealFiles: true,
-    rollup: require('rollup')
+    rollup: require('rollup'),
   };
 
   Object.assign(options, extraRollupOptions);
 
-  return gulp.src(entry)
-  .pipe(rollup(options))
-  .pipe(rename(`${fileName}.js`))
-  .pipe(gulp.dest(outDir))
+  return gulp
+    .src(entry)
+    .pipe(rollup(options))
+    .pipe(rename(`${fileName}.js`))
+    .pipe(gulp.dest(outDir));
 }
 
 function closurify(sourceName, fileName) {
@@ -71,101 +70,131 @@ function closurify(sourceName, fileName) {
     rewrite_polyfills: false,
     module_resolution: 'NODE',
     entry_point: `src/entrypoints/${sourceName}-index.js`,
-    dependency_mode: 'STRICT',
+    dependency_mode: 'PRUNE',
     process_common_js_modules: true,
     externs: [
       'externs/webcomponents.js',
       'node_modules/@webcomponents/custom-elements/externs/custom-elements.js',
       'node_modules/@webcomponents/shadycss/externs/shadycss-externs.js',
-      'node_modules/@webcomponents/shadydom/externs/shadydom.js'
-    ]
+      'node_modules/@webcomponents/shadydom/externs/shadydom.js',
+    ],
   };
 
-  return gulp.src([
-      'src/**/*.js',
-      'node_modules/get-own-property-symbols/build/get-own-property-symbols.max.js',
-      'node_modules/promise-polyfill/src/**/*.js',
-      'node_modules/@webcomponents/**/*.js',
-      '!node_modules/@webcomponents/*/externs/*.js',
-      '!node_modules/@webcomponents/*/node_modules/**'
-    ], {base: './', follow: true})
-  .pipe(sourcemaps.init())
-  .pipe(closure(closureOptions))
-  .pipe(sourcesContent())
-  .pipe(sourcemaps.mapSources(
-      // We load from node_modules, but the other polyfills are technically siblings of us.
-      // Therefore, rewrite the sourcemap files to fixup the directory location
-      sourcePath => sourcePath
-        .replace(/node_modules\/@webcomponents/, smPrefix + '..')
-        .replace(/node_modules/, smPrefix + '../..')
-        .replace(/^src/, smPrefix + 'src')
-  ))
-  .pipe(sourcemaps.write('.'))
-  .pipe(gulp.dest(outDir));
+  return gulp
+    .src(
+      [
+        'src/**/*.js',
+        'node_modules/get-own-property-symbols/build/get-own-property-symbols.max.js',
+        'node_modules/promise-polyfill/src/**/*.js',
+        'node_modules/@webcomponents/**/*.js',
+        '!node_modules/@webcomponents/*/externs/*.js',
+        '!node_modules/@webcomponents/*/node_modules/**',
+      ],
+      {base: './', follow: true}
+    )
+    .pipe(sourcemaps.init())
+    .pipe(closure(closureOptions))
+    .pipe(sourcesContent())
+    .pipe(
+      sourcemaps.mapSources(
+        // We load from node_modules, but the other polyfills are technically siblings of us.
+        // Therefore, rewrite the sourcemap files to fixup the directory location
+        (sourcePath) =>
+          sourcePath
+            .replace(/node_modules\/@webcomponents/, smPrefix + '..')
+            .replace(/node_modules/, smPrefix + '../..')
+            .replace(/^src/, smPrefix + 'src')
+      )
+    )
+    .pipe(sourcemaps.write('.'))
+    .pipe(gulp.dest(outDir));
 }
+
+gulp.task('concat-ts-externs', () => {
+  return gulp
+    .src(
+      [
+        './externs/webcomponents.d.ts',
+        './node_modules/@webcomponents/custom-elements/externs/custom-elements.d.ts',
+        './node_modules/@webcomponents/shadycss/externs/shadycss.d.ts',
+        './node_modules/@webcomponents/shadydom/externs/shadydom.d.ts',
+        './node_modules/@webcomponents/template/externs/template.d.ts',
+      ],
+      {
+        base: './',
+        follow: true,
+      }
+    )
+    .pipe(concat('webcomponents-bundle.d.ts'))
+    .pipe(gulp.dest('.'));
+});
 
 gulp.task('debugify-pf_js', () => {
   const rollupOptions = {
-    plugins: [commonjs()]
+    plugins: [commonjs()],
   };
-  return debugify('webcomponents-pf_js', null, rollupOptions)
+  return debugify('webcomponents-pf_js', null, rollupOptions);
 });
 
 gulp.task('debugify-pf_dom', () => {
   const rollupOptions = {
-    plugins: [commonjs()]
+    plugins: [commonjs()],
   };
-  return debugify('webcomponents-pf_dom', null, rollupOptions)
+  return debugify('webcomponents-pf_dom', null, rollupOptions);
 });
 
 gulp.task('debugify-ce', () => {
-  return debugify('webcomponents-ce')
+  return debugify('webcomponents-ce');
 });
 
 gulp.task('debugify-sd-ce-pf', () => {
   const rollupOptions = {
-    plugins: [commonjs()]
+    plugins: [commonjs()],
   };
-  return debugify('webcomponents-sd-ce-pf', null, rollupOptions)
+  return debugify('webcomponents-sd-ce-pf', null, rollupOptions);
 });
 
 gulp.task('debugify-sd-ce', () => {
-  return debugify('webcomponents-sd-ce')
+  return debugify('webcomponents-sd-ce');
 });
 
 gulp.task('debugify-sd', () => {
-  return debugify('webcomponents-sd')
+  return debugify('webcomponents-sd');
 });
 
 gulp.task('debugify-bundle', () => {
   const rollupOptions = {
-    plugins: [commonjs()]
+    plugins: [commonjs()],
   };
-  return debugify('webcomponents-bundle', 'webcomponents-bundle', rollupOptions);
-})
+  return debugify(
+    'webcomponents-bundle',
+    'webcomponents-bundle',
+    rollupOptions
+  );
+});
 
 gulp.task('closurify-pf_js', () => {
-  return closurify('webcomponents-pf_js')
+  return closurify('webcomponents-pf_js');
 });
 
 gulp.task('closurify-pf_dom', () => {
-  return closurify('webcomponents-pf_dom')
+  return closurify('webcomponents-pf_dom');
 });
 
 gulp.task('closurify-ce', () => {
-  return closurify('webcomponents-ce')
+  return closurify('webcomponents-ce');
 });
 
 gulp.task('closurify-sd-ce-pf', () => {
-  return closurify('webcomponents-sd-ce-pf')
+  return closurify('webcomponents-sd-ce-pf');
 });
 
 gulp.task('closurify-sd-ce', () => {
-  return closurify('webcomponents-sd-ce')
+  return closurify('webcomponents-sd-ce');
 });
 
 gulp.task('closurify-sd', () => {
-  return closurify('webcomponents-sd')
+  return closurify('webcomponents-sd');
 });
 
 gulp.task('closurify-bundle', () => {
@@ -176,53 +205,61 @@ gulp.task('debugify-ce-es5-adapter', () => {
   const rollupOptions = {
     plugins: [
       babel({
-        presets: [
-          ['minify', {'keepFnName': true}]
-        ],
+        presets: [['minify', {'keepFnName': true}]],
       }),
       license({
         banner: {
-          file: './license-header.txt'
-        }
-      })
-    ]
+          file: './license-header.txt',
+        },
+      }),
+    ],
   };
-  return debugify('custom-elements-es5-adapter', 'custom-elements-es5-adapter', rollupOptions);
+  return debugify(
+    'custom-elements-es5-adapter',
+    'custom-elements-es5-adapter',
+    rollupOptions
+  );
 });
 
 gulp.task('clean', () => {
   return del([
     'custom-elements-es5-adapter.js{,.map}',
     'bundles',
-    'webcomponents-bundle.js{,.map}'
+    'webcomponents-bundle.js{,.map}',
   ]);
 });
 
-gulp.task('debug', gulp.series([
-  'debugify-pf_js',
-  'debugify-pf_dom',
-  'debugify-ce',
-  'debugify-sd',
-  'debugify-sd-ce',
-  'debugify-sd-ce-pf',
-  'debugify-bundle',
-  'debugify-ce-es5-adapter'
-]));
+gulp.task(
+  'debug',
+  gulp.series([
+    'debugify-pf_js',
+    'debugify-pf_dom',
+    'debugify-ce',
+    'debugify-sd',
+    'debugify-sd-ce',
+    'debugify-sd-ce-pf',
+    'debugify-bundle',
+    'debugify-ce-es5-adapter',
+  ])
+);
 
-gulp.task('closure', gulp.series([
-  'closurify-pf_js',
-  'closurify-pf_dom',
-  'closurify-ce',
-  'closurify-sd',
-  'closurify-sd-ce',
-  'closurify-sd-ce-pf',
-  'closurify-bundle',
-  'debugify-ce-es5-adapter'
-]));
+gulp.task(
+  'closure',
+  gulp.series([
+    'closurify-pf_js',
+    'closurify-pf_dom',
+    'closurify-ce',
+    'closurify-sd',
+    'closurify-sd-ce',
+    'closurify-sd-ce-pf',
+    'closurify-bundle',
+    'debugify-ce-es5-adapter',
+  ])
+);
 
-gulp.task('default', gulp.series('closure'));
+gulp.task('default', gulp.series('closure', 'concat-ts-externs'));
 
 process.on('unhandledRejection', (err) => {
   console.error('Unhandled Promise Rejection:', err);
   process.exit(1);
-})
+});

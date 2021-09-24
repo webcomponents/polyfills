@@ -11,32 +11,37 @@
 
 import AlreadyConstructedMarker from '../AlreadyConstructedMarker.js';
 import CustomElementInternals from '../CustomElementInternals.js';
+import CustomElementRegistry from '../CustomElementRegistry.js';
 import CEState from '../CustomElementState.js';
-import {Constructor} from '../Externs.js';
 import * as Native from './Native.js';
 
-export default function(internals: CustomElementInternals) {
+export default function (internals: CustomElementInternals) {
   const PatchedHTMLElement = function HTMLElement(this: HTMLElement) {
     // This should really be `new.target` but `new.target` can't be
     // emulated in ES5. Assuming the user keeps the default value of the
     // constructor's prototype's `constructor` property, this is
     // equivalent.
-    const constructor = this.constructor as Constructor<HTMLElement>;
+    const constructor = this.constructor as {new (): HTMLElement};
 
     // Always look up the definition from the global registry.
     const registry = document.__CE_registry!;
-    const definition = registry.internal_constructorToDefinition(constructor);
+    const definition = (registry as CustomElementRegistry).internal_constructorToDefinition(
+      constructor
+    );
     if (!definition) {
       throw new Error(
-          'Failed to construct a custom element: ' +
-          'The constructor was not registered with `customElements`.');
+        'Failed to construct a custom element: ' +
+          'The constructor was not registered with `customElements`.'
+      );
     }
 
     const constructionStack = definition.constructionStack;
 
     if (constructionStack.length === 0) {
-      const element = (Native.Document_createElement.call(
-                          document, definition.localName)) as HTMLElement;
+      const element = Native.Document_createElement.call(
+        document,
+        definition.localName
+      ) as HTMLElement;
       Object.setPrototypeOf(element, constructor.prototype as typeof element);
       element.__CE_state = CEState.custom;
       element.__CE_definition = definition;
@@ -49,14 +54,17 @@ export default function(internals: CustomElementInternals) {
     if (element === AlreadyConstructedMarker) {
       const localName = definition.localName;
       throw new Error(
-          'Failed to construct \'' + localName + '\': ' +
-          'This element was already constructed.');
+        `Failed to construct '${localName}': ` +
+          'This element was already constructed.'
+      );
     }
     const toConstructElement = element as HTMLElement;
     constructionStack[lastIndex] = AlreadyConstructedMarker;
 
     Object.setPrototypeOf(
-        toConstructElement, constructor.prototype as typeof toConstructElement);
+      toConstructElement,
+      constructor.prototype as typeof toConstructElement
+    );
     internals.patchElement(toConstructElement);
 
     return toConstructElement;
@@ -70,8 +78,8 @@ export default function(internals: CustomElementInternals) {
     writable: true,
     configurable: true,
     enumerable: false,
-    value: PatchedHTMLElement
+    value: PatchedHTMLElement,
   });
 
-  window['HTMLElement'] = PatchedHTMLElement as unknown as typeof HTMLElement;
+  window['HTMLElement'] = (PatchedHTMLElement as unknown) as typeof HTMLElement;
 }

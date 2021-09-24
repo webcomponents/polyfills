@@ -20,12 +20,15 @@ import PatchNode from './Patch/Node.js';
 const priorCustomElements = window['customElements'];
 
 function installPolyfill() {
-  const noDocumentConstructionObserver =
-      !!(priorCustomElements?.['noDocumentConstructionObserver']);
-  const shadyDomFastWalk = !!(priorCustomElements?.['shadyDomFastWalk']);
+  const noDocumentConstructionObserver = !!priorCustomElements?.[
+    'noDocumentConstructionObserver'
+  ];
+  const shadyDomFastWalk = !!priorCustomElements?.['shadyDomFastWalk'];
 
-  const internals = new CustomElementInternals(
-      {noDocumentConstructionObserver, shadyDomFastWalk});
+  const internals = new CustomElementInternals({
+    noDocumentConstructionObserver,
+    shadyDomFastWalk,
+  });
 
   PatchHTMLElement(internals);
   PatchDocument(internals);
@@ -45,12 +48,16 @@ function installPolyfill() {
   });
 }
 
-if (!priorCustomElements || priorCustomElements['forcePolyfill'] ||
-    (typeof priorCustomElements['define'] != 'function') ||
-    (typeof priorCustomElements['get'] != 'function')) {
+if (
+  !priorCustomElements ||
+  priorCustomElements['forcePolyfill'] ||
+  typeof priorCustomElements['define'] != 'function' ||
+  typeof priorCustomElements['get'] != 'function'
+) {
   installPolyfill();
 }
 
 // This is NOT public API and is only meant to work around a GC bug in older
 // versions of Safari that randomly removes the polyfill during tests.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 (window as any)['__CE_installPolyfill'] = installPolyfill;

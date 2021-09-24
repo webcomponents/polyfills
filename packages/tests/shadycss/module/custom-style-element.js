@@ -15,4 +15,4 @@ A simple shim to generate a testable module
 // TODO: This reference reaches directly into the shadycss package because this
 // file is not available in the npm package. Is there a better way to reference
 // this file?
-import '../../../shadycss/examples/custom-style-element'
+import '../../../shadycss/examples/custom-style-element';

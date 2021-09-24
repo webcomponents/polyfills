@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <!--
 @license
 Copyright (c) 2017 The Polymer Project Authors. All rights reserved.
@@ -8,7 +8,13 @@ The complete set of contributors may be found at http://polymer.github.io/CONTRI
 Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 -->
-<script>WCT = { waitFor(cb) { addEventListener('DOMContentLoaded', cb) } };</script>
+<script>
+  WCT = {
+    waitFor(cb) {
+      addEventListener('DOMContentLoaded', cb);
+    },
+  };
+</script>
 <script src="test-flags.js"></script>
 <script src="../node_modules/wct-browser-legacy/browser.js"></script>
 <script src="../node_modules/@webcomponents/webcomponentsjs/bundles/webcomponents-pf_js.js"></script>
@@ -122,17 +128,17 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     }
     connectedCallback() {
       if (this.template && !this.shadowRoot) {
-        this.attachShadow({ mode: 'open' });
+        this.attachShadow({mode: 'open'});
         this.shadowRoot.appendChild(this.template.content.cloneNode(true));
       }
       window.ShadyCSS.styleElement(this);
     }
   }
 
-  suite('Lazy Initialization', function() {
-    test('Late child element is eventually correct', function() {
-      customElements.define('late-client', class extends LateClient{});
-      customElements.define('eager-host', class extends EagerHost{});
+  suite('Lazy Initialization', function () {
+    test('Late child element is eventually correct', function () {
+      customElements.define('late-client', class extends LateClient {});
+      customElements.define('eager-host', class extends EagerHost {});
       const host = document.createElement('eager-host');
       document.body.appendChild(host);
       window.ShadyCSS.styleDocument();
@@ -141,17 +147,23 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         inner.init();
       }
       const div = inner.shadowRoot.querySelector('div');
-      assert.equal(getComputedStyle(div).getPropertyValue('border-color').trim(), 'rgb(255, 0, 0)');
+      assert.equal(
+        getComputedStyle(div).getPropertyValue('border-color').trim(),
+        'rgb(255, 0, 0)'
+      );
     });
 
-    test('Custom Property Shim can force unprepared parent to evaluate', function() {
+    test('Custom Property Shim can force unprepared parent to evaluate', function () {
       customElements.define('x-child', class extends StampBeforeStyle {});
       customElements.define('x-parent', class extends StampBeforeStyle {});
       const host = document.createElement('x-parent');
       document.body.appendChild(host);
       const inner = host.shadowRoot.querySelector('x-child');
       const div = inner.shadowRoot.querySelector('div');
-      assert.equal(getComputedStyle(div).getPropertyValue('border-top-width').trim(), '10px');
+      assert.equal(
+        getComputedStyle(div).getPropertyValue('border-top-width').trim(),
+        '10px'
+      );
     });
   });
 </script>

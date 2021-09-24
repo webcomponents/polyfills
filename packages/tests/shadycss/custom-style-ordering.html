@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <!--
 @license
 Copyright (c) 2019 The Polymer Project Authors. All rights reserved.
@@ -9,7 +9,11 @@ Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 -->
 <script>
-WCT = {waitFor: function (cb) {HTMLImports.whenReady(cb)}}
+  WCT = {
+    waitFor: function (cb) {
+      HTMLImports.whenReady(cb);
+    },
+  };
 </script>
 <script src="./test-flags.js"></script>
 <script src="../node_modules/wct-browser-legacy/browser.js"></script>
@@ -42,13 +46,18 @@ WCT = {waitFor: function (cb) {HTMLImports.whenReady(cb)}}
 </template>
 
 <script>
-  suite('Custom Style Ordering', function() {
-    function assertComputed(node, expected, property = 'border-top-width', msg = undefined) {
+  suite('Custom Style Ordering', function () {
+    function assertComputed(
+      node,
+      expected,
+      property = 'border-top-width',
+      msg = undefined
+    ) {
       const actual = getComputedStyle(node).getPropertyValue(property).trim();
       assert.equal(expected, actual, msg);
     }
     let tmpl;
-    suiteSetup(function() {
+    suiteSetup(function () {
       makeElement('x-foo');
       tmpl = document.createElement('template');
       tmpl.innerHTML = `
@@ -59,8 +68,8 @@ WCT = {waitFor: function (cb) {HTMLImports.whenReady(cb)}}
           }
         </style>
       </custom-style>`;
-    })
-    test('custom styles apply properties in document order', function() {
+    });
+    test('custom styles apply properties in document order', function () {
       const el = document.createElement('x-foo');
       document.body.appendChild(el);
       if (window.ShadyDOM) {
@@ -75,10 +84,15 @@ WCT = {waitFor: function (cb) {HTMLImports.whenReady(cb)}}
         ShadyDOM.flush();
       }
       ShadyCSS.styleDocument();
-      assertComputed(el, 'rgb(255, 0, 0)', 'background-color', 'late custom style should be processed in document order');
+      assertComputed(
+        el,
+        'rgb(255, 0, 0)',
+        'background-color',
+        'late custom style should be processed in document order'
+      );
     });
 
-    test('empty custom-style is processed correctly', function() {
+    test('empty custom-style is processed correctly', function () {
       const empty = document.createElement('custom-style');
       document.head.appendChild(empty);
       ShadyCSS.flushCustomStyles();

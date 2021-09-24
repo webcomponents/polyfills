@@ -14,7 +14,10 @@ import {EventListenerArray} from './event_listener_array.js';
 /**
  * The set of 'submit' event listeners for an event target.
  */
-export const targetToSubmitListeners = new WeakMap<EventTarget, EventListenerArray>();
+export const targetToSubmitListeners = new WeakMap<
+  EventTarget,
+  EventListenerArray
+>();
 
 /**
  * This function should be called when any 'submit' event listener is added to
@@ -23,7 +26,7 @@ export const targetToSubmitListeners = new WeakMap<EventTarget, EventListenerArr
 export const submitListenerAdded = (
   target: EventTarget,
   callback: EventListenerOrEventListenerObject | null,
-  options?: boolean | AddEventListenerOptions,
+  options?: boolean | AddEventListenerOptions
 ) => {
   // If this listener's `callback` is null, the browser ignores it.
   if (!callback) {
@@ -34,7 +37,8 @@ export const submitListenerAdded = (
     targetToSubmitListeners.set(target, new EventListenerArray());
   }
 
-  const capture = typeof options === 'boolean' ? options : (options?.capture ?? false);
+  const capture =
+    typeof options === 'boolean' ? options : options?.capture ?? false;
   targetToSubmitListeners.get(target)!.push({callback, capture});
 };
 
@@ -45,7 +49,7 @@ export const submitListenerAdded = (
 export const submitListenerRemoved = (
   target: EventTarget,
   callback: EventListenerOrEventListenerObject | null,
-  options?: boolean | EventListenerOptions,
+  options?: boolean | EventListenerOptions
 ) => {
   // Event listeners with null callbacks aren't stored.
   if (!callback) {
@@ -57,6 +61,7 @@ export const submitListenerRemoved = (
     return;
   }
 
-  const capture = typeof options === 'boolean' ? options : (options?.capture ?? false);
+  const capture =
+    typeof options === 'boolean' ? options : options?.capture ?? false;
   submitListeners.delete({callback, capture});
 };

@@ -20,7 +20,10 @@ const /** string */ eventWrappersName = `__eventWrappers${Date.now()}`;
 
 /** @type {?function(!Event): boolean} */
 const composedGetter = (() => {
-  const composedProp = Object.getOwnPropertyDescriptor(Event.prototype, 'composed');
+  const composedProp = Object.getOwnPropertyDescriptor(
+    Event.prototype,
+    'composed'
+  );
   return composedProp ? (ev) => composedProp.get.call(ev) : null;
 })();
 
@@ -30,9 +33,9 @@ const supportsEventOptions = (() => {
     get capture() {
       supported = true;
       return false;
-    }
-  }
-  const listener = () => {}
+    },
+  };
+  const listener = () => {};
   // NOTE: These will be unpatched at this point.
   window.addEventListener('test', listener, eventOptions);
   window.removeEventListener('test', listener, eventOptions);
@@ -40,25 +43,26 @@ const supportsEventOptions = (() => {
 })();
 
 const parseEventOptions = (optionsOrCapture) => {
-  let capture, once, passive, shadyTarget;
-  if (optionsOrCapture && typeof optionsOrCapture === 'object') {
+  let capture, once, shadyTarget;
+  if (
+    optionsOrCapture !== null &&
+    (typeof optionsOrCapture === 'object' ||
+      typeof optionsOrCapture === 'function')
+  ) {
     capture = Boolean(optionsOrCapture.capture);
     once = Boolean(optionsOrCapture.once);
-    passive = Boolean(optionsOrCapture.passive);
     shadyTarget = optionsOrCapture.__shadyTarget;
   } else {
     capture = Boolean(optionsOrCapture);
     once = false;
-    passive = false;
   }
   return {
     shadyTarget,
     capture,
     once,
-    passive,
-    nativeEventOptions: supportsEventOptions ? optionsOrCapture : capture
-  }
-}
+    nativeEventOptions: supportsEventOptions ? optionsOrCapture : capture,
+  };
+};
 
 // https://github.com/w3c/webcomponents/issues/513#issuecomment-224183937
 const alwaysComposed = {
@@ -107,7 +111,7 @@ const alwaysComposed = {
   'DOMActivate': true,
   'DOMFocusIn': true,
   'DOMFocusOut': true,
-  'keypress': true
+  'keypress': true,
 };
 
 const unpatchedEvents = {
@@ -119,8 +123,8 @@ const unpatchedEvents = {
   'DOMNodeInsertedIntoDocument': true,
   'DOMNodeRemoved': true,
   'DOMNodeRemovedFromDocument': true,
-  'DOMSubtreeModified': true
-}
+  'DOMSubtreeModified': true,
+};
 
 /**
  * Some EventTarget subclasses are not Node subclasses, and you cannot call
@@ -145,7 +149,11 @@ function pathComposer(startNode, composed) {
     composedPath.push(current);
     if (current[utils.SHADY_PREFIX + 'assignedSlot']) {
       current = current[utils.SHADY_PREFIX + 'assignedSlot'];
-    } else if (current.nodeType === Node.DOCUMENT_FRAGMENT_NODE && current.host && (composed || current !== startRoot)) {
+    } else if (
+      current.nodeType === Node.DOCUMENT_FRAGMENT_NODE &&
+      current.host &&
+      (composed || current !== startRoot)
+    ) {
       current = current.host;
     } else {
       current = current[utils.SHADY_PREFIX + 'parentNode'];
@@ -163,7 +171,7 @@ export const composedPath = (event) => {
     event.__composedPath = pathComposer(event.target, true);
   }
   return event.__composedPath;
-}
+};
 
 function retarget(refNode, path) {
   if (!utils.isShadyRoot) {
@@ -173,7 +181,7 @@ function retarget(refNode, path) {
   // shadow-including inclusive ancestor, return ANCESTOR.
   let refNodePath = pathComposer(refNode, true);
   let p$ = path;
-  for (let i=0, ancestor, lastRoot, root, rootIdx; i < p$.length; i++) {
+  for (let i = 0, ancestor, lastRoot, root, rootIdx; i < p$.length; i++) {
     ancestor = p$[i];
     root = getRootNodeWithFallback(ancestor);
     if (root !== lastRoot) {
@@ -187,7 +195,6 @@ function retarget(refNode, path) {
 }
 
 let EventPatches = {
-
   /**
    * @this {Event}
    */
@@ -196,13 +203,16 @@ let EventPatches = {
       // if there's an original `composed` getter on the Event prototype, use that
       if (composedGetter) {
         // TODO(web-padawan): see https://github.com/webcomponents/shadydom/issues/275
-        this.__composed = this.type === 'focusin' || this.type === 'focusout' || composedGetter(this);
-      // If the event is trusted, or `isTrusted` is not supported, check the list of always composed events
+        this.__composed =
+          this.type === 'focusin' ||
+          this.type === 'focusout' ||
+          composedGetter(this);
+        // If the event is trusted, or `isTrusted` is not supported, check the list of always composed events
       } else if (this.isTrusted !== false) {
         this.__composed = alwaysComposed[this.type];
       }
     }
-    return /** @type {!Event} */(this).__composed || false;
+    return /** @type {!Event} */ (this).__composed || false;
   },
 
   /**
@@ -212,14 +222,17 @@ let EventPatches = {
     if (!this.__composedPath) {
       this.__composedPath = pathComposer(this['__target'], this.composed);
     }
-    return /** @type {!Event} */(this).__composedPath;
+    return /** @type {!Event} */ (this).__composedPath;
   },
 
   /**
    * @this {Event}
    */
   get target() {
-    return retarget(this.currentTarget || this['__previousCurrentTarget'], this.composedPath());
+    return retarget(
+      this.currentTarget || this['__previousCurrentTarget'],
+      this.composedPath()
+    );
   },
 
   // http://w3c.github.io/webcomponents/spec/shadow/#event-relatedtarget-retargeting
@@ -231,10 +244,16 @@ let EventPatches = {
       return null;
     }
     if (!this.__relatedTargetComposedPath) {
-      this.__relatedTargetComposedPath = pathComposer(this.__relatedTarget, true);
+      this.__relatedTargetComposedPath = pathComposer(
+        this.__relatedTarget,
+        true
+      );
     }
     // find the deepest node in relatedTarget composed path that is in the same root with the currentTarget
-    return retarget(this.currentTarget || this['__previousCurrentTarget'], /** @type {!Event} */(this).__relatedTargetComposedPath);
+    return retarget(
+      this.currentTarget || this['__previousCurrentTarget'],
+      /** @type {!Event} */ (this).__relatedTargetComposedPath
+    );
   },
   /**
    * @this {Event}
@@ -250,18 +269,49 @@ let EventPatches = {
     Event.prototype.stopImmediatePropagation.call(this);
     this.__immediatePropagationStopped = true;
     this.__propagationStopped = true;
-  }
-
+  },
 };
+
+// Some browsers have missing or broken descriptors. If this is the case
+// eventPhase can't be polyfilled. For example, Chrome 41 does not
+// have prototypical descriptors on DOM objects and Safari 9 has broken ones
+// that cannot be used.
+const eventPhaseDescriptor =
+  utils.settings.hasDescriptors &&
+  Object.getOwnPropertyDescriptor(Event.prototype, 'eventPhase');
+if (eventPhaseDescriptor) {
+  Object.defineProperty(
+    EventPatches,
+    'eventPhase',
+    /** @type {!ObjectPropertyDescriptor<!Event>} */ ({
+      /**
+       * @this {Event}
+       */
+      get() {
+        return this.currentTarget === this.target
+          ? Event.AT_TARGET
+          : this[utils.NATIVE_PREFIX + 'eventPhase'];
+      },
+      enumerable: true,
+      configurable: true,
+    })
+  );
+
+  Object.defineProperty(
+    EventPatches,
+    utils.NATIVE_PREFIX + 'eventPhase',
+    eventPhaseDescriptor
+  );
+}
 
 function mixinComposedFlag(Base) {
   // NOTE: avoiding use of `class` here so that transpiled output does not
   // try to do `Base.call` with a dom construtor.
-  let klazz = function(type, options) {
+  let klazz = function (type, options) {
     let event = new Base(type, options);
     event.__composed = options && Boolean(options['composed']);
     return event;
-  }
+  };
   // put constructor properties on subclass
   klazz.__proto__ = Base;
   klazz.prototype = Base.prototype;
@@ -270,9 +320,8 @@ function mixinComposedFlag(Base) {
 
 let nonBubblingEventsToRetarget = {
   'focus': true,
-  'blur': true
+  'blur': true,
 };
-
 
 /**
  * Check if the event has been retargeted by comparing original `target`, and calculated `target`
@@ -280,7 +329,10 @@ let nonBubblingEventsToRetarget = {
  * @return {boolean} True if the original target and calculated target are the same
  */
 function hasRetargeted(event) {
-  return event['__target'] !== event.target || event.__relatedTarget !== event.relatedTarget;
+  return (
+    event['__target'] !== event.target ||
+    event.__relatedTarget !== event.relatedTarget
+  );
 }
 
 /**
@@ -290,7 +342,9 @@ function hasRetargeted(event) {
  * @param {string} phase
  */
 function fireHandlers(event, node, phase) {
-  let hs = node.__handlers && node.__handlers[event.type] &&
+  let hs =
+    node.__handlers &&
+    node.__handlers[event.type] &&
     node.__handlers[event.type][phase];
   if (hs) {
     for (let i = 0, fn; (fn = hs[i]); i++) {
@@ -307,7 +361,7 @@ function fireHandlers(event, node, phase) {
 
 function shadyDispatchEvent(e) {
   const path = e.composedPath();
-  const retargetedPath = path.map(node => retarget(node, path));
+  const retargetedPath = path.map((node) => retarget(node, path));
   const bubbles = e.bubbles;
 
   let currentTarget;
@@ -315,7 +369,7 @@ function shadyDispatchEvent(e) {
   Object.defineProperty(e, 'currentTarget', {
     configurable: true,
     enumerable: true,
-    get: function() {
+    get: function () {
       return currentTarget;
     },
   });
@@ -324,14 +378,17 @@ function shadyDispatchEvent(e) {
   Object.defineProperty(e, 'eventPhase', {
     configurable: true,
     enumerable: true,
-    get: function() {
+    get: function () {
       return eventPhase;
     },
   });
 
   for (let i = path.length - 1; i >= 0; i--) {
     currentTarget = path[i];
-    eventPhase = currentTarget === retargetedPath[i] ? Event.AT_TARGET : Event.CAPTURING_PHASE;
+    eventPhase =
+      currentTarget === retargetedPath[i]
+        ? Event.AT_TARGET
+        : Event.CAPTURING_PHASE;
     // capture phase fires all capture handlers
     fireHandlers(e, currentTarget, 'capture');
     if (e.__propagationStopped) {
@@ -355,24 +412,14 @@ function shadyDispatchEvent(e) {
   currentTarget = null;
 }
 
-function listenerSettingsEqual(savedListener, node, type, capture, once, passive) {
-  let {
-    node: savedNode,
-    type: savedType,
-    capture: savedCapture,
-    once: savedOnce,
-    passive: savedPassive
-  } = savedListener;
-  return node === savedNode &&
-    type === savedType &&
-    capture === savedCapture &&
-    once === savedOnce &&
-    passive === savedPassive;
+function listenerSettingsEqual(savedListener, node, type, capture) {
+  let {node: savedNode, type: savedType, capture: savedCapture} = savedListener;
+  return node === savedNode && type === savedType && capture === savedCapture;
 }
 
-export function findListener(wrappers, node, type, capture, once, passive) {
+export function findListener(wrappers, node, type, capture) {
   for (let i = 0; i < wrappers.length; i++) {
-    if (listenerSettingsEqual(wrappers[i], node, type, capture, once, passive)) {
+    if (listenerSettingsEqual(wrappers[i], node, type, capture)) {
       return i;
     }
   }
@@ -402,8 +449,11 @@ export function dispatchEvent(event) {
   // If the target is disconnected from the real document, it might still be
   // connected in the user-facing tree. To allow its path to potentially
   // include both connected and disconnected parts, dispatch it manually.
-  if (!utils.settings.preferPerformance && this instanceof Node &&
-      !utils.documentContains(document, this)) {
+  if (
+    !utils.settings.preferPerformance &&
+    this instanceof Node &&
+    !utils.documentContains(document, this)
+  ) {
     if (!event['__target']) {
       patchEvent(event, this);
     }
@@ -417,8 +467,9 @@ export function dispatchEvent(event) {
  * @this {EventTarget}
  */
 export function addEventListener(type, fnOrObj, optionsOrCapture) {
-  const {capture, once, passive, shadyTarget, nativeEventOptions} =
-    parseEventOptions(optionsOrCapture);
+  const {capture, once, shadyTarget, nativeEventOptions} = parseEventOptions(
+    optionsOrCapture
+  );
   if (!fnOrObj) {
     return;
   }
@@ -431,12 +482,19 @@ export function addEventListener(type, fnOrObj, optionsOrCapture) {
   }
 
   // bail if `fnOrObj` is an object without a `handleEvent` method
-  if (handlerType === 'object' && (!fnOrObj.handleEvent || typeof fnOrObj.handleEvent !== 'function')) {
+  if (
+    handlerType === 'object' &&
+    (!fnOrObj.handleEvent || typeof fnOrObj.handleEvent !== 'function')
+  ) {
     return;
   }
 
   if (unpatchedEvents[type]) {
-    return this[utils.NATIVE_PREFIX + 'addEventListener'](type, fnOrObj, nativeEventOptions);
+    return this[utils.NATIVE_PREFIX + 'addEventListener'](
+      type,
+      fnOrObj,
+      nativeEventOptions
+    );
   }
 
   // hack to let ShadyRoots have event listeners
@@ -453,7 +511,7 @@ export function addEventListener(type, fnOrObj, optionsOrCapture) {
     // for few nodes at most, whereas a node will likely have many event listeners).
     // NOTE(valdrin) invoking external functions is costly, inline has better perf.
     // Stop if the wrapper function has already been created.
-    if (findListener(wrappers, target, type, capture, once, passive) > -1) {
+    if (findListener(wrappers, target, type, capture) > -1) {
       return;
     }
   } else {
@@ -461,13 +519,17 @@ export function addEventListener(type, fnOrObj, optionsOrCapture) {
   }
 
   /**
-   * @this {HTMLElement}
+   * @this {EventTarget}
    * @param {Event} e
    */
-  const wrapperFn = function(e) {
+  const wrapperFn = (e) => {
     // Support `once` option.
     if (once) {
-      this[utils.SHADY_PREFIX + 'removeEventListener'](type, fnOrObj, optionsOrCapture);
+      this[utils.SHADY_PREFIX + 'removeEventListener'](
+        type,
+        fnOrObj,
+        optionsOrCapture
+      );
     }
     if (!e['__target']) {
       patchEvent(e);
@@ -476,8 +538,16 @@ export function addEventListener(type, fnOrObj, optionsOrCapture) {
     let lastEventPhaseDesc;
     if (target !== this) {
       // replace `currentTarget` to make `target` and `relatedTarget` correct for inside the shadowroot
-      lastCurrentTargetDesc = Object.getOwnPropertyDescriptor(e, 'currentTarget');
-      Object.defineProperty(e, 'currentTarget', {get() { return target }, configurable: true});
+      lastCurrentTargetDesc = Object.getOwnPropertyDescriptor(
+        e,
+        'currentTarget'
+      );
+      Object.defineProperty(e, 'currentTarget', {
+        get() {
+          return target;
+        },
+        configurable: true,
+      });
       lastEventPhaseDesc = Object.getOwnPropertyDescriptor(e, 'eventPhase');
       Object.defineProperty(e, 'eventPhase', {
         configurable: true,
@@ -493,7 +563,10 @@ export function addEventListener(type, fnOrObj, optionsOrCapture) {
     // Always check if a shadowRoot or slot is in the current event path.
     // If it is not, the event was generated on either the host of the shadowRoot
     // or a children of the host.
-    if (targetNeedsPathCheck(target) && e.composedPath().indexOf(target) == -1) {
+    if (
+      targetNeedsPathCheck(target) &&
+      e.composedPath().indexOf(target) == -1
+    ) {
       return;
     }
     // There are two critera that should stop events from firing on this node
@@ -507,12 +580,18 @@ export function addEventListener(type, fnOrObj, optionsOrCapture) {
         return;
       }
       // prevent non-bubbling events from triggering bubbling handlers on shadowroot, but only if not in capture phase
-      if (e.eventPhase !== Event.CAPTURING_PHASE && !e.bubbles && e.target !== target && !(target instanceof Window)) {
+      if (
+        e.eventPhase !== Event.CAPTURING_PHASE &&
+        !e.bubbles &&
+        e.target !== target &&
+        !(target instanceof Window)
+      ) {
         return;
       }
-      let ret = handlerType === 'function' ?
-        fnOrObj.call(target, e) :
-        (fnOrObj.handleEvent && fnOrObj.handleEvent(e));
+      let ret =
+        handlerType === 'function'
+          ? fnOrObj.call(target, e)
+          : fnOrObj.handleEvent && fnOrObj.handleEvent(e);
       if (target !== this) {
         // Replace the original descriptors for `currentTarget` and `eventPhase`.
         if (lastCurrentTargetDesc) {
@@ -537,20 +616,24 @@ export function addEventListener(type, fnOrObj, optionsOrCapture) {
     // note: use target here which is either a shadowRoot
     // (when the host element is proxy'ing the event) or this element
     node: target,
-    type: type,
-    capture: capture,
-    once: once,
-    passive: passive,
-    wrapperFn: wrapperFn
+    type,
+    capture,
+    wrapperFn,
   });
 
   this.__handlers = this.__handlers || {};
-  this.__handlers[type] = this.__handlers[type] ||
-    {'capture': [], 'bubble': []};
+  this.__handlers[type] = this.__handlers[type] || {
+    'capture': [],
+    'bubble': [],
+  };
   this.__handlers[type][capture ? 'capture' : 'bubble'].push(wrapperFn);
 
   if (!nonBubblingEventsToRetarget[type]) {
-    this[utils.NATIVE_PREFIX + 'addEventListener'](type, wrapperFn, nativeEventOptions);
+    this[utils.NATIVE_PREFIX + 'addEventListener'](
+      type,
+      wrapperFn,
+      nativeEventOptions
+    );
   }
 }
 
@@ -561,17 +644,22 @@ export function removeEventListener(type, fnOrObj, optionsOrCapture) {
   if (!fnOrObj) {
     return;
   }
-  const {capture, once, passive, shadyTarget, nativeEventOptions} =
-    parseEventOptions(optionsOrCapture);
+  const {capture, shadyTarget, nativeEventOptions} = parseEventOptions(
+    optionsOrCapture
+  );
   if (unpatchedEvents[type]) {
-    return this[utils.NATIVE_PREFIX + 'removeEventListener'](type, fnOrObj, nativeEventOptions);
+    return this[utils.NATIVE_PREFIX + 'removeEventListener'](
+      type,
+      fnOrObj,
+      nativeEventOptions
+    );
   }
   let target = shadyTarget || this;
   // Search the wrapped function.
   let wrapperFn = undefined;
   let wrappers = getEventWrappers(fnOrObj);
   if (wrappers) {
-    let idx = findListener(wrappers, target, type, capture, once, passive);
+    let idx = findListener(wrappers, target, type, capture);
     if (idx > -1) {
       wrapperFn = wrappers.splice(idx, 1)[0].wrapperFn;
       // Cleanup.
@@ -580,8 +668,11 @@ export function removeEventListener(type, fnOrObj, optionsOrCapture) {
       }
     }
   }
-  this[utils.NATIVE_PREFIX + 'removeEventListener'](type, wrapperFn || fnOrObj,
-    nativeEventOptions);
+  this[utils.NATIVE_PREFIX + 'removeEventListener'](
+    type,
+    wrapperFn || fnOrObj,
+    nativeEventOptions
+  );
   if (wrapperFn && this.__handlers && this.__handlers[type]) {
     const arr = this.__handlers[type][capture ? 'capture' : 'bubble'];
     const idx = arr.indexOf(wrapperFn);
@@ -593,12 +684,16 @@ export function removeEventListener(type, fnOrObj, optionsOrCapture) {
 
 function activateFocusEventOverrides() {
   for (let ev in nonBubblingEventsToRetarget) {
-    window[utils.NATIVE_PREFIX + 'addEventListener'](ev, function(e) {
-      if (!e['__target']) {
-        patchEvent(e);
-        shadyDispatchEvent(e);
-      }
-    }, true);
+    window[utils.NATIVE_PREFIX + 'addEventListener'](
+      ev,
+      function (e) {
+        if (!e['__target']) {
+          patchEvent(e);
+          shadyDispatchEvent(e);
+        }
+      },
+      true
+    );
   }
 }
 
@@ -621,7 +716,7 @@ function patchEvent(event, target = event.target) {
       proto[SHADY_PROTO] = patchedProto;
     }
     event.__proto__ = proto[SHADY_PROTO];
-  // and fallback to patching instance
+    // and fallback to patching instance
   } else {
     utils.patchProperties(event, EventPatchesDescriptors);
   }
@@ -630,7 +725,6 @@ function patchEvent(event, target = event.target) {
 let PatchedEvent = mixinComposedFlag(Event);
 let PatchedCustomEvent = mixinComposedFlag(CustomEvent);
 let PatchedMouseEvent = mixinComposedFlag(MouseEvent);
-
 
 export function patchEvents() {
   activateFocusEventOverrides();
@@ -641,13 +735,16 @@ export function patchEvents() {
 
 export function patchClick() {
   // Fix up `Element.prototype.click()` if `isTrusted` is supported, but `composed` isn't
-  if (!composedGetter && Object.getOwnPropertyDescriptor(Event.prototype, 'isTrusted')) {
+  if (
+    !composedGetter &&
+    Object.getOwnPropertyDescriptor(Event.prototype, 'isTrusted')
+  ) {
     /** @this {Element} */
-    const composedClickFn = function() {
+    const composedClickFn = function () {
       const ev = new MouseEvent('click', {
         bubbles: true,
         cancelable: true,
-        composed: true
+        composed: true,
       });
       this[utils.SHADY_PREFIX + 'dispatchEvent'](ev);
     };
@@ -659,13 +756,13 @@ export function patchClick() {
   }
 }
 
-export const eventPropertyNamesForElement =
-    Object.getOwnPropertyNames(Element.prototype)
-    .filter(name => name.substring(0,2) === 'on');
+export const eventPropertyNamesForElement = Object.getOwnPropertyNames(
+  Element.prototype
+).filter((name) => name.substring(0, 2) === 'on');
 
-export const eventPropertyNamesForHTMLElement =
-    Object.getOwnPropertyNames(HTMLElement.prototype)
-    .filter(name => name.substring(0,2) === 'on');
+export const eventPropertyNamesForHTMLElement = Object.getOwnPropertyNames(
+  HTMLElement.prototype
+).filter((name) => name.substring(0, 2) === 'on');
 
 /**
  * @param {string} property
@@ -674,21 +771,29 @@ export const eventPropertyNamesForHTMLElement =
 export const wrappedDescriptorForEventProperty = (property) => {
   return {
     /** @this {Element} */
-    set: function(fn) {
+    set: function (fn) {
       const shadyData = ensureShadyDataForNode(this);
       const eventName = property.substring(2);
       if (!shadyData.__onCallbackListeners) {
         shadyData.__onCallbackListeners = {};
       }
-      shadyData.__onCallbackListeners[property] && this.removeEventListener(eventName, shadyData.__onCallbackListeners[property]);
+      shadyData.__onCallbackListeners[property] &&
+        this.removeEventListener(
+          eventName,
+          shadyData.__onCallbackListeners[property]
+        );
       this[utils.SHADY_PREFIX + 'addEventListener'](eventName, fn);
       shadyData.__onCallbackListeners[property] = fn;
     },
     /** @this {Element} */
     get() {
       const shadyData = shadyDataForNode(this);
-      return shadyData && shadyData.__onCallbackListeners && shadyData.__onCallbackListeners[property];
+      return (
+        shadyData &&
+        shadyData.__onCallbackListeners &&
+        shadyData.__onCallbackListeners[property]
+      );
     },
-    configurable: true
+    configurable: true,
   };
 };

@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <!--
 @license
 Copyright (c) 2020 The Polymer Project Authors. All rights reserved.
@@ -9,125 +9,126 @@ Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 -->
 <html>
-<head>
-  <title>SVGElement classList</title>
-  <script src="../node_modules/@webcomponents/webcomponentsjs/bundles/webcomponents-pf_dom.js"></script>
-  <script src="./wct-config.js"></script>
-  <script src="../node_modules/wct-browser-legacy/browser.js"></script>
-</head>
-<body>
-  <script>
-    suite('SVGElement classList', function() {
-      const createSVGElement = () => document.createElementNS('http://www.w3.org/2000/svg', 'g');
+  <head>
+    <title>SVGElement classList</title>
+    <script src="../node_modules/@webcomponents/webcomponentsjs/bundles/webcomponents-pf_dom.js"></script>
+    <script src="./wct-config.js"></script>
+    <script src="../node_modules/wct-browser-legacy/browser.js"></script>
+  </head>
+  <body>
+    <script>
+      suite('SVGElement classList', function () {
+        const createSVGElement = () =>
+          document.createElementNS('http://www.w3.org/2000/svg', 'g');
 
-      test('length', () => {
-        const svgElement = createSVGElement();
+        test('length', () => {
+          const svgElement = createSVGElement();
 
-        assert(svgElement.classList.length === 0);
+          assert(svgElement.classList.length === 0);
 
-        svgElement.classList.add('one');
-        assert(svgElement.classList.length === 1);
+          svgElement.classList.add('one');
+          assert(svgElement.classList.length === 1);
 
-        svgElement.classList.add('two');
-        assert(svgElement.classList.length === 2);
+          svgElement.classList.add('two');
+          assert(svgElement.classList.length === 2);
+        });
+
+        test('item()', () => {
+          const svgElement = createSVGElement();
+
+          svgElement.classList.add('one');
+          svgElement.classList.add('two');
+          assert(svgElement.classList.item(0) === 'one');
+          assert(svgElement.classList.item(1) === 'two');
+          assert(svgElement.classList.item(2) === null);
+        });
+
+        test('contains()', () => {
+          const svgElement = createSVGElement();
+
+          svgElement.classList.add('one');
+          svgElement.classList.add('two');
+          assert(svgElement.classList.contains('one'));
+          assert(svgElement.classList.contains('two'));
+          assert(!svgElement.classList.contains('three'));
+        });
+
+        test('add()', () => {
+          const svgElement = createSVGElement();
+
+          svgElement.classList.add('one');
+          // `SVGElement#className` is not a string like HTML.
+          // https://www.w3.org/TR/SVG2/idl.html
+          assert(svgElement.getAttribute('class') === 'one');
+          assert(svgElement.classList.contains('one'));
+          assert(!svgElement.classList.contains('two'));
+          assert(svgElement.className.baseVal === 'one');
+
+          svgElement.classList.add('two');
+          assert(svgElement.getAttribute('class') === 'one two');
+          assert(svgElement.classList.contains('one'));
+          assert(svgElement.classList.contains('two'));
+          assert(svgElement.className.baseVal === 'one two');
+        });
+
+        test('remove()', () => {
+          const svgElement = createSVGElement();
+
+          svgElement.classList.add('one');
+          svgElement.classList.add('two');
+          svgElement.classList.add('three');
+          assert(svgElement.getAttribute('class') === 'one two three');
+          assert(svgElement.className.baseVal === 'one two three');
+
+          svgElement.classList.remove('one');
+          assert(svgElement.getAttribute('class') === 'two three');
+          assert(!svgElement.classList.contains('one'));
+          assert(svgElement.classList.contains('two'));
+          assert(svgElement.classList.contains('three'));
+          assert(svgElement.className.baseVal === 'two three');
+        });
+
+        test('toggle()', () => {
+          const svgElement = createSVGElement();
+
+          assert(svgElement.getAttribute('class') === null);
+          assert(!svgElement.classList.contains('one'));
+          assert(svgElement.className.baseVal === '');
+
+          svgElement.classList.toggle('one');
+          assert(svgElement.getAttribute('class') === 'one');
+          assert(svgElement.classList.contains('one'));
+          assert(svgElement.className.baseVal === 'one');
+
+          svgElement.classList.toggle('one');
+          assert(svgElement.getAttribute('class') === '');
+          assert(!svgElement.classList.contains('one'));
+          assert(svgElement.className.baseVal === '');
+        });
+
+        test('Setting the class attribute reflects to classList', () => {
+          const svgElement = createSVGElement();
+
+          assert(!svgElement.classList.contains('one'));
+          assert(!svgElement.classList.contains('two'));
+
+          svgElement.setAttribute('class', 'one');
+          assert(svgElement.classList.contains('one'));
+          assert(!svgElement.classList.contains('two'));
+
+          svgElement.setAttribute('class', 'one two');
+          assert(svgElement.classList.contains('one'));
+          assert(svgElement.classList.contains('two'));
+
+          svgElement.setAttribute('class', 'two');
+          assert(!svgElement.classList.contains('one'));
+          assert(svgElement.classList.contains('two'));
+
+          svgElement.removeAttribute('class');
+          assert(!svgElement.classList.contains('one'));
+          assert(!svgElement.classList.contains('two'));
+        });
       });
-
-      test('item()', () => {
-        const svgElement = createSVGElement();
-
-        svgElement.classList.add('one');
-        svgElement.classList.add('two');
-        assert(svgElement.classList.item(0) === 'one');
-        assert(svgElement.classList.item(1) === 'two');
-        assert(svgElement.classList.item(2) === null);
-      });
-
-      test('contains()', () => {
-        const svgElement = createSVGElement();
-
-        svgElement.classList.add('one');
-        svgElement.classList.add('two');
-        assert(svgElement.classList.contains('one'));
-        assert(svgElement.classList.contains('two'));
-        assert(!svgElement.classList.contains('three'));
-      });
-
-      test('add()', () => {
-        const svgElement = createSVGElement();
-
-        svgElement.classList.add('one');
-        // `SVGElement#className` is not a string like HTML.
-        // https://www.w3.org/TR/SVG2/idl.html
-        assert(svgElement.getAttribute('class') === 'one');
-        assert(svgElement.classList.contains('one'));
-        assert(!svgElement.classList.contains('two'));
-        assert(svgElement.className.baseVal === 'one');
-
-        svgElement.classList.add('two');
-        assert(svgElement.getAttribute('class') === 'one two');
-        assert(svgElement.classList.contains('one'));
-        assert(svgElement.classList.contains('two'));
-        assert(svgElement.className.baseVal === 'one two');
-      });
-
-      test('remove()', () => {
-        const svgElement = createSVGElement();
-
-        svgElement.classList.add('one');
-        svgElement.classList.add('two');
-        svgElement.classList.add('three');
-        assert(svgElement.getAttribute('class') === 'one two three');
-        assert(svgElement.className.baseVal === 'one two three');
-
-        svgElement.classList.remove('one');
-        assert(svgElement.getAttribute('class') === 'two three');
-        assert(!svgElement.classList.contains('one'));
-        assert(svgElement.classList.contains('two'));
-        assert(svgElement.classList.contains('three'));
-        assert(svgElement.className.baseVal === 'two three');
-      });
-
-      test('toggle()', () => {
-        const svgElement = createSVGElement();
-
-        assert(svgElement.getAttribute('class') === null);
-        assert(!svgElement.classList.contains('one'));
-        assert(svgElement.className.baseVal === '');
-
-        svgElement.classList.toggle('one');
-        assert(svgElement.getAttribute('class') === 'one');
-        assert(svgElement.classList.contains('one'));
-        assert(svgElement.className.baseVal === 'one');
-
-        svgElement.classList.toggle('one');
-        assert(svgElement.getAttribute('class') === '');
-        assert(!svgElement.classList.contains('one'));
-        assert(svgElement.className.baseVal === '');
-      });
-
-      test('Setting the class attribute reflects to classList', () => {
-        const svgElement = createSVGElement();
-
-        assert(!svgElement.classList.contains('one'));
-        assert(!svgElement.classList.contains('two'));
-
-        svgElement.setAttribute('class', 'one');
-        assert(svgElement.classList.contains('one'));
-        assert(!svgElement.classList.contains('two'));
-
-        svgElement.setAttribute('class', 'one two');
-        assert(svgElement.classList.contains('one'));
-        assert(svgElement.classList.contains('two'));
-
-        svgElement.setAttribute('class', 'two');
-        assert(!svgElement.classList.contains('one'));
-        assert(svgElement.classList.contains('two'));
-
-        svgElement.removeAttribute('class');
-        assert(!svgElement.classList.contains('one'));
-        assert(!svgElement.classList.contains('two'));
-      });
-    });
-  </script>
-</body>
+    </script>
+  </body>
 </html>

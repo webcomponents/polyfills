@@ -10,13 +10,16 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 export {};
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Constructor<T> = new (...args: Array<any>) => T;
 
 const nativeRemoveChild = Node.prototype.removeChild;
 const nativeGetParentNode =
-    Object.getOwnPropertyDescriptor(Node.prototype, 'parentNode')?.get! ??
-    // In Safari 9, the `parentNode` descriptor's `get` and `set` are undefined.
-    function(this: Node) { return this.parentNode; };
+  Object.getOwnPropertyDescriptor(Node.prototype, 'parentNode')?.get ??
+  // In Safari 9, the `parentNode` descriptor's `get` and `set` are undefined.
+  function (this: Node) {
+    return this.parentNode;
+  };
 
 const installRemove = <T>(constructor: Constructor<T>) => {
   const prototype = constructor.prototype;
@@ -33,7 +36,7 @@ const installRemove = <T>(constructor: Constructor<T>) => {
       if (parentNode) {
         nativeRemoveChild.call(parentNode, this);
       }
-    }
+    },
   });
 };
 

@@ -1,26 +1,21 @@
 {
   "name": "@webcomponents/shady-css-scoped-element",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "private": true,
+  "publishConfig": {
+    "access": "public"
+  },
   "description": "ShadyCSS scoped element",
+  "license": "BSD-3-Clause",
   "repository": {
     "type": "git",
     "url": "https://github.com/webcomponents/polyfills.git",
     "directory": "packages/shady-css-scoped-element"
   },
-  "bugs": "https://github.com/webcomponents/polyfills/issues?q=is%3Aissue+is%3Aopen+label%3A\"Package%3A+shady-css-scoped-element\"",
-  "homepage": "https://github.com/webcomponents/polyfills/tree/master/packages/shady-css-scoped-element",
-  "main": "shady-css-scoped.min.js",
   "author": "The Polymer Project Authors (https://polymer.github.io/AUTHORS.txt)",
-  "keywords": [
-    "custom-elements",
-    "customelements",
-    "web-components",
-    "webcomponents",
-    "polyfill",
-    "shim"
-  ],
-  "license": "BSD-3-Clause",
+  "homepage": "https://github.com/webcomponents/polyfills/tree/master/packages/shady-css-scoped-element",
+  "bugs": "https://github.com/webcomponents/polyfills/issues?q=is%3Aissue+is%3Aopen+label%3A\"Package%3A+shady-css-scoped-element\"",
+  "main": "shady-css-scoped.min.js",
   "scripts": {
     "build": "gulp",
     "build:watch": "chokidar --initial 'src/**/*.js' -c 'npm run build'",
@@ -31,7 +26,12 @@
     "shady-css-scoped-element.min.js*",
     "src/"
   ],
-  "publishConfig": {
-    "access": "public"
-  }
+  "keywords": [
+    "custom-elements",
+    "customelements",
+    "web-components",
+    "webcomponents",
+    "polyfill",
+    "shim"
+  ]
 }

@@ -12,7 +12,6 @@ import * as utils from './utils.js';
 import {ensureShadyDataForNode} from './shady-data.js';
 
 class AsyncObserver {
-
   constructor() {
     this._scheduled = false;
     this.addedNodes = [];
@@ -34,7 +33,7 @@ class AsyncObserver {
       this._scheduled = false;
       let mutations = this.takeRecords();
       if (mutations.length) {
-        this.callbacks.forEach(function(cb) {
+        this.callbacks.forEach(function (cb) {
           cb(mutations);
         });
       }
@@ -43,17 +42,18 @@ class AsyncObserver {
 
   takeRecords() {
     if (this.addedNodes.length || this.removedNodes.length) {
-      let mutations = [{
-        addedNodes: this.addedNodes,
-        removedNodes: this.removedNodes
-      }];
+      let mutations = [
+        {
+          addedNodes: this.addedNodes,
+          removedNodes: this.removedNodes,
+        },
+      ];
       this.addedNodes = [];
       this.removedNodes = [];
       return mutations;
     }
     return [];
   }
-
 }
 
 // TODO(sorvell): consider instead polyfilling MutationObserver
@@ -61,7 +61,7 @@ class AsyncObserver {
 // Supporting the entire api may be challenging: e.g. filtering out
 // removed nodes in the wrong scope and seeing non-distributing
 // subtree child mutations.
-export let observeChildren = function(node, callback) {
+export let observeChildren = function (node, callback) {
   const sd = ensureShadyDataForNode(node);
   if (!sd.observer) {
     sd.observer = new AsyncObserver();
@@ -73,12 +73,12 @@ export let observeChildren = function(node, callback) {
     _observer: observer,
     _node: node,
     takeRecords() {
-      return observer.takeRecords()
-    }
+      return observer.takeRecords();
+    },
   };
-}
+};
 
-export let unobserveChildren = function(handle) {
+export let unobserveChildren = function (handle) {
   let observer = handle && handle._observer;
   if (observer) {
     observer.callbacks.delete(handle._callback);
@@ -86,28 +86,32 @@ export let unobserveChildren = function(handle) {
       ensureShadyDataForNode(handle._node).observer = null;
     }
   }
-}
+};
 
 export function filterMutations(mutations, target) {
   /** @const {Node} */
   const targetRootNode = target.getRootNode();
-  return mutations.map(function(mutation) {
-    /** @const {boolean} */
-    const mutationInScope = (targetRootNode === mutation.target.getRootNode());
-    if (mutationInScope && mutation.addedNodes) {
-      let nodes = utils.arrayFrom(mutation.addedNodes).filter(function(n) {
-        return (targetRootNode === n.getRootNode());
-      });
-      if (nodes.length) {
-        mutation = Object.create(mutation);
-        Object.defineProperty(mutation, 'addedNodes', {
-          value: nodes,
-          configurable: true
+  return mutations
+    .map(function (mutation) {
+      /** @const {boolean} */
+      const mutationInScope = targetRootNode === mutation.target.getRootNode();
+      if (mutationInScope && mutation.addedNodes) {
+        let nodes = utils.arrayFrom(mutation.addedNodes).filter(function (n) {
+          return targetRootNode === n.getRootNode();
         });
+        if (nodes.length) {
+          mutation = Object.create(mutation);
+          Object.defineProperty(mutation, 'addedNodes', {
+            value: nodes,
+            configurable: true,
+          });
+          return mutation;
+        }
+      } else if (mutationInScope) {
         return mutation;
       }
-    } else if (mutationInScope) {
-      return mutation;
-    }
-  }).filter(function(m) { return m});
+    })
+    .filter(function (m) {
+      return m;
+    });
 }

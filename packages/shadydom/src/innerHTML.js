@@ -65,7 +65,7 @@ let voidElements = makeSet([
   'param',
   'source',
   'track',
-  'wbr'
+  'wbr',
 ]);
 
 let plaintextParents = makeSet([
@@ -76,7 +76,7 @@ let plaintextParents = makeSet([
   'noembed',
   'noframes',
   'plaintext',
-  'noscript'
+  'noscript',
 ]);
 
 /**
@@ -122,11 +122,11 @@ export function getOuterHTML(node, parentNode, callback) {
  */
 export function getInnerHTML(node, callback) {
   if (node.localName === 'template') {
-    node =  /** @type {HTMLTemplateElement} */ (node).content;
+    node = /** @type {HTMLTemplateElement} */ (node).content;
   }
   let s = '';
   let c$ = callback ? callback(node) : node.childNodes;
-  for (let i=0, l=c$.length, child; (i<l) && (child=c$[i]); i++) {
+  for (let i = 0, l = c$.length, child; i < l && (child = c$[i]); i++) {
     s += getOuterHTML(child, node, callback);
   }
   return s;

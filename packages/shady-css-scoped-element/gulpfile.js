@@ -21,15 +21,14 @@ const closureOptions = {
   assume_function_wrapper: true,
   isolation_mode: 'IIFE',
   rewrite_polyfills: false,
-  dependency_mode: 'STRICT',
+  dependency_mode: 'PRUNE',
   entry_point: 'src/shady-css-scoped-element.js',
-  externs: 'externs/shadycss-externs.js'
+  externs: 'externs/shadycss-externs.js',
 };
 
 gulp.task('default', () => {
-  return gulp.src([
-      './src/shady-css-scoped-element.js'
-    ], {base: './', follow: true})
+  return gulp
+    .src(['./src/shady-css-scoped-element.js'], {base: './', follow: true})
     .pipe(sourcemaps.init())
     .pipe(closure(closureOptions))
     .pipe(sourcemaps.write('.'))

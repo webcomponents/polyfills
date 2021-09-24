@@ -2,19 +2,9 @@
   "name": "url",
   "main": "url.js",
   "homepage": "https://github.com/Polymer/URL",
-  "authors": [
-    "https://github.com/Polymer/URL/graphs/contributors"
-  ],
+  "authors": ["https://github.com/Polymer/URL/graphs/contributors"],
   "description": "URL parser in JavaScript",
-  "keywords": [
-    "url",
-    "urlsearchparams",
-    "whatwg",
-    "w3c"
-  ],
+  "keywords": ["url", "urlsearchparams", "whatwg", "w3c"],
   "license": "https://github.com/Polymer/URL#license",
-  "ignore": [
-    "*test*",
-    "playground.html"
-  ]
+  "ignore": ["*test*", "playground.html"]
 }

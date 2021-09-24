@@ -1,4 +1,5 @@
 # template
+
 A minimal polyfill for `<template>`.
 
 ## Known limitations

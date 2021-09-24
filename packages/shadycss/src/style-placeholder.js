@@ -49,7 +49,12 @@ if (ce && !nativeShadow && !disableRuntime) {
    */
   const wrappedDefine = (name, clazz, options) => {
     ensureStylePlaceholder(name);
-    origDefine.call(/** @type {!CustomElementRegistry} */(ce), name, clazz, options);
+    origDefine.call(
+      /** @type {!CustomElementRegistry} */ (ce),
+      name,
+      clazz,
+      options
+    );
   };
   ce['define'] = wrappedDefine;
 }

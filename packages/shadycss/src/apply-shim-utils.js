@@ -10,7 +10,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 'use strict';
 import templateMap from './template-map.js';
-import {StyleNode} from './css-parse.js'; // eslint-disable-line no-unused-vars
+import {StyleNode} from './css-parse.js'; // eslint-disable-line @typescript-eslint/no-unused-vars
 
 /*
  * Utilities for handling invalidating apply-shim mixins for a given template.
@@ -36,7 +36,7 @@ const promise = Promise.resolve();
 /**
  * @param {string} elementName
  */
-export function invalidate(elementName){
+export function invalidate(elementName) {
   let template = templateMap[elementName];
   if (template) {
     invalidateTemplate(template);
@@ -100,7 +100,10 @@ export function isValidating(elementName) {
  * @return {boolean}
  */
 export function templateIsValidating(template) {
-  return !templateIsValid(template) && template[VALIDATING_VERSION] === template[NEXT_VERSION];
+  return (
+    !templateIsValid(template) &&
+    template[VALIDATING_VERSION] === template[NEXT_VERSION]
+  );
 }
 
 /**
@@ -108,7 +111,7 @@ export function templateIsValidating(template) {
  * found in the tree crawl of `applyStyle` will update themselves,
  * but the template will only be updated once.
  * @param {string} elementName
-*/
+ */
 export function startValidating(elementName) {
   let template = templateMap[elementName];
   startValidatingTemplate(template);
@@ -127,7 +130,7 @@ export function startValidatingTemplate(template) {
   // however, there only needs to be one async task to clear the counters
   if (!template._validating) {
     template._validating = true;
-    promise.then(function() {
+    promise.then(function () {
       // sync the current version to let future invalidations cause a refresh cycle
       template[CURRENT_VERSION] = template[NEXT_VERSION];
       template._validating = false;

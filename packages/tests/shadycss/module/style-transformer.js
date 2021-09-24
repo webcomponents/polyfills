@@ -12,5 +12,5 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 A simple shim to generate a testable module
 */
 
-import StyleTransformer from '../../node_modules/@webcomponents/shadycss/src/style-transformer'
+import StyleTransformer from '../../node_modules/@webcomponents/shadycss/src/style-transformer';
 window['StyleTransformer'] = StyleTransformer;

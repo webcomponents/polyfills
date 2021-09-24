@@ -14,7 +14,7 @@ import CustomElementInternals from './CustomElementInternals.js';
 export default class DocumentConstructionObserver {
   private readonly _internals: CustomElementInternals;
   private readonly _document: Document;
-  private _observer: MutationObserver|undefined = undefined;
+  private _observer: MutationObserver | undefined = undefined;
   constructor(internals: CustomElementInternals, doc: Document) {
     this._internals = internals;
     this._document = doc;

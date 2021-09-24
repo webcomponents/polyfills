@@ -16,7 +16,9 @@ export class BaseClass extends HTMLElement {
       if (window.ShadyCSS && !template._prepared) {
         window.ShadyCSS.prepareTemplate(template, this.localName);
       }
-      this.attachShadow({mode: 'open'}).appendChild(template.content.cloneNode(true));
+      this.attachShadow({mode: 'open'}).appendChild(
+        template.content.cloneNode(true)
+      );
     }
   }
   connectedCallback() {
