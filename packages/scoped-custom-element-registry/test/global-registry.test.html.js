@@ -1,10 +1,12 @@
 import {expect} from '@open-wc/testing';
 
 import {commonRegistryTests} from './common-registry-tests.js';
+import {commonRegistryTests as faceTests} from './form-associated.test.js';
 import {getTestElement} from './utils';
 
 describe('Global Registry', () => {
   commonRegistryTests(customElements);
+  faceTests(customElements);
 
   describe('custom element constructors', () => {
     it('should allow to create a defined custom element', () => {

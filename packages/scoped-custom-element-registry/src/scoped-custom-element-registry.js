@@ -74,7 +74,10 @@ if (!ShadowRoot.prototype.createElement) {
       // Register a stand-in class which will handle the registry lookup & delegation
       let standInClass = nativeGet.call(nativeRegistry, tagName);
       if (!standInClass) {
-        standInClass = createStandInElement(tagName);
+        standInClass = createStandInElement(
+          tagName,
+          elementClass.formAssociated
+        );
         nativeDefine.call(nativeRegistry, tagName, standInClass);
       }
       if (this === window.customElements) {
@@ -206,8 +209,11 @@ if (!ShadowRoot.prototype.createElement) {
 
   // Helper to create stand-in element for each tagName registered that delegates
   // out to the registry for the given element
-  const createStandInElement = (tagName) => {
+  const createStandInElement = (tagName, formAssociated) => {
     return class ScopedCustomElementBase {
+      static get formAssociated() {
+        return formAssociated;
+      }
       constructor() {
         // Create a raw HTMLElement first
         const instance = Reflect.construct(

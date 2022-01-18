@@ -30,6 +30,24 @@ export const getTestElement = () => ({
   CustomElementClass: class extends HTMLElement {},
 });
 
+export const getFormAssociatedTestElement = () => ({
+  tagName: getTestTagName(),
+  CustomElementClass: class extends HTMLElement {
+    static formAssociated() {
+      return true;
+    }
+    constructor() {
+      super();
+      if (window.ElementInternals) {
+        this.internals = this.attachInternals();
+        if (this.internals.setFormValue) {
+          this.internals.setFormValue('FACE');
+        }
+      }
+    }
+  },
+});
+
 /**
  * Gets a shadowRoot with a registry associated.
  *
