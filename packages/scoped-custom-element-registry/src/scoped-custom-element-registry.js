@@ -67,6 +67,12 @@ if (!ShadowRoot.prototype.createElement) {
         disconnectedCallback: elementClass.prototype.disconnectedCallback,
         adoptedCallback: elementClass.prototype.adoptedCallback,
         attributeChangedCallback,
+        formAssociated: elementClass.formAssociated,
+        formAssociatedCallback: elementClass.prototype.formAssociatedCallback,
+        formDisabledCallback: elementClass.prototype.formDisabledCallback,
+        formResetCallback: elementClass.prototype.formResetCallback,
+        formStateRestoreCallback:
+          elementClass.prototype.formStateRestoreCallback,
         observedAttributes,
       };
       this._definitionsByTag.set(tagName, definition);
@@ -74,10 +80,7 @@ if (!ShadowRoot.prototype.createElement) {
       // Register a stand-in class which will handle the registry lookup & delegation
       let standInClass = nativeGet.call(nativeRegistry, tagName);
       if (!standInClass) {
-        standInClass = createStandInElement(
-          tagName,
-          elementClass.formAssociated
-        );
+        standInClass = createStandInElement(tagName);
         nativeDefine.call(nativeRegistry, tagName, standInClass);
       }
       if (this === window.customElements) {
@@ -209,10 +212,10 @@ if (!ShadowRoot.prototype.createElement) {
 
   // Helper to create stand-in element for each tagName registered that delegates
   // out to the registry for the given element
-  const createStandInElement = (tagName, formAssociated) => {
+  const createStandInElement = (tagName) => {
     return class ScopedCustomElementBase {
-      static get formAssociated() {
-        return formAssociated;
+      static get ['formAssociated']() {
+        return true;
       }
       constructor() {
         // Create a raw HTMLElement first
@@ -267,6 +270,27 @@ if (!ShadowRoot.prototype.createElement) {
       adoptedCallback() {
         const definition = definitionForElement.get(this);
         definition?.adoptedCallback?.apply(this, arguments);
+      }
+
+      // Form-associated custom elements lifecycle methods
+      formAssociatedCallback() {
+        const definition = definitionForElement.get(this);
+        definition?.formAssociatedCallback?.apply(this, arguments);
+      }
+
+      formDisabledCallback() {
+        const definition = definitionForElement.get(this);
+        definition?.formDisabledCallback?.apply(this, arguments);
+      }
+
+      formResetCallback() {
+        const definition = definitionForElement.get(this);
+        definition?.formResetCallback?.apply(this, arguments);
+      }
+
+      formStateRestoreCallback() {
+        const definition = definitionForElement.get(this);
+        definition?.formStateRestoreCallback?.apply(this, arguments);
       }
 
       // no attributeChangedCallback or observedAttributes since these
@@ -409,4 +433,40 @@ if (!ShadowRoot.prototype.createElement) {
     configurable: true,
     writable: true,
   });
+
+  if (
+    window.ElementInternals &&
+    window.ElementInternals.prototype.setFormValue
+  ) {
+    const internalsToHostMap = new WeakMap();
+    const attachInternals = HTMLElement.prototype.attachInternals;
+    const methods = [
+      'setFormValue',
+      'setValidity',
+      'checkValidity',
+      'reportValidity',
+    ];
+
+    HTMLElement.prototype.attachInternals = function (...args) {
+      const internals = attachInternals.call(this, ...args);
+      internalsToHostMap.set(internals, this);
+      return internals;
+    };
+
+    methods.forEach((method) => {
+      const originalMethod = window.ElementInternals.prototype[method];
+
+      window.ElementInternals.prototype[method] = function (...args) {
+        const host = internalsToHostMap.get(this);
+        const definition = definitionForElement.get(host);
+        if (definition?.formAssociated === true) {
+          originalMethod.call(this, ...args);
+        } else {
+          throw new DOMException(
+            `Failed to execute ${originalMethod} on 'ElementInternals': The target element is not a form-associated custom element.`
+          );
+        }
+      };
+    });
+  }
 }

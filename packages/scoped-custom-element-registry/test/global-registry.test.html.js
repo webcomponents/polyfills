@@ -6,7 +6,10 @@ import {getTestElement} from './utils';
 
 describe('Global Registry', () => {
   commonRegistryTests(customElements);
-  faceTests(customElements);
+
+  if (window.ElementInternals) {
+    faceTests(customElements);
+  }
 
   describe('custom element constructors', () => {
     it('should allow to create a defined custom element', () => {

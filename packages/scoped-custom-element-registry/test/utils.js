@@ -38,12 +38,19 @@ export const getFormAssociatedTestElement = () => ({
     }
     constructor() {
       super();
-      if (window.ElementInternals) {
-        this.internals = this.attachInternals();
-        if (this.internals.setFormValue) {
-          this.internals.setFormValue('FACE');
-        }
-      }
+      this.internals = this.attachInternals();
+      this.internals.setFormValue('FACE');
+    }
+  },
+});
+
+export const getFormAssociatedErrorTestElement = () => ({
+  tagName: getTestTagName(),
+  CustomElementClass: class extends HTMLElement {
+    constructor() {
+      super();
+      this.internals = this.attachInternals();
+      this.internals.setFormValue('FACE');
     }
   },
 });

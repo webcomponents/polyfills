@@ -23,7 +23,7 @@ gulp.task('default', () => {
     .pipe(sourcemaps.init())
     .pipe(
       closureCompiler({
-        compilation_level: 'SIMPLE',
+        compilation_level: 'ADVANCED',
         warning_level: 'VERBOSE',
         language_in: 'STABLE',
         language_out: 'ECMASCRIPT5_STRICT',
