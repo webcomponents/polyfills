@@ -1,11 +1,12 @@
 /**
 @license
-Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
-This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
-The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
-The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
-Code distributed by Google as part of the polymer project is also
-subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+Copyright (c) 2022 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at
+http://polymer.github.io/LICENSE.txt The complete set of authors may be found at
+http://polymer.github.io/AUTHORS.txt The complete set of contributors may be
+found at http://polymer.github.io/CONTRIBUTORS.txt Code distributed by Google as
+part of the polymer project is also subject to an additional IP rights grant
+found at http://polymer.github.io/PATENTS.txt
 */
 
 /**
@@ -18,19 +19,19 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
  * libraries, and frameworks that use DOM tree manipulation apis.
  */
 
-import * as utils from './utils.js';
-import {flush, enqueue} from './flush.js';
+import {ShadyRoot} from './attach-shadow.js';
+import {enqueue, flush} from './flush.js';
 // prettier-ignore
-import {observeChildren, unobserveChildren, filterMutations} from './observe-changes.js';
+import {filterMutations, observeChildren, unobserveChildren} from './observe-changes.js';
+import {composedPath, patchClick, patchEvents} from './patch-events.js';
+// prettier-ignore
+import {patchInsideElementAccessors, patchOutsideElementAccessors} from './patch-instances.js';
 // prettier-ignore
 import {addNativePrefixedProperties, nativeMethods, nativeTree} from './patch-native.js';
 // prettier-ignore
-import {patchInsideElementAccessors, patchOutsideElementAccessors} from './patch-instances.js';
-import {patchEvents, patchClick, composedPath} from './patch-events.js';
-import {ShadyRoot} from './attach-shadow.js';
+import {addShadyPrefixedProperties, applyPatches, patchElementProto, patchShadowOnElement, validateNodePatch} from './patch-prototypes.js';
+import * as utils from './utils.js';
 import {wrap, Wrapper} from './wrapper.js';
-// prettier-ignore
-import {addShadyPrefixedProperties, applyPatches, patchShadowOnElement, patchElementProto} from './patch-prototypes.js';
 
 if (utils.settings.inUse) {
   const patch = utils.settings.hasDescriptors
@@ -102,7 +103,8 @@ if (utils.settings.inUse) {
     // Shadow DOM compatible behavior is only available when accessing DOM
     // API using `ShadyDOM.wrap`, e.g. `ShadyDOM.wrap(element).shadowRoot`.
     // This setting provides a small performance boost, but requires all DOM API
-    // access that requires Shadow DOM behavior to be proxied via `ShadyDOM.wrap`.
+    // access that requires Shadow DOM behavior to be proxied via
+    // `ShadyDOM.wrap`.
     //
     // WARNING: When `noPatch` is set and the Custom Elements polyfill is
     // needed, the Custom Elements polyfill must be loaded before this
@@ -118,6 +120,7 @@ if (utils.settings.inUse) {
     'nativeMethods': nativeMethods,
     'nativeTree': nativeTree,
     'patchElementProto': patchElementProto,
+    'validateNodePatch': validateNodePatch,
   };
 
   window['ShadyDOM'] = ShadyDOM;
@@ -155,7 +158,8 @@ if (utils.settings.inUse) {
     // Patch click event behavior only if we're patching
     patchClick();
   } else if (utils.settings.patchOnDemand) {
-    // In `on-demand` patching, do patch `attachShadow` and `shadowRoot`.
+    // In `on-demand` patching, do patch `attachShadow` and `shadowRoot` and
+    // styling (e.g. `set/getAttribute` and `className`).
     // These are the only patched properties in `on-demand` mode and these
     // patches kick off patching "on-demand" for other nodes.
     patchShadowOnElement();

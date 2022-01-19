@@ -1,19 +1,20 @@
 /**
 @license
-Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
-This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
-The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
-The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
-Code distributed by Google as part of the polymer project is also
-subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+Copyright (c) 2022 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at
+http://polymer.github.io/LICENSE.txt The complete set of authors may be found at
+http://polymer.github.io/AUTHORS.txt The complete set of contributors may be
+found at http://polymer.github.io/CONTRIBUTORS.txt Code distributed by Google as
+part of the polymer project is also subject to an additional IP rights grant
+found at http://polymer.github.io/PATENTS.txt
 */
 
-import * as utils from '../utils.js';
-import {scopeClassAttribute} from '../style-scoping.js';
-import {shadyDataForNode} from '../shady-data.js';
 import {attachShadow, ownerShadyRootForNode} from '../attach-shadow.js';
 // prettier-ignore
 import {eventPropertyNamesForElement, wrappedDescriptorForEventProperty} from '../patch-events.js';
+import {shadyDataForNode} from '../shady-data.js';
+import {scopeClassAttribute} from '../style-scoping.js';
+import * as utils from '../utils.js';
 
 const doc = window.document;
 
@@ -77,7 +78,9 @@ export const ElementPatches = utils.getOwnPropertyDescriptors({
   set slot(value) {
     this[utils.SHADY_PREFIX + 'setAttribute']('slot', value);
   },
+});
 
+export const ElementStylePatches = utils.getOwnPropertyDescriptors({
   /** @this {Element} */
   get className() {
     return this.getAttribute('class') || '';
@@ -116,7 +119,8 @@ export const ElementPatches = utils.getOwnPropertyDescriptors({
       this[utils.NATIVE_PREFIX + 'removeAttribute'](attr);
       distributeAttributeChange(this, attr);
     } else if (this.getAttribute(attr) === '') {
-      // ensure that "class" attribute is fully removed if ShadyCSS does not keep scoping
+      // ensure that "class" attribute is fully removed if ShadyCSS does not
+      // keep scoping
       this[utils.NATIVE_PREFIX + 'removeAttribute'](attr);
     }
   },
@@ -140,7 +144,8 @@ export const ElementShadowPatches = utils.getOwnPropertyDescriptors({
     // and cannot set its own special tracking for shadowRoot. It does this
     // to be able to see closed shadowRoots.
     // This is necessary so that the CE polyfill can traverse into nodes
-    // with shadowRoot that will under `on-demand` have their childNodes patched.
+    // with shadowRoot that will under `on-demand` have their childNodes
+    // patched.
     this['__CE_shadowRoot'] = root;
     return root;
   },
@@ -154,5 +159,3 @@ export const ElementShadowPatches = utils.getOwnPropertyDescriptors({
     return (nodeData && nodeData.publicRoot) || null;
   },
 });
-
-utils.assign(ElementPatches, ElementShadowPatches);
