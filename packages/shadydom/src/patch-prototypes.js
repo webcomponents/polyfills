@@ -169,7 +169,19 @@ const applyAllHTMLElementProtoPatches = (proto) => {
  * Patch class prototype in "on demand" patching mode.
  *
  */
-export const patchElementProto = (proto) => {
+export const patchElementProto = (proto, isVanillaElement = false) => {
+  // Do this only in a `noPatch`'ing mode.
+  if (!utils.settings.noPatch) {
+    return;
+  }
+  // Note, patches are installed at the top of the prototype chain, shadowing
+  // any custom implementations. This is for simplicity and not a problem
+  // since `super` calls cannot be patched properly anyway due to being
+  // statically bound. Instead, implemented methods are copied to their native
+  // locations to preserve custom implementations.
+  if (!isVanillaElement) {
+    copyAllImplementedNativeProperties(proto);
+  }
   proto[PROTO_IS_PATCHED] = true;
   applyAllHTMLElementProtoPatches(proto);
   return proto;
@@ -190,6 +202,10 @@ const copyAllImplementedNativeProperties = (proto) => {
   });
 };
 
+const isCustomElement = utils.hasCustomElements()
+  ? (obj) => Boolean(customElements.get(obj.localName))
+  : (_obj) => false;
+
 const getPatchedProto = (obj) => {
   const nativeProto = Object.getPrototypeOf(obj);
   // Note, this hasOwnProperty check is critical to avoid seeing a patched
@@ -199,16 +215,8 @@ const getPatchedProto = (obj) => {
     nativeProto.hasOwnProperty(PATCHED_PROTO) && nativeProto[PATCHED_PROTO];
   if (!proto) {
     proto = Object.create(nativeProto);
-    // Note, patches are installed at the top of the prototype chain, shadowing
-    // any custom implementations. This is for simplicity and not a problem
-    // since `super` calls cannot be patched properly anyway due to being
-    // statically bound. Instead, implemented methods are copied to their native
-    // locations to preserve custom implementations.
-    const isCustomElement = !!customElements?.get(obj?.localName);
-    if (isCustomElement) {
-      copyAllImplementedNativeProperties(proto);
-    }
-    patchElementProto(proto);
+    const vanillaElement = !(obj && isCustomElement(obj));
+    patchElementProto(proto, vanillaElement);
     nativeProto[PATCHED_PROTO] = proto;
   }
   return proto;

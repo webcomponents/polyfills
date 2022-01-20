@@ -14,7 +14,7 @@ found at http://polymer.github.io/PATENTS.txt
  * such that tree traversal and mutation apis act like they would under
  * ShadowDOM.
  *
- * This import enables seemless interaction with ShadyDOM powered
+ * This import enables seamless interaction with ShadyDOM powered
  * custom elements, enabling better interoperation with 3rd party code,
  * libraries, and frameworks that use DOM tree manipulation apis.
  */

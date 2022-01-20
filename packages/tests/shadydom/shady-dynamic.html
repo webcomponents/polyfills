@@ -296,7 +296,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     </script>
 
     <template id="x-has-input">
-      <s>element with HTMLElement protoype</s>
+      <s>element with HTMLElement prototype</s>
       <input value="hi" />
     </template>
 
@@ -979,13 +979,15 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           assert.equal(ShadyDOM.wrapIfNeeded(echo).nextElementSibling, s2);
           ShadyDOM.wrapIfNeeded(echo).appendChild(s2);
           ShadyDOM.flush();
+
           assert.equal(ShadyDOM.wrapIfNeeded(container).children.length, 1);
           assert.equal(ShadyDOM.wrapIfNeeded(echo).nextElementSibling, null);
-          ShadyDOM.wrapIfNeeded(container).appendChild(s1);
+          ShadyDOM.wrap(container).appendChild(s1);
           ShadyDOM.flush();
+
           assert.equal(ShadyDOM.wrapIfNeeded(container).children.length, 2);
           assert.equal(ShadyDOM.wrapIfNeeded(echo).nextElementSibling, s1);
-          ShadyDOM.wrapIfNeeded(container).appendChild(s2);
+          ShadyDOM.wrap(container).appendChild(s2);
           ShadyDOM.flush();
           assert.equal(ShadyDOM.wrapIfNeeded(container).children.length, 3);
           assert.equal(ShadyDOM.wrapIfNeeded(echo).nextElementSibling, s1);
@@ -1467,6 +1469,43 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           );
           assert.equal(input.value, 'hi');
           ShadyDOM.wrapIfNeeded(document.body).removeChild(e);
+        });
+
+        test('custom elements can implement DOM methods when patched', function () {
+          class XOverride extends HTMLElement {
+            events = [];
+            appended = [];
+            dispatchEvent(e) {
+              this.events.push(e);
+              return super.dispatchEvent(e);
+            }
+            appendChild(node) {
+              this.appended.push(node);
+              return super.appendChild(node);
+            }
+          }
+          ShadyDOM.patchElementProto(XOverride.prototype);
+          customElements.define('x-override', XOverride);
+          const host = document.createElement('div');
+          ShadyDOM.wrapIfNeeded(document.body).appendChild(host);
+          ShadyDOM.wrapIfNeeded(host).attachShadow({mode: 'open'});
+          const el = new XOverride();
+          ShadyDOM.wrapIfNeeded(host).shadowRoot.appendChild(el);
+          const name = 'test';
+          const event = new Event(name);
+          let eventHeard = false;
+          ShadyDOM.wrapIfNeeded(el).addEventListener(
+            name,
+            () => (eventHeard = true)
+          );
+          el.dispatchEvent(event);
+          assert.isTrue(eventHeard);
+          assert.sameMembers(el.events, [event]);
+          //
+          const child = document.createElement('span');
+          el.appendChild(child);
+          assert.sameMembers(el.appended, [child]);
+          ShadyDOM.wrapIfNeeded(document.body).removeChild(host);
         });
       });
 
@@ -2890,8 +2929,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           const d = document.createElement('div');
           document.body.appendChild(d);
           d.innerHTML = `
-      <x-echo> <!-- comment --><![CDATA[ data ]]><? processing ?></x-echo>
-    `;
+        <x-echo> <!-- comment --><![CDATA[ data ]]><? processing ?></x-echo>
+      `;
           ShadyDOM.flush();
           const el = d.firstElementChild;
           assert.equal(el.childNodes.length, 4);
