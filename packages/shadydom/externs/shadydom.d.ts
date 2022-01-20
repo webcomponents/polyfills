@@ -24,6 +24,7 @@ declare global {
     patchElementProto: (node: object) => void;
     validateNodePatch: (node: object) => void;
     wrap: (node: Node) => Node;
+    onDemandPatches: {[index: string]: boolean};
   }
 
   // This type alias exists because Tsickle will replace any type name used in the

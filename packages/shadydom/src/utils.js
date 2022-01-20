@@ -37,6 +37,8 @@ settings.noPatch = /** @type {string|boolean} */ (settings['noPatch'] || false);
 // eslint-disable-next-line no-self-assign
 settings.preferPerformance = settings['preferPerformance'];
 settings.patchOnDemand = settings.noPatch === 'on-demand';
+// eslint-disable-next-line no-self-assign
+settings.onDemandPatches = settings['onDemandPatches'];
 
 const IS_IE = navigator.userAgent.match('Trident');
 settings.IS_IE = IS_IE;
@@ -213,16 +215,23 @@ const patchProperty = (proto, name, descriptor) => {
  * @param {!Object} proto
  * @param {!Object} descriptors
  * @param {string=} prefix
- * @param {Array=} disallowedPatches
+ * @param {Object=} disallowedPatches
+ * @param {Object=} allowedPatches
  */
 export const patchProperties = (
   proto,
   descriptors,
   prefix = '',
-  disallowedPatches
+  disallowedPatches,
+  allowedPatches
 ) => {
   for (let name in descriptors) {
-    if (disallowedPatches && disallowedPatches.indexOf(name) >= 0) {
+    // optionally do *not* apply disallowed patches
+    if (disallowedPatches && disallowedPatches[name]) {
+      continue;
+    }
+    // optionally *only* apply allowed patches
+    if (allowedPatches && !allowedPatches[name]) {
       continue;
     }
     patchProperty(proto, prefix + name, descriptors[name]);

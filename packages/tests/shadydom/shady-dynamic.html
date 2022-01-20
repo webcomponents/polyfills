@@ -25,6 +25,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           'firstElementChild'
         ),
       };
+
+      ShadyDOM = {
+        onDemandPatches: {
+          // typically this is just set to true but using the pre-patched
+          // implementation for testing
+          blur: document.head.blur,
+        },
+      };
     </script>
     <script src="loader.js"></script>
     <script>
@@ -1506,6 +1514,16 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           el.appendChild(child);
           assert.sameMembers(el.appended, [child]);
           ShadyDOM.wrapIfNeeded(document.body).removeChild(host);
+        });
+
+        (ShadyDOM.patchOnDemand
+          ? test
+          : test.skip)('can select global patches in on demand mode', function () {
+          const alwaysPatch = ShadyDOM.settings.onDemandPatches;
+          for (const p in alwaysPatch) {
+            assert.ok(document.head[p]);
+            assert.notEqual(alwaysPatch[p], document.head[p]);
+          }
         });
       });
 

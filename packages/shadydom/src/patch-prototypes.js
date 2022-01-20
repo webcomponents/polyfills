@@ -108,19 +108,22 @@ const getPatchPrototype = (name) => window[name] && window[name].prototype;
 // accessors.
 const disallowedNativePatches = utils.settings.hasDescriptors
   ? null
-  : ['innerHTML', 'textContent'];
+  : {innerHTML: true, textContent: true};
 
 /**
  * Patch a group of accessors on an object.
  * @param {!Object} proto
  * @param {!Array<Object>} list
  * @param {string=} prefix
- * @param {Array=} disallowed
+ * @param {Object=} disallowed
+ * @param {Object=} allowed
  */
-function applyPatchList(proto, list, prefix, disallowed) {
+function applyPatchList(proto, list, prefix, disallowed, allowed) {
   list.forEach(
     (patch) =>
-      proto && patch && utils.patchProperties(proto, patch, prefix, disallowed)
+      proto &&
+      patch &&
+      utils.patchProperties(proto, patch, prefix, disallowed, allowed)
   );
 }
 
@@ -130,6 +133,16 @@ export const applyPatches = (prefix) => {
   for (let p in patchMap) {
     const proto = getPatchPrototype(p);
     applyPatchList(proto, patchMap[p], prefix, disallowed);
+  }
+};
+
+export const applySelectedPatches = (allowedPatches) => {
+  if (!allowedPatches) {
+    return;
+  }
+  for (let p in patchMap) {
+    const proto = getPatchPrototype(p);
+    applyPatchList(proto, patchMap[p], '', undefined, allowedPatches);
   }
 };
 
