@@ -1,6 +1,7 @@
 import {expect} from '@open-wc/testing';
 
 import {
+  getTestElement,
   getFormAssociatedTestElement,
   getFormAssociatedErrorTestElement,
 } from './utils';
@@ -38,6 +39,19 @@ export const commonRegistryTests = (registry) => {
       expect(() => {
         form.append(element);
       }).to.throw;
+    });
+  });
+
+  describe('Form elements should only include form associated elements', () => {
+    it('will not include non form-associated elements', () => {
+      const {tagName, CustomElementClass} = getTestElement();
+      registry.define(tagName, CustomElementClass);
+
+      const form = document.createElement('form');
+      const element = new CustomElementClass();
+
+      form.append(element);
+      expect(form.elements).to.deep.equal({});
     });
   });
 };

@@ -476,5 +476,76 @@ if (!ShadowRoot.prototype.createElement) {
         }
       };
     });
+
+    // Emulate the native RadioNodeList object
+    class RadioNodeList extends Array {
+      constructor(elements) {
+        super(...elements);
+        this._elements = elements;
+      }
+
+      get value() {
+        return this._elements.find((element) => element.checked.value);
+      }
+    }
+
+    // Emulate the native HTMLFormControlsCollection object
+    class HTMLFormControlsCollection {
+      constructor(elements) {
+        const entries = new Map();
+        elements.forEach((element, index) => {
+          const name = element.getAttribute('name');
+          this[+index] = element;
+          if (name && entries.has[name]) {
+            entries.get(name).push(element);
+          } else {
+            entries.set(name, [element]);
+          }
+        });
+        this._length = elements.length;
+        entries.forEach((value, key) => {
+          if (!value) return;
+          if (value.length === 1) {
+            this[key] = value[0];
+          } else {
+            this[key] = new RadioNodeList(value);
+          }
+        });
+      }
+
+      namedItem(key) {
+        return this[key];
+      }
+
+      get length() {
+        return this._length;
+      }
+    }
+
+    // Override the built-in HTMLFormElements.prototype.elements getter
+    const formElementsDescriptor = Object.getOwnPropertyDescriptor(
+      HTMLFormElement.prototype,
+      'elements'
+    );
+    Object.defineProperty(HTMLFormElement.prototype, 'elements', {
+      get() {
+        const nativeElements = formElementsDescriptor.get.call(this, []);
+        const include = [];
+
+        for (const element of nativeElements) {
+          const definition = definitionForElement.get(element);
+
+          // Only purposefully formAssociated elements or built-ins will feature in elements
+          if (
+            definition?.formAssociated === true ||
+            element.localName.indexOf('0') === -1
+          ) {
+            include.push(element);
+          }
+        }
+
+        return new HTMLFormControlsCollection(include);
+      },
+    });
   }
 }
