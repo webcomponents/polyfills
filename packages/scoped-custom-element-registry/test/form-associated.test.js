@@ -26,6 +26,24 @@ export const commonRegistryTests = (registry) => {
         );
       });
 
+      it('should still be able to participate in a form as a RadioGroup', async () => {
+        const {tagName, CustomElementClass} = getFormAssociatedTestElement();
+        registry.define(tagName, CustomElementClass);
+
+        const form = document.createElement('form');
+        const element = new CustomElementClass();
+        const element2 = new CustomElementClass();
+        const name = 'form-associated';
+
+        element.setAttribute('name', name);
+        element2.setAttribute('name', name);
+        form.append(element);
+        form.append(element2);
+        document.body.append(form);
+        expect(form.elements[name].includes(element)).to.be.true;
+        expect(form.elements[name].includes(element2)).to.be.true;
+      });
+
       it('should be present in form.elements', async () => {
         const {tagName, CustomElementClass} = getFormAssociatedTestElement();
         registry.define(tagName, CustomElementClass);
@@ -69,7 +87,6 @@ export const commonRegistryTests = (registry) => {
 
       const form = document.createElement('form');
       const element = new CustomElementClass();
-      document.body.append(form);
       form.append(element);
 
       expect(form.elements.length).to.equal(0);

@@ -487,7 +487,9 @@ if (!ShadowRoot.prototype.createElement) {
       }
 
       get value() {
-        return this._elements.find((element) => element.checked.value);
+        return (
+          this._elements.find((element) => element.checked.value)?.value ?? ''
+        );
       }
     }
 
@@ -497,15 +499,14 @@ if (!ShadowRoot.prototype.createElement) {
         const entries = new Map();
         elements.forEach((element, index) => {
           const name = element.getAttribute('name');
+          const nameReference = entries.get(name) || [];
           this[+index] = element;
-          if (name && entries.has[name]) {
-            entries.get(name).push(element);
-          } else {
-            entries.set(name, [element]);
-          }
+          nameReference.push(element);
+          entries.set(name, nameReference);
         });
         this['length'] = elements.length;
         entries.forEach((value, key) => {
+          console.log(value);
           if (!value) return;
           if (value.length === 1) {
             this[key] = value[0];
@@ -536,10 +537,7 @@ if (!ShadowRoot.prototype.createElement) {
           const definition = definitionForElement.get(element);
 
           // Only purposefully formAssociated elements or built-ins will feature in elements
-          if (
-            (definition && definition['formAssociated'] === true) ||
-            element.localName.indexOf('0') === -1
-          ) {
+          if (!definition || definition['formAssociated'] === true) {
             include.push(element);
           }
         }
