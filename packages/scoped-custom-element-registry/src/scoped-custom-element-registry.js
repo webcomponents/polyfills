@@ -276,29 +276,29 @@ if (!ShadowRoot.prototype.createElement) {
       // Form-associated custom elements lifecycle methods
       formAssociatedCallback() {
         const definition = definitionForElement.get(this);
-        if (definition?.formAssociated) {
-          definition?.formAssociatedCallback?.apply(this, arguments);
+        if (definition && definition['formAssociated']) {
+          definition?.['formAssociatedCallback']?.apply(this, arguments);
         }
       }
 
       formDisabledCallback() {
         const definition = definitionForElement.get(this);
-        if (definition?.formAssociated) {
-          definition?.formDisabledCallback?.apply(this, arguments);
+        if (definition?.['formAssociated']) {
+          definition?.['formDisabledCallback']?.apply(this, arguments);
         }
       }
 
       formResetCallback() {
         const definition = definitionForElement.get(this);
-        if (definition?.formAssociated) {
-          definition?.formResetCallback?.apply(this, arguments);
+        if (definition?.['formAssociated']) {
+          definition?.['formResetCallback']?.apply(this, arguments);
         }
       }
 
       formStateRestoreCallback() {
         const definition = definitionForElement.get(this);
-        if (definition?.formAssociated) {
-          definition?.formStateRestoreCallback?.apply(this, arguments);
+        if (definition?.['formAssociated']) {
+          definition?.['formStateRestoreCallback']?.apply(this, arguments);
         }
       }
 
