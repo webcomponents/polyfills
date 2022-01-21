@@ -515,7 +515,7 @@ if (!ShadowRoot.prototype.createElement) {
         });
       }
 
-      namedItem(key) {
+      ['namedItem'](key) {
         return this[key];
       }
     }
@@ -537,7 +537,7 @@ if (!ShadowRoot.prototype.createElement) {
 
           // Only purposefully formAssociated elements or built-ins will feature in elements
           if (
-            definition?.formAssociated === true ||
+            (definition && definition['formAssociated'] === true) ||
             element.localName.indexOf('0') === -1
           ) {
             include.push(element);
