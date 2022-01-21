@@ -31,14 +31,12 @@ export const commonRegistryTests = (registry) => {
       const {tagName, CustomElementClass} = getFormAssociatedErrorTestElement();
       registry.define(tagName, CustomElementClass);
 
-      const form = document.createElement('form');
-      const element = new CustomElementClass();
-      element.setAttribute('name', 'form-associated');
-      form.append(element);
-
       expect(() => {
-        form.append(element);
-      }).to.throw;
+        new CustomElementClass();
+      }).to.throw(
+        DOMException,
+        `Failed to execute function setFormValue() { [native code] } on 'ElementInternals': The target element is not a form-associated custom element.`
+      );
     });
   });
 
@@ -49,9 +47,12 @@ export const commonRegistryTests = (registry) => {
 
       const form = document.createElement('form');
       const element = new CustomElementClass();
-
+      document.body.append(form);
       form.append(element);
-      expect(form.elements).to.deep.equal({});
+
+      expect(form.elements).to.deep.equal({
+        length: 0,
+      });
     });
   });
 };

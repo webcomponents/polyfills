@@ -33,7 +33,7 @@ export const getTestElement = () => ({
 export const getFormAssociatedTestElement = () => ({
   tagName: getTestTagName(),
   CustomElementClass: class extends HTMLElement {
-    static formAssociated() {
+    static get formAssociated() {
       return true;
     }
     constructor() {
@@ -47,9 +47,9 @@ export const getFormAssociatedTestElement = () => ({
 export const getFormAssociatedErrorTestElement = () => ({
   tagName: getTestTagName(),
   CustomElementClass: class extends HTMLElement {
+    internals = this.attachInternals();
     constructor() {
       super();
-      this.internals = this.attachInternals();
       this.internals.setFormValue('FACE');
     }
   },

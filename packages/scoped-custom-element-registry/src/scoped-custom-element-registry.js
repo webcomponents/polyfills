@@ -67,12 +67,13 @@ if (!ShadowRoot.prototype.createElement) {
         disconnectedCallback: elementClass.prototype.disconnectedCallback,
         adoptedCallback: elementClass.prototype.adoptedCallback,
         attributeChangedCallback,
-        formAssociated: elementClass.formAssociated,
-        formAssociatedCallback: elementClass.prototype.formAssociatedCallback,
-        formDisabledCallback: elementClass.prototype.formDisabledCallback,
-        formResetCallback: elementClass.prototype.formResetCallback,
-        formStateRestoreCallback:
-          elementClass.prototype.formStateRestoreCallback,
+        'formAssociated': elementClass['formAssociated'],
+        'formAssociatedCallback':
+          elementClass.prototype['formAssociatedCallback'],
+        'formDisabledCallback': elementClass.prototype['formDisabledCallback'],
+        'formResetCallback': elementClass.prototype['formResetCallback'],
+        'formStateRestoreCallback':
+          elementClass.prototype['formStateRestoreCallback'],
         observedAttributes,
       };
       this._definitionsByTag.set(tagName, definition);
@@ -443,11 +444,11 @@ if (!ShadowRoot.prototype.createElement) {
   });
 
   if (
-    window.ElementInternals &&
-    window.ElementInternals.prototype.setFormValue
+    !!window['ElementInternals'] &&
+    !!window['ElementInternals'].prototype['setFormValue']
   ) {
     const internalsToHostMap = new WeakMap();
-    const attachInternals = HTMLElement.prototype.attachInternals;
+    const attachInternals = HTMLElement.prototype['attachInternals'];
     const methods = [
       'setFormValue',
       'setValidity',
@@ -455,20 +456,21 @@ if (!ShadowRoot.prototype.createElement) {
       'reportValidity',
     ];
 
-    HTMLElement.prototype.attachInternals = function (...args) {
+    HTMLElement.prototype['attachInternals'] = function (...args) {
       const internals = attachInternals.call(this, ...args);
       internalsToHostMap.set(internals, this);
       return internals;
     };
 
     methods.forEach((method) => {
-      const originalMethod = window.ElementInternals.prototype[method];
+      const proto = window['ElementInternals'].prototype;
+      const originalMethod = proto[method];
 
-      window.ElementInternals.prototype[method] = function (...args) {
+      proto[method] = function (...args) {
         const host = internalsToHostMap.get(this);
         const definition = definitionForElement.get(host);
-        if (definition?.formAssociated === true) {
-          originalMethod.call(this, ...args);
+        if (definition['formAssociated'] === true) {
+          originalMethod?.call(this, ...args);
         } else {
           throw new DOMException(
             `Failed to execute ${originalMethod} on 'ElementInternals': The target element is not a form-associated custom element.`
@@ -502,7 +504,7 @@ if (!ShadowRoot.prototype.createElement) {
             entries.set(name, [element]);
           }
         });
-        this._length = elements.length;
+        this['length'] = elements.length;
         entries.forEach((value, key) => {
           if (!value) return;
           if (value.length === 1) {
@@ -516,10 +518,6 @@ if (!ShadowRoot.prototype.createElement) {
       namedItem(key) {
         return this[key];
       }
-
-      get length() {
-        return this._length;
-      }
     }
 
     // Override the built-in HTMLFormElements.prototype.elements getter
@@ -527,9 +525,11 @@ if (!ShadowRoot.prototype.createElement) {
       HTMLFormElement.prototype,
       'elements'
     );
+
     Object.defineProperty(HTMLFormElement.prototype, 'elements', {
-      get() {
+      get: function () {
         const nativeElements = formElementsDescriptor.get.call(this, []);
+
         const include = [];
 
         for (const element of nativeElements) {
