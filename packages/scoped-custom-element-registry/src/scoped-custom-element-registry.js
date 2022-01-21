@@ -486,9 +486,10 @@ if (!ShadowRoot.prototype.createElement) {
         this._elements = elements;
       }
 
-      get value() {
+      get ['value']() {
         return (
-          this._elements.find((element) => element.checked.value)?.value ?? ''
+          this._elements.find((element) => element['checked'] === true)
+            ?.value || ''
         );
       }
     }
@@ -506,7 +507,6 @@ if (!ShadowRoot.prototype.createElement) {
         });
         this['length'] = elements.length;
         entries.forEach((value, key) => {
-          console.log(value);
           if (!value) return;
           if (value.length === 1) {
             this[key] = value[0];

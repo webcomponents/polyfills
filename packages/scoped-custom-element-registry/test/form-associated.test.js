@@ -42,6 +42,7 @@ export const commonRegistryTests = (registry) => {
         document.body.append(form);
         expect(form.elements[name].includes(element)).to.be.true;
         expect(form.elements[name].includes(element2)).to.be.true;
+        expect(form.elements[name].value).to.equal('');
       });
 
       it('should be present in form.elements', async () => {
