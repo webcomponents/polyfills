@@ -38,7 +38,7 @@ settings.noPatch = /** @type {string|boolean} */ (settings['noPatch'] || false);
 settings.preferPerformance = settings['preferPerformance'];
 settings.patchOnDemand = settings.noPatch === 'on-demand';
 // eslint-disable-next-line no-self-assign
-settings.onDemandPatches = settings['onDemandPatches'];
+settings.onDemandGlobalPatches = settings['onDemandGlobalPatches'];
 
 const IS_IE = navigator.userAgent.match('Trident');
 settings.IS_IE = IS_IE;
@@ -252,11 +252,19 @@ export const patchExistingProperties = (proto, descriptors) => {
  * and the property will be patched with a valued function (not accessor), then
  * copy the existing property value to the native location for the value.
  */
-export const copyImplementedNativeProperties = (proto, descriptors) => {
+export const copyImplementedNativeProperties = (
+  proto,
+  descriptors,
+  disallowed
+) => {
   for (let name in descriptors) {
     const d = descriptors[name];
     // Only check methods.
     if (!d.value && typeof d.value !== 'function') {
+      continue;
+    }
+    // skip if this property has been disallowed.
+    if (disallowed && disallowed[name]) {
       continue;
     }
     const nativeName = NATIVE_PREFIX + name;

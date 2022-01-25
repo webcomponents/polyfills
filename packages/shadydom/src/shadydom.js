@@ -29,7 +29,7 @@ import {patchInsideElementAccessors, patchOutsideElementAccessors} from './patch
 // prettier-ignore
 import {addNativePrefixedProperties, nativeMethods, nativeTree} from './patch-native.js';
 // prettier-ignore
-import {addShadyPrefixedProperties, applyPatches, patchElementProto, patchShadowOnElement, validateNodePatch, applySelectedPatches} from './patch-prototypes.js';
+import {addShadyPrefixedProperties, applyPatches, patchElementProto, patchShadowOnElement, validateNodePatch, applyOnDemandGlobalPatches} from './patch-prototypes.js';
 import * as utils from './utils.js';
 import {wrap, Wrapper} from './wrapper.js';
 
@@ -163,7 +163,7 @@ if (utils.settings.inUse) {
     // These are the only patched properties in `on-demand` mode and these
     // patches kick off patching "on-demand" for other nodes.
     patchShadowOnElement();
-    applySelectedPatches(utils.settings.onDemandPatches);
+    applyOnDemandGlobalPatches();
   }
 
   // For simplicity, patch events unconditionally.

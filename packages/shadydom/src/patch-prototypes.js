@@ -92,7 +92,7 @@ const patchMap = {
   CharacterData: [ChildNodePatches],
 };
 
-const allHTMLElementPatches = [
+const allHTMLElementOnDemandPatches = [
   patchMap.EventTarget,
   patchMap.Node,
   ElementOnDemandPatchList,
@@ -136,13 +136,22 @@ export const applyPatches = (prefix) => {
   }
 };
 
-export const applySelectedPatches = (allowedPatches) => {
-  if (!allowedPatches) {
+const onDemandGlobalPatches = utils.settings.onDemandGlobalPatches;
+
+/**
+ * This should only be called in `on-demand` mode and it applies any of the
+ * patches listed in the `onDemandGlobalPatches` user provided setting
+ * globally on all elements instead of only when a node is patched on demand.
+ * This allows users to configure what is patched "on-demand" v. globally and
+ * can help increase the fidelity of "on-demand" mode when needed.
+ */
+export const applyOnDemandGlobalPatches = () => {
+  if (!onDemandGlobalPatches) {
     return;
   }
   for (let p in patchMap) {
     const proto = getPatchPrototype(p);
-    applyPatchList(proto, patchMap[p], '', undefined, allowedPatches);
+    applyPatchList(proto, patchMap[p], '', undefined, onDemandGlobalPatches);
   }
 };
 
@@ -172,12 +181,6 @@ const PATCHED_PROTO = utils.SHADY_PREFIX + 'patchedProto';
   ctor.prototype[PATCHED_PROTO] = patchedProto;
 });
 
-const applyAllHTMLElementProtoPatches = (proto) => {
-  allHTMLElementPatches.forEach((patches) => {
-    applyPatchList(proto, patches);
-  });
-};
-
 /**
  * Patch class prototype in "on demand" patching mode.
  *
@@ -196,7 +199,12 @@ export const patchElementProto = (proto, isVanillaElement = false) => {
     copyAllImplementedNativeProperties(proto);
   }
   proto[PROTO_IS_PATCHED] = true;
-  applyAllHTMLElementProtoPatches(proto);
+  allHTMLElementOnDemandPatches.forEach((patches) => {
+    // apply patches at native location (e.g. `appendChild`) but disallow
+    // patching any properties that have already been patched globally via the
+    // `onDemandGlobalPatches` list.
+    applyPatchList(proto, patches, '', onDemandGlobalPatches);
+  });
   return proto;
 };
 
@@ -208,9 +216,13 @@ export const patchElementProto = (proto, isVanillaElement = false) => {
  * implementation will call the native version if necessary.
  */
 const copyAllImplementedNativeProperties = (proto) => {
-  allHTMLElementPatches.forEach((patches) => {
+  allHTMLElementOnDemandPatches.forEach((patches) => {
     patches.forEach((patch) => {
-      utils.copyImplementedNativeProperties(proto, patch);
+      utils.copyImplementedNativeProperties(
+        proto,
+        patch,
+        onDemandGlobalPatches
+      );
     });
   });
 };

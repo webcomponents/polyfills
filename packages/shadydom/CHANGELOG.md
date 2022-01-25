@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Adds improvements to `noPatch: 'on-demand'` mode, including:
   `ShadyDOM.validateNodePatch` which can reset a patch on a node if needed,
-  `ShadyDOM.onDemandPatches` which is a list of properties to always patch,
+  `ShadyDOM.onDemandGlobalPatches` which is a list of properties to always patch,
   always patches styling related properties, and allows a limited form of
   overriding native methods.
   ([#484](https://github.com/webcomponents/polyfills/pull/484))
