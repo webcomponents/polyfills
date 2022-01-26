@@ -11,10 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fixed form-associated custom element definitions (`static formAssociated = true`) when used with the polyfill.
 - Fixed patched callback names in form-associated custom element support.
-
-## [0.0.4] - 2022-26-01
-
-- Lowercasing of attributes. Fixes #483
+- Fixed handling of mixed-case attributes. Fixes #483
 
 ## [0.0.3] - 2021-08-02
 
