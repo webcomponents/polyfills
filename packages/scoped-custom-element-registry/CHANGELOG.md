@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Bump @web/test-runner and related deps to resolve issue running tests on Chrome
+- Make form-associated tests conditional on the native feature.
 - Fixed form-associated custom element definitions (`static formAssociated = true`) when used with the polyfill.
 - Fixed patched callback names in form-associated custom element support.
 - Fixed handling of mixed-case attributes. Fixes #483
