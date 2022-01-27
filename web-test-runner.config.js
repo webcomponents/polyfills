@@ -13,9 +13,7 @@ const envBrowsers = process.env.BROWSERS?.split(',').map((product) =>
 const browsers = envBrowsers ?? defaultBrowsers;
 
 module.exports = {
-  files: [
-    'packages/tests/custom-elements/wtr/**/*.test.(js|html)',
-  ],
+  files: ['packages/tests/custom-elements/wtr/**/*.test.(js|html)'],
   nodeResolve: true,
   concurrency: 10,
   browsers,
