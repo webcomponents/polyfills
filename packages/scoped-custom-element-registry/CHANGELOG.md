@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- ## Unreleased -->
 
+# [0.0.4] - 2022-01-27
+
 ### Fixed
 
 - Bump @web/test-runner and related deps to resolve issue running tests on Chrome
