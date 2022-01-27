@@ -281,21 +281,21 @@ if (!ShadowRoot.prototype.createElement) {
         }
       }
 
-      '[formDisabledCallback]'() {
+      ['formDisabledCallback']() {
         const definition = definitionForElement.get(this);
         if (definition?.['formAssociated']) {
           definition?.['formDisabledCallback']?.apply(this, arguments);
         }
       }
 
-      '[formResetCallback]'() {
+      ['formResetCallback']() {
         const definition = definitionForElement.get(this);
         if (definition?.['formAssociated']) {
           definition?.['formResetCallback']?.apply(this, arguments);
         }
       }
 
-      '[formStateRestoreCallback]'() {
+      ['formStateRestoreCallback']() {
         const definition = definitionForElement.get(this);
         if (definition?.['formAssociated']) {
           definition?.['formStateRestoreCallback']?.apply(this, arguments);
@@ -322,7 +322,8 @@ if (!ShadowRoot.prototype.createElement) {
     }
     const setAttribute = elementClass.prototype.setAttribute;
     if (setAttribute) {
-      elementClass.prototype.setAttribute = function (name, value) {
+      elementClass.prototype.setAttribute = function (n, value) {
+        const name = n.toLowerCase();
         if (observedAttributes.has(name)) {
           const old = this.getAttribute(name);
           setAttribute.call(this, name, value);
@@ -334,7 +335,8 @@ if (!ShadowRoot.prototype.createElement) {
     }
     const removeAttribute = elementClass.prototype.removeAttribute;
     if (removeAttribute) {
-      elementClass.prototype.removeAttribute = function (name) {
+      elementClass.prototype.removeAttribute = function (n) {
+        const name = n.toLowerCase();
         if (observedAttributes.has(name)) {
           const old = this.getAttribute(name);
           removeAttribute.call(this, name);
