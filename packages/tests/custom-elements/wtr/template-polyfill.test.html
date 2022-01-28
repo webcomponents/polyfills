@@ -21,36 +21,52 @@
     <script src="../../node_modules/@webcomponents/template/template.js"></script>
     <script src="../../node_modules/@webcomponents/shadydom/shadydom.min.js"></script>
     <script src="../../node_modules/@webcomponents/custom-elements/custom-elements.min.js"></script>
-    <script src="../../node_modules/wct-browser-legacy/browser.js"></script>
   </head>
   <body>
     <script type="module">
+      import {
+        mocha,
+        sessionFinished,
+        sessionFailed,
+      } from '@web/test-runner-mocha';
+      import {assert} from '@open-wc/testing';
       import {safariGCBugWorkaround} from '../safari-gc-bug-workaround.js';
-      suiteSetup(() => safariGCBugWorkaround());
 
-      suite('Template polyfill integration', function () {
-        test('defined custom elements do not upgrade when setting innerHTML of a template', function () {
-          let upgraded = false;
+      mocha.setup({ui: 'tdd'});
+      try {
+        suiteSetup(() => safariGCBugWorkaround());
 
-          customElements.define(
-            'inside-template-content',
-            class extends HTMLElement {
-              constructor() {
-                super();
-                upgraded = true;
+        suite('Template polyfill integration', function () {
+          test('defined custom elements do not upgrade when setting innerHTML of a template', function () {
+            let upgraded = false;
+
+            customElements.define(
+              'inside-template-content',
+              class extends HTMLElement {
+                constructor() {
+                  super();
+                  upgraded = true;
+                }
               }
-            }
-          );
+            );
 
-          const template = document.createElement('template');
-          template.innerHTML =
-            '<inside-template-content></inside-template-content>';
-          assert(
-            !upgraded,
-            'A defined element in the HTML string was upgraded.'
-          );
+            const template = document.createElement('template');
+            template.innerHTML =
+              '<inside-template-content></inside-template-content>';
+            assert(
+              !upgraded,
+              'A defined element in the HTML string was upgraded.'
+            );
+          });
         });
-      });
+
+        mocha.run(() => {
+          sessionFinished();
+        });
+      } catch (e) {
+        console.error(e);
+        sessionFailed(e);
+      }
     </script>
   </body>
 </html>
