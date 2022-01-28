@@ -7,7 +7,6 @@
         window.customElements || {}).forcePolyfill = true;
     </script>
     <script src="../../../node_modules/@webcomponents/webcomponentsjs/bundles/webcomponents-pf_js.js"></script>
-    <script src="../../../node_modules/wct-browser-legacy/browser.js"></script>
     <script src="../../../node_modules/@webcomponents/custom-elements/custom-elements.min.js"></script>
     <script type="module">
       /**
@@ -20,26 +19,43 @@
        * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
        */
 
+      import {
+        mocha,
+        sessionFinished,
+        sessionFailed,
+      } from '@web/test-runner-mocha';
+      import {assert} from '@open-wc/testing';
       import {safariGCBugWorkaround} from '../../safari-gc-bug-workaround.js';
-      suiteSetup(() => safariGCBugWorkaround());
 
-      test('`define` flushes synchronously if no callbacks are installed.', function () {
-        const element = document.querySelector('custom-element');
+      mocha.setup({ui: 'tdd'});
+      try {
+        suiteSetup(() => safariGCBugWorkaround());
 
-        assert(!element.upgraded);
+        test('`define` flushes synchronously if no callbacks are installed.', function () {
+          const element = document.querySelector('custom-element');
 
-        customElements.define(
-          'custom-element',
-          class extends HTMLElement {
-            constructor() {
-              super();
-              this.upgraded = true;
+          assert(!element.upgraded);
+
+          customElements.define(
+            'custom-element',
+            class extends HTMLElement {
+              constructor() {
+                super();
+                this.upgraded = true;
+              }
             }
-          }
-        );
+          );
 
-        assert(element.upgraded);
-      });
+          assert(element.upgraded);
+        });
+
+        mocha.run(() => {
+          sessionFinished();
+        });
+      } catch (e) {
+        console.error(e);
+        sessionFailed(e);
+      }
     </script>
   </head>
   <body>
