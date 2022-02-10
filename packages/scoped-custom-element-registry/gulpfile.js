@@ -30,7 +30,8 @@ gulp.task('default', () => {
         dependency_mode: 'PRUNE',
         entry_point: ['/src/scoped-custom-element-registry.js'],
         js_output_file: 'scoped-custom-element-registry.min.js',
-        output_wrapper: '(function(){\n%output%\n}).call(typeof globalThis === \'object\' ? globalThis : window);',
+        output_wrapper: 
+          "(function(){\n%output%\n}).call(typeof globalThis === 'object' ? globalThis : window);",
         assume_function_wrapper: true,
         rewrite_polyfills: false,
       })
