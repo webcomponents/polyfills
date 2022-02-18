@@ -1,4 +1,5 @@
 ShadyDOM = {
+  ...(window.ShadyDOM || {}),
   force: true,
   noPatch: window.location.search.match('noPatch=on-demand')
     ? 'on-demand'

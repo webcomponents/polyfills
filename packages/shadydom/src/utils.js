@@ -1,11 +1,12 @@
 /**
 @license
-Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
-This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
-The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
-The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
-Code distributed by Google as part of the polymer project is also
-subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+Copyright (c) 2022 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at
+http://polymer.github.io/LICENSE.txt The complete set of authors may be found at
+http://polymer.github.io/AUTHORS.txt The complete set of contributors may be
+found at http://polymer.github.io/CONTRIBUTORS.txt Code distributed by Google as
+part of the polymer project is also subject to an additional IP rights grant
+found at http://polymer.github.io/PATENTS.txt
 */
 import {shadyDataForNode} from './shady-data.js';
 
@@ -36,6 +37,8 @@ settings.noPatch = /** @type {string|boolean} */ (settings['noPatch'] || false);
 // eslint-disable-next-line no-self-assign
 settings.preferPerformance = settings['preferPerformance'];
 settings.patchOnDemand = settings.noPatch === 'on-demand';
+// eslint-disable-next-line no-self-assign
+settings.onDemandGlobalPatches = settings['onDemandGlobalPatches'];
 
 const IS_IE = navigator.userAgent.match('Trident');
 settings.IS_IE = IS_IE;
@@ -133,7 +136,8 @@ const getNodeHTMLCollectionName = (node) =>
 const isValidHTMLCollectionName = (name) => name !== 'length' && isNaN(name);
 
 export const createPolyfilledHTMLCollection = (nodes) => {
-  // Note: loop in reverse so that the first named item matches the named property
+  // Note: loop in reverse so that the first named item matches the named
+  // property
   for (let l = nodes.length - 1; l >= 0; l--) {
     const node = nodes[l];
     const name = getNodeHTMLCollectionName(node);
@@ -211,16 +215,23 @@ const patchProperty = (proto, name, descriptor) => {
  * @param {!Object} proto
  * @param {!Object} descriptors
  * @param {string=} prefix
- * @param {Array=} disallowedPatches
+ * @param {Object=} disallowedPatches
+ * @param {Object=} allowedPatches
  */
 export const patchProperties = (
   proto,
   descriptors,
   prefix = '',
-  disallowedPatches
+  disallowedPatches,
+  allowedPatches
 ) => {
   for (let name in descriptors) {
-    if (disallowedPatches && disallowedPatches.indexOf(name) >= 0) {
+    // optionally do *not* apply disallowed patches
+    if (disallowedPatches && disallowedPatches[name]) {
+      continue;
+    }
+    // optionally *only* apply allowed patches
+    if (allowedPatches && !allowedPatches[name]) {
       continue;
     }
     patchProperty(proto, prefix + name, descriptors[name]);
@@ -231,6 +242,47 @@ export const patchExistingProperties = (proto, descriptors) => {
   for (let name in descriptors) {
     if (name in proto) {
       patchProperty(proto, name, descriptors[name]);
+    }
+  }
+};
+
+/**
+ * If a prototype will receive a patch for an existing property
+ * that is valued differently from the native or shady value for that property
+ * and the property will be patched with a valued function (not accessor), then
+ * copy the existing property value to the native location for the value.
+ */
+export const copyImplementedNativeProperties = (
+  proto,
+  descriptors,
+  disallowed
+) => {
+  for (let name in descriptors) {
+    const d = descriptors[name];
+    // Only check methods.
+    if (!d.value && typeof d.value !== 'function') {
+      continue;
+    }
+    // skip if this property has been disallowed.
+    if (disallowed && disallowed[name]) {
+      continue;
+    }
+    const nativeName = NATIVE_PREFIX + name;
+    const shadyName = SHADY_PREFIX + name;
+    const existingValue = proto[name];
+    const nativeValue = proto[nativeName];
+    const shadyValue = proto[shadyName];
+    if (
+      nativeValue &&
+      existingValue !== nativeValue &&
+      existingValue !== shadyValue
+    ) {
+      patchProperty(proto, nativeName, {
+        value: existingValue,
+        configurable: true,
+        writable: true,
+        enumerable: true,
+      });
     }
   }
 };

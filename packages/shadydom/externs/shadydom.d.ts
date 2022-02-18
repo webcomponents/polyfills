@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright (c) 2021 The Polymer Project Authors. All rights reserved. This
+ * Copyright (c) 2022 The Polymer Project Authors. All rights reserved. This
  * code may only be used under the BSD style license found at
  * http://polymer.github.io/LICENSE.txt The complete set of authors may be found
  * at http://polymer.github.io/AUTHORS.txt The complete set of contributors may
@@ -21,8 +21,10 @@ declare global {
       querySelectorAll: typeof document.querySelectorAll;
     };
     noPatch: boolean | string;
-    patchElementProto: (node: Object) => void;
+    patchElementProto: (node: object) => void;
+    validateNodePatch: (node: object) => void;
     wrap: (node: Node) => Node;
+    onDemandPatches: {[index: string]: boolean};
   }
 
   // This type alias exists because Tsickle will replace any type name used in the
