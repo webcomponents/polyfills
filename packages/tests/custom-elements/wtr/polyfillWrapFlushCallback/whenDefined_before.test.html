@@ -22,16 +22,12 @@
        * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
        */
 
-      import {
-        mocha,
-        sessionFinished,
-        sessionFailed,
-      } from '@web/test-runner-mocha';
+      import {mocha, runTests} from '@web/test-runner-mocha';
       import {assert} from '@open-wc/testing';
       import {safariGCBugWorkaround} from '../../safari-gc-bug-workaround.js';
 
       mocha.setup({ui: 'tdd'});
-      try {
+      runTests(async () => {
         suiteSetup(() => safariGCBugWorkaround());
 
         test('`whenDefined` called before `define` does not resolve until its local name has flushed.', function (done) {
@@ -89,14 +85,7 @@
             }, 0);
           }, 0);
         });
-
-        mocha.run(() => {
-          sessionFinished();
-        });
-      } catch (e) {
-        console.error(e);
-        sessionFailed(e);
-      }
+      });
     </script>
   </body>
 </html>

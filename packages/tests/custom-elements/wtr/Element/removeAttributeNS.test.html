@@ -11,16 +11,12 @@
   </head>
   <body>
     <script type="module">
-      import {
-        mocha,
-        sessionFinished,
-        sessionFailed,
-      } from '@web/test-runner-mocha';
+      import {mocha, runTests} from '@web/test-runner-mocha';
       import {assert} from '@open-wc/testing';
       import {safariGCBugWorkaround} from '../../safari-gc-bug-workaround.js';
 
       mocha.setup({ui: 'tdd'});
-      try {
+      runTests(async () => {
         suiteSetup(() => safariGCBugWorkaround());
 
         // In older browsers, `Element#getAttributeNS` may return the empty string
@@ -130,14 +126,7 @@
             ]);
           });
         });
-
-        mocha.run(() => {
-          sessionFinished();
-        });
-      } catch (e) {
-        console.error(e);
-        sessionFailed(e);
-      }
+      });
     </script>
   </body>
 </html>
