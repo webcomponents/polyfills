@@ -16,6 +16,6 @@
         "firefox": ["-headless"]
       }
     },
-    "wct-trusted-types-plugin": {}
+    "wct-trusted-types-plugin": true
   }
 }
