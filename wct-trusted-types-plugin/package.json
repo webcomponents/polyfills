@@ -1,0 +1,9 @@
+{
+  "name": "wct-trusted-types-plugin",
+  "private": true,
+  "main": "main.js",
+  "wct-plugin": {
+    "cli-options": {
+    }
+  }
+}
