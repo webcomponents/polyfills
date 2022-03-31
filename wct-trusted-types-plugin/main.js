@@ -19,7 +19,7 @@ module.exports = (context, pluginOptions = {}, _plugin) => {
         );
         res.append(
           'Content-Security-Policy',
-          `trusted-types ${policies.join('')}`
+          `trusted-types ${policies.join(' ')}`
         );
       }
       next();
