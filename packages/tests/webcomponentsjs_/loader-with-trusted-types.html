@@ -21,7 +21,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       suite('Trusted Types API compatibility', () => {
         test('No errors were reported during loading', (done) => {
           const iframe = document.createElement('iframe');
-          iframe.src = './loader-with-trusted-types_enforced-page.html';
+          iframe.src =
+            './loader-with-trusted-types_enforced-page.html?enforce-trusted-types=webcomponents-loader';
           window.addEventListener('message', (e) => {
             if (e.source === iframe.contentWindow) {
               document.body.removeChild(iframe);

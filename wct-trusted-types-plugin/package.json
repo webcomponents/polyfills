@@ -8,12 +8,5 @@
   "dependencies": {
     "express": "^4.17.3"
   },
-  "wct-plugin": {
-    "cli-options": {
-      "enforce-trusted-types": {
-        "help": "Enforces trusted types for a particular request path. This argument is a path, followed by an optional ';' and ','-separated list of allowed trusted type policy names. For example: `--enforce-trusted-types='/some/path.html;policy-name'`.",
-        "list": true
-      }
-    }
-  }
+  "wct-plugin": true
 }
