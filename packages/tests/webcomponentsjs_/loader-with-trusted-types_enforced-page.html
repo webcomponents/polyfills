@@ -10,7 +10,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 -->
 <script>
   window.ERRORS = [];
-  window.onerror = (e) => ERRORS.push(e);
+  window.onerror = (e) => window.ERRORS.push(e);
 
   delete window.customElements;
   delete Element.prototype.attachShadow;
@@ -18,6 +18,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <script src="../node_modules/@webcomponents/webcomponentsjs/webcomponents-loader.js"></script>
 <script>
   window.addEventListener('WebComponentsReady', () => {
-    window.parent.postMessage(ERRORS.length === 0 ? 'PASS' : 'FAIL', '*');
+    window.parent.postMessage(
+      window.ERRORS.length === 0 ? 'PASS' : 'FAIL',
+      '*'
+    );
   });
 </script>

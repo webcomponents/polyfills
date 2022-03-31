@@ -1,6 +1,6 @@
 const express = require('express');
 
-module.exports = (context, pluginOptions = {}, plugin) => {
+module.exports = (context, pluginOptions = {}, _plugin) => {
   const pathToPolicies = new Map();
   for (const rule of pluginOptions['enforce-trusted-types'] ?? []) {
     const [path, policies] = rule.split(';');
