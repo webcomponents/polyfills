@@ -1,0 +1,9 @@
+{
+  "name": "wct-trusted-types-plugin",
+  "private": true,
+  "main": "main.js",
+  "dependencies": {
+    "express": "^4.17.3"
+  },
+  "wct-plugin": true
+}
