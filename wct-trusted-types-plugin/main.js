@@ -1,6 +1,6 @@
 const express = require('express');
 
-module.exports = (context, pluginOptions = {}, _plugin) => {
+module.exports = (context, _pluginOptions, _plugin) => {
   context.hook('define:webserver', (app, assign, options, done) => {
     const newApp = express();
 
