@@ -5,8 +5,5 @@
   "dependencies": {
     "express": "^4.17.3"
   },
-  "dependencies": {
-    "express": "^4.17.3"
-  },
   "wct-plugin": true
 }
