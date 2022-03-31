@@ -169,16 +169,35 @@
       url = script.src.replace(name, polyfillFile);
     }
 
+    var identity = function (x) {
+      return x;
+    };
+    var trustedTypesPolicyOptions = {
+      createHTML: identity,
+      createScript: identity,
+      createScriptURL: identity,
+    };
+    var trustedTypesPolicy =
+      window.trustedTypes &&
+      window.trustedTypes.createPolicy(
+        'webcomponents-loader',
+        trustedTypesPolicyOptions
+      );
+    var trustedTypesPolicyWrapper =
+      trustedTypesPolicy || trustedTypesPolicyOptions;
+
     var newScript = document.createElement('script');
-    newScript.src = url;
+    newScript.src = trustedTypesPolicyWrapper.createScriptURL(url);
     // if readyState is 'loading', this script is synchronous
     if (document.readyState === 'loading') {
       // make sure custom elements are batched whenever parser gets to the injected script
       newScript.setAttribute(
         'onload',
-        'window.WebComponents._batchCustomElements()'
+        trustedTypesPolicyWrapper.createScript(
+          'window.WebComponents._batchCustomElements()'
+        )
       );
-      document.write(newScript.outerHTML);
+      document.write(trustedTypesPolicyWrapper.createHTML(newScript.outerHTML));
       document.addEventListener('DOMContentLoaded', ready);
     } else {
       newScript.addEventListener('load', function () {
