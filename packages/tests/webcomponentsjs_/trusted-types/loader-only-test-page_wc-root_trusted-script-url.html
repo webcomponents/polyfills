@@ -23,9 +23,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     createScriptURL: (x) => x,
   });
 
-  (window.WebComponents ??= {}).root = policy.createScriptURL(
-    '../../node_modules/@webcomponents/webcomponentsjs/'
-  );
+  window.WebComponents = {
+    root: policy.createScriptURL(
+      '../../node_modules/@webcomponents/webcomponentsjs/'
+    ),
+  };
 
   window.addEventListener('load', () => {
     const script = document.createElement('script');
