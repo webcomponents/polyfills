@@ -22,7 +22,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         test('If the `webcomponents-loader` policy is allowed, the loader generates no errors.', (done) => {
           const iframe = document.createElement('iframe');
           iframe.src =
-            './loader-only-test-page.html?enforce-trusted-types=webcomponents-loader';
+            './loader-only-test-page_src-replace.html?enforce-trusted-types=webcomponents-loader';
 
           window.addEventListener('message', function listener(e) {
             if (e.source !== iframe.contentWindow) {
@@ -50,7 +50,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
           const iframe = document.createElement('iframe');
           iframe.src =
-            './loader-only-test-page.html?enforce-trusted-types=unused-policy-name';
+            './loader-only-test-page_src-replace.html?enforce-trusted-types=unused-policy-name';
 
           window.addEventListener('message', function listener(e) {
             if (e.source !== iframe.contentWindow) {
