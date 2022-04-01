@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<!--
+@license
+Copyright (c) 2022 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<html>
+  <head>
+    <title>Trusted Types API compatibility</title>
+    <meta charset="UTF-8" />
+    <script src="../wct-config.js"></script>
+    <script src="../../node_modules/wct-browser-legacy/browser.js"></script>
+  </head>
+
+  <body>
+    <script>
+      suite('Trusted Types API compatibility', () => {
+        test('If the `webcomponents-loader` policy is allowed, the loader generates no errors.', (done) => {
+          const iframe = document.createElement('iframe');
+          iframe.src =
+            './loader-only-test-page_src-replace.html?enforce-trusted-types=webcomponents-loader';
+
+          window.addEventListener('message', function listener(e) {
+            if (e.source !== iframe.contentWindow) {
+              console.warn('Unexpected message event:', e);
+              return;
+            }
+
+            window.removeEventListener('message', listener);
+            document.body.removeChild(iframe);
+
+            if (e.data === 'WebComponentsReady') {
+              done();
+            } else {
+              done(new Error('An error was caught while loading.'));
+            }
+          });
+
+          document.body.appendChild(iframe);
+        });
+
+        test('If the `webcomponents-loader` policy is not allowed, the loader generates an error.', (done) => {
+          console.info(
+            'Errors are expected to be printed to the console during this test.'
+          );
+
+          const iframe = document.createElement('iframe');
+          iframe.src =
+            './loader-only-test-page_src-replace.html?enforce-trusted-types=%27none%27';
+
+          window.addEventListener('message', function listener(e) {
+            if (e.source !== iframe.contentWindow) {
+              console.warn('Unexpected message event:', e);
+              return;
+            }
+
+            window.removeEventListener('message', listener);
+            document.body.removeChild(iframe);
+
+            if (e.data === 'error') {
+              done();
+            } else {
+              done(new Error('No error was caught while loading.'));
+            }
+          });
+
+          document.body.appendChild(iframe);
+        });
+
+        test('If the `webcomponents-loader` policy is allowed, the loader generates no errors. (setting `WebComponents.root`)', (done) => {
+          const iframe = document.createElement('iframe');
+          iframe.src =
+            './loader-only-test-page_wc-root.html?enforce-trusted-types=webcomponents-loader%20wc-test-page-script';
+
+          window.addEventListener('message', function listener(e) {
+            if (e.source !== iframe.contentWindow) {
+              console.warn('Unexpected message event:', e);
+              return;
+            }
+
+            window.removeEventListener('message', listener);
+            document.body.removeChild(iframe);
+
+            if (e.data === 'WebComponentsReady') {
+              done();
+            } else {
+              done(new Error('An error was caught while loading.'));
+            }
+          });
+
+          document.body.appendChild(iframe);
+        });
+
+        test('If the `webcomponents-loader` policy is not allowed, the loader generates an error. (setting `WebComponents.root`)', (done) => {
+          console.info(
+            'Errors are expected to be printed to the console during this test.'
+          );
+
+          const iframe = document.createElement('iframe');
+          iframe.src =
+            './loader-only-test-page_wc-root.html?enforce-trusted-types=wc-test-page-script';
+
+          window.addEventListener('message', function listener(e) {
+            if (e.source !== iframe.contentWindow) {
+              console.warn('Unexpected message event:', e);
+              return;
+            }
+
+            window.removeEventListener('message', listener);
+            document.body.removeChild(iframe);
+
+            if (e.data === 'error') {
+              done();
+            } else {
+              done(new Error('No error was caught while loading.'));
+            }
+          });
+
+          document.body.appendChild(iframe);
+        });
+      });
+    </script>
+  </body>
+</html>
