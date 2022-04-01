@@ -41,6 +41,29 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
           document.body.appendChild(iframe);
         });
+
+        test('If the `webcomponents-loader` policy is not allowed, the loader generates an error.', (done) => {
+          const iframe = document.createElement('iframe');
+          iframe.src =
+            './loader-with-trusted-types_enforced-page.html?enforce-trusted-types=unused-policy-name';
+
+          window.addEventListener('message', (e) => {
+            if (e.source !== iframe.contentWindow) {
+              console.warn('Unexpected message event:', e);
+              return;
+            }
+
+            document.body.removeChild(iframe);
+
+            if (e.data === 'error') {
+              done();
+            } else {
+              done(new Error('No error was caught while loading.'));
+            }
+          });
+
+          document.body.appendChild(iframe);
+        });
       });
     </script>
   </body>
