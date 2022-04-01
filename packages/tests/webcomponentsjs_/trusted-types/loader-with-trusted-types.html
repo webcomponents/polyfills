@@ -19,16 +19,26 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <body>
     <script>
       suite('Trusted Types API compatibility', () => {
-        test('No errors were reported during loading', (done) => {
+        test('If the `webcomponents-loader` policy is allowed, the loader generates no errors.', (done) => {
           const iframe = document.createElement('iframe');
           iframe.src =
             './loader-with-trusted-types_enforced-page.html?enforce-trusted-types=webcomponents-loader';
+
           window.addEventListener('message', (e) => {
-            if (e.source === iframe.contentWindow) {
-              document.body.removeChild(iframe);
-              done(e.data === 'PASS' ? undefined : new Error());
+            if (e.source !== iframe.contentWindow) {
+              console.warn('Unexpected message event:', e);
+              return;
+            }
+
+            document.body.removeChild(iframe);
+
+            if (e.data === 'WebComponentsReady') {
+              done();
+            } else {
+              done(new Error('An error was caught while loading.'));
             }
           });
+
           document.body.appendChild(iframe);
         });
       });
