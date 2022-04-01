@@ -24,12 +24,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           iframe.src =
             './loader-with-trusted-types_enforced-page.html?enforce-trusted-types=webcomponents-loader';
 
-          window.addEventListener('message', (e) => {
+          window.addEventListener('message', function listener(e) {
             if (e.source !== iframe.contentWindow) {
               console.warn('Unexpected message event:', e);
               return;
             }
 
+            window.removeEventListener('message', listener);
             document.body.removeChild(iframe);
 
             if (e.data === 'WebComponentsReady') {
@@ -43,16 +44,21 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         });
 
         test('If the `webcomponents-loader` policy is not allowed, the loader generates an error.', (done) => {
+          console.info(
+            'Errors are expected to be printed to the console during this test.'
+          );
+
           const iframe = document.createElement('iframe');
           iframe.src =
             './loader-with-trusted-types_enforced-page.html?enforce-trusted-types=unused-policy-name';
 
-          window.addEventListener('message', (e) => {
+          window.addEventListener('message', function listener(e) {
             if (e.source !== iframe.contentWindow) {
               console.warn('Unexpected message event:', e);
               return;
             }
 
+            window.removeEventListener('message', listener);
             document.body.removeChild(iframe);
 
             if (e.data === 'error') {
