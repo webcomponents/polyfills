@@ -9,6 +9,9 @@ Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 -->
 <script>
+  delete window.customElements;
+  delete Element.prototype.attachShadow;
+
   window.addEventListener('error', () => {
     window.parent.postMessage('error', '*');
   });
@@ -16,15 +19,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     window.parent.postMessage('WebComponentsReady', '*');
   });
 
-  delete window.customElements;
-  delete Element.prototype.attachShadow;
-
   const policy = window.trustedTypes.createPolicy('wc-test-page-script', {
     createScriptURL: (x) => x,
   });
 
-  (window.WebComponents ??= {}).root =
-    '../../node_modules/@webcomponents/webcomponentsjs/';
+  window.WebComponents = {
+    root: '../../node_modules/@webcomponents/webcomponentsjs/',
+  };
 
   window.addEventListener('load', () => {
     const script = document.createElement('script');

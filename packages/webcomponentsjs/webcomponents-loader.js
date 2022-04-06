@@ -176,37 +176,58 @@
   }
 
   if (polyfills.length) {
+    var trustedTypesPolicyWrapper = (() => {
+      var identity = function (x) {
+        return x;
+      };
+      var trustedTypesPolicyOptions = {
+        createHTML: identity,
+        createScript: identity,
+        createScriptURL: identity,
+      };
+      var trustedTypesPolicy =
+        window.trustedTypes &&
+        window.trustedTypes.createPolicy(
+          'webcomponents-loader',
+          trustedTypesPolicyOptions
+        );
+      return trustedTypesPolicy || trustedTypesPolicyOptions;
+    })();
+
     var url;
     var polyfillFile = 'bundles/webcomponents-' + polyfills.join('-') + '.js';
 
     // Load it from the right place.
     if (window.WebComponents.root) {
-      url = window.WebComponents.root + polyfillFile;
+      var trustedTypesAreEnforced = (() => {
+        try {
+          document.createElement('input').setAttribute('oninput', '');
+        } catch (e) {
+          return true;
+        }
+        return false;
+      })();
+
+      if (
+        window.trustedTypes &&
+        trustedTypesAreEnforced &&
+        !window.trustedTypes.isScriptURL(window.WebComponents.root)
+      ) {
+        throw new Error('`WebComponents.root` must be a `TrustedScriptURL`.');
+      }
+      url = trustedTypesPolicyWrapper.createScriptURL(
+        window.WebComponents.root + polyfillFile
+      );
     } else {
       var script = document.querySelector('script[src*="' + name + '"]');
       // Load it from the right place.
-      url = script.src.replace(name, polyfillFile);
+      url = trustedTypesPolicyWrapper.createScriptURL(
+        script.src.replace(name, polyfillFile)
+      );
     }
 
-    var identity = function (x) {
-      return x;
-    };
-    var trustedTypesPolicyOptions = {
-      createHTML: identity,
-      createScript: identity,
-      createScriptURL: identity,
-    };
-    var trustedTypesPolicy =
-      window.trustedTypes &&
-      window.trustedTypes.createPolicy(
-        'webcomponents-loader',
-        trustedTypesPolicyOptions
-      );
-    var trustedTypesPolicyWrapper =
-      trustedTypesPolicy || trustedTypesPolicyOptions;
-
     var newScript = document.createElement('script');
-    newScript.src = trustedTypesPolicyWrapper.createScriptURL(url);
+    newScript.src = url;
     // if readyState is 'loading', this script is synchronous
     if (document.readyState === 'loading') {
       // make sure custom elements are batched whenever parser gets to the injected script

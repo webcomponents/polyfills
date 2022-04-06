@@ -12,11 +12,28 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   delete window.customElements;
   delete Element.prototype.attachShadow;
 
-  window.addEventListener('error', (e) => {
+  window.addEventListener('error', () => {
     window.parent.postMessage('error', '*');
   });
   window.addEventListener('WebComponentsReady', () => {
     window.parent.postMessage('WebComponentsReady', '*');
   });
+
+  const policy = window.trustedTypes.createPolicy('wc-test-page-script', {
+    createScriptURL: (x) => x,
+  });
+
+  window.WebComponents = {
+    root: policy.createScriptURL(
+      '../../node_modules/@webcomponents/webcomponentsjs/'
+    ),
+  };
+
+  window.addEventListener('load', () => {
+    const script = document.createElement('script');
+    script.src = policy.createScriptURL(
+      '../../node_modules/@webcomponents/webcomponentsjs/webcomponents-loader.js'
+    );
+    document.body.appendChild(script);
+  });
 </script>
-<script src="../../node_modules/@webcomponents/webcomponentsjs/webcomponents-loader.js"></script>
