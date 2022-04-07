@@ -1627,6 +1627,39 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
             ShadyDOM.wrap(document.body).removeChild(fixtureRoot);
           });
+
+          test('focus currentTarget is valid when unwrapped in noPatch', () => {
+            customElements.define(
+              'unpatched-focus',
+              class extends HTMLElement {
+                connectedCallback() {
+                  const root = ShadyDOM.wrapIfNeeded(this).attachShadow({
+                    mode: 'open',
+                  });
+                  this.input = document.createElement('input');
+                  ShadyDOM.wrapIfNeeded(root).appendChild(this.input);
+                  ShadyDOM.wrap(this.input).addEventListener(
+                    'focus',
+                    (event) => {
+                      this.focusedInputPatched = event.currentTarget;
+                    }
+                  );
+                  this.input.addEventListener('focus', (event) => {
+                    this.focusedInputUnpatched = event.currentTarget;
+                  });
+                }
+              }
+            );
+            const el = document.createElement('unpatched-focus');
+            document.body.appendChild(el);
+            el.input.dispatchEvent(new Event('focus'), {
+              bubbles: false,
+              composed: false,
+            });
+            assert.equal(el.focusedInputPatched, el.input);
+            assert.equal(el.focusedInputUnpatched, el.input);
+            document.body.removeChild(el);
+          });
         });
       });
     </script>
