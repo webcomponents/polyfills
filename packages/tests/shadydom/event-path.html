@@ -1638,14 +1638,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                   });
                   this.input = document.createElement('input');
                   ShadyDOM.wrapIfNeeded(root).appendChild(this.input);
-                  ShadyDOM.wrap(this.input).addEventListener(
-                    'focus',
-                    (event) => {
-                      this.focusedInputPatched = event.currentTarget;
-                    }
-                  );
+                  // Note this is intentionally an unpatched listener
                   this.input.addEventListener('focus', (event) => {
-                    this.focusedInputUnpatched = event.currentTarget;
+                    this.focusedInput = event.currentTarget;
                   });
                 }
               }
@@ -1656,8 +1651,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
               bubbles: false,
               composed: false,
             });
-            assert.equal(el.focusedInputPatched, el.input);
-            assert.equal(el.focusedInputUnpatched, el.input);
+            assert.equal(el.focusedInput, el.input);
             document.body.removeChild(el);
           });
         });
