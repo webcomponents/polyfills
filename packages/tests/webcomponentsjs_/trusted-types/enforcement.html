@@ -83,40 +83,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           }
         );
 
-        // Skip this test if trusted types aren't available because
-        // `WebComponents.root` must be a string.
-        testOnlyIfTrustedTypes(
-          'If trusted types are enforced, setting `WebComponents.root` to a ' +
-            'string causes an error.',
-          (done) => {
-            console.info(
-              'Errors are expected to be printed to the console during this test.'
-            );
-
-            const iframe = document.createElement('iframe');
-            iframe.src =
-              './loader-only-test-page_wc-root_string.html?enforce-trusted-types=webcomponents-loader%20wc-test-page-script';
-
-            window.addEventListener('message', function listener(e) {
-              if (e.source !== iframe.contentWindow) {
-                console.warn('Unexpected message event:', e);
-                return;
-              }
-
-              window.removeEventListener('message', listener);
-              document.body.removeChild(iframe);
-
-              if (e.data === 'error') {
-                done();
-              } else {
-                done(new Error('No error was caught while loading.'));
-              }
-            });
-
-            document.body.appendChild(iframe);
-          }
-        );
-
         // Skip this test if trusted types aren't available because this test
         // can't create a `TrustedScriptURL`.
         testOnlyIfTrustedTypes(

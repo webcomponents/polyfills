@@ -180,22 +180,6 @@
 
     // Load it from the right place.
     if (window.WebComponents.root) {
-      var trustedTypesAreEnforced = (() => {
-        try {
-          document.createElement('input').setAttribute('oninput', '');
-        } catch (e) {
-          return true;
-        }
-        return false;
-      })();
-
-      if (
-        window.trustedTypes &&
-        trustedTypesAreEnforced &&
-        !window.trustedTypes.isScriptURL(window.WebComponents.root)
-      ) {
-        throw new Error('`WebComponents.root` must be a `TrustedScriptURL`.');
-      }
       url = trustedTypesPolicyWrapper.createScriptURL(
         window.WebComponents.root + polyfillFile
       );
