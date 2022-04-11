@@ -157,22 +157,19 @@
   }
 
   if (polyfills.length) {
-    var trustedTypesPolicyWrapper = (() => {
+    var policy = (() => {
       var identity = function (x) {
         return x;
       };
-      var trustedTypesPolicyOptions = {
+      var policyOptions = {
         createHTML: identity,
         createScript: identity,
         createScriptURL: identity,
       };
-      var trustedTypesPolicy =
+      var policy =
         window.trustedTypes &&
-        window.trustedTypes.createPolicy(
-          'webcomponents-loader',
-          trustedTypesPolicyOptions
-        );
-      return trustedTypesPolicy || trustedTypesPolicyOptions;
+        window.trustedTypes.createPolicy('webcomponents-loader', policyOptions);
+      return policy || policyOptions;
     })();
 
     var url;
@@ -180,15 +177,11 @@
 
     // Load it from the right place.
     if (window.WebComponents.root) {
-      url = trustedTypesPolicyWrapper.createScriptURL(
-        window.WebComponents.root + polyfillFile
-      );
+      url = policy.createScriptURL(window.WebComponents.root + polyfillFile);
     } else {
       var script = document.querySelector('script[src*="' + name + '"]');
       // Load it from the right place.
-      url = trustedTypesPolicyWrapper.createScriptURL(
-        script.src.replace(name, polyfillFile)
-      );
+      url = policy.createScriptURL(script.src.replace(name, polyfillFile));
     }
 
     var newScript = document.createElement('script');
@@ -198,11 +191,9 @@
       // make sure custom elements are batched whenever parser gets to the injected script
       newScript.setAttribute(
         'onload',
-        trustedTypesPolicyWrapper.createScript(
-          'window.WebComponents._batchCustomElements()'
-        )
+        policy.createScript('window.WebComponents._batchCustomElements()')
       );
-      document.write(trustedTypesPolicyWrapper.createHTML(newScript.outerHTML));
+      document.write(policy.createHTML(newScript.outerHTML));
       document.addEventListener('DOMContentLoaded', ready);
     } else {
       newScript.addEventListener('load', function () {
