@@ -157,6 +157,17 @@
   }
 
   if (polyfills.length) {
+    // When the Trusted Types API is available, `policy` is a
+    // `TrustedTypePolicy` with functions for creating trusted HTML, scripts,
+    // and script URLs. This policy is used below to (a) approve the bundle URL
+    // string created by the loader that is assigned to a `<script>`'s `src`
+    // attribute, (b) approve a constant script string that is assigned to that
+    // `<script>'s `onload` attribute, and (c) approve the string of HTML that
+    // the loader reads from that `<script>`'s `outerHTML`.
+    //
+    // If the Trusted Types API is not available, the returned object exposes a
+    // similar interface to a `TrustedTypePolicy`, but all of its functions are
+    // the identity function.
     var policy = (() => {
       var identity = function (x) {
         return x;
