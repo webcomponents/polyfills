@@ -366,6 +366,10 @@ function shadyDispatchEvent(e) {
 
   let currentTarget;
   // override `currentTarget` to let patched `target` calculate correctly
+  const prevCurrentTargetDesc = Object.getOwnPropertyDescriptor(
+    e,
+    'currentTarget'
+  );
   Object.defineProperty(e, 'currentTarget', {
     configurable: true,
     enumerable: true,
@@ -375,6 +379,7 @@ function shadyDispatchEvent(e) {
   });
 
   let eventPhase = Event.CAPTURING_PHASE;
+  const prevEventPhaseDesc = Object.getOwnPropertyDescriptor(e, 'eventPhase');
   Object.defineProperty(e, 'eventPhase', {
     configurable: true,
     enumerable: true,
@@ -383,33 +388,45 @@ function shadyDispatchEvent(e) {
     },
   });
 
-  for (let i = path.length - 1; i >= 0; i--) {
-    currentTarget = path[i];
-    eventPhase =
-      currentTarget === retargetedPath[i]
-        ? Event.AT_TARGET
-        : Event.CAPTURING_PHASE;
-    // capture phase fires all capture handlers
-    fireHandlers(e, currentTarget, 'capture');
-    if (e.__propagationStopped) {
-      return;
-    }
-  }
-
-  for (let i = 0; i < path.length; i++) {
-    currentTarget = path[i];
-    const atTarget = currentTarget === retargetedPath[i];
-    if (atTarget || bubbles) {
-      eventPhase = atTarget ? Event.AT_TARGET : Event.BUBBLING_PHASE;
-      fireHandlers(e, currentTarget, 'bubble');
+  try {
+    for (let i = path.length - 1; i >= 0; i--) {
+      currentTarget = path[i];
+      eventPhase =
+        currentTarget === retargetedPath[i]
+          ? Event.AT_TARGET
+          : Event.CAPTURING_PHASE;
+      // capture phase fires all capture handlers
+      fireHandlers(e, currentTarget, 'capture');
       if (e.__propagationStopped) {
         return;
       }
     }
-  }
 
-  eventPhase = 0; // `Event.NONE` is not available in IE11.
-  currentTarget = null;
+    for (let i = 0; i < path.length; i++) {
+      currentTarget = path[i];
+      const atTarget = currentTarget === retargetedPath[i];
+      if (atTarget || bubbles) {
+        eventPhase = atTarget ? Event.AT_TARGET : Event.BUBBLING_PHASE;
+        fireHandlers(e, currentTarget, 'bubble');
+        if (e.__propagationStopped) {
+          return;
+        }
+      }
+    }
+  } finally {
+    // Restore previous currentTarget & eventPhase descriptors when
+    // dispatching is complete
+    if (prevCurrentTargetDesc) {
+      Object.defineProperty(e, 'currentTarget', prevCurrentTargetDesc);
+    } else {
+      delete e['currentTarget'];
+    }
+    if (prevEventPhaseDesc) {
+      Object.defineProperty(e, 'eventPhase', prevEventPhaseDesc);
+    } else {
+      delete e['eventPhase'];
+    }
+  }
 }
 
 function listenerSettingsEqual(savedListener, node, type, capture) {
