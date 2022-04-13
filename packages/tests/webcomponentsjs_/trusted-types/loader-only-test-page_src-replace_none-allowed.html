@@ -12,36 +12,16 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   http-equiv="content-security-policy"
   content="require-trusted-types-for 'script'"
 />
-<meta
-  http-equiv="content-security-policy"
-  content="trusted-types webcomponents-loader wc-test-page-script"
-/>
+<meta http-equiv="content-security-policy" content="trusted-types 'none'" />
 <script>
   delete window.customElements;
   delete Element.prototype.attachShadow;
 
-  window.addEventListener('error', () => {
+  window.addEventListener('error', (e) => {
     window.parent.postMessage('error', '*');
   });
   window.addEventListener('WebComponentsReady', () => {
     window.parent.postMessage('WebComponentsReady', '*');
   });
-
-  const policy = window.trustedTypes.createPolicy('wc-test-page-script', {
-    createScriptURL: (x) => x,
-  });
-
-  window.WebComponents = {
-    root: policy.createScriptURL(
-      '../../node_modules/@webcomponents/webcomponentsjs/'
-    ),
-  };
-
-  window.addEventListener('load', () => {
-    const script = document.createElement('script');
-    script.src = policy.createScriptURL(
-      '../../node_modules/@webcomponents/webcomponentsjs/webcomponents-loader.js'
-    );
-    document.body.appendChild(script);
-  });
 </script>
+<script src="../../node_modules/@webcomponents/webcomponentsjs/webcomponents-loader.js"></script>
