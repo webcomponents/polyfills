@@ -207,7 +207,13 @@
 
     // Load it from the right place.
     if (window.WebComponents.root) {
-      url = policy.createScriptURL(window.WebComponents.root + polyfillFile);
+      url = window.WebComponents.root + polyfillFile;
+      if (
+        window.trustedTypes &&
+        window.trustedTypes.isScriptURL(window.WebComponents.root)
+      ) {
+        url = policy.createScriptURL(url);
+      }
     } else {
       var script = document.querySelector('script[src*="' + name + '"]');
       // Load it from the right place.
