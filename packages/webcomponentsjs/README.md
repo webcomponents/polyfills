@@ -167,8 +167,9 @@ If you're using the loader on a page that enforces the `trusted-types` Content
 Security Policy, you'll need to allow the `webcomponents-loader` policy name so
 that the loader can dynamically create and insert a `<script>` for the polyfill
 bundle it selects based on feature detection. You should also treat
-`WebComponents.root` as if it were required to be set to a `TrustedScriptURL`
-when trusted types are being enforced.
+`WebComponents.root` as a potentially dangerous script URL sink: only set it to
+values that are known to be safe and unable to be influenced by user-controlled
+data.
 
 ### WebComponentsReady event
 
