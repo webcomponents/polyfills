@@ -77,9 +77,9 @@ For example:
 </script>
 ```
 
-Because this property is used to build the URL to the selected bundle, you
-should only set it to values that are known to be safe and unable to be
-influenced by user-controlled data.
+This property is used to build the URL to the selected bundle, so you should
+only set it to values that are unable to be influenced by user-controlled data.
+If trusted types are enforced, this property should be a `TrustedScriptURL`.
 
 #### Synchronous
 
