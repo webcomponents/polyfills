@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<!--
+@license
+Copyright (c) 2022 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<meta
+  http-equiv="content-security-policy"
+  content="require-trusted-types-for 'script'"
+/>
+<meta http-equiv="content-security-policy" content="trusted-types 'none'" />
+<script>
+  delete window.customElements;
+  delete Element.prototype.attachShadow;
+
+  window.addEventListener('error', (e) => {
+    window.parent.postMessage('error', '*');
+  });
+  window.addEventListener('WebComponentsReady', () => {
+    window.parent.postMessage('WebComponentsReady', '*');
+  });
+</script>
+<script src="../../node_modules/@webcomponents/webcomponentsjs/webcomponents-loader.js"></script>
