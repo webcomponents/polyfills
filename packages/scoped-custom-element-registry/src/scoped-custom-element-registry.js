@@ -67,6 +67,13 @@ if (!ShadowRoot.prototype.createElement) {
         disconnectedCallback: elementClass.prototype.disconnectedCallback,
         adoptedCallback: elementClass.prototype.adoptedCallback,
         attributeChangedCallback,
+        'formAssociated': elementClass['formAssociated'],
+        'formAssociatedCallback':
+          elementClass.prototype['formAssociatedCallback'],
+        'formDisabledCallback': elementClass.prototype['formDisabledCallback'],
+        'formResetCallback': elementClass.prototype['formResetCallback'],
+        'formStateRestoreCallback':
+          elementClass.prototype['formStateRestoreCallback'],
         observedAttributes,
       };
       this._definitionsByTag.set(tagName, definition);
@@ -208,6 +215,9 @@ if (!ShadowRoot.prototype.createElement) {
   // out to the registry for the given element
   const createStandInElement = (tagName) => {
     return class ScopedCustomElementBase {
+      static get ['formAssociated']() {
+        return true;
+      }
       constructor() {
         // Create a raw HTMLElement first
         const instance = Reflect.construct(
@@ -263,6 +273,35 @@ if (!ShadowRoot.prototype.createElement) {
         definition?.adoptedCallback?.apply(this, arguments);
       }
 
+      // Form-associated custom elements lifecycle methods
+      ['formAssociatedCallback']() {
+        const definition = definitionForElement.get(this);
+        if (definition && definition['formAssociated']) {
+          definition?.['formAssociatedCallback']?.apply(this, arguments);
+        }
+      }
+
+      ['formDisabledCallback']() {
+        const definition = definitionForElement.get(this);
+        if (definition?.['formAssociated']) {
+          definition?.['formDisabledCallback']?.apply(this, arguments);
+        }
+      }
+
+      ['formResetCallback']() {
+        const definition = definitionForElement.get(this);
+        if (definition?.['formAssociated']) {
+          definition?.['formResetCallback']?.apply(this, arguments);
+        }
+      }
+
+      ['formStateRestoreCallback']() {
+        const definition = definitionForElement.get(this);
+        if (definition?.['formAssociated']) {
+          definition?.['formStateRestoreCallback']?.apply(this, arguments);
+        }
+      }
+
       // no attributeChangedCallback or observedAttributes since these
       // are simulated via setAttribute/removeAttribute patches
     };
@@ -283,7 +322,8 @@ if (!ShadowRoot.prototype.createElement) {
     }
     const setAttribute = elementClass.prototype.setAttribute;
     if (setAttribute) {
-      elementClass.prototype.setAttribute = function (name, value) {
+      elementClass.prototype.setAttribute = function (n, value) {
+        const name = n.toLowerCase();
         if (observedAttributes.has(name)) {
           const old = this.getAttribute(name);
           setAttribute.call(this, name, value);
@@ -295,7 +335,8 @@ if (!ShadowRoot.prototype.createElement) {
     }
     const removeAttribute = elementClass.prototype.removeAttribute;
     if (removeAttribute) {
-      elementClass.prototype.removeAttribute = function (name) {
+      elementClass.prototype.removeAttribute = function (n) {
+        const name = n.toLowerCase();
         if (observedAttributes.has(name)) {
           const old = this.getAttribute(name);
           removeAttribute.call(this, name);
@@ -403,4 +444,108 @@ if (!ShadowRoot.prototype.createElement) {
     configurable: true,
     writable: true,
   });
+
+  if (
+    !!window['ElementInternals'] &&
+    !!window['ElementInternals'].prototype['setFormValue']
+  ) {
+    const internalsToHostMap = new WeakMap();
+    const attachInternals = HTMLElement.prototype['attachInternals'];
+    const methods = [
+      'setFormValue',
+      'setValidity',
+      'checkValidity',
+      'reportValidity',
+    ];
+
+    HTMLElement.prototype['attachInternals'] = function (...args) {
+      const internals = attachInternals.call(this, ...args);
+      internalsToHostMap.set(internals, this);
+      return internals;
+    };
+
+    methods.forEach((method) => {
+      const proto = window['ElementInternals'].prototype;
+      const originalMethod = proto[method];
+
+      proto[method] = function (...args) {
+        const host = internalsToHostMap.get(this);
+        const definition = definitionForElement.get(host);
+        if (definition['formAssociated'] === true) {
+          originalMethod?.call(this, ...args);
+        } else {
+          throw new DOMException(
+            `Failed to execute ${originalMethod} on 'ElementInternals': The target element is not a form-associated custom element.`
+          );
+        }
+      };
+    });
+
+    // Emulate the native RadioNodeList object
+    class RadioNodeList extends Array {
+      constructor(elements) {
+        super(...elements);
+        this._elements = elements;
+      }
+
+      get ['value']() {
+        return (
+          this._elements.find((element) => element['checked'] === true)
+            ?.value || ''
+        );
+      }
+    }
+
+    // Emulate the native HTMLFormControlsCollection object
+    class HTMLFormControlsCollection {
+      constructor(elements) {
+        const entries = new Map();
+        elements.forEach((element, index) => {
+          const name = element.getAttribute('name');
+          const nameReference = entries.get(name) || [];
+          this[+index] = element;
+          nameReference.push(element);
+          entries.set(name, nameReference);
+        });
+        this['length'] = elements.length;
+        entries.forEach((value, key) => {
+          if (!value) return;
+          if (value.length === 1) {
+            this[key] = value[0];
+          } else {
+            this[key] = new RadioNodeList(value);
+          }
+        });
+      }
+
+      ['namedItem'](key) {
+        return this[key];
+      }
+    }
+
+    // Override the built-in HTMLFormElements.prototype.elements getter
+    const formElementsDescriptor = Object.getOwnPropertyDescriptor(
+      HTMLFormElement.prototype,
+      'elements'
+    );
+
+    Object.defineProperty(HTMLFormElement.prototype, 'elements', {
+      get: function () {
+        const nativeElements = formElementsDescriptor.get.call(this, []);
+
+        const include = [];
+
+        for (const element of nativeElements) {
+          const definition = definitionForElement.get(element);
+
+          // Only purposefully formAssociated elements or built-ins will feature in elements
+          if (!definition || definition['formAssociated'] === true) {
+            include.push(element);
+          }
+        }
+
+        return new HTMLFormControlsCollection(include);
+      },
+    });
+  }
 }
