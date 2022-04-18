@@ -187,7 +187,7 @@
     // If the Trusted Types API is not available, the returned object exposes a
     // similar interface to a `TrustedTypePolicy`, but all of its functions are
     // the identity function.
-    var policy = (() => {
+    var policy = (function () {
       var identity = function (x) {
         return x;
       };
