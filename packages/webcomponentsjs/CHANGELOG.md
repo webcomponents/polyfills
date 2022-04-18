@@ -15,6 +15,8 @@ Versioning](https://semver.org/spec/v2.0.0.html).
   ([#469](https://github.com/webcomponents/polyfills/pull/469))
 - Make `webcomponents-loader.js` compatible with the Trusted Types API
   ([#501](https://github.com/webcomponents/polyfills/pull/501))
+- Remove an arrow function in `webcomponents-loader.js`.
+  ([#507](https://github.com/webcomponents/polyfills/pull/507))
 
 ## [2.6.0] - 2021-08-02
 
