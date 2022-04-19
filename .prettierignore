@@ -28,6 +28,7 @@ packages/shadycss/src/interface.*
 packages/shadycss/.tsbuildinfo
 
 # tests package
+packages/tests/environment-bundle.js
 packages/tests/shadycss/module/generated/
 
 # webcomponentsjs package

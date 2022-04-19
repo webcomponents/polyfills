@@ -2,7 +2,7 @@
   "name": "tests",
   "private": true,
   "scripts": {
-    "build": "gulp --gulpfile ./shadycss/gulpfile.js",
+    "build": "gulp --gulpfile ./shadycss/gulpfile.js && rollup --config rollup.config.js",
     "build:watch": "chokidar --initial --follow-symlinks 'shadycss/module/**/*.js' --ignore 'shadycss/module/generated/**/*' 'node_modules/@webcomponents/shadycss/**/*.js' -c 'npm run build'"
   },
   "devDependencies": {
