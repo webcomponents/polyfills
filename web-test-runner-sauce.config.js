@@ -1,4 +1,5 @@
 const {createSauceLabsLauncher} = require('@web/test-runner-saucelabs');
+const {compileJSPlugin} = require('./compile-js-plugin.js');
 
 const sauceLabsLauncher = createSauceLabsLauncher(
   {
@@ -77,4 +78,5 @@ module.exports = {
   concurrency: 1,
   concurrentBrowsers: 1,
   browsers,
+  plugins: [compileJSPlugin()],
 };
