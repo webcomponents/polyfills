@@ -20,6 +20,7 @@
     "gulp": "^4.0.0",
     "rollup-stream": "=1.23.1",
     "vinyl-source-stream": "^2.0.0",
-    "wct-browser-legacy": "^1.0.2"
+    "wct-browser-legacy": "^1.0.2",
+    "whatwg-fetch": "^3.6.2"
   }
 }
