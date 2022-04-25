@@ -1,6 +1,7 @@
-const URL = require('core-js/stable/url');
-require('whatwg-fetch');
+export {assert} from 'chai/index.mjs';
+import {mocha, runTests as wtrRunTests} from '@web/test-runner-mocha';
 
-if (!window.URL || !window.URLSearchParams) {
-  window.URL = URL;
-}
+export const runTests = (...args) => {
+  mocha.setup({ui: 'tdd'});
+  return wtrRunTests(...args);
+};

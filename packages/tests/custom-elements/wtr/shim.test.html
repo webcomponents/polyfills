@@ -10,14 +10,13 @@
 -->
 <title>Custom Elements Tests</title>
 <meta charset="utf-8" />
+<script src="../../node_modules/@webcomponents/webcomponentsjs/bundles/webcomponents-pf_js.js"></script>
 <script src="../../node_modules/@webcomponents/custom-elements/src/native-shim.js"></script>
 
 <script type="module">
-  import '../../environment-bundle.js';
-  import {mocha, runTests} from '@web/test-runner-mocha';
-  import {assert} from '@open-wc/testing';
+  import '../../environment-polyfills-bundle.js';
+  import {runTests, assert} from '../../environment-bundle.js';
 
-  mocha.setup({ui: 'tdd'});
   runTests(async () => {
     suite('Native Shim', () => {
       // Calling `this.skip` in `suiteSetup` does not prevent descendant suites
