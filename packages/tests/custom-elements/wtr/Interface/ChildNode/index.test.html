@@ -11,12 +11,10 @@
   </head>
   <body>
     <script type="module">
-      import '../../../../environment-bundle.js';
-      import {mocha, runTests} from '@web/test-runner-mocha';
-      import {assert} from '@open-wc/testing';
+      import '../../../../environment-polyfills-bundle.js';
+      import {runTests, assert} from '../../../../environment-bundle.js';
       import {safariGCBugWorkaround} from '../../../safari-gc-bug-workaround.js';
 
-      mocha.setup({ui: 'tdd'});
       runTests(async () => {
         suiteSetup(() => safariGCBugWorkaround());
 
