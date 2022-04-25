@@ -68,14 +68,14 @@
           });
 
           test('CustomElements upgrade', function () {
-            chai.assert.equal(window.elementsCreated, 2);
+            assert.equal(window.elementsCreated, 2);
           });
 
           test('CustomElements do have connectedCallback called', function () {
             // Elements with any document as their root node are considered
             // connected. This includes elements inside imported and script-created
             // documents.
-            chai.assert.equal(window.connectedCount, 2);
+            assert.equal(window.connectedCount, 2);
           });
 
           test('CustomElements only attempt to upgrade <link rel=import>', function () {
@@ -109,7 +109,7 @@
             l.href = 'async-import.html';
 
             customElements.whenDefined('x-dependent').then(function () {
-              chai.assert.isTrue(
+              assert.isTrue(
                 dependencySatisfied,
                 'element instance cannot depend on element instance in HTMLImport'
               );
