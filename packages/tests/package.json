@@ -2,10 +2,12 @@
   "name": "tests",
   "private": true,
   "scripts": {
-    "build": "gulp --gulpfile ./shadycss/gulpfile.js",
+    "build": "gulp --gulpfile ./shadycss/gulpfile.js && rollup --config rollup.config.js",
     "build:watch": "chokidar --initial --follow-symlinks 'shadycss/module/**/*.js' --ignore 'shadycss/module/generated/**/*' 'node_modules/@webcomponents/shadycss/**/*.js' -c 'npm run build'"
   },
   "devDependencies": {
+    "@rollup/plugin-commonjs": "^21.1.0",
+    "@rollup/plugin-node-resolve": "^13.2.1",
     "@webcomponents/custom-elements": "^1.5.0",
     "@webcomponents/formdata-event": "^0.0.3",
     "@webcomponents/html-imports": "^1.3.0",
@@ -13,10 +15,13 @@
     "@webcomponents/shadydom": "^1.9.0",
     "@webcomponents/template": "^1.5.0",
     "@webcomponents/webcomponentsjs": "^2.6.0",
+    "chai": "^4.3.6",
+    "core-js": "^3.22.0",
     "del": "^3.0.0",
     "gulp": "^4.0.0",
     "rollup-stream": "=1.23.1",
     "vinyl-source-stream": "^2.0.0",
-    "wct-browser-legacy": "^1.0.2"
+    "wct-browser-legacy": "^1.0.2",
+    "whatwg-fetch": "^3.6.2"
   }
 }
