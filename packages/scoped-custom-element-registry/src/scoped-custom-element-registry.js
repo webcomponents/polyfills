@@ -351,10 +351,10 @@ if (!ShadowRoot.prototype.createElement) {
       elementClass.prototype.toggleAttribute = function (n) {
         const name = n.toLowerCase();
         if (observedAttributes.has(name)) {
-          const old = this.hasAttribute(name);
+          const old = this.getAttribute(name);
           toggleAttribute.call(this, name);
-          const hasAttribute = this.hasAttribute(name);
-          attributeChangedCallback.call(this, name, old, hasAttribute);
+          const newValue = this.getAttribute(name);
+          attributeChangedCallback.call(this, name, old, newValue);
         } else {
           toggleAttribute.call(this, name);
         }
