@@ -72,14 +72,47 @@ const defaultBrowsers = [
   }),
 ];
 
-const envBrowsers = process.env.BROWSERS?.split(',').map((product) => {
-  const [platformName, rest] = product.split('/');
+/**
+ * Parses a string representing a browser and platform combination into an
+ * object with `platformName`, `browserName`, and `browserVersion` properties.
+ */
+const parseCapabilities = (capabilities) => {
+  const [platformName, rest] = capabilities.split('/');
   const [browserName, browserVersion] = rest.split('@');
-  return sauceLabsLauncher({
+  return {
     platformName,
     browserName,
     browserVersion,
-  });
+  };
+};
+
+// If set, the `BROWSERS` environment variable overrides browsers in the
+// `defaultBrowsers` object. Add `;protocol=w3c` or `;protocol=jwp` to a browser
+// to explicitly control which protocol is used to control that browser.
+const envBrowsers = process.env.BROWSERS?.split(',').map((browser) => {
+  const [capabilities, paramStr] = browser.split(';');
+  const params = new URLSearchParams(paramStr);
+  const {platformName, browserName, browserVersion} = parseCapabilities(
+    capabilities
+  );
+
+  const protocol = params.get('protocol');
+  if (!protocol || protocol === 'w3c') {
+    return sauceLabsLauncher({
+      platformName,
+      browserName,
+      browserVersion,
+    });
+  } else if (protocol === 'jwp') {
+    return sauceLabsLauncher({
+      platform: platformName,
+      browserName,
+      version: browserVersion,
+    });
+  } else {
+    console.error('`protocol` must be either undefined, "w3c", or "jwp".');
+    process.exit(1);
+  }
 });
 
 const browsers = envBrowsers ?? defaultBrowsers;
