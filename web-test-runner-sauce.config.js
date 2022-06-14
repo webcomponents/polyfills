@@ -35,11 +35,6 @@ const defaultBrowsers = [
     browserName: 'safari',
     browserVersion: '12',
   }),
-  sauceLabsLauncher({
-    platformName: 'macos 10.13',
-    browserName: 'safari',
-    browserVersion: '11',
-  }),
 
   // These browsers only support the older JWP protocol.
   //
@@ -55,6 +50,11 @@ const defaultBrowsers = [
   // [^1]: https://docs.saucelabs.com/dev/w3c-webdriver-capabilities/#use-sauceoptions
   // [^2]: https://github.com/modernweb-dev/web/blob/db4949ece675d9c6e4bb722bb9700347258b7e96/packages/test-runner-saucelabs/src/createSauceLabsLauncher.ts#L51-L72
 
+  sauceLabsLauncher({
+    platform: 'macos 10.13',
+    browserName: 'safari',
+    version: '11',
+  }),
   sauceLabsLauncher({
     platform: 'os x 10.11',
     browserName: 'safari',
