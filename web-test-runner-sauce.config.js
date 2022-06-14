@@ -12,9 +12,9 @@ const sauceLabsLauncher = createSauceLabsLauncher(
   }
 );
 
-// wct -s 'windows 10/microsoftedge@17' -s 'windows 10/microsoftedge@15' -s 'windows 8.1/internet explorer@11' -s 'macos 10.13/safari@12' -s 'macos 10.13/safari@11' -s 'os x 10.11/safari@10' -s 'os x 10.11/safari@9' -s 'Linux/chrome@41'
-
 const defaultBrowsers = [
+  // These browsers support the standard W3C WebDriver protocol.
+
   sauceLabsLauncher({
     platformName: 'windows 10',
     browserName: 'microsoftedge',
@@ -40,20 +40,35 @@ const defaultBrowsers = [
     browserName: 'safari',
     browserVersion: '11',
   }),
+
+  // These browsers only support the older JWP protocol.
+  //
+  // Sauce Labs determines which protocol to use to talk to the launched browser
+  // based on whether or not an option called `sauce:options` exists in the
+  // given configuration. If this key is passed, the newer W3C standard
+  // WebDriver protocol is used; otherwise, JWP is used.[^1]
+  // `@web/test-runner-saucelabs` adds the `sauce:options` key if it sees the
+  // `browserVersion` key, which is only supported by Sauce Labs with the
+  // standard WebDriver protocol.[^2] So, we use the older key names here so
+  // that JWP will be used with these browsers.
+  //
+  // [^1]: https://docs.saucelabs.com/dev/w3c-webdriver-capabilities/#use-sauceoptions
+  // [^2]: https://github.com/modernweb-dev/web/blob/db4949ece675d9c6e4bb722bb9700347258b7e96/packages/test-runner-saucelabs/src/createSauceLabsLauncher.ts#L51-L72
+
   sauceLabsLauncher({
-    platformName: 'os x 10.11',
+    platform: 'os x 10.11',
     browserName: 'safari',
-    browserVersion: '10',
+    version: '10',
   }),
   sauceLabsLauncher({
-    platformName: 'os x 10.11',
+    platform: 'os x 10.11',
     browserName: 'safari',
-    browserVersion: '9',
+    version: '9',
   }),
   sauceLabsLauncher({
-    platformName: 'Linux',
+    platform: 'Linux',
     browserName: 'chrome',
-    browserVersion: '41',
+    version: '41',
   }),
 ];
 
