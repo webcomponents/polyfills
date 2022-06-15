@@ -157,16 +157,48 @@
   }
 
   if (polyfills.length) {
+    // When the Trusted Types API is available, `policy` is a
+    // `TrustedTypePolicy` with functions for creating trusted HTML, scripts,
+    // and script URLs. This policy is used below to (a) approve the bundle URL
+    // string created by the loader that is assigned to a `<script>`'s `src`
+    // attribute, (b) approve a constant script string that is assigned to that
+    // `<script>'s `onload` attribute, and (c) approve the string of HTML that
+    // the loader reads from that `<script>`'s `outerHTML`.
+    //
+    // If the Trusted Types API is not available, the returned object exposes a
+    // similar interface to a `TrustedTypePolicy`, but all of its functions are
+    // the identity function.
+    var policy = (function () {
+      var identity = function (x) {
+        return x;
+      };
+      var policyOptions = {
+        createHTML: identity,
+        createScript: identity,
+        createScriptURL: identity,
+      };
+      var policy =
+        window.trustedTypes &&
+        window.trustedTypes.createPolicy('webcomponents-loader', policyOptions);
+      return policy || policyOptions;
+    })();
+
     var url;
     var polyfillFile = 'bundles/webcomponents-' + polyfills.join('-') + '.js';
 
     // Load it from the right place.
     if (window.WebComponents.root) {
       url = window.WebComponents.root + polyfillFile;
+      if (
+        window.trustedTypes &&
+        window.trustedTypes.isScriptURL(window.WebComponents.root)
+      ) {
+        url = policy.createScriptURL(url);
+      }
     } else {
       var script = document.querySelector('script[src*="' + name + '"]');
       // Load it from the right place.
-      url = script.src.replace(name, polyfillFile);
+      url = policy.createScriptURL(script.src.replace(name, polyfillFile));
     }
 
     var newScript = document.createElement('script');
@@ -176,9 +208,9 @@
       // make sure custom elements are batched whenever parser gets to the injected script
       newScript.setAttribute(
         'onload',
-        'window.WebComponents._batchCustomElements()'
+        policy.createScript('window.WebComponents._batchCustomElements()')
       );
-      document.write(newScript.outerHTML);
+      document.write(policy.createHTML(newScript.outerHTML));
       document.addEventListener('DOMContentLoaded', ready);
     } else {
       newScript.addEventListener('load', function () {

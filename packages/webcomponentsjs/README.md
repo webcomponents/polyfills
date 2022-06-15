@@ -77,6 +77,10 @@ For example:
 </script>
 ```
 
+This property is used to build the URL to the selected bundle, so you should
+only set it to values that are unable to be influenced by user-controlled data.
+If trusted types are enforced, this property should be a `TrustedScriptURL`.
+
 #### Synchronous
 
 When loaded synchronously, `webcomponents-loader.js` behaves similarly to `webcomponents-bundle.js`.
@@ -156,6 +160,15 @@ Here's a more complicated example:
 
 <script type="module"></script>
 ```
+
+#### Trusted Types
+
+If you're using the loader on a page that enforces the `trusted-types` Content
+Security Policy, you'll need to allow the `webcomponents-loader` policy name so
+that the loader can dynamically create and insert a `<script>` for the polyfill
+bundle it selects based on feature detection. If you set `WebComponents.root`
+(which is rare), it should be set to a `TrustedScriptURL` for Trusted Types
+compatibility.
 
 ### WebComponentsReady event
 

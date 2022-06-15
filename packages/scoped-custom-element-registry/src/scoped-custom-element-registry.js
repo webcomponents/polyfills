@@ -346,6 +346,20 @@ if (!ShadowRoot.prototype.createElement) {
         }
       };
     }
+    const toggleAttribute = elementClass.prototype.toggleAttribute;
+    if (toggleAttribute) {
+      elementClass.prototype.toggleAttribute = function (n) {
+        const name = n.toLowerCase();
+        if (observedAttributes.has(name)) {
+          const old = this.getAttribute(name);
+          toggleAttribute.call(this, name);
+          const newValue = this.getAttribute(name);
+          attributeChangedCallback.call(this, name, old, newValue);
+        } else {
+          toggleAttribute.call(this, name);
+        }
+      };
+    }
   };
 
   // Helper to patch CE class hierarchy changing those CE classes created before applying the polyfill
