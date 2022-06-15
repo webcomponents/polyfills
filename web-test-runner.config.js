@@ -15,7 +15,7 @@ const browsers = envBrowsers ?? defaultBrowsers;
 module.exports = {
   files: [
     'packages/scoped-custom-element-registry/test/**/*.test.(js|html)',
-    'packages/tests/custom-elements/wtr/**/*.test.(js|html)',
+    'packages/tests/custom-elements/html/**/*.test.(js|html)',
   ],
   nodeResolve: true,
   concurrency: 10,
