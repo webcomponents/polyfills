@@ -19,13 +19,6 @@
     <script src="../../node_modules/@webcomponents/webcomponentsjs/bundles/webcomponents-pf_dom.js"></script>
     <script src="../../node_modules/@webcomponents/html-imports/html-imports.min.js"></script>
     <script src="../../node_modules/@webcomponents/custom-elements/custom-elements.min.js"></script>
-    <script>
-      window.WCT = {
-        waitFor: function (cb) {
-          HTMLImports.whenReady(cb);
-        },
-      };
-    </script>
 
     <script>
       window.elementsCreated = 0;
@@ -49,7 +42,13 @@
       import {safariGCBugWorkaround} from '../safari-gc-bug-workaround.js';
 
       runTests(async () => {
-        suiteSetup(() => safariGCBugWorkaround());
+        suiteSetup((done) => {
+          safariGCBugWorkaround();
+
+          HTMLImports.whenReady(() => {
+            done();
+          });
+        });
 
         suite('HTML Imports Integration', function () {
           suiteSetup(function () {
