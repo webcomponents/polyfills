@@ -76,12 +76,14 @@
               });
 
               suite('Element', function () {
-                if (!(methodName in Element.prototype)) {
-                  test.skip(
-                    `Element#${methodName} is not implemented by this browser.`
-                  );
-                  return;
-                }
+                suiteSetup(function () {
+                  if (!(methodName in Element.prototype)) {
+                    this.skip(
+                      `Element#${methodName} is not implemented by this browser.`
+                    );
+                    return;
+                  }
+                });
 
                 test(
                   'Moving nodes from a disconnected tree to a connected tree calls ' +
@@ -317,14 +319,16 @@
               });
 
               suite('DocumentFragment', function () {
-                if (!(methodName in DocumentFragment.prototype)) {
-                  test.skip(
-                    'DocumentFragment#' +
-                      methodName +
-                      ' is not implemented by this browser.'
-                  );
-                  return;
-                }
+                suiteSetup(function () {
+                  if (!(methodName in DocumentFragment.prototype)) {
+                    this.skip(
+                      'DocumentFragment#' +
+                        methodName +
+                        ' is not implemented by this browser.'
+                    );
+                    return;
+                  }
+                });
 
                 test(
                   'Moving nodes from a connected tree to a DocumentFragment calls ' +

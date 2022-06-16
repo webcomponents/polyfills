@@ -47,14 +47,16 @@
         suite('ChildNode', function () {
           function beforeAfterSuite(methodName) {
             suite(methodName, function () {
-              if (!(methodName in Element.prototype)) {
-                test.skip(
-                  'Element#' +
-                    methodName +
-                    ' is not implemented by this browser.'
-                );
-                return;
-              }
+              suiteSetup(function () {
+                if (!(methodName in Element.prototype)) {
+                  this.skip(
+                    'Element#' +
+                      methodName +
+                      ' is not implemented by this browser.'
+                  );
+                  return;
+                }
+              });
 
               let localName;
               let constructor;
@@ -285,12 +287,14 @@
           beforeAfterSuite('after');
 
           suite('replaceWith', function () {
-            if (!('replaceWith' in Element.prototype)) {
-              test.skip(
-                'Element#replaceWith is not implemented by this browser.'
-              );
-              return;
-            }
+            suiteSetup(function () {
+              if (!('replaceWith' in Element.prototype)) {
+                this.skip(
+                  'Element#replaceWith is not implemented by this browser.'
+                );
+                return;
+              }
+            });
 
             let localName;
             let constructor;
@@ -570,10 +574,12 @@
           });
 
           suite('remove', function () {
-            if (!('remove' in Element.prototype)) {
-              test.skip('Element#remove is not implemented by this browser.');
-              return;
-            }
+            suiteSetup(function () {
+              if (!('remove' in Element.prototype)) {
+                this.skip('Element#remove is not implemented by this browser.');
+                return;
+              }
+            });
 
             let localName;
             let constructor;

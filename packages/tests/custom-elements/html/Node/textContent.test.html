@@ -141,31 +141,34 @@
               }
             });
 
-            if (window.Element.prototype.attachShadow) {
-              test('setting textContent on a ShadowRoot', function () {
-                const container = document.createElement('div');
-                document.body.appendChild(container);
+            test('setting textContent on a ShadowRoot', function () {
+              if (!window.Element.prototype.attachShadow) {
+                this.skip();
+                return;
+              }
 
-                const shadowRoot = container.attachShadow({mode: 'open'});
-                shadowRoot.appendChild(div);
+              const container = document.createElement('div');
+              document.body.appendChild(container);
 
-                // `element1` was connected.
-                assert.equal(element1.connectedCallbackCount, 1);
-                assert.equal(element1.disconnectedCallbackCount, 0);
-                // `element2` was connected.
-                assert.equal(element2.connectedCallbackCount, 1);
-                assert.equal(element2.disconnectedCallbackCount, 0);
+              const shadowRoot = container.attachShadow({mode: 'open'});
+              shadowRoot.appendChild(div);
 
-                shadowRoot.textContent = '';
+              // `element1` was connected.
+              assert.equal(element1.connectedCallbackCount, 1);
+              assert.equal(element1.disconnectedCallbackCount, 0);
+              // `element2` was connected.
+              assert.equal(element2.connectedCallbackCount, 1);
+              assert.equal(element2.disconnectedCallbackCount, 0);
 
-                // `element1` was disconnected.
-                assert.equal(element1.connectedCallbackCount, 1);
-                assert.equal(element1.disconnectedCallbackCount, 1);
-                // `element2` was disconnected.
-                assert.equal(element2.connectedCallbackCount, 1);
-                assert.equal(element2.disconnectedCallbackCount, 1);
-              });
-            }
+              shadowRoot.textContent = '';
+
+              // `element1` was disconnected.
+              assert.equal(element1.connectedCallbackCount, 1);
+              assert.equal(element1.disconnectedCallbackCount, 1);
+              // `element2` was disconnected.
+              assert.equal(element2.connectedCallbackCount, 1);
+              assert.equal(element2.disconnectedCallbackCount, 1);
+            });
           }
         );
 
