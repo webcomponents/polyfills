@@ -21,7 +21,7 @@ jobs:
       - name: Check formatting
         run: npm run format && git diff --exit-code
 
-  wct-local:
+  local:
     runs-on: ubuntu-latest
 
     steps:
@@ -39,31 +39,10 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: WCT local (Chrome/Firefox)
+      - name: Test
         run: npm test
 
-  wtr-local:
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
-        with:
-          node-version: 16
-
-      - name: NPM install
-        run: npm ci
-
-      - name: Lerna bootstrap
-        run: npm run bootstrap
-
-      - name: Build
-        run: npm run build
-
-      - name: WTR local (Chrome/Firefox)
-        run: BROWSERS=chromium,firefox npm run test:wtr
-
-  wct-sauce:
+  sauce:
     # Skip if this is from a forked repository because we can't access Sauce
     # secrets.
     if: github.event.pull_request.base.repo.id == github.event.pull_request.head.repo.id
@@ -85,36 +64,8 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: WCT sauce (Safari/Edge/IE11/Chrome 41)
+      - name: Test
         env:
           SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
           SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
         run: npm run test-sauce
-
-  wtr-sauce:
-    # Skip if this is from a forked repository because we can't access Sauce
-    # secrets.
-    if: github.event.pull_request.base.repo.id == github.event.pull_request.head.repo.id
-
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
-        with:
-          node-version: 16
-
-      - name: NPM install
-        run: npm ci
-
-      - name: Lerna bootstrap
-        run: npm run bootstrap
-
-      - name: Build
-        run: npm run build
-
-      - name: WTR sauce (Safari/Edge/IE11/Chrome 41)
-        env:
-          SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
-          SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
-        run: npm run test:wtr:sauce
