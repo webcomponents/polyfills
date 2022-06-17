@@ -37,5 +37,11 @@
     "webcomponents",
     "polyfill",
     "shim"
-  ]
+  ],
+  "devDependencies": {
+    "@open-wc/testing": "^3.1.5",
+    "@web/test-runner": "^0.13.30",
+    "@web/test-runner-mocha": "^0.7.5",
+    "@web/test-runner-playwright": "^0.8.9"
+  }
 }
