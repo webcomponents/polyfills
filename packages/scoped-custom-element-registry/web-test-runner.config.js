@@ -2,7 +2,6 @@ const {playwrightLauncher} = require('@web/test-runner-playwright');
 
 const defaultBrowsers = [
   playwrightLauncher({product: 'chromium'}),
-  playwrightLauncher({product: 'webkit'}),
   playwrightLauncher({product: 'firefox', concurrency: 1}),
 ];
 

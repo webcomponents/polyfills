@@ -5,7 +5,6 @@ const {compileJSPlugin} = require('./compile-js-plugin.js');
 const generateLocalBrowserLaunchers = () => {
   const defaultBrowsers = [
     playwrightLauncher({product: 'chromium'}),
-    playwrightLauncher({product: 'webkit'}),
     playwrightLauncher({product: 'firefox', concurrency: 1}),
   ];
 
