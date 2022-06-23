@@ -141,6 +141,8 @@ module.exports = {
   groups: [
     {
       name: 'local',
+      // This is intentionally a getter so that browser launchers are only
+      // created on demand.
       get browsers() {
         return generateLocalBrowserLaunchers();
       },
@@ -149,6 +151,8 @@ module.exports = {
       name: 'sauce',
       concurrency: 1,
       concurrentBrowsers: 1,
+      // This is intentionally a getter so that browser launchers are only
+      // created on demand.
       get browsers() {
         return generateSauceBrowserLaunchers();
       },
