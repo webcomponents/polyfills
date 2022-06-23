@@ -1195,8 +1195,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           });
 
           test('composedPath of events from non-Node subclasses works', function (done) {
-            this.skip();
-
             const xhr = new XMLHttpRequest();
             xhr.open('GET', window.location.href);
             xhr.addEventListener('load', (e) => {
@@ -1632,8 +1630,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           });
 
           test('focus currentTarget is valid when unwrapped in noPatch', function () {
-            this.skip();
-
             customElements.define(
               'unpatched-focus',
               class extends HTMLElement {

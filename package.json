@@ -14,9 +14,9 @@
     "ignore-sync": "ignore-sync .",
     "lint": "eslint \"**/*.{html,js,ts}\"",
     "nuke": "rm -rf package-lock.json node_modules && npm install && lerna exec \"rm -f package-lock.json\" && lerna clean --yes && lerna bootstrap && lerna exec --stream -- \"test -f package-lock.json || npm install --package-lock-only\"",
-    "test": "wct && lerna run test --concurrency 1 --stream --no-bail",
+    "test": "EXIT_CODE=0; wct || EXIT_CODE=1; lerna run test --concurrency 1 --stream --no-bail || EXIT_CODE=1; exit $EXIT_CODE",
     "test-pack": "lerna exec \"npm pack\"",
-    "test-sauce": "wct -s 'windows 10/microsoftedge@17' -s 'windows 10/microsoftedge@15' -s 'windows 8.1/internet explorer@11' -s 'macos 10.13/safari@12' -s 'macos 10.13/safari@11' -s 'os x 10.11/safari@10' -s 'os x 10.11/safari@9' -s 'Linux/chrome@41' && npx lerna run test-sauce --concurrency 1 --stream --no-bail"
+    "test-sauce": "EXIT_CODE=0; wct -s 'windows 10/microsoftedge@17' -s 'windows 10/microsoftedge@15' -s 'windows 8.1/internet explorer@11' -s 'macos 10.13/safari@12' -s 'macos 10.13/safari@11' -s 'os x 10.11/safari@10' -s 'os x 10.11/safari@9' -s 'Linux/chrome@41' || EXIT_CODE=1; npx lerna run test-sauce --concurrency 1 --stream --no-bail || EXIT_CODE=1; exit $EXIT_CODE"
   },
   "devDependencies": {
     "@gulp-sourcemaps/sources-content": "^1.0.0",
