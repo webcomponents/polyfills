@@ -31,55 +31,6 @@ don't need to be managed collectively otherwise.
     there was intent to migrate this repo's tests to WTR, so it still contains its
     own tests. These should eventually be moved here too.
 
-## Why are two imports required to set up the test environment in WTR tests?
-
-The test environment is _intentionally_ imported into the test pages through two
-separate entrypoints: one for polyfills that the test runner depends on and
-another for the test runner itself.
-
-`@web/test-runner-mocha` depends on a module that is _dynamically-generated_ by
-the test server, so this compilation step must occur as server middleware.
-Particularly, this compilation step can't happen partially at build time because
-all modules in the same dependency graph need to be visible to the same
-compilation tool to be linked correctly but the dynamically-generated module
-does not exist on disk.
-
-This dynamic module requires support for `fetch` as well as `URL` with both a
-user-callable constructor and a `searchParams` property (implying
-`URLSearchParams` support). Some of the browsers these packages are tested in do
-not natively support these features so polyfills are required: `whatwg-fetch`
-for `fetch` and `core-js` for `URL` (`core-js` was the only suitable candidate
-found at the time for `URL`).
-
-The required `core-js` polyfills are only available in Common JS format.
-However, the server middleware used for module compilation does not support
-Common JS, so `core-js` must be bundled in an earlier step by a tool that _is_
-capable of compiling Common JS.
-
-If `@web/test-runner-mocha` were included in the same bundle as `core-js` and
-the bundler were instructed to output a single standard module that still
-contains the import statement pointing to the dynamically-generated module
-(because that module does not exist as a file on disk that the bundler could
-read to include in the bundle), then the bundler would be forced to emit a
-module that implicitly describes the entirety of that bundle executing only
-_after_ the imported module. **This would cause the dynamically-generated module
-that depends on the `core-js` polyfills to run before those polyfills are
-installed, making this an unviable option.**
-
-So, to work around this ordering problem and guarantee that the `core-js`
-polyfills are (a) able to be bundled, (b) run before the dynamically-generated
-module dependency of `@web/test-runner-mocha`, and (c) linked properly with
-other modules in the dependency graph by use of a single compilation tool, the
-test environment is split into two separately bundled standard modules.
-
-The first module bundle contains polyfills required by `@web/test-runner-mocha`
-and the second contains the modules that depend on those polyfills. These
-polyfills are then included as separate import statements in each test file,
-which guarantees that the server middleware is the one step where all modules
-are compiled out. This gives that middleware full control of the loading order
-of all modules, allowing it to properly delay the dynamically-generated module
-from running until the polyfills it requires have loaded.
-
 ## Why does the `webcomponentsjs_` directory name end with a `_`?
 
 `polyserve`, the server used internally by `web-component-tester` (WCT), will
