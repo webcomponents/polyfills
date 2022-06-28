@@ -3,8 +3,38 @@ const {getRequestFilePath} = require('@web/dev-server-core');
 const {browserCapabilities} = require('browser-capabilities');
 const {getCompileTarget} = require('polyserve/lib/get-compile-target.js');
 
+/**
+ * This `@web/dev-server` plugin is used to roughly mimic the automatic JS
+ * compilation behavior of WCT's test server (`polyserve`) as is assumed by many
+ * of the tests.
+ */
 exports.compileJSPlugin = () => {
   let rootDir = undefined;
+
+  /**
+   * Compute the settings that should be passed to `polymer-build`'s
+   * `htmlTransform` given a Koa `Context`.[^1] (The options for `jsTransform`
+   * are embedded as the `js` property.)
+   *
+   * [^1]: https://github.com/modernweb-dev/web/blob/3f671e732201f141d910b59c60666f31df9c6126/packages/dev-server-core/src/plugins/Plugin.ts#L35
+   */
+  const getHTMLTransformOptions = (context) => {
+    const capabilities = browserCapabilities(context.headers['user-agent']);
+    const compileTarget = getCompileTarget(capabilities, 'auto');
+
+    const jsOptions = {
+      compile: compileTarget,
+      moduleResolution: 'node',
+      transformModulesToAmd: !capabilities.has('modules'),
+      filePath: getRequestFilePath(context, rootDir),
+    };
+    const htmlOptions = {
+      js: jsOptions,
+      injectAmdLoader: jsOptions.transformModulesToAmd,
+    };
+
+    return htmlOptions;
+  };
 
   return {
     name: 'compile-js-plugin',
@@ -23,14 +53,7 @@ exports.compileJSPlugin = () => {
         return;
       }
 
-      const capabilities = browserCapabilities(context.headers['user-agent']);
-      const compileTarget = getCompileTarget(capabilities, 'auto');
-
-      return JSON.stringify({
-        compile: compileTarget,
-        transformModulesToAmd: !capabilities.has('modules'),
-        filePath: getRequestFilePath(context, rootDir),
-      });
+      return JSON.stringify(getHTMLTransformOptions(context));
     },
 
     async transform(context) {
@@ -38,19 +61,8 @@ exports.compileJSPlugin = () => {
         return;
       }
 
-      const capabilities = browserCapabilities(context.headers['user-agent']);
-      const compileTarget = getCompileTarget(capabilities, 'auto');
-
-      const jsOptions = {
-        compile: compileTarget,
-        moduleResolution: 'node',
-        transformModulesToAmd: !capabilities.has('modules'),
-        filePath: getRequestFilePath(context, rootDir),
-      };
-      const htmlOptions = {
-        js: jsOptions,
-        injectAmdLoader: jsOptions.transformModulesToAmd,
-      };
+      const htmlOptions = getHTMLTransformOptions(context);
+      const jsOptions = htmlOptions.js;
 
       if (context.response.is('html')) {
         context.body = htmlTransform(context.body, htmlOptions);
