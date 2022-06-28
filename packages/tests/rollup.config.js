@@ -16,9 +16,9 @@ export default [
     ],
   },
   {
-    input: 'environment.js',
+    input: 'environment-runner.js',
     output: {
-      file: 'environment-bundle.js',
+      file: 'environment-runner-bundle.js',
       format: 'es',
     },
     plugins: [
