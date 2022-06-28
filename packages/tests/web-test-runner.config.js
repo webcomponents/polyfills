@@ -138,6 +138,7 @@ module.exports = {
   files: ['custom-elements/html/**/*.test.(js|html)'],
   rootDir: '../..',
   nodeResolve: true,
+  plugins: [compileJSPlugin()],
   groups: [
     {
       name: 'local',
@@ -156,7 +157,6 @@ module.exports = {
       get browsers() {
         return generateSauceBrowserLaunchers();
       },
-      plugins: [compileJSPlugin()],
     },
   ],
 };
