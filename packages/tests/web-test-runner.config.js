@@ -138,6 +138,8 @@ module.exports = {
   files: ['custom-elements/html/**/*.test.(js|html)'],
   rootDir: '../..',
   nodeResolve: true,
+  concurrency: 1,
+  concurrentBrowsers: 1,
   plugins: [compileJSPlugin()],
   groups: [
     {
@@ -150,8 +152,6 @@ module.exports = {
     },
     {
       name: 'sauce',
-      concurrency: 1,
-      concurrentBrowsers: 1,
       // This is intentionally a getter so that browser launchers are only
       // created on demand.
       get browsers() {
