@@ -23,8 +23,8 @@ packages/shadycss/src/interface.*
 packages/shadycss/.tsbuildinfo
 
 # tests package
-packages/tests/environment-polyfills-bundle.js
-packages/tests/environment-runner-bundle.js
+packages/tests/chai-bundle.js
+packages/tests/core-js_url-bundle.js
 packages/tests/shadycss/module/generated/
 
 # webcomponentsjs package

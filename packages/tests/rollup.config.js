@@ -3,9 +3,9 @@ import {nodeResolve} from '@rollup/plugin-node-resolve';
 
 export default [
   {
-    input: 'environment-polyfills.js',
+    input: 'chai.js',
     output: {
-      file: 'environment-polyfills-bundle.js',
+      file: 'chai-bundle.js',
       format: 'es',
     },
     plugins: [
@@ -16,9 +16,9 @@ export default [
     ],
   },
   {
-    input: 'environment-runner.js',
+    input: 'core-js_url.js',
     output: {
-      file: 'environment-runner-bundle.js',
+      file: 'core-js_url-bundle.js',
       format: 'es',
     },
     plugins: [
