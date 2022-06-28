@@ -27,7 +27,5 @@ export default [
         preferBuiltins: false,
       }),
     ],
-    makeAbsoluteExternalsRelative: false,
-    external: ['/__web-dev-server__web-socket.js'],
   },
 ];
