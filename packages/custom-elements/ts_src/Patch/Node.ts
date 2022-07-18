@@ -92,9 +92,14 @@ export default function (internals: CustomElementInternals) {
 
   Node.prototype.cloneNode = function (this: Node, deep) {
     const clone = Native.Node_cloneNode.call(this, !!deep);
+    // document.ownerDocument is null
+    const registry = this.ownerDocument
+      ? this.ownerDocument!.__CE_registry
+      : (this as Document).__CE_registry;
+
     // Only create custom elements if this element's owner document is
     // associated with the registry.
-    if (!this.ownerDocument!.__CE_registry) {
+    if (!registry) {
       internals.patchTree(clone);
     } else {
       internals.patchAndUpgradeTree(clone);
