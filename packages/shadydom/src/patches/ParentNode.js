@@ -135,6 +135,17 @@ export const QueryPatches = utils.getOwnPropertyDescriptors({
    * @param  {string} selector
    */
   querySelector(selector) {
+    if (utils.settings.useNativeQuerySelector) {
+      const candidates = Array.prototype.slice.call(
+        this[utils.NATIVE_PREFIX + 'querySelectorAll'](selector)
+      );
+      const root = this[utils.SHADY_PREFIX + 'getRootNode']();
+      const result = candidates.find(
+        (node) => node[utils.SHADY_PREFIX + 'getRootNode']() === root
+      );
+      return result || null;
+    }
+
     // match selector and halt on first result.
     let result = query(
       this,
@@ -157,7 +168,7 @@ export const QueryPatches = utils.getOwnPropertyDescriptors({
   // misses distributed nodes, see
   // https://github.com/webcomponents/shadydom/pull/210#issuecomment-361435503
   querySelectorAll(selector, useNative) {
-    if (useNative) {
+    if (useNative || utils.settings.useNativeQuerySelector) {
       const o = Array.prototype.slice.call(
         this[utils.NATIVE_PREFIX + 'querySelectorAll'](selector)
       );

@@ -23,6 +23,7 @@ declare global {
     noPatch: boolean | string;
     patchElementProto: (node: Object) => void;
     wrap: (node: Node) => Node;
+    useNativeQuerySelector?: boolean;
   }
 
   // This type alias exists because Tsickle will replace any type name used in the
