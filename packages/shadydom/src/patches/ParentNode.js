@@ -136,15 +136,7 @@ export const ParentNodePatches = utils.getOwnPropertyDescriptors({
  * @return {!Array<T>}
  * @template T
  */
-const deduplicateArray = (array) => {
-  const results = [];
-  for (const item of array) {
-    if (!results.includes(item)) {
-      results.push(item);
-    }
-  }
-  return results;
-};
+const deduplicateArray = (array) => Array.from(new Set(array));
 
 /**
  * @param {!Element} contextElement
