@@ -200,9 +200,9 @@ const logicalQuerySingleSelector = (contextElement, complexSelector) => {
       // Child combinator
       cursors = cursors.flatMap((cursor) => {
         for (
-          let child = cursor[utils.SHADY_PREFIX + 'firstElementChild']();
+          let child = cursor[utils.SHADY_PREFIX + 'firstElementChild'];
           child;
-          child = child[utils.SHADY_PREFIX + 'nextElementSibling']()
+          child = child[utils.SHADY_PREFIX + 'nextElementSibling']
         ) {
           if (utils.matchesSelector(child, simpleSelector)) {
             return [child];
@@ -214,9 +214,8 @@ const logicalQuerySingleSelector = (contextElement, complexSelector) => {
     } else if (combinator === '+') {
       // Next-sibling combinator
       cursors = cursors.flatMap((cursor) => {
-        let nextElementSibling = cursor[
-          utils.SHADY_PREFIX + 'nextElementSibling'
-        ]();
+        let nextElementSibling =
+          cursor[utils.SHADY_PREFIX + 'nextElementSibling'];
         if (
           nextElementSibling &&
           utils.matchesSelector(nextElementSibling, simpleSelector)
@@ -230,9 +229,9 @@ const logicalQuerySingleSelector = (contextElement, complexSelector) => {
       // Subsequent-sibling combinator
       cursors = cursors.flatMap((cursor) => {
         for (
-          let sibling = cursor[utils.SHADY_PREFIX + 'nextElementSibling']();
+          let sibling = cursor[utils.SHADY_PREFIX + 'nextElementSibling'];
           sibling;
-          sibling = sibling[utils.SHADY_PREFIX + 'nextElementSibling']()
+          sibling = sibling[utils.SHADY_PREFIX + 'nextElementSibling']
         ) {
           if (utils.matchesSelector(sibling, simpleSelector)) {
             return [sibling];
