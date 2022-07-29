@@ -96,8 +96,8 @@ function splitSelector(selector, splitCharacters = [',']) {
   }
   selectors.push(currentSelector.trim());
   return {
-    selectors: selectors.filter((cssSelector) => cssSelector.length > 0),
-    joiners: joiners,
+    'selectors': selectors.filter((cssSelector) => cssSelector.length > 0),
+    'joiners': joiners,
   };
 }
 
@@ -133,8 +133,8 @@ function joinParts(selectors, joiners) {
   return selector;
 }
 
-extractSelectors.splitSelectorBlocks = extractSelectorBlocks;
+export {extractSelectorBlocks as splitSelectorBlocks};
 
-extractSelectors.joinSelector = joinParts;
+export {joinParts as joinSelector};
 
 export default extractSelectors;
