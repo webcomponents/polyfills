@@ -139,14 +139,14 @@ export const ParentNodePatches = utils.getOwnPropertyDescriptors({
 const deduplicateArray = (array) => Array.from(new Set(array));
 
 /**
- * @param {!Element} contextElement
+ * @param {!Element} ancestor
  * @param {!Array<!Element>} elements
  * @return {!Array<!Element>}
  */
-const deduplicateAndFilterToContextRoot = (contextElement, elements) => {
-  const getRoot = (e) => e[utils.SHADY_PREFIX + 'getRootNode']();
-  const contextRoot = getRoot(contextElement);
-  return deduplicateArray(elements).filter((e) => getRoot(e) === contextRoot);
+const deduplicateAndFilterToDescendants = (ancestor, elements) => {
+  return deduplicateArray(elements).filter((e) => {
+    return e !== ancestor && ancestor.contains(e);
+  });
 };
 
 /**
@@ -155,7 +155,7 @@ const deduplicateAndFilterToContextRoot = (contextElement, elements) => {
  * @return {!Array<!Element>}
  */
 const logicalQuerySelectorList = (contextElement, selectorList) => {
-  return deduplicateAndFilterToContextRoot(
+  return deduplicateAndFilterToDescendants(
     contextElement,
     extractSelectors(selectorList).flatMap((selector) => {
       return logicalQuerySingleSelector(contextElement, selector);
@@ -245,7 +245,7 @@ const logicalQuerySingleSelector = (contextElement, complexSelector) => {
     }
   }
 
-  return deduplicateAndFilterToContextRoot(contextElement, cursors);
+  return deduplicateAndFilterToDescendants(contextElement, cursors);
 };
 
 export const QueryPatches = utils.getOwnPropertyDescriptors({
