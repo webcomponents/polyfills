@@ -144,8 +144,10 @@ const deduplicateArray = (array) => Array.from(new Set(array));
  * @return {!Array<!Element>}
  */
 const deduplicateAndFilterToDescendants = (ancestor, elements) => {
-  return deduplicateArray(elements).filter((e) => {
-    return e !== ancestor && ancestor.contains(e);
+  return deduplicateArray(elements).filter((element) => {
+    return (
+      element !== ancestor && ancestor[utils.SHADY_PREFIX + 'contains'](element)
+    );
   });
 };
 
