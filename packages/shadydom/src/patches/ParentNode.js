@@ -187,6 +187,18 @@ const logicalQuerySingleSelector = (contextElement, complexSelector) => {
     }
   );
 
+  /**
+   * @param {!Element} element
+   * @param {string} simpleSelector
+   * @return {boolean}
+   */
+  const matchesSimpleSelector = (element, simpleSelector) => {
+    return (
+      utils.matchesSelector(element, simpleSelector) &&
+      (!simpleSelector.includes(':scope') || element === contextElement)
+    );
+  };
+
   for (let i = 0; i < combinators.length; i++) {
     const combinator = combinators[i];
     const simpleSelector = simpleSelectors[i + 1];
@@ -195,7 +207,7 @@ const logicalQuerySingleSelector = (contextElement, complexSelector) => {
       // Descendant combinator
       cursors = cursors.flatMap((cursor) => {
         return query(cursor, (descendant) => {
-          return utils.matchesSelector(descendant, simpleSelector);
+          return matchesSimpleSelector(descendant, simpleSelector);
         });
       });
     } else if (combinator === '>') {
@@ -208,7 +220,7 @@ const logicalQuerySingleSelector = (contextElement, complexSelector) => {
           child;
           child = child[utils.SHADY_PREFIX + 'nextElementSibling']
         ) {
-          if (utils.matchesSelector(child, simpleSelector)) {
+          if (matchesSimpleSelector(child, simpleSelector)) {
             results.push(child);
           }
         }
@@ -222,7 +234,7 @@ const logicalQuerySingleSelector = (contextElement, complexSelector) => {
           cursor[utils.SHADY_PREFIX + 'nextElementSibling'];
         if (
           nextElementSibling &&
-          utils.matchesSelector(nextElementSibling, simpleSelector)
+          matchesSimpleSelector(nextElementSibling, simpleSelector)
         ) {
           return [nextElementSibling];
         }
@@ -239,7 +251,7 @@ const logicalQuerySingleSelector = (contextElement, complexSelector) => {
           sibling;
           sibling = sibling[utils.SHADY_PREFIX + 'nextElementSibling']
         ) {
-          if (utils.matchesSelector(sibling, simpleSelector)) {
+          if (matchesSimpleSelector(sibling, simpleSelector)) {
             results.push(sibling);
           }
         }
