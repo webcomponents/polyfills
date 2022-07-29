@@ -105,7 +105,7 @@ function splitSelector(selector, splitCharacters = [',']) {
 
 function extractSelectors(selector, splitChars) {
   let split = splitSelector(selector, splitChars);
-  return split.selectors;
+  return split['selectors'];
 }
 
 function extractSelectorBlocks(selector) {
