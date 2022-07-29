@@ -10,6 +10,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 import * as utils from '../utils.js';
 import {shadyDataForNode} from '../shady-data.js';
+import {splitSelectorBlocks} from './css-selector-splitter.js';
 
 /**
  * @param {Node} node
@@ -128,6 +129,92 @@ export const ParentNodePatches = utils.getOwnPropertyDescriptors({
   },
 });
 
+/**
+ * @param {!Element} contextElement
+ * @param {string} selector
+ * @return {!Array<!Element>}
+ */
+const logicalQuerySelectorAll = (contextElement, selector) => {
+  const {
+    'selectors': simpleSelectors,
+    'joiners': combinators,
+  } = splitSelectorBlocks(selector);
+
+  if (simpleSelectors.length < 1) {
+    return [];
+  }
+
+  let cursors = query(
+    contextElement[utils.SHADY_PREFIX + 'getRootNode'](),
+    (node) => {
+      return utils.matchesSelector(node, simpleSelectors[0]);
+    }
+  );
+
+  for (let i = 0; i < combinators.length; i++) {
+    const combinator = combinators[i];
+    const simpleSelector = simpleSelectors[i + 1];
+
+    if (combinator === ' ') {
+      // Descendant combinator
+      cursors = cursors.flatMap((cursor) => {
+        return query(cursor, (descendant) => {
+          return utils.matchesSelector(descendant, simpleSelector);
+        });
+      });
+    } else if (combinator === '>') {
+      // Child combinator
+      cursors = cursors.flatMap((cursor) => {
+        for (
+          let child = cursor[utils.SHADY_PREFIX + 'firstElementChild']();
+          child;
+          child = child[utils.SHADY_PREFIX + 'nextElementSibling']()
+        ) {
+          if (utils.matchesSelector(child, simpleSelector)) {
+            return [child];
+          } else {
+            return [];
+          }
+        }
+      });
+    } else if (combinator === '+') {
+      // Next-sibling combinator
+      cursors = cursors.flatMap((cursor) => {
+        let nextElementSibling = cursor[
+          utils.SHADY_PREFIX + 'nextElementSibling'
+        ]();
+        if (
+          nextElementSibling &&
+          utils.matchesSelector(nextElementSibling, simpleSelector)
+        ) {
+          return [nextElementSibling];
+        } else {
+          return [];
+        }
+      });
+    } else if (combinator === '~') {
+      // Subsequent-sibling combinator
+      cursors = cursors.flatMap((cursor) => {
+        for (
+          let sibling = cursor[utils.SHADY_PREFIX + 'nextElementSibling']();
+          sibling;
+          sibling = sibling[utils.SHADY_PREFIX + 'nextElementSibling']()
+        ) {
+          if (utils.matchesSelector(sibling, simpleSelector)) {
+            return [sibling];
+          } else {
+            return [];
+          }
+        }
+      });
+    } else {
+      throw new Error(`Unrecognized combinator: '${combinator}'.`);
+    }
+  }
+
+  return cursors;
+};
+
 export const QueryPatches = utils.getOwnPropertyDescriptors({
   // TODO(sorvell): consider doing native QSA and filtering results.
   /**
@@ -135,17 +222,7 @@ export const QueryPatches = utils.getOwnPropertyDescriptors({
    * @param  {string} selector
    */
   querySelector(selector) {
-    // match selector and halt on first result.
-    let result = query(
-      this,
-      function (n) {
-        return utils.matchesSelector(n, selector);
-      },
-      function (n) {
-        return Boolean(n);
-      }
-    )[0];
-    return result || null;
+    return logicalQuerySelectorAll(this, selector)[0] || null;
   },
 
   /**
@@ -167,9 +244,7 @@ export const QueryPatches = utils.getOwnPropertyDescriptors({
       );
     }
     return utils.createPolyfilledHTMLCollection(
-      query(this, function (n) {
-        return utils.matchesSelector(n, selector);
-      })
+      logicalQuerySelectorAll(this, selector)
     );
   },
 });
