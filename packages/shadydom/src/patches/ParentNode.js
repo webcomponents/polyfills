@@ -199,17 +199,19 @@ const logicalQuerySingleSelector = (contextElement, complexSelector) => {
     } else if (combinator === '>') {
       // Child combinator
       cursors = cursors.flatMap((cursor) => {
+        const results = [];
+
         for (
           let child = cursor[utils.SHADY_PREFIX + 'firstElementChild'];
           child;
           child = child[utils.SHADY_PREFIX + 'nextElementSibling']
         ) {
           if (utils.matchesSelector(child, simpleSelector)) {
-            return [child];
-          } else {
-            return [];
+            results.push(child);
           }
         }
+
+        return results;
       });
     } else if (combinator === '+') {
       // Next-sibling combinator
@@ -221,24 +223,26 @@ const logicalQuerySingleSelector = (contextElement, complexSelector) => {
           utils.matchesSelector(nextElementSibling, simpleSelector)
         ) {
           return [nextElementSibling];
-        } else {
-          return [];
         }
+
+        return [];
       });
     } else if (combinator === '~') {
       // Subsequent-sibling combinator
       cursors = cursors.flatMap((cursor) => {
+        const results = [];
+
         for (
           let sibling = cursor[utils.SHADY_PREFIX + 'nextElementSibling'];
           sibling;
           sibling = sibling[utils.SHADY_PREFIX + 'nextElementSibling']
         ) {
           if (utils.matchesSelector(sibling, simpleSelector)) {
-            return [sibling];
-          } else {
-            return [];
+            results.push(sibling);
           }
         }
+
+        return results;
       });
     } else {
       throw new Error(`Unrecognized combinator: '${combinator}'.`);
