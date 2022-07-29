@@ -10,7 +10,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 import * as utils from '../utils.js';
 import {shadyDataForNode} from '../shady-data.js';
-import {splitSelectorBlocks} from './css-selector-splitter.js';
+import extractSelectors, {
+  splitSelectorBlocks,
+} from './css-selector-splitter.js';
 
 /**
  * @param {Node} node
@@ -130,15 +132,55 @@ export const ParentNodePatches = utils.getOwnPropertyDescriptors({
 });
 
 /**
+ * @param {!Array<T>} array
+ * @return {!Array<T>}
+ * @template T
+ */
+const deduplicateArray = (array) => {
+  const results = [];
+  for (const item of array) {
+    if (!results.includes(item)) {
+      results.push(item);
+    }
+  }
+  return results;
+};
+
+/**
  * @param {!Element} contextElement
- * @param {string} selector
+ * @param {!Array<!Element>} elements
  * @return {!Array<!Element>}
  */
-const logicalQuerySelectorAll = (contextElement, selector) => {
+const deduplicateAndFilterToContextRoot = (contextElement, elements) => {
+  const getRoot = (e) => e[utils.SHADY_PREFIX + 'getRootNode']();
+  const contextRoot = getRoot(contextElement);
+  return deduplicateArray(elements).filter((e) => getRoot(e) === contextRoot);
+};
+
+/**
+ * @param {!Element} contextElement
+ * @param {string} selectorList
+ * @return {!Array<!Element>}
+ */
+const logicalQuerySelectorList = (contextElement, selectorList) => {
+  return deduplicateAndFilterToContextRoot(
+    contextElement,
+    extractSelectors(selectorList).flatMap((selector) => {
+      return logicalQuerySingleSelector(contextElement, selector);
+    })
+  );
+};
+
+/**
+ * @param {!Element} contextElement
+ * @param {string} complexSelector
+ * @return {!Array<!Element>}
+ */
+const logicalQuerySingleSelector = (contextElement, complexSelector) => {
   const {
     'selectors': simpleSelectors,
     'joiners': combinators,
-  } = splitSelectorBlocks(selector);
+  } = splitSelectorBlocks(complexSelector);
 
   if (simpleSelectors.length < 1) {
     return [];
@@ -212,7 +254,7 @@ const logicalQuerySelectorAll = (contextElement, selector) => {
     }
   }
 
-  return cursors;
+  return deduplicateAndFilterToContextRoot(contextElement, cursors);
 };
 
 export const QueryPatches = utils.getOwnPropertyDescriptors({
@@ -222,7 +264,7 @@ export const QueryPatches = utils.getOwnPropertyDescriptors({
    * @param  {string} selector
    */
   querySelector(selector) {
-    return logicalQuerySelectorAll(this, selector)[0] || null;
+    return logicalQuerySelectorList(this, selector)[0] || null;
   },
 
   /**
@@ -244,7 +286,7 @@ export const QueryPatches = utils.getOwnPropertyDescriptors({
       );
     }
     return utils.createPolyfilledHTMLCollection(
-      logicalQuerySelectorAll(this, selector)
+      logicalQuerySelectorList(this, selector)
     );
   },
 });
