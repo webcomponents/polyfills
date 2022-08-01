@@ -159,7 +159,7 @@ const deduplicateAndFilterToDescendants = (ancestor, elements) => {
 const logicalQuerySelectorList = (contextElement, selectorList) => {
   return deduplicateAndFilterToDescendants(
     contextElement,
-    extractSelectors(selectorList).flatMap((selector) => {
+    utils.flatMap(extractSelectors(selectorList), (selector) => {
       return logicalQuerySingleSelector(contextElement, selector);
     })
   );
@@ -205,14 +205,14 @@ const logicalQuerySingleSelector = (contextElement, complexSelector) => {
 
     if (combinator === ' ') {
       // Descendant combinator
-      cursors = cursors.flatMap((cursor) => {
+      cursors = utils.flatMap(cursors, (cursor) => {
         return query(cursor, (descendant) => {
           return matchesSimpleSelector(descendant, simpleSelector);
         });
       });
     } else if (combinator === '>') {
       // Child combinator
-      cursors = cursors.flatMap((cursor) => {
+      cursors = utils.flatMap(cursors, (cursor) => {
         const results = [];
 
         for (
@@ -229,7 +229,7 @@ const logicalQuerySingleSelector = (contextElement, complexSelector) => {
       });
     } else if (combinator === '+') {
       // Next-sibling combinator
-      cursors = cursors.flatMap((cursor) => {
+      cursors = utils.flatMap(cursors, (cursor) => {
         let nextElementSibling =
           cursor[utils.SHADY_PREFIX + 'nextElementSibling'];
         if (
@@ -243,7 +243,7 @@ const logicalQuerySingleSelector = (contextElement, complexSelector) => {
       });
     } else if (combinator === '~') {
       // Subsequent-sibling combinator
-      cursors = cursors.flatMap((cursor) => {
+      cursors = utils.flatMap(cursors, (cursor) => {
         const results = [];
 
         for (
