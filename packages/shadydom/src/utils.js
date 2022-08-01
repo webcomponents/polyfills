@@ -298,7 +298,7 @@ export const convertNodesIntoANode = (...args) => {
  * @param {number} depth
  * @return {!Array<!T>}
  */
-const flat = (array, depth = 1) => {
+export const flat = (array, depth = 1) => {
   for (; depth > 0; depth--) {
     array = array.reduce((acc, item) => {
       if (Array.isArray(item)) {
@@ -312,12 +312,3 @@ const flat = (array, depth = 1) => {
 
   return array;
 };
-
-/**
- * @template A
- * @template B
- * @param {!Array<!A>} array
- * @param {function(!A): (!B | !Array<!B>)} mapFn
- * @return {!Array<!B>}
- */
-export const flatMap = (array, mapFn) => flat(array.map(mapFn), 1);

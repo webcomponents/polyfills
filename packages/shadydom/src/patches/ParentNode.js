@@ -159,9 +159,11 @@ const deduplicateAndFilterToDescendants = (ancestor, elements) => {
 const logicalQuerySelectorList = (contextElement, selectorList) => {
   return deduplicateAndFilterToDescendants(
     contextElement,
-    utils.flatMap(extractSelectors(selectorList), (selector) => {
-      return logicalQuerySingleSelector(contextElement, selector);
-    })
+    utils.flat(
+      extractSelectors(selectorList).map((selector) => {
+        return logicalQuerySingleSelector(contextElement, selector);
+      })
+    )
   );
 };
 
@@ -214,66 +216,74 @@ const logicalQuerySingleSelector = (contextElement, complexSelector) => {
 
     if (combinator === ' ') {
       // Descendant combinator
-      cursors = utils.flatMap(cursors, (cursor) => {
-        const results = [];
+      cursors = utils.flat(
+        cursors.map((cursor) => {
+          const results = [];
 
-        for (
-          let ancestor = cursor.position[utils.SHADY_PREFIX + 'parentNode'];
-          ancestor && ancestor instanceof Element;
-          ancestor = ancestor[utils.SHADY_PREFIX + 'parentNode']
-        ) {
-          if (matchesSimpleSelector(ancestor, simpleSelector)) {
-            results.push({position: ancestor, target: cursor.target});
+          for (
+            let ancestor = cursor.position[utils.SHADY_PREFIX + 'parentNode'];
+            ancestor && ancestor instanceof Element;
+            ancestor = ancestor[utils.SHADY_PREFIX + 'parentNode']
+          ) {
+            if (matchesSimpleSelector(ancestor, simpleSelector)) {
+              results.push({position: ancestor, target: cursor.target});
+            }
           }
-        }
 
-        return results;
-      });
+          return results;
+        })
+      );
     } else if (combinator === '>') {
       // Child combinator
-      cursors = utils.flatMap(cursors, (cursor) => {
-        const parent = cursor.position[utils.SHADY_PREFIX + 'parentNode'];
+      cursors = utils.flat(
+        cursors.map((cursor) => {
+          const parent = cursor.position[utils.SHADY_PREFIX + 'parentNode'];
 
-        if (
-          parent &&
-          parent instanceof Element &&
-          matchesSimpleSelector(parent, simpleSelector)
-        ) {
-          return [{position: parent, target: cursor.target}];
-        }
+          if (
+            parent &&
+            parent instanceof Element &&
+            matchesSimpleSelector(parent, simpleSelector)
+          ) {
+            return [{position: parent, target: cursor.target}];
+          }
 
-        return [];
-      });
+          return [];
+        })
+      );
     } else if (combinator === '+') {
       // Next-sibling combinator
-      cursors = utils.flatMap(cursors, (cursor) => {
-        const sibling =
-          cursor.position[utils.SHADY_PREFIX + 'previousElementSibling'];
+      cursors = utils.flat(
+        cursors.map((cursor) => {
+          const sibling =
+            cursor.position[utils.SHADY_PREFIX + 'previousElementSibling'];
 
-        if (sibling && matchesSimpleSelector(sibling, simpleSelector)) {
-          return [{position: sibling, target: cursor.target}];
-        }
+          if (sibling && matchesSimpleSelector(sibling, simpleSelector)) {
+            return [{position: sibling, target: cursor.target}];
+          }
 
-        return [];
-      });
+          return [];
+        })
+      );
     } else if (combinator === '~') {
       // Subsequent-sibling combinator
-      cursors = utils.flatMap(cursors, (cursor) => {
-        const results = [];
+      cursors = utils.flat(
+        cursors.map((cursor) => {
+          const results = [];
 
-        for (
-          let sibling =
-            cursor.position[utils.SHADY_PREFIX + 'previousElementSibling'];
-          sibling;
-          sibling = sibling[utils.SHADY_PREFIX + 'previousElementSibling']
-        ) {
-          if (matchesSimpleSelector(sibling, simpleSelector)) {
-            results.push({position: sibling, target: cursor.target});
+          for (
+            let sibling =
+              cursor.position[utils.SHADY_PREFIX + 'previousElementSibling'];
+            sibling;
+            sibling = sibling[utils.SHADY_PREFIX + 'previousElementSibling']
+          ) {
+            if (matchesSimpleSelector(sibling, simpleSelector)) {
+              results.push({position: sibling, target: cursor.target});
+            }
           }
-        }
 
-        return results;
-      });
+          return results;
+        })
+      );
     } else {
       throw new Error(`Unrecognized combinator: '${combinator}'.`);
     }
