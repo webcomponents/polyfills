@@ -180,12 +180,21 @@ const logicalQuerySingleSelector = (contextElement, complexSelector) => {
     return [];
   }
 
+  /**
+   * @type {!Array<!{
+   *   position: !Element,
+   *   target: !Element,
+   * }>}
+   */
   let cursors = query(
     contextElement[utils.SHADY_PREFIX + 'getRootNode'](),
     (node) => {
-      return utils.matchesSelector(node, simpleSelectors[0]);
+      return utils.matchesSelector(
+        node,
+        simpleSelectors[simpleSelectors.length - 1]
+      );
     }
-  );
+  ).map((element) => ({position: element, target: element}));
 
   /**
    * @param {!Element} element
@@ -199,44 +208,50 @@ const logicalQuerySingleSelector = (contextElement, complexSelector) => {
     );
   };
 
-  for (let i = 0; i < combinators.length; i++) {
+  for (let i = combinators.length - 1; i >= 0; i--) {
     const combinator = combinators[i];
-    const simpleSelector = simpleSelectors[i + 1];
+    const simpleSelector = simpleSelectors[i];
 
     if (combinator === ' ') {
       // Descendant combinator
       cursors = utils.flatMap(cursors, (cursor) => {
-        return query(cursor, (descendant) => {
-          return matchesSimpleSelector(descendant, simpleSelector);
-        });
-      });
-    } else if (combinator === '>') {
-      // Child combinator
-      cursors = utils.flatMap(cursors, (cursor) => {
         const results = [];
 
         for (
-          let child = cursor[utils.SHADY_PREFIX + 'firstElementChild'];
-          child;
-          child = child[utils.SHADY_PREFIX + 'nextElementSibling']
+          let ancestor = cursor.position[utils.SHADY_PREFIX + 'parentNode'];
+          ancestor && ancestor instanceof Element;
+          ancestor = ancestor[utils.SHADY_PREFIX + 'parentNode']
         ) {
-          if (matchesSimpleSelector(child, simpleSelector)) {
-            results.push(child);
+          if (matchesSimpleSelector(ancestor, simpleSelector)) {
+            results.push({position: ancestor, target: cursor.target});
           }
         }
 
         return results;
       });
+    } else if (combinator === '>') {
+      // Child combinator
+      cursors = utils.flatMap(cursors, (cursor) => {
+        const parent = cursor.position[utils.SHADY_PREFIX + 'parentNode'];
+
+        if (
+          parent &&
+          parent instanceof Element &&
+          matchesSimpleSelector(parent, simpleSelector)
+        ) {
+          return [{position: parent, target: cursor.target}];
+        }
+
+        return [];
+      });
     } else if (combinator === '+') {
       // Next-sibling combinator
       cursors = utils.flatMap(cursors, (cursor) => {
-        let nextElementSibling =
-          cursor[utils.SHADY_PREFIX + 'nextElementSibling'];
-        if (
-          nextElementSibling &&
-          matchesSimpleSelector(nextElementSibling, simpleSelector)
-        ) {
-          return [nextElementSibling];
+        const sibling =
+          cursor.position[utils.SHADY_PREFIX + 'previousElementSibling'];
+
+        if (sibling && matchesSimpleSelector(sibling, simpleSelector)) {
+          return [{position: sibling, target: cursor.target}];
         }
 
         return [];
@@ -247,12 +262,13 @@ const logicalQuerySingleSelector = (contextElement, complexSelector) => {
         const results = [];
 
         for (
-          let sibling = cursor[utils.SHADY_PREFIX + 'nextElementSibling'];
+          let sibling =
+            cursor.position[utils.SHADY_PREFIX + 'previousElementSibling'];
           sibling;
-          sibling = sibling[utils.SHADY_PREFIX + 'nextElementSibling']
+          sibling = sibling[utils.SHADY_PREFIX + 'previousElementSibling']
         ) {
           if (matchesSimpleSelector(sibling, simpleSelector)) {
-            results.push(sibling);
+            results.push({position: sibling, target: cursor.target});
           }
         }
 
@@ -263,7 +279,10 @@ const logicalQuerySingleSelector = (contextElement, complexSelector) => {
     }
   }
 
-  return deduplicateAndFilterToDescendants(contextElement, cursors);
+  return deduplicateAndFilterToDescendants(
+    contextElement,
+    cursors.map((cursor) => cursor.target)
+  );
 };
 
 export const QueryPatches = utils.getOwnPropertyDescriptors({
