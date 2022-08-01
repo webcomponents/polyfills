@@ -204,7 +204,7 @@ const logicalQuerySingleSelector = (contextElement, complexSelector) => {
   const matchesSimpleSelector = (element, simpleSelector) => {
     return (
       utils.matchesSelector(element, simpleSelector) &&
-      (!simpleSelector.includes(':scope') || element === contextElement)
+      (simpleSelector.indexOf(':scope') === -1 || element === contextElement)
     );
   };
 
