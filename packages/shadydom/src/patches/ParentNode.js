@@ -174,11 +174,11 @@ const logicalQuerySelectorList = (contextElement, selectorList) => {
  */
 const logicalQuerySingleSelector = (contextElement, complexSelector) => {
   const {
-    'selectors': simpleSelectors,
+    'selectors': compoundSelectors,
     'joiners': combinators,
   } = splitSelectorBlocks(complexSelector);
 
-  if (simpleSelectors.length < 1) {
+  if (compoundSelectors.length < 1) {
     return [];
   }
 
@@ -193,26 +193,26 @@ const logicalQuerySingleSelector = (contextElement, complexSelector) => {
     (node) => {
       return utils.matchesSelector(
         node,
-        simpleSelectors[simpleSelectors.length - 1]
+        compoundSelectors[compoundSelectors.length - 1]
       );
     }
   ).map((element) => ({position: element, target: element}));
 
   /**
    * @param {!Element} element
-   * @param {string} simpleSelector
+   * @param {string} compoundSelector
    * @return {boolean}
    */
-  const matchesSimpleSelector = (element, simpleSelector) => {
+  const matchesCompoundSelector = (element, compoundSelector) => {
     return (
-      utils.matchesSelector(element, simpleSelector) &&
-      (simpleSelector.indexOf(':scope') === -1 || element === contextElement)
+      utils.matchesSelector(element, compoundSelector) &&
+      (compoundSelector.indexOf(':scope') === -1 || element === contextElement)
     );
   };
 
   for (let i = combinators.length - 1; i >= 0; i--) {
     const combinator = combinators[i];
-    const simpleSelector = simpleSelectors[i];
+    const compoundSelector = compoundSelectors[i];
 
     if (combinator === ' ') {
       // Descendant combinator
@@ -225,7 +225,7 @@ const logicalQuerySingleSelector = (contextElement, complexSelector) => {
             ancestor && ancestor instanceof Element;
             ancestor = ancestor[utils.SHADY_PREFIX + 'parentNode']
           ) {
-            if (matchesSimpleSelector(ancestor, simpleSelector)) {
+            if (matchesCompoundSelector(ancestor, compoundSelector)) {
               results.push({position: ancestor, target: cursor.target});
             }
           }
@@ -242,7 +242,7 @@ const logicalQuerySingleSelector = (contextElement, complexSelector) => {
           if (
             parent &&
             parent instanceof Element &&
-            matchesSimpleSelector(parent, simpleSelector)
+            matchesCompoundSelector(parent, compoundSelector)
           ) {
             return [{position: parent, target: cursor.target}];
           }
@@ -257,7 +257,7 @@ const logicalQuerySingleSelector = (contextElement, complexSelector) => {
           const sibling =
             cursor.position[utils.SHADY_PREFIX + 'previousElementSibling'];
 
-          if (sibling && matchesSimpleSelector(sibling, simpleSelector)) {
+          if (sibling && matchesCompoundSelector(sibling, compoundSelector)) {
             return [{position: sibling, target: cursor.target}];
           }
 
@@ -276,7 +276,7 @@ const logicalQuerySingleSelector = (contextElement, complexSelector) => {
             sibling;
             sibling = sibling[utils.SHADY_PREFIX + 'previousElementSibling']
           ) {
-            if (matchesSimpleSelector(sibling, simpleSelector)) {
+            if (matchesCompoundSelector(sibling, compoundSelector)) {
               results.push({position: sibling, target: cursor.target});
             }
           }
