@@ -11,7 +11,7 @@ descendants of the context element.
 
 For example, consider querying for `a > b ~ c` within this tree:
 
-```html
+```
 <a>
   <b></b>
   <x></x>
@@ -27,17 +27,15 @@ For example, consider querying for `a > b ~ c` within this tree:
 First, all elements in the root are tested against the final compound selector
 (`c`) to create the initial set of cursors:
 
-```html
+```
 <a>
   <b></b>
   <x></x>
-  <c id="c_1"></c>
-  <!-- cursor 1: target=#c_1 -->
+  <c id="c_1"></c> <!-- cursor 1: target=#c_1 -->
   <d>
     <x></x>
     <b></b>
-    <c id="c_2"></c>
-    <!-- cursor 2: target=#c_2 -->
+    <c id="c_2"></c> <!-- cursor 2: target=#c_2 -->
   </d>
 </a>
 ```
@@ -50,21 +48,15 @@ Moving backwards, the next combinator and compound selector in `a > b ~ c` are
 `~` and `b`, so the next set of candidate elements are the preceding siblings of
 the current cursors' `position` elements:
 
-```html
+```
 <a>
-  <b></b>
-  <!-- candidate for cursor 1 -->
-  <x></x>
-  <!-- candidate for cursor 1 -->
-  <c id="c_1"></c>
-  <!-- cursor 1: target=#c_1 -->
+  <b></b> <!-- candidate for cursor 1 -->
+  <x></x> <!-- candidate for cursor 1 -->
+  <c id="c_1"></c> <!-- cursor 1: target=#c_1 -->
   <d>
-    <x></x>
-    <!-- candidate for cursor 2 -->
-    <b></b>
-    <!-- candidate for cursor 2 -->
-    <c id="c_2"></c>
-    <!-- cursor 2: target=#c_2 -->
+    <x></x> <!-- candidate for cursor 2 -->
+    <b></b> <!-- candidate for cursor 2 -->
+    <c id="c_2"></c> <!-- cursor 2: target=#c_2 -->
   </d>
 </a>
 ```
@@ -74,16 +66,14 @@ elements become the `position`s of the new set of cursors, with their `target`
 set to the same `target` as the cursor for which they were previously a
 candidate:
 
-```html
+```
 <a>
-  <b></b>
-  <!-- cursor 3: target=#c_1 -->
+  <b></b> <!-- cursor 3: target=#c_1 -->
   <x></x>
   <c id="c_1"></c>
   <d>
     <x></x>
-    <b></b>
-    <!-- cursor 4: target=#c_2 -->
+    <b></b> <!-- cursor 4: target=#c_2 -->
     <c id="c_2"></c>
   </d>
 </a>
@@ -92,18 +82,14 @@ candidate:
 The process repeats again for the next combinator and compound selector: `>` and
 `a`. First, the combinator (`>`) determines the candidates:
 
-```html
-<a>
-  <!-- candidate for cursor 3 -->
-  <b></b>
-  <!-- cursor 3: target=#c_1 -->
+```
+<a> <!-- candidate for cursor 3 -->
+  <b></b> <!-- cursor 3: target=#c_1 -->
   <x></x>
   <c id="c_1"></c>
-  <d>
-    <!-- candidate for cursor 4 -->
+  <d> <!-- candidate for cursor 4 -->
     <x></x>
-    <b></b>
-    <!-- cursor 4: target=#c_2 -->
+    <b></b> <!-- cursor 4: target=#c_2 -->
     <c id="c_2"></c>
   </d>
 </a>
@@ -112,9 +98,8 @@ The process repeats again for the next combinator and compound selector: `>` and
 Then, the candidates are filtered by matching against the compound selector
 (`a`), which determines the new cursors:
 
-```html
-<a>
-  <!-- cursor 5: target=#c_1 -->
+```
+<a> <!-- cursor 5: target=#c_1 -->
   <b></b>
   <x></x>
   <c id="c_1"></c>
