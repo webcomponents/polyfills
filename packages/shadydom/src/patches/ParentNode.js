@@ -132,6 +132,8 @@ export const ParentNodePatches = utils.getOwnPropertyDescriptors({
 });
 
 /**
+ * Deduplicates items in an array.
+ *
  * @param {!Array<T>} array
  * @return {!Array<T>}
  * @template T
@@ -139,6 +141,9 @@ export const ParentNodePatches = utils.getOwnPropertyDescriptors({
 const deduplicateArray = (array) => Array.from(new Set(array));
 
 /**
+ * Deduplicates an array of elements and removes any that are not exclusive
+ * descendants of `ancestor`.
+ *
  * @param {!Element} ancestor
  * @param {!Array<!Element>} elements
  * @return {!Array<!Element>}
@@ -152,6 +157,9 @@ const deduplicateAndFilterToDescendants = (ancestor, elements) => {
 };
 
 /**
+ * Performs the equivalent of `querySelectorAll` within Shady DOM's logical
+ * model of the tree for a selector list.
+ *
  * @param {!Element} contextElement
  * @param {string} selectorList
  * @return {!Array<!Element>}
@@ -168,6 +176,11 @@ const logicalQuerySelectorList = (contextElement, selectorList) => {
 };
 
 /**
+ * Performs the equivalent of `querySelectorAll` within Shady DOM's logical
+ * model of the tree for a single complex selector.
+ *
+ * See <./logicalQuerySingleSelector.md> for implementation details.
+ *
  * @param {!Element} contextElement
  * @param {string} complexSelector
  * @return {!Array<!Element>}
@@ -183,10 +196,31 @@ const logicalQuerySingleSelector = (contextElement, complexSelector) => {
   }
 
   /**
-   * @type {!Array<!{
+   * An object used to track the current position of a potential selector match.
+   *
+   * - `position` is the element that matches the compound selector last reached
+   * by the selector engine.
+   *
+   * - `target` is the element that matches the selector if the cursor
+   * eventually results in a complete match.
+   *
+   * @typedef {{
    *   position: !Element,
    *   target: !Element,
-   * }>}
+   * }}
+   */
+  let SelectorMatchingCursor;
+
+  /**
+   * The list of selector matching cursors, initialized to point at all
+   * descendants of `contextElement`'s root node that match the last compound
+   * selector in `complexSelector`.
+   *
+   * For example, if `complexSelector` is `a > b + c`, then this list is
+   * initialized to all descendants of `contextElement.getRootNode()` that match
+   * the compound selector `c`.
+   *
+   * @type {!Array<!SelectorMatchingCursor>}
    */
   let cursors = query(
     contextElement[utils.SHADY_PREFIX + 'getRootNode'](),
@@ -199,6 +233,10 @@ const logicalQuerySingleSelector = (contextElement, complexSelector) => {
   ).map((element) => ({position: element, target: element}));
 
   /**
+   * Determines if a single compound selector matches an element. If the
+   * selector contains `:scope` (as a substring), then `element` must be
+   * `contextElement`.
+   *
    * @param {!Element} element
    * @param {string} compoundSelector
    * @return {boolean}
@@ -210,6 +248,8 @@ const logicalQuerySingleSelector = (contextElement, complexSelector) => {
     );
   };
 
+  // Iterate backwards through the remaining combinators and compound selectors,
+  // updating the cursors at each step.
   for (let i = combinators.length - 1; i >= 0; i--) {
     const combinator = combinators[i];
     const compoundSelector = compoundSelectors[i];
@@ -220,6 +260,9 @@ const logicalQuerySingleSelector = (contextElement, complexSelector) => {
         cursors.map((cursor) => {
           const results = [];
 
+          // For `a b`, where existing cursors have `position`s matching `b`,
+          // the candidates to test against `a` are all ancestors each cursor's
+          // `position`.
           for (
             let ancestor = cursor.position[utils.SHADY_PREFIX + 'parentNode'];
             ancestor && ancestor instanceof Element;
@@ -239,6 +282,9 @@ const logicalQuerySingleSelector = (contextElement, complexSelector) => {
         cursors.map((cursor) => {
           const parent = cursor.position[utils.SHADY_PREFIX + 'parentNode'];
 
+          // For `a > b`, where existing cursors have `position`s matching `b`,
+          // the candidates to test against `a` are the parents of each cursor's
+          // `position`.
           if (
             parent &&
             parent instanceof Element &&
@@ -257,6 +303,9 @@ const logicalQuerySingleSelector = (contextElement, complexSelector) => {
           const sibling =
             cursor.position[utils.SHADY_PREFIX + 'previousElementSibling'];
 
+          // For `a + b`, where existing cursors have `position`s matching `b`,
+          // the candidates to test against `a` are the immediately preceding
+          // siblings of each cursor's `position`.
           if (sibling && matchesCompoundSelector(sibling, compoundSelector)) {
             return [{position: sibling, target: cursor.target}];
           }
@@ -270,6 +319,9 @@ const logicalQuerySingleSelector = (contextElement, complexSelector) => {
         cursors.map((cursor) => {
           const results = [];
 
+          // For `a ~ b`, where existing cursors have `position`s matching `b`,
+          // the candidates to test against `a` are all preceding siblings of
+          // each cursor's `position`.
           for (
             let sibling =
               cursor.position[utils.SHADY_PREFIX + 'previousElementSibling'];
@@ -285,6 +337,8 @@ const logicalQuerySingleSelector = (contextElement, complexSelector) => {
         })
       );
     } else {
+      // As of writing, there are no other combinators:
+      // <https://drafts.csswg.org/selectors/#combinators>
       throw new Error(`Unrecognized combinator: '${combinator}'.`);
     }
   }

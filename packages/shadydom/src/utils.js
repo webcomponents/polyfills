@@ -293,6 +293,10 @@ export const convertNodesIntoANode = (...args) => {
 };
 
 /**
+ * Equivalent to `Array.prototype.flat`. Closure does not compile out this
+ * function, so we need an implementation for browsers that don't natively
+ * support it.
+ *
  * @template T
  * @param {!Array<!T | !Array<!T>>} array
  * @param {number} depth
