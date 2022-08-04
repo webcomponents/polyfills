@@ -132,105 +132,47 @@ export const ParentNodePatches = utils.getOwnPropertyDescriptors({
 });
 
 /**
- * Deduplicates items in an array.
- *
- * @param {!Array<T>} array
- * @return {!Array<T>}
- * @template T
- */
-const deduplicateArray = (array) => Array.from(new Set(array));
-
-/**
- * Deduplicates an array of elements and removes any that are not exclusive
- * descendants of `ancestor`.
- *
- * @param {!Element} ancestor
- * @param {!Array<!Element>} elements
- * @return {!Array<!Element>}
- */
-const deduplicateAndFilterToDescendants = (ancestor, elements) => {
-  return deduplicateArray(elements).filter((element) => {
-    return (
-      element !== ancestor && ancestor[utils.SHADY_PREFIX + 'contains'](element)
-    );
-  });
-};
-
-/**
  * Performs the equivalent of `querySelectorAll` within Shady DOM's logical
  * model of the tree for a selector list.
+ *
+ * See <./logicalQuerySelectorAll.md> for implementation details.
  *
  * @param {!Element} contextElement
  * @param {string} selectorList
  * @return {!Array<!Element>}
  */
-const logicalQuerySelectorList = (contextElement, selectorList) => {
-  return deduplicateAndFilterToDescendants(
-    contextElement,
-    utils.flat(
-      extractSelectors(selectorList).map((selector) => {
-        return logicalQuerySingleSelector(contextElement, selector);
-      })
-    )
-  );
-};
-
-/**
- * Performs the equivalent of `querySelectorAll` within Shady DOM's logical
- * model of the tree for a single complex selector.
- *
- * See <./logicalQuerySingleSelector.md> for implementation details.
- *
- * @param {!Element} contextElement
- * @param {string} complexSelector
- * @return {!Array<!Element>}
- */
-const logicalQuerySingleSelector = (contextElement, complexSelector) => {
-  const {
-    'selectors': compoundSelectors,
-    'joiners': combinators,
-  } = splitSelectorBlocks(complexSelector);
-
-  if (compoundSelectors.length < 1) {
-    return [];
-  }
-
+const logicalQuerySelectorAll = (contextElement, selectorList) => {
   /**
-   * An object used to track the current position of a potential selector match.
-   *
-   * - `position` is the element that matches the compound selector last reached
-   * by the selector engine.
-   *
-   * - `target` is the element that matches the selector if the cursor
-   * eventually results in a complete match.
+   * A key-renamed version of the return value of `extractSelectors`, which
+   * describes a single complex selector.
    *
    * @typedef {{
-   *   position: !Element,
-   *   target: !Element,
+   *   compoundSelectors: !Array<string>,
+   *   combinators: !Array<string>,
    * }}
    */
-  let SelectorMatchingCursor;
+  let ComplexSelectorParts;
 
   /**
-   * The list of selector matching cursors, initialized to point at all
-   * descendants of `contextElement`'s root node that match the last compound
-   * selector in `complexSelector`.
-   *
-   * For example, if `complexSelector` is `a > b + c`, then this list is
-   * initialized to all descendants of `contextElement.getRootNode()` that match
-   * the compound selector `c`.
-   *
-   * @type {!Array<!SelectorMatchingCursor>}
+   * @type {!Array<!ComplexSelectorParts>}
    */
-  let cursors = query(
-    contextElement[utils.SHADY_PREFIX + 'getRootNode'](),
-    (node) => {
-      return utils.matchesSelector(
-        node,
-        compoundSelectors[compoundSelectors.length - 1]
-      );
-    }
-  ).map((element) => ({position: element, target: element}));
+  const complexSelectors = extractSelectors(selectorList)
+    .map((complexSelector) => {
+      const {
+        'selectors': compoundSelectors,
+        'joiners': combinators,
+      } = splitSelectorBlocks(complexSelector);
+
+      return {
+        compoundSelectors,
+        combinators,
+      };
+    })
+    .filter(({compoundSelectors}) => compoundSelectors.length > 0);
+
+  if (complexSelectors.length < 1) {
+    return [];
+  }
 
   /**
    * Determines if a single compound selector matches an element. If the
@@ -248,39 +190,106 @@ const logicalQuerySingleSelector = (contextElement, complexSelector) => {
     );
   };
 
-  // Iterate backwards through the remaining combinators and compound selectors,
-  // updating the cursors at each step.
-  for (let i = combinators.length - 1; i >= 0; i--) {
-    const combinator = combinators[i];
-    const compoundSelector = compoundSelectors[i];
+  /**
+   * An object used to track the current position of a potential selector match.
+   *
+   * - `target` is the element that matches the selector if the cursor
+   * eventually results in a complete match.
+   *
+   * - `complexSelectorParts` is the decomposed version of the selector that
+   * this cursor is attempting to match.
+   *
+   * - `position` is an element that matches a compound selector in
+   * `complexSelectorParts`.
+   *
+   * - `index` is the index of the compound selector in `complexSelectorParts`
+   * that matched `position`.
+   *
+   * @typedef {{
+   *   target: !Element,
+   *   complexSelectorParts: !ComplexSelectorParts,
+   *   position: !Element,
+   *   index: number,
+   * }}
+   */
+  let SelectorMatchingCursor;
 
-    if (combinator === ' ') {
-      // Descendant combinator
-      cursors = utils.flat(
-        cursors.map((cursor) => {
+  /**
+   * The list of `SelectorMatchingCursor`s, initialized with cursors pointing at
+   * all descendants of `contextElement` that match the last compound selector
+   * in any complex selector in `selectorList`.
+   *
+   * @type {!Array<!SelectorMatchingCursor>}
+   */
+  let cursors = utils.flat(
+    query(contextElement, (_element) => true).map((element) => {
+      return utils.flat(
+        complexSelectors.map((complexSelectorParts) => {
+          const {compoundSelectors} = complexSelectorParts;
+          const index = compoundSelectors.length - 1;
+          if (matchesCompoundSelector(element, compoundSelectors[index])) {
+            return [
+              {
+                target: element,
+                complexSelectorParts,
+                position: element,
+                index,
+              },
+            ];
+          } else {
+            return [];
+          }
+        })
+      );
+    })
+  );
+
+  // At each step, any remaining cursors that have not finished matching (i.e.
+  // with `cursor.index > 0`) should be replaced with new cursors for any valid
+  // candidates that match the next compound selector.
+  while (cursors.length > 0 && cursors.some((cursor) => cursor.index > 0)) {
+    cursors = utils.flat(
+      cursors.map((cursor) => {
+        // Cursors with `index` of 0 have already matched and should not be
+        // replaced or removed.
+        if (cursor.index <= 0) {
+          return cursor;
+        }
+
+        const {
+          target,
+          position,
+          complexSelectorParts,
+          index: lastIndex,
+        } = cursor;
+        const index = lastIndex - 1;
+        const combinator = complexSelectorParts.combinators[index];
+        const compoundSelector = complexSelectorParts.compoundSelectors[index];
+
+        if (combinator === ' ') {
           const results = [];
 
           // For `a b`, where existing cursors have `position`s matching `b`,
           // the candidates to test against `a` are all ancestors each cursor's
           // `position`.
           for (
-            let ancestor = cursor.position[utils.SHADY_PREFIX + 'parentNode'];
+            let ancestor = position[utils.SHADY_PREFIX + 'parentNode'];
             ancestor && ancestor instanceof Element;
             ancestor = ancestor[utils.SHADY_PREFIX + 'parentNode']
           ) {
             if (matchesCompoundSelector(ancestor, compoundSelector)) {
-              results.push({position: ancestor, target: cursor.target});
+              results.push({
+                target,
+                complexSelectorParts,
+                position: ancestor,
+                index,
+              });
             }
           }
 
           return results;
-        })
-      );
-    } else if (combinator === '>') {
-      // Child combinator
-      cursors = utils.flat(
-        cursors.map((cursor) => {
-          const parent = cursor.position[utils.SHADY_PREFIX + 'parentNode'];
+        } else if (combinator === '>') {
+          const parent = position[utils.SHADY_PREFIX + 'parentNode'];
 
           // For `a > b`, where existing cursors have `position`s matching `b`,
           // the candidates to test against `a` are the parents of each cursor's
@@ -290,33 +299,37 @@ const logicalQuerySingleSelector = (contextElement, complexSelector) => {
             parent instanceof Element &&
             matchesCompoundSelector(parent, compoundSelector)
           ) {
-            return [{position: parent, target: cursor.target}];
+            return [
+              {
+                target,
+                complexSelectorParts,
+                position: parent,
+                index,
+              },
+            ];
           }
 
           return [];
-        })
-      );
-    } else if (combinator === '+') {
-      // Next-sibling combinator
-      cursors = utils.flat(
-        cursors.map((cursor) => {
+        } else if (combinator === '+') {
           const sibling =
-            cursor.position[utils.SHADY_PREFIX + 'previousElementSibling'];
+            position[utils.SHADY_PREFIX + 'previousElementSibling'];
 
           // For `a + b`, where existing cursors have `position`s matching `b`,
           // the candidates to test against `a` are the immediately preceding
           // siblings of each cursor's `position`.
           if (sibling && matchesCompoundSelector(sibling, compoundSelector)) {
-            return [{position: sibling, target: cursor.target}];
+            return [
+              {
+                target,
+                complexSelectorParts,
+                position: sibling,
+                index,
+              },
+            ];
           }
 
           return [];
-        })
-      );
-    } else if (combinator === '~') {
-      // Subsequent-sibling combinator
-      cursors = utils.flat(
-        cursors.map((cursor) => {
+        } else if (combinator === '~') {
           const results = [];
 
           // For `a ~ b`, where existing cursors have `position`s matching `b`,
@@ -324,29 +337,32 @@ const logicalQuerySingleSelector = (contextElement, complexSelector) => {
           // each cursor's `position`.
           for (
             let sibling =
-              cursor.position[utils.SHADY_PREFIX + 'previousElementSibling'];
+              position[utils.SHADY_PREFIX + 'previousElementSibling'];
             sibling;
             sibling = sibling[utils.SHADY_PREFIX + 'previousElementSibling']
           ) {
             if (matchesCompoundSelector(sibling, compoundSelector)) {
-              results.push({position: sibling, target: cursor.target});
+              results.push({
+                target,
+                complexSelectorParts,
+                position: sibling,
+                index,
+              });
             }
           }
 
           return results;
-        })
-      );
-    } else {
-      // As of writing, there are no other combinators:
-      // <https://drafts.csswg.org/selectors/#combinators>
-      throw new Error(`Unrecognized combinator: '${combinator}'.`);
-    }
+        } else {
+          // As of writing, there are no other combinators:
+          // <https://drafts.csswg.org/selectors/#combinators>
+          throw new Error(`Unrecognized combinator: '${combinator}'.`);
+        }
+      })
+    );
   }
 
-  return deduplicateAndFilterToDescendants(
-    contextElement,
-    cursors.map((cursor) => cursor.target)
-  );
+  // Map remaining cursors to their `target` and deduplicate.
+  return Array.from(new Set(cursors.map(({target}) => target)));
 };
 
 export const QueryPatches = utils.getOwnPropertyDescriptors({
@@ -356,7 +372,7 @@ export const QueryPatches = utils.getOwnPropertyDescriptors({
    * @param  {string} selector
    */
   querySelector(selector) {
-    return logicalQuerySelectorList(this, selector)[0] || null;
+    return logicalQuerySelectorAll(this, selector)[0] || null;
   },
 
   /**
@@ -378,7 +394,7 @@ export const QueryPatches = utils.getOwnPropertyDescriptors({
       );
     }
     return utils.createPolyfilledHTMLCollection(
-      logicalQuerySelectorList(this, selector)
+      logicalQuerySelectorAll(this, selector)
     );
   },
 });
