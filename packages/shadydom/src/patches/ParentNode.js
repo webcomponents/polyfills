@@ -362,7 +362,7 @@ const logicalQuerySelectorAll = (contextElement, selectorList) => {
   }
 
   // Map remaining cursors to their `target` and deduplicate.
-  return Array.from(new Set(cursors.map(({target}) => target)));
+  return utils.deduplicate(cursors.map(({target}) => target));
 };
 
 export const QueryPatches = utils.getOwnPropertyDescriptors({
