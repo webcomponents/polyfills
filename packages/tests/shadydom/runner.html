@@ -74,7 +74,12 @@
     'filter-mutations.html',
     'native-access.html',
     'prefer-performance.html',
-  ];
+  ].reduce((acc, item) => {
+    acc.push(item);
+    const joiner = item.indexOf('?') !== -1 ? '&' : '?';
+    acc.push(item + joiner + 'querySelectorImplementation=selectorEngine');
+    return acc;
+  }, []);
 
   // test only under native custom elements.
   if (window.customElements) {
