@@ -41,7 +41,7 @@
     "gulp-size": "^4.0.1",
     "gulp-sourcemaps": "^3.0.0",
     "husky": "^8.0.1",
-    "ignore-sync": "^3.0.1",
+    "ignore-sync": "^5.0.1",
     "lerna": "^5.4.0",
     "lint-staged": "^10.5.3",
     "prettier": "2.2.1",
