@@ -365,6 +365,9 @@ const logicalQuerySelectorAll = (contextElement, selectorList) => {
   return utils.deduplicate(cursors.map(({target}) => target));
 };
 
+const querySelectorImplementation =
+  utils.settings['querySelectorImplementation'];
+
 export const QueryPatches = utils.getOwnPropertyDescriptors({
   // TODO(sorvell): consider doing native QSA and filtering results.
   /**
@@ -372,7 +375,36 @@ export const QueryPatches = utils.getOwnPropertyDescriptors({
    * @param  {string} selector
    */
   querySelector(selector) {
-    return logicalQuerySelectorAll(this, selector)[0] || null;
+    if (querySelectorImplementation === 'native') {
+      const candidates = Array.prototype.slice.call(
+        this[utils.NATIVE_PREFIX + 'querySelector'](selector)
+      );
+      const root = this[utils.SHADY_PREFIX + 'getRootNode']();
+      return utils.createPolyfilledHTMLCollection(
+        candidates.filter(
+          (e) => e[utils.SHADY_PREFIX + 'getRootNode']() == root
+        )
+      );
+    } else if (querySelectorImplementation === 'selectorEngine') {
+      return logicalQuerySelectorAll(this, selector)[0] || null;
+    } else if (querySelectorImplementation === undefined) {
+      // match selector and halt on first result.
+      let result = query(
+        this,
+        function (n) {
+          return utils.matchesSelector(n, selector);
+        },
+        function (n) {
+          return Boolean(n);
+        }
+      )[0];
+      return result || null;
+    } else {
+      throw new Error(
+        'Unrecognized value of ShadyDOM.querySelectorImplementation: ' +
+          `'${querySelectorImplementation}'`
+      );
+    }
   },
 
   /**
@@ -384,18 +416,32 @@ export const QueryPatches = utils.getOwnPropertyDescriptors({
   // misses distributed nodes, see
   // https://github.com/webcomponents/shadydom/pull/210#issuecomment-361435503
   querySelectorAll(selector, useNative) {
-    if (useNative) {
-      const o = Array.prototype.slice.call(
+    if (useNative || querySelectorImplementation === 'native') {
+      const candidates = Array.prototype.slice.call(
         this[utils.NATIVE_PREFIX + 'querySelectorAll'](selector)
       );
       const root = this[utils.SHADY_PREFIX + 'getRootNode']();
       return utils.createPolyfilledHTMLCollection(
-        o.filter((e) => e[utils.SHADY_PREFIX + 'getRootNode']() == root)
+        candidates.filter(
+          (e) => e[utils.SHADY_PREFIX + 'getRootNode']() == root
+        )
+      );
+    } else if (querySelectorImplementation === 'selectorEngine') {
+      return utils.createPolyfilledHTMLCollection(
+        logicalQuerySelectorAll(this, selector)
+      );
+    } else if (querySelectorImplementation === undefined) {
+      return utils.createPolyfilledHTMLCollection(
+        query(this, function (n) {
+          return utils.matchesSelector(n, selector);
+        })
+      );
+    } else {
+      throw new Error(
+        'Unrecognized value of ShadyDOM.querySelectorImplementation: ' +
+          `'${querySelectorImplementation}'`
       );
     }
-    return utils.createPolyfilledHTMLCollection(
-      logicalQuerySelectorAll(this, selector)
-    );
   },
 });
 
