@@ -22,7 +22,7 @@
   },
   "devDependencies": {
     "@gulp-sourcemaps/sources-content": "^1.1.0",
-    "@open-wc/testing": "^2.5.33",
+    "@open-wc/testing": "^3.1.6",
     "@rollup/plugin-babel": "^5.3.1",
     "@typescript-eslint/eslint-plugin": "^5.33.0",
     "@typescript-eslint/parser": "^5.33.0",
