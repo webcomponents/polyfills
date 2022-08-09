@@ -14,10 +14,10 @@ const gulp = require('gulp');
 const sourcemaps = require('gulp-sourcemaps');
 const sourcesContent = require('@gulp-sourcemaps/sources-content');
 const rename = require('gulp-rename');
-const rollup = require('gulp-rollup');
+const rollup = require('rollup-stream');
 const del = require('del');
 const closure = require('google-closure-compiler').gulp();
-const babel = require('rollup-plugin-babel');
+const {babel} = require('@rollup/plugin-babel');
 const commonjs = require('rollup-plugin-commonjs');
 const license = require('rollup-plugin-license');
 const concat = require('gulp-concat');
@@ -37,15 +37,12 @@ function debugify(sourceName, fileName, extraRollupOptions) {
       format: 'iife',
       name: 'webcomponentsjs',
     },
-    allowRealFiles: true,
     rollup: require('rollup'),
   };
 
   Object.assign(options, extraRollupOptions);
 
-  return gulp
-    .src(entry)
-    .pipe(rollup(options))
+  return rollup(options)
     .pipe(rename(`${fileName}.js`))
     .pipe(gulp.dest(outDir));
 }
@@ -209,7 +206,9 @@ gulp.task('debugify-ce-es5-adapter', () => {
       }),
       license({
         banner: {
-          file: './license-header.txt',
+          content: {
+            file: './license-header.txt',
+          },
         },
       }),
     ],

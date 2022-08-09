@@ -41,7 +41,7 @@ export default class CustomElementRegistry {
   private readonly _internals: CustomElementInternals;
   private readonly _whenDefinedDeferred = new Map<
     string,
-    Deferred<undefined>
+    Deferred<CustomElementConstructor>
   >();
 
   /**
@@ -262,7 +262,9 @@ export default class CustomElementRegistry {
       // Resolve any promises created by `whenDefined` for the definition.
       const deferred = this._whenDefinedDeferred.get(localName);
       if (deferred) {
-        deferred.resolve(undefined);
+        deferred.resolve(
+          this.internal_localNameToDefinition(localName)!.constructorFunction
+        );
       }
     }
 
@@ -278,7 +280,7 @@ export default class CustomElementRegistry {
     return undefined;
   }
 
-  whenDefined(localName: string): Promise<void> {
+  whenDefined(localName: string): Promise<CustomElementConstructor> {
     if (!Utilities.isValidCustomElementName(localName)) {
       return Promise.reject(
         new SyntaxError(`'${localName}' is not a valid custom element name.`)
@@ -290,7 +292,7 @@ export default class CustomElementRegistry {
       return prior.toPromise();
     }
 
-    const deferred = new Deferred<undefined>();
+    const deferred = new Deferred<CustomElementConstructor>();
     this._whenDefinedDeferred.set(localName, deferred);
 
     // Resolve immediately if the given local name has a regular or lazy
@@ -308,7 +310,9 @@ export default class CustomElementRegistry {
     const definitionHasFlushed =
       this._unflushedLocalNames.indexOf(localName) === -1;
     if (anyDefinitionExists && definitionHasFlushed) {
-      deferred.resolve(undefined);
+      deferred.resolve(
+        this.internal_localNameToDefinition(localName)!.constructorFunction
+      );
     }
 
     return deferred.toPromise();
@@ -336,7 +340,7 @@ export default class CustomElementRegistry {
       try {
         return this.internal_reifyDefinition(localName, constructorGetter());
       } catch (e) {
-        this._internals.reportTheException(e);
+        this._internals.reportTheException(e as Error);
       }
     }
 

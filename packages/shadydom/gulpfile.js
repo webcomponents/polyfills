@@ -16,7 +16,7 @@ let sourcemaps = require('gulp-sourcemaps');
 let closureCompiler = compilerPackage.gulp();
 const size = require('gulp-size');
 const rename = require('gulp-rename');
-const rollup = require('gulp-rollup');
+const rollup = require('rollup-stream');
 
 gulp.task('default', () => {
   return gulp
@@ -51,13 +51,10 @@ gulp.task('debug', () => {
       format: 'iife',
       name: 'shadydom',
     },
-    allowRealFiles: true,
     rollup: require('rollup'),
   };
 
-  return gulp
-    .src(entry)
-    .pipe(rollup(options))
+  return rollup(options)
     .pipe(rename(`${fileName}.js`))
     .pipe(gulp.dest('.'));
 });

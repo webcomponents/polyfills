@@ -281,7 +281,7 @@ export default class CustomElementInternals {
         this._upgradeAnElement(element, definition);
       }
     } catch (e) {
-      this.reportTheException(e);
+      this.reportTheException(e as Error);
     }
   }
 
@@ -341,7 +341,7 @@ export default class CustomElementInternals {
       try {
         definition.connectedCallback.call(element);
       } catch (e) {
-        this.reportTheException(e);
+        this.reportTheException(e as Error);
       }
     }
   }
@@ -352,7 +352,7 @@ export default class CustomElementInternals {
       try {
         definition.disconnectedCallback.call(element);
       } catch (e) {
-        this.reportTheException(e);
+        this.reportTheException(e as Error);
       }
     }
   }
@@ -378,7 +378,7 @@ export default class CustomElementInternals {
           namespace
         );
       } catch (e) {
-        this.reportTheException(e);
+        this.reportTheException(e as Error);
       }
     }
   }
@@ -413,7 +413,7 @@ export default class CustomElementInternals {
       return;
     }
 
-    return (registry as CustomElementRegistry).internal_localNameToDefinition(
+    return ((registry as unknown) as CustomElementRegistry).internal_localNameToDefinition(
       localName
     );
   }
@@ -436,7 +436,7 @@ export default class CustomElementInternals {
     // Only create custom elements if the document is associated with a
     // registry.
     if (registry && (namespace === null || namespace === NS_HTML)) {
-      const definition = (registry as CustomElementRegistry).internal_localNameToDefinition(
+      const definition = ((registry as unknown) as CustomElementRegistry).internal_localNameToDefinition(
         localName
       );
       if (definition) {
@@ -508,7 +508,7 @@ export default class CustomElementInternals {
 
           return result;
         } catch (e) {
-          this.reportTheException(e);
+          this.reportTheException(e as Error);
 
           // When construction fails, a new HTMLUnknownElement is produced.
           // However, there's no direct way to create one, so we create a
