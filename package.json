@@ -33,7 +33,7 @@
     "del": "^3.0.0",
     "eslint": "^7.18.0",
     "eslint-plugin-html": "^6.1.1",
-    "google-closure-compiler": "^20210202.0.0",
+    "google-closure-compiler": "^20220719.0.0",
     "gulp": "^4.0.0",
     "gulp-babel": "^7.0.1",
     "gulp-rename": "^1.4.0",
