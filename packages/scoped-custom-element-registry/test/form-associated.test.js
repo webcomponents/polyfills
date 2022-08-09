@@ -84,7 +84,7 @@ export const commonRegistryTests = (registry) => {
           new CustomElementClass();
         }).to.throw(
           DOMException,
-          `Failed to execute function setFormValue() { [native code] } on 'ElementInternals': The target element is not a form-associated custom element.`
+          `The target element is not a form-associated custom element.`
         );
       });
     });
