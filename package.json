@@ -29,7 +29,7 @@
     "@web/test-runner": "^0.13.4",
     "@web/test-runner-mocha": "^0.7.2",
     "@web/test-runner-playwright": "^0.8.5",
-    "chokidar-cli": "^2.1.0",
+    "chokidar-cli": "^3.0.0",
     "del": "^3.0.0",
     "eslint": "^8.21.0",
     "eslint-plugin-html": "^7.1.0",
