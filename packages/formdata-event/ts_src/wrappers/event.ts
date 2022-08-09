@@ -37,8 +37,8 @@ export const getEventPropagationImmediatelyStopped = (e: Event) => {
 // const s = new SpecialEvent("type");
 // console.assert(s instanceof SpecialEvent); // fails in Safari 13.1
 // ```
-export const Event: typeof window.Event = (function Event(
-  this: Event,
+export const Event: typeof globalThis.Event = (function Event(
+  this: typeof globalThis.Event,
   type: string,
   eventInit: EventInit = {}
 ) {
@@ -53,7 +53,7 @@ export const Event: typeof window.Event = (function Event(
   }
   Object.setPrototypeOf(_this, Object.getPrototypeOf(this));
   return _this;
-} as Function) as typeof window.Event;
+} as Function) as typeof globalThis.Event;
 
 prepareWrapper(Event, EventConstructor, EventPrototype);
 
