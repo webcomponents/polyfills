@@ -21,7 +21,7 @@
     "test:wtr": "web-test-runner"
   },
   "devDependencies": {
-    "@gulp-sourcemaps/sources-content": "^1.0.0",
+    "@gulp-sourcemaps/sources-content": "^1.1.0",
     "@open-wc/testing": "^2.5.33",
     "@rollup/plugin-babel": "^5.3.1",
     "@typescript-eslint/eslint-plugin": "^5.33.0",
