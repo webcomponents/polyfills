@@ -60,7 +60,7 @@ if (!window.Event || (isIE && typeof window.Event !== 'function')) {
 
 // CustomEvent constructor shim
 if (!window.CustomEvent || (isIE && typeof window.CustomEvent !== 'function')) {
-  window['CustomEvent'] = ((<T extends unknown>(
+  window['CustomEvent'] = ((<T>(
     inType: string,
     params?: CustomEventInit<T>
   ) => {
