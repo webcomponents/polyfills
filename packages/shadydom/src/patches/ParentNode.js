@@ -245,7 +245,7 @@ const logicalQuerySelectorAll = (contextElement, selectorList) => {
   // At each step, any remaining cursors that have not finished matching (i.e.
   // with `cursor.index > 0`) should be replaced with new cursors for any valid
   // candidates that match the next compound selector.
-  while (cursors.length > 0 && cursors.some((cursor) => cursor.index > 0)) {
+  while (cursors.some((cursor) => cursor.index > 0)) {
     cursors = utils.flat(
       cursors.map((cursor) => {
         // Cursors with `index` of 0 have already matched and should not be
