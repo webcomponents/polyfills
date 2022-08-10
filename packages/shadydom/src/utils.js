@@ -36,6 +36,14 @@ settings.noPatch = /** @type {string|boolean} */ (settings['noPatch'] || false);
 // eslint-disable-next-line no-self-assign
 settings.preferPerformance = settings['preferPerformance'];
 settings.patchOnDemand = settings.noPatch === 'on-demand';
+settings.querySelectorImplementation = (() => {
+  const acceptedValues = ['native', 'selectorEngine'];
+  const userValue = settings['querySelectorImplementation'];
+  if (acceptedValues.indexOf(userValue) > -1) {
+    return userValue;
+  }
+  return undefined;
+})();
 
 const IS_IE = navigator.userAgent.match('Trident');
 settings.IS_IE = IS_IE;

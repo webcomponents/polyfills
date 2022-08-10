@@ -118,6 +118,56 @@ if (utils.settings.inUse) {
     'nativeMethods': nativeMethods,
     'nativeTree': nativeTree,
     'patchElementProto': patchElementProto,
+    // Use this setting to choose the implementation of `querySelector` and
+    // `querySelectorAll`. The logical tree exposed by Shady DOM via the DOM
+    // APIs it wraps doesn't match the structure of the tree seen by the browser
+    // (the 'real tree'), so the level to which the browser itself is used to
+    // match selectors (which always happens against the real tree) affects the
+    // accuracy and performance of these wrappers.
+    //
+    // - `undefined` (default): Shady DOM will walk the logical descendants of
+    // the context element and call `matches` with the given selector to find
+    // matching elements.
+    //
+    //   This option is a balance between accuracy and performance. This option
+    //   will be able to match all logical descendants of the context element
+    //   (i.e. including descendants of unassigned nodes) but selectors are
+    //   matched against the real tree, so complex selectors may fail to match
+    //   since their combinators will attempt to match against the structure of
+    //   the real tree. Generally, you should only pass compound selectors when
+    //   using the default implementation. This implementation also breaks the
+    //   semantics of `:scope` because the wrapped `querySelector` call is
+    //   translated into many `matches` calls on different elements.
+    //
+    // - `'native'`: Shady DOM's wrapper for (e.g.) `querySelector` will call
+    // into the native `querySelector` function and then filter out results that
+    // are not in the same shadow root in the logical tree.
+    //
+    //   This is the fastest option. This option will not match elements that
+    //   are logical descendants of unassigned nodes because they will not be in
+    //   the real tree, against which the browser matches the selector. Like the
+    //   default option, this option may not correctly match complex selectors
+    //   (i.e. those with combinators) due to the structural differences between
+    //   the real tree and the logical tree. This option preserves the semantics
+    //   of `:scope` because the context element of the call to the wrapper is
+    //   also the context element of the call to the native function.
+    //
+    // - `'selectorEngine'`: Shady DOM's wrapper for (e.g.) `querySelector` will
+    // partially parse the given selector list and perform the tree-traversal
+    // steps of a selector engine against the logical tree.
+    //
+    //   This is the slowest and most accurate option. This option is able to
+    //   find all logical descendants of the context element by manually walking
+    //   the tree. This option is also able to correctly match complex selectors
+    //   because it does not rely on the browser to handle combinators. Despite
+    //   using `matches` to match compound selectors during selector evaluation,
+    //   this option preserves the semantics of `:scope` by only considering
+    //   compound selectors containing `:scope` to be matching if the context
+    //   element of the `matches` call is also the context element of the
+    //   wrapper call. (Note that this implementation detects `:scope` by simple
+    //   substring inclusion.)
+    'querySelectorImplementation':
+      utils.settings['querySelectorImplementation'],
   };
 
   window['ShadyDOM'] = ShadyDOM;
