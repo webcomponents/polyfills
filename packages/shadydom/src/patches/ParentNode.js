@@ -156,8 +156,8 @@ const logicalQuerySelectorAll = (contextElement, selectorList) => {
   /**
    * @type {!Array<!ComplexSelectorParts>}
    */
-  const complexSelectors = extractSelectors(selectorList)
-    .map((complexSelector) => {
+  const complexSelectors = extractSelectors(selectorList).map(
+    (complexSelector) => {
       const {
         'selectors': compoundSelectors,
         'joiners': combinators,
@@ -167,8 +167,8 @@ const logicalQuerySelectorAll = (contextElement, selectorList) => {
         compoundSelectors,
         combinators,
       };
-    })
-    .filter(({compoundSelectors}) => compoundSelectors.length > 0);
+    }
+  );
 
   if (complexSelectors.length < 1) {
     return [];
@@ -228,14 +228,12 @@ const logicalQuerySelectorAll = (contextElement, selectorList) => {
           const {compoundSelectors} = complexSelectorParts;
           const index = compoundSelectors.length - 1;
           if (matchesCompoundSelector(element, compoundSelectors[index])) {
-            return [
-              {
-                target: element,
-                complexSelectorParts,
-                position: element,
-                index,
-              },
-            ];
+            return {
+              target: element,
+              complexSelectorParts,
+              position: element,
+              index,
+            };
           } else {
             return [];
           }
@@ -299,14 +297,12 @@ const logicalQuerySelectorAll = (contextElement, selectorList) => {
             parent instanceof Element &&
             matchesCompoundSelector(parent, compoundSelector)
           ) {
-            return [
-              {
-                target,
-                complexSelectorParts,
-                position: parent,
-                index,
-              },
-            ];
+            return {
+              target,
+              complexSelectorParts,
+              position: parent,
+              index,
+            };
           }
 
           return [];
@@ -318,14 +314,12 @@ const logicalQuerySelectorAll = (contextElement, selectorList) => {
           // the candidates to test against `a` are the immediately preceding
           // siblings of each cursor's `position`.
           if (sibling && matchesCompoundSelector(sibling, compoundSelector)) {
-            return [
-              {
-                target,
-                complexSelectorParts,
-                position: sibling,
-                index,
-              },
-            ];
+            return {
+              target,
+              complexSelectorParts,
+              position: sibling,
+              index,
+            };
           }
 
           return [];
