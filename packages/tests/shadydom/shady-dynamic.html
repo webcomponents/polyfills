@@ -358,6 +358,15 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       });
     </script>
 
+    <template id="x-slot-inside-div">
+      <div>
+        <slot></slot>
+      </div>
+    </template>
+    <script>
+      defineTestElement('x-slot-inside-div');
+    </script>
+
     <script>
       'use strict';
 
@@ -2904,6 +2913,33 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             assert.equal(ShadyDOM.wrapIfNeeded(child).assignedSlot, slot);
           }
           document.body.removeChild(d);
+        });
+      });
+
+      suite('querySelectorImplementation', function () {
+        const querySelectorImplementation =
+          ShadyDOM.querySelectorImplementation;
+
+        test('The `>` combinator can match shadow root hosts with their children.', function () {
+          const layer1 = createEnabledElement('x-slot-inside-div');
+          const layer2 = createEnabledElement('x-slot-inside-div');
+          layer1.appendChild(layer2);
+          const target = document.createElement('div');
+          layer2.appendChild(target);
+
+          const results = layer1.querySelectorAll(
+            'x-slot-inside-div > x-slot-inside-div > div'
+          );
+
+          if (!querySelectorImplementation) {
+            // The default implementation can't find the target because of the
+            // `<div>`s from the logical shadow roots are in the same root in
+            // the real tree.
+            assert.equal(results.length, 0);
+          } else if (querySelectorImplementation === 'selectorEngine') {
+            assert.equal(results.length, 1);
+            assert.equal(results[0], target);
+          }
         });
       });
     </script>
