@@ -18,37 +18,40 @@
     </script>
     <script src="../../node_modules/@webcomponents/webcomponentsjs/bundles/webcomponents-pf_js.js"></script>
     <script src="../../node_modules/@webcomponents/webcomponentsjs/bundles/webcomponents-pf_dom.js"></script>
-    <script src="../../node_modules/@webcomponents/template/template.js"></script>
+    <script src="../../node_modules/@webcomponents/template/template.min.js"></script>
     <script src="../../node_modules/@webcomponents/shadydom/shadydom.min.js"></script>
     <script src="../../node_modules/@webcomponents/custom-elements/custom-elements.min.js"></script>
-    <script src="../../node_modules/wct-browser-legacy/browser.js"></script>
   </head>
   <body>
     <script type="module">
+      import {runTests, assert} from '../../environment.js';
       import {safariGCBugWorkaround} from '../safari-gc-bug-workaround.js';
-      suiteSetup(() => safariGCBugWorkaround());
 
-      suite('Template polyfill integration', function () {
-        test('defined custom elements do not upgrade when setting innerHTML of a template', function () {
-          let upgraded = false;
+      runTests(async () => {
+        suiteSetup(() => safariGCBugWorkaround());
 
-          customElements.define(
-            'inside-template-content',
-            class extends HTMLElement {
-              constructor() {
-                super();
-                upgraded = true;
+        suite('Template polyfill integration', function () {
+          test('defined custom elements do not upgrade when setting innerHTML of a template', function () {
+            let upgraded = false;
+
+            customElements.define(
+              'inside-template-content',
+              class extends HTMLElement {
+                constructor() {
+                  super();
+                  upgraded = true;
+                }
               }
-            }
-          );
+            );
 
-          const template = document.createElement('template');
-          template.innerHTML =
-            '<inside-template-content></inside-template-content>';
-          assert(
-            !upgraded,
-            'A defined element in the HTML string was upgraded.'
-          );
+            const template = document.createElement('template');
+            template.innerHTML =
+              '<inside-template-content></inside-template-content>';
+            assert(
+              !upgraded,
+              'A defined element in the HTML string was upgraded.'
+            );
+          });
         });
       });
     </script>

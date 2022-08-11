@@ -7,7 +7,6 @@
         window.customElements || {}).forcePolyfill = true;
     </script>
     <script src="../../../node_modules/@webcomponents/webcomponentsjs/bundles/webcomponents-pf_js.js"></script>
-    <script src="../../../node_modules/wct-browser-legacy/browser.js"></script>
     <script src="../../../node_modules/@webcomponents/custom-elements/custom-elements.min.js"></script>
   </head>
   <body>
@@ -23,61 +22,67 @@
        * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
        */
 
+      import {runTests, assert} from '../../../environment.js';
       import {safariGCBugWorkaround} from '../../safari-gc-bug-workaround.js';
-      suiteSetup(() => safariGCBugWorkaround());
 
-      test('`whenDefined` called after `define` does not resolve until its local name has flushed.', function (done) {
-        const element = document.querySelector('custom-element');
+      runTests(async () => {
+        suiteSetup(() => safariGCBugWorkaround());
 
-        let flushFn = undefined;
-        let resolved = false;
+        test('`whenDefined` called after `define` does not resolve until its local name has flushed.', function (done) {
+          const element = document.querySelector('custom-element');
 
-        customElements.polyfillWrapFlushCallback((flush) => (flushFn = flush));
+          let flushFn = undefined;
+          let resolved = false;
 
-        customElements.define(
-          'custom-element',
-          class extends HTMLElement {
-            constructor() {
-              super();
-              this.upgraded = true;
-              if (resolved) {
-                done(
-                  new Error(
-                    '`whenDefined` promise was resolved before upgrade!'
-                  )
-                );
+          customElements.polyfillWrapFlushCallback(
+            (flush) => (flushFn = flush)
+          );
+
+          customElements.define(
+            'custom-element',
+            class extends HTMLElement {
+              constructor() {
+                super();
+                this.upgraded = true;
+                if (resolved) {
+                  done(
+                    new Error(
+                      '`whenDefined` promise was resolved before upgrade!'
+                    )
+                  );
+                }
               }
             }
-          }
-        );
+          );
 
-        assert(!element.upgraded);
-
-        const promise = customElements.whenDefined('custom-element');
-        promise
-          .then(function () {
-            resolved = true;
-            assert(element.upgraded);
-          })
-          .catch(function (err) {
-            done(err);
-          });
-
-        // Delay until the next task to give the promise the opportunity to
-        // potentially resolve incorrectly.
-        setTimeout(function () {
           assert(!element.upgraded);
-          flushFn();
-          assert(element.upgraded);
 
-          // The promise resolves in the set of microtasks after the task that ran
-          // the flush.
-          assert(!resolved);
+          const promise = customElements.whenDefined('custom-element');
+          promise
+            .then(function () {
+              resolved = true;
+              assert(element.upgraded);
+            })
+            .catch(function (err) {
+              done(err);
+            });
+
+          // Delay until the next task to give the promise the opportunity to
+          // potentially resolve incorrectly.
           setTimeout(function () {
-            assert(resolved);
-            done();
+            assert(!element.upgraded);
+            flushFn();
+            assert(element.upgraded);
+
+            // The promise resolves in the set of microtasks after the task that ran
+            // the flush.
+            assert(!resolved);
+            setTimeout(function () {
+              assert(resolved);
+              done();
+            }, 0);
           }, 0);
-        }, 0);
+        });
       });
     </script>
   </body>

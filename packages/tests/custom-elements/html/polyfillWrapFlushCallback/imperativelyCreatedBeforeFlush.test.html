@@ -7,7 +7,6 @@
         window.customElements || {}).forcePolyfill = true;
     </script>
     <script src="../../../node_modules/@webcomponents/webcomponentsjs/bundles/webcomponents-pf_js.js"></script>
-    <script src="../../../node_modules/wct-browser-legacy/browser.js"></script>
     <script src="../../../node_modules/@webcomponents/custom-elements/custom-elements.min.js"></script>
   </head>
   <body>
@@ -22,28 +21,35 @@
        * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
        */
 
+      import {runTests, assert} from '../../../environment.js';
       import {safariGCBugWorkaround} from '../../safari-gc-bug-workaround.js';
-      suiteSetup(() => safariGCBugWorkaround());
 
-      test(
-        'Elements are upgraded when created imperatively, even if the flush ' +
-          'callback has not been called.',
-        function () {
-          let flush = undefined;
-          customElements.polyfillWrapFlushCallback((fn) => {
-            flush = fn;
-          });
+      runTests(async () => {
+        suiteSetup(() => safariGCBugWorkaround());
 
-          class CustomElement0 extends HTMLElement {}
-          customElements.define('custom-element-0', CustomElement0);
-          assert.equal(customElements.get('custom-element-0'), CustomElement0);
+        test(
+          'Elements are upgraded when created imperatively, even if the flush ' +
+            'callback has not been called.',
+          function () {
+            let flush = undefined;
+            customElements.polyfillWrapFlushCallback((fn) => {
+              flush = fn;
+            });
 
-          const element = document.createElement('custom-element-0');
-          assert.instanceOf(element, CustomElement0);
+            class CustomElement0 extends HTMLElement {}
+            customElements.define('custom-element-0', CustomElement0);
+            assert.equal(
+              customElements.get('custom-element-0'),
+              CustomElement0
+            );
 
-          flush();
-        }
-      );
+            const element = document.createElement('custom-element-0');
+            assert.instanceOf(element, CustomElement0);
+
+            flush();
+          }
+        );
+      });
     </script>
   </body>
 </html>
