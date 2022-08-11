@@ -3087,11 +3087,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         test('The `>` combinator can match shadow root hosts with their children.', function () {
           const layer1 = createEnabledElement('x-slot-inside-div');
           const layer2 = createEnabledElement('x-slot-inside-div');
-          layer1.appendChild(layer2);
+          ShadyDOM.wrapIfNeeded(layer1).appendChild(layer2);
           const target = document.createElement('div');
-          layer2.appendChild(target);
+          ShadyDOM.wrapIfNeeded(layer2).appendChild(target);
 
-          const results = layer1.querySelectorAll(
+          const results = ShadyDOM.wrapIfNeeded(layer1).querySelectorAll(
             'x-slot-inside-div > x-slot-inside-div > div'
           );
 
@@ -3112,7 +3112,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             host
           ).shadowRoot.getElementById('contextElement');
 
-          const results = contextElement.querySelectorAll('div:scope > div');
+          const results = ShadyDOM.wrap(contextElement).querySelectorAll(
+            'div:scope > div'
+          );
 
           if (!querySelectorImplementation) {
             // The default implementation can't find the target because it
