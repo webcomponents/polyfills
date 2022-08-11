@@ -367,6 +367,17 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       defineTestElement('x-slot-inside-div');
     </script>
 
+    <template id="x-query-selector-scope">
+      <div>
+        <div id="contextElement">
+          <div id="target"></div>
+        </div>
+      </div>
+    </template>
+    <script>
+      defineTestElement('x-query-selector-scope');
+    </script>
+
     <script>
       'use strict';
 
@@ -2939,6 +2950,25 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           } else if (querySelectorImplementation === 'selectorEngine') {
             assert.equal(results.length, 1);
             assert.equal(results[0], target);
+          }
+        });
+
+        test('The semantics of `:scope` are preserved.', function () {
+          const host = createEnabledElement('x-query-selector-scope');
+          const contextElement = ShadyDOM.wrapIfNeeded(
+            host
+          ).shadowRoot.getElementById('contextElement');
+
+          const results = contextElement.querySelectorAll('div:scope > div');
+
+          if (!querySelectorImplementation) {
+            // The default implementation can't find the target because it
+            // attempts to match it by calling `matches` on the element with the
+            // full selector, which breaks the semantics of `:scope`.
+            assert.equal(results.length, 0);
+          } else if (querySelectorImplementation === 'selectorEngine') {
+            assert.equal(results.length, 1);
+            assert.equal(results[0].id, 'target');
           }
         });
       });
