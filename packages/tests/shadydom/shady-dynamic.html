@@ -358,6 +358,81 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       });
     </script>
 
+    <template id="x-query-selector-descendant-combinator">
+      <div id="contextElement">
+        <div match id="a">
+          <div>
+            <div match id="b"></div>
+          </div>
+        </div>
+        <div>
+          <div></div>
+          <div match id="c"></div>
+        </div>
+      </div>
+    </template>
+    <script>
+      defineTestElement('x-query-selector-descendant-combinator');
+    </script>
+
+    <template id="x-query-selector-child-combinator">
+      <div id="contextElement">
+        <div id="a">
+          <div>
+            <div></div>
+          </div>
+        </div>
+        <div id="b"></div>
+        <div id="c">
+          <div></div>
+          <div></div>
+        </div>
+      </div>
+    </template>
+    <script>
+      defineTestElement('x-query-selector-child-combinator');
+    </script>
+
+    <template id="x-query-selector-next-sibling-combinator">
+      <div id="contextElement">
+        <div before>
+          <div before></div>
+          <div id="a">
+            <div></div>
+          </div>
+        </div>
+        <div id="b"></div>
+        <div>
+          <div before></div>
+          <div id="c"></div>
+          <div></div>
+        </div>
+      </div>
+    </template>
+    <script>
+      defineTestElement('x-query-selector-next-sibling-combinator');
+    </script>
+
+    <template id="x-query-selector-subsequent-sibling-combinator">
+      <div id="contextElement">
+        <div before>
+          <div before></div>
+          <div id="a">
+            <div></div>
+          </div>
+        </div>
+        <div id="b"></div>
+        <div id="c">
+          <div before></div>
+          <div id="d"></div>
+          <div id="e"></div>
+        </div>
+      </div>
+    </template>
+    <script>
+      defineTestElement('x-query-selector-subsequent-sibling-combinator');
+    </script>
+
     <template id="x-slot-inside-div">
       <div>
         <slot></slot>
@@ -2930,6 +3005,72 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       suite('querySelectorImplementation', function () {
         const querySelectorImplementation =
           ShadyDOM.querySelectorImplementation;
+
+        test('The ` ` combinator finds descendants.', function () {
+          const host = createEnabledElement('x-query-selector-descendant-combinator');
+          const contextElement = ShadyDOM.wrapIfNeeded(
+            host
+          ).shadowRoot.getElementById('contextElement');
+
+          const results = contextElement.querySelectorAll('#contextElement [match]');
+
+          // No shadow root hosts below #contextElement or use of `:scope`, so
+          // the results are the same for all implementations.
+          assert.equal(results.length, 3);
+          assert.equal(results[0].id, 'a');
+          assert.equal(results[1].id, 'b');
+          assert.equal(results[2].id, 'c');
+        });
+
+        test('The `>` combinator finds children.', function () {
+          const host = createEnabledElement('x-query-selector-child-combinator');
+          const contextElement = ShadyDOM.wrapIfNeeded(
+            host
+          ).shadowRoot.getElementById('contextElement');
+
+          const results = contextElement.querySelectorAll('#contextElement > *');
+
+          // No shadow root hosts below #contextElement or use of `:scope`, so
+          // the results are the same for all implementations.
+          assert.equal(results.length, 3);
+          assert.equal(results[0].id, 'a');
+          assert.equal(results[1].id, 'b');
+          assert.equal(results[2].id, 'c');
+        });
+
+        test('The `+` combinator finds next siblings.', function () {
+          const host = createEnabledElement('x-query-selector-next-sibling-combinator');
+          const contextElement = ShadyDOM.wrapIfNeeded(
+            host
+          ).shadowRoot.getElementById('contextElement');
+
+          const results = contextElement.querySelectorAll('[before] + *');
+
+          // No shadow root hosts below #contextElement or use of `:scope`, so
+          // the results are the same for all implementations.
+          assert.equal(results.length, 3);
+          assert.equal(results[0].id, 'a');
+          assert.equal(results[1].id, 'b');
+          assert.equal(results[2].id, 'c');
+        });
+
+        test('The `~` combinator finds subsequent siblings.', function () {
+          const host = createEnabledElement('x-query-selector-subsequent-sibling-combinator');
+          const contextElement = ShadyDOM.wrapIfNeeded(
+            host
+          ).shadowRoot.getElementById('contextElement');
+
+          const results = contextElement.querySelectorAll('[before] ~ *');
+
+          // No shadow root hosts below #contextElement or use of `:scope`, so
+          // the results are the same for all implementations.
+          assert.equal(results.length, 5);
+          assert.equal(results[0].id, 'a');
+          assert.equal(results[1].id, 'b');
+          assert.equal(results[2].id, 'c');
+          assert.equal(results[3].id, 'd');
+          assert.equal(results[4].id, 'e');
+        });
 
         test('The `>` combinator can match shadow root hosts with their children.', function () {
           const layer1 = createEnabledElement('x-slot-inside-div');
