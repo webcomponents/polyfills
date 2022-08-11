@@ -7,74 +7,77 @@
         window.customElements || {}).forcePolyfill = true;
     </script>
     <script src="../../../node_modules/@webcomponents/webcomponentsjs/bundles/webcomponents-pf_js.js"></script>
-    <script src="../../../node_modules/wct-browser-legacy/browser.js"></script>
     <script src="../../../node_modules/@webcomponents/custom-elements/custom-elements.min.js"></script>
     <script type="module">
+      import {runTests, assert} from '../../../environment.js';
       import {safariGCBugWorkaround} from '../../safari-gc-bug-workaround.js';
-      suiteSetup(() => safariGCBugWorkaround());
 
-      function generateLocalName() {
-        return 'test-element-' + Math.random().toString(32).substring(2);
-      }
+      runTests(async () => {
+        suiteSetup(() => safariGCBugWorkaround());
 
-      function defineWithLocalName(localName) {
-        customElements.define(
-          localName,
-          class extends HTMLElement {
-            constructor() {
-              super();
-              this.constructed = true;
-              this.connectedCallbackCount = 0;
-              this.disconnectedCallbackCount = 0;
+        function generateLocalName() {
+          return 'test-element-' + Math.random().toString(32).substring(2);
+        }
+
+        function defineWithLocalName(localName) {
+          customElements.define(
+            localName,
+            class extends HTMLElement {
+              constructor() {
+                super();
+                this.constructed = true;
+                this.connectedCallbackCount = 0;
+                this.disconnectedCallbackCount = 0;
+              }
+
+              connectedCallback() {
+                this.connectedCallbackCount++;
+              }
+
+              disconnectedCallback() {
+                this.disconnectedCallbackCount++;
+              }
             }
+          );
+        }
 
-            connectedCallback() {
-              this.connectedCallbackCount++;
-            }
+        test('Cloning a customized element upgrades the cloned tree. (shallow)', function () {
+          const localName = generateLocalName();
+          defineWithLocalName(localName);
 
-            disconnectedCallback() {
-              this.disconnectedCallbackCount++;
-            }
-          }
-        );
-      }
+          const element = document.createElement(localName);
+          document.body.appendChild(element);
 
-      test('Cloning a customized element upgrades the cloned tree. (shallow)', function () {
-        const localName = generateLocalName();
-        defineWithLocalName(localName);
+          const clone = element.cloneNode();
 
-        const element = document.createElement(localName);
-        document.body.appendChild(element);
+          assert(clone.constructed);
+          assert.equal(clone.connectedCallbackCount, 0);
+          assert.equal(clone.disconnectedCallbackCount, 0);
 
-        const clone = element.cloneNode();
+          assert.equal(clone.childNodes.length, 0);
+        });
 
-        assert(clone.constructed);
-        assert.equal(clone.connectedCallbackCount, 0);
-        assert.equal(clone.disconnectedCallbackCount, 0);
+        test('Cloning a customized element upgrades the cloned tree. (deep)', function () {
+          const localName = generateLocalName();
+          defineWithLocalName(localName);
 
-        assert.equal(clone.childNodes.length, 0);
-      });
+          const element = document.createElement(localName);
+          element.appendChild(document.createElement(localName));
+          document.body.appendChild(element);
 
-      test('Cloning a customized element upgrades the cloned tree. (deep)', function () {
-        const localName = generateLocalName();
-        defineWithLocalName(localName);
+          const clone = element.cloneNode(true);
 
-        const element = document.createElement(localName);
-        element.appendChild(document.createElement(localName));
-        document.body.appendChild(element);
+          assert(clone.constructed);
+          assert.equal(clone.connectedCallbackCount, 0);
+          assert.equal(clone.disconnectedCallbackCount, 0);
 
-        const clone = element.cloneNode(true);
+          assert.equal(clone.childNodes.length, 1);
 
-        assert(clone.constructed);
-        assert.equal(clone.connectedCallbackCount, 0);
-        assert.equal(clone.disconnectedCallbackCount, 0);
-
-        assert.equal(clone.childNodes.length, 1);
-
-        const cloneChild = clone.childNodes[0];
-        assert(cloneChild.constructed);
-        assert.equal(cloneChild.connectedCallbackCount, 0);
-        assert.equal(cloneChild.disconnectedCallbackCount, 0);
+          const cloneChild = clone.childNodes[0];
+          assert(cloneChild.constructed);
+          assert.equal(cloneChild.connectedCallbackCount, 0);
+          assert.equal(cloneChild.disconnectedCallbackCount, 0);
+        });
       });
     </script>
   </head>

@@ -7,7 +7,6 @@
         window.customElements || {}).forcePolyfill = true;
     </script>
     <script src="../../../node_modules/@webcomponents/webcomponentsjs/bundles/webcomponents-pf_js.js"></script>
-    <script src="../../../node_modules/wct-browser-legacy/browser.js"></script>
     <script src="../../../node_modules/@webcomponents/custom-elements/custom-elements.min.js"></script>
     <script type="module">
       /**
@@ -20,18 +19,22 @@
        * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
        */
 
+      import {runTests, assert} from '../../../environment.js';
       import {safariGCBugWorkaround} from '../../safari-gc-bug-workaround.js';
-      suiteSetup(() => safariGCBugWorkaround());
 
-      test('Installed flush callbacks are called with a function when `#define` is called.', function () {
-        let callbackWasCalled = false;
-        customElements.polyfillWrapFlushCallback((f) => {
-          callbackWasCalled = true;
-          assert(f instanceof Function);
-          f();
+      runTests(async () => {
+        suiteSetup(() => safariGCBugWorkaround());
+
+        test('Installed flush callbacks are called with a function when `#define` is called.', function () {
+          let callbackWasCalled = false;
+          customElements.polyfillWrapFlushCallback((f) => {
+            callbackWasCalled = true;
+            assert(f instanceof Function);
+            f();
+          });
+          customElements.define('x-test', class extends HTMLElement {});
+          assert(callbackWasCalled);
         });
-        customElements.define('x-test', class extends HTMLElement {});
-        assert(callbackWasCalled);
       });
     </script>
   </head>

@@ -1194,12 +1194,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             ).removeChild(top);
           });
 
-          test('composedPath of events from non-Node subclasses works', function () {
+          test('composedPath of events from non-Node subclasses works', function (done) {
             const xhr = new XMLHttpRequest();
             xhr.open('GET', window.location.href);
             xhr.addEventListener('load', (e) => {
               assert.doesNotThrow(() => {
                 e.composedPath();
+                done();
               });
             });
             xhr.addEventListener('error', () => assert.fail('xhr failed'));

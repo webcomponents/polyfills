@@ -7,7 +7,6 @@
         window.customElements || {}).forcePolyfill = true;
     </script>
     <script src="../../../node_modules/@webcomponents/webcomponentsjs/bundles/webcomponents-pf_js.js"></script>
-    <script src="../../../node_modules/wct-browser-legacy/browser.js"></script>
     <script src="../../../node_modules/@webcomponents/custom-elements/custom-elements.min.js"></script>
   </head>
   <body>
@@ -36,58 +35,62 @@
        * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
        */
 
+      import {runTests, assert} from '../../../environment.js';
       import {safariGCBugWorkaround} from '../../safari-gc-bug-workaround.js';
-      suiteSetup(() => safariGCBugWorkaround());
 
-      test(
-        'When a flush callback is installed and multiple calls to define are ' +
-          'made calling the flush callback causes elements to upgrade in define-call ' +
-          'order and then document order.',
-        function () {
-          let flush = undefined;
-          customElements.polyfillWrapFlushCallback((fn) => {
-            flush = fn;
-          });
+      runTests(async () => {
+        suiteSetup(() => safariGCBugWorkaround());
 
-          const upgradeLog = [];
-          class LogIDOnConstruct extends HTMLElement {
-            constructor() {
-              super();
-              upgradeLog.push(this.id);
+        test(
+          'When a flush callback is installed and multiple calls to define are ' +
+            'made calling the flush callback causes elements to upgrade in define-call ' +
+            'order and then document order.',
+          function () {
+            let flush = undefined;
+            customElements.polyfillWrapFlushCallback((fn) => {
+              flush = fn;
+            });
+
+            const upgradeLog = [];
+            class LogIDOnConstruct extends HTMLElement {
+              constructor() {
+                super();
+                upgradeLog.push(this.id);
+              }
             }
+
+            customElements.define(
+              'custom-element-0',
+              class extends LogIDOnConstruct {}
+            );
+            customElements.define(
+              'custom-element-1',
+              class extends LogIDOnConstruct {}
+            );
+            customElements.define(
+              'custom-element-2',
+              class extends LogIDOnConstruct {}
+            );
+
+            assert.deepEqual(upgradeLog, []);
+
+            flush();
+
+            assert.deepEqual(upgradeLog, [
+              'elt_0_0',
+              'elt_0_1',
+              'elt_0_2',
+              'elt_1_0',
+              'elt_1_1',
+              'elt_1_2',
+              'elt_2_0',
+              'elt_2_1',
+              'elt_2_2',
+              'elt_2_3',
+            ]);
           }
-
-          customElements.define(
-            'custom-element-0',
-            class extends LogIDOnConstruct {}
-          );
-          customElements.define(
-            'custom-element-1',
-            class extends LogIDOnConstruct {}
-          );
-          customElements.define(
-            'custom-element-2',
-            class extends LogIDOnConstruct {}
-          );
-
-          assert.deepEqual(upgradeLog, []);
-
-          flush();
-
-          assert.deepEqual(upgradeLog, [
-            'elt_0_0',
-            'elt_0_1',
-            'elt_0_2',
-            'elt_1_0',
-            'elt_1_1',
-            'elt_1_2',
-            'elt_2_0',
-            'elt_2_1',
-            'elt_2_2',
-            'elt_2_3',
-          ]);
-        }
-      );
+        );
+      });
     </script>
   </body>
 </html>
