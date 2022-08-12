@@ -82,6 +82,7 @@ const patchMap = {
   ],
   Window: [WindowPatches],
   CharacterData: [ChildNodePatches],
+  XMLHttpRequest: [!window.EventTarget ? EventTargetPatches : null],
 };
 
 const getPatchPrototype = (name) => window[name] && window[name].prototype;

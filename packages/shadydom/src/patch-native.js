@@ -126,6 +126,7 @@ export const addNativePrefixedProperties = () => {
   } else {
     copyProperties(Node.prototype, eventProps);
     copyProperties(Window.prototype, eventProps);
+    copyProperties(XMLHttpRequest.prototype, eventProps);
   }
 
   // Node
