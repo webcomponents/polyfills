@@ -359,7 +359,10 @@ function fireHandlers(event, node, phase) {
   }
 }
 
-function shadyDispatchEvent(e) {
+function shadyDispatchEvent(originalEvent) {
+  const e = utils.settings.hasDescriptors
+    ? originalEvent
+    : Object.create(originalEvent);
   const path = e.composedPath();
   const retargetedPath = path.map((node) => retarget(node, path));
   const bubbles = e.bubbles;
@@ -414,17 +417,19 @@ function shadyDispatchEvent(e) {
       }
     }
   } finally {
-    // Restore previous currentTarget & eventPhase descriptors when
-    // dispatching is complete
-    if (prevCurrentTargetDesc) {
-      Object.defineProperty(e, 'currentTarget', prevCurrentTargetDesc);
-    } else {
-      delete e['currentTarget'];
-    }
-    if (prevEventPhaseDesc) {
-      Object.defineProperty(e, 'eventPhase', prevEventPhaseDesc);
-    } else {
-      delete e['eventPhase'];
+    if (utils.settings.hasDescriptors) {
+      // Restore previous currentTarget & eventPhase descriptors when
+      // dispatching is complete
+      if (prevCurrentTargetDesc) {
+        Object.defineProperty(e, 'currentTarget', prevCurrentTargetDesc);
+      } else {
+        delete e['currentTarget'];
+      }
+      if (prevEventPhaseDesc) {
+        Object.defineProperty(e, 'eventPhase', prevEventPhaseDesc);
+      } else {
+        delete e['eventPhase'];
+      }
     }
   }
 }
