@@ -1197,7 +1197,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           test('composedPath of events from non-Node subclasses works', function (done) {
             const xhr = new XMLHttpRequest();
             xhr.open('GET', window.location.href);
-            ShadyDOM.wrapIfNeeded(xhr).addEventListener('load', (e) => {
+            ShadyDOM.wrap(xhr).addEventListener('load', (e) => {
               assert.doesNotThrow(() => {
                 e.composedPath();
                 done();
