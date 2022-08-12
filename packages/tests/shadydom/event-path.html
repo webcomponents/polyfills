@@ -1648,10 +1648,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             );
             const el = document.createElement('unpatched-focus');
             document.body.appendChild(el);
-            el.input.dispatchEvent(new Event('focus'), {
-              bubbles: false,
-              composed: false,
-            });
+            el.input.dispatchEvent(
+              new Event('focus', {
+                bubbles: false,
+                composed: false,
+              })
+            );
             assert.equal(el.focusedInput, el.input);
             document.body.removeChild(el);
           });
