@@ -359,10 +359,38 @@ function fireHandlers(event, node, phase) {
   }
 }
 
+// In Chrome 41, `currentTarget` is an own property of every `Event` and its
+// descriptor is a _data_ descriptor and not an accessor descriptor (so there is
+// no getter that could be saved and wrapped) but the browser effectively treats
+// this property as if it had a getter and returns different values on getting
+// as necessary. Further, setting a new descriptor for `currentTarget`, as
+// `shadyDispatchEvent` does below, permanently breaks this special descriptor
+// behavior. In this case, `shadyDispatchEvent` creates a new object with the
+// original event as its prototype (via `Object.create`) and modifies that
+// object's `currentTarget` instead, to avoid breaking the descriptor on the
+// original event.
+//
+// In Chrome 104 and Safari 9, some getters on events do not allow `this` to be
+// anything other than exactly the original event object. This means that the
+// above process of using a proxy-like (not a `Proxy`) object for the event
+// fails because any user that attempts to use properties of the original event
+// will be using the proxy as `this`.
+//
+// Fortunately, these two issues seem to be mutually exclusive amongst the
+// browsers that we test on, so we can specifically check if `currentTarget`
+// exists on a new `Event` and switch based off of that. Safari 9 both doesn't
+// have working descriptors for `Event` properties and doesn't allow getter
+// contexts to be anything other than the original event, so
+// `utils.settings.hasDescriptors` is not a sufficient test for deciding this
+// behavior.
+const shadyDispatchEventNeedsProxyEvent = new Event('e').hasOwnProperty(
+  'currentTarget'
+);
+
 function shadyDispatchEvent(originalEvent) {
-  const e = utils.settings.hasDescriptors
-    ? originalEvent
-    : Object.create(originalEvent);
+  const e = shadyDispatchEventNeedsProxyEvent
+    ? Object.create(originalEvent)
+    : originalEvent;
   const path = e.composedPath();
   const retargetedPath = path.map((node) => retarget(node, path));
   const bubbles = e.bubbles;
@@ -417,7 +445,7 @@ function shadyDispatchEvent(originalEvent) {
       }
     }
   } finally {
-    if (utils.settings.hasDescriptors) {
+    if (!shadyDispatchEventNeedsProxyEvent) {
       // Restore previous currentTarget & eventPhase descriptors when
       // dispatching is complete
       if (prevCurrentTargetDesc) {
