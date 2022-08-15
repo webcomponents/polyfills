@@ -3107,6 +3107,16 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         });
 
         test('The semantics of `:scope` are preserved.', function () {
+          // Skip if `:scope` isn't natively supported.
+          try {
+            ShadyDOM.nativeMethods.querySelectorAll.call(
+              document,
+              'body:scope'
+            );
+          } catch (e) {
+            this.skip();
+          }
+
           const host = createEnabledElement('x-query-selector-scope');
           const contextElement = ShadyDOM.wrapIfNeeded(
             host
