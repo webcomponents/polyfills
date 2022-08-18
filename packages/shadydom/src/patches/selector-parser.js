@@ -45,7 +45,7 @@ const findNext = (str, queryChars, withGroupings = true) => {
 const COMBINATORS = [' ', '>', '~', '+'];
 
 /**
- * @param str {string}
+ * @param {string} str
  * @return {!ComplexSelectorParts}
  */
 const parseComplexSelector = (str) => {
@@ -109,7 +109,7 @@ const parseComplexSelector = (str) => {
 };
 
 /**
- * @param str {string}
+ * @param {string} str
  * @return {!Array<!ComplexSelectorParts>}
  */
 export const parseSelectorList = (str) => {
