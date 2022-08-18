@@ -378,11 +378,10 @@ function fireHandlers(event, node, phase) {
 //
 // Fortunately, these two issues seem to be mutually exclusive amongst the
 // browsers that we test on, so we can specifically check if `currentTarget`
-// exists on a new `Event` and switch based off of that. Safari 9 both doesn't
-// have working descriptors for `Event` properties and doesn't allow getter
-// contexts to be anything other than the original event, so
-// `utils.settings.hasDescriptors` is not a sufficient test for deciding this
-// behavior.
+// exists on a new `Event` and switch based off of that.
+// `utils.settings.hasDescriptors` is not sufficient for deciding this behavior
+// because, in Safari 9, `currentTarget` is not an own property of events, but
+// `.hasDescriptors` is still false.
 const shadyDispatchEventNeedsProxyEvent = new Event('e').hasOwnProperty(
   'currentTarget'
 );
