@@ -20,7 +20,6 @@ const STRINGS = {
 };
 
 const findNext = (str, queryChars, withGroupings = true) => {
-  let before = '';
   for (let i = 0; i < str.length; i++) {
     if (str[i] === '\\' && i < str.length - 1 && str[i + 1] !== '\n') {
       // Skip escaped character.
