@@ -21,6 +21,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Adds an opt-out for polyfilling `element(s)FromPoint` on `document` via
   setting `ShadyDOM.useNativeDocumentEFP` to `true`.
   ([#472](https://github.com/webcomponents/polyfills/pull/472))
+- In browsers where `EventTarget` doesn't exist, `XMLHttpRequest.prototype`'s
+  `EventTarget`-like properties are now patched. In browsers where events'
+  `currentTarget` is an own value property and Shady DOM needs to manually
+  dispatch an event, Shady DOM will instead dispatch a new object having the
+  original event as its prototype so that it can update `currentTarget` without
+  modifying the built-in property descriptor.
+  ([#519](https://github.com/webcomponents/polyfills/pull/519))
 
 ## [1.9.0] - 2021-08-02
 
