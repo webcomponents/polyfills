@@ -59,6 +59,8 @@ const COMBINATORS = [' ', '>', '~', '+'];
  * @return {!ComplexSelectorParts}
  */
 const parseComplexSelector = (str) => {
+  str = str.trim();
+
   /**
    * @type {!Array<string>}
    */
@@ -73,16 +75,6 @@ const parseComplexSelector = (str) => {
       chunks.push(str.substring(0, index));
       str = str.substring(index);
     }
-  }
-
-  // Remove leading whitespace.
-  while (chunks[0] === ' ') {
-    chunks.shift();
-  }
-
-  // Remove trailing whitespace.
-  while (chunks[chunks.length - 1] === ' ') {
-    chunks.pop();
   }
 
   // Remove whitespace next to combinators.
