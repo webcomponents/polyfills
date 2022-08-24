@@ -63,7 +63,7 @@ const parseComplexSelector = (str) => {
     const nextIndex = findNext(str, i, [' ', '>', '~', '+']);
     const next = nextIndex === i ? str[i] : str.substring(i, nextIndex);
 
-    if (['>', '+', '~'].includes(prev) && next === ' ') {
+    if ([' ', '>', '+', '~'].includes(prev) && next === ' ') {
       // Do nothing.
     } else if (prev === ' ' && ['>', '+', '~'].includes(next)) {
       chunks[chunks.length - 1] = next;
