@@ -48,22 +48,40 @@ const findNext = (str, start, queryChars, matchNestedParens = true) => {
 
 /**
  * @param {string} str
- * @return {!ComplexSelectorParts}
+ * @return {!Array<!ComplexSelectorParts>}
  */
-const parseComplexSelector = (str) => {
-  str = str.trim();
+export const parseSelectorList = (str) => {
+  /**
+   * @type {!Array<!ComplexSelectorParts>}
+   */
+  const results = [];
 
   /**
    * @type {!Array<string>}
    */
   const chunks = [];
 
+  const complexSelectorBoundary = () => {
+    if (chunks.length > 0) {
+      while (chunks[chunks.length - 1] === ' ') {
+        chunks.pop();
+      }
+      results.push({
+        compoundSelectors: chunks.filter((x, i) => i % 2 === 0),
+        combinators: chunks.filter((x, i) => i % 2 === 1),
+      });
+      chunks.length = 0;
+    }
+  };
+
   for (let i = 0; i < str.length; ) {
     const prev = chunks[chunks.length - 1];
-    const nextIndex = findNext(str, i, [' ', '>', '~', '+']);
+    const nextIndex = findNext(str, i, [',', ' ', '>', '+', '~']);
     const next = nextIndex === i ? str[i] : str.substring(i, nextIndex);
 
-    if ([' ', '>', '+', '~'].includes(prev) && next === ' ') {
+    if (next === ',') {
+      complexSelectorBoundary();
+    } else if ([undefined, ' ', '>', '+', '~'].includes(prev) && next === ' ') {
       // Do nothing.
     } else if (prev === ' ' && ['>', '+', '~'].includes(next)) {
       chunks[chunks.length - 1] = next;
@@ -74,24 +92,7 @@ const parseComplexSelector = (str) => {
     i = nextIndex + (nextIndex === i ? 1 : 0);
   }
 
-  return {
-    compoundSelectors: chunks.filter((x, i) => i % 2 === 0),
-    combinators: chunks.filter((x, i) => i % 2 === 1),
-  };
-};
-
-/**
- * @param {string} str
- * @return {!Array<!ComplexSelectorParts>}
- */
-export const parseSelectorList = (str) => {
-  const results = [];
-
-  for (let i = 0; i < str.length; ) {
-    const next = findNext(str, i, [',']);
-    results.push(parseComplexSelector(str.substring(i, next)));
-    i = next + 1;
-  }
+  complexSelectorBoundary();
 
   return results;
 };
