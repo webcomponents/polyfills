@@ -56,34 +56,23 @@ const parseComplexSelector = (str) => {
   /**
    * @type {!Array<string>}
    */
-  let chunks = [];
+  const chunks = [];
 
   for (let i = 0; i < str.length; ) {
-    const next = findNext(str, i, [' ', '>', '~', '+']);
-    if (next === i) {
-      chunks.push(str[i]);
-      i++;
-    } else {
-      chunks.push(str.substring(i, next));
-      i = next;
-    }
-  }
+    const prev = chunks[chunks.length - 1];
+    const nextIndex = findNext(str, i, [' ', '>', '~', '+']);
+    const next = nextIndex === i ? str[i] : str.substring(i, nextIndex);
 
-  // Remove whitespace chunks next to other combinators.
-  chunks = chunks.reduce((out, next) => {
-    const prev = out[out.length - 1];
     if (['>', '+', '~'].includes(prev) && next === ' ') {
-      return out;
+      // Do nothing.
+    } else if (prev === ' ' && ['>', '+', '~'].includes(next)) {
+      chunks[chunks.length - 1] = next;
+    } else {
+      chunks.push(next);
     }
 
-    if (prev === ' ' && ['>', '+', '~'].includes(next)) {
-      out[out.length - 1] = next;
-      return out;
-    }
-
-    out.push(next);
-    return out;
-  }, []);
+    i = nextIndex + (nextIndex === i ? 1 : 0);
+  }
 
   return {
     compoundSelectors: chunks.filter((x, i) => i % 2 === 0),
