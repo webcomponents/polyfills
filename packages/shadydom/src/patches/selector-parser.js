@@ -21,12 +21,13 @@ const PARENS = new Map([
 
 /**
  * @param {string} str
+ * @param {number} start
  * @param {!Array<string>} queryChars
  * @param {boolean} matchNestedParens
  * @return {number}
  */
-const findNext = (str, queryChars, matchNestedParens = true) => {
-  for (let i = 0; i < str.length; i++) {
+const findNext = (str, start, queryChars, matchNestedParens = true) => {
+  for (let i = start; i < str.length; i++) {
     if (str[i] === '\\' && i < str.length - 1 && str[i + 1] !== '\n') {
       // Skip escaped character.
       i++;
@@ -34,11 +35,7 @@ const findNext = (str, queryChars, matchNestedParens = true) => {
       return i;
     } else if (matchNestedParens && PARENS.has(str[i])) {
       const parenInfo = PARENS.get(str[i]);
-      i += findNext(
-        str.substring(i + 1),
-        [parenInfo.end],
-        parenInfo.matchNestedParens
-      );
+      i += findNext(str, i + 1, [parenInfo.end], parenInfo.matchNestedParens);
       continue;
     }
 
@@ -66,14 +63,14 @@ const parseComplexSelector = (str) => {
    */
   let chunks = [];
 
-  while (str.length) {
-    const index = findNext(str, COMBINATORS);
-    if (index === 0) {
-      chunks.push(str[0]);
-      str = str.substring(1);
+  for (let i = 0; i < str.length;) {
+    const next = findNext(str, i, COMBINATORS);
+    if (next === i) {
+      chunks.push(str[i]);
+      i++;
     } else {
-      chunks.push(str.substring(0, index));
-      str = str.substring(index);
+      chunks.push(str.substring(i, next));
+      i = next;
     }
   }
 
@@ -99,10 +96,10 @@ const parseComplexSelector = (str) => {
 export const parseSelectorList = (str) => {
   const results = [];
 
-  while (str.length) {
-    const index = findNext(str, [',']);
-    results.push(parseComplexSelector(str.substring(0, index)));
-    str = str.substring(index + 1);
+  for (let i = 0; i < str.length;) {
+    const next = findNext(str, i, [',']);
+    results.push(parseComplexSelector(str.substring(i, next)));
+    i = next + 1;
   }
 
   return results;
