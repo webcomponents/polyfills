@@ -9,28 +9,36 @@
  */
 export let ComplexSelectorParts;
 
-const PARENS = {
-  '(': ')',
-  '[': ']',
-};
+/**
+ * @type {!Map<string, {end: string, matchNestedParens: boolean}>}
+ */
+const PARENS = new Map([
+  ['(', {end: ')', matchNestedParens: true}],
+  ['[', {end: ']', matchNestedParens: true}],
+  ['"', {end: '"', matchNestedParens: false}],
+  ["'", {end: "'", matchNestedParens: false}],
+]);
 
-const STRINGS = {
-  '"': '"',
-  "'": "'",
-};
-
-const findNext = (str, queryChars, withGroupings = true) => {
+/**
+ * @param {string} str
+ * @param {!Array<string>} queryChars
+ * @param {boolean} matchNestedParens
+ * @return {number}
+ */
+const findNext = (str, queryChars, matchNestedParens = true) => {
   for (let i = 0; i < str.length; i++) {
     if (str[i] === '\\' && i < str.length - 1 && str[i + 1] !== '\n') {
       // Skip escaped character.
       i++;
     } else if (queryChars.includes(str[i])) {
       return i;
-    } else if (withGroupings && PARENS[str[i]]) {
-      i += findNext(str.substring(i + 1), [PARENS[str[i]]], withGroupings);
-      continue;
-    } else if (withGroupings && STRINGS[str[i]]) {
-      i += findNext(str.substring(i + 1), [STRINGS[str[i]]], false);
+    } else if (matchNestedParens && PARENS.has(str[i])) {
+      const parenInfo = PARENS.get(str[i]);
+      i += findNext(
+        str.substring(i + 1),
+        [parenInfo.end],
+        parenInfo.matchNestedParens
+      );
       continue;
     }
 
@@ -41,6 +49,9 @@ const findNext = (str, queryChars, withGroupings = true) => {
   return str.length;
 };
 
+/**
+ * @type {!Array<string>}
+ */
 const COMBINATORS = [' ', '>', '~', '+'];
 
 /**
