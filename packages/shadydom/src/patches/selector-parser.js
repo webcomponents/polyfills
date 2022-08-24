@@ -47,11 +47,6 @@ const findNext = (str, start, queryChars, matchNestedParens = true) => {
 };
 
 /**
- * @type {!Array<string>}
- */
-const COMBINATORS = [' ', '>', '~', '+'];
-
-/**
  * @param {string} str
  * @return {!ComplexSelectorParts}
  */
@@ -64,7 +59,7 @@ const parseComplexSelector = (str) => {
   let chunks = [];
 
   for (let i = 0; i < str.length;) {
-    const next = findNext(str, i, COMBINATORS);
+    const next = findNext(str, i, [' ', '>', '~', '+']);
     if (next === i) {
       chunks.push(str[i]);
       i++;
