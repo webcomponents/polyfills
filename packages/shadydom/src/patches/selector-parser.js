@@ -35,7 +35,7 @@ const findNext = (str, start, queryChars, matchNestedParens = true) => {
       return i;
     } else if (matchNestedParens && PARENS.has(str[i])) {
       const parenInfo = PARENS.get(str[i]);
-      i += findNext(str, i + 1, [parenInfo.end], parenInfo.matchNestedParens);
+      i = findNext(str, i + 1, [parenInfo.end], parenInfo.matchNestedParens);
       continue;
     }
 
