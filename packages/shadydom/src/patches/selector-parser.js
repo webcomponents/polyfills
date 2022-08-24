@@ -69,14 +69,21 @@ const parseComplexSelector = (str) => {
     }
   }
 
-  // Remove whitespace next to combinators.
-  chunks = chunks.filter((x, i) => {
-    return !(
-      x === ' ' &&
-      (COMBINATORS.includes(chunks[i - 1]) ||
-        COMBINATORS.includes(chunks[i + 1]))
-    );
-  });
+  // Remove whitespace chunks next to other combinators.
+  chunks = chunks.reduce((out, next) => {
+    const prev = out[out.length - 1];
+    if (['>', '+', '~'].includes(prev) && next === ' ') {
+      return out;
+    }
+
+    if (prev === ' ' && ['>', '+', '~'].includes(next)) {
+      out[out.length - 1] = next;
+      return out;
+    }
+
+    out.push(next);
+    return out;
+  }, []);
 
   return {
     compoundSelectors: chunks.filter((x, i) => i % 2 === 0),
