@@ -10,9 +10,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 import * as utils from '../utils.js';
 import {shadyDataForNode} from '../shady-data.js';
-import extractSelectors, {
-  splitSelectorBlocks,
-} from './css-selector-splitter.js';
+import {ComplexSelectorParts, parseSelectorList} from './selector-parser.js';
 
 /**
  * @param {Node} node
@@ -143,32 +141,9 @@ export const ParentNodePatches = utils.getOwnPropertyDescriptors({
  */
 const logicalQuerySelectorAll = (contextElement, selectorList) => {
   /**
-   * A key-renamed version of the return value of `extractSelectors`, which
-   * describes a single complex selector.
-   *
-   * @typedef {{
-   *   compoundSelectors: !Array<string>,
-   *   combinators: !Array<string>,
-   * }}
-   */
-  let ComplexSelectorParts;
-
-  /**
    * @type {!Array<!ComplexSelectorParts>}
    */
-  const complexSelectors = extractSelectors(selectorList).map(
-    (complexSelector) => {
-      const {
-        'selectors': compoundSelectors,
-        'joiners': combinators,
-      } = splitSelectorBlocks(complexSelector);
-
-      return {
-        compoundSelectors,
-        combinators,
-      };
-    }
-  );
+  const complexSelectors = parseSelectorList(selectorList);
 
   if (complexSelectors.length < 1) {
     return [];
