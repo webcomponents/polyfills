@@ -86,27 +86,9 @@ const parseComplexSelector = (str) => {
     );
   });
 
-  /**
-   * @type {!Array<string>}
-   */
-  const compoundSelectors = [];
-
-  /**
-   * @type {!Array<string>}
-   */
-  const combinators = [];
-
-  for (let i = 0; i < chunks.length; i++) {
-    if (i % 2 === 0) {
-      compoundSelectors.push(chunks[i]);
-    } else {
-      combinators.push(chunks[i]);
-    }
-  }
-
   return {
-    compoundSelectors,
-    combinators,
+    compoundSelectors: chunks.filter((x, i) => i % 2 === 0),
+    combinators: chunks.filter((x, i) => i % 2 === 1),
   };
 };
 
