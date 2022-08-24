@@ -58,7 +58,7 @@ const parseComplexSelector = (str) => {
    */
   let chunks = [];
 
-  for (let i = 0; i < str.length;) {
+  for (let i = 0; i < str.length; ) {
     const next = findNext(str, i, [' ', '>', '~', '+']);
     if (next === i) {
       chunks.push(str[i]);
@@ -91,7 +91,7 @@ const parseComplexSelector = (str) => {
 export const parseSelectorList = (str) => {
   const results = [];
 
-  for (let i = 0; i < str.length;) {
+  for (let i = 0; i < str.length; ) {
     const next = findNext(str, i, [',']);
     results.push(parseComplexSelector(str.substring(i, next)));
     i = next + 1;
