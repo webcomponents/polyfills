@@ -31,7 +31,7 @@ const findNext = (str, start, queryChars, matchNestedParens = true) => {
     if (str[i] === '\\' && i < str.length - 1 && str[i + 1] !== '\n') {
       // Skip escaped character.
       i++;
-    } else if (queryChars.includes(str[i])) {
+    } else if (queryChars.indexOf(str[i]) !== -1) {
       return i;
     } else if (matchNestedParens && PARENS.has(str[i])) {
       const parenInfo = PARENS.get(str[i]);
@@ -81,9 +81,12 @@ export const parseSelectorList = (str) => {
 
     if (next === ',') {
       complexSelectorBoundary();
-    } else if ([undefined, ' ', '>', '+', '~'].includes(prev) && next === ' ') {
+    } else if (
+      [undefined, ' ', '>', '+', '~'].indexOf(prev) !== -1 &&
+      next === ' '
+    ) {
       // Do nothing.
-    } else if (prev === ' ' && ['>', '+', '~'].includes(next)) {
+    } else if (prev === ' ' && ['>', '+', '~'].indexOf(next) !== -1) {
       chunks[chunks.length - 1] = next;
     } else {
       chunks.push(next);
