@@ -164,8 +164,33 @@ if (utils.settings.inUse) {
     //   this option preserves the semantics of `:scope` by only considering
     //   compound selectors containing `:scope` to be matching if the context
     //   element of the `matches` call is also the context element of the
-    //   wrapper call. (Note that this implementation detects `:scope` by simple
-    //   substring inclusion.)
+    //   wrapper call.
+    //
+    //   However, the parser used for this option is not strictly correct.
+    //   Notable caveats include:
+    //
+    //     - The parser assumes the selector list it's given is syntactically
+    //     correct. When given a selector that would not parse under a full
+    //     implementation, this implementation may fail silently.
+    //
+    //     - Only top-level combinators and compound selectors are taken into
+    //     consideration while walking the tree. Each top-level compound
+    //     selector is tested against candidate elements as a whole, without
+    //     modification. This means that selectors nested in arguments of
+    //     functional pseudo-classes (e.g. `a > b` in `:is(a > b)`) are still
+    //     matched by the browser against the real tree, not Shady DOM's logical
+    //     tree.
+    //
+    //     - `:scope` is only supported at the top-level. Particularly, if the
+    //     text `:scope` appears anywhere within a compound selector, then the
+    //     selector engine will only allow that compound selector to match the
+    //     context element. Having the text `:scope` inside a string
+    //     (`x[y=":scope"]`) or an argument to a functional pseudo-selector
+    //     (`:not(:scope > x)`) will likely break your selector.
+    //
+    //     - Comments are not supported. (e.g. `a /* b */ c`)
+    //
+    //     - The (draft) column combinator is not supported. (e.g. `a || b`)
     'querySelectorImplementation':
       utils.settings['querySelectorImplementation'],
   };
