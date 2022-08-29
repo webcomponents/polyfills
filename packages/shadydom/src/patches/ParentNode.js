@@ -10,7 +10,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 import * as utils from '../utils.js';
 import {shadyDataForNode} from '../shady-data.js';
-import {ComplexSelectorParts, parseSelectorList} from './selector-parser.js';
+import {ComplexSelectorParts, parseSelectorList} from '../selector-parser.js';
 
 /**
  * @param {Node} node
