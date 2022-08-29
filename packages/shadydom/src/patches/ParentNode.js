@@ -151,8 +151,8 @@ const logicalQuerySelectorAll = (contextElement, selectorList) => {
 
   /**
    * Determines if a single compound selector matches an element. If the
-   * selector contains `:scope` (as a substring), then `element` must be
-   * `contextElement`.
+   * selector contains `:scope` (as a substring), then the selector only is only
+   * considered matching if `element` is `contextElement`.
    *
    * @param {!Element} element
    * @param {string} compoundSelector
