@@ -28,6 +28,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   original event as its prototype so that it can update `currentTarget` without
   modifying the built-in property descriptor.
   ([#519](https://github.com/webcomponents/polyfills/pull/519))
+- Fix `:scope` in `querySelector{,All}` by traversing the logical tree manually
+  to match selectors.
+  ([#517](https://github.com/webcomponents/polyfills/pull/517))
 
 ## [1.9.0] - 2021-08-02
 
