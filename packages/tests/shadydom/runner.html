@@ -26,6 +26,12 @@
     'shady-dynamic.html?forceCustomElements=true',
     'shady-dynamic.html?noPatch=true&forceCustomElements=true',
     'shady-dynamic.html?noPatch=on-demand&forceCustomElements=true',
+    'shady-dynamic.html?querySelectorImplementation=selectorEngine',
+    'shady-dynamic.html?noPatch=true&querySelectorImplementation=selectorEngine',
+    'shady-dynamic.html?noPatch=on-demand&querySelectorImplementation=selectorEngine',
+    'shady-dynamic.html?forceCustomElements=true&querySelectorImplementation=selectorEngine',
+    'shady-dynamic.html?noPatch=true&forceCustomElements=true&querySelectorImplementation=selectorEngine',
+    'shady-dynamic.html?noPatch=on-demand&forceCustomElements=true&querySelectorImplementation=selectorEngine',
 
     'shady-content.html',
     'shady-content.html?noPatch=true',
@@ -74,12 +80,7 @@
     'filter-mutations.html',
     'native-access.html',
     'prefer-performance.html',
-  ].reduce((acc, item) => {
-    acc.push(item);
-    const joiner = item.indexOf('?') !== -1 ? '&' : '?';
-    acc.push(item + joiner + 'querySelectorImplementation=selectorEngine');
-    return acc;
-  }, []);
+  ];
 
   // test only under native custom elements.
   if (window.customElements) {
