@@ -3220,7 +3220,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             const host = createEnabledElement(
               'x-query-selector-parser-escape-single-quotes'
             );
-            const result = host.shadowRoot.querySelector(
+            const result = ShadyDOM.wrapIfNeeded(host).shadowRoot.querySelector(
               "div[with-single-quote='a\\'b'][another-attr]"
             );
             assert(result);
@@ -3233,7 +3233,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             const host = createEnabledElement(
               'x-query-selector-parser-escape-double-quotes'
             );
-            const result = host.shadowRoot.querySelector(
+            const result = ShadyDOM.wrapIfNeeded(host).shadowRoot.querySelector(
               'div[with-double-quote="a\\"b"][another-attr]'
             );
             assert(result);
@@ -3246,7 +3246,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             const host = createEnabledElement(
               'x-query-selector-parser-escape-brackets'
             );
-            const result = host.shadowRoot.querySelector(
+            const result = ShadyDOM.wrapIfNeeded(host).shadowRoot.querySelector(
               'div[with-bracket\\]][another-attr]'
             );
             assert(result);
@@ -3259,7 +3259,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             const host = createEnabledElement(
               'x-query-selector-parser-escape-parens'
             );
-            const result = host.shadowRoot.querySelector(
+            const result = ShadyDOM.wrapIfNeeded(host).shadowRoot.querySelector(
               ':not([with-paren\\)])[without-paren]'
             );
             assert(result);
@@ -3272,7 +3272,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             const host = createEnabledElement(
               'x-query-selector-parser-comma-in-attr-value'
             );
-            const result = host.shadowRoot.querySelector(
+            const result = ShadyDOM.wrapIfNeeded(host).shadowRoot.querySelector(
               "div[comma-in-value=','][another-attr]"
             );
             assert(result);
@@ -3285,7 +3285,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             const host = createEnabledElement(
               'x-query-selector-parser-comma-in-attr-value'
             );
-            const result = host.shadowRoot.querySelector(
+            const result = ShadyDOM.wrapIfNeeded(host).shadowRoot.querySelector(
               'div[comma-in-value=","][another-attr]'
             );
             assert(result);
@@ -3307,7 +3307,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             const host = createEnabledElement(
               'x-query-selector-parser-plain-attrs'
             );
-            const result = host.shadowRoot.querySelector(
+            const result = ShadyDOM.wrapIfNeeded(host).shadowRoot.querySelector(
               'div[some-attr]:not(some-name, another-name)[another-attr]'
             );
             assert(result);
@@ -3322,7 +3322,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             );
             // This is really a test for escape sequences, since commas aren't
             // valid inside brackets without being escaped.
-            const result = host.shadowRoot.querySelector(
+            const result = ShadyDOM.wrapIfNeeded(host).shadowRoot.querySelector(
               'div[comma-in-name-\\,][another-attr]'
             );
             assert(result);
@@ -3337,6 +3337,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             );
 
             [
+              // All permutations with 1 space.
               'div>[some-attr][another-attr]',
               'div>[some-attr][another-attr] ',
               'div> [some-attr][another-attr]',
@@ -3353,6 +3354,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
               ' div >[some-attr][another-attr] ',
               ' div > [some-attr][another-attr]',
               ' div > [some-attr][another-attr] ',
+              // All permutations with 4 spaces.
               'div>[some-attr][another-attr]',
               'div>[some-attr][another-attr]    ',
               'div>    [some-attr][another-attr]',
@@ -3370,7 +3372,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
               '    div    >    [some-attr][another-attr]',
               '    div    >    [some-attr][another-attr]    ',
             ].forEach((selector) => {
-              const result = host.shadowRoot.querySelector(selector);
+              const result = ShadyDOM.wrapIfNeeded(
+                host
+              ).shadowRoot.querySelector(selector);
               assert(result);
               assert(!result.hasAttribute('decoy'));
               assert(result.hasAttribute('some-attr'));
