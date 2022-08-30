@@ -453,6 +453,72 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       defineTestElement('x-query-selector-scope');
     </script>
 
+    <template id="x-query-selector-parser-escape-single-quotes">
+      <div with-single-quote="a'b" decoy></div>
+      <div another-attr decoy></div>
+      <div with-single-quote="a'b" another-attr></div>
+    </template>
+    <script>
+      defineTestElement('x-query-selector-parser-escape-single-quotes');
+    </script>
+
+    <template id="x-query-selector-parser-escape-double-quotes">
+      <div with-double-quote='a"b' decoy></div>
+      <div another-attr decoy></div>
+      <div with-double-quote='a"b' another-attr></div>
+    </template>
+    <script>
+      defineTestElement('x-query-selector-parser-escape-double-quotes');
+    </script>
+
+    <template id="x-query-selector-parser-escape-brackets">
+      <div with-bracket] decoy></div>
+      <div another-attr decoy></div>
+      <div with-bracket] another-attr></div>
+    </template>
+    <script>
+      defineTestElement('x-query-selector-parser-escape-brackets');
+    </script>
+
+    <template id="x-query-selector-parser-escape-parens">
+      <div with-paren) decoy></div>
+      <div without-paren></div>
+    </template>
+    <script>
+      defineTestElement('x-query-selector-parser-escape-parens');
+    </script>
+
+    <template id="x-query-selector-parser-comma-in-attr-name">
+      <div comma-in-name-, decoy></div>
+      <div another-attr decoy></div>
+      <div comma-in-name-, another-attr></div>
+    </template>
+    <script>
+      defineTestElement('x-query-selector-parser-comma-in-attr-name');
+    </script>
+
+    <template id="x-query-selector-parser-comma-in-attr-value">
+      <div comma-in-value="," decoy></div>
+      <div another-attr decoy></div>
+      <some-name another-attr decoy></some-name>
+      <another-name another-attr decoy></another-name>
+      <div comma-in-value="," another-attr></div>
+    </template>
+    <script>
+      defineTestElement('x-query-selector-parser-comma-in-attr-value');
+    </script>
+
+    <template id="x-query-selector-parser-plain-attrs">
+      <div some-attr decoy></div>
+      <div another-attr decoy></div>
+      <some-name another-attr decoy></some-name>
+      <another-name another-attr decoy></another-name>
+      <div some-attr another-attr></div>
+    </template>
+    <script>
+      defineTestElement('x-query-selector-parser-plain-attrs');
+    </script>
+
     <script>
       'use strict';
 
@@ -3135,6 +3201,123 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             assert.equal(results.length, 1);
             assert.equal(results[0].id, 'target');
           }
+        });
+
+        suite('parseSelectorList', function () {
+          test('Escape sequences are handled in single-quoted strings.', function () {
+            const host = createEnabledElement(
+              'x-query-selector-parser-escape-single-quotes'
+            );
+            const result = host.shadowRoot.querySelector(
+              "div[with-single-quote='a\\'b'][another-attr]"
+            );
+            assert(result);
+            assert(!result.hasAttribute('decoy'));
+            assert.equal(result.getAttribute('with-single-quote'), "a'b");
+            assert(result.hasAttribute('another-attr'));
+          });
+
+          test('Escape sequences are handled in double-quoted strings.', function () {
+            const host = createEnabledElement(
+              'x-query-selector-parser-escape-double-quotes'
+            );
+            const result = host.shadowRoot.querySelector(
+              'div[with-double-quote="a\\"b"][another-attr]'
+            );
+            assert(result);
+            assert(!result.hasAttribute('decoy'));
+            assert.equal(result.getAttribute('with-double-quote'), 'a"b');
+            assert(result.hasAttribute('another-attr'));
+          });
+
+          test('Escape sequences are handled in brackets.', function () {
+            const host = createEnabledElement(
+              'x-query-selector-parser-escape-brackets'
+            );
+            const result = host.shadowRoot.querySelector(
+              'div[with-bracket\\]][another-attr]'
+            );
+            assert(result);
+            assert(!result.hasAttribute('decoy'));
+            assert(result.hasAttribute('with-bracket]'));
+            assert(result.hasAttribute('another-attr'));
+          });
+
+          test('Escape sequences are handled in parentheses.', function () {
+            const host = createEnabledElement(
+              'x-query-selector-parser-escape-parens'
+            );
+            const result = host.shadowRoot.querySelector(
+              ':not([with-paren\\)])[without-paren]'
+            );
+            assert(result);
+            assert(!result.hasAttribute('decoy'));
+            assert(!result.hasAttribute('with-paren)'));
+            assert(result.hasAttribute('without-paren'));
+          });
+
+          test('Commas nested in single-quoted strings do not split top-level complex selectors.', function () {
+            const host = createEnabledElement(
+              'x-query-selector-parser-comma-in-attr-value'
+            );
+            const result = host.shadowRoot.querySelector(
+              "div[comma-in-value=','][another-attr]"
+            );
+            assert(result);
+            assert(!result.hasAttribute('decoy'));
+            assert.equal(result.getAttribute('comma-in-value'), ',');
+            assert(result.hasAttribute('another-attr'));
+          });
+
+          test('Commas nested in double-quoted strings do not split top-level complex selectors.', function () {
+            const host = createEnabledElement(
+              'x-query-selector-parser-comma-in-attr-value'
+            );
+            const result = host.shadowRoot.querySelector(
+              'div[comma-in-value=","][another-attr]'
+            );
+            assert(result);
+            assert(!result.hasAttribute('decoy'));
+            assert.equal(result.getAttribute('comma-in-value'), ',');
+            assert(result.hasAttribute('another-attr'));
+          });
+
+          test('Commas nested in parentheses do not split top-level complex selectors.', function () {
+            // Only run this test in browsers that support selector lists as
+            // arguments to functional pseudo-classes.
+            try {
+              document.querySelector(':not(abc, def)');
+            } catch (e) {
+              this.skip();
+              return;
+            }
+
+            const host = createEnabledElement(
+              'x-query-selector-parser-plain-attrs'
+            );
+            const result = host.shadowRoot.querySelector(
+              'div[some-attr]:not(some-name, another-name)[another-attr]'
+            );
+            assert(result);
+            assert(!result.hasAttribute('decoy'));
+            assert(result.hasAttribute('some-attr'));
+            assert(result.hasAttribute('another-attr'));
+          });
+
+          test('Commas nested in brackets do not split top-level complex selectors.', function () {
+            const host = createEnabledElement(
+              'x-query-selector-parser-comma-in-attr-name'
+            );
+            // This is really a test for escape sequences, since commas aren't
+            // valid inside brackets without being escaped.
+            const result = host.shadowRoot.querySelector(
+              'div[comma-in-name-\\,][another-attr]'
+            );
+            assert(result);
+            assert(!result.hasAttribute('decoy'));
+            assert(result.hasAttribute('comma-in-name-,'));
+            assert(result.hasAttribute('another-attr'));
+          });
         });
       });
     </script>
