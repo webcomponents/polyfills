@@ -519,6 +519,18 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       defineTestElement('x-query-selector-parser-plain-attrs');
     </script>
 
+    <template id="x-query-selector-parser-optional-whitespace">
+      <div decoy>
+        <div another-attr decoy></div>
+        <some-name another-attr decoy></some-name>
+        <another-name another-attr decoy></another-name>
+        <div some-attr another-attr></div>
+      </div>
+    </template>
+    <script>
+      defineTestElement('x-query-selector-parser-optional-whitespace');
+    </script>
+
     <script>
       'use strict';
 
@@ -3317,6 +3329,53 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             assert(!result.hasAttribute('decoy'));
             assert(result.hasAttribute('comma-in-name-,'));
             assert(result.hasAttribute('another-attr'));
+          });
+
+          test('Whitespace surrounding compound selectors and combinators is optional.', function () {
+            const host = createEnabledElement(
+              'x-query-selector-parser-optional-whitespace'
+            );
+
+            [
+              'div>[some-attr][another-attr]',
+              'div>[some-attr][another-attr] ',
+              'div> [some-attr][another-attr]',
+              'div> [some-attr][another-attr] ',
+              'div >[some-attr][another-attr]',
+              'div >[some-attr][another-attr] ',
+              'div > [some-attr][another-attr]',
+              'div > [some-attr][another-attr] ',
+              ' div>[some-attr][another-attr]',
+              ' div>[some-attr][another-attr] ',
+              ' div> [some-attr][another-attr]',
+              ' div> [some-attr][another-attr] ',
+              ' div >[some-attr][another-attr]',
+              ' div >[some-attr][another-attr] ',
+              ' div > [some-attr][another-attr]',
+              ' div > [some-attr][another-attr] ',
+              'div>[some-attr][another-attr]',
+              'div>[some-attr][another-attr]    ',
+              'div>    [some-attr][another-attr]',
+              'div>    [some-attr][another-attr]    ',
+              'div    >[some-attr][another-attr]',
+              'div    >[some-attr][another-attr]    ',
+              'div    >    [some-attr][another-attr]',
+              'div    >    [some-attr][another-attr]    ',
+              '    div>[some-attr][another-attr]',
+              '    div>[some-attr][another-attr]    ',
+              '    div>    [some-attr][another-attr]',
+              '    div>    [some-attr][another-attr]    ',
+              '    div    >[some-attr][another-attr]',
+              '    div    >[some-attr][another-attr]    ',
+              '    div    >    [some-attr][another-attr]',
+              '    div    >    [some-attr][another-attr]    ',
+            ].forEach((selector) => {
+              const result = host.shadowRoot.querySelector(selector);
+              assert(result);
+              assert(!result.hasAttribute('decoy'));
+              assert(result.hasAttribute('some-attr'));
+              assert(result.hasAttribute('another-attr'));
+            });
           });
         });
       });
