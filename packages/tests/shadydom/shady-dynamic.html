@@ -3118,9 +3118,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             host
           ).shadowRoot.getElementById('contextElement');
 
-          const results = contextElement.querySelectorAll(
-            '#contextElement [match]'
-          );
+          const results = ShadyDOM.wrapIfNeeded(
+            contextElement
+          ).querySelectorAll('#contextElement [match]');
 
           // No shadow root hosts below #contextElement or use of `:scope`, so
           // the results are the same for all implementations.
@@ -3138,9 +3138,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             host
           ).shadowRoot.getElementById('contextElement');
 
-          const results = contextElement.querySelectorAll(
-            '#contextElement > *'
-          );
+          const results = ShadyDOM.wrapIfNeeded(
+            contextElement
+          ).querySelectorAll('#contextElement > *');
 
           // No shadow root hosts below #contextElement or use of `:scope`, so
           // the results are the same for all implementations.
@@ -3158,7 +3158,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             host
           ).shadowRoot.getElementById('contextElement');
 
-          const results = contextElement.querySelectorAll('[before] + *');
+          const results = ShadyDOM.wrapIfNeeded(
+            contextElement
+          ).querySelectorAll('[before] + *');
 
           // No shadow root hosts below #contextElement or use of `:scope`, so
           // the results are the same for all implementations.
@@ -3176,7 +3178,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             host
           ).shadowRoot.getElementById('contextElement');
 
-          const results = contextElement.querySelectorAll('[before] ~ *');
+          const results = ShadyDOM.wrapIfNeeded(
+            contextElement
+          ).querySelectorAll('[before] ~ *');
 
           // No shadow root hosts below #contextElement or use of `:scope`, so
           // the results are the same for all implementations.
@@ -3217,9 +3221,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             host
           ).shadowRoot.getElementById('contextElement');
 
-          const results = ShadyDOM.wrap(contextElement).querySelectorAll(
-            '#b, #e, #a, #c, #d'
-          );
+          const results = ShadyDOM.wrapIfNeeded(
+            contextElement
+          ).querySelectorAll('#b, #e, #a, #c, #d');
 
           assert.equal(results.length, 5);
           assert.equal(results[0].id, 'a');
