@@ -10,7 +10,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 import * as utils from '../utils.js';
 import {shadyDataForNode} from '../shady-data.js';
-import {ComplexSelectorParts, parseSelectorList} from '../selector-parser.js';
+import {ComplexSelectorParts, parseSelectorList} from '../selector-parser.js'; // eslint-disable-line @typescript-eslint/no-unused-vars
 
 /**
  * @param {Node} node
@@ -187,7 +187,7 @@ const logicalQuerySelectorAll = (contextElement, selectorList) => {
    *   index: number,
    * }}
    */
-  let SelectorMatchingCursor;
+  let SelectorMatchingCursor; // eslint-disable-line @typescript-eslint/no-unused-vars
 
   /**
    * The list of `SelectorMatchingCursor`s, initialized with cursors pointing at
