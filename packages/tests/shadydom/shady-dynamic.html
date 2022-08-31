@@ -3298,7 +3298,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             // Only run this test in browsers that support selector lists as
             // arguments to functional pseudo-classes.
             try {
-              document.querySelector(':not(abc, def)');
+              ShadyDOM.nativeMethods.querySelector.call(
+                document,
+                ':not(abc, def)'
+              );
             } catch (e) {
               this.skip();
               return;
