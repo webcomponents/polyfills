@@ -433,6 +433,19 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       defineTestElement('x-query-selector-subsequent-sibling-combinator');
     </script>
 
+    <template id="x-query-selector-results-order">
+      <div id="contextElement">
+        <div id="a"></div>
+        <div id="b"></div>
+        <div id="c"></div>
+        <div id="d"></div>
+        <div id="e"></div>
+      </div>
+    </template>
+    <script>
+      defineTestElement('x-query-selector-results-order');
+    </script>
+
     <template id="x-slot-inside-div">
       <div>
         <slot></slot>
@@ -3182,6 +3195,24 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             assert.equal(results.length, 1);
             assert.equal(results[0], target);
           }
+        });
+
+        test('Results from queries with selector lists are in document order.', function () {
+          const host = createEnabledElement('x-query-selector-results-order');
+          const contextElement = ShadyDOM.wrapIfNeeded(
+            host
+          ).shadowRoot.getElementById('contextElement');
+
+          const results = ShadyDOM.wrap(contextElement).querySelectorAll(
+            '#b, #e, #a, #c, #d'
+          );
+
+          assert.equal(results.length, 5);
+          assert.equal(results[0].id, 'a');
+          assert.equal(results[1].id, 'b');
+          assert.equal(results[2].id, 'c');
+          assert.equal(results[3].id, 'd');
+          assert.equal(results[4].id, 'e');
         });
 
         test('The semantics of `:scope` are preserved.', function () {
