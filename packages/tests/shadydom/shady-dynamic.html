@@ -433,6 +433,19 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       defineTestElement('x-query-selector-subsequent-sibling-combinator');
     </script>
 
+    <template id="x-query-selector-child-selector-through-shadow-hosts">
+      <div id="contextElement">
+        <x-slot-inside-div>
+          <x-slot-inside-div>
+            <div target-element></div>
+          </x-slot-inside-div>
+        </x-slot-inside-div>
+      </div>
+    </template>
+    <script>
+      defineTestElement('x-query-selector-child-selector-through-shadow-hosts');
+    </script>
+
     <template id="x-query-selector-results-order">
       <div id="contextElement">
         <div id="a"></div>
@@ -3176,15 +3189,16 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         });
 
         test('The `>` combinator can match shadow root hosts with their children.', function () {
-          const layer1 = createEnabledElement('x-slot-inside-div');
-          const layer2 = createEnabledElement('x-slot-inside-div');
-          ShadyDOM.wrapIfNeeded(layer1).appendChild(layer2);
-          const target = document.createElement('div');
-          ShadyDOM.wrapIfNeeded(layer2).appendChild(target);
-
-          const results = ShadyDOM.wrapIfNeeded(layer1).querySelectorAll(
-            'x-slot-inside-div > x-slot-inside-div > div'
+          const host = createEnabledElement(
+            'x-query-selector-child-selector-through-shadow-hosts'
           );
+          const contextElement = ShadyDOM.wrapIfNeeded(
+            host
+          ).shadowRoot.getElementById('contextElement');
+
+          const results = ShadyDOM.wrapIfNeeded(
+            contextElement
+          ).querySelectorAll('x-slot-inside-div > x-slot-inside-div > div');
 
           if (!querySelectorImplementation) {
             // The default implementation can't find the target because of the
@@ -3193,7 +3207,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             assert.equal(results.length, 0);
           } else if (querySelectorImplementation === 'selectorEngine') {
             assert.equal(results.length, 1);
-            assert.equal(results[0], target);
+            assert(results[0].hasAttribute('target-element'));
           }
         });
 
