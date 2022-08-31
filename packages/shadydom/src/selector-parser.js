@@ -7,12 +7,16 @@
  *
  * @type {!Map<string, {end: string, matchNestedParens: boolean}>}
  */
-const PARENS = new Map([
+const PARENS = new Map();
+// IE 11 doesn't support `Map`'s constructor parameter.
+[
   ['(', {end: ')', matchNestedParens: true}],
   ['[', {end: ']', matchNestedParens: true}],
   ['"', {end: '"', matchNestedParens: false}],
   ["'", {end: "'", matchNestedParens: false}],
-]);
+].forEach(([k, v]) => {
+  PARENS.set(k, v);
+});
 
 /**
  * Finds the first character of `queryChars` within `str` from index `start`
