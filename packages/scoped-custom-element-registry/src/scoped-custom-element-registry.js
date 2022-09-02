@@ -12,65 +12,17 @@
  * http://polymer.github.io/PATENTS.txt
  */
 
-import {
-  creationContext,
-  definitionForElement,
-  scopeForElement,
-} from './sharedState.js';
+import {definitionForElement} from './sharedState.js';
 import {install as installCustomElementRegistry} from './Patch/CustomElementRegistry.js';
+import {install as installElement} from './Patch/Element.js';
 import {install as installHTMLElement} from './Patch/HTMLElement.js';
+import {install as installShadowRoot} from './Patch/ShadowRoot.js';
 
 if (!ShadowRoot.prototype.createElement) {
   installCustomElementRegistry();
+  installElement();
   installHTMLElement();
-
-  // Patch attachShadow to set customElements on shadowRoot when provided
-  const nativeAttachShadow = Element.prototype.attachShadow;
-  Element.prototype.attachShadow = function (init) {
-    const shadowRoot = nativeAttachShadow.apply(this, arguments);
-    if (init.customElements) {
-      shadowRoot.customElements = init.customElements;
-    }
-    return shadowRoot;
-  };
-
-  // Install scoped creation API on Element & ShadowRoot
-  const installScopedCreationMethod = (ctor, method, from = undefined) => {
-    const native = (from ? Object.getPrototypeOf(from) : ctor.prototype)[
-      method
-    ];
-    ctor.prototype[method] = function () {
-      creationContext.push(this);
-      const ret = native.apply(from || this, arguments);
-      // For disconnected elements, note their creation scope so that e.g.
-      // innerHTML into them will use the correct scope; note that
-      // insertAdjacentHTML doesn't return an element, but that's fine since
-      // it will have a parent that should have a scope
-      if (ret !== undefined) {
-        scopeForElement.set(ret, this);
-      }
-      creationContext.pop();
-      return ret;
-    };
-  };
-  installScopedCreationMethod(ShadowRoot, 'createElement', document);
-  installScopedCreationMethod(ShadowRoot, 'importNode', document);
-  installScopedCreationMethod(Element, 'insertAdjacentHTML');
-
-  // Install scoped innerHTML on Element & ShadowRoot
-  const installScopedCreationSetter = (ctor, name) => {
-    const descriptor = Object.getOwnPropertyDescriptor(ctor.prototype, name);
-    Object.defineProperty(ctor.prototype, name, {
-      ...descriptor,
-      set(value) {
-        creationContext.push(this);
-        descriptor.set.call(this, value);
-        creationContext.pop();
-      },
-    });
-  };
-  installScopedCreationSetter(Element, 'innerHTML');
-  installScopedCreationSetter(ShadowRoot, 'innerHTML');
+  installShadowRoot();
 
   // Install global registry
   Object.defineProperty(window, 'customElements', {
