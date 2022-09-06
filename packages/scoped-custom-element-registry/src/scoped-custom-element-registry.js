@@ -15,12 +15,14 @@
 import {definitionForElement} from './sharedState.js';
 import {install as installCustomElementRegistry} from './Patch/CustomElementRegistry.js';
 import {install as installElement} from './Patch/Element.js';
+import {install as installElementInternals} from './Patch/ElementInternals.js';
 import {install as installHTMLElement} from './Patch/HTMLElement.js';
 import {install as installShadowRoot} from './Patch/ShadowRoot.js';
 
 if (!ShadowRoot.prototype.createElement) {
   installCustomElementRegistry();
   installElement();
+  installElementInternals();
   installHTMLElement();
   installShadowRoot();
 
@@ -31,42 +33,7 @@ if (!ShadowRoot.prototype.createElement) {
     writable: true,
   });
 
-  if (
-    !!window['ElementInternals'] &&
-    !!window['ElementInternals'].prototype['setFormValue']
-  ) {
-    const internalsToHostMap = new WeakMap();
-    const attachInternals = HTMLElement.prototype['attachInternals'];
-    const methods = [
-      'setFormValue',
-      'setValidity',
-      'checkValidity',
-      'reportValidity',
-    ];
-
-    HTMLElement.prototype['attachInternals'] = function (...args) {
-      const internals = attachInternals.call(this, ...args);
-      internalsToHostMap.set(internals, this);
-      return internals;
-    };
-
-    methods.forEach((method) => {
-      const proto = window['ElementInternals'].prototype;
-      const originalMethod = proto[method];
-
-      proto[method] = function (...args) {
-        const host = internalsToHostMap.get(this);
-        const definition = definitionForElement.get(host);
-        if (definition['formAssociated'] === true) {
-          originalMethod?.call(this, ...args);
-        } else {
-          throw new DOMException(
-            `Failed to execute ${originalMethod} on 'ElementInternals': The target element is not a form-associated custom element.`
-          );
-        }
-      };
-    });
-
+  if (window['ElementInternals']?.prototype['setFormValue']) {
     // Emulate the native RadioNodeList object
     class RadioNodeList extends Array {
       constructor(elements) {

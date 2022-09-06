@@ -28,3 +28,5 @@ export const getUpgradingInstance = () => upgradingInstance;
 export const setUpgradingInstance = (x) => {
   upgradingInstance = x;
 };
+
+export const internalsToHostMap = new WeakMap();

@@ -18,6 +18,7 @@ import {
   setUpgradingInstance,
   globalDefinitionForConstructor,
   definitionForElement,
+  internalsToHostMap,
 } from '../sharedState.js';
 
 export const install = () => {
@@ -51,4 +52,14 @@ export const install = () => {
     return instance;
   };
   window.HTMLElement.prototype = NativeHTMLElement.prototype;
+
+  if (window['ElementInternals']?.prototype['setFormValue']) {
+    const attachInternals = HTMLElement.prototype['attachInternals'];
+
+    HTMLElement.prototype['attachInternals'] = function (...args) {
+      const internals = attachInternals.call(this, ...args);
+      internalsToHostMap.set(internals, this);
+      return internals;
+    };
+  }
 };
