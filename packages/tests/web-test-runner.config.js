@@ -135,7 +135,10 @@ const generateSauceBrowserLaunchers = () => {
 };
 
 module.exports = {
-  files: ['custom-elements/html/**/*.test.(js|html)'],
+  files: [
+    'custom-elements/html/**/*.test.(js|html)',
+    'formdata-event/**/*.test.(js|html)',
+  ],
   rootDir: '../..',
   nodeResolve: true,
   concurrency: 1,
