@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<!--
+@license
+Copyright (c) 2020 The Polymer Project Authors. All rights reserved. This code
+may only be used under the BSD style license found at
+http://polymer.github.io/LICENSE.txt The complete set of authors may be found
+at http://polymer.github.io/AUTHORS.txt The complete set of contributors may be
+found at http://polymer.github.io/CONTRIBUTORS.txt Code distributed by Google
+as part of the polymer project is also subject to an additional IP rights grant
+found at http://polymer.github.io/PATENTS.txt
+-->
+<html>
+  <body>
+    <script type="module">
+      import {runTests, assert} from '../../environment.js';
+
+      runTests(async () => {
+        suite('FormData', () => {
+          let iframe = undefined;
+          let iframeDoc = undefined;
+          let FormData = undefined;
+          let FormDataEvent = undefined;
+
+          setup((done) => {
+            iframe = document.createElement('iframe');
+            iframe.src = '../test_environment.html';
+            iframe.addEventListener('load', function listener() {
+              iframe.removeEventListener('load', listener);
+              iframeDoc = iframe.contentDocument;
+              FormData = iframeDoc.defaultView.FormData;
+              FormDataEvent = iframeDoc.defaultView.FormDataEvent;
+              done();
+            });
+            document.body.appendChild(iframe);
+          });
+
+          teardown(() => {
+            document.body.removeChild(iframe);
+            iframe = undefined;
+          });
+
+          test(
+            'Constructing a FormData dispatches a "formdata" event with that ' +
+              'FormData to the form.',
+            () => {
+              const form = iframeDoc.createElement('form');
+              iframeDoc.body.appendChild(form);
+
+              let eventWasDispatched = false;
+              form.addEventListener('formdata', (e) => {
+                eventWasDispatched = true;
+                assert.instanceOf(e, FormDataEvent);
+                assert.instanceOf(e.formData, FormData);
+              });
+
+              const formData = new FormData(form);
+              assert.ok(eventWasDispatched);
+            }
+          );
+
+          // TODO: Enable this test once 'formdata' events for constructed FormData
+          // objects dispatch with a different FormData instance.
+          test.skip(
+            'The "formdata" event dispatched during construction has a ' +
+              'different FormData object for `formData` than the one being ' +
+              'constructed.',
+            () => {
+              const form = iframeDoc.createElement('form');
+              iframeDoc.body.appendChild(form);
+
+              let eventFormData = undefined;
+              form.addEventListener('formdata', (e) => {
+                eventFormData = e.formData;
+              });
+
+              const formData = new FormData(form);
+              assert.notStrictEqual(eventFormData, formData);
+            }
+          );
+        });
+      });
+    </script>
+  </body>
+</html>
