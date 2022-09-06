@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<!--
+@license
+Copyright (c) 2020 The Polymer Project Authors. All rights reserved. This code
+may only be used under the BSD style license found at
+http://polymer.github.io/LICENSE.txt The complete set of authors may be found
+at http://polymer.github.io/AUTHORS.txt The complete set of contributors may be
+found at http://polymer.github.io/CONTRIBUTORS.txt Code distributed by Google
+as part of the polymer project is also subject to an additional IP rights grant
+found at http://polymer.github.io/PATENTS.txt
+-->
+<html>
+  <body>
+    <script type="module">
+      import {runTests, assert} from '../environment.js';
+
+      runTests(async () => {
+        suite('FormDataEvent', () => {
+          let iframe = undefined;
+          let iframeDoc = undefined;
+          let Event = undefined;
+          let FormDataEvent = undefined;
+          let FormData = undefined;
+
+          setup((done) => {
+            iframe = document.createElement('iframe');
+            iframe.src = './test_environment.html';
+            iframe.addEventListener('load', function listener() {
+              iframe.removeEventListener('load', listener);
+              iframeDoc = iframe.contentDocument;
+              Event = iframeDoc.defaultView.Event;
+              FormDataEvent = iframeDoc.defaultView.FormDataEvent;
+              FormData = iframeDoc.defaultView.FormData;
+              done();
+            });
+            document.body.appendChild(iframe);
+          });
+
+          teardown(() => {
+            document.body.removeChild(iframe);
+            iframe = undefined;
+          });
+
+          test('A `FormDataEvent` property is added to `window`.', () => {
+            assert.ok(FormDataEvent);
+          });
+
+          test('FormDataEvent must be constructed with a `formData` option.', () => {
+            assert.throws(() => {
+              new FormDataEvent('formdata');
+            });
+
+            assert.throws(() => {
+              new FormDataEvent('formdata', {
+                formData: "This isn't a FormData.",
+              });
+            });
+
+            new FormDataEvent('formdata', {formData: new FormData()});
+          });
+
+          test(
+            "FormDataEvent's `formData` property returns the FormData used to " +
+              'construct it.',
+            () => {
+              const formData = new FormData();
+              const event = new FormDataEvent('formdata', {formData});
+              assert.strictEqual(event.formData, formData);
+            }
+          );
+        });
+      });
+    </script>
+  </body>
+</html>
