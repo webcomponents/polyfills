@@ -250,12 +250,12 @@ const logicalQuerySelectorAll = (contextElement, selectorList) => {
           const results = [];
 
           // For `a b`, where existing cursors have `matchedElement`s matching
-          // `b`, the candidates to test against `a` are all ancestors each
+          // `b`, the candidates to test against `a` are all ancestors of each
           // cursor's `matchedElement`.
           for (
-            let ancestor = matchedElement[utils.SHADY_PREFIX + 'parentNode'];
-            ancestor && ancestor instanceof Element;
-            ancestor = ancestor[utils.SHADY_PREFIX + 'parentNode']
+            let ancestor = matchedElement[utils.SHADY_PREFIX + 'parentElement'];
+            ancestor;
+            ancestor = ancestor[utils.SHADY_PREFIX + 'parentElement']
           ) {
             if (matchesCompoundSelector(ancestor, compoundSelector)) {
               results.push({
@@ -269,16 +269,12 @@ const logicalQuerySelectorAll = (contextElement, selectorList) => {
 
           return results;
         } else if (combinator === '>') {
-          const parent = matchedElement[utils.SHADY_PREFIX + 'parentNode'];
+          const parent = matchedElement[utils.SHADY_PREFIX + 'parentElement'];
 
           // For `a > b`, where existing cursors have `matchedElement`s matching
           // `b`, the candidates to test against `a` are the parents of each
           // cursor's `matchedElement`.
-          if (
-            parent &&
-            parent instanceof Element &&
-            matchesCompoundSelector(parent, compoundSelector)
-          ) {
+          if (matchesCompoundSelector(parent, compoundSelector)) {
             return {
               target,
               complexSelectorParts,
