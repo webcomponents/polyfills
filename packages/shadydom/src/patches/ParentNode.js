@@ -160,8 +160,9 @@ const logicalQuerySelectorAll = (contextElement, selectorList) => {
    */
   const matchesCompoundSelector = (element, compoundSelector) => {
     return (
-      utils.matchesSelector(element, compoundSelector) &&
-      (compoundSelector.indexOf(':scope') === -1 || element === contextElement)
+      (element === contextElement ||
+        compoundSelector.indexOf(':scope') === -1) &&
+      utils.matchesSelector(element, compoundSelector)
     );
   };
 
