@@ -347,15 +347,19 @@ export const QueryPatches = utils.getOwnPropertyDescriptors({
    */
   querySelector(selector) {
     if (querySelectorImplementation === 'native') {
+      // Polyfilled `ShadowRoot`s don't have a native `querySelectorAll`.
+      const target = this instanceof ShadowRoot ? this.host : this;
       const candidates = Array.prototype.slice.call(
-        this[utils.NATIVE_PREFIX + 'querySelector'](selector)
+        target[utils.NATIVE_PREFIX + 'querySelectorAll'](selector)
       );
       const root = this[utils.SHADY_PREFIX + 'getRootNode']();
-      return utils.createPolyfilledHTMLCollection(
-        candidates.filter(
-          (e) => e[utils.SHADY_PREFIX + 'getRootNode']() == root
-        )
-      );
+      // This could use `find`, but Closure doesn't polyfill it.
+      for (const candidate of candidates) {
+        if (candidate[utils.SHADY_PREFIX + 'getRootNode']() == root) {
+          return candidate;
+        }
+      }
+      return null;
     } else if (querySelectorImplementation === 'selectorEngine') {
       return logicalQuerySelectorAll(this, selector)[0] || null;
     } else if (querySelectorImplementation === undefined) {
@@ -388,8 +392,10 @@ export const QueryPatches = utils.getOwnPropertyDescriptors({
   // https://github.com/webcomponents/shadydom/pull/210#issuecomment-361435503
   querySelectorAll(selector, useNative) {
     if (useNative || querySelectorImplementation === 'native') {
+      // Polyfilled `ShadowRoot`s don't have a native `querySelectorAll`.
+      const target = this instanceof ShadowRoot ? this.host : this;
       const candidates = Array.prototype.slice.call(
-        this[utils.NATIVE_PREFIX + 'querySelectorAll'](selector)
+        target[utils.NATIVE_PREFIX + 'querySelectorAll'](selector)
       );
       const root = this[utils.SHADY_PREFIX + 'getRootNode']();
       return utils.createPolyfilledHTMLCollection(

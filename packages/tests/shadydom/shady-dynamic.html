@@ -141,13 +141,15 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       };
     </script>
 
-    <template id="x-project"> x-project: [<slot></slot>] </template>
+    <template id="x-project">
+      x-project: [<slot id="theSlot"></slot>]
+    </template>
     <script>
       defineTestElement('x-project');
     </script>
 
     <template id="x-reproject">
-      <x-project>x-reproject: [<slot></slot>]</x-project>
+      <x-project>x-reproject: [<slot id="theSlot"></slot>]</x-project>
     </template>
 
     <script>
@@ -155,7 +157,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     </script>
 
     <template id="x-rereproject">
-      <x-reproject>x-rereproject: [<slot></slot>]</x-reproject>
+      <x-reproject>x-rereproject: [<slot id="theSlot"></slot>]</x-reproject>
     </template>
 
     <script>
@@ -223,7 +225,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       defineTestElement('x-compose');
     </script>
 
-    <template id="x-echo"><slot></slot></template>
+    <template id="x-echo"><slot id="theSlot"></slot></template>
     <script>
       defineTestElement('x-echo');
     </script>
@@ -248,7 +250,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     </script>
 
     <template id="x-select-attr">
-      Foo: [<slot name="foo"></slot>] Bar: [<slot name="bar"></slot>]
+      Foo: [<slot id="slotFoo" name="foo"></slot>] Bar: [<slot
+        id="slotBar"
+        name="bar"
+      ></slot
+      >]
     </template>
     <script>
       defineTestElement('x-select-attr');
@@ -647,16 +653,34 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             ShadyDOM.wrapIfNeeded(rere).shadowRoot
           ).querySelectorAll('*');
           assert.include(rereList, re);
-          assert.equal(rereList.length, 2);
+          if (ShadyDOM.querySelectorImplementation === 'native') {
+            // The `<slot>` in the shadow root does not exist in the real tree,
+            // so the native `querySelectorAll` will not see it.
+            assert.equal(rereList.length, 1);
+          } else {
+            assert.equal(rereList.length, 2);
+          }
           var reList = ShadyDOM.wrapIfNeeded(
             ShadyDOM.wrapIfNeeded(re).shadowRoot
           ).querySelectorAll('*');
           assert.include(reList, p);
-          assert.equal(reList.length, 2);
+          if (ShadyDOM.querySelectorImplementation === 'native') {
+            // The `<slot>` in the shadow root does not exist in the real tree,
+            // so the native `querySelectorAll` will not see it.
+            assert.equal(reList.length, 1);
+          } else {
+            assert.equal(reList.length, 2);
+          }
           var pList = ShadyDOM.wrapIfNeeded(
             ShadyDOM.wrapIfNeeded(p).shadowRoot
           ).querySelectorAll('*');
-          assert.equal(pList.length, 1);
+          if (ShadyDOM.querySelectorImplementation === 'native') {
+            // The `<slot>` in the shadow root does not exist in the real tree,
+            // so the native `querySelectorAll` will not see it.
+            assert.equal(pList.length, 0);
+          } else {
+            assert.equal(pList.length, 1);
+          }
         });
 
         test('shadowRoot.getElementById', function () {
@@ -696,8 +720,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             ShadyDOM.wrapIfNeeded(rere).querySelector('#projected'),
             projected
           );
-          assert(ShadyDOM.wrapIfNeeded(re).querySelector('slot'));
-          assert(ShadyDOM.wrapIfNeeded(p).querySelector('slot'));
+          // The `<slot>`s in these shadow roots do not exist in the real tree,
+          // so the native `querySelectorAll` will not see it.
+          if (ShadyDOM.querySelectorImplementation !== 'native') {
+            assert(ShadyDOM.wrapIfNeeded(re).querySelector('slot'));
+            assert(ShadyDOM.wrapIfNeeded(p).querySelector('slot'));
+          }
         });
 
         test('element.querySelectorAll', function () {
@@ -717,8 +745,15 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             ShadyDOM.wrapIfNeeded(rere).querySelectorAll('#projected')[0],
             projected
           );
-          assert(ShadyDOM.wrapIfNeeded(re).querySelectorAll('slot').length, 1);
-          assert(ShadyDOM.wrapIfNeeded(p).querySelectorAll('slot').length, 1);
+          // The `<slot>`s in these shadow root do not exist in the real tree,
+          // so the native `querySelectorAll` will not see it.
+          if (ShadyDOM.querySelectorImplementation !== 'native') {
+            assert(
+              ShadyDOM.wrapIfNeeded(re).querySelectorAll('slot').length,
+              1
+            );
+            assert(ShadyDOM.wrapIfNeeded(p).querySelectorAll('slot').length, 1);
+          }
         });
 
         test('ShadyDOM.wrapIfNeeded(document).querySelector', function () {
@@ -758,21 +793,21 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           ShadyDOM.flush();
           var c1 = ShadyDOM.wrapIfNeeded(
             ShadyDOM.wrapIfNeeded(rere).shadowRoot
-          ).querySelector('slot');
+          ).getElementById('theSlot');
           assert.include(
             ShadyDOM.wrapIfNeeded(c1).assignedNodes({flatten: true}),
             projected
           );
           var c2 = ShadyDOM.wrapIfNeeded(
             ShadyDOM.wrapIfNeeded(re).shadowRoot
-          ).querySelector('slot');
+          ).getElementById('theSlot');
           assert.include(
             ShadyDOM.wrapIfNeeded(c2).assignedNodes({flatten: true}),
             projected
           );
           var c3 = ShadyDOM.wrapIfNeeded(
             ShadyDOM.wrapIfNeeded(p).shadowRoot
-          ).querySelector('slot');
+          ).getElementById('theSlot');
           assert.include(
             ShadyDOM.wrapIfNeeded(c3).assignedNodes({flatten: true}),
             projected
@@ -791,19 +826,19 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           ).querySelector('x-rereproject');
           var c1 = ShadyDOM.wrapIfNeeded(
             ShadyDOM.wrapIfNeeded(rere).shadowRoot
-          ).querySelector('slot');
+          ).getElementById('theSlot');
           var re = ShadyDOM.wrapIfNeeded(
             ShadyDOM.wrapIfNeeded(rere).shadowRoot
           ).querySelector('x-reproject');
           var c2 = ShadyDOM.wrapIfNeeded(
             ShadyDOM.wrapIfNeeded(re).shadowRoot
-          ).querySelector('slot');
+          ).getElementById('theSlot');
           var p = ShadyDOM.wrapIfNeeded(
             ShadyDOM.wrapIfNeeded(re).shadowRoot
           ).querySelector('x-project');
           var c3 = ShadyDOM.wrapIfNeeded(
             ShadyDOM.wrapIfNeeded(p).shadowRoot
-          ).querySelector('slot');
+          ).getElementById('theSlot');
           var ip$ = [c1, c2, c3];
           if (testElement.shadyRoot) {
             testElement.shadyRoot.update();
@@ -838,21 +873,23 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           var e = ShadyDOM.wrapIfNeeded(document).querySelector(
             'x-select-attr'
           );
-          var ip$ = ShadyDOM.wrapIfNeeded(
+          var xSelectAttrShadowRoot = ShadyDOM.wrapIfNeeded(
             ShadyDOM.wrapIfNeeded(e).shadowRoot
-          ).querySelectorAll('slot');
+          );
+          var slotFoo = xSelectAttrShadowRoot.getElementById('slotFoo');
+          var slotBar = xSelectAttrShadowRoot.getElementById('slotBar');
           var c = ShadyDOM.wrapIfNeeded(e).firstElementChild;
           ShadyDOM.flush();
           assert.equal(
             allInsertionPoints(c)[0],
-            ip$[1],
+            slotBar,
             'child not distributed based on host attribute'
           );
           ShadyDOM.wrapIfNeeded(c).slot = 'foo';
           ShadyDOM.flush();
           assert.equal(
             allInsertionPoints(c)[0],
-            ip$[0],
+            slotFoo,
             'child not distributed based on reflecting attribute'
           );
           ShadyDOM.wrapIfNeeded(c).slot = '';
@@ -868,34 +905,36 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           var e = ShadyDOM.wrapIfNeeded(document).querySelector(
             'x-compose-select-attr'
           );
-          var ip$ = ShadyDOM.wrapIfNeeded(
+          var xSelectAttrShadowRoot = ShadyDOM.wrapIfNeeded(
             ShadyDOM.wrapIfNeeded(
               ShadyDOM.wrapIfNeeded(
                 ShadyDOM.wrapIfNeeded(e).shadowRoot
               ).querySelector('#select')
             ).shadowRoot
-          ).querySelectorAll('slot');
+          );
+          var slotFoo = xSelectAttrShadowRoot.getElementById('slotFoo');
+          var slotBar = xSelectAttrShadowRoot.getElementById('slotBar');
           var c1 = ShadyDOM.wrapIfNeeded(
             ShadyDOM.wrapIfNeeded(e).shadowRoot
           ).querySelector('#attr1');
           ShadyDOM.flush();
           assert.equal(
             allInsertionPoints(c1)[0],
-            ip$[1],
+            slotBar,
             'child not distributed based on host attribute'
           );
           ShadyDOM.wrapIfNeeded(c1).slot = 'foo';
           ShadyDOM.flush();
           assert.equal(
             allInsertionPoints(c1)[0],
-            ip$[0],
+            slotFoo,
             'child not distributed based on reflecting attribute'
           );
           ShadyDOM.wrapIfNeeded(c1).slot = 'bar';
           ShadyDOM.flush();
           assert.equal(
             allInsertionPoints(c1)[0],
-            ip$[1],
+            slotBar,
             'child not distributed based on reflecting attribute'
           );
           var c2 = ShadyDOM.wrapIfNeeded(
@@ -904,7 +943,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           ShadyDOM.flush();
           assert.equal(
             allInsertionPoints(c2)[0],
-            ip$[0],
+            slotFoo,
             'child not distributed based on default value'
           );
         });
@@ -917,6 +956,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           s.id = 'added';
           ShadyDOM.wrapIfNeeded(s).textContent = 'Added';
           ShadyDOM.wrapIfNeeded(rere).appendChild(s);
+          // Nodes must be distributed to be seen by the native `querySelector`.
+          if (ShadyDOM.querySelectorImplementation === 'native') {
+            ShadyDOM.flush();
+          }
           assert.equal(
             ShadyDOM.wrapIfNeeded(
               ShadyDOM.wrapIfNeeded(testElement).shadowRoot
@@ -936,6 +979,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           s.id = 'added2';
           ShadyDOM.wrapIfNeeded(s).textContent = 'Added2';
           ShadyDOM.wrapIfNeeded(rere).insertBefore(s, ref);
+          // Nodes must be distributed to be seen by the native `querySelector`.
+          if (ShadyDOM.querySelectorImplementation === 'native') {
+            ShadyDOM.flush();
+          }
           assert.equal(
             ShadyDOM.wrapIfNeeded(
               ShadyDOM.wrapIfNeeded(testElement).shadowRoot
@@ -1205,6 +1252,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           s.id = 'light';
           ShadyDOM.wrapIfNeeded(s).textContent = 'Light';
           ShadyDOM.wrapIfNeeded(rere).appendChild(s);
+          // Nodes must be distributed to be seen by the native `querySelector`.
+          if (ShadyDOM.querySelectorImplementation === 'native') {
+            ShadyDOM.flush();
+          }
           assert.equal(ShadyDOM.wrapIfNeeded(rere).querySelector('#light'), s);
           assert.equal(ShadyDOM.wrapIfNeeded(s).parentNode, rere);
           assert.notEqual(ShadyDOM.nativeTree.parentNode(s), rere);
@@ -1633,6 +1684,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         });
 
         test('shadowRoot.appendChild element with slot child and shadowRoot with slot pending distribution', function () {
+          // Nodes must be distributed to be seen by the native `querySelector`.
+          if (ShadyDOM.querySelectorImplementation === 'native') {
+            this.skip();
+          }
           var outerElement = ShadyDOM.wrapIfNeeded(document).querySelector(
             'outer-element'
           );
@@ -2644,7 +2699,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
               allInsertionPoints(child)[0],
               ShadyDOM.wrapIfNeeded(
                 ShadyDOM.wrapIfNeeded(d).shadowRoot
-              ).querySelector('#notTestContent'),
+              ).getElementById('notTestContent'),
               'child not distributed logically'
             );
           }
@@ -2653,7 +2708,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
               allInsertionPoints(child)[0],
               ShadyDOM.wrapIfNeeded(
                 ShadyDOM.wrapIfNeeded(d).shadowRoot
-              ).querySelector('#testContent'),
+              ).getElementById('testContent'),
               'child not distributed logically'
             );
           }
@@ -3094,8 +3149,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           ShadyDOM.flush();
           const el = d.firstElementChild;
           assert.equal(el.childNodes.length, 4);
-          const slot = ShadyDOM.wrapIfNeeded(el).shadowRoot.querySelector(
-            'slot'
+          const slot = ShadyDOM.wrapIfNeeded(el).shadowRoot.getElementById(
+            'theSlot'
           );
           for (let i = 0; i < el.childNodes.length; i++) {
             const child = el.childNodes[i];
