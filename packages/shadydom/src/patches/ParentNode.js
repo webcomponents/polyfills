@@ -202,6 +202,12 @@ const logicalQuerySelectorAll = (contextElement, selectorList) => {
       return utils.flat(
         complexSelectors.map((complexSelectorParts) => {
           const {compoundSelectors} = complexSelectorParts;
+          // Selectors are matched by iterating their compound selectors in
+          // reverse order for efficiency. In particular, when finding
+          // candidates for the descendant combinator, iterating forwards would
+          // imply needing to walk all descendants of the last matched element
+          // for possible candidates, but iterating backwards only requires
+          // walking up the ancestor chain.
           const index = compoundSelectors.length - 1;
           if (matchesCompoundSelector(element, compoundSelectors[index])) {
             return {
