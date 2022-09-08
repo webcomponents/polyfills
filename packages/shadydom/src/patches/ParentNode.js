@@ -341,7 +341,6 @@ const querySelectorImplementation =
   utils.settings['querySelectorImplementation'];
 
 export const QueryPatches = utils.getOwnPropertyDescriptors({
-  // TODO(sorvell): consider doing native QSA and filtering results.
   /**
    * @this {Element}
    * @param  {string} selector
