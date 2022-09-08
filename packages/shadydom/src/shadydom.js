@@ -188,6 +188,8 @@ if (utils.settings.inUse) {
     //     (`x[y=":scope"]`) or an argument to a functional pseudo-selector
     //     (`:not(:scope > x)`) will likely break your selector.
     //
+    //     - The `:host` and `:host-context` pseudo-classes are not supported.
+    //
     //     - Comments are not supported. (e.g. `a /* b */ c`)
     //
     //     - The (draft) column combinator is not supported. (e.g. `a || b`)
