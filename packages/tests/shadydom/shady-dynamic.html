@@ -3174,16 +3174,25 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           ).shadowRoot.getElementById('contextElement');
 
           ShadyDOM.flush();
-          const results = ShadyDOM.wrapIfNeeded(
-            contextElement
-          ).querySelectorAll('#contextElement [match]');
 
           // No shadow root hosts below #contextElement or use of `:scope`, so
           // the results are the same for all implementations.
-          assert.equal(results.length, 3);
-          assert.equal(results[0].id, 'a');
-          assert.equal(results[1].id, 'b');
-          assert.equal(results[2].id, 'c');
+
+          const resultQS = ShadyDOM.wrapIfNeeded(contextElement).querySelector(
+            '#contextElement [match]'
+          );
+
+          assert(resultQS);
+          assert(resultQS.id, 'a');
+
+          const resultsQSA = ShadyDOM.wrapIfNeeded(
+            contextElement
+          ).querySelectorAll('#contextElement [match]');
+
+          assert.equal(resultsQSA.length, 3);
+          assert.equal(resultsQSA[0].id, 'a');
+          assert.equal(resultsQSA[1].id, 'b');
+          assert.equal(resultsQSA[2].id, 'c');
         });
 
         test('The `>` combinator finds children.', function () {
@@ -3195,16 +3204,25 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           ).shadowRoot.getElementById('contextElement');
 
           ShadyDOM.flush();
-          const results = ShadyDOM.wrapIfNeeded(
-            contextElement
-          ).querySelectorAll('#contextElement > *');
 
           // No shadow root hosts below #contextElement or use of `:scope`, so
           // the results are the same for all implementations.
-          assert.equal(results.length, 3);
-          assert.equal(results[0].id, 'a');
-          assert.equal(results[1].id, 'b');
-          assert.equal(results[2].id, 'c');
+
+          const resultQS = ShadyDOM.wrapIfNeeded(contextElement).querySelector(
+            '#contextElement > *'
+          );
+
+          assert(resultQS);
+          assert.equal(resultQS.id, 'a');
+
+          const resultsQSA = ShadyDOM.wrapIfNeeded(
+            contextElement
+          ).querySelectorAll('#contextElement > *');
+
+          assert.equal(resultsQSA.length, 3);
+          assert.equal(resultsQSA[0].id, 'a');
+          assert.equal(resultsQSA[1].id, 'b');
+          assert.equal(resultsQSA[2].id, 'c');
         });
 
         test('The `+` combinator finds next siblings.', function () {
@@ -3216,16 +3234,25 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           ).shadowRoot.getElementById('contextElement');
 
           ShadyDOM.flush();
-          const results = ShadyDOM.wrapIfNeeded(
-            contextElement
-          ).querySelectorAll('[before] + *');
 
           // No shadow root hosts below #contextElement or use of `:scope`, so
           // the results are the same for all implementations.
-          assert.equal(results.length, 3);
-          assert.equal(results[0].id, 'a');
-          assert.equal(results[1].id, 'b');
-          assert.equal(results[2].id, 'c');
+
+          const resultQS = ShadyDOM.wrapIfNeeded(contextElement).querySelector(
+            '[before] + *'
+          );
+
+          assert(resultQS);
+          assert.equal(resultQS.id, 'a');
+
+          const resultsQSA = ShadyDOM.wrapIfNeeded(
+            contextElement
+          ).querySelectorAll('[before] + *');
+
+          assert.equal(resultsQSA.length, 3);
+          assert.equal(resultsQSA[0].id, 'a');
+          assert.equal(resultsQSA[1].id, 'b');
+          assert.equal(resultsQSA[2].id, 'c');
         });
 
         test('The `~` combinator finds subsequent siblings.', function () {
@@ -3237,18 +3264,27 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           ).shadowRoot.getElementById('contextElement');
 
           ShadyDOM.flush();
-          const results = ShadyDOM.wrapIfNeeded(
-            contextElement
-          ).querySelectorAll('[before] ~ *');
 
           // No shadow root hosts below #contextElement or use of `:scope`, so
           // the results are the same for all implementations.
-          assert.equal(results.length, 5);
-          assert.equal(results[0].id, 'a');
-          assert.equal(results[1].id, 'b');
-          assert.equal(results[2].id, 'c');
-          assert.equal(results[3].id, 'd');
-          assert.equal(results[4].id, 'e');
+
+          const resultQS = ShadyDOM.wrapIfNeeded(contextElement).querySelector(
+            '[before] ~ *'
+          );
+
+          assert(resultQS);
+          assert.equal(resultQS.id, 'a');
+
+          const resultsQSA = ShadyDOM.wrapIfNeeded(
+            contextElement
+          ).querySelectorAll('[before] ~ *');
+
+          assert.equal(resultsQSA.length, 5);
+          assert.equal(resultsQSA[0].id, 'a');
+          assert.equal(resultsQSA[1].id, 'b');
+          assert.equal(resultsQSA[2].id, 'c');
+          assert.equal(resultsQSA[3].id, 'd');
+          assert.equal(resultsQSA[4].id, 'e');
         });
 
         test('The `>` combinator can match shadow root hosts with their children.', function () {
@@ -3260,7 +3296,22 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           ).shadowRoot.getElementById('contextElement');
 
           ShadyDOM.flush();
-          const results = ShadyDOM.wrapIfNeeded(
+
+          const resultQS = ShadyDOM.wrapIfNeeded(contextElement).querySelector(
+            'x-slot-inside-div > x-slot-inside-div > div'
+          );
+
+          if (!querySelectorImplementation) {
+            // The default implementation can't find the target because of the
+            // `<div>`s from the logical shadow roots are in the same root in
+            // the real tree.
+            assert.equal(resultQS, null);
+          } else if (querySelectorImplementation === 'selectorEngine') {
+            assert(resultQS);
+            assert(resultQS.hasAttribute('target-element'));
+          }
+
+          const resultsQSA = ShadyDOM.wrapIfNeeded(
             contextElement
           ).querySelectorAll('x-slot-inside-div > x-slot-inside-div > div');
 
@@ -3268,10 +3319,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             // The default implementation can't find the target because of the
             // `<div>`s from the logical shadow roots are in the same root in
             // the real tree.
-            assert.equal(results.length, 0);
+            assert.equal(resultsQSA.length, 0);
           } else if (querySelectorImplementation === 'selectorEngine') {
-            assert.equal(results.length, 1);
-            assert(results[0].hasAttribute('target-element'));
+            assert.equal(resultsQSA.length, 1);
+            assert(resultsQSA[0].hasAttribute('target-element'));
           }
         });
 
@@ -3282,16 +3333,24 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           ).shadowRoot.getElementById('contextElement');
 
           ShadyDOM.flush();
-          const results = ShadyDOM.wrapIfNeeded(
+
+          const resultQS = ShadyDOM.wrapIfNeeded(contextElement).querySelector(
+            '#b, #e, #a, #c, #d'
+          );
+
+          assert(resultQS);
+          assert.equal(resultQS.id, 'a');
+
+          const resultsQSA = ShadyDOM.wrapIfNeeded(
             contextElement
           ).querySelectorAll('#b, #e, #a, #c, #d');
 
-          assert.equal(results.length, 5);
-          assert.equal(results[0].id, 'a');
-          assert.equal(results[1].id, 'b');
-          assert.equal(results[2].id, 'c');
-          assert.equal(results[3].id, 'd');
-          assert.equal(results[4].id, 'e');
+          assert.equal(resultsQSA.length, 5);
+          assert.equal(resultsQSA[0].id, 'a');
+          assert.equal(resultsQSA[1].id, 'b');
+          assert.equal(resultsQSA[2].id, 'c');
+          assert.equal(resultsQSA[3].id, 'd');
+          assert.equal(resultsQSA[4].id, 'e');
         });
 
         test('The semantics of `:scope` are preserved.', function () {
@@ -3311,7 +3370,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           ).shadowRoot.getElementById('contextElement');
 
           ShadyDOM.flush();
-          const results = ShadyDOM.wrap(contextElement).querySelectorAll(
+
+          const resultQS = ShadyDOM.wrap(contextElement).querySelector(
             'div:scope > div'
           );
 
@@ -3319,10 +3379,24 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             // The default implementation can't find the target because it
             // attempts to match it by calling `matches` on the element with the
             // full selector, which breaks the semantics of `:scope`.
-            assert.equal(results.length, 0);
+            assert.equal(resultQS, null);
           } else if (querySelectorImplementation === 'selectorEngine') {
-            assert.equal(results.length, 1);
-            assert.equal(results[0].id, 'target');
+            assert(resultQS);
+            assert.equal(resultQS.id, 'target');
+          }
+
+          const resultsQSA = ShadyDOM.wrap(contextElement).querySelectorAll(
+            'div:scope > div'
+          );
+
+          if (!querySelectorImplementation) {
+            // The default implementation can't find the target because it
+            // attempts to match it by calling `matches` on the element with the
+            // full selector, which breaks the semantics of `:scope`.
+            assert.equal(resultsQSA.length, 0);
+          } else if (querySelectorImplementation === 'selectorEngine') {
+            assert.equal(resultsQSA.length, 1);
+            assert.equal(resultsQSA[0].id, 'target');
           }
         });
 
