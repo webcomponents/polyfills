@@ -174,13 +174,12 @@ if (utils.settings.inUse) {
     //     correct. When given a selector that would not parse under a full
     //     implementation, this implementation may fail silently.
     //
-    //     - Only top-level combinators and compound selectors are taken into
-    //     consideration while walking the tree. Each top-level compound
-    //     selector is tested against candidate elements as a whole, without
-    //     modification. This means that selectors nested in arguments of
-    //     functional pseudo-classes (e.g. `a > b` in `:is(a > b)`) are still
-    //     matched by the browser against the real tree, not Shady DOM's logical
-    //     tree.
+    //     - Nested selectors are _not_ taken into consideration while walking
+    //     the tree. Each outer-most compound selector is tested against
+    //     candidate elements as a whole, without modification. This means that
+    //     selectors nested in arguments of functional pseudo-classes, such as
+    //     `a > b` in `:is(a > b)`, are still matched by the browser against the
+    //     real tree, not Shady DOM's logical tree.
     //
     //     - `:scope` is only supported at the top-level. Particularly, if the
     //     text `:scope` appears anywhere within a compound selector, then the
