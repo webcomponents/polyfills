@@ -169,17 +169,17 @@ const logicalQuerySelectorAll = (contextElement, selectorList) => {
   /**
    * An object used to track the current position of a potential selector match.
    *
-   * - `target` is the element that matches the selector if the cursor
+   * - `target` is the element that would be considered matching if the cursor
    * eventually results in a complete match.
    *
-   * - `complexSelectorParts` is the decomposed version of the selector that
-   * this cursor is attempting to match.
+   * - `complexSelectorParts` is the parsed representation of the complex
+   * selector that this cursor is attempting to match.
    *
-   * - `matchedElement` is an element that matches a compound selector in
-   * `complexSelectorParts`.
+   * - `index` is the index into `.complexSelectorParts.compoundSelectors` of
+   * the last successfully matched compound selector.
    *
-   * - `index` is the index of the compound selector in `complexSelectorParts`
-   * that matched `matchedElement`.
+   * - `matchedElement` is the element that successfully matched the compound
+   * selector in `.complexSelectorParts.compoundSelectors` at `index`.
    *
    * @typedef {{
    *   target: !Element,

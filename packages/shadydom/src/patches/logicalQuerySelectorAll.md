@@ -39,17 +39,17 @@ final compound selectors in each complex selector - in this example, `c` and
 `e`. Any matches create an initial 'cursor', which tracks the progress of a
 potential match. Cursors consist of a handful of properties:
 
-- `target`: the element that would be considered matching if the cursor
-  eventually results in a complete match
+- `target` is the element that would be considered matching if the cursor
+  eventually results in a complete match.
 
-- `complexSelectorParts`: the split complex selector which the cursor is
-  attempting to match
+- `complexSelectorParts` is the parsed representation of the complex selector
+  that this cursor is attempting to match.
 
-- `index`: the index into `.complexSelectorParts.compoundSelectors` of the last
-  successfully matched compound selector
+- `index` is the index into `.complexSelectorParts.compoundSelectors` of the
+  last successfully matched compound selector.
 
-- `position`: the element which successfully matched the compound selector at
-  `index`
+- `matchedElement` is the element that successfully matched the compound
+  selector in `.complexSelectorParts.compoundSelectors` at `index`.
 
 This initial walk through the descendants of the context element results in an
 initial list of cursors with `target`s which are in _document order_.
@@ -58,10 +58,10 @@ initial list of cursors with `target`s which are in _document order_.
 
 ```
 cursors = [
-  {target: #c_1, selector: 'a > b ~ c', index: 2, position: ...},
-  {target: #e_1, selector: 'd e', index: 1, position: ...},
-  {target: #c_2, selector: 'a > b ~ c', index: 2, position: ...},
-  {target: #e_2, selector: 'd e', index: 1, position: ...},
+  {target: #c_1, selector: 'a > b ~ c', index: 2, matchedElement: ...},
+  {target: #e_1, selector: 'd e', index: 1, matchedElement: ...},
+  {target: #c_2, selector: 'a > b ~ c', index: 2, matchedElement: ...},
+  {target: #e_2, selector: 'd e', index: 1, matchedElement: ...},
 ]
 ```
 
@@ -69,28 +69,28 @@ cursors = [
 <a>
   <b></b>
   <x></x>
-  <c id="c_1"></c> <!-- cursors[0].position -->
+  <c id="c_1"></c> <!-- cursors[0].matchedElement -->
   <d>
     <x>
-      <e id="e_1"></e> <!-- cursors[1].position -->
+      <e id="e_1"></e> <!-- cursors[1].matchedElement -->
     </x>
     <b></b>
-    <c id="c_2"></c> <!-- cursors[2].position -->
+    <c id="c_2"></c> <!-- cursors[2].matchedElement -->
   </d>
-  <e id="e_2"></e> <!-- cursors[3].position -->
+  <e id="e_2"></e> <!-- cursors[3].matchedElement -->
 </a>
 ```
 
-Next, the `position` and next combinator (iterating backwards) of each cursor
-with `.index > 0` ('source' cursors) are used to determine the candidate
+Next, the `matchedElement` and next combinator (iterating backwards) of each
+cursor with `.index > 0` ('source' cursors) are used to determine the candidate
 elements to test against that cursor's next compound selector.
 
 ```
 cursors = [
-  {target: #c_1, selector: 'a > b ~ c', index: 2, position: ...},
-  {target: #e_1, selector: 'd e', index: 1, position: ...},
-  {target: #c_2, selector: 'a > b ~ c', index: 2, position: ...},
-  {target: #e_2, selector: 'd e', index: 1, position: ...},
+  {target: #c_1, selector: 'a > b ~ c', index: 2, matchedElement: ...},
+  {target: #e_1, selector: 'd e', index: 1, matchedElement: ...},
+  {target: #c_2, selector: 'a > b ~ c', index: 2, matchedElement: ...},
+  {target: #e_2, selector: 'd e', index: 1, matchedElement: ...},
 ]
 ```
 
@@ -112,7 +112,7 @@ cursors = [
 
 Candidates that do not match the next compound selector in the source cursor's
 complex selector are filtered out. Those that do match result in a new cursor
-being created with `position` set to the matching element and `index`
+being created with `matchedElement` set to the matching element and `index`
 decremented by one, but with the same `target`, `complexSelectorParts` as the
 source cursor. Then, source cursors are each replaced by any new cursors created
 by their matching candidates. Specifically, all new cursors must maintain the
@@ -122,22 +122,22 @@ position in the list unchanged.
 
 ```
 cursors = [
-  {target: #c_1, selector: 'a > b ~ c', index: 1, position: ...},
-  {target: #e_1, selector: 'd e', index: 0, position: ...},
-  {target: #c_2, selector: 'a > b ~ c', index: 1, position: ...},
+  {target: #c_1, selector: 'a > b ~ c', index: 1, matchedElement: ...},
+  {target: #e_1, selector: 'd e', index: 0, matchedElement: ...},
+  {target: #c_2, selector: 'a > b ~ c', index: 1, matchedElement: ...},
 ]
 ```
 
 ```
 <a>
-  <b></b> <!-- cursors[0].position -->
+  <b></b> <!-- cursors[0].matchedElement -->
   <x></x>
   <c id="c_1"></c>
-  <d> <!-- cursors[1].position -->
+  <d> <!-- cursors[1].matchedElement -->
     <x>
       <e id="e_1"></e>
     </x>
-    <b></b> <!-- cursors[2].position -->
+    <b></b> <!-- cursors[2].matchedElement -->
     <c id="c_2"></c>
   </d>
   <e id="e_2"></e>
@@ -150,9 +150,9 @@ Again, candidates for cursors with `.index > 0` are selected.
 
 ```
 cursors = [
-  {target: #c_1, selector: 'a > b ~ c', index: 1, position: ...},
-  {target: #e_1, selector: 'd e', index: 0, position: ...},
-  {target: #c_2, selector: 'a > b ~ c', index: 1, position: ...},
+  {target: #c_1, selector: 'a > b ~ c', index: 1, matchedElement: ...},
+  {target: #e_1, selector: 'd e', index: 0, matchedElement: ...},
+  {target: #c_2, selector: 'a > b ~ c', index: 1, matchedElement: ...},
 ]
 ```
 
@@ -177,17 +177,17 @@ selector to produce new cursors that replace the source cursors.
 
 ```
 cursors = [
-  {target: #c_1, selector: 'a > b ~ c', index: 0, position: ...},
-  {target: #e_1, selector: 'd e', index: 0, position: ...},
+  {target: #c_1, selector: 'a > b ~ c', index: 0, matchedElement: ...},
+  {target: #e_1, selector: 'd e', index: 0, matchedElement: ...},
 ]
 ```
 
 ```
-<a> <!-- cursors[0].position -->
+<a> <!-- cursors[0].matchedElement -->
   <b></b>
   <x></x>
   <c id="c_1"></c>
-  <d> <!-- cursors[1].position -->
+  <d> <!-- cursors[1].matchedElement -->
     <x>
       <e id="e_1"></e>
     </x>
