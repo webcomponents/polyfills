@@ -119,11 +119,12 @@ if (utils.settings.inUse) {
     'nativeTree': nativeTree,
     'patchElementProto': patchElementProto,
     // Use this setting to choose the implementation of `querySelector` and
-    // `querySelectorAll`. The logical tree exposed by Shady DOM via the DOM
-    // APIs it wraps doesn't match the structure of the tree seen by the browser
-    // (the 'real tree'), so the level to which the browser itself is used to
-    // match selectors (which always happens against the real tree) affects the
-    // accuracy and performance of these wrappers.
+    // `querySelectorAll`. The options provide different tradeoffs between
+    // accuracy and performance, as explained below. More specifically, the
+    // logical tree exposed by Shady DOM through the DOM APIs it wraps doesn't
+    // match the structure of the tree seen by the browser (the 'real tree'), so
+    // the degree to which the browser itself is used to match selectors affects
+    // this tradeoff.
     //
     // - `undefined` (default): Shady DOM will walk the logical descendants of
     // the context element and call `matches` with the given selector to find
