@@ -36,6 +36,14 @@ settings.noPatch = /** @type {string|boolean} */ (settings['noPatch'] || false);
 // eslint-disable-next-line no-self-assign
 settings.preferPerformance = settings['preferPerformance'];
 settings.patchOnDemand = settings.noPatch === 'on-demand';
+settings.querySelectorImplementation = (() => {
+  const acceptedValues = ['native', 'selectorEngine'];
+  const userValue = settings['querySelectorImplementation'];
+  if (acceptedValues.indexOf(userValue) > -1) {
+    return userValue;
+  }
+  return undefined;
+})();
 
 const IS_IE = navigator.userAgent.match('Trident');
 settings.IS_IE = IS_IE;
@@ -290,4 +298,55 @@ export const convertNodesIntoANode = (...args) => {
     fragment.appendChild(convertIntoANode(arg));
   }
   return fragment;
+};
+
+/**
+ * Equivalent to `Array.prototype.flat`. Closure does not compile out this
+ * function, so we need an implementation for browsers that don't natively
+ * support it.
+ *
+ * @template T
+ * @param {!Array<!T | !Array<!T>>} array
+ * @param {number} depth
+ * @return {!Array<!T>}
+ */
+export const flat = (array, depth = 1) => {
+  for (; depth > 0; depth--) {
+    array = array.reduce((acc, item) => {
+      if (Array.isArray(item)) {
+        acc.push(...item);
+      } else {
+        acc.push(item);
+      }
+      return acc;
+    }, []);
+  }
+
+  return array;
+};
+
+/**
+ * Deduplicates items in an array.
+ *
+ * This function could normally be implemented as merely `Array.from(new
+ * Set(...))`. However, in IE 11, `Set` does not support being constructed with
+ * an iterable. Further, some polyfills for `Array.from` effectively default to
+ * `Array.prototype.slice.call(...)` when they are unable to find
+ * `[Symbol.iterator]`; this is incompatible with `Set` which has no `length` or
+ * indexable properties.
+ *
+ * @template T
+ * @param {!Array<!T>} array
+ * @return {!Array<!T>}
+ */
+export const deduplicate = (array) => {
+  const results = [];
+  const set = new Set();
+  for (const item of array) {
+    if (!set.has(item)) {
+      results.push(item);
+      set.add(item);
+    }
+  }
+  return results;
 };
