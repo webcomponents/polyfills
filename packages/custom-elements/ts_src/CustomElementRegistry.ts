@@ -351,9 +351,6 @@ export default class CustomElementRegistry {
 }
 
 // Closure compiler exports.
-window[
-  'CustomElementRegistry'
-] = (CustomElementRegistry as unknown) as typeof window['CustomElementRegistry'];
 /* eslint-disable no-self-assign */
 CustomElementRegistry.prototype['define'] =
   CustomElementRegistry.prototype.define;
