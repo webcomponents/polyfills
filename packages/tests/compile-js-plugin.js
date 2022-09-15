@@ -65,8 +65,12 @@ exports.compileJSPlugin = () => {
       const jsOptions = htmlOptions.js;
 
       if (context.response.is('html')) {
+        // Inform any caches that UA affects the response.
+        context.append('Vary', 'User-Agent');
         context.body = htmlTransform(context.body, htmlOptions);
       } else if (context.response.is('js')) {
+        // Inform any caches that UA affects the response.
+        context.append('Vary', 'User-Agent');
         context.body = jsTransform(context.body, jsOptions);
       }
     },
