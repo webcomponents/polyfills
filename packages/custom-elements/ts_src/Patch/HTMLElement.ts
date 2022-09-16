@@ -25,7 +25,7 @@ export default function (internals: CustomElementInternals) {
 
     // Always look up the definition from the global registry.
     const registry = document.__CE_registry!;
-    const definition = (registry as any as CustomElementRegistry).internal_constructorToDefinition(
+    const definition = ((registry as unknown) as CustomElementRegistry).internal_constructorToDefinition(
       constructor
     );
     if (!definition) {
