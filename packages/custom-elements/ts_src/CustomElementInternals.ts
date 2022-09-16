@@ -413,7 +413,7 @@ export default class CustomElementInternals {
       return;
     }
 
-    return (registry as CustomElementRegistry).internal_localNameToDefinition(
+    return (registry as any as CustomElementRegistry).internal_localNameToDefinition(
       localName
     );
   }
@@ -436,7 +436,7 @@ export default class CustomElementInternals {
     // Only create custom elements if the document is associated with a
     // registry.
     if (registry && (namespace === null || namespace === NS_HTML)) {
-      const definition = (registry as CustomElementRegistry).internal_localNameToDefinition(
+      const definition = (registry as any as CustomElementRegistry).internal_localNameToDefinition(
         localName
       );
       if (definition) {
