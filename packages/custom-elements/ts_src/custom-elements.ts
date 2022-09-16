@@ -43,7 +43,7 @@ function installPolyfill() {
   const customElements = new CustomElementRegistry(internals);
 
   // The main document is associated with the global registry.
-  document.__CE_registry = (customElements as unknown) as CustomElementRegistry;
+  (document.__CE_registry as unknown) = customElements;
 
   Object.defineProperty(window, 'customElements', {
     configurable: true,

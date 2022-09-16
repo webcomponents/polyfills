@@ -37,11 +37,11 @@ export const getEventPropagationImmediatelyStopped = (e: Event) => {
 // const s = new SpecialEvent("type");
 // console.assert(s instanceof SpecialEvent); // fails in Safari 13.1
 // ```
-export const Event: typeof window.Event = (function Event(
+export const Event: typeof EventConstructor = (function Event(
   this: Event,
   type: string,
   eventInit: EventInit = {}
-) {
+): Event {
   let _this;
   // When running in a browser where Event isn't constructible (e.g. IE11) this
   // throws and we fall back to the old `createEvent` API.
@@ -53,7 +53,7 @@ export const Event: typeof window.Event = (function Event(
   }
   Object.setPrototypeOf(_this, Object.getPrototypeOf(this));
   return _this;
-} as Function) as typeof window.Event;
+} as unknown) as typeof EventConstructor;
 
 prepareWrapper(Event, EventConstructor, EventPrototype);
 
