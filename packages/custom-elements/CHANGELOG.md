@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- ## Unreleased -->
 
+## Unreleased
+
+- Don't write to window.CustomElementsRegistry unless we're also writing to window.customElements. ([#524](https://github.com/webcomponents/polyfills/pull/524))
+
 ## [1.5.0] - 2021-08-02
 
 - Add TS externs. ([#457](https://github.com/webcomponents/polyfills/pull/457))

@@ -141,13 +141,15 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       };
     </script>
 
-    <template id="x-project"> x-project: [<slot></slot>] </template>
+    <template id="x-project">
+      x-project: [<slot id="theSlot"></slot>]
+    </template>
     <script>
       defineTestElement('x-project');
     </script>
 
     <template id="x-reproject">
-      <x-project>x-reproject: [<slot></slot>]</x-project>
+      <x-project>x-reproject: [<slot id="theSlot"></slot>]</x-project>
     </template>
 
     <script>
@@ -155,7 +157,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     </script>
 
     <template id="x-rereproject">
-      <x-reproject>x-rereproject: [<slot></slot>]</x-reproject>
+      <x-reproject>x-rereproject: [<slot id="theSlot"></slot>]</x-reproject>
     </template>
 
     <script>
@@ -223,7 +225,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       defineTestElement('x-compose');
     </script>
 
-    <template id="x-echo"><slot></slot></template>
+    <template id="x-echo"><slot id="theSlot"></slot></template>
     <script>
       defineTestElement('x-echo');
     </script>
@@ -248,7 +250,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     </script>
 
     <template id="x-select-attr">
-      Foo: [<slot name="foo"></slot>] Bar: [<slot name="bar"></slot>]
+      Foo: [<slot id="slotFoo" name="foo"></slot>] Bar: [<slot
+        id="slotBar"
+        name="bar"
+      ></slot
+      >]
     </template>
     <script>
       defineTestElement('x-select-attr');
@@ -358,6 +364,205 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       });
     </script>
 
+    <template id="x-query-selector-descendant-combinator">
+      <div id="contextElement">
+        <div match id="a">
+          <div>
+            <div match id="b"></div>
+          </div>
+        </div>
+        <div>
+          <div></div>
+          <div match id="c"></div>
+        </div>
+      </div>
+    </template>
+    <script>
+      defineTestElement('x-query-selector-descendant-combinator');
+    </script>
+
+    <template id="x-query-selector-child-combinator">
+      <div id="contextElement">
+        <div id="a">
+          <div>
+            <div></div>
+          </div>
+        </div>
+        <div id="b"></div>
+        <div id="c">
+          <div></div>
+          <div></div>
+        </div>
+      </div>
+    </template>
+    <script>
+      defineTestElement('x-query-selector-child-combinator');
+    </script>
+
+    <template id="x-query-selector-next-sibling-combinator">
+      <div id="contextElement">
+        <div before>
+          <div before></div>
+          <div id="a">
+            <div></div>
+          </div>
+        </div>
+        <div id="b"></div>
+        <div>
+          <div before></div>
+          <div id="c"></div>
+          <div></div>
+        </div>
+      </div>
+    </template>
+    <script>
+      defineTestElement('x-query-selector-next-sibling-combinator');
+    </script>
+
+    <template id="x-query-selector-subsequent-sibling-combinator">
+      <div id="contextElement">
+        <div before>
+          <div before></div>
+          <div id="a">
+            <div></div>
+          </div>
+        </div>
+        <div id="b"></div>
+        <div id="c">
+          <div before></div>
+          <div id="d"></div>
+          <div id="e"></div>
+        </div>
+      </div>
+    </template>
+    <script>
+      defineTestElement('x-query-selector-subsequent-sibling-combinator');
+    </script>
+
+    <template id="x-query-selector-child-selector-through-shadow-hosts">
+      <div id="contextElement">
+        <x-slot-inside-div>
+          <x-slot-inside-div>
+            <div target-element></div>
+          </x-slot-inside-div>
+        </x-slot-inside-div>
+      </div>
+    </template>
+    <script>
+      defineTestElement('x-query-selector-child-selector-through-shadow-hosts');
+    </script>
+
+    <template id="x-query-selector-results-order">
+      <div id="contextElement">
+        <div id="a"></div>
+        <div id="b"></div>
+        <div id="c"></div>
+        <div id="d"></div>
+        <div id="e"></div>
+      </div>
+    </template>
+    <script>
+      defineTestElement('x-query-selector-results-order');
+    </script>
+
+    <template id="x-slot-inside-div">
+      <div>
+        <slot></slot>
+      </div>
+    </template>
+    <script>
+      defineTestElement('x-slot-inside-div');
+    </script>
+
+    <template id="x-query-selector-scope">
+      <div>
+        <div id="contextElement">
+          <div id="target"></div>
+        </div>
+      </div>
+    </template>
+    <script>
+      defineTestElement('x-query-selector-scope');
+    </script>
+
+    <template id="x-query-selector-parser-escape-single-quotes">
+      <div with-single-quote="a'b" decoy></div>
+      <div another-attr decoy></div>
+      <div with-single-quote="a'b" another-attr></div>
+    </template>
+    <script>
+      defineTestElement('x-query-selector-parser-escape-single-quotes');
+    </script>
+
+    <template id="x-query-selector-parser-escape-double-quotes">
+      <div with-double-quote='a"b' decoy></div>
+      <div another-attr decoy></div>
+      <div with-double-quote='a"b' another-attr></div>
+    </template>
+    <script>
+      defineTestElement('x-query-selector-parser-escape-double-quotes');
+    </script>
+
+    <template id="x-query-selector-parser-escape-brackets">
+      <div with-bracket] decoy></div>
+      <div another-attr decoy></div>
+      <div with-bracket] another-attr></div>
+    </template>
+    <script>
+      defineTestElement('x-query-selector-parser-escape-brackets');
+    </script>
+
+    <template id="x-query-selector-parser-escape-parens">
+      <div with-paren) decoy></div>
+      <div without-paren></div>
+    </template>
+    <script>
+      defineTestElement('x-query-selector-parser-escape-parens');
+    </script>
+
+    <template id="x-query-selector-parser-comma-in-attr-name">
+      <div comma-in-name-, decoy></div>
+      <div another-attr decoy></div>
+      <div comma-in-name-, another-attr></div>
+    </template>
+    <script>
+      defineTestElement('x-query-selector-parser-comma-in-attr-name');
+    </script>
+
+    <template id="x-query-selector-parser-comma-in-attr-value">
+      <div comma-in-value="," decoy></div>
+      <div another-attr decoy></div>
+      <some-name another-attr decoy></some-name>
+      <another-name another-attr decoy></another-name>
+      <div comma-in-value="," another-attr></div>
+    </template>
+    <script>
+      defineTestElement('x-query-selector-parser-comma-in-attr-value');
+    </script>
+
+    <template id="x-query-selector-parser-plain-attrs">
+      <div some-attr decoy></div>
+      <div another-attr decoy></div>
+      <some-name another-attr decoy></some-name>
+      <another-name another-attr decoy></another-name>
+      <div some-attr another-attr></div>
+    </template>
+    <script>
+      defineTestElement('x-query-selector-parser-plain-attrs');
+    </script>
+
+    <template id="x-query-selector-parser-optional-whitespace">
+      <div decoy>
+        <div another-attr decoy></div>
+        <some-name another-attr decoy></some-name>
+        <another-name another-attr decoy></another-name>
+        <div some-attr another-attr></div>
+      </div>
+    </template>
+    <script>
+      defineTestElement('x-query-selector-parser-optional-whitespace');
+    </script>
+
     <script>
       'use strict';
 
@@ -448,16 +653,34 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             ShadyDOM.wrapIfNeeded(rere).shadowRoot
           ).querySelectorAll('*');
           assert.include(rereList, re);
-          assert.equal(rereList.length, 2);
+          if (ShadyDOM.querySelectorImplementation === 'native') {
+            // The `<slot>` in the shadow root does not exist in the real tree,
+            // so the native `querySelectorAll` will not see it.
+            assert.equal(rereList.length, 1);
+          } else {
+            assert.equal(rereList.length, 2);
+          }
           var reList = ShadyDOM.wrapIfNeeded(
             ShadyDOM.wrapIfNeeded(re).shadowRoot
           ).querySelectorAll('*');
           assert.include(reList, p);
-          assert.equal(reList.length, 2);
+          if (ShadyDOM.querySelectorImplementation === 'native') {
+            // The `<slot>` in the shadow root does not exist in the real tree,
+            // so the native `querySelectorAll` will not see it.
+            assert.equal(reList.length, 1);
+          } else {
+            assert.equal(reList.length, 2);
+          }
           var pList = ShadyDOM.wrapIfNeeded(
             ShadyDOM.wrapIfNeeded(p).shadowRoot
           ).querySelectorAll('*');
-          assert.equal(pList.length, 1);
+          if (ShadyDOM.querySelectorImplementation === 'native') {
+            // The `<slot>` in the shadow root does not exist in the real tree,
+            // so the native `querySelectorAll` will not see it.
+            assert.equal(pList.length, 0);
+          } else {
+            assert.equal(pList.length, 1);
+          }
         });
 
         test('shadowRoot.getElementById', function () {
@@ -497,8 +720,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             ShadyDOM.wrapIfNeeded(rere).querySelector('#projected'),
             projected
           );
-          assert(ShadyDOM.wrapIfNeeded(re).querySelector('slot'));
-          assert(ShadyDOM.wrapIfNeeded(p).querySelector('slot'));
+          // The `<slot>`s in these shadow roots do not exist in the real tree,
+          // so the native `querySelectorAll` will not see it.
+          if (ShadyDOM.querySelectorImplementation !== 'native') {
+            assert(ShadyDOM.wrapIfNeeded(re).querySelector('slot'));
+            assert(ShadyDOM.wrapIfNeeded(p).querySelector('slot'));
+          }
         });
 
         test('element.querySelectorAll', function () {
@@ -518,8 +745,15 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             ShadyDOM.wrapIfNeeded(rere).querySelectorAll('#projected')[0],
             projected
           );
-          assert(ShadyDOM.wrapIfNeeded(re).querySelectorAll('slot').length, 1);
-          assert(ShadyDOM.wrapIfNeeded(p).querySelectorAll('slot').length, 1);
+          // The `<slot>`s in these shadow root do not exist in the real tree,
+          // so the native `querySelectorAll` will not see it.
+          if (ShadyDOM.querySelectorImplementation !== 'native') {
+            assert(
+              ShadyDOM.wrapIfNeeded(re).querySelectorAll('slot').length,
+              1
+            );
+            assert(ShadyDOM.wrapIfNeeded(p).querySelectorAll('slot').length, 1);
+          }
         });
 
         test('ShadyDOM.wrapIfNeeded(document).querySelector', function () {
@@ -559,21 +793,21 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           ShadyDOM.flush();
           var c1 = ShadyDOM.wrapIfNeeded(
             ShadyDOM.wrapIfNeeded(rere).shadowRoot
-          ).querySelector('slot');
+          ).getElementById('theSlot');
           assert.include(
             ShadyDOM.wrapIfNeeded(c1).assignedNodes({flatten: true}),
             projected
           );
           var c2 = ShadyDOM.wrapIfNeeded(
             ShadyDOM.wrapIfNeeded(re).shadowRoot
-          ).querySelector('slot');
+          ).getElementById('theSlot');
           assert.include(
             ShadyDOM.wrapIfNeeded(c2).assignedNodes({flatten: true}),
             projected
           );
           var c3 = ShadyDOM.wrapIfNeeded(
             ShadyDOM.wrapIfNeeded(p).shadowRoot
-          ).querySelector('slot');
+          ).getElementById('theSlot');
           assert.include(
             ShadyDOM.wrapIfNeeded(c3).assignedNodes({flatten: true}),
             projected
@@ -592,19 +826,19 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           ).querySelector('x-rereproject');
           var c1 = ShadyDOM.wrapIfNeeded(
             ShadyDOM.wrapIfNeeded(rere).shadowRoot
-          ).querySelector('slot');
+          ).getElementById('theSlot');
           var re = ShadyDOM.wrapIfNeeded(
             ShadyDOM.wrapIfNeeded(rere).shadowRoot
           ).querySelector('x-reproject');
           var c2 = ShadyDOM.wrapIfNeeded(
             ShadyDOM.wrapIfNeeded(re).shadowRoot
-          ).querySelector('slot');
+          ).getElementById('theSlot');
           var p = ShadyDOM.wrapIfNeeded(
             ShadyDOM.wrapIfNeeded(re).shadowRoot
           ).querySelector('x-project');
           var c3 = ShadyDOM.wrapIfNeeded(
             ShadyDOM.wrapIfNeeded(p).shadowRoot
-          ).querySelector('slot');
+          ).getElementById('theSlot');
           var ip$ = [c1, c2, c3];
           if (testElement.shadyRoot) {
             testElement.shadyRoot.update();
@@ -639,21 +873,23 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           var e = ShadyDOM.wrapIfNeeded(document).querySelector(
             'x-select-attr'
           );
-          var ip$ = ShadyDOM.wrapIfNeeded(
+          var xSelectAttrShadowRoot = ShadyDOM.wrapIfNeeded(
             ShadyDOM.wrapIfNeeded(e).shadowRoot
-          ).querySelectorAll('slot');
+          );
+          var slotFoo = xSelectAttrShadowRoot.getElementById('slotFoo');
+          var slotBar = xSelectAttrShadowRoot.getElementById('slotBar');
           var c = ShadyDOM.wrapIfNeeded(e).firstElementChild;
           ShadyDOM.flush();
           assert.equal(
             allInsertionPoints(c)[0],
-            ip$[1],
+            slotBar,
             'child not distributed based on host attribute'
           );
           ShadyDOM.wrapIfNeeded(c).slot = 'foo';
           ShadyDOM.flush();
           assert.equal(
             allInsertionPoints(c)[0],
-            ip$[0],
+            slotFoo,
             'child not distributed based on reflecting attribute'
           );
           ShadyDOM.wrapIfNeeded(c).slot = '';
@@ -669,34 +905,36 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           var e = ShadyDOM.wrapIfNeeded(document).querySelector(
             'x-compose-select-attr'
           );
-          var ip$ = ShadyDOM.wrapIfNeeded(
+          var xSelectAttrShadowRoot = ShadyDOM.wrapIfNeeded(
             ShadyDOM.wrapIfNeeded(
               ShadyDOM.wrapIfNeeded(
                 ShadyDOM.wrapIfNeeded(e).shadowRoot
               ).querySelector('#select')
             ).shadowRoot
-          ).querySelectorAll('slot');
+          );
+          var slotFoo = xSelectAttrShadowRoot.getElementById('slotFoo');
+          var slotBar = xSelectAttrShadowRoot.getElementById('slotBar');
           var c1 = ShadyDOM.wrapIfNeeded(
             ShadyDOM.wrapIfNeeded(e).shadowRoot
           ).querySelector('#attr1');
           ShadyDOM.flush();
           assert.equal(
             allInsertionPoints(c1)[0],
-            ip$[1],
+            slotBar,
             'child not distributed based on host attribute'
           );
           ShadyDOM.wrapIfNeeded(c1).slot = 'foo';
           ShadyDOM.flush();
           assert.equal(
             allInsertionPoints(c1)[0],
-            ip$[0],
+            slotFoo,
             'child not distributed based on reflecting attribute'
           );
           ShadyDOM.wrapIfNeeded(c1).slot = 'bar';
           ShadyDOM.flush();
           assert.equal(
             allInsertionPoints(c1)[0],
-            ip$[1],
+            slotBar,
             'child not distributed based on reflecting attribute'
           );
           var c2 = ShadyDOM.wrapIfNeeded(
@@ -705,7 +943,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           ShadyDOM.flush();
           assert.equal(
             allInsertionPoints(c2)[0],
-            ip$[0],
+            slotFoo,
             'child not distributed based on default value'
           );
         });
@@ -718,6 +956,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           s.id = 'added';
           ShadyDOM.wrapIfNeeded(s).textContent = 'Added';
           ShadyDOM.wrapIfNeeded(rere).appendChild(s);
+          // Nodes must be distributed to be seen by the native `querySelector`.
+          if (ShadyDOM.querySelectorImplementation === 'native') {
+            ShadyDOM.flush();
+          }
           assert.equal(
             ShadyDOM.wrapIfNeeded(
               ShadyDOM.wrapIfNeeded(testElement).shadowRoot
@@ -737,6 +979,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           s.id = 'added2';
           ShadyDOM.wrapIfNeeded(s).textContent = 'Added2';
           ShadyDOM.wrapIfNeeded(rere).insertBefore(s, ref);
+          // Nodes must be distributed to be seen by the native `querySelector`.
+          if (ShadyDOM.querySelectorImplementation === 'native') {
+            ShadyDOM.flush();
+          }
           assert.equal(
             ShadyDOM.wrapIfNeeded(
               ShadyDOM.wrapIfNeeded(testElement).shadowRoot
@@ -1006,6 +1252,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           s.id = 'light';
           ShadyDOM.wrapIfNeeded(s).textContent = 'Light';
           ShadyDOM.wrapIfNeeded(rere).appendChild(s);
+          // Nodes must be distributed to be seen by the native `querySelector`.
+          if (ShadyDOM.querySelectorImplementation === 'native') {
+            ShadyDOM.flush();
+          }
           assert.equal(ShadyDOM.wrapIfNeeded(rere).querySelector('#light'), s);
           assert.equal(ShadyDOM.wrapIfNeeded(s).parentNode, rere);
           assert.notEqual(ShadyDOM.nativeTree.parentNode(s), rere);
@@ -1434,6 +1684,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         });
 
         test('shadowRoot.appendChild element with slot child and shadowRoot with slot pending distribution', function () {
+          // Nodes must be distributed to be seen by the native `querySelector`.
+          if (ShadyDOM.querySelectorImplementation === 'native') {
+            this.skip();
+          }
           var outerElement = ShadyDOM.wrapIfNeeded(document).querySelector(
             'outer-element'
           );
@@ -2445,7 +2699,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
               allInsertionPoints(child)[0],
               ShadyDOM.wrapIfNeeded(
                 ShadyDOM.wrapIfNeeded(d).shadowRoot
-              ).querySelector('#notTestContent'),
+              ).getElementById('notTestContent'),
               'child not distributed logically'
             );
           }
@@ -2454,7 +2708,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
               allInsertionPoints(child)[0],
               ShadyDOM.wrapIfNeeded(
                 ShadyDOM.wrapIfNeeded(d).shadowRoot
-              ).querySelector('#testContent'),
+              ).getElementById('testContent'),
               'child not distributed logically'
             );
           }
@@ -2895,8 +3149,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           ShadyDOM.flush();
           const el = d.firstElementChild;
           assert.equal(el.childNodes.length, 4);
-          const slot = ShadyDOM.wrapIfNeeded(el).shadowRoot.querySelector(
-            'slot'
+          const slot = ShadyDOM.wrapIfNeeded(el).shadowRoot.getElementById(
+            'theSlot'
           );
           for (let i = 0; i < el.childNodes.length; i++) {
             const child = el.childNodes[i];
@@ -2904,6 +3158,426 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             assert.equal(ShadyDOM.wrapIfNeeded(child).assignedSlot, slot);
           }
           document.body.removeChild(d);
+        });
+      });
+
+      suite('querySelectorImplementation', function () {
+        const querySelectorImplementation =
+          ShadyDOM.querySelectorImplementation;
+
+        test('The ` ` combinator finds descendants.', function () {
+          const host = createEnabledElement(
+            'x-query-selector-descendant-combinator'
+          );
+          const contextElement = ShadyDOM.wrapIfNeeded(
+            host
+          ).shadowRoot.getElementById('contextElement');
+
+          ShadyDOM.flush();
+
+          // No shadow root hosts below #contextElement or use of `:scope`, so
+          // the results are the same for all implementations.
+
+          const resultQS = ShadyDOM.wrapIfNeeded(contextElement).querySelector(
+            '#contextElement [match]'
+          );
+
+          assert(resultQS);
+          assert(resultQS.id, 'a');
+
+          const resultsQSA = ShadyDOM.wrapIfNeeded(
+            contextElement
+          ).querySelectorAll('#contextElement [match]');
+
+          assert.equal(resultsQSA.length, 3);
+          assert.equal(resultsQSA[0].id, 'a');
+          assert.equal(resultsQSA[1].id, 'b');
+          assert.equal(resultsQSA[2].id, 'c');
+        });
+
+        test('The `>` combinator finds children.', function () {
+          const host = createEnabledElement(
+            'x-query-selector-child-combinator'
+          );
+          const contextElement = ShadyDOM.wrapIfNeeded(
+            host
+          ).shadowRoot.getElementById('contextElement');
+
+          ShadyDOM.flush();
+
+          // No shadow root hosts below #contextElement or use of `:scope`, so
+          // the results are the same for all implementations.
+
+          const resultQS = ShadyDOM.wrapIfNeeded(contextElement).querySelector(
+            '#contextElement > *'
+          );
+
+          assert(resultQS);
+          assert.equal(resultQS.id, 'a');
+
+          const resultsQSA = ShadyDOM.wrapIfNeeded(
+            contextElement
+          ).querySelectorAll('#contextElement > *');
+
+          assert.equal(resultsQSA.length, 3);
+          assert.equal(resultsQSA[0].id, 'a');
+          assert.equal(resultsQSA[1].id, 'b');
+          assert.equal(resultsQSA[2].id, 'c');
+        });
+
+        test('The `+` combinator finds next siblings.', function () {
+          const host = createEnabledElement(
+            'x-query-selector-next-sibling-combinator'
+          );
+          const contextElement = ShadyDOM.wrapIfNeeded(
+            host
+          ).shadowRoot.getElementById('contextElement');
+
+          ShadyDOM.flush();
+
+          // No shadow root hosts below #contextElement or use of `:scope`, so
+          // the results are the same for all implementations.
+
+          const resultQS = ShadyDOM.wrapIfNeeded(contextElement).querySelector(
+            '[before] + *'
+          );
+
+          assert(resultQS);
+          assert.equal(resultQS.id, 'a');
+
+          const resultsQSA = ShadyDOM.wrapIfNeeded(
+            contextElement
+          ).querySelectorAll('[before] + *');
+
+          assert.equal(resultsQSA.length, 3);
+          assert.equal(resultsQSA[0].id, 'a');
+          assert.equal(resultsQSA[1].id, 'b');
+          assert.equal(resultsQSA[2].id, 'c');
+        });
+
+        test('The `~` combinator finds subsequent siblings.', function () {
+          const host = createEnabledElement(
+            'x-query-selector-subsequent-sibling-combinator'
+          );
+          const contextElement = ShadyDOM.wrapIfNeeded(
+            host
+          ).shadowRoot.getElementById('contextElement');
+
+          ShadyDOM.flush();
+
+          // No shadow root hosts below #contextElement or use of `:scope`, so
+          // the results are the same for all implementations.
+
+          const resultQS = ShadyDOM.wrapIfNeeded(contextElement).querySelector(
+            '[before] ~ *'
+          );
+
+          assert(resultQS);
+          assert.equal(resultQS.id, 'a');
+
+          const resultsQSA = ShadyDOM.wrapIfNeeded(
+            contextElement
+          ).querySelectorAll('[before] ~ *');
+
+          assert.equal(resultsQSA.length, 5);
+          assert.equal(resultsQSA[0].id, 'a');
+          assert.equal(resultsQSA[1].id, 'b');
+          assert.equal(resultsQSA[2].id, 'c');
+          assert.equal(resultsQSA[3].id, 'd');
+          assert.equal(resultsQSA[4].id, 'e');
+        });
+
+        test('The `>` combinator can match shadow root hosts with their children.', function () {
+          const host = createEnabledElement(
+            'x-query-selector-child-selector-through-shadow-hosts'
+          );
+          const contextElement = ShadyDOM.wrapIfNeeded(
+            host
+          ).shadowRoot.getElementById('contextElement');
+
+          ShadyDOM.flush();
+
+          const resultQS = ShadyDOM.wrapIfNeeded(contextElement).querySelector(
+            'x-slot-inside-div > x-slot-inside-div > div'
+          );
+
+          if (!querySelectorImplementation) {
+            // The default implementation can't find the target because of the
+            // `<div>`s from the logical shadow roots are in the same root in
+            // the real tree.
+            assert.equal(resultQS, null);
+          } else if (querySelectorImplementation === 'selectorEngine') {
+            assert(resultQS);
+            assert(resultQS.hasAttribute('target-element'));
+          }
+
+          const resultsQSA = ShadyDOM.wrapIfNeeded(
+            contextElement
+          ).querySelectorAll('x-slot-inside-div > x-slot-inside-div > div');
+
+          if (!querySelectorImplementation) {
+            // The default implementation can't find the target because of the
+            // `<div>`s from the logical shadow roots are in the same root in
+            // the real tree.
+            assert.equal(resultsQSA.length, 0);
+          } else if (querySelectorImplementation === 'selectorEngine') {
+            assert.equal(resultsQSA.length, 1);
+            assert(resultsQSA[0].hasAttribute('target-element'));
+          }
+        });
+
+        test('Results from queries with selector lists are in document order.', function () {
+          const host = createEnabledElement('x-query-selector-results-order');
+          const contextElement = ShadyDOM.wrapIfNeeded(
+            host
+          ).shadowRoot.getElementById('contextElement');
+
+          ShadyDOM.flush();
+
+          const resultQS = ShadyDOM.wrapIfNeeded(contextElement).querySelector(
+            '#b, #e, #a, #c, #d'
+          );
+
+          assert(resultQS);
+          assert.equal(resultQS.id, 'a');
+
+          const resultsQSA = ShadyDOM.wrapIfNeeded(
+            contextElement
+          ).querySelectorAll('#b, #e, #a, #c, #d');
+
+          assert.equal(resultsQSA.length, 5);
+          assert.equal(resultsQSA[0].id, 'a');
+          assert.equal(resultsQSA[1].id, 'b');
+          assert.equal(resultsQSA[2].id, 'c');
+          assert.equal(resultsQSA[3].id, 'd');
+          assert.equal(resultsQSA[4].id, 'e');
+        });
+
+        test('The semantics of `:scope` are preserved.', function () {
+          // Skip if `:scope` isn't natively supported.
+          try {
+            ShadyDOM.nativeMethods.querySelectorAll.call(
+              document,
+              'body:scope'
+            );
+          } catch (e) {
+            this.skip();
+          }
+
+          const host = createEnabledElement('x-query-selector-scope');
+          const contextElement = ShadyDOM.wrapIfNeeded(
+            host
+          ).shadowRoot.getElementById('contextElement');
+
+          ShadyDOM.flush();
+
+          const resultQS = ShadyDOM.wrap(contextElement).querySelector(
+            'div:scope > div'
+          );
+
+          if (!querySelectorImplementation) {
+            // The default implementation can't find the target because it
+            // attempts to match it by calling `matches` on the element with the
+            // full selector, which breaks the semantics of `:scope`.
+            assert.equal(resultQS, null);
+          } else if (querySelectorImplementation === 'selectorEngine') {
+            assert(resultQS);
+            assert.equal(resultQS.id, 'target');
+          }
+
+          const resultsQSA = ShadyDOM.wrap(contextElement).querySelectorAll(
+            'div:scope > div'
+          );
+
+          if (!querySelectorImplementation) {
+            // The default implementation can't find the target because it
+            // attempts to match it by calling `matches` on the element with the
+            // full selector, which breaks the semantics of `:scope`.
+            assert.equal(resultsQSA.length, 0);
+          } else if (querySelectorImplementation === 'selectorEngine') {
+            assert.equal(resultsQSA.length, 1);
+            assert.equal(resultsQSA[0].id, 'target');
+          }
+        });
+
+        suite('parseSelectorList', function () {
+          test('Escape sequences are handled in single-quoted strings.', function () {
+            const host = createEnabledElement(
+              'x-query-selector-parser-escape-single-quotes'
+            );
+            ShadyDOM.flush();
+            const result = ShadyDOM.wrapIfNeeded(host).shadowRoot.querySelector(
+              "div[with-single-quote='a\\'b'][another-attr]"
+            );
+            assert(result);
+            assert(!result.hasAttribute('decoy'));
+            assert.equal(result.getAttribute('with-single-quote'), "a'b");
+            assert(result.hasAttribute('another-attr'));
+          });
+
+          test('Escape sequences are handled in double-quoted strings.', function () {
+            const host = createEnabledElement(
+              'x-query-selector-parser-escape-double-quotes'
+            );
+            ShadyDOM.flush();
+            const result = ShadyDOM.wrapIfNeeded(host).shadowRoot.querySelector(
+              'div[with-double-quote="a\\"b"][another-attr]'
+            );
+            assert(result);
+            assert(!result.hasAttribute('decoy'));
+            assert.equal(result.getAttribute('with-double-quote'), 'a"b');
+            assert(result.hasAttribute('another-attr'));
+          });
+
+          test('Escape sequences are handled in brackets.', function () {
+            const host = createEnabledElement(
+              'x-query-selector-parser-escape-brackets'
+            );
+            ShadyDOM.flush();
+            const result = ShadyDOM.wrapIfNeeded(host).shadowRoot.querySelector(
+              'div[with-bracket\\]][another-attr]'
+            );
+            assert(result);
+            assert(!result.hasAttribute('decoy'));
+            assert(result.hasAttribute('with-bracket]'));
+            assert(result.hasAttribute('another-attr'));
+          });
+
+          test('Escape sequences are handled in parentheses.', function () {
+            const host = createEnabledElement(
+              'x-query-selector-parser-escape-parens'
+            );
+            ShadyDOM.flush();
+            const result = ShadyDOM.wrapIfNeeded(host).shadowRoot.querySelector(
+              ':not([with-paren\\)])[without-paren]'
+            );
+            assert(result);
+            assert(!result.hasAttribute('decoy'));
+            assert(!result.hasAttribute('with-paren)'));
+            assert(result.hasAttribute('without-paren'));
+          });
+
+          test('Commas nested in single-quoted strings do not split top-level complex selectors.', function () {
+            const host = createEnabledElement(
+              'x-query-selector-parser-comma-in-attr-value'
+            );
+            ShadyDOM.flush();
+            const result = ShadyDOM.wrapIfNeeded(host).shadowRoot.querySelector(
+              "div[comma-in-value=','][another-attr]"
+            );
+            assert(result);
+            assert(!result.hasAttribute('decoy'));
+            assert.equal(result.getAttribute('comma-in-value'), ',');
+            assert(result.hasAttribute('another-attr'));
+          });
+
+          test('Commas nested in double-quoted strings do not split top-level complex selectors.', function () {
+            const host = createEnabledElement(
+              'x-query-selector-parser-comma-in-attr-value'
+            );
+            ShadyDOM.flush();
+            const result = ShadyDOM.wrapIfNeeded(host).shadowRoot.querySelector(
+              'div[comma-in-value=","][another-attr]'
+            );
+            assert(result);
+            assert(!result.hasAttribute('decoy'));
+            assert.equal(result.getAttribute('comma-in-value'), ',');
+            assert(result.hasAttribute('another-attr'));
+          });
+
+          test('Commas nested in parentheses do not split top-level complex selectors.', function () {
+            // Only run this test in browsers that support selector lists as
+            // arguments to functional pseudo-classes.
+            try {
+              ShadyDOM.nativeMethods.querySelector.call(
+                document,
+                ':not(abc, def)'
+              );
+            } catch (e) {
+              this.skip();
+              return;
+            }
+
+            const host = createEnabledElement(
+              'x-query-selector-parser-plain-attrs'
+            );
+            ShadyDOM.flush();
+            const result = ShadyDOM.wrapIfNeeded(host).shadowRoot.querySelector(
+              'div[some-attr]:not(some-name, another-name)[another-attr]'
+            );
+            assert(result);
+            assert(!result.hasAttribute('decoy'));
+            assert(result.hasAttribute('some-attr'));
+            assert(result.hasAttribute('another-attr'));
+          });
+
+          test('Commas nested in brackets do not split top-level complex selectors.', function () {
+            const host = createEnabledElement(
+              'x-query-selector-parser-comma-in-attr-name'
+            );
+            ShadyDOM.flush();
+            // This is really a test for escape sequences, since commas aren't
+            // valid inside brackets without being escaped.
+            const result = ShadyDOM.wrapIfNeeded(host).shadowRoot.querySelector(
+              'div[comma-in-name-\\,][another-attr]'
+            );
+            assert(result);
+            assert(!result.hasAttribute('decoy'));
+            assert(result.hasAttribute('comma-in-name-,'));
+            assert(result.hasAttribute('another-attr'));
+          });
+
+          test('Whitespace surrounding compound selectors and combinators is optional.', function () {
+            const host = createEnabledElement(
+              'x-query-selector-parser-optional-whitespace'
+            );
+
+            ShadyDOM.flush();
+            [
+              // All permutations with 1 space.
+              'div>[some-attr][another-attr]',
+              'div>[some-attr][another-attr] ',
+              'div> [some-attr][another-attr]',
+              'div> [some-attr][another-attr] ',
+              'div >[some-attr][another-attr]',
+              'div >[some-attr][another-attr] ',
+              'div > [some-attr][another-attr]',
+              'div > [some-attr][another-attr] ',
+              ' div>[some-attr][another-attr]',
+              ' div>[some-attr][another-attr] ',
+              ' div> [some-attr][another-attr]',
+              ' div> [some-attr][another-attr] ',
+              ' div >[some-attr][another-attr]',
+              ' div >[some-attr][another-attr] ',
+              ' div > [some-attr][another-attr]',
+              ' div > [some-attr][another-attr] ',
+              // All permutations with 4 spaces.
+              'div>[some-attr][another-attr]',
+              'div>[some-attr][another-attr]    ',
+              'div>    [some-attr][another-attr]',
+              'div>    [some-attr][another-attr]    ',
+              'div    >[some-attr][another-attr]',
+              'div    >[some-attr][another-attr]    ',
+              'div    >    [some-attr][another-attr]',
+              'div    >    [some-attr][another-attr]    ',
+              '    div>[some-attr][another-attr]',
+              '    div>[some-attr][another-attr]    ',
+              '    div>    [some-attr][another-attr]',
+              '    div>    [some-attr][another-attr]    ',
+              '    div    >[some-attr][another-attr]',
+              '    div    >[some-attr][another-attr]    ',
+              '    div    >    [some-attr][another-attr]',
+              '    div    >    [some-attr][another-attr]    ',
+            ].forEach((selector) => {
+              const result = ShadyDOM.wrapIfNeeded(
+                host
+              ).shadowRoot.querySelector(selector);
+              assert(result);
+              assert(!result.hasAttribute('decoy'));
+              assert(result.hasAttribute('some-attr'));
+              assert(result.hasAttribute('another-attr'));
+            });
+          });
         });
       });
     </script>

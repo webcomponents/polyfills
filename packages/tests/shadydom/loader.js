@@ -6,6 +6,14 @@ ShadyDOM = {
   preferPerformance: !!window.location.search.match('preferPerformance'),
 };
 
+if (
+  window.location.search.match('querySelectorImplementation=selectorEngine')
+) {
+  ShadyDOM.querySelectorImplementation = 'selectorEngine';
+} else if (window.location.search.match('querySelectorImplementation=native')) {
+  ShadyDOM.querySelectorImplementation = 'native';
+}
+
 // TODO(sorvell): noPatching does not work with the custom elements polyfill.
 // IF the polyfill used `ShadyDOM.wrap` throughout, it could be made to work.
 if (window.customElements) {

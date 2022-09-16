@@ -19,7 +19,7 @@
   "main": "scoped-custom-element-registry.min.js",
   "scripts": {
     "build": "gulp",
-    "test": "cd ../.. && wtr 'packages/scoped-custom-element-registry/test/**/*.test.(js|html)'"
+    "test": "web-test-runner"
   },
   "files": [
     "CHANGELOG.md",
@@ -37,5 +37,11 @@
     "webcomponents",
     "polyfill",
     "shim"
-  ]
+  ],
+  "devDependencies": {
+    "@open-wc/testing": "^3.1.5",
+    "@web/test-runner": "^0.13.30",
+    "@web/test-runner-mocha": "^0.7.5",
+    "@web/test-runner-playwright": "^0.8.9"
+  }
 }

@@ -36,6 +36,10 @@ function installPolyfill() {
   PatchNode(internals);
   PatchElement(internals);
 
+  window[
+    'CustomElementRegistry'
+  ] = (CustomElementRegistry as unknown) as typeof window['CustomElementRegistry'];
+
   const customElements = new CustomElementRegistry(internals);
 
   // The main document is associated with the global registry.
