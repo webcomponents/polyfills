@@ -280,7 +280,7 @@ export default class CustomElementInternals {
       if (definition) {
         this._upgradeAnElement(element, definition);
       }
-    } catch (e) {
+    } catch (e: any) {
       this.reportTheException(e);
     }
   }
@@ -340,7 +340,7 @@ export default class CustomElementInternals {
     if (definition.connectedCallback) {
       try {
         definition.connectedCallback.call(element);
-      } catch (e) {
+      } catch (e: any) {
         this.reportTheException(e);
       }
     }
@@ -351,7 +351,7 @@ export default class CustomElementInternals {
     if (definition.disconnectedCallback) {
       try {
         definition.disconnectedCallback.call(element);
-      } catch (e) {
+      } catch (e: any) {
         this.reportTheException(e);
       }
     }
@@ -377,7 +377,7 @@ export default class CustomElementInternals {
           newValue,
           namespace
         );
-      } catch (e) {
+      } catch (e: any) {
         this.reportTheException(e);
       }
     }
@@ -507,7 +507,7 @@ export default class CustomElementInternals {
           }
 
           return result;
-        } catch (e) {
+        } catch (e: any) {
           this.reportTheException(e);
 
           // When construction fails, a new HTMLUnknownElement is produced.

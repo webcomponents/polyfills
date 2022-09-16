@@ -335,7 +335,7 @@ export default class CustomElementRegistry {
       this._localNameToConstructorGetter.delete(localName);
       try {
         return this.internal_reifyDefinition(localName, constructorGetter());
-      } catch (e) {
+      } catch (e: any) {
         this._internals.reportTheException(e);
       }
     }
