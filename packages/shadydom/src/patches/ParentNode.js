@@ -389,9 +389,6 @@ export const QueryPatches = utils.getOwnPropertyDescriptors({
    * @param {string} selector
    * @param {boolean} useNative
    */
-  // TODO(sorvell): `useNative` option relies on native querySelectorAll and
-  // misses distributed nodes, see
-  // https://github.com/webcomponents/shadydom/pull/210#issuecomment-361435503
   querySelectorAll(selector, useNative) {
     if (useNative || querySelectorImplementation === 'native') {
       // Polyfilled `ShadowRoot`s don't have a native `querySelectorAll`.
