@@ -135,11 +135,11 @@ export const ParentNodePatches = utils.getOwnPropertyDescriptors({
  *
  * See <./logicalQuerySelectorAll.md> for implementation details.
  *
- * @param {!Element} contextElement
+ * @param {!ParentNode} contextNode
  * @param {string} selectorList
  * @return {!Array<!Element>}
  */
-const logicalQuerySelectorAll = (contextElement, selectorList) => {
+const logicalQuerySelectorAll = (contextNode, selectorList) => {
   /**
    * @type {!Array<!ComplexSelectorParts>}
    */
@@ -152,7 +152,7 @@ const logicalQuerySelectorAll = (contextElement, selectorList) => {
   /**
    * Determines if a single compound selector matches an element. If the
    * selector contains `:scope` (as a substring), then the selector only is only
-   * considered matching if `element` is `contextElement`.
+   * considered matching if `element` is `contextNode`.
    *
    * @param {!Element} element
    * @param {string} compoundSelector
@@ -160,8 +160,7 @@ const logicalQuerySelectorAll = (contextElement, selectorList) => {
    */
   const matchesCompoundSelector = (element, compoundSelector) => {
     return (
-      (element === contextElement ||
-        compoundSelector.indexOf(':scope') === -1) &&
+      (element === contextNode || compoundSelector.indexOf(':scope') === -1) &&
       utils.matchesSelector(element, compoundSelector)
     );
   };
@@ -192,13 +191,13 @@ const logicalQuerySelectorAll = (contextElement, selectorList) => {
 
   /**
    * The list of `SelectorMatchingCursor`s, initialized with cursors pointing at
-   * all descendants of `contextElement` that match the last compound selector
-   * in any complex selector in `selectorList`.
+   * all descendants of `contextNode` that match the last compound selector in
+   * any complex selector in `selectorList`.
    *
    * @type {!Array<!SelectorMatchingCursor>}
    */
   let cursors = utils.flat(
-    query(contextElement, (_element) => true).map((element) => {
+    query(contextNode, (_element) => true).map((element) => {
       return utils.flat(
         complexSelectors.map((complexSelectorParts) => {
           const {compoundSelectors} = complexSelectorParts;
@@ -342,13 +341,16 @@ const querySelectorImplementation =
 
 export const QueryPatches = utils.getOwnPropertyDescriptors({
   /**
-   * @this {Element}
-   * @param  {string} selector
+   * @this {!ParentNode}
+   * @param {string} selector
    */
   querySelector(selector) {
     if (querySelectorImplementation === 'native') {
       // Polyfilled `ShadowRoot`s don't have a native `querySelectorAll`.
-      const target = this instanceof ShadowRoot ? this.host : this;
+      const target =
+        this instanceof ShadowRoot
+          ? /** @type {!ShadowRoot} */ (this).host
+          : this;
       const candidates = Array.prototype.slice.call(
         target[utils.NATIVE_PREFIX + 'querySelectorAll'](selector)
       );
@@ -383,9 +385,9 @@ export const QueryPatches = utils.getOwnPropertyDescriptors({
   },
 
   /**
-   * @this {Element}
-   * @param  {string} selector
-   * @param  {boolean} useNative
+   * @this {!ParentNode}
+   * @param {string} selector
+   * @param {boolean} useNative
    */
   // TODO(sorvell): `useNative` option relies on native querySelectorAll and
   // misses distributed nodes, see
@@ -393,7 +395,10 @@ export const QueryPatches = utils.getOwnPropertyDescriptors({
   querySelectorAll(selector, useNative) {
     if (useNative || querySelectorImplementation === 'native') {
       // Polyfilled `ShadowRoot`s don't have a native `querySelectorAll`.
-      const target = this instanceof ShadowRoot ? this.host : this;
+      const target =
+        this instanceof ShadowRoot
+          ? /** @type {!ShadowRoot} */ (this).host
+          : this;
       const candidates = Array.prototype.slice.call(
         target[utils.NATIVE_PREFIX + 'querySelectorAll'](selector)
       );
