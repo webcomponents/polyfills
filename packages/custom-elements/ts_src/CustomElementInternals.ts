@@ -281,7 +281,7 @@ export default class CustomElementInternals {
         this._upgradeAnElement(element, definition);
       }
     } catch (e: unknown) {
-      this.reportTheException(e as Error);
+      this.reportTheException(e);
     }
   }
 
@@ -341,7 +341,7 @@ export default class CustomElementInternals {
       try {
         definition.connectedCallback.call(element);
       } catch (e: unknown) {
-        this.reportTheException(e as Error);
+        this.reportTheException(e);
       }
     }
   }
@@ -352,7 +352,7 @@ export default class CustomElementInternals {
       try {
         definition.disconnectedCallback.call(element);
       } catch (e: unknown) {
-        this.reportTheException(e as Error);
+        this.reportTheException(e);
       }
     }
   }
@@ -378,7 +378,7 @@ export default class CustomElementInternals {
           namespace
         );
       } catch (e: unknown) {
-        this.reportTheException(e as Error);
+        this.reportTheException(e);
       }
     }
   }
@@ -506,7 +506,7 @@ export default class CustomElementInternals {
 
           return result;
         } catch (e: unknown) {
-          this.reportTheException(e as Error);
+          this.reportTheException(e);
 
           // When construction fails, a new HTMLUnknownElement is produced.
           // However, there's no direct way to create one, so we create a
@@ -537,7 +537,7 @@ export default class CustomElementInternals {
    *
    * @see https://html.spec.whatwg.org/multipage/webappapis.html#report-the-exception
    */
-  reportTheException(errorArg: Error) {
+  reportTheException(errorArg: unknown) {
     interface ExtendedError extends Error {
       // Non-standard Safari properties.
       sourceURL?: string;
@@ -550,11 +550,26 @@ export default class CustomElementInternals {
       columnNumber?: number;
     }
 
-    const error = errorArg as ExtendedError;
-    const message = error.message;
-    const filename = error.sourceURL || error.fileName || '';
-    const lineno = error.line || error.lineNumber || 0;
-    const colno = error.column || error.columnNumber || 0;
+    const getErrorInfo = (maybeError: unknown) => {
+      if (maybeError instanceof Error) {
+        const error = maybeError as ExtendedError;
+        return {
+          message: error.message,
+          filename: error.sourceURL || error.fileName || '',
+          lineno: error.line || error.lineNumber || 0,
+          colno: error.column || error.columnNumber || 0,
+        };
+      } else {
+        return {
+          message: `Uncaught ${String(maybeError)}`,
+          filename: '',
+          lineno: 0,
+          colno: 0,
+        };
+      }
+    };
+
+    const {message, filename, lineno, colno} = getErrorInfo(errorArg);
 
     let event: ErrorEvent | undefined = undefined;
     if (ErrorEvent.prototype.initErrorEvent === undefined) {
@@ -564,7 +579,7 @@ export default class CustomElementInternals {
         filename,
         lineno,
         colno,
-        error,
+        error: errorArg,
       });
     } else {
       event = document.createEvent('ErrorEvent') as ErrorEvent;
@@ -587,7 +602,7 @@ export default class CustomElementInternals {
         configurable: true,
         enumerable: true,
         get: function () {
-          return error;
+          return errorArg;
         },
       });
     }
@@ -598,7 +613,7 @@ export default class CustomElementInternals {
       // console if their associated ErrorEvent isn't handled during dispatch
       // (indicated by calling `preventDefault`). In practice, these errors are
       // always displayed.
-      console.error(error);
+      console.error(errorArg);
     }
   }
 }
