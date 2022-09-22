@@ -413,9 +413,7 @@ export default class CustomElementInternals {
       return;
     }
 
-    return ((registry as unknown) as CustomElementRegistry).internal_localNameToDefinition(
-      localName
-    );
+    return registry.internal_localNameToDefinition(localName);
   }
 
   /**
