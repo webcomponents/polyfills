@@ -537,7 +537,7 @@ export default class CustomElementInternals {
    *
    * @see https://html.spec.whatwg.org/multipage/webappapis.html#report-the-exception
    */
-  reportTheException(errorArg: unknown) {
+  reportTheException(arg: unknown) {
     interface ExtendedError extends Error {
       // Non-standard Safari properties.
       sourceURL?: string;
@@ -550,26 +550,20 @@ export default class CustomElementInternals {
       columnNumber?: number;
     }
 
-    const getErrorInfo = (maybeError: unknown) => {
-      if (maybeError instanceof Error) {
-        const error = maybeError as ExtendedError;
-        return {
-          message: error.message,
-          filename: error.sourceURL || error.fileName || '',
-          lineno: error.line || error.lineNumber || 0,
-          colno: error.column || error.columnNumber || 0,
-        };
-      } else {
-        return {
-          message: `Uncaught ${String(maybeError)}`,
-          filename: '',
-          lineno: 0,
-          colno: 0,
-        };
-      }
-    };
+    let message = '';
+    let filename = '';
+    let lineno = 0;
+    let colno = 0;
 
-    const {message, filename, lineno, colno} = getErrorInfo(errorArg);
+    if (arg instanceof Error) {
+      const error = arg as ExtendedError;
+      message = error.message;
+      filename = error.sourceURL || error.fileName || '';
+      lineno = error.line || error.lineNumber || 0;
+      colno = error.column || error.columnNumber || 0;
+    } else {
+      message = `Uncaught ${String(arg)}`;
+    }
 
     let event: ErrorEvent | undefined = undefined;
     if (ErrorEvent.prototype.initErrorEvent === undefined) {
@@ -579,7 +573,7 @@ export default class CustomElementInternals {
         filename,
         lineno,
         colno,
-        error: errorArg,
+        error: arg,
       });
     } else {
       event = document.createEvent('ErrorEvent') as ErrorEvent;
@@ -602,7 +596,7 @@ export default class CustomElementInternals {
         configurable: true,
         enumerable: true,
         get: function () {
-          return errorArg;
+          return arg;
         },
       });
     }
@@ -613,7 +607,7 @@ export default class CustomElementInternals {
       // console if their associated ErrorEvent isn't handled during dispatch
       // (indicated by calling `preventDefault`). In practice, these errors are
       // always displayed.
-      console.error(errorArg);
+      console.error(arg);
     }
   }
 }
