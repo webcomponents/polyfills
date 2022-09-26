@@ -9,7 +9,10 @@
  * additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
-export const constructor = window.Event;
+// Without this explicit type, TS seems to think that `window.Event` is the
+// wrapper from `wrappers/event.ts` at this point, which is typed in terms of
+// this binding, causing a cycle in its type.
+export const constructor: typeof Event = window.Event;
 
 export const prototype = constructor.prototype;
 

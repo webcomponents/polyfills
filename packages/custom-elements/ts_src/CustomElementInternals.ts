@@ -280,7 +280,7 @@ export default class CustomElementInternals {
       if (definition) {
         this._upgradeAnElement(element, definition);
       }
-    } catch (e) {
+    } catch (e: unknown) {
       this.reportTheException(e);
     }
   }
@@ -340,7 +340,7 @@ export default class CustomElementInternals {
     if (definition.connectedCallback) {
       try {
         definition.connectedCallback.call(element);
-      } catch (e) {
+      } catch (e: unknown) {
         this.reportTheException(e);
       }
     }
@@ -351,7 +351,7 @@ export default class CustomElementInternals {
     if (definition.disconnectedCallback) {
       try {
         definition.disconnectedCallback.call(element);
-      } catch (e) {
+      } catch (e: unknown) {
         this.reportTheException(e);
       }
     }
@@ -377,7 +377,7 @@ export default class CustomElementInternals {
           newValue,
           namespace
         );
-      } catch (e) {
+      } catch (e: unknown) {
         this.reportTheException(e);
       }
     }
@@ -413,9 +413,7 @@ export default class CustomElementInternals {
       return;
     }
 
-    return (registry as CustomElementRegistry).internal_localNameToDefinition(
-      localName
-    );
+    return registry.internal_localNameToDefinition(localName);
   }
 
   /**
@@ -436,7 +434,7 @@ export default class CustomElementInternals {
     // Only create custom elements if the document is associated with a
     // registry.
     if (registry && (namespace === null || namespace === NS_HTML)) {
-      const definition = (registry as CustomElementRegistry).internal_localNameToDefinition(
+      const definition = ((registry as unknown) as CustomElementRegistry).internal_localNameToDefinition(
         localName
       );
       if (definition) {
@@ -507,7 +505,7 @@ export default class CustomElementInternals {
           }
 
           return result;
-        } catch (e) {
+        } catch (e: unknown) {
           this.reportTheException(e);
 
           // When construction fails, a new HTMLUnknownElement is produced.
@@ -539,7 +537,7 @@ export default class CustomElementInternals {
    *
    * @see https://html.spec.whatwg.org/multipage/webappapis.html#report-the-exception
    */
-  reportTheException(errorArg: Error) {
+  reportTheException(arg: unknown) {
     interface ExtendedError extends Error {
       // Non-standard Safari properties.
       sourceURL?: string;
@@ -552,11 +550,20 @@ export default class CustomElementInternals {
       columnNumber?: number;
     }
 
-    const error = errorArg as ExtendedError;
-    const message = error.message;
-    const filename = error.sourceURL || error.fileName || '';
-    const lineno = error.line || error.lineNumber || 0;
-    const colno = error.column || error.columnNumber || 0;
+    let message = '';
+    let filename = '';
+    let lineno = 0;
+    let colno = 0;
+
+    if (arg instanceof Error) {
+      const error = arg as ExtendedError;
+      message = error.message;
+      filename = error.sourceURL || error.fileName || '';
+      lineno = error.line || error.lineNumber || 0;
+      colno = error.column || error.columnNumber || 0;
+    } else {
+      message = `Uncaught ${String(arg)}`;
+    }
 
     let event: ErrorEvent | undefined = undefined;
     if (ErrorEvent.prototype.initErrorEvent === undefined) {
@@ -566,7 +573,7 @@ export default class CustomElementInternals {
         filename,
         lineno,
         colno,
-        error,
+        error: arg,
       });
     } else {
       event = document.createEvent('ErrorEvent') as ErrorEvent;
@@ -589,7 +596,7 @@ export default class CustomElementInternals {
         configurable: true,
         enumerable: true,
         get: function () {
-          return error;
+          return arg;
         },
       });
     }
@@ -600,7 +607,7 @@ export default class CustomElementInternals {
       // console if their associated ErrorEvent isn't handled during dispatch
       // (indicated by calling `preventDefault`). In practice, these errors are
       // always displayed.
-      console.error(error);
+      console.error(arg);
     }
   }
 }
