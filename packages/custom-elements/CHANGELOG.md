@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 
 - Don't write to window.CustomElementsRegistry unless we're also writing to window.customElements. ([#524](https://github.com/webcomponents/polyfills/pull/524))
+- Update TypeScript and upstream internal changes.
+  ([#525](https://github.com/webcomponents/polyfills/pull/525))
 
 ## [1.5.0] - 2021-08-02
 
