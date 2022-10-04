@@ -12,7 +12,7 @@
 export {};
 
 if (!Array.from) {
-  Array.from = <T extends unknown>(object: ArrayLike<T>): Array<T> => {
+  Array.from = <T>(object: ArrayLike<T>): Array<T> => {
     return [].slice.call(object);
   };
 }

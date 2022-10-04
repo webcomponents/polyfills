@@ -30,6 +30,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#519](https://github.com/webcomponents/polyfills/pull/519))
 - Add `ShadyDOM.querySelectorImplementation` setting.
   ([#517](https://github.com/webcomponents/polyfills/pull/517))
+- Fix Closure types of `querySelector{,All}` patches for internal conformance
+  checks. ([#526](https://github.com/webcomponents/polyfills/pull/526))
 
 ## [1.9.0] - 2021-08-02
 

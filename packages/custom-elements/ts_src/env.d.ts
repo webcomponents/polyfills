@@ -9,9 +9,7 @@
  * rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
-// When building externally, this file is always assumed to be a module, but by
-// default it isn't when building internally, so we need this export statement.
-export {};
+import CustomElementRegistry from './CustomElementRegistry.js';
 
 declare global {
   interface AlreadyConstructedMarkerType {
