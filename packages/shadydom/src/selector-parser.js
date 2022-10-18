@@ -1,4 +1,10 @@
 /**
+ * @license
+ * Copyright (c) 2022 The Polymer Project Authors
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
+
+/**
  * A map describing parentheses-like grouping characters and their behavior. The
  * keys are the group's start character and the value's `end` property contains
  * the end character. The `matchNestedParens` property indicates whether or not
