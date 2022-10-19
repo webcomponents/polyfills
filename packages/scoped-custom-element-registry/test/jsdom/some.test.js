@@ -1,2 +1,5 @@
-test('passing test', () => {});
-test('failing test', () => { throw new Error(); });
+require('../../scoped-custom-element-registry.min.js');
+
+test('`CustomElementRegistry` is constructable.', () => {
+  new CustomElementRegistry();
+});
