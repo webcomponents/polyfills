@@ -1,6 +1,6 @@
 {
   "name": "@webcomponents/custom-elements",
-  "version": "1.5.0",
+  "version": "1.5.1",
   "publishConfig": {
     "access": "public"
   },
@@ -37,6 +37,6 @@
   ],
   "devDependencies": {
     "@webcomponents/html-imports": "^1.3.0",
-    "@webcomponents/shadydom": "^1.9.0"
+    "@webcomponents/shadydom": "^1.10.0"
   }
 }
