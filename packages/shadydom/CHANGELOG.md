@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- ## Unreleased -->
 
-## Unreleased
+## [1.10.0] - 2022-10-20
 
 - Fix focus/blur events to be usable without wrapped `addEventListener` in
   `noPatch` mode. ([#502](https://github.com/webcomponents/polyfills/pull/502))
