@@ -19,7 +19,7 @@
   "main": "scoped-custom-element-registry.min.js",
   "scripts": {
     "build": "gulp",
-    "test": "web-test-runner"
+    "test": "web-test-runner && jest"
   },
   "files": [
     "CHANGELOG.md",
