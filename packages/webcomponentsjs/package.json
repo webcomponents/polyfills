@@ -1,6 +1,6 @@
 {
   "name": "@webcomponents/webcomponentsjs",
-  "version": "2.6.0",
+  "version": "2.7.0",
   "publishConfig": {
     "access": "public"
   },
@@ -38,9 +38,9 @@
     "shim"
   ],
   "devDependencies": {
-    "@webcomponents/custom-elements": "^1.5.0",
-    "@webcomponents/shadycss": "^1.11.0",
-    "@webcomponents/shadydom": "^1.9.0",
+    "@webcomponents/custom-elements": "^1.5.1",
+    "@webcomponents/shadycss": "^1.11.1",
+    "@webcomponents/shadydom": "^1.10.0",
     "@webcomponents/template": "^1.5.0",
     "@webcomponents/url": "^0.7.8",
     "babel-preset-minify": "^0.4.3",
