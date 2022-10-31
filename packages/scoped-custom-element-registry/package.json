@@ -44,6 +44,7 @@
     "@web/test-runner-mocha": "^0.7.5",
     "@web/test-runner-playwright": "^0.8.9",
     "jest": "^29.2.2",
-    "jest-environment-jsdom": "^29.2.2"
+    "jest-environment-jsdom": "^29.2.2",
+    "jsdom": "^20.0.2"
   }
 }
