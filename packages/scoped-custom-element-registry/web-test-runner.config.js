@@ -12,10 +12,7 @@ const envBrowsers = process.env.BROWSERS?.split(',').map((product) =>
 const browsers = envBrowsers ?? defaultBrowsers;
 
 module.exports = {
-  files: [
-    'test/**/*.test.(js|html)',
-    '!test/jsdom/**/*',
-  ],
+  files: ['test/**/*.test.(js|html)', '!test/jsdom/**/*'],
   nodeResolve: true,
   concurrency: 10,
   browsers,

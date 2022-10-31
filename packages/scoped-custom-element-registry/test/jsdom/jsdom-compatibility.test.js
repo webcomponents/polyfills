@@ -19,6 +19,10 @@ test('Shadow roots with different registries can contain different definitions f
   const div2 = document.createElement('div');
   div2.attachShadow({mode: 'open', customElements: registry2});
 
-  expect(div1.shadowRoot.createElement('some-element')).toBeInstanceOf(SomeElement1);
-  expect(div2.shadowRoot.createElement('some-element')).toBeInstanceOf(SomeElement2);
+  expect(div1.shadowRoot.createElement('some-element')).toBeInstanceOf(
+    SomeElement1
+  );
+  expect(div2.shadowRoot.createElement('some-element')).toBeInstanceOf(
+    SomeElement2
+  );
 });
