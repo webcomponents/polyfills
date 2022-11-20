@@ -348,15 +348,16 @@ if (!ShadowRoot.prototype.createElement) {
     }
     const toggleAttribute = elementClass.prototype.toggleAttribute;
     if (toggleAttribute) {
-      elementClass.prototype.toggleAttribute = function (n) {
+      elementClass.prototype.toggleAttribute = function (n, f) {
         const name = n.toLowerCase();
+        const force = typeof f === 'undefined' ? undefined : !!f
         if (observedAttributes.has(name)) {
           const old = this.getAttribute(name);
-          toggleAttribute.call(this, name);
+          toggleAttribute.call(this, name, force);
           const newValue = this.getAttribute(name);
           attributeChangedCallback.call(this, name, old, newValue);
         } else {
-          toggleAttribute.call(this, name);
+          toggleAttribute.call(this, name, force);
         }
       };
     }
