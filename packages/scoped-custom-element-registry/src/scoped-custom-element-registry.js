@@ -348,9 +348,8 @@ if (!ShadowRoot.prototype.createElement) {
     }
     const toggleAttribute = elementClass.prototype.toggleAttribute;
     if (toggleAttribute) {
-      elementClass.prototype.toggleAttribute = function (n, f) {
+      elementClass.prototype.toggleAttribute = function (n, force) {
         const name = n.toLowerCase();
-        const force = typeof f === 'undefined' ? undefined : !!f
         if (observedAttributes.has(name)) {
           const old = this.getAttribute(name);
           toggleAttribute.call(this, name, force);
