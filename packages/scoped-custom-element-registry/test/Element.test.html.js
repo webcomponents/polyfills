@@ -1,6 +1,11 @@
 import {expect} from '@open-wc/testing';
 
-import {getTestElement, getShadowRoot, getHTML} from './utils.js';
+import {
+  getTestElement,
+  getObservedAttributesTestElement,
+  getShadowRoot,
+  getHTML
+} from './utils.js';
 
 describe('Element', () => {
   describe('global registry', () => {
@@ -102,6 +107,43 @@ describe('Element', () => {
       $el.insertAdjacentHTML('afterbegin', `<${tagName}></${tagName}>`);
 
       expect($el.firstElementChild).to.not.be.instanceof(CustomElementClass);
+    });
+  });
+
+  describe('attributes', () => {
+    it('should call setAttribute', () => {
+      const {tagName, CustomElementClass} = getObservedAttributesTestElement(['foo']);
+      customElements.define(tagName, CustomElementClass);
+      const $el = getHTML('<div></div>');
+      $el.innerHTML = `<${tagName}></${tagName}>`;
+
+      $el.firstElementChild.setAttribute('foo', 'bar');
+
+      expect($el.firstElementChild.getAttribute('foo')).to.equal('bar');
+    });
+    it('should call removeAttribute', () => {
+      const {tagName, CustomElementClass} = getObservedAttributesTestElement(['foo']);
+      customElements.define(tagName, CustomElementClass);
+      const $el = getHTML('<div></div>');
+      $el.innerHTML = `<${tagName} foo></${tagName}>`;
+
+      $el.firstElementChild.removeAttribute('foo');
+
+      expect($el.firstElementChild.hasAttribute('foo')).to.be.false;
+    });
+    it('should call toggleAttribute', () => {
+      const {tagName, CustomElementClass} = getObservedAttributesTestElement(['foo']);
+      customElements.define(tagName, CustomElementClass);
+      const $el = getHTML('<div></div>');
+      $el.innerHTML = `<${tagName}></${tagName}>`;
+
+      $el.firstElementChild.toggleAttribute('foo', false);
+
+      expect($el.firstElementChild.hasAttribute('foo')).to.be.false;
+
+      $el.firstElementChild.toggleAttribute('foo', true);
+
+      expect($el.firstElementChild.hasAttribute('foo')).to.be.true;
     });
   });
 });

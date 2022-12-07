@@ -51,7 +51,7 @@ if (!ShadowRoot.prototype.createElement) {
         );
       }
       // Since observedAttributes can't change, we approximate it by patching
-      // set/removeAttribute on the user's class
+      // set/remove/toggleAttribute on the user's class
       const attributeChangedCallback =
         elementClass.prototype.attributeChangedCallback;
       const observedAttributes = new Set(elementClass.observedAttributes || []);
@@ -307,8 +307,8 @@ if (!ShadowRoot.prototype.createElement) {
     };
   };
 
-  // Helper to patch CE class setAttribute/getAttribute to implement
-  // attributeChangedCallback
+  // Helper to patch CE class setAttribute/getAttribute/toggleAttribute to
+  // implement attributeChangedCallback
   const patchAttributes = (
     elementClass,
     observedAttributes,
