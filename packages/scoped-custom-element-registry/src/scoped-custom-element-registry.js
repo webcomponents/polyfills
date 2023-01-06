@@ -486,7 +486,7 @@ if (!ShadowRoot.prototype.createElement) {
         const host = internalsToHostMap.get(this);
         const definition = definitionForElement.get(host);
         if (definition['formAssociated'] === true) {
-          originalMethod?.call(this, ...args);
+          return originalMethod?.call(this, ...args);
         } else {
           throw new DOMException(
             `Failed to execute ${originalMethod} on 'ElementInternals': The target element is not a form-associated custom element.`
