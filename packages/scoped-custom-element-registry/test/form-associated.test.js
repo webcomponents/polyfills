@@ -99,4 +99,22 @@ export const commonRegistryTests = (registry) => {
       expect(form.elements.length).to.equal(0);
     });
   });
+
+  describe('ElementInternals prototype method overrides', () => {
+    it('will still return the appropriate values', () => {
+      const {tagName, CustomElementClass} = getFormAssociatedTestElement();
+      registry.define(tagName, CustomElementClass);
+
+      const form = document.createElement('form');
+      const element = new CustomElementClass();
+
+      form.append(element);
+
+      expect(element.internals.checkValidity()).to.be.true;
+
+      element.internals.setValidity({valueMissing: true}, 'Test');
+
+      expect(element.internals.checkValidity()).to.be.false;
+    });
+  });
 };
