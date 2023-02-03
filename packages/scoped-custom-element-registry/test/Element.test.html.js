@@ -4,7 +4,7 @@ import {
   getTestElement,
   getObservedAttributesTestElement,
   getShadowRoot,
-  getHTML
+  getHTML,
 } from './utils.js';
 
 describe('Element', () => {
@@ -112,38 +112,44 @@ describe('Element', () => {
 
   describe('attributes', () => {
     it('should call setAttribute', () => {
-      const {tagName, CustomElementClass} = getObservedAttributesTestElement(['foo']);
+      const {tagName, CustomElementClass} = getObservedAttributesTestElement([
+        'foo',
+      ]);
       customElements.define(tagName, CustomElementClass);
-      const $el = getHTML('<div></div>');
-      $el.innerHTML = `<${tagName}></${tagName}>`;
+      const $el = document.createElement(tagName);
 
-      $el.firstElementChild.setAttribute('foo', 'bar');
+      $el.setAttribute('foo', 'bar');
 
-      expect($el.firstElementChild.getAttribute('foo')).to.equal('bar');
+      expect($el.getAttribute('foo')).to.equal('bar');
     });
+
     it('should call removeAttribute', () => {
-      const {tagName, CustomElementClass} = getObservedAttributesTestElement(['foo']);
+      const {tagName, CustomElementClass} = getObservedAttributesTestElement([
+        'foo',
+      ]);
       customElements.define(tagName, CustomElementClass);
-      const $el = getHTML('<div></div>');
-      $el.innerHTML = `<${tagName} foo></${tagName}>`;
+      const $el = getHTML(`<${tagName} foo></${tagName}>`);
 
-      $el.firstElementChild.removeAttribute('foo');
+      $el.removeAttribute('foo');
 
-      expect($el.firstElementChild.hasAttribute('foo')).to.be.false;
+      expect($el.hasAttribute('foo')).to.be.false;
     });
+
     it('should call toggleAttribute', () => {
-      const {tagName, CustomElementClass} = getObservedAttributesTestElement(['foo']);
+      const {tagName, CustomElementClass} = getObservedAttributesTestElement([
+        'foo',
+      ]);
       customElements.define(tagName, CustomElementClass);
-      const $el = getHTML('<div></div>');
-      $el.innerHTML = `<${tagName}></${tagName}>`;
+      const $el = document.createElement(tagName);
 
-      $el.firstElementChild.toggleAttribute('foo', false);
+      $el.toggleAttribute('foo', false);
 
-      expect($el.firstElementChild.hasAttribute('foo')).to.be.false;
+      expect($el.hasAttribute('foo')).to.be.false;
 
-      $el.firstElementChild.toggleAttribute('foo', true);
+      $el.setAttribute('foo');
+      $el.toggleAttribute('foo', true);
 
-      expect($el.firstElementChild.hasAttribute('foo')).to.be.true;
+      expect($el.hasAttribute('foo')).to.be.true;
     });
   });
 });

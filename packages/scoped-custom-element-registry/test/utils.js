@@ -31,11 +31,13 @@ export const getTestElement = () => ({
 });
 
 /**
- * 
- * @param {array<string>} observedAttributeNames the names of the attributes you want to observe
- * @returns {{Klass: typeof HTMLElement, tagName: string}}
+ *
+ * @param {Array<string>} observedAttributeNames the names of the attributes you want to observe
+ * @returns {{CustomElementClass: typeof HTMLElement, tagName: string}}
  */
-export const getObservedAttributesTestElement = (observedAttributeNames = []) => ({
+export const getObservedAttributesTestElement = (
+  observedAttributeNames = []
+) => ({
   tagName: getTestTagName(),
   CustomElementClass: class extends HTMLElement {
     static get observedAttributes() {
