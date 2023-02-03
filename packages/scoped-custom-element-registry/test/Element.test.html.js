@@ -146,7 +146,7 @@ describe('Element', () => {
 
       expect($el.hasAttribute('foo')).to.be.false;
 
-      $el.setAttribute('foo');
+      $el.setAttribute('foo', '');
       $el.toggleAttribute('foo', true);
 
       expect($el.hasAttribute('foo')).to.be.true;
