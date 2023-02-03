@@ -387,17 +387,19 @@ if (!ShadowRoot.prototype.createElement) {
       patchHTMLElement(definition.elementClass);
       new definition.elementClass();
     }
-    // Approximate observedAttributes from the user class, since the stand-in element had none
-    definition.observedAttributes.forEach((attr) => {
-      if (instance.hasAttribute(attr)) {
-        definition.attributeChangedCallback.call(
-          instance,
-          attr,
-          null,
-          instance.getAttribute(attr)
-        );
-      }
-    });
+    if (definition.attributeChangedCallback) {
+      // Approximate observedAttributes from the user class, since the stand-in element had none
+      definition.observedAttributes.forEach((attr) => {
+        if (instance.hasAttribute(attr)) {
+          definition.attributeChangedCallback.call(
+            instance,
+            attr,
+            null,
+            instance.getAttribute(attr)
+          );
+        }
+      });
+    }
     if (isUpgrade && definition.connectedCallback && instance.isConnected) {
       definition.connectedCallback.call(instance);
     }
