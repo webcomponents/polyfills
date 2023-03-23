@@ -179,7 +179,11 @@ export default function (internals: CustomElementInternals) {
     }
   };
 
-    Element.prototype.toggleAttribute = function (this: Element, name, force?: boolean | undefined) {
+  Element.prototype.toggleAttribute = function (
+    this: Element,
+    name,
+    force?: boolean | undefined
+  ) {
     // Fast path for non-custom elements.
     if (this.__CE_state !== CEState.custom) {
       return Native.Element_toggleAttribute.call(this, name, force);

@@ -126,17 +126,17 @@ export const ElementPatches = utils.getOwnPropertyDescriptors({
    * @param {string} attr
    * @param {boolean | undefined} force
    */
-    toggleAttribute(attr, force) {
-      if (this.ownerDocument !== doc) {
-        this[utils.NATIVE_PREFIX + 'toggleAttribute'](attr, force);
-      } else if (!scopeClassAttribute(this, attr, '')) {
-        this[utils.NATIVE_PREFIX + 'toggleAttribute'](attr, force);
-        distributeAttributeChange(this, attr);
-      } else if (this.getAttribute(attr) === '' && !force) {
-        // ensure that "class" attribute is fully removed if ShadyCSS does not keep scoping
-        this[utils.NATIVE_PREFIX + 'toggleAttribute'](attr, force);
-      }
-    },
+  toggleAttribute(attr, force) {
+    if (this.ownerDocument !== doc) {
+      this[utils.NATIVE_PREFIX + 'toggleAttribute'](attr, force);
+    } else if (!scopeClassAttribute(this, attr, '')) {
+      this[utils.NATIVE_PREFIX + 'toggleAttribute'](attr, force);
+      distributeAttributeChange(this, attr);
+    } else if (this.getAttribute(attr) === '' && !force) {
+      // ensure that "class" attribute is fully removed if ShadyCSS does not keep scoping
+      this[utils.NATIVE_PREFIX + 'toggleAttribute'](attr, force);
+    }
+  },
 });
 
 if (!utils.settings.preferPerformance) {
