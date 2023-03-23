@@ -179,6 +179,21 @@ export default function (internals: CustomElementInternals) {
     }
   };
 
+    Element.prototype.toggleAttribute = function (this: Element, name, force?: boolean | undefined) {
+    // Fast path for non-custom elements.
+    if (this.__CE_state !== CEState.custom) {
+      return Native.Element_toggleAttribute.call(this, name, force);
+    }
+
+    const oldValue = Native.Element_getAttribute.call(this, name);
+    const hadAttribute = oldValue !== null;
+    const hasAttribute = Native.Element_toggleAttribute.call(this, name);
+    if (hadAttribute !== hasAttribute) {
+      internals.attributeChangedCallback(this, name, oldValue, null, null);
+    }
+    return hasAttribute;
+  };
+
   Element.prototype.removeAttributeNS = function (
     this: Element,
     namespace,

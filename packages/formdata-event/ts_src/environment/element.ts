@@ -18,4 +18,5 @@ export const methods = {
   hasAttribute: prototype.hasAttribute,
   removeAttribute: prototype.removeAttribute,
   setAttribute: prototype.setAttribute,
+  toggleAttribute: prototype.toggleAttribute,
 };
