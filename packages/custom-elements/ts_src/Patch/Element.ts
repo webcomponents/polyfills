@@ -193,7 +193,13 @@ export default function (internals: CustomElementInternals) {
     const hadAttribute = oldValue !== null;
     const hasAttribute = Native.Element_toggleAttribute.call(this, name, force);
     if (hadAttribute !== hasAttribute) {
-      internals.attributeChangedCallback(this, name, oldValue, hasAttribute ? '' : null, null);
+      internals.attributeChangedCallback(
+        this,
+        name,
+        oldValue,
+        hasAttribute ? '' : null,
+        null
+      );
     }
     return hasAttribute;
   };
