@@ -128,7 +128,7 @@ export const ElementPatches = utils.getOwnPropertyDescriptors({
    */
   toggleAttribute(attr, force) {
     if (this.ownerDocument !== doc) {
-      this[utils.NATIVE_PREFIX + 'toggleAttribute'](attr, force);
+      return this[utils.NATIVE_PREFIX + 'toggleAttribute'](attr, force);
     } else if (!scopeClassAttribute(this, attr, '')) {
       this[utils.NATIVE_PREFIX + 'toggleAttribute'](attr, force);
       distributeAttributeChange(this, attr);
