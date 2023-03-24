@@ -71,8 +71,8 @@
             assert.equal(element.attrCallbackArgs.length, 1);
             assert.deepEqual(element.attrCallbackArgs[0], [
               'attr',
-              '',
               null,
+              '',
               null,
             ]);
           });
@@ -86,8 +86,8 @@
             assert.equal(element.attrCallbackArgs.length, 1);
             assert.deepEqual(element.attrCallbackArgs[0], [
               'attr',
-              '',
               null,
+              '',
               null,
             ]);
           });
@@ -179,7 +179,7 @@
             ]);
           });
 
-          test('Toggling (force: true) an observed attribute does not change the attribute and does not triggers a callback.', () => {
+          test('Toggling (force: true) an observed attribute does not change the attribute and does not trigger a callback.', () => {
             const element = document.createElement(localName2);
 
             assert.equal(element.attrCallbackArgs.length, 0);
@@ -188,7 +188,7 @@
 
             assert.equal(element.attrCallbackArgs.length, 1);
 
-            element.toggleAttribute('attr');
+            element.toggleAttribute('attr', true);
 
             assert.equal(element.getAttribute('attr'), 'abc');
             assert.equal(element.attrCallbackArgs.length, 1);
@@ -203,13 +203,13 @@
 
             assert.equal(element.attrCallbackArgs.length, 1);
 
-            element.toggleAttribute('attr');
+            element.toggleAttribute('attr', false);
 
             assert.equal(element.getAttribute('attr'), null);
             assert.equal(element.attrCallbackArgs.length, 2);
             assert.deepEqual(element.attrCallbackArgs[1], [
               'attr',
-              null,
+              'abc',
               null,
               null,
             ]);
