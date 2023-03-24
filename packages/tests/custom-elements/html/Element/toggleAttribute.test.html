@@ -68,7 +68,8 @@
             element.toggleAttribute('attr');
 
             assert.equal(element.getAttribute('attr'), '');
-            assert.deepEqual(element.attrCallbackArgs[1], [
+            assert.equal(element.attrCallbackArgs.length, 1);
+            assert.deepEqual(element.attrCallbackArgs[0], [
               'attr',
               '',
               null,
@@ -82,7 +83,8 @@
             element.toggleAttribute('attr', true);
 
             assert.equal(element.getAttribute('attr'), '');
-            assert.deepEqual(element.attrCallbackArgs[1], [
+            assert.equal(element.attrCallbackArgs.length, 1);
+            assert.deepEqual(element.attrCallbackArgs[0], [
               'attr',
               '',
               null,
@@ -207,7 +209,7 @@
             assert.equal(element.attrCallbackArgs.length, 2);
             assert.deepEqual(element.attrCallbackArgs[1], [
               'attr',
-              'abc',
+              null,
               null,
               null,
             ]);
