@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- ## Unreleased -->
 
+- Add support for `Element.toggleAttribute()` ([#541](https://github.com/webcomponents/polyfills/pull/541))
+
 ## [1.10.0] - 2022-10-20
 
 - Fix focus/blur events to be usable without wrapped `addEventListener` in
