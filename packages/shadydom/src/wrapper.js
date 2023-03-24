@@ -88,7 +88,7 @@ class Wrapper {
   }
 
   toggleAttribute(name, force) {
-    this.node[utils.SHADY_PREFIX + 'toggleAttribute'](name, force);
+    return this.node[utils.SHADY_PREFIX + 'toggleAttribute'](name, force);
   }
 
   attachShadow(options) {
