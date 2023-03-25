@@ -135,6 +135,7 @@
 
             element.setAttribute('attr', 'abc');
 
+            assert.equal(element.getAttribute('attr'), 'abc');
             assert.equal(element.attrCallbackArgs.length, 0);
 
             element.toggleAttribute('attr', true);
@@ -150,6 +151,7 @@
 
             element.setAttribute('attr', 'abc');
 
+            assert.equal(element.getAttribute('attr'), 'abc');
             assert.equal(element.attrCallbackArgs.length, 0);
 
             element.toggleAttribute('attr', false);
@@ -165,6 +167,7 @@
 
             element.setAttribute('attr', 'abc');
 
+            assert.equal(element.getAttribute('attr'), 'abc');
             assert.equal(element.attrCallbackArgs.length, 1);
 
             element.toggleAttribute('attr');
@@ -186,6 +189,7 @@
 
             element.setAttribute('attr', 'abc');
 
+            assert.equal(element.getAttribute('attr'), 'abc');
             assert.equal(element.attrCallbackArgs.length, 1);
 
             element.toggleAttribute('attr', true);
@@ -201,6 +205,7 @@
 
             element.setAttribute('attr', 'abc');
 
+            assert.equal(element.getAttribute('attr'), 'abc');
             assert.equal(element.attrCallbackArgs.length, 1);
 
             element.toggleAttribute('attr', false);

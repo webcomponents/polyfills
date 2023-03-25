@@ -130,11 +130,12 @@ export const ElementPatches = utils.getOwnPropertyDescriptors({
     if (this.ownerDocument !== doc) {
       return this[utils.NATIVE_PREFIX + 'toggleAttribute'](attr, force);
     } else if (!scopeClassAttribute(this, attr, '')) {
-      this[utils.NATIVE_PREFIX + 'toggleAttribute'](attr, force);
+      const result = this[utils.NATIVE_PREFIX + 'toggleAttribute'](attr, force);
       distributeAttributeChange(this, attr);
+      return result;
     } else if (this.getAttribute(attr) === '' && !force) {
       // ensure that "class" attribute is fully removed if ShadyCSS does not keep scoping
-      this[utils.NATIVE_PREFIX + 'toggleAttribute'](attr, force);
+      return this[utils.NATIVE_PREFIX + 'toggleAttribute'](attr, force);
     }
   },
 });
