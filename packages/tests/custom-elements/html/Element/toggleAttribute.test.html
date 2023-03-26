@@ -52,11 +52,11 @@
               }
             }
           );
-
-          const hasToggleAttribute =
-            Element.prototype.toggleAttribute instanceof Function;
-          const testFn = hasToggleAttribute ? test : test.skip;
         }
+
+        const hasToggleAttribute =
+          Element.prototype.toggleAttribute instanceof Function;
+        const testFn = hasToggleAttribute ? test : test.skip;
 
         suite('Toggling an unset attribute.', () => {
           let localName;
@@ -66,44 +66,53 @@
             defineWithLocalName(localName, ['attr']);
           });
 
-          test('Toggling an attribute with no value (null) adds the attribute and triggers a callback.', () => {
-            const element = document.createElement(localName);
+          testFn(
+            'Toggling an attribute with no value (null) adds the attribute and triggers a callback.',
+            () => {
+              const element = document.createElement(localName);
 
-            element.toggleAttribute('attr');
+              element.toggleAttribute('attr');
 
-            assert.equal(element.getAttribute('attr'), '');
-            assert.equal(element.attrCallbackArgs.length, 1);
-            assert.deepEqual(element.attrCallbackArgs[0], [
-              'attr',
-              null,
-              '',
-              null,
-            ]);
-          });
+              assert.equal(element.getAttribute('attr'), '');
+              assert.equal(element.attrCallbackArgs.length, 1);
+              assert.deepEqual(element.attrCallbackArgs[0], [
+                'attr',
+                null,
+                '',
+                null,
+              ]);
+            }
+          );
 
-          test('Toggling (force: true) an attribute with no value (null) adds the attribute and triggers a callback.', () => {
-            const element = document.createElement(localName);
+          testFn(
+            'Toggling (force: true) an attribute with no value (null) adds the attribute and triggers a callback.',
+            () => {
+              const element = document.createElement(localName);
 
-            element.toggleAttribute('attr', true);
+              element.toggleAttribute('attr', true);
 
-            assert.equal(element.getAttribute('attr'), '');
-            assert.equal(element.attrCallbackArgs.length, 1);
-            assert.deepEqual(element.attrCallbackArgs[0], [
-              'attr',
-              null,
-              '',
-              null,
-            ]);
-          });
+              assert.equal(element.getAttribute('attr'), '');
+              assert.equal(element.attrCallbackArgs.length, 1);
+              assert.deepEqual(element.attrCallbackArgs[0], [
+                'attr',
+                null,
+                '',
+                null,
+              ]);
+            }
+          );
 
-          test('Toggling (force: false) an attribute with no value (null) does not trigger a callback.', () => {
-            const element = document.createElement(localName);
+          testFn(
+            'Toggling (force: false) an attribute with no value (null) does not trigger a callback.',
+            () => {
+              const element = document.createElement(localName);
 
-            element.toggleAttribute('attr', false);
+              element.toggleAttribute('attr', false);
 
-            assert.equal(element.getAttribute('attr'), null);
-            assert.equal(element.attrCallbackArgs.length, 0);
-          });
+              assert.equal(element.getAttribute('attr'), null);
+              assert.equal(element.attrCallbackArgs.length, 0);
+            }
+          );
         });
 
         suite('Toggling a set attribute.', () => {
@@ -117,112 +126,130 @@
             defineWithLocalName(localName2, ['attr']);
           });
 
-          test('Toggling an unobserved attribute removes the attribute but does not trigger a callback.', () => {
-            const element = document.createElement(localName1);
+          testFn(
+            'Toggling an unobserved attribute removes the attribute but does not trigger a callback.',
+            () => {
+              const element = document.createElement(localName1);
 
-            assert.equal(element.attrCallbackArgs.length, 0);
+              assert.equal(element.attrCallbackArgs.length, 0);
 
-            element.setAttribute('attr', 'abc');
+              element.setAttribute('attr', 'abc');
 
-            assert.equal(element.attrCallbackArgs.length, 0);
+              assert.equal(element.attrCallbackArgs.length, 0);
 
-            element.toggleAttribute('attr');
+              element.toggleAttribute('attr');
 
-            assert.equal(element.getAttribute('attr'), null);
-            assert.equal(element.attrCallbackArgs.length, 0);
-          });
+              assert.equal(element.getAttribute('attr'), null);
+              assert.equal(element.attrCallbackArgs.length, 0);
+            }
+          );
 
-          test('Toggling (force: true) an unobserved attribute does not change the attribute and does not trigger a callback.', () => {
-            const element = document.createElement(localName1);
+          testFn(
+            'Toggling (force: true) an unobserved attribute does not change the attribute and does not trigger a callback.',
+            () => {
+              const element = document.createElement(localName1);
 
-            assert.equal(element.attrCallbackArgs.length, 0);
+              assert.equal(element.attrCallbackArgs.length, 0);
 
-            element.setAttribute('attr', 'abc');
+              element.setAttribute('attr', 'abc');
 
-            assert.equal(element.getAttribute('attr'), 'abc');
-            assert.equal(element.attrCallbackArgs.length, 0);
+              assert.equal(element.getAttribute('attr'), 'abc');
+              assert.equal(element.attrCallbackArgs.length, 0);
 
-            element.toggleAttribute('attr', true);
+              element.toggleAttribute('attr', true);
 
-            assert.equal(element.getAttribute('attr'), 'abc');
-            assert.equal(element.attrCallbackArgs.length, 0);
-          });
+              assert.equal(element.getAttribute('attr'), 'abc');
+              assert.equal(element.attrCallbackArgs.length, 0);
+            }
+          );
 
-          test('Toggling (force: false) an unobserved attribute removes the attribute but does not trigger a callback.', () => {
-            const element = document.createElement(localName1);
+          testFn(
+            'Toggling (force: false) an unobserved attribute removes the attribute but does not trigger a callback.',
+            () => {
+              const element = document.createElement(localName1);
 
-            assert.equal(element.attrCallbackArgs.length, 0);
+              assert.equal(element.attrCallbackArgs.length, 0);
 
-            element.setAttribute('attr', 'abc');
+              element.setAttribute('attr', 'abc');
 
-            assert.equal(element.getAttribute('attr'), 'abc');
-            assert.equal(element.attrCallbackArgs.length, 0);
+              assert.equal(element.getAttribute('attr'), 'abc');
+              assert.equal(element.attrCallbackArgs.length, 0);
 
-            element.toggleAttribute('attr', false);
+              element.toggleAttribute('attr', false);
 
-            assert.equal(element.getAttribute('attr'), null);
-            assert.equal(element.attrCallbackArgs.length, 0);
-          });
+              assert.equal(element.getAttribute('attr'), null);
+              assert.equal(element.attrCallbackArgs.length, 0);
+            }
+          );
 
-          test('Toggling an observed attribute removes the attribute and triggers a callback.', () => {
-            const element = document.createElement(localName2);
+          testFn(
+            'Toggling an observed attribute removes the attribute and triggers a callback.',
+            () => {
+              const element = document.createElement(localName2);
 
-            assert.equal(element.attrCallbackArgs.length, 0);
+              assert.equal(element.attrCallbackArgs.length, 0);
 
-            element.setAttribute('attr', 'abc');
+              element.setAttribute('attr', 'abc');
 
-            assert.equal(element.getAttribute('attr'), 'abc');
-            assert.equal(element.attrCallbackArgs.length, 1);
+              assert.equal(element.getAttribute('attr'), 'abc');
+              assert.equal(element.attrCallbackArgs.length, 1);
 
-            element.toggleAttribute('attr');
+              element.toggleAttribute('attr');
 
-            assert.equal(element.getAttribute('attr'), null);
-            assert.equal(element.attrCallbackArgs.length, 2);
-            assert.deepEqual(element.attrCallbackArgs[1], [
-              'attr',
-              'abc',
-              null,
-              null,
-            ]);
-          });
+              assert.equal(element.getAttribute('attr'), null);
+              assert.equal(element.attrCallbackArgs.length, 2);
+              assert.deepEqual(element.attrCallbackArgs[1], [
+                'attr',
+                'abc',
+                null,
+                null,
+              ]);
+            }
+          );
 
-          test('Toggling (force: true) an observed attribute does not change the attribute and does not trigger a callback.', () => {
-            const element = document.createElement(localName2);
+          testFn(
+            'Toggling (force: true) an observed attribute does not change the attribute and does not trigger a callback.',
+            () => {
+              const element = document.createElement(localName2);
 
-            assert.equal(element.attrCallbackArgs.length, 0);
+              assert.equal(element.attrCallbackArgs.length, 0);
 
-            element.setAttribute('attr', 'abc');
+              element.setAttribute('attr', 'abc');
 
-            assert.equal(element.getAttribute('attr'), 'abc');
-            assert.equal(element.attrCallbackArgs.length, 1);
+              assert.equal(element.getAttribute('attr'), 'abc');
+              assert.equal(element.attrCallbackArgs.length, 1);
 
-            element.toggleAttribute('attr', true);
+              element.toggleAttribute('attr', true);
 
-            assert.equal(element.getAttribute('attr'), 'abc');
-            assert.equal(element.attrCallbackArgs.length, 1);
-          });
+              assert.equal(element.getAttribute('attr'), 'abc');
+              assert.equal(element.attrCallbackArgs.length, 1);
+            }
+          );
 
-          test('Toggling (force: false) an observed attribute removes the attribute and triggers a callback.', () => {
-            const element = document.createElement(localName2);
+          testFn(
+            'Toggling (force: false) an observed attribute removes the attribute and triggers a callback.',
+            () => {
+              const element = document.createElement(localName2);
 
-            assert.equal(element.attrCallbackArgs.length, 0);
+              assert.equal(element.attrCallbackArgs.length, 0);
 
-            element.setAttribute('attr', 'abc');
+              element.setAttribute('attr', 'abc');
 
-            assert.equal(element.getAttribute('attr'), 'abc');
-            assert.equal(element.attrCallbackArgs.length, 1);
+              assert.equal(element.getAttribute('attr'), 'abc');
+              assert.equal(element.attrCallbackArgs.length, 1);
 
-            element.toggleAttribute('attr', false);
+              element.toggleAttribute('attr', false);
 
-            assert.equal(element.getAttribute('attr'), null);
-            assert.equal(element.attrCallbackArgs.length, 2);
-            assert.deepEqual(element.attrCallbackArgs[1], [
-              'attr',
-              'abc',
-              null,
-              null,
-            ]);
-          });
+              assert.equal(element.getAttribute('attr'), null);
+              assert.equal(element.attrCallbackArgs.length, 2);
+              assert.deepEqual(element.attrCallbackArgs[1], [
+                'attr',
+                'abc',
+                null,
+                null,
+              ]);
+            }
+          );
         });
       });
     </script>
