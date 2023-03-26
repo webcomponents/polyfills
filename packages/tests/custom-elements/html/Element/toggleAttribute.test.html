@@ -52,6 +52,10 @@
               }
             }
           );
+
+          const hasToggleAttribute =
+            Element.prototype.toggleAttribute instanceof Function;
+          const testFn = hasToggleAttribute ? test : test.skip;
         }
 
         suite('Toggling an unset attribute.', () => {
