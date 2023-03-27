@@ -2738,6 +2738,18 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           ShadyDOM.wrapIfNeeded(child).setAttribute('slot', 'test');
           ShadyDOM.flush();
           testWithAttr();
+          //
+          ShadyDOM.wrapIfNeeded(child).toggleAttribute('slot');
+          ShadyDOM.flush();
+          testNoAttr();
+          //
+          ShadyDOM.wrapIfNeeded(child).setAttribute('slot', 'test');
+          ShadyDOM.flush();
+          testWithAttr();
+          //
+          ShadyDOM.wrapIfNeeded(child).toggleAttribute('slot', false);
+          ShadyDOM.flush();
+          testNoAttr();
         });
 
         test('getRootNode', function () {
