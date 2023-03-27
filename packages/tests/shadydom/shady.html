@@ -561,6 +561,43 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           assert.strictEqual(getComposedHTML(host), 'fallback bfallback a');
         });
 
+        test('toggleAttribute slot', function () {
+          ShadyDOM.wrapIfNeeded(host).innerHTML =
+            '<a slot="a">Hello</a><b slot="b">World</b>';
+
+          ShadyDOM.wrapIfNeeded(
+            ShadyDOM.wrapIfNeeded(host).shadowRoot
+          ).innerHTML =
+            '<slot name="b">fallback b</slot>' +
+            '<slot name="a">fallback a</slot>';
+          ShadyDOM.flush();
+          assert.strictEqual(
+            getComposedHTML(host),
+            '<b slot="b">World</b><a slot="a">Hello</a>'
+          );
+
+          ShadyDOM.wrapIfNeeded(
+            ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(host).shadowRoot)
+              .firstChild
+          ).toggleAttribute('name');
+          ShadyDOM.flush();
+          assert.strictEqual(
+            getComposedHTML(host),
+            'fallback b<a slot="a">Hello</a>'
+          );
+
+          ShadyDOM.wrapIfNeeded(
+            ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(host).shadowRoot)
+              .firstChild
+          ).toggleAttribute('name', false);
+          ShadyDOM.wrapIfNeeded(
+            ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(host).shadowRoot)
+              .lastChild
+          ).toggleAttribute('name');
+          ShadyDOM.flush();
+          assert.strictEqual(getComposedHTML(host), 'fallback bfallback a');
+        });
+
         test('appendChild - mutate host', function () {
           ShadyDOM.wrapIfNeeded(host).innerHTML = '<a>Hello</a>';
           ShadyDOM.wrapIfNeeded(
