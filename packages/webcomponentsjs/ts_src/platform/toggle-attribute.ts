@@ -12,6 +12,9 @@ found at http://polymer.github.io/PATENTS.txt
 export {};
 
 const Element_prototype = Element.prototype;
+const nativeHasAttribute = Element.prototype.hasAttribute;
+const nativeSetAttribute = Element.prototype.setAttribute;
+const nativeRemoveAttribute = Element.prototype.removeAttribute;
 
 if (!Element_prototype.hasOwnProperty('toggleAttribute')) {
   Element_prototype.toggleAttribute = function toggleAttribute(
@@ -20,22 +23,22 @@ if (!Element_prototype.hasOwnProperty('toggleAttribute')) {
     force?: boolean
   ): boolean {
     if (force === undefined) {
-      if (this.hasAttribute(name)) {
-        this.removeAttribute(name);
+      if (nativeHasAttribute.call(this, name)) {
+        nativeRemoveAttribute.call(this, name);
         return false;
       } else {
-        this.setAttribute(name, '');
+        nativeSetAttribute.call(this, name, '');
         return true;
       }
     }
     if (force) {
-      if (!this.hasAttribute(name)) {
-        this.setAttribute(name, '');
+      if (!nativeHasAttribute.call(this, name)) {
+        nativeSetAttribute.call(this, name, '');
       }
       return true;
     }
     // force is falsey
-    this.removeAttribute(name);
+    nativeRemoveAttribute.call(this, name);
     return false;
   };
 }
