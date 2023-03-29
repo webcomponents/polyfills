@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 
 - Add support for `Element.toggleAttribute()` ([#541](https://github.com/webcomponents/polyfills/pull/541))
+- Fix `document.cloneNode` causing a `TypeError` because of trying to access properties on `null`. ([#514](https://github.com/webcomponents/polyfills/pull/514))
 
 ## [1.5.1] - 2022-10-20
 
