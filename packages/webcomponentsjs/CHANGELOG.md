@@ -8,6 +8,8 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 <!-- ## [Unreleased] -->
 
+- Polyfill `Element.toggleAttribute()`. ([#541](https://github.com/webcomponents/polyfills/pull/541))
+
 ## [2.7.0] - 2022-10-20
 
 - Polyfill `addEventListener/removeEventListener` event listener options,
