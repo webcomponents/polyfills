@@ -576,24 +576,27 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             '<b slot="b">World</b><a slot="a">Hello</a>'
           );
 
-          ShadyDOM.wrapIfNeeded(
+          let result = ShadyDOM.wrapIfNeeded(
             ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(host).shadowRoot)
               .firstChild
           ).toggleAttribute('name');
+          assert.strictEqual(result, false);
           ShadyDOM.flush();
           assert.strictEqual(
             getComposedHTML(host),
             'fallback b<a slot="a">Hello</a>'
           );
 
-          ShadyDOM.wrapIfNeeded(
+          result = ShadyDOM.wrapIfNeeded(
             ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(host).shadowRoot)
               .firstChild
           ).toggleAttribute('name', false);
-          ShadyDOM.wrapIfNeeded(
+          assert.strictEqual(result, false);
+          result = ShadyDOM.wrapIfNeeded(
             ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(host).shadowRoot)
               .lastChild
           ).toggleAttribute('name');
+          assert.strictEqual(result, false);
           ShadyDOM.flush();
           assert.strictEqual(getComposedHTML(host), 'fallback bfallback a');
         });

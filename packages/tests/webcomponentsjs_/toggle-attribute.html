@@ -23,26 +23,33 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
           assert(element.getAttribute('attr') === null);
 
-          element.toggleAttribute('attr');
+          let result = element.toggleAttribute('attr');
+          assert(result === true);
           assert(element.getAttribute('attr') === '');
 
-          element.toggleAttribute('attr');
+          result = element.toggleAttribute('attr');
+          assert(result === false);
           assert(element.getAttribute('attr') === null);
 
-          element.toggleAttribute('attr', true);
+          result = element.toggleAttribute('attr', true);
+          assert(result === true);
           assert(element.getAttribute('attr') === '');
 
-          element.toggleAttribute('attr', true);
+          result = element.toggleAttribute('attr', true);
+          assert(result === true);
           assert(element.getAttribute('attr') === '');
 
-          element.toggleAttribute('attr', false);
+          result = element.toggleAttribute('attr', false);
+          assert(result === false);
           assert(element.getAttribute('attr') === null);
 
-          element.toggleAttribute('attr', false);
+          result = element.toggleAttribute('attr', false);
+          assert(result === false);
           assert(element.getAttribute('attr') === null);
 
           element.setAttribute('attr', 'abc');
-          element.toggleAttribute('attr', true);
+          result = element.toggleAttribute('attr', true);
+          assert(result === true);
           assert(element.getAttribute('attr') === 'abc');
         });
       });

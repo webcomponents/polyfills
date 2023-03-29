@@ -2739,7 +2739,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           ShadyDOM.flush();
           testWithAttr();
           //
-          ShadyDOM.wrapIfNeeded(child).toggleAttribute('slot');
+          let result = ShadyDOM.wrapIfNeeded(child).toggleAttribute('slot');
+          assert.strictEqual(result, false);
           ShadyDOM.flush();
           testNoAttr();
           //
@@ -2747,7 +2748,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           ShadyDOM.flush();
           testWithAttr();
           //
-          ShadyDOM.wrapIfNeeded(child).toggleAttribute('slot', false);
+          result = ShadyDOM.wrapIfNeeded(child).toggleAttribute('slot', false);
+          assert.strictEqual(result, false);
           ShadyDOM.flush();
           testNoAttr();
         });

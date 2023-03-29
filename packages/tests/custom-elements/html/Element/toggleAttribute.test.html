@@ -71,8 +71,9 @@
             () => {
               const element = document.createElement(localName);
 
-              element.toggleAttribute('attr');
+              let result = element.toggleAttribute('attr');
 
+              assert.equal(result, true);
               assert.equal(element.getAttribute('attr'), '');
               assert.equal(element.attrCallbackArgs.length, 1);
               assert.deepEqual(element.attrCallbackArgs[0], [
@@ -89,8 +90,9 @@
             () => {
               const element = document.createElement(localName);
 
-              element.toggleAttribute('attr', true);
+              let result = element.toggleAttribute('attr', true);
 
+              assert.equal(result, true);
               assert.equal(element.getAttribute('attr'), '');
               assert.equal(element.attrCallbackArgs.length, 1);
               assert.deepEqual(element.attrCallbackArgs[0], [
@@ -107,8 +109,9 @@
             () => {
               const element = document.createElement(localName);
 
-              element.toggleAttribute('attr', false);
+              let result = element.toggleAttribute('attr', false);
 
+              assert.equal(result, false);
               assert.equal(element.getAttribute('attr'), null);
               assert.equal(element.attrCallbackArgs.length, 0);
             }
@@ -137,8 +140,9 @@
 
               assert.equal(element.attrCallbackArgs.length, 0);
 
-              element.toggleAttribute('attr');
+              let result = element.toggleAttribute('attr');
 
+              assert.equal(result, false);
               assert.equal(element.getAttribute('attr'), null);
               assert.equal(element.attrCallbackArgs.length, 0);
             }
@@ -156,8 +160,9 @@
               assert.equal(element.getAttribute('attr'), 'abc');
               assert.equal(element.attrCallbackArgs.length, 0);
 
-              element.toggleAttribute('attr', true);
+              let result = element.toggleAttribute('attr', true);
 
+              assert.equal(result, true);
               assert.equal(element.getAttribute('attr'), 'abc');
               assert.equal(element.attrCallbackArgs.length, 0);
             }
@@ -175,8 +180,9 @@
               assert.equal(element.getAttribute('attr'), 'abc');
               assert.equal(element.attrCallbackArgs.length, 0);
 
-              element.toggleAttribute('attr', false);
+              let result = element.toggleAttribute('attr', false);
 
+              assert.equal(result, false);
               assert.equal(element.getAttribute('attr'), null);
               assert.equal(element.attrCallbackArgs.length, 0);
             }
@@ -194,8 +200,9 @@
               assert.equal(element.getAttribute('attr'), 'abc');
               assert.equal(element.attrCallbackArgs.length, 1);
 
-              element.toggleAttribute('attr');
+              let result = element.toggleAttribute('attr');
 
+              assert.equal(result, false);
               assert.equal(element.getAttribute('attr'), null);
               assert.equal(element.attrCallbackArgs.length, 2);
               assert.deepEqual(element.attrCallbackArgs[1], [
@@ -219,8 +226,9 @@
               assert.equal(element.getAttribute('attr'), 'abc');
               assert.equal(element.attrCallbackArgs.length, 1);
 
-              element.toggleAttribute('attr', true);
+              let result = element.toggleAttribute('attr', true);
 
+              assert.equal(result, true);
               assert.equal(element.getAttribute('attr'), 'abc');
               assert.equal(element.attrCallbackArgs.length, 1);
             }
@@ -238,8 +246,9 @@
               assert.equal(element.getAttribute('attr'), 'abc');
               assert.equal(element.attrCallbackArgs.length, 1);
 
-              element.toggleAttribute('attr', false);
+              let result = element.toggleAttribute('attr', false);
 
+              assert.equal(result, false);
               assert.equal(element.getAttribute('attr'), null);
               assert.equal(element.attrCallbackArgs.length, 2);
               assert.deepEqual(element.attrCallbackArgs[1], [
