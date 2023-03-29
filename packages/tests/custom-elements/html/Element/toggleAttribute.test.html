@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Element#toggleAttribute</title>
+    <script>
+      (window.customElements =
+        window.customElements || {}).forcePolyfill = true;
+    </script>
+    <script src="../../../node_modules/@webcomponents/webcomponentsjs/bundles/webcomponents-pf_js.js"></script>
+    <script src="../../../node_modules/@webcomponents/custom-elements/custom-elements.min.js"></script>
+  </head>
+  <body>
+    <script type="module">
+      import {runTests, assert} from '../../../environment.js';
+      import {safariGCBugWorkaround} from '../../safari-gc-bug-workaround.js';
+
+      runTests(async () => {
+        suiteSetup(() => safariGCBugWorkaround());
+
+        function generateLocalName() {
+          return 'test-element-' + Math.random().toString(32).substring(2);
+        }
+
+        function defineWithLocalName(localName, observedAttributes) {
+          customElements.define(
+            localName,
+            class extends HTMLElement {
+              static get observedAttributes() {
+                return observedAttributes;
+              }
+
+              constructor() {
+                super();
+                this.constructed = true;
+                this.connectedCallbackCount = 0;
+                this.disconnectedCallbackCount = 0;
+                this.attrCallbackArgs = [];
+              }
+
+              connectedCallback() {
+                this.connectedCallbackCount++;
+              }
+
+              disconnectedCallback() {
+                this.disconnectedCallbackCount++;
+              }
+
+              attributeChangedCallback(name, oldValue, newValue, namespace) {
+                this.attrCallbackArgs.push(
+                  Array.prototype.slice.apply(arguments)
+                );
+              }
+            }
+          );
+        }
+
+        const hasToggleAttribute =
+          Element.prototype.toggleAttribute instanceof Function;
+        const testFn = hasToggleAttribute ? test : test.skip;
+
+        suite('Toggling an unset attribute.', () => {
+          let localName;
+
+          setup(() => {
+            localName = generateLocalName();
+            defineWithLocalName(localName, ['attr']);
+          });
+
+          testFn(
+            'Toggling an attribute with no value (null) adds the attribute and triggers a callback.',
+            () => {
+              const element = document.createElement(localName);
+
+              let result = element.toggleAttribute('attr');
+
+              assert.equal(result, true);
+              assert.equal(element.getAttribute('attr'), '');
+              assert.equal(element.attrCallbackArgs.length, 1);
+              assert.deepEqual(element.attrCallbackArgs[0], [
+                'attr',
+                null,
+                '',
+                null,
+              ]);
+            }
+          );
+
+          testFn(
+            'Toggling (force: true) an attribute with no value (null) adds the attribute and triggers a callback.',
+            () => {
+              const element = document.createElement(localName);
+
+              let result = element.toggleAttribute('attr', true);
+
+              assert.equal(result, true);
+              assert.equal(element.getAttribute('attr'), '');
+              assert.equal(element.attrCallbackArgs.length, 1);
+              assert.deepEqual(element.attrCallbackArgs[0], [
+                'attr',
+                null,
+                '',
+                null,
+              ]);
+            }
+          );
+
+          testFn(
+            'Toggling (force: false) an attribute with no value (null) does not trigger a callback.',
+            () => {
+              const element = document.createElement(localName);
+
+              let result = element.toggleAttribute('attr', false);
+
+              assert.equal(result, false);
+              assert.equal(element.getAttribute('attr'), null);
+              assert.equal(element.attrCallbackArgs.length, 0);
+            }
+          );
+        });
+
+        suite('Toggling a set attribute.', () => {
+          let localName1;
+          let localName2;
+
+          setup(() => {
+            localName1 = generateLocalName();
+            defineWithLocalName(localName1, []);
+            localName2 = generateLocalName();
+            defineWithLocalName(localName2, ['attr']);
+          });
+
+          testFn(
+            'Toggling an unobserved attribute removes the attribute but does not trigger a callback.',
+            () => {
+              const element = document.createElement(localName1);
+
+              assert.equal(element.attrCallbackArgs.length, 0);
+
+              element.setAttribute('attr', 'abc');
+
+              assert.equal(element.attrCallbackArgs.length, 0);
+
+              let result = element.toggleAttribute('attr');
+
+              assert.equal(result, false);
+              assert.equal(element.getAttribute('attr'), null);
+              assert.equal(element.attrCallbackArgs.length, 0);
+            }
+          );
+
+          testFn(
+            'Toggling (force: true) an unobserved attribute does not change the attribute and does not trigger a callback.',
+            () => {
+              const element = document.createElement(localName1);
+
+              assert.equal(element.attrCallbackArgs.length, 0);
+
+              element.setAttribute('attr', 'abc');
+
+              assert.equal(element.getAttribute('attr'), 'abc');
+              assert.equal(element.attrCallbackArgs.length, 0);
+
+              let result = element.toggleAttribute('attr', true);
+
+              assert.equal(result, true);
+              assert.equal(element.getAttribute('attr'), 'abc');
+              assert.equal(element.attrCallbackArgs.length, 0);
+            }
+          );
+
+          testFn(
+            'Toggling (force: false) an unobserved attribute removes the attribute but does not trigger a callback.',
+            () => {
+              const element = document.createElement(localName1);
+
+              assert.equal(element.attrCallbackArgs.length, 0);
+
+              element.setAttribute('attr', 'abc');
+
+              assert.equal(element.getAttribute('attr'), 'abc');
+              assert.equal(element.attrCallbackArgs.length, 0);
+
+              let result = element.toggleAttribute('attr', false);
+
+              assert.equal(result, false);
+              assert.equal(element.getAttribute('attr'), null);
+              assert.equal(element.attrCallbackArgs.length, 0);
+            }
+          );
+
+          testFn(
+            'Toggling an observed attribute removes the attribute and triggers a callback.',
+            () => {
+              const element = document.createElement(localName2);
+
+              assert.equal(element.attrCallbackArgs.length, 0);
+
+              element.setAttribute('attr', 'abc');
+
+              assert.equal(element.getAttribute('attr'), 'abc');
+              assert.equal(element.attrCallbackArgs.length, 1);
+
+              let result = element.toggleAttribute('attr');
+
+              assert.equal(result, false);
+              assert.equal(element.getAttribute('attr'), null);
+              assert.equal(element.attrCallbackArgs.length, 2);
+              assert.deepEqual(element.attrCallbackArgs[1], [
+                'attr',
+                'abc',
+                null,
+                null,
+              ]);
+            }
+          );
+
+          testFn(
+            'Toggling (force: true) an observed attribute does not change the attribute and does not trigger a callback.',
+            () => {
+              const element = document.createElement(localName2);
+
+              assert.equal(element.attrCallbackArgs.length, 0);
+
+              element.setAttribute('attr', 'abc');
+
+              assert.equal(element.getAttribute('attr'), 'abc');
+              assert.equal(element.attrCallbackArgs.length, 1);
+
+              let result = element.toggleAttribute('attr', true);
+
+              assert.equal(result, true);
+              assert.equal(element.getAttribute('attr'), 'abc');
+              assert.equal(element.attrCallbackArgs.length, 1);
+            }
+          );
+
+          testFn(
+            'Toggling (force: false) an observed attribute removes the attribute and triggers a callback.',
+            () => {
+              const element = document.createElement(localName2);
+
+              assert.equal(element.attrCallbackArgs.length, 0);
+
+              element.setAttribute('attr', 'abc');
+
+              assert.equal(element.getAttribute('attr'), 'abc');
+              assert.equal(element.attrCallbackArgs.length, 1);
+
+              let result = element.toggleAttribute('attr', false);
+
+              assert.equal(result, false);
+              assert.equal(element.getAttribute('attr'), null);
+              assert.equal(element.attrCallbackArgs.length, 2);
+              assert.deepEqual(element.attrCallbackArgs[1], [
+                'attr',
+                'abc',
+                null,
+                null,
+              ]);
+            }
+          );
+        });
+      });
+    </script>
+  </body>
+</html>

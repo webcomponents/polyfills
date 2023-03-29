@@ -116,8 +116,34 @@ export const ElementPatches = utils.getOwnPropertyDescriptors({
       this[utils.NATIVE_PREFIX + 'removeAttribute'](attr);
       distributeAttributeChange(this, attr);
     } else if (this.getAttribute(attr) === '') {
-      // ensure that "class" attribute is fully removed if ShadyCSS does not keep scoping
+      // When attr='class', scopeClassAttribute() will handle the change as a
+      // side-effect and return `true`, allowing us to get to this branch,
+      // which cleans up the 'class' attribute if it's empty and we were
+      // supposed to have removed it.
       this[utils.NATIVE_PREFIX + 'removeAttribute'](attr);
+    }
+  },
+
+  /**
+   * @this {Element}
+   * @param {string} attr
+   * @param {boolean | undefined} force
+   */
+  toggleAttribute(attr, force) {
+    if (this.ownerDocument !== doc) {
+      return this[utils.NATIVE_PREFIX + 'toggleAttribute'](attr, force);
+    } else if (!scopeClassAttribute(this, attr, '')) {
+      const result = this[utils.NATIVE_PREFIX + 'toggleAttribute'](attr, force);
+      distributeAttributeChange(this, attr);
+      return result;
+    } else if (this.getAttribute(attr) === '' && !force) {
+      // When attr='class', scopeClassAttribute() will handle the change as a
+      // side-effect and return `true`, allowing us to get to this branch,
+      // which cleans up the 'class' attribute if it's empty and we were
+      // supposed to have removed it.
+      // We check for `force` being falsey because we only want to clean up on
+      // removal of the attribute.
+      return this[utils.NATIVE_PREFIX + 'toggleAttribute'](attr, force);
     }
   },
 });

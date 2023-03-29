@@ -22,7 +22,7 @@ upgrade it.
 Notes/limitations:
 
 - In order to leverage native CE when available, `observedAttributes` handling
-  must be simulated by patching `setAttribute`/`getAttribute` to call
+  must be simulated by patching `setAttribute`/`getAttribute`/`toggleAttribute` to call
   `attributeChangedCallback` manually, since while we can delegate constructors,
   the `observedAttributes` respected by the browser are fixed at define time.
   This means that native reflecting properties are not observable when set via

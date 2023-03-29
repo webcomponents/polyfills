@@ -397,6 +397,7 @@ export const addNativePrefixedProperties = () => {
     'getAttribute',
     'hasAttribute',
     'removeAttribute',
+    'toggleAttribute',
     // on older Safari, these are on Element.
     'focus',
     'blur',

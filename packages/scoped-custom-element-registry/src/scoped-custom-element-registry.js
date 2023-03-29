@@ -51,7 +51,7 @@ if (!ShadowRoot.prototype.createElement) {
         );
       }
       // Since observedAttributes can't change, we approximate it by patching
-      // set/removeAttribute on the user's class
+      // set/remove/toggleAttribute on the user's class
       const attributeChangedCallback =
         elementClass.prototype.attributeChangedCallback;
       const observedAttributes = new Set(elementClass.observedAttributes || []);
@@ -307,8 +307,8 @@ if (!ShadowRoot.prototype.createElement) {
     };
   };
 
-  // Helper to patch CE class setAttribute/getAttribute to implement
-  // attributeChangedCallback
+  // Helper to patch CE class setAttribute/getAttribute/toggleAttribute to
+  // implement attributeChangedCallback
   const patchAttributes = (
     elementClass,
     observedAttributes,
@@ -348,15 +348,15 @@ if (!ShadowRoot.prototype.createElement) {
     }
     const toggleAttribute = elementClass.prototype.toggleAttribute;
     if (toggleAttribute) {
-      elementClass.prototype.toggleAttribute = function (n) {
+      elementClass.prototype.toggleAttribute = function (n, force) {
         const name = n.toLowerCase();
         if (observedAttributes.has(name)) {
           const old = this.getAttribute(name);
-          toggleAttribute.call(this, name);
+          toggleAttribute.call(this, name, force);
           const newValue = this.getAttribute(name);
           attributeChangedCallback.call(this, name, old, newValue);
         } else {
-          toggleAttribute.call(this, name);
+          toggleAttribute.call(this, name, force);
         }
       };
     }
@@ -387,17 +387,19 @@ if (!ShadowRoot.prototype.createElement) {
       patchHTMLElement(definition.elementClass);
       new definition.elementClass();
     }
-    // Approximate observedAttributes from the user class, since the stand-in element had none
-    definition.observedAttributes.forEach((attr) => {
-      if (instance.hasAttribute(attr)) {
-        definition.attributeChangedCallback.call(
-          instance,
-          attr,
-          null,
-          instance.getAttribute(attr)
-        );
-      }
-    });
+    if (definition.attributeChangedCallback) {
+      // Approximate observedAttributes from the user class, since the stand-in element had none
+      definition.observedAttributes.forEach((attr) => {
+        if (instance.hasAttribute(attr)) {
+          definition.attributeChangedCallback.call(
+            instance,
+            attr,
+            null,
+            instance.getAttribute(attr)
+          );
+        }
+      });
+    }
     if (isUpgrade && definition.connectedCallback && instance.isConnected) {
       definition.connectedCallback.call(instance);
     }
@@ -486,7 +488,7 @@ if (!ShadowRoot.prototype.createElement) {
         const host = internalsToHostMap.get(this);
         const definition = definitionForElement.get(host);
         if (definition['formAssociated'] === true) {
-          originalMethod?.call(this, ...args);
+          return originalMethod?.call(this, ...args);
         } else {
           throw new DOMException(
             `Failed to execute ${originalMethod} on 'ElementInternals': The target element is not a form-associated custom element.`
