@@ -6,10 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic
 Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+<!-- ## [Unreleased] -->
+
+## [2.8.0] - 2023-03-30
 
 - Update dependencies ([#542](https://github.com/webcomponents/polyfills/pull/542))
-
 - Polyfill `Element.toggleAttribute()`. ([#541](https://github.com/webcomponents/polyfills/pull/541))
 
 ## [2.7.0] - 2022-10-20
