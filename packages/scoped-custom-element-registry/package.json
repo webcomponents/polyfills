@@ -47,9 +47,14 @@
   },
   "wireit": {
     "build": {
-      "command": "gulp",
+      "dependencies": [
+        "build:closure"
+      ]
+    },
+    "build:closure": {
+      "command": "google-closure-compiler --flagfile closure-flags.txt",
       "files": [
-        "gulpfile.js",
+        "closure-flags.txt",
         "src/**/*.js"
       ],
       "output": [
