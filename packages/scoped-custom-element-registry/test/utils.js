@@ -43,6 +43,13 @@ export const getObservedAttributesTestElement = (
     static get observedAttributes() {
       return observedAttributeNames;
     }
+
+    /** @type {{ name: string, oldValue: string|null, newValue: string|null}[]} */
+    changedAttributes = [];
+
+    attributeChangedCallback(name, oldValue, newValue) {
+      this.changedAttributes.push({name, oldValue, newValue});
+    }
   },
 });
 
