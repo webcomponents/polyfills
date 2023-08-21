@@ -18,8 +18,8 @@
   },
   "main": "scoped-custom-element-registry.min.js",
   "scripts": {
-    "build": "gulp",
-    "test": "web-test-runner"
+    "build": "wireit",
+    "test": "wireit"
   },
   "files": [
     "CHANGELOG.md",
@@ -42,6 +42,31 @@
     "@open-wc/testing": "^3.1.5",
     "@web/test-runner": "^0.13.30",
     "@web/test-runner-mocha": "^0.7.5",
-    "@web/test-runner-playwright": "^0.8.9"
+    "@web/test-runner-playwright": "^0.8.9",
+    "wireit": "^0.10.0"
+  },
+  "wireit": {
+    "build": {
+      "command": "gulp",
+      "files": [
+        "gulpfile.js",
+        "src/**/*.js"
+      ],
+      "output": [
+        "scoped-custom-element-registry.min.js",
+        "scoped-custom-element-registry.min.js.map"
+      ]
+    },
+    "test": {
+      "command": "wtr",
+      "dependencies": [
+        "build"
+      ],
+      "files": [
+        "web-test-runner.config.js",
+        "test/**/*.test.(js|html)"
+      ],
+      "output": []
+    }
   }
 }
