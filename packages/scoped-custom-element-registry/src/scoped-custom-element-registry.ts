@@ -11,6 +11,53 @@
  * subject to an additional IP rights grant found at
  * http://polymer.github.io/PATENTS.txt
  */
+
+interface CustomElementConstructor {
+  observedAttributes?: Array<string>;
+  formAssociated?: boolean;
+
+  new (...params: unknown[]): CustomHTMLElement;
+}
+
+interface CustomHTMLElement {
+  connectedCallback?(): void;
+  disconnectedCallback?(): void;
+  adoptedCallback?(): void;
+  attributeChangedCallback?(
+    name: string,
+    oldValue?: string | null,
+    newValue?: string | null,
+    namespace?: string | null
+  ): void;
+  formAssociatedCallback?: unknown;
+  formDisabledCallback?: unknown;
+  formResetCallback?: unknown;
+  formStateRestoreCallback?: unknown;
+}
+
+interface CustomElementRegistry {
+  _getDefinition(tagName: string): CustomElementDefinition;
+}
+
+interface CustomElementDefinition {
+  elementClass: CustomElementConstructor;
+  connectedCallback?: CustomHTMLElement['connectedCallback'];
+  disconnectedCallback?: CustomHTMLElement['disconnectedCallback'];
+  adoptedCallback?: CustomHTMLElement['adoptedCallback'];
+  attributeChangedCallback?: CustomHTMLElement['attributeChangedCallback'];
+  formAssociated?: boolean;
+  formAssociatedCallback?: CustomHTMLElement['formAssociatedCallback'];
+  formDisabledCallback?: CustomHTMLElement['formDisabledCallback'];
+  formResetCallback?: CustomHTMLElement['formResetCallback'];
+  formStateRestoreCallback?: CustomHTMLElement['formStateRestoreCallback'];
+  observedAttributes: Set<string>;
+  standInClass?: CustomElementConstructor;
+}
+
+interface ShadowRootWithSettableCustomElements extends ShadowRoot {
+  customElements?: CustomElementRegistry;
+}
+
 if (!ShadowRoot.prototype.createElement) {
   const NativeHTMLElement = window.HTMLElement;
   const nativeDefine = window.customElements.define;
@@ -31,14 +78,12 @@ if (!ShadowRoot.prototype.createElement) {
   // register stand-in elements that can delegate out to CE classes registered
   // in scoped registries
   window.CustomElementRegistry = class {
-    constructor() {
-      this._definitionsByTag = new Map();
-      this._definitionsByClass = new Map();
-      this._whenDefinedPromises = new Map();
-      this._awaitingUpgrade = new Map();
-    }
+    private _definitionsByTag = new Map();
+    private _definitionsByClass = new Map();
+    private _whenDefinedPromises = new Map();
+    private _awaitingUpgrade = new Map();
 
-    define(tagName, elementClass) {
+    define(tagName: string, elementClass: CustomElementConstructor) {
       tagName = tagName.toLowerCase();
       if (this._getDefinition(tagName) !== undefined) {
         throw new DOMException(
@@ -61,7 +106,7 @@ if (!ShadowRoot.prototype.createElement) {
         attributeChangedCallback
       );
       // Register the definition
-      const definition = {
+      const definition: CustomElementDefinition = {
         elementClass,
         connectedCallback: elementClass.prototype.connectedCallback,
         disconnectedCallback: elementClass.prototype.disconnectedCallback,
@@ -108,20 +153,25 @@ if (!ShadowRoot.prototype.createElement) {
 
     upgrade() {
       creationContext.push(this);
-      nativeRegistry.upgrade.apply(nativeRegistry, arguments);
+      // eslint-disable-next-line prefer-spread
+      nativeRegistry.upgrade.apply(
+        nativeRegistry,
+        // eslint-disable-next-line prefer-rest-params
+        (arguments as unknown) as [Node]
+      );
       creationContext.pop();
     }
 
-    get(tagName) {
+    get(tagName: string) {
       const definition = this._definitionsByTag.get(tagName);
       return definition?.elementClass;
     }
 
-    _getDefinition(tagName) {
+    _getDefinition(tagName: string) {
       return this._definitionsByTag.get(tagName);
     }
 
-    whenDefined(tagName) {
+    whenDefined(tagName: string) {
       const definition = this._getDefinition(tagName);
       if (definition !== undefined) {
         return Promise.resolve(definition.elementClass);
@@ -135,7 +185,11 @@ if (!ShadowRoot.prototype.createElement) {
       return info.promise;
     }
 
-    _upgradeWhenDefined(element, tagName, shouldUpgrade) {
+    _upgradeWhenDefined(
+      element: HTMLElement,
+      tagName: string,
+      shouldUpgrade: boolean
+    ) {
       let awaiting = this._awaitingUpgrade.get(tagName);
       if (!awaiting) {
         this._awaitingUpgrade.set(tagName, (awaiting = new Set()));
@@ -149,8 +203,8 @@ if (!ShadowRoot.prototype.createElement) {
   };
 
   // User extends this HTMLElement, which returns the CE being upgraded
-  let upgradingInstance;
-  window.HTMLElement = function HTMLElement() {
+  let upgradingInstance: HTMLElement | undefined;
+  window.HTMLElement = (function HTMLElement(this: HTMLElement) {
     // Upgrading case: the StandInElement constructor was run by the browser's
     // native custom elements and we're in the process of running the
     // "constructor-call trick" on the natively constructed instance, so just
@@ -175,15 +229,15 @@ if (!ShadowRoot.prototype.createElement) {
       definition.standInClass
     );
     Object.setPrototypeOf(instance, this.constructor.prototype);
-    definitionForElement.set(instance, definition);
+    definitionForElement.set(instance!, definition);
     return instance;
-  };
+  } as unknown) as typeof HTMLElement;
   window.HTMLElement.prototype = NativeHTMLElement.prototype;
 
   // Helpers to return the scope for a node where its registry would be located
-  const isValidScope = (node) =>
+  const isValidScope = (node: Node) =>
     node === document || node instanceof ShadowRoot;
-  const registryForNode = (node) => {
+  const registryForNode = (node: Node) => {
     // TODO: the algorithm for finding the scope is a bit up in the air; assigning
     // a one-time scope at creation time would require walking every tree ever
     // created, which is avoided for now
@@ -208,21 +262,27 @@ if (!ShadowRoot.prototype.createElement) {
         scope = scopeForElement.get(scope)?.getRootNode() || document;
       }
     }
-    return scope.customElements;
+    // TODO (justinfagnani): I don't think this matches the proposal
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (scope as any).customElements as CustomElementRegistry | null;
   };
 
   // Helper to create stand-in element for each tagName registered that delegates
   // out to the registry for the given element
-  const createStandInElement = (tagName) => {
-    return class ScopedCustomElementBase {
+  const createStandInElement = (tagName: string): CustomElementConstructor => {
+    return (class ScopedCustomElementBase {
       static get ['formAssociated']() {
         return true;
       }
       constructor() {
+        // if (false as true) {
+        //   super();
+        // }
         // Create a raw HTMLElement first
         const instance = Reflect.construct(
           NativeHTMLElement,
           [],
+          // / @ts-expect-error
           this.constructor
         );
         // We need to install the minimum HTMLElement prototype so that
@@ -245,6 +305,7 @@ if (!ShadowRoot.prototype.createElement) {
         if (definition) {
           // Delegate out to user callback
           definition.connectedCallback &&
+            // eslint-disable-next-line prefer-rest-params
             definition.connectedCallback.apply(this, arguments);
         } else {
           // Register for upgrade when defined (only when connected, so we don't leak)
@@ -259,6 +320,7 @@ if (!ShadowRoot.prototype.createElement) {
         if (definition) {
           // Delegate out to user callback
           definition.disconnectedCallback &&
+            // eslint-disable-next-line prefer-rest-params
             definition.disconnectedCallback.apply(this, arguments);
         } else {
           // Un-register for upgrade when defined (so we don't leak)
@@ -270,6 +332,7 @@ if (!ShadowRoot.prototype.createElement) {
 
       adoptedCallback() {
         const definition = definitionForElement.get(this);
+        // eslint-disable-next-line prefer-rest-params
         definition?.adoptedCallback?.apply(this, arguments);
       }
 
@@ -277,6 +340,7 @@ if (!ShadowRoot.prototype.createElement) {
       ['formAssociatedCallback']() {
         const definition = definitionForElement.get(this);
         if (definition && definition['formAssociated']) {
+          // eslint-disable-next-line prefer-rest-params
           definition?.['formAssociatedCallback']?.apply(this, arguments);
         }
       }
@@ -284,6 +348,7 @@ if (!ShadowRoot.prototype.createElement) {
       ['formDisabledCallback']() {
         const definition = definitionForElement.get(this);
         if (definition?.['formAssociated']) {
+          // eslint-disable-next-line prefer-rest-params
           definition?.['formDisabledCallback']?.apply(this, arguments);
         }
       }
@@ -291,6 +356,7 @@ if (!ShadowRoot.prototype.createElement) {
       ['formResetCallback']() {
         const definition = definitionForElement.get(this);
         if (definition?.['formAssociated']) {
+          // eslint-disable-next-line prefer-rest-params
           definition?.['formResetCallback']?.apply(this, arguments);
         }
       }
@@ -298,21 +364,22 @@ if (!ShadowRoot.prototype.createElement) {
       ['formStateRestoreCallback']() {
         const definition = definitionForElement.get(this);
         if (definition?.['formAssociated']) {
+          // eslint-disable-next-line prefer-rest-params
           definition?.['formStateRestoreCallback']?.apply(this, arguments);
         }
       }
 
       // no attributeChangedCallback or observedAttributes since these
       // are simulated via setAttribute/removeAttribute patches
-    };
+    } as unknown) as CustomElementConstructor;
   };
 
   // Helper to patch CE class setAttribute/getAttribute/toggleAttribute to
   // implement attributeChangedCallback
   const patchAttributes = (
-    elementClass,
-    observedAttributes,
-    attributeChangedCallback
+    elementClass: CustomElementConstructor,
+    observedAttributes: Set<string>,
+    attributeChangedCallback?: CustomHTMLElement['attributeChangedCallback']
   ) => {
     if (
       observedAttributes.size === 0 ||
@@ -322,7 +389,10 @@ if (!ShadowRoot.prototype.createElement) {
     }
     const setAttribute = elementClass.prototype.setAttribute;
     if (setAttribute) {
-      elementClass.prototype.setAttribute = function (n, value) {
+      elementClass.prototype.setAttribute = function (
+        n: string,
+        value: string
+      ) {
         const name = n.toLowerCase();
         if (observedAttributes.has(name)) {
           const old = this.getAttribute(name);
@@ -335,7 +405,7 @@ if (!ShadowRoot.prototype.createElement) {
     }
     const removeAttribute = elementClass.prototype.removeAttribute;
     if (removeAttribute) {
-      elementClass.prototype.removeAttribute = function (n) {
+      elementClass.prototype.removeAttribute = function (n: string) {
         const name = n.toLowerCase();
         if (observedAttributes.has(name)) {
           const old = this.getAttribute(name);
@@ -348,7 +418,10 @@ if (!ShadowRoot.prototype.createElement) {
     }
     const toggleAttribute = elementClass.prototype.toggleAttribute;
     if (toggleAttribute) {
-      elementClass.prototype.toggleAttribute = function (n, force) {
+      elementClass.prototype.toggleAttribute = function (
+        n: string,
+        force?: boolean
+      ) {
         const name = n.toLowerCase();
         if (observedAttributes.has(name)) {
           const old = this.getAttribute(name);
@@ -364,7 +437,10 @@ if (!ShadowRoot.prototype.createElement) {
 
   // Helper to patch CE class hierarchy changing those CE classes created before applying the polyfill
   // to make them work with the new patched CustomElementsRegistry
-  const patchHTMLElement = (elementClass) => {
+  const patchHTMLElement = (
+    elementClass: CustomElementConstructor
+  ): // @ts-expect-error Not all code paths return a value.
+  unknown => {
     const parentClass = Object.getPrototypeOf(elementClass);
 
     if (parentClass !== window.HTMLElement) {
@@ -374,10 +450,15 @@ if (!ShadowRoot.prototype.createElement) {
 
       return patchHTMLElement(parentClass);
     }
+    // return;
   };
 
   // Helper to upgrade an instance with a CE definition using "constructor call trick"
-  const customize = (instance, definition, isUpgrade = false) => {
+  const customize = (
+    instance: HTMLElement,
+    definition: CustomElementDefinition,
+    isUpgrade = false
+  ) => {
     Object.setPrototypeOf(instance, definition.elementClass.prototype);
     definitionForElement.set(instance, definition);
     upgradingInstance = instance;
@@ -391,7 +472,7 @@ if (!ShadowRoot.prototype.createElement) {
       // Approximate observedAttributes from the user class, since the stand-in element had none
       definition.observedAttributes.forEach((attr) => {
         if (instance.hasAttribute(attr)) {
-          definition.attributeChangedCallback.call(
+          definition.attributeChangedCallback!.call(
             instance,
             attr,
             null,
@@ -407,22 +488,31 @@ if (!ShadowRoot.prototype.createElement) {
 
   // Patch attachShadow to set customElements on shadowRoot when provided
   const nativeAttachShadow = Element.prototype.attachShadow;
-  Element.prototype.attachShadow = function (init) {
-    const shadowRoot = nativeAttachShadow.apply(this, arguments);
+  Element.prototype.attachShadow = function (init: ShadowRootInit) {
+    const shadowRoot = nativeAttachShadow.apply(
+      this,
+      // eslint-disable-next-line prefer-rest-params
+      (arguments as unknown) as Parameters<Element['attachShadow']>
+    );
     if (init.customElements) {
-      shadowRoot.customElements = init.customElements;
+      (shadowRoot as ShadowRootWithSettableCustomElements).customElements =
+        init.customElements;
     }
     return shadowRoot;
   };
 
   // Install scoped creation API on Element & ShadowRoot
-  let creationContext = [document];
-  const installScopedCreationMethod = (ctor, method, from = undefined) => {
-    const native = (from ? Object.getPrototypeOf(from) : ctor.prototype)[
-      method
-    ];
+  const creationContext: Array<Document | CustomElementRegistry> = [document];
+  const installScopedCreationMethod = (
+    ctor: Function,
+    method: string,
+    from?: Document
+  ) => {
+    // eslint-disable-next-line prefer-const
+    let native = (from ? Object.getPrototypeOf(from) : ctor.prototype)[method];
     ctor.prototype[method] = function () {
       creationContext.push(this);
+      // eslint-disable-next-line prefer-rest-params
       const ret = native.apply(from || this, arguments);
       // For disconnected elements, note their creation scope so that e.g.
       // innerHTML into them will use the correct scope; note that
@@ -440,13 +530,13 @@ if (!ShadowRoot.prototype.createElement) {
   installScopedCreationMethod(Element, 'insertAdjacentHTML');
 
   // Install scoped innerHTML on Element & ShadowRoot
-  const installScopedCreationSetter = (ctor, name) => {
-    const descriptor = Object.getOwnPropertyDescriptor(ctor.prototype, name);
+  const installScopedCreationSetter = (ctor: Function, name: string) => {
+    const descriptor = Object.getOwnPropertyDescriptor(ctor.prototype, name)!;
     Object.defineProperty(ctor.prototype, name, {
       ...descriptor,
       set(value) {
         creationContext.push(this);
-        descriptor.set.call(this, value);
+        descriptor.set!.call(this, value);
         creationContext.pop();
       },
     });
@@ -467,7 +557,7 @@ if (!ShadowRoot.prototype.createElement) {
   ) {
     const internalsToHostMap = new WeakMap();
     const attachInternals = HTMLElement.prototype['attachInternals'];
-    const methods = [
+    const methods: Array<keyof ElementInternals> = [
       'setFormValue',
       'setValidity',
       'checkValidity',
@@ -482,13 +572,15 @@ if (!ShadowRoot.prototype.createElement) {
 
     methods.forEach((method) => {
       const proto = window['ElementInternals'].prototype;
-      const originalMethod = proto[method];
+      const originalMethod = proto[method] as Function;
 
-      proto[method] = function (...args) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (proto as any)[method] = function () {
         const host = internalsToHostMap.get(this);
         const definition = definitionForElement.get(host);
         if (definition['formAssociated'] === true) {
-          return originalMethod?.call(this, ...args);
+          // eslint-disable-next-line prefer-rest-params
+          return originalMethod?.call(this, ...arguments);
         } else {
           throw new DOMException(
             `Failed to execute ${originalMethod} on 'ElementInternals': The target element is not a form-associated custom element.`
@@ -498,11 +590,18 @@ if (!ShadowRoot.prototype.createElement) {
     });
 
     // Emulate the native RadioNodeList object
-    class RadioNodeList extends Array {
-      constructor(elements) {
-        super(...elements);
+    const RadioNodeList = (class
+      extends Array<Node>
+      implements Omit<RadioNodeList, 'forEach' | 'item'> {
+      private _elements: Array<HTMLInputElement>;
+
+      constructor(elements: Array<HTMLInputElement>) {
+        // TODO: why is this cast needed? TS isn't choosing the right overload
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        super(...(elements as any));
         this._elements = elements;
       }
+      [index: number]: Node;
 
       get ['value']() {
         return (
@@ -510,11 +609,15 @@ if (!ShadowRoot.prototype.createElement) {
             ?.value || ''
         );
       }
-    }
+    } as unknown) as {new (elements: Array<HTMLInputElement>): RadioNodeList};
 
     // Emulate the native HTMLFormControlsCollection object
-    class HTMLFormControlsCollection {
-      constructor(elements) {
+    const HTMLFormControlsCollection = class
+      implements
+        Omit<HTMLFormControlsCollection, typeof Symbol.iterator | 'item'> {
+      length: number;
+
+      constructor(elements: Array<HTMLElement>) {
         const entries = new Map();
         elements.forEach((element, index) => {
           const name = element.getAttribute('name');
@@ -529,27 +632,31 @@ if (!ShadowRoot.prototype.createElement) {
           if (value.length === 1) {
             this[key] = value[0];
           } else {
-            this[key] = new RadioNodeList(value);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (this as any)[key] = new RadioNodeList(value);
           }
         });
       }
 
-      ['namedItem'](key) {
-        return this[key];
+      [index: number]: Element;
+
+      ['namedItem'](key: string): RadioNodeList | Element | null {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        return (this as any)[key];
       }
-    }
+    };
 
     // Override the built-in HTMLFormElements.prototype.elements getter
     const formElementsDescriptor = Object.getOwnPropertyDescriptor(
       HTMLFormElement.prototype,
       'elements'
-    );
+    )!;
 
     Object.defineProperty(HTMLFormElement.prototype, 'elements', {
       get: function () {
-        const nativeElements = formElementsDescriptor.get.call(this, []);
+        const nativeElements = formElementsDescriptor.get!.call(this);
 
-        const include = [];
+        const include: Array<HTMLElement> = [];
 
         for (const element of nativeElements) {
           const definition = definitionForElement.get(element);

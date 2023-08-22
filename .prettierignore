@@ -42,6 +42,8 @@ packages/webcomponentsjs/webcomponents-bundle.d.ts
 packages/webcomponentsjs/webcomponents-bundle.js*
 
 packages/scoped-custom-element-registry/**/.wireit/
+packages/scoped-custom-element-registry/**/.tsbuildinfo
+packages/scoped-custom-element-registry/**/build/
 
 LICENSE
 packages/*/LICENSE.md

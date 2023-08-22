@@ -3,8 +3,8 @@
 --language_in=STABLE
 --language_out=ECMASCRIPT5_STRICT
 --dependency_mode=PRUNE
---entry_point=./src/scoped-custom-element-registry.js
---js=./src/scoped-custom-element-registry.js
+--entry_point=./build/scoped-custom-element-registry.js
+--js=./build/scoped-custom-element-registry.js
 --js_output_file=./scoped-custom-element-registry.min.js
 --output_wrapper="(function(){
 %output%
@@ -14,4 +14,5 @@
 --assume_function_wrapper=true
 --rewrite_polyfills=false
 --create_source_map=./scoped-custom-element-registry.min.js.map
+--source_map_input="./build/scoped-custom-element-registry.js|./build/scoped-custom-element-registry.js.msp"
 --source_map_include_content
