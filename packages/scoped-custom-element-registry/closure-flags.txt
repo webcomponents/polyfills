@@ -1,0 +1,17 @@
+--compilation_level=ADVANCED_OPTIMIZATIONS
+--warning_level=VERBOSE
+--language_in=STABLE
+--language_out=ECMASCRIPT5_STRICT
+--dependency_mode=PRUNE
+--entry_point=./src/scoped-custom-element-registry.js
+--js=./src/scoped-custom-element-registry.js
+--js_output_file=./scoped-custom-element-registry.min.js
+--output_wrapper="(function(){
+%output%
+}).call(typeof globalThis === 'object' ? globalThis : window);
+
+//# sourceMappingURL=scoped-custom-element-registry.min.js.map"
+--assume_function_wrapper=true
+--rewrite_polyfills=false
+--create_source_map=./scoped-custom-element-registry.min.js.map
+--source_map_include_content
