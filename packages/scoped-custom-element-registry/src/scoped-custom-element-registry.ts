@@ -32,8 +32,10 @@ interface CustomHTMLElement {
   formAssociatedCallback?(form: HTMLFormElement | null): void;
   formDisabledCallback?(disabled: boolean): void;
   formResetCallback?(): void;
-  // TODO(justinfagnani): what is the type of state? Does it matter?
-  formStateRestoreCallback?(state: unknown, mode: string): void;
+  formStateRestoreCallback?(
+    state: File | string | FormData | null,
+    mode: string
+  ): void;
 }
 
 interface CustomElementRegistry {
