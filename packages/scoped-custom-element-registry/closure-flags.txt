@@ -14,5 +14,5 @@
 --assume_function_wrapper=true
 --rewrite_polyfills=false
 --create_source_map=./scoped-custom-element-registry.min.js.map
---source_map_input="./build/scoped-custom-element-registry.js|./build/scoped-custom-element-registry.js.msp"
+--source_map_input="./build/scoped-custom-element-registry.js|./build/scoped-custom-element-registry.js.map"
 --source_map_include_content
