@@ -56,7 +56,8 @@ if (
   !priorCustomElements ||
   priorCustomElements['forcePolyfill'] ||
   typeof priorCustomElements['define'] != 'function' ||
-  typeof priorCustomElements['get'] != 'function'
+  typeof priorCustomElements['get'] != 'function' ||
+  typeof priorCustomElements['upgrade'] != 'function'
 ) {
   installPolyfill();
 }
