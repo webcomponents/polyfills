@@ -44,6 +44,10 @@ interface CustomElementRegistry {
 
 interface CustomElementDefinition {
   elementClass: CustomElementConstructor;
+  /**
+   * We hold onto the versions of callbacks at registration time, because that's the
+   * specc'd behavior.
+   */
   connectedCallback?: CustomHTMLElement['connectedCallback'];
   disconnectedCallback?: CustomHTMLElement['disconnectedCallback'];
   adoptedCallback?: CustomHTMLElement['adoptedCallback'];
@@ -107,16 +111,19 @@ if (!ShadowRoot.prototype.createElement) {
   // register stand-in elements that can delegate out to CE classes registered
   // in scoped registries
   class ShimmedCustomElementsRegistry implements CustomElementRegistry {
-    private _definitionsByTag = new Map<string, CustomElementDefinition>();
-    private _definitionsByClass = new Map<
+    private readonly _definitionsByTag = new Map<
+      string,
+      CustomElementDefinition
+    >();
+    private readonly _definitionsByClass = new Map<
       CustomElementConstructor,
       CustomElementDefinition
     >();
-    private _whenDefinedPromises = new Map<
+    private readonly _whenDefinedPromises = new Map<
       string,
       AsyncInfo<CustomElementConstructor>
     >();
-    private _awaitingUpgrade = new Map<string, Set<HTMLElement>>();
+    private readonly _awaitingUpgrade = new Map<string, Set<HTMLElement>>();
 
     define(tagName: string, elementClass: CustomElementConstructor) {
       tagName = tagName.toLowerCase();
