@@ -52,8 +52,8 @@ interface CustomElementRegistry {
 interface CustomElementDefinition {
   elementClass: CustomElementConstructor;
   /**
-   * We hold onto the versions of callbacks at registration time, because that's the
-   * specc'd behavior.
+   * We hold onto the versions of callbacks at registration time, because
+   * that's the specc'd behavior.
    */
   connectedCallback?: CustomHTMLElement['connectedCallback'];
   disconnectedCallback?: CustomHTMLElement['disconnectedCallback'];
@@ -65,6 +65,11 @@ interface CustomElementDefinition {
   formResetCallback?: CustomHTMLElement['formResetCallback'];
   formStateRestoreCallback?: CustomHTMLElement['formStateRestoreCallback'];
   observedAttributes: Set<string>;
+  /**
+   * The class that's registered on the global custom element registry for this
+   * element definition. Only present if this definition is registered on the
+   * global registry, though all definitions do have a standin.
+   */
   standInClass?: CustomElementConstructor;
 }
 
