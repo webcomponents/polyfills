@@ -12,6 +12,13 @@
  * http://polymer.github.io/PATENTS.txt
  */
 
+/**
+ * Note: this file is a script, not a module, so toplevel
+ * interfaces are global. This is relevent because those named
+ * after existing global TypeScript types actually add to those
+ * types, as though they were declared in a `declare global` in a module.
+ */
+
 interface CustomElementConstructor {
   observedAttributes?: Array<string>;
   formAssociated?: boolean;
