@@ -99,7 +99,7 @@ if (!ShadowRoot.prototype.createElement) {
     readonly promise: Promise<T>;
     readonly resolve: (val: T) => void;
     constructor() {
-      let resolve;
+      let resolve: (val: T) => void;
       this.promise = new Promise<T>((r) => {
         resolve = r;
       });
@@ -210,7 +210,7 @@ if (!ShadowRoot.prototype.createElement) {
       return this._definitionsByTag.get(tagName);
     }
 
-    whenDefined(tagName: string) {
+    ['whenDefined'](tagName: string) {
       const definition = this._getDefinition(tagName);
       if (definition !== undefined) {
         return Promise.resolve(definition.elementClass);
