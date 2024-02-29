@@ -283,7 +283,14 @@ if (eventPhaseDescriptor) {
   Object.defineProperty(
     EventPatches,
     'eventPhase',
-    /** @type {!ObjectPropertyDescriptor<!Event>} */ ({
+    /** @type {!ObjectPropertyDescriptor<!{
+  composed: ?,
+  composedPath: function(this:Event): ?,
+  relatedTarget: ?,
+  stopImmediatePropagation: function(this:Event): undefined,
+  stopPropagation: function(this:Event): undefined,
+  target: ?
+}>} */ ({
       /**
        * @this {Event}
        */
