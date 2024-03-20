@@ -1,2 +1,5 @@
 [local]
 .gitignore
+
+[relative]
+packages/*/{.gitignore,.eslintignore}

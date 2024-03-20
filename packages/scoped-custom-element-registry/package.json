@@ -19,6 +19,7 @@
   "main": "scoped-custom-element-registry.min.js",
   "scripts": {
     "build": "wireit",
+    "build:ts": "wireit",
     "test": "wireit"
   },
   "files": [
@@ -39,11 +40,11 @@
     "shim"
   ],
   "devDependencies": {
-    "@open-wc/testing": "^3.1.5",
-    "@web/test-runner": "^0.13.30",
-    "@web/test-runner-mocha": "^0.7.5",
-    "@web/test-runner-playwright": "^0.8.9",
-    "wireit": "^0.10.0"
+    "@open-wc/testing": "^4.0.0",
+    "@web/test-runner": "^0.18.0",
+    "@web/test-runner-mocha": "^0.9.0",
+    "@web/test-runner-playwright": "^0.11.0",
+    "wireit": "^0.14.4"
   },
   "wireit": {
     "build": {
@@ -53,14 +54,29 @@
     },
     "build:closure": {
       "command": "google-closure-compiler --flagfile closure-flags.txt",
+      "dependencies": [
+        "build:ts"
+      ],
       "files": [
         "closure-flags.txt",
-        "src/**/*.js"
+        "build/**/*.js"
       ],
       "output": [
         "scoped-custom-element-registry.min.js",
         "scoped-custom-element-registry.min.js.map"
       ]
+    },
+    "build:ts": {
+      "command": "tsc",
+      "files": [
+        "tsconfig.json",
+        "src/**/*.ts"
+      ],
+      "output": [
+        ".tsbuildinfo",
+        "build"
+      ],
+      "clean": "if-file-deleted"
     },
     "test": {
       "command": "wtr",

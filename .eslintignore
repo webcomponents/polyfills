@@ -40,3 +40,7 @@ packages/webcomponentsjs/src/unresolved.*
 packages/webcomponentsjs/custom-elements-es5-adapter.js
 packages/webcomponentsjs/webcomponents-bundle.d.ts
 packages/webcomponentsjs/webcomponents-bundle.js*
+
+packages/scoped-custom-element-registry/**/.wireit/
+packages/scoped-custom-element-registry/**/.tsbuildinfo
+packages/scoped-custom-element-registry/**/build/
