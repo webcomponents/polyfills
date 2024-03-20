@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- ## Unreleased -->
 
+## [Unreleased]
+
+### Fixed
+
+- `toggleAttribute` only triggers `attributeChangedCallback` when the attribute actually changes (#556).
+
 ## [0.0.9] - 2023-03-30
 
 - Update dependencies ([#542](https://github.com/webcomponents/polyfills/pull/542))
