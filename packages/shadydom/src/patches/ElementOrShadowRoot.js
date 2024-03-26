@@ -38,6 +38,16 @@ export const ElementOrShadowRootPatches = utils.getOwnPropertyDescriptors({
       this[utils.NATIVE_PREFIX + 'innerHTML'] = value;
     } else {
       clearNode(this);
+      // Make sure that the domain attributes of inertDoc and the document for
+      // are the same in order to avoid WrongDocumentError in IE11.
+      if ((inertDoc.domain.indexOf(document.domain) >= 0) && (inertDoc.domain !== document.domain)) {
+        inertDoc.domain = document.domain;
+      }
+      // Some libraries, like Angular, create their own document object for their tags,
+      // so make sure that domain value matches as well.
+      if ((this.ownerDocument.domain.indexOf(document.domain) >= 0) && (this.ownerDocument.domain !== document.domain)) {
+        this.ownerDocument.domain = document.domain;
+      }
       const containerName = this.localName || 'div';
       let htmlContainer;
       if (!this.namespaceURI || this.namespaceURI === inertDoc.namespaceURI) {
