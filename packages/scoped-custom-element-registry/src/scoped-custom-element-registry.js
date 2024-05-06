@@ -11,11 +11,21 @@
  * subject to an additional IP rights grant found at
  * http://polymer.github.io/PATENTS.txt
  */
-if (!ShadowRoot.prototype.createElement) {
+if (!(ShadowRoot.prototype.createElement && ShadowRoot.prototype.importNode)) {
   const NativeHTMLElement = window.HTMLElement;
   const nativeDefine = window.customElements.define;
   const nativeGet = window.customElements.get;
   const nativeRegistry = window.customElements;
+
+  // Polyfill helper object
+  window['CustomElementRegistryPolyfill'] = {
+    // Note, `formAssociated` cannot be properly scoped and can only be set
+    // once per name. This is determined by how it is set on the first defined
+    // tag name. However, adding the name to
+    // `CustomElementsRegistryPolyfill.add(tagName)` reserves the given tag
+    // so it's always formAssociated.
+    'formAssociated': new Set(),
+  };
 
   const definitionForElement = new WeakMap();
   const pendingRegistryForElement = new WeakMap();
@@ -81,8 +91,27 @@ if (!ShadowRoot.prototype.createElement) {
       // Register a stand-in class which will handle the registry lookup & delegation
       let standInClass = nativeGet.call(nativeRegistry, tagName);
       if (!standInClass) {
+        // `formAssociated` cannot be scoped so it's set to true if
+        // the first defined element sets it or it's reserved in
+        // `CustomElementRegistryPolyfill.formAssociated`.
+        if (definition['formAssociated']) {
+          window['CustomElementRegistryPolyfill']['formAssociated'].add(
+            tagName
+          );
+        }
         standInClass = createStandInElement(tagName);
         nativeDefine.call(nativeRegistry, tagName, standInClass);
+      }
+      // Sync `formAssociated` to its effective setting:
+      if (
+        window['CustomElementRegistryPolyfill']['formAssociated'].has(tagName)
+      ) {
+        definition['formAssociated'] = true;
+        try {
+          elementClass['formAssociated'] = true;
+        } catch (e) {
+          /** squelch */
+        }
       }
       if (this === window.customElements) {
         globalDefinitionForConstructor.set(elementClass, definition);
@@ -216,7 +245,9 @@ if (!ShadowRoot.prototype.createElement) {
   const createStandInElement = (tagName) => {
     return class ScopedCustomElementBase {
       static get ['formAssociated']() {
-        return true;
+        return window['CustomElementRegistryPolyfill']['formAssociated'].has(
+          tagName
+        );
       }
       constructor() {
         // Create a raw HTMLElement first
