@@ -292,6 +292,34 @@ describe('ShadowRoot', () => {
       });
     });
 
+    describe('createElementNS', () => {
+      it('should create a regular element', () => {
+        const shadowRoot = getShadowRoot();
+
+        const $el = shadowRoot.createElementNS(
+          'http://www.w3.org/1999/xhtml',
+          'div'
+        );
+
+        expect($el).to.not.be.undefined;
+        expect($el).to.be.instanceof(HTMLDivElement);
+      });
+
+      it(`should upgrade an element defined in the global registry`, () => {
+        const {tagName, CustomElementClass} = getTestElement();
+        customElements.define(tagName, CustomElementClass);
+        const shadowRoot = getShadowRoot();
+
+        const $el = shadowRoot.createElementNS(
+          'http://www.w3.org/1999/xhtml',
+          tagName
+        );
+
+        expect($el).to.not.be.undefined;
+        expect($el).to.be.instanceof(CustomElementClass);
+      });
+    });
+
     describe('innerHTML', () => {
       it(`shouldn't upgrade a defined custom element in a custom registry`, () => {
         const {tagName, CustomElementClass} = getTestElement();
