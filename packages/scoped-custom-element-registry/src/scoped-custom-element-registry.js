@@ -11,7 +11,7 @@
  * subject to an additional IP rights grant found at
  * http://polymer.github.io/PATENTS.txt
  */
-if (!(ShadowRoot.prototype.createElement && ShadowRoot.prototype.importNode)) {
+if (!ShadowRoot.prototype.createElement) {
   const NativeHTMLElement = window.HTMLElement;
   const nativeDefine = window.customElements.define;
   const nativeGet = window.customElements.get;
