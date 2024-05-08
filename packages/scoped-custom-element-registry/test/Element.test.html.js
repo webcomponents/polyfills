@@ -119,7 +119,9 @@ describe('Element', () => {
       const $el = document.createElement(tagName);
 
       $el.setAttribute('foo', 'bar');
-
+      expect($el.attributeChanges).to.be.deep.equal([
+        {name: 'foo', old: null, value: 'bar'},
+      ]);
       expect($el.getAttribute('foo')).to.equal('bar');
     });
 
@@ -131,7 +133,10 @@ describe('Element', () => {
       const $el = getHTML(`<${tagName} foo></${tagName}>`);
 
       $el.removeAttribute('foo');
-
+      expect($el.attributeChanges).to.be.deep.equal([
+        {name: 'foo', old: null, value: ''},
+        {name: 'foo', old: '', value: null},
+      ]);
       expect($el.hasAttribute('foo')).to.be.false;
     });
 
@@ -148,8 +153,27 @@ describe('Element', () => {
 
       $el.setAttribute('foo', '');
       $el.toggleAttribute('foo', true);
-
+      expect($el.attributeChanges).to.be.deep.equal([
+        {name: 'foo', old: null, value: ''},
+      ]);
       expect($el.hasAttribute('foo')).to.be.true;
+    });
+
+    it('should call attributeChangedCallback for parser created element', () => {
+      const $el = document.getElementById('parsed-el');
+      expect($el).to.be.ok;
+      expect($el.attributeChanges).to.be.deep.equal([
+        {name: 'a', old: null, value: 'a'},
+        {name: 'b', old: null, value: 'b'},
+      ]);
+    });
+
+    it('should call attributeChangedCallback for imperative created element while parsing', () => {
+      const $el = document.getElementById('imperative-parsed-el');
+      expect($el).to.be.ok;
+      expect($el.attributeChanges).to.be.deep.equal([
+        {name: 'a', old: null, value: 'ia'},
+      ]);
     });
   });
 });

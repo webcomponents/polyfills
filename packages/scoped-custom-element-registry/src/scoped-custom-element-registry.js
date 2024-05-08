@@ -273,6 +273,7 @@ if (!ShadowRoot.prototype.createElement) {
 
       connectedCallback() {
         const definition = definitionForElement.get(this);
+        ensureAttributesCustomized(this);
         if (definition) {
           // Delegate out to user callback
           definition.connectedCallback &&
@@ -354,6 +355,7 @@ if (!ShadowRoot.prototype.createElement) {
     const setAttribute = elementClass.prototype.setAttribute;
     if (setAttribute) {
       elementClass.prototype.setAttribute = function (n, value) {
+        ensureAttributesCustomized(this);
         const name = n.toLowerCase();
         if (observedAttributes.has(name)) {
           const old = this.getAttribute(name);
@@ -367,6 +369,7 @@ if (!ShadowRoot.prototype.createElement) {
     const removeAttribute = elementClass.prototype.removeAttribute;
     if (removeAttribute) {
       elementClass.prototype.removeAttribute = function (n) {
+        ensureAttributesCustomized(this);
         const name = n.toLowerCase();
         if (observedAttributes.has(name)) {
           const old = this.getAttribute(name);
@@ -380,12 +383,15 @@ if (!ShadowRoot.prototype.createElement) {
     const toggleAttribute = elementClass.prototype.toggleAttribute;
     if (toggleAttribute) {
       elementClass.prototype.toggleAttribute = function (n, force) {
+        ensureAttributesCustomized(this);
         const name = n.toLowerCase();
         if (observedAttributes.has(name)) {
           const old = this.getAttribute(name);
           toggleAttribute.call(this, name, force);
           const newValue = this.getAttribute(name);
-          attributeChangedCallback.call(this, name, old, newValue);
+          if (old !== newValue) {
+            attributeChangedCallback.call(this, name, old, newValue);
+          }
         } else {
           toggleAttribute.call(this, name, force);
         }
@@ -407,6 +413,44 @@ if (!ShadowRoot.prototype.createElement) {
     }
   };
 
+  // Helper to defer initial attribute processing for parser generated
+  // custom elements.
+  let elementsPendingAttributes;
+  if (document.readyState === 'loading') {
+    elementsPendingAttributes = new Set();
+    document.addEventListener(
+      'readystatechange',
+      () => {
+        elementsPendingAttributes.forEach((instance) =>
+          customizeAttributes(instance, definitionForElement.get(instance))
+        );
+      },
+      {once: true}
+    );
+  }
+
+  const ensureAttributesCustomized = (instance) => {
+    if (!elementsPendingAttributes?.has(instance)) {
+      return;
+    }
+    customizeAttributes(instance, definitionForElement.get(instance));
+  };
+
+  // Approximate observedAttributes from the user class, since the stand-in element had none
+  const customizeAttributes = (instance, definition) => {
+    elementsPendingAttributes?.delete(instance);
+    definition.observedAttributes.forEach((attr) => {
+      if (instance.hasAttribute(attr)) {
+        definition.attributeChangedCallback.call(
+          instance,
+          attr,
+          null,
+          instance.getAttribute(attr)
+        );
+      }
+    });
+  };
+
   // Helper to upgrade an instance with a CE definition using "constructor call trick"
   const customize = (instance, definition, isUpgrade = false) => {
     Object.setPrototypeOf(instance, definition.elementClass.prototype);
@@ -419,17 +463,14 @@ if (!ShadowRoot.prototype.createElement) {
       new definition.elementClass();
     }
     if (definition.attributeChangedCallback) {
-      // Approximate observedAttributes from the user class, since the stand-in element had none
-      definition.observedAttributes.forEach((attr) => {
-        if (instance.hasAttribute(attr)) {
-          definition.attributeChangedCallback.call(
-            instance,
-            attr,
-            null,
-            instance.getAttribute(attr)
-          );
-        }
-      });
+      if (
+        elementsPendingAttributes !== undefined &&
+        !instance.hasAttributes()
+      ) {
+        elementsPendingAttributes.add(instance);
+      } else {
+        customizeAttributes(instance, definition);
+      }
     }
     if (isUpgrade && definition.connectedCallback && instance.isConnected) {
       definition.connectedCallback.call(instance);

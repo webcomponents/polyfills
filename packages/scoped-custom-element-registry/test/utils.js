@@ -43,6 +43,10 @@ export const getObservedAttributesTestElement = (
     static get observedAttributes() {
       return observedAttributeNames;
     }
+    attributeChanges = [];
+    attributeChangedCallback(name, old, value) {
+      this.attributeChanges.push({name, old, value});
+    }
   },
 });
 
