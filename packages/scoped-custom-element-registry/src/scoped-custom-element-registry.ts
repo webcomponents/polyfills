@@ -67,6 +67,7 @@ interface CustomElementRegistry {
 
 interface CustomElementDefinition {
   elementClass: CustomElementConstructor;
+  tagName: string;
   /**
    * We hold onto the versions of callbacks at registration time, because
    * that's the specc'd behavior.
@@ -202,6 +203,7 @@ class ShimmedCustomElementsRegistry implements CustomElementRegistry {
     }
     // Register the definition
     const definition: CustomElementDefinition = {
+      tagName,
       elementClass,
       connectedCallback: elementClass.prototype.connectedCallback,
       disconnectedCallback: elementClass.prototype.disconnectedCallback,
@@ -254,6 +256,11 @@ class ShimmedCustomElementsRegistry implements CustomElementRegistry {
   get(tagName: string) {
     const definition = this._definitionsByTag.get(tagName);
     return definition?.elementClass;
+  }
+
+  getName(elementClass: CustomElementConstructor) {
+    const definition = this._definitionsByClass.get(elementClass);
+    return definition?.tagName ?? null;
   }
 
   _getDefinition(tagName: string) {
