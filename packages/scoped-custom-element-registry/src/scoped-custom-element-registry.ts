@@ -19,6 +19,22 @@
  * types, as though they were declared in a `declare global` in a module.
  */
 
+interface Window {
+  CustomElementRegistryPolyfill: {
+    formAssociated: Set<string>;
+  };
+}
+
+// Polyfill helper object
+(window as Window)['CustomElementRegistryPolyfill'] = {
+  // Note, `formAssociated` cannot be properly scoped and can only be set
+  // once per name. This is determined by how it is set on the first defined
+  // tag name. However, adding the name to
+  // `CustomElementsRegistryPolyfill.add(tagName)` reserves the given tag
+  // so it's always formAssociated.
+  'formAssociated': new Set(),
+};
+
 interface CustomElementConstructor {
   observedAttributes?: Array<string>;
   formAssociated?: boolean;
@@ -73,7 +89,15 @@ interface CustomElementDefinition {
   standInClass?: CustomElementConstructor;
 }
 
+// Note, `registry` matches proposal but `customElements` was previously
+// proposed. It's supported for back compat.
 interface ShadowRootWithSettableCustomElements extends ShadowRoot {
+  registry?: CustomElementRegistry;
+  customElements?: CustomElementRegistry;
+}
+
+interface ShadowRootInitWithSettableCustomElements extends ShadowRootInit {
+  registry?: CustomElementRegistry;
   customElements?: CustomElementRegistry;
 }
 
@@ -161,6 +185,28 @@ if (!ShadowRoot.prototype.createElement) {
         observedAttributes,
         attributeChangedCallback
       );
+      // Register a stand-in class which will handle the registry lookup & delegation
+      let standInClass = nativeGet.call(nativeRegistry, tagName);
+      // `formAssociated` cannot be scoped so it's set to true if
+      // the first defined element sets it or it's reserved in
+      // `CustomElementRegistryPolyfill.formAssociated`.
+      const formAssociated =
+        standInClass?.formAssociated ??
+        (elementClass['formAssociated'] ||
+          window['CustomElementRegistryPolyfill']['formAssociated'].has(
+            tagName
+          ));
+      if (formAssociated) {
+        window['CustomElementRegistryPolyfill']['formAssociated'].add(tagName);
+      }
+      // Sync the class value to the definition value for easier debuggability
+      if (formAssociated != elementClass['formAssociated']) {
+        try {
+          elementClass['formAssociated'] = formAssociated;
+        } catch (e) {
+          // squelch
+        }
+      }
       // Register the definition
       const definition: CustomElementDefinition = {
         elementClass,
@@ -168,7 +214,7 @@ if (!ShadowRoot.prototype.createElement) {
         disconnectedCallback: elementClass.prototype.disconnectedCallback,
         adoptedCallback: elementClass.prototype.adoptedCallback,
         attributeChangedCallback,
-        'formAssociated': elementClass['formAssociated'],
+        'formAssociated': formAssociated,
         'formAssociatedCallback':
           elementClass.prototype['formAssociatedCallback'],
         'formDisabledCallback': elementClass.prototype['formDisabledCallback'],
@@ -179,8 +225,7 @@ if (!ShadowRoot.prototype.createElement) {
       };
       this._definitionsByTag.set(tagName, definition);
       this._definitionsByClass.set(elementClass, definition);
-      // Register a stand-in class which will handle the registry lookup & delegation
-      let standInClass = nativeGet.call(nativeRegistry, tagName);
+
       if (!standInClass) {
         standInClass = createStandInElement(tagName);
         nativeDefine.call(nativeRegistry, tagName, standInClass);
@@ -316,18 +361,21 @@ if (!ShadowRoot.prototype.createElement) {
         scope = scopeForElement.get(scope)?.getRootNode() || document;
       }
     }
-    // TODO (justinfagnani): I don't think this matches the proposal
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return (scope as any)
-      .customElements as ShimmedCustomElementsRegistry | null;
+    return (scope as any)['registry'] as ShimmedCustomElementsRegistry | null;
   };
 
   // Helper to create stand-in element for each tagName registered that delegates
   // out to the registry for the given element
   const createStandInElement = (tagName: string): CustomElementConstructor => {
     return (class ScopedCustomElementBase {
+      // Note, this cannot be scoped so it's set based on a polyfill config
+      // option. When this config option isn't specified, it is set
+      // if the first defining element is formAssociated.
       static get ['formAssociated']() {
-        return true;
+        return window['CustomElementRegistryPolyfill']['formAssociated'].has(
+          tagName
+        );
       }
       constructor() {
         // Create a raw HTMLElement first
@@ -556,13 +604,18 @@ if (!ShadowRoot.prototype.createElement) {
   // Patch attachShadow to set customElements on shadowRoot when provided
   const nativeAttachShadow = Element.prototype.attachShadow;
   Element.prototype.attachShadow = function (
-    ...args: Parameters<Element['attachShadow']>
+    init: ShadowRootInitWithSettableCustomElements
   ) {
-    const init = args[0];
-    const shadowRoot = nativeAttachShadow.apply(this, args);
-    if (init.customElements) {
-      (shadowRoot as ShadowRootWithSettableCustomElements).customElements =
-        init.customElements;
+    // note, set registry to undefined to avoid using a native implementation
+    const shadowRoot = nativeAttachShadow.call(this, {
+      ...init,
+      registry: undefined,
+    });
+    const registry = init['registry'] ?? init.customElements;
+    if (registry !== undefined) {
+      (shadowRoot as ShadowRootWithSettableCustomElements).customElements = (shadowRoot as ShadowRootWithSettableCustomElements)[
+        'registry'
+      ] = registry;
     }
     return shadowRoot;
   };
