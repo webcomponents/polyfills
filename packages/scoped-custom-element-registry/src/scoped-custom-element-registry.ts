@@ -19,21 +19,34 @@
  * types, as though they were declared in a `declare global` in a module.
  */
 
-interface Window {
+declare interface PolyfillWindow {
   CustomElementRegistryPolyfill: {
     formAssociated: Set<string>;
   };
 }
 
-// Polyfill helper object
-(window as Window)['CustomElementRegistryPolyfill'] = {
-  // Note, `formAssociated` cannot be properly scoped and can only be set
-  // once per name. This is determined by how it is set on the first defined
-  // tag name. However, adding the name to
-  // `CustomElementsRegistryPolyfill.add(tagName)` reserves the given tag
-  // so it's always formAssociated.
-  'formAssociated': new Set(),
-};
+const polyfillWindow = (window as unknown) as PolyfillWindow;
+
+/**
+ * Polyfill helper object. This is global and distinct from
+ * `CustomElementRegistry`because the polyfill does not use modules and
+ * so that it is clearly polyfill-specific and not related to the native
+ * feature.
+ *
+ * The `formAssociated` setting cannot be properly scoped and can only be set
+ * once per name. This is determined by how it is set on the first defined
+ * tag name. However, adding the name to
+ * `CustomElementsRegistryPolyfill.add(tagName)` reserves the given tag
+ * so it's always formAssociated.
+ */
+if (
+  polyfillWindow['CustomElementRegistryPolyfill']?.['formAssociated'] ===
+  undefined
+) {
+  polyfillWindow['CustomElementRegistryPolyfill'] = {
+    ['formAssociated']: new Set(),
+  };
+}
 
 interface CustomElementConstructor {
   observedAttributes?: Array<string>;
@@ -189,9 +202,13 @@ class ShimmedCustomElementsRegistry implements CustomElementRegistry {
     const formAssociated =
       standInClass?.formAssociated ??
       (elementClass['formAssociated'] ||
-        window['CustomElementRegistryPolyfill']['formAssociated'].has(tagName));
+        polyfillWindow['CustomElementRegistryPolyfill']['formAssociated'].has(
+          tagName
+        ));
     if (formAssociated) {
-      window['CustomElementRegistryPolyfill']['formAssociated'].add(tagName);
+      polyfillWindow['CustomElementRegistryPolyfill']['formAssociated'].add(
+        tagName
+      );
     }
     // Sync the class value to the definition value for easier debuggability
     if (formAssociated != elementClass['formAssociated']) {
@@ -367,9 +384,9 @@ const createStandInElement = (tagName: string): CustomElementConstructor => {
     // option. When this config option isn't specified, it is set
     // if the first defining element is formAssociated.
     static get ['formAssociated']() {
-      return window['CustomElementRegistryPolyfill']['formAssociated'].has(
-        tagName
-      );
+      return polyfillWindow['CustomElementRegistryPolyfill'][
+        'formAssociated'
+      ].has(tagName);
     }
     constructor() {
       // Create a raw HTMLElement first
@@ -590,13 +607,18 @@ const customize = (
 // Patch attachShadow to set customElements on shadowRoot when provided
 const nativeAttachShadow = Element.prototype.attachShadow;
 Element.prototype.attachShadow = function (
-  init: ShadowRootInitWithSettableCustomElements
+  init: ShadowRootInitWithSettableCustomElements,
+  ...args: unknown[]
 ) {
   // note, set registry to undefined to avoid using a native implementation
-  const shadowRoot = nativeAttachShadow.call(this, {
-    ...init,
-    registry: undefined,
-  });
+  const nativeArgs = ([
+    {
+      ...init,
+      registry: undefined,
+    },
+    ...args,
+  ] as unknown) as [init: ShadowRootInit];
+  const shadowRoot = nativeAttachShadow.apply(this, nativeArgs);
   const registry = init['registry'] ?? init.customElements;
   if (registry !== undefined) {
     (shadowRoot as ShadowRootWithSettableCustomElements).customElements = (shadowRoot as ShadowRootWithSettableCustomElements)[
