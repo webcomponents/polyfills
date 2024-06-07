@@ -548,7 +548,9 @@ const patchAttributes = (
         const old = this.getAttribute(name);
         toggleAttribute.call(this, name, force);
         const newValue = this.getAttribute(name);
-        attributeChangedCallback.call(this, name, old, newValue);
+        if (old !== newValue) {
+          attributeChangedCallback.call(this, name, old, newValue);
+        }
       } else {
         toggleAttribute.call(this, name, force);
       }
