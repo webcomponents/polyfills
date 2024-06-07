@@ -119,29 +119,27 @@ export const commonRegistryTests = (registry) => {
     });
   });
 
-  if (window.CustomElementRegistryPolyfill) {
-    describe('formAssociated scoping limitations', () => {
-      it('is formAssociated if set in CustomElementRegistryPolyfill.formAssociated', () => {
-        const tagName = getTestTagName();
-        window.CustomElementRegistryPolyfill.formAssociated.add(tagName);
-        class El extends HTMLElement {}
-        customElements.define(tagName, El);
-        expect(customElements.get(tagName).formAssociated).to.be.true;
-      });
-      it('is always formAssociated if first defined tag is formAssociated', () => {
-        const tagName = getTestTagName();
-        class FormAssociatedEl extends HTMLElement {
-          static formAssociated = true;
-        }
-        class El extends HTMLElement {}
-        customElements.define(tagName, FormAssociatedEl);
-        const registry = new CustomElementRegistry();
-        registry.define(tagName, El);
-        expect(customElements.get(tagName).formAssociated).to.be.true;
-        expect(registry.get(tagName).formAssociated).to.be.true;
-      });
+  describe('formAssociated scoping limitations', () => {
+    it('is formAssociated if set in CustomElementRegistryPolyfill.formAssociated', () => {
+      const tagName = getTestTagName();
+      window.CustomElementRegistryPolyfill.formAssociated.add(tagName);
+      class El extends HTMLElement {}
+      customElements.define(tagName, El);
+      expect(customElements.get(tagName).formAssociated).to.be.true;
     });
-  }
+    it('is always formAssociated if first defined tag is formAssociated', () => {
+      const tagName = getTestTagName();
+      class FormAssociatedEl extends HTMLElement {
+        static formAssociated = true;
+      }
+      class El extends HTMLElement {}
+      customElements.define(tagName, FormAssociatedEl);
+      const registry = new CustomElementRegistry();
+      registry.define(tagName, El);
+      expect(customElements.get(tagName).formAssociated).to.be.true;
+      expect(registry.get(tagName).formAssociated).to.be.true;
+    });
+  });
 
   describe('When formAssociated is not set', () => {
     it('should not prevent clicks when disabled', () => {

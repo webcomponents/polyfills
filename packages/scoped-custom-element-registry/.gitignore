@@ -1,1 +1,3 @@
 .wireit/
+.tsbuildinfo
+build/
