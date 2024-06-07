@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added support for ShadowRoot.prototype.createElementNS()
 
-- registry in ShadowRootInit; matches current proposal but customElements
+- Added the `registry` property to ShadowRootInit to match current proposal. `customElements`
   remains supported for compatibility
 
 ### Changed
