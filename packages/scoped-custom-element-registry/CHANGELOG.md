@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- ## Unreleased -->
 
+## [Unreleased]
+
+### Added
+
+- shadowRoot.createElementNS
+
+- registry in ShadowRootInit; matches current proposal but customElements
+  remains supported for compatibility
+
+### Changed
+
+- polyfill always used; conditional installation blocked by need for spec
+
+- formAssociated set by first name's defining value or if
+  CustomElementRegistryPolyfill.formAssociated set contains name
+
 ## [0.0.9] - 2023-03-30
 
 - Update dependencies ([#542](https://github.com/webcomponents/polyfills/pull/542))

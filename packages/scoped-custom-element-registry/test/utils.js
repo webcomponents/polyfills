@@ -92,7 +92,7 @@ export const getShadowRoot = (customElementRegistry) => {
       };
 
       if (customElementRegistry) {
-        initOptions.customElements = customElementRegistry;
+        initOptions.registry = customElementRegistry;
       }
 
       this.attachShadow(initOptions);
