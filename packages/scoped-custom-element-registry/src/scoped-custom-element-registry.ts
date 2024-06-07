@@ -656,6 +656,7 @@ const installScopedCreationMethod = (
   };
 };
 installScopedCreationMethod(ShadowRoot, 'createElement', document);
+installScopedCreationMethod(ShadowRoot, 'createElementNS', document);
 installScopedCreationMethod(ShadowRoot, 'importNode', document);
 installScopedCreationMethod(Element, 'insertAdjacentHTML');
 
