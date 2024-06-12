@@ -17,6 +17,7 @@
     "url": "https://github.com/webcomponents/polyfills/issues"
   },
   "main": "scoped-custom-element-registry.min.js",
+  "module": "scoped-custom-element-registry.min.js",
   "scripts": {
     "build": "wireit",
     "build:ts": "wireit",
