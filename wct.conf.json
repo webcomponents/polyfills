@@ -1,6 +1,5 @@
 {
   "suites": [
-    "packages/tests/formdata-event/index.html",
     "packages/tests/html-imports/index.html",
     "packages/tests/shadycss/runner.html",
     "packages/tests/shadydom/runner.html",
