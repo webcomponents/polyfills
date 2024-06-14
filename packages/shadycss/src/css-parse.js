@@ -254,7 +254,7 @@ const RX = {
   customProp: /(?:^[^;\-\s}]+)?--[^;{}]*?:[^{};]*?(?:[;\n]|$)/gim,
   mixinProp: /(?:^[^;\-\s}]+)?--[^;{}]*?:[^{};]*?{[^}]*?}(?:[;\n]|$)?/gim,
   mixinApply: /@apply\s*\(?[^);]*\)?\s*(?:[;\n]|$)?/gim,
-  varApply: /[^;:]*?:[^;]*?var\([^;]*\)(?:[;\n]|$)?/gim,
+  varApply: /[\w\s\d-]*?:[^;]*?var\([^;]*\)(?:[;\n]|$)?/gim,
   keyframesRule: /^@[^\s]*keyframes/,
   multipleSpaces: /\s+/g,
 };
