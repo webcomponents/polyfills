@@ -416,6 +416,7 @@ const createStandInElement = (tagName: string): CustomElementConstructor => {
       this: HTMLElement,
       ...args: ParametersOf<CustomHTMLElement['connectedCallback']>
     ) {
+      ensureAttributesCustomized(this);
       const definition = definitionForElement.get(this);
       if (definition) {
         // Delegate out to user callback
@@ -514,6 +515,7 @@ const patchAttributes = (
   const setAttribute = elementClass.prototype.setAttribute;
   if (setAttribute) {
     elementClass.prototype.setAttribute = function (n: string, value: string) {
+      ensureAttributesCustomized(this);
       const name = n.toLowerCase();
       if (observedAttributes.has(name)) {
         const old = this.getAttribute(name);
@@ -527,6 +529,7 @@ const patchAttributes = (
   const removeAttribute = elementClass.prototype.removeAttribute;
   if (removeAttribute) {
     elementClass.prototype.removeAttribute = function (n: string) {
+      ensureAttributesCustomized(this);
       const name = n.toLowerCase();
       if (observedAttributes.has(name)) {
         const old = this.getAttribute(name);
@@ -543,17 +546,72 @@ const patchAttributes = (
       n: string,
       force?: boolean
     ) {
+      ensureAttributesCustomized(this);
       const name = n.toLowerCase();
       if (observedAttributes.has(name)) {
         const old = this.getAttribute(name);
         toggleAttribute.call(this, name, force);
         const newValue = this.getAttribute(name);
-        attributeChangedCallback.call(this, name, old, newValue);
+        if (old !== newValue) {
+          attributeChangedCallback.call(this, name, old, newValue);
+        }
       } else {
         toggleAttribute.call(this, name, force);
       }
     };
   }
+};
+
+// Helper to defer initial attribute processing for parser generated
+// custom elements. These elements are created without attributes
+// so attributes cannot be processed in the constructor. Instead,
+// these elements are customized at the first opportunity:
+// 1. when the element is connected
+// 2. when any attribute API is first used
+// 3. when the document becomes readyState === interactive (the parser is done)
+let elementsPendingAttributes: Set<CustomHTMLElement & HTMLElement> | undefined;
+if (document.readyState === 'loading') {
+  elementsPendingAttributes = new Set();
+  document.addEventListener(
+    'readystatechange',
+    () => {
+      elementsPendingAttributes!.forEach((instance) =>
+        customizeAttributes(instance, definitionForElement.get(instance)!)
+      );
+    },
+    {once: true}
+  );
+}
+
+const ensureAttributesCustomized = (
+  instance: CustomHTMLElement & HTMLElement
+) => {
+  if (!elementsPendingAttributes?.has(instance)) {
+    return;
+  }
+  customizeAttributes(instance, definitionForElement.get(instance)!);
+};
+
+// Approximate observedAttributes from the user class, since the stand-in element had none
+const customizeAttributes = (
+  instance: CustomHTMLElement & HTMLElement,
+  definition: CustomElementDefinition
+) => {
+  elementsPendingAttributes?.delete(instance);
+  if (!definition.attributeChangedCallback) {
+    return;
+  }
+  definition.observedAttributes.forEach((attr: string) => {
+    if (!instance.hasAttribute(attr)) {
+      return;
+    }
+    definition.attributeChangedCallback!.call(
+      instance,
+      attr,
+      null,
+      instance.getAttribute(attr)
+    );
+  });
 };
 
 // Helper to patch CE class hierarchy changing those CE classes created before applying the polyfill
@@ -587,17 +645,17 @@ const customize = (
     new definition.elementClass();
   }
   if (definition.attributeChangedCallback) {
-    // Approximate observedAttributes from the user class, since the stand-in element had none
-    definition.observedAttributes.forEach((attr) => {
-      if (instance.hasAttribute(attr)) {
-        definition.attributeChangedCallback!.call(
-          instance,
-          attr,
-          null,
-          instance.getAttribute(attr)
-        );
-      }
-    });
+    // Note, these checks determine if the element is being parser created.
+    // and has no attributes when created. In this case, it may have attributes
+    // in HTML that are immediately processed. To handle this, the instance
+    // is added to a set and its attributes are customized at first
+    // opportunity (e.g. when connected or when the parser completes and the
+    // document becomes interactive).
+    if (elementsPendingAttributes !== undefined && !instance.hasAttributes()) {
+      elementsPendingAttributes.add(instance);
+    } else {
+      customizeAttributes(instance, definition);
+    }
   }
   if (isUpgrade && definition.connectedCallback && instance.isConnected) {
     definition.connectedCallback.call(instance);
