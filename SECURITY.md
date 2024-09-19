@@ -2,7 +2,7 @@
 
 ## Reporting a Vulnerability
 
-To report a suspected vulnerability please report it through GitHub at https://github.com/webcomponents/polyfills/security
+To report a suspected vulnerability please report it through GitHub at https://github.com/webcomponents/polyfills/security/advisories/new
 
 Please do not report any suspected vulnerabilities through public issues.
 
