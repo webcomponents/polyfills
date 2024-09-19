@@ -1,4 +1,5 @@
 # Security Policy
+
 ## Reporting a Vulnerability
 
 To report a suspected vulnerability please report it through GitHub at https://github.com/webcomponents/polyfills/security
