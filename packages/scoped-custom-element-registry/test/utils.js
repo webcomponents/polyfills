@@ -82,28 +82,18 @@ export const getFormAssociatedErrorTestElement = () => ({
  * @return {ShadowRoot}
  */
 export const getShadowRoot = (customElementRegistry) => {
-  const tagName = getTestTagName();
-  const CustomElementClass = class extends HTMLElement {
-    constructor() {
-      super();
+  const el = document.createElement('div');
+  return el.attachShadow({mode: 'open', customElements: customElementRegistry});
+};
 
-      const initOptions = {
-        mode: 'open',
-      };
-
-      if (customElementRegistry) {
-        initOptions.registry = customElementRegistry;
-      }
-
-      this.attachShadow(initOptions);
-    }
-  };
-
-  window.customElements.define(tagName, CustomElementClass);
-
-  const {shadowRoot} = new CustomElementClass();
-
-  return shadowRoot;
+/**
+ * Gets a shadowRoot with a null registry associated.
+ *
+ * @return {ShadowRoot}
+ */
+export const getUnitializedShadowRoot = () => {
+  const el = document.createElement('div');
+  return el.attachShadow({mode: 'open', customElements: null});
 };
 
 /**
@@ -114,7 +104,7 @@ export const getShadowRoot = (customElementRegistry) => {
  * @return {HTMLElement}
  */
 export const getHTML = (html, root = document) => {
-  const div = root.createElement('div');
+  const div = root.customElements.createElement('div');
 
   div.innerHTML = html;
 

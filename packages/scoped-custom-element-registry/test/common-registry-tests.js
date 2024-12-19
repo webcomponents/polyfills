@@ -1,5 +1,9 @@
 import {expect, nextFrame} from '@open-wc/testing';
-import {getTestElement} from './utils.js';
+import {
+  getTestElement,
+  createTemplate,
+  getUnitializedShadowRoot,
+} from './utils.js';
 
 export const commonRegistryTests = (registry) => {
   describe('define', () => {
@@ -74,6 +78,103 @@ export const commonRegistryTests = (registry) => {
       await nextFrame();
 
       expect(defined).to.be.true;
+    });
+  });
+
+  describe('createElement', () => {
+    it('should create built-in elements', async () => {
+      const el = registry.createElement('div');
+      expect(el).to.be.ok;
+    });
+
+    it('should create custom elements', async () => {
+      const {tagName, CustomElementClass} = getTestElement();
+      registry.define(tagName, CustomElementClass);
+      const el = registry.createElement(tagName);
+      expect(el).to.be.instanceOf(CustomElementClass);
+    });
+  });
+
+  describe('cloneSubtree', () => {
+    it('should upgrade custom elements in cloned subtree', async () => {
+      const {tagName, CustomElementClass} = getTestElement();
+      registry.define(tagName, CustomElementClass);
+      const template = createTemplate(`
+        <${tagName}><${tagName}></${tagName}></${tagName}>
+        <${tagName}><${tagName}></${tagName}></${tagName}>
+      `);
+      const clone = registry.cloneSubtree(template.content);
+      const els = clone.querySelectorAll(tagName);
+      expect(els.length).to.be.equal(4);
+      els.forEach((el) => expect(el).to.be.instanceOf(CustomElementClass));
+    });
+  });
+
+  describe('initializeSubtree', () => {
+    it('can create uninitialized roots', async () => {
+      const shadowRoot = getUnitializedShadowRoot();
+      expect(shadowRoot.customElements).to.be.null;
+      shadowRoot.innerHTML = `<div></div>`;
+      const el = shadowRoot.firstElementChild;
+      expect(el.customElements).to.be.null;
+    });
+
+    it('initializeSubtree sets customElements', async () => {
+      const shadowRoot = getUnitializedShadowRoot();
+      shadowRoot.innerHTML = `<div></div>`;
+      registry.initializeSubtree(shadowRoot);
+      expect(shadowRoot.customElements).to.be.equal(registry);
+      shadowRoot.innerHTML = `<div></div>`;
+      const el = shadowRoot.firstElementChild;
+      expect(el.customElements).to.be.equal(registry);
+    });
+
+    it('should not upgrade custom elements in uninitialized subtree', async () => {
+      const shadowRoot = getUnitializedShadowRoot();
+      const {tagName, CustomElementClass} = getTestElement();
+      registry.define(tagName, CustomElementClass);
+      shadowRoot.innerHTML = `<${tagName}></${tagName}><div></div>`;
+      const el = shadowRoot.firstElementChild;
+      const container = shadowRoot.lastElementChild;
+      expect(el.localName).to.be.equal(tagName);
+      expect(el).not.to.be.instanceOf(CustomElementClass);
+      container.innerHTML = `<${tagName}></${tagName}>`;
+      const el2 = container.firstElementChild;
+      expect(el2.localName).to.be.equal(tagName);
+      expect(el2).not.to.be.instanceOf(CustomElementClass);
+    });
+
+    it('should upgrade custom elements in initialized subtree', async () => {
+      const shadowRoot = getUnitializedShadowRoot();
+      const {tagName, CustomElementClass} = getTestElement();
+      registry.define(tagName, CustomElementClass);
+      shadowRoot.innerHTML = `<${tagName}></${tagName}><div></div>`;
+      registry.initializeSubtree(shadowRoot);
+      const el = shadowRoot.firstElementChild;
+      const container = shadowRoot.lastElementChild;
+      expect(el.localName).to.be.equal(tagName);
+      expect(el).to.be.instanceOf(CustomElementClass);
+      container.innerHTML = `<${tagName}></${tagName}>`;
+      const el2 = container.firstElementChild;
+      expect(el2.localName).to.be.equal(tagName);
+      expect(el2).to.be.instanceOf(CustomElementClass);
+    });
+
+    it('should upgrade custom elements connected to subtree with registry', async () => {
+      const shadowRoot = getUnitializedShadowRoot();
+      const {tagName, CustomElementClass} = getTestElement();
+      registry.define(tagName, CustomElementClass);
+      const container = registry.createElement('div');
+      document.body.append(container);
+      shadowRoot.innerHTML = `
+        <${tagName}><${tagName}></${tagName}></${tagName}>
+        <${tagName}><${tagName}></${tagName}></${tagName}>
+      `;
+      container.append(shadowRoot);
+      const els = container.querySelectorAll(tagName);
+      expect(els.length).to.be.equal(4);
+      els.forEach((el) => expect(el).to.be.instanceOf(CustomElementClass));
+      container.remove();
     });
   });
 };

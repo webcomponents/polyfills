@@ -76,6 +76,8 @@ interface CustomHTMLElement {
 
 interface CustomElementRegistry {
   _getDefinition(tagName: string): CustomElementDefinition | undefined;
+  createElement(tagName: string): Node;
+  cloneSubtree(node: Node): Node;
 }
 
 interface CustomElementDefinition {
@@ -106,13 +108,13 @@ interface CustomElementDefinition {
 // Note, `registry` matches proposal but `customElements` was previously
 // proposed. It's supported for back compat.
 interface ShadowRootWithSettableCustomElements extends ShadowRoot {
-  registry?: CustomElementRegistry;
-  customElements?: CustomElementRegistry;
+  registry?: CustomElementRegistry | null;
+  customElements: CustomElementRegistry | null;
 }
 
 interface ShadowRootInitWithSettableCustomElements extends ShadowRootInit {
-  registry?: CustomElementRegistry;
-  customElements?: CustomElementRegistry;
+  registry?: CustomElementRegistry | null;
+  customElements?: CustomElementRegistry | null;
 }
 
 type ParametersOf<
@@ -137,12 +139,29 @@ const globalDefinitionForConstructor = new WeakMap<
   CustomElementConstructor,
   CustomElementDefinition
 >();
-// TBD: This part of the spec proposal is unclear:
-// > Another option for looking up registries is to store an element's
-// > originating registry with the element. The Chrome DOM team was concerned
-// > about the small additional memory overhead on all elements. Looking up the
-// > root avoids this.
-const scopeForElement = new WeakMap<Node, Element | ShadowRoot>();
+
+const registryForElement = new WeakMap<
+  Node,
+  ShimmedCustomElementsRegistry | null
+>();
+const registryToSubtree = (
+  node: Node,
+  registry: ShimmedCustomElementsRegistry | null,
+  shouldUpgrade?: boolean
+) => {
+  if (registryForElement.get(node) == null) {
+    registryForElement.set(node, registry);
+  }
+  if (shouldUpgrade && registryForElement.get(node) === registry) {
+    registry?._upgradeElement(node as HTMLElement);
+  }
+  const {children} = node as Element;
+  if (children?.length) {
+    Array.from(children).forEach((child) =>
+      registryToSubtree(child, registry, shouldUpgrade)
+    );
+  }
+};
 
 class AsyncInfo<T> {
   readonly promise: Promise<T>;
@@ -251,8 +270,7 @@ class ShimmedCustomElementsRegistry implements CustomElementRegistry {
     if (awaiting) {
       this._awaitingUpgrade.delete(tagName);
       for (const element of awaiting) {
-        pendingRegistryForElement.delete(element);
-        customize(element, definition, true);
+        this._upgradeElement(element, definition);
       }
     }
     // Flush whenDefined callbacks
@@ -268,6 +286,7 @@ class ShimmedCustomElementsRegistry implements CustomElementRegistry {
     creationContext.push(this);
     nativeRegistry.upgrade(...args);
     creationContext.pop();
+    args.forEach((n) => registryToSubtree(n, this));
   }
 
   get(tagName: string) {
@@ -312,6 +331,39 @@ class ShimmedCustomElementsRegistry implements CustomElementRegistry {
       awaiting.delete(element);
     }
   }
+
+  // upgrades the given element if defined or queues it for upgrade when defined.
+  _upgradeElement(element: HTMLElement, definition?: CustomElementDefinition) {
+    definition ??= this._getDefinition(element.localName);
+    if (definition !== undefined) {
+      pendingRegistryForElement.delete(element);
+      customize(element, definition!, true);
+    } else {
+      this._upgradeWhenDefined(element, element.localName, true);
+    }
+  }
+
+  ['createElement'](localName: string) {
+    creationContext.push(this);
+    const el = document.createElement(localName);
+    creationContext.pop();
+    registryToSubtree(el, this);
+    return el;
+  }
+
+  ['cloneSubtree'](node: Node) {
+    creationContext.push(this);
+    // Note, cannot use `cloneNode` here becuase the node may not be in this document
+    const subtree = document.importNode(node, true);
+    creationContext.pop();
+    registryToSubtree(subtree, this);
+    return subtree;
+  }
+
+  ['initializeSubtree'](node: Node) {
+    registryToSubtree(node, this, true);
+    return node;
+  }
 }
 
 // User extends this HTMLElement, which returns the CE being upgraded
@@ -345,35 +397,23 @@ window.HTMLElement = (function HTMLElement(this: HTMLElement) {
 window.HTMLElement.prototype = NativeHTMLElement.prototype;
 
 // Helpers to return the scope for a node where its registry would be located
-const isValidScope = (node: Node) =>
-  node === document || node instanceof ShadowRoot;
+// const isValidScope = (node: Node) =>
+//   node === document || node instanceof ShadowRoot;
 const registryForNode = (node: Node): ShimmedCustomElementsRegistry | null => {
-  // TODO: the algorithm for finding the scope is a bit up in the air; assigning
-  // a one-time scope at creation time would require walking every tree ever
-  // created, which is avoided for now
-  let scope = node.getRootNode();
-  // If we're not attached to the document (i.e. in a disconnected tree or
-  // fragment), we need to get the scope from the creation context; that should
-  // be a Document or ShadowRoot, unless it was created via innerHTML
-  if (!isValidScope(scope)) {
-    const context = creationContext[creationContext.length - 1];
-    // When upgrading via registry.upgrade(), the registry itself is put on the
-    // creationContext stack
-    if (context instanceof CustomElementRegistry) {
-      return context as ShimmedCustomElementsRegistry;
-    }
-    // Otherwise, get the root node of the element this was created from
-    scope = context.getRootNode();
-    // The creation context wasn't a Document or ShadowRoot or in one; this
-    // means we're being innerHTML'ed into a disconnected element; for now, we
-    // hope that root node was created imperatively, where we stash _its_
-    // scopeForElement. Beyond that, we'd need more costly tracking.
-    if (!isValidScope(scope)) {
-      scope = scopeForElement.get(scope)?.getRootNode() || document;
-    }
+  const context = creationContext[creationContext.length - 1];
+  if (context instanceof CustomElementRegistry) {
+    return context as ShimmedCustomElementsRegistry;
   }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return (scope as any)['registry'] as ShimmedCustomElementsRegistry | null;
+  if (
+    context?.nodeType === Node.ELEMENT_NODE ||
+    context?.nodeType === Node.DOCUMENT_FRAGMENT_NODE
+  ) {
+    return context.customElements as ShimmedCustomElementsRegistry;
+  }
+  return node.nodeType === Node.ELEMENT_NODE
+    ? ((node as Element).customElements as ShimmedCustomElementsRegistry) ??
+        null
+    : null;
 };
 
 // Helper to create stand-in element for each tagName registered that delegates
@@ -400,13 +440,11 @@ const createStandInElement = (tagName: string): CustomElementConstructor => {
       // upgrade will eventually install the full CE prototype
       Object.setPrototypeOf(instance, HTMLElement.prototype);
       // Get the node's scope, and its registry (falls back to global registry)
-      const registry =
-        registryForNode(instance) ||
-        (window.customElements as ShimmedCustomElementsRegistry);
-      const definition = registry._getDefinition(tagName);
+      const registry = registryForNode(instance);
+      const definition = registry?._getDefinition(tagName);
       if (definition) {
         customize(instance, definition);
-      } else {
+      } else if (registry) {
         pendingRegistryForElement.set(instance, registry);
       }
       return instance;
@@ -423,10 +461,25 @@ const createStandInElement = (tagName: string): CustomElementConstructor => {
         definition.connectedCallback &&
           definition.connectedCallback.apply(this, args);
       } else {
+        // NOTE, if this has a null registry, then it should be changed
+        // to the registry into which it's inserted.
+        // LIMITATION: this is only done for custom elements and not built-ins
+        // since we can't easily see their connection state changing.
         // Register for upgrade when defined (only when connected, so we don't leak)
-        pendingRegistryForElement
-          .get(this)!
-          ._upgradeWhenDefined(this, tagName, true);
+        const pendingRegistry = pendingRegistryForElement.get(this);
+        if (pendingRegistry !== undefined) {
+          pendingRegistry._upgradeWhenDefined(this, tagName, true);
+        } else {
+          const registry =
+            this.customElements ?? this.parentElement?.customElements;
+          if (registry) {
+            registryToSubtree(
+              this,
+              registry as ShimmedCustomElementsRegistry,
+              true
+            );
+          }
+        }
       }
     }
 
@@ -677,14 +730,50 @@ Element.prototype.attachShadow = function (
     ...args,
   ] as unknown) as [init: ShadowRootInit];
   const shadowRoot = nativeAttachShadow.apply(this, nativeArgs);
-  const registry = init['registry'] ?? init.customElements;
+  // Note, this allows a `null` customElements purely for testing.
+  const registry =
+    init['customElements'] === undefined
+      ? init['registry']
+      : init['customElements'];
   if (registry !== undefined) {
-    (shadowRoot as ShadowRootWithSettableCustomElements).customElements = (shadowRoot as ShadowRootWithSettableCustomElements)[
-      'registry'
-    ] = registry;
+    registryForElement.set(
+      shadowRoot,
+      registry as ShimmedCustomElementsRegistry
+    );
+    (shadowRoot as ShadowRootWithSettableCustomElements)['registry'] = registry;
   }
   return shadowRoot;
 };
+
+const customElementsDescriptor = {
+  get(this: Element) {
+    const registry = registryForElement.get(this);
+    return registry === undefined
+      ? ((this.nodeType === Node.DOCUMENT_NODE
+          ? this
+          : this.ownerDocument) as Document)?.defaultView?.customElements ||
+          null
+      : registry;
+  },
+  enumerable: true,
+  configurable: true,
+};
+
+Object.defineProperty(
+  Element.prototype,
+  'customElements',
+  customElementsDescriptor
+);
+Object.defineProperty(
+  Document.prototype,
+  'customElements',
+  customElementsDescriptor
+);
+Object.defineProperty(
+  ShadowRoot.prototype,
+  'customElements',
+  customElementsDescriptor
+);
 
 // Install scoped creation API on Element & ShadowRoot
 const creationContext: Array<
@@ -707,15 +796,15 @@ const installScopedCreationMethod = (
     // insertAdjacentHTML doesn't return an element, but that's fine since
     // it will have a parent that should have a scope
     if (ret !== undefined) {
-      scopeForElement.set(ret, this);
+      registryToSubtree(
+        ret,
+        this.customElements as ShimmedCustomElementsRegistry
+      );
     }
     creationContext.pop();
     return ret;
   };
 };
-installScopedCreationMethod(ShadowRoot, 'createElement', document);
-installScopedCreationMethod(ShadowRoot, 'createElementNS', document);
-installScopedCreationMethod(ShadowRoot, 'importNode', document);
 installScopedCreationMethod(Element, 'insertAdjacentHTML');
 
 // Install scoped innerHTML on Element & ShadowRoot
@@ -727,6 +816,7 @@ const installScopedCreationSetter = (ctor: Function, name: string) => {
       creationContext.push(this);
       descriptor.set!.call(this, value);
       creationContext.pop();
+      registryToSubtree(this, this.customElements);
     },
   });
 };
@@ -759,10 +849,10 @@ if (
     return internals;
   };
 
-  methods.forEach((method) => {
-    const proto = window['ElementInternals'].prototype;
-    const originalMethod = proto[method] as Function;
+  const proto = window['ElementInternals'].prototype;
 
+  methods.forEach((method) => {
+    const originalMethod = proto[method] as Function;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (proto as any)[method] = function (...args: Array<unknown>) {
       const host = internalsToHostMap.get(this);

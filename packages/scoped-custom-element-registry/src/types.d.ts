@@ -1,7 +1,7 @@
 export {};
 
 declare global {
-  interface ShadowRoot {
+  interface CustomElementRegistry {
     // This overload is for roots that use the global registry
     createElement<K extends keyof HTMLElementTagNameMap>(
       tagName: K,
@@ -16,14 +16,28 @@ declare global {
       tagName: string,
       options?: ElementCreationOptions
     ): HTMLElement;
+    cloneSubtree(node: Node): Node;
+    initializeSubtree: (node: Node) => Node;
   }
 
   interface ShadowRootInit {
-    customElements?: CustomElementRegistry;
+    customElements?: CustomElementRegistry | null;
   }
 
   interface ShadowRoot {
-    readonly customElements?: CustomElementRegistry;
+    readonly customElements: CustomElementRegistry | null;
+  }
+
+  interface Document {
+    readonly customElements: CustomElementRegistry | null;
+  }
+
+  interface Element {
+    readonly customElements: CustomElementRegistry | null;
+  }
+
+  interface InitializeShadowRootInit {
+    customElements?: CustomElementRegistry;
   }
 
   /*
