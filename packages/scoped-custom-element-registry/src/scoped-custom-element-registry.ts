@@ -397,23 +397,20 @@ window.HTMLElement = (function HTMLElement(this: HTMLElement) {
 window.HTMLElement.prototype = NativeHTMLElement.prototype;
 
 // Helpers to return the scope for a node where its registry would be located
-// const isValidScope = (node: Node) =>
-//   node === document || node instanceof ShadowRoot;
-const registryForNode = (node: Node): ShimmedCustomElementsRegistry | null => {
+const registryFromContext = (
+  node: Element
+): ShimmedCustomElementsRegistry | null => {
+  const explicitRegistry = registryForElement.get(node);
+  if (explicitRegistry != null) {
+    return explicitRegistry;
+  }
   const context = creationContext[creationContext.length - 1];
   if (context instanceof CustomElementRegistry) {
     return context as ShimmedCustomElementsRegistry;
   }
-  if (
-    context?.nodeType === Node.ELEMENT_NODE ||
-    context?.nodeType === Node.DOCUMENT_FRAGMENT_NODE
-  ) {
-    return context.customElements as ShimmedCustomElementsRegistry;
-  }
-  return node.nodeType === Node.ELEMENT_NODE
-    ? ((node as Element).customElements as ShimmedCustomElementsRegistry) ??
-        null
-    : null;
+  const registry = (context as Element)
+    .customElements as ShimmedCustomElementsRegistry;
+  return registry ?? null;
 };
 
 // Helper to create stand-in element for each tagName registered that delegates
@@ -440,7 +437,8 @@ const createStandInElement = (tagName: string): CustomElementConstructor => {
       // upgrade will eventually install the full CE prototype
       Object.setPrototypeOf(instance, HTMLElement.prototype);
       // Get the node's scope, and its registry (falls back to global registry)
-      const registry = registryForNode(instance);
+      const registry = registryFromContext(instance);
+      registryToSubtree(instance, registry);
       const definition = registry?._getDefinition(tagName);
       if (definition) {
         customize(instance, definition);
@@ -471,7 +469,8 @@ const createStandInElement = (tagName: string): CustomElementConstructor => {
           pendingRegistry._upgradeWhenDefined(this, tagName, true);
         } else {
           const registry =
-            this.customElements ?? this.parentElement?.customElements;
+            this.customElements ??
+            (this.parentNode as Element | ShadowRoot)?.customElements;
           if (registry) {
             registryToSubtree(
               this,
@@ -495,8 +494,8 @@ const createStandInElement = (tagName: string): CustomElementConstructor => {
       } else {
         // Un-register for upgrade when defined (so we don't leak)
         pendingRegistryForElement
-          .get(this)!
-          ._upgradeWhenDefined(this, tagName, false);
+          .get(this)
+          ?._upgradeWhenDefined(this, tagName, false);
       }
     }
 
@@ -779,36 +778,57 @@ Object.defineProperty(
 const creationContext: Array<
   Document | CustomElementRegistry | Element | ShadowRoot
 > = [document];
-const installScopedCreationMethod = (
+const installScopedMethod = (
   ctor: Function,
   method: string,
-  from?: Document
+  coda = function (this: Element, result: Node) {
+    registryToSubtree(
+      result ?? this,
+      this.customElements as ShimmedCustomElementsRegistry
+    );
+  }
 ) => {
-  const native = (from ? Object.getPrototypeOf(from) : ctor.prototype)[method];
+  const native = ctor.prototype[method];
+  if (native === undefined) {
+    return;
+  }
   ctor.prototype[method] = function (
     this: Element | ShadowRoot,
     ...args: Array<unknown>
   ) {
     creationContext.push(this);
-    const ret = native.apply(from || this, args);
-    // For disconnected elements, note their creation scope so that e.g.
-    // innerHTML into them will use the correct scope; note that
-    // insertAdjacentHTML doesn't return an element, but that's fine since
-    // it will have a parent that should have a scope
-    if (ret !== undefined) {
-      registryToSubtree(
-        ret,
-        this.customElements as ShimmedCustomElementsRegistry
-      );
-    }
+    const ret = native.apply(this, args);
     creationContext.pop();
+    coda?.call(this as Element, ret);
     return ret;
   };
 };
-installScopedCreationMethod(Element, 'insertAdjacentHTML');
+
+const applyScopeFromParent = function (this: Element) {
+  const scope = (this.parentNode ?? this) as Element;
+  registryToSubtree(
+    scope,
+    scope.customElements as ShimmedCustomElementsRegistry
+  );
+};
+
+installScopedMethod(Element, 'insertAdjacentHTML', applyScopeFromParent);
+installScopedMethod(Element, 'setHTMLUnsafe');
+installScopedMethod(ShadowRoot, 'setHTMLUnsafe');
+
+// For setting null elements to this scope.
+installScopedMethod(Node, 'appendChild');
+installScopedMethod(Node, 'insertBefore');
+installScopedMethod(Element, 'append');
+installScopedMethod(Element, 'prepend');
+installScopedMethod(Element, 'insertAdjacentElement', applyScopeFromParent);
+installScopedMethod(Element, 'replaceChild');
+installScopedMethod(Element, 'replaceChildren');
+installScopedMethod(DocumentFragment, 'append');
+installScopedMethod(Element, 'replaceWith', applyScopeFromParent);
 
 // Install scoped innerHTML on Element & ShadowRoot
-const installScopedCreationSetter = (ctor: Function, name: string) => {
+const installScopedSetter = (ctor: Function, name: string) => {
   const descriptor = Object.getOwnPropertyDescriptor(ctor.prototype, name)!;
   Object.defineProperty(ctor.prototype, name, {
     ...descriptor,
@@ -820,8 +840,8 @@ const installScopedCreationSetter = (ctor: Function, name: string) => {
     },
   });
 };
-installScopedCreationSetter(Element, 'innerHTML');
-installScopedCreationSetter(ShadowRoot, 'innerHTML');
+installScopedSetter(Element, 'innerHTML');
+installScopedSetter(ShadowRoot, 'innerHTML');
 
 // Install global registry
 Object.defineProperty(window, 'customElements', {
