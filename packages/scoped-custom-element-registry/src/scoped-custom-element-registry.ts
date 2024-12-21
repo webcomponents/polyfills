@@ -198,11 +198,7 @@ if (typeof window === 'undefined') {
       const observedAttributes = new Set<string>(
         elementClass.observedAttributes || []
       );
-      patchAttributes(
-        elementClass,
-        observedAttributes,
-        attributeChangedCallback
-      );
+      patchAttributes(elementClass, observedAttributes, attributeChangedCallback);
       // Register a stand-in class which will handle the registry lookup & delegation
       let standInClass = nativeGet.call(nativeRegistry, tagName);
       // `formAssociated` cannot be scoped so it's set to true if
@@ -346,11 +342,7 @@ if (typeof window === 'undefined') {
         'Illegal constructor (custom element class must be registered with global customElements registry to be newable)'
       );
     }
-    instance = Reflect.construct(
-      NativeHTMLElement,
-      [],
-      definition.standInClass
-    );
+    instance = Reflect.construct(NativeHTMLElement, [], definition.standInClass);
     Object.setPrototypeOf(instance, this.constructor.prototype);
     definitionForElement.set(instance!, definition);
     return instance;
@@ -360,9 +352,7 @@ if (typeof window === 'undefined') {
   // Helpers to return the scope for a node where its registry would be located
   const isValidScope = (node: Node) =>
     node === document || node instanceof ShadowRoot;
-  const registryForNode = (
-    node: Node
-  ): ShimmedCustomElementsRegistry | null => {
+  const registryForNode = (node: Node): ShimmedCustomElementsRegistry | null => {
     // TODO: the algorithm for finding the scope is a bit up in the air; assigning
     // a one-time scope at creation time would require walking every tree ever
     // created, which is avoided for now
@@ -524,18 +514,12 @@ if (typeof window === 'undefined') {
     observedAttributes: Set<string>,
     attributeChangedCallback?: CustomHTMLElement['attributeChangedCallback']
   ) => {
-    if (
-      observedAttributes.size === 0 ||
-      attributeChangedCallback === undefined
-    ) {
+    if (observedAttributes.size === 0 || attributeChangedCallback === undefined) {
       return;
     }
     const setAttribute = elementClass.prototype.setAttribute;
     if (setAttribute) {
-      elementClass.prototype.setAttribute = function (
-        n: string,
-        value: string
-      ) {
+      elementClass.prototype.setAttribute = function (n: string, value: string) {
         ensureAttributesCustomized(this);
         const name = n.toLowerCase();
         if (observedAttributes.has(name)) {
@@ -590,9 +574,7 @@ if (typeof window === 'undefined') {
   // 1. when the element is connected
   // 2. when any attribute API is first used
   // 3. when the document becomes readyState === interactive (the parser is done)
-  let elementsPendingAttributes:
-    | Set<CustomHTMLElement & HTMLElement>
-    | undefined;
+  let elementsPendingAttributes: Set<CustomHTMLElement & HTMLElement> | undefined;
   if (document.readyState === 'loading') {
     elementsPendingAttributes = new Set();
     document.addEventListener(
@@ -639,9 +621,7 @@ if (typeof window === 'undefined') {
 
   // Helper to patch CE class hierarchy changing those CE classes created before applying the polyfill
   // to make them work with the new patched CustomElementsRegistry
-  const patchHTMLElement = (
-    elementClass: CustomElementConstructor
-  ): unknown => {
+  const patchHTMLElement = (elementClass: CustomElementConstructor): unknown => {
     const parentClass = Object.getPrototypeOf(elementClass);
 
     if (parentClass !== window.HTMLElement) {
@@ -676,10 +656,7 @@ if (typeof window === 'undefined') {
       // is added to a set and its attributes are customized at first
       // opportunity (e.g. when connected or when the parser completes and the
       // document becomes interactive).
-      if (
-        elementsPendingAttributes !== undefined &&
-        !instance.hasAttributes()
-      ) {
+      if (elementsPendingAttributes !== undefined && !instance.hasAttributes()) {
         elementsPendingAttributes.add(instance);
       } else {
         customizeAttributes(instance, definition);
@@ -723,9 +700,7 @@ if (typeof window === 'undefined') {
     method: string,
     from?: Document
   ) => {
-    const native = (from ? Object.getPrototypeOf(from) : ctor.prototype)[
-      method
-    ];
+    const native = (from ? Object.getPrototypeOf(from) : ctor.prototype)[method];
     ctor.prototype[method] = function (
       this: Element | ShadowRoot,
       ...args: Array<unknown>
@@ -827,8 +802,8 @@ if (typeof window === 'undefined') {
 
       get ['value']() {
         return (
-          this._elements.find((element) => element['checked'] === true)
-            ?.value || ''
+          this._elements.find((element) => element['checked'] === true)?.value ||
+          ''
         );
       }
     } as unknown) as {new (elements: Array<HTMLInputElement>): RadioNodeList};
@@ -857,9 +832,7 @@ if (typeof window === 'undefined') {
             (this as any)[name!] = value[0];
           } else {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (this as any)[name!] = new RadioNodeList(
-              value as HTMLInputElement[]
-            );
+            (this as any)[name!] = new RadioNodeList(value as HTMLInputElement[]);
           }
         });
       }
