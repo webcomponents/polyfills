@@ -18,6 +18,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- polyfill will do nothing but log a warning on the server, but it will no longer throw an error
+
 - polyfill always used; conditional installation blocked by need for spec
 
 - formAssociated set by first name's defining value or if
