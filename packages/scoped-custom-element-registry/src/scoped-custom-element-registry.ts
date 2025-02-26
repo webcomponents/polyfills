@@ -666,22 +666,22 @@ const customize = (
 const nativeAttachShadow = Element.prototype.attachShadow;
 Element.prototype.attachShadow = function (
   init: ShadowRootInitWithSettableCustomElements,
-  ...args: unknown[]
+  ...args: Array<unknown>
 ) {
-  // note, set registry to undefined to avoid using a native implementation
-  const nativeArgs = ([
-    {
-      ...init,
-      registry: undefined,
-    },
-    ...args,
-  ] as unknown) as [init: ShadowRootInit];
-  const shadowRoot = nativeAttachShadow.apply(this, nativeArgs);
-  const registry = init['registry'] ?? init.customElements;
+  // Note, We must remove `registry` from the init object to avoid passing it to
+  // the native implementation. Use string keys to avoid renaming in Closure.
+  const {
+    'customElements': customElements,
+    'registry': registry = customElements,
+    ...nativeInit
+  } = init;
+  const shadowRoot = nativeAttachShadow.call(
+    this,
+    nativeInit,
+    ...(args as [])
+  ) as ShadowRootWithSettableCustomElements;
   if (registry !== undefined) {
-    (shadowRoot as ShadowRootWithSettableCustomElements).customElements = (shadowRoot as ShadowRootWithSettableCustomElements)[
-      'registry'
-    ] = registry;
+    shadowRoot['customElements'] = shadowRoot['registry'] = registry;
   }
   return shadowRoot;
 };
