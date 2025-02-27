@@ -1,29 +1,54 @@
 export {};
 
 declare global {
-  interface ShadowRoot {
+  interface CustomElementRegistry {
     // This overload is for roots that use the global registry
+    initialize: (node: Node) => Node;
+  }
+
+  interface ShadowRootInit {
+    customElements?: CustomElementRegistry | null;
+  }
+
+  interface ShadowRoot {
+    readonly customElements: CustomElementRegistry | null;
+  }
+
+  interface Document {
+    readonly customElements: CustomElementRegistry | null;
     createElement<K extends keyof HTMLElementTagNameMap>(
       tagName: K,
       options?: ElementCreationOptions
     ): HTMLElementTagNameMap[K];
-    // This overload is for roots that use a scoped registry
-    createElement<K extends keyof BuiltInHTMLElementTagNameMap>(
+
+    createElementNS<K extends keyof HTMLElementTagNameMap>(
+      namespace: string | null,
       tagName: K,
       options?: ElementCreationOptions
-    ): BuiltInHTMLElementTagNameMap[K];
-    createElement(
-      tagName: string,
-      options?: ElementCreationOptions
-    ): HTMLElement;
+    ): HTMLElementTagNameMap[K];
+
+    importNode<T extends Node>(
+      node: T,
+      options?: boolean | ImportNodeOptions
+    ): T;
   }
 
-  interface ShadowRootInit {
+  interface Element {
+    readonly customElements: CustomElementRegistry | null;
+  }
+
+  interface InitializeShadowRootInit {
     customElements?: CustomElementRegistry;
   }
 
-  interface ShadowRoot {
-    readonly customElements?: CustomElementRegistry;
+  interface ImportNodeOptions {
+    selfOnly?: boolean;
+    customElements?: CustomElementRegistry;
+  }
+
+  interface ElementCreationOptions {
+    is?: string;
+    customElements?: CustomElementRegistry;
   }
 
   /*

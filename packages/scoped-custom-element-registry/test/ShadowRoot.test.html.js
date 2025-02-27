@@ -30,7 +30,9 @@ describe('ShadowRoot', () => {
         const html = '<span>sample</span>';
         const $div = getHTML(html);
 
-        const $clone = shadowRoot.importNode($div, true);
+        const $clone = document.importNode($div, {
+          customElements: shadowRoot.customELements,
+        });
 
         expect($clone.outerHTML).to.be.equal(html);
       });
@@ -46,7 +48,9 @@ describe('ShadowRoot', () => {
         const shadowRoot = getShadowRoot(registry);
         const $el = getHTML(`<${tagName}></${tagName}>`);
 
-        const $clone = shadowRoot.importNode($el, true);
+        const $clone = document.importNode($el, {
+          customElements: shadowRoot.customElements,
+        });
 
         expect($clone.outerHTML).to.be.equal(`<${tagName}></${tagName}>`);
         expect($clone).not.to.be.instanceof(CustomElementClass);
@@ -65,7 +69,9 @@ describe('ShadowRoot', () => {
         secondRegistry.define(tagName, AnotherCustomElementClass);
         const secondShadowRoot = getShadowRoot(secondRegistry);
 
-        const $clone = secondShadowRoot.importNode($el, true);
+        const $clone = document.importNode($el, {
+          customElements: secondShadowRoot.customElements,
+        });
 
         expect($clone.outerHTML).to.be.equal($el.outerHTML);
         expect($clone).not.to.be.instanceof(CustomElementClass);
@@ -78,7 +84,9 @@ describe('ShadowRoot', () => {
         const shadowRoot = getShadowRoot(registry);
         const $el = getHTML(`<${tagName}></${tagName}>`);
 
-        const $clone = shadowRoot.importNode($el, true);
+        const $clone = document.importNode($el, {
+          customElements: shadowRoot.customElements,
+        });
 
         expect($clone.outerHTML).to.be.equal(`<${tagName}></${tagName}>`);
       });
@@ -91,7 +99,9 @@ describe('ShadowRoot', () => {
         const shadowRoot = getShadowRoot(registry);
         const $el = getHTML(`<${tagName}></${tagName}>`);
 
-        const $clone = shadowRoot.importNode($el, true);
+        const $clone = document.importNode($el, {
+          customElements: shadowRoot.customElements,
+        });
 
         expect($clone).to.be.instanceof(CustomElementClass);
       });
@@ -102,7 +112,9 @@ describe('ShadowRoot', () => {
         const shadowRoot = getShadowRoot(registry);
         const $template = createTemplate(`<${tagName}></${tagName}>`);
 
-        const $clone = shadowRoot.importNode($template.content, true);
+        const $clone = document.importNode($template.content, {
+          customElements: shadowRoot.customElements,
+        });
 
         expect($clone).to.be.instanceof(DocumentFragment);
         expect($clone.firstElementChild.outerHTML).to.be.equal(
@@ -117,7 +129,9 @@ describe('ShadowRoot', () => {
         const $template = createTemplate(`<${tagName}></${tagName}>`);
         registry.define(tagName, CustomElementClass);
 
-        const $clone = shadowRoot.importNode($template.content, true);
+        const $clone = document.importNode($template.content, {
+          customElements: shadowRoot.customElements,
+        });
 
         expect($clone).to.be.instanceof(DocumentFragment);
         expect($clone.firstElementChild.outerHTML).to.be.equal(
@@ -132,7 +146,9 @@ describe('ShadowRoot', () => {
         const registry = new CustomElementRegistry();
         const shadowRoot = getShadowRoot(registry);
 
-        const $el = shadowRoot.createElement('div');
+        const $el = document.createElement('div', {
+          customElements: shadowRoot.customElements,
+        });
 
         expect($el).to.not.be.undefined;
         expect($el).to.be.instanceof(HTMLDivElement);
@@ -144,7 +160,9 @@ describe('ShadowRoot', () => {
         const registry = new CustomElementRegistry();
         const shadowRoot = getShadowRoot(registry);
 
-        const $el = shadowRoot.createElement(tagName);
+        const $el = document.createElement(tagName, {
+          customElements: shadowRoot.customElements,
+        });
 
         expect($el).to.not.be.undefined;
         expect($el).to.not.be.instanceof(CustomElementClass);
@@ -156,52 +174,9 @@ describe('ShadowRoot', () => {
         registry.define(tagName, CustomElementClass);
         const shadowRoot = getShadowRoot(registry);
 
-        const $el = shadowRoot.createElement(tagName);
-
-        expect($el).to.not.be.undefined;
-        expect($el).to.be.instanceof(CustomElementClass);
-      });
-    });
-
-    describe('createElementNS', () => {
-      it('should create a regular element', () => {
-        const registry = new CustomElementRegistry();
-        const shadowRoot = getShadowRoot(registry);
-
-        const $el = shadowRoot.createElementNS(
-          'http://www.w3.org/1999/xhtml',
-          'div'
-        );
-
-        expect($el).to.not.be.undefined;
-        expect($el).to.be.instanceof(HTMLDivElement);
-      });
-
-      it(`shouldn't upgrade an element defined in the global registry`, () => {
-        const {tagName, CustomElementClass} = getTestElement();
-        customElements.define(tagName, CustomElementClass);
-        const registry = new CustomElementRegistry();
-        const shadowRoot = getShadowRoot(registry);
-
-        const $el = shadowRoot.createElementNS(
-          'http://www.w3.org/1999/xhtml',
-          tagName
-        );
-
-        expect($el).to.not.be.undefined;
-        expect($el).to.not.be.instanceof(CustomElementClass);
-      });
-
-      it(`should upgrade an element defined in the custom registry`, () => {
-        const {tagName, CustomElementClass} = getTestElement();
-        const registry = new CustomElementRegistry();
-        registry.define(tagName, CustomElementClass);
-        const shadowRoot = getShadowRoot(registry);
-
-        const $el = shadowRoot.createElementNS(
-          'http://www.w3.org/1999/xhtml',
-          tagName
-        );
+        const $el = document.createElement(tagName, {
+          customElements: shadowRoot.customElements,
+        });
 
         expect($el).to.not.be.undefined;
         expect($el).to.be.instanceof(CustomElementClass);
@@ -244,7 +219,9 @@ describe('ShadowRoot', () => {
         const html = '<span>sample</span>';
         const $div = getHTML(html);
 
-        const $clone = shadowRoot.importNode($div, true);
+        const $clone = document.importNode($div, {
+          customElements: shadowRoot.customElements,
+        });
 
         expect($clone.outerHTML).to.be.equal(html);
       });
@@ -256,7 +233,9 @@ describe('ShadowRoot', () => {
         const shadowRoot = getShadowRoot();
         const $el = getHTML(`<${tagName}></${tagName}>`);
 
-        const $clone = shadowRoot.importNode($el, true);
+        const $clone = document.importNode($el, {
+          customElements: shadowRoot.customElements,
+        });
 
         expect($clone.outerHTML).to.be.equal(`<${tagName}></${tagName}>`);
         expect($clone).to.be.instanceof(CustomElementClass);
@@ -271,7 +250,9 @@ describe('ShadowRoot', () => {
         const $el = getHTML(`<${tagName}></${tagName}>`, firstShadowRoot);
         const secondShadowRoot = getShadowRoot();
 
-        const $clone = secondShadowRoot.importNode($el, true);
+        const $clone = document.importNode($el, {
+          customElements: secondShadowRoot.customElements,
+        });
 
         expect($clone.outerHTML).to.be.equal($el.outerHTML);
       });
@@ -281,7 +262,9 @@ describe('ShadowRoot', () => {
         const shadowRoot = getShadowRoot();
         const $el = getHTML(`<${tagName}></${tagName}>`);
 
-        const $clone = shadowRoot.importNode($el, true);
+        const $clone = document.importNode($el, {
+          customElements: shadowRoot.customElements,
+        });
 
         expect($clone.outerHTML).to.be.equal(`<${tagName}></${tagName}>`);
       });
@@ -291,7 +274,9 @@ describe('ShadowRoot', () => {
         const shadowRoot = getShadowRoot();
         const $template = createTemplate(`<${tagName}></${tagName}>`);
 
-        const $clone = shadowRoot.importNode($template.content, true);
+        const $clone = document.importNode($template.content, {
+          customElements: shadowRoot.customElements,
+        });
 
         expect($clone).to.be.instanceof(DocumentFragment);
         expect($clone.firstElementChild.outerHTML).to.be.equal(
@@ -305,7 +290,9 @@ describe('ShadowRoot', () => {
         const $template = createTemplate(`<${tagName}></${tagName}>`);
         customElements.define(tagName, CustomElementClass);
 
-        const $clone = shadowRoot.importNode($template.content, true);
+        const $clone = document.importNode($template.content, {
+          customElements: shadowRoot.customElements,
+        });
 
         expect($clone).to.be.instanceof(DocumentFragment);
         expect($clone.firstElementChild.outerHTML).to.be.equal(
@@ -319,7 +306,9 @@ describe('ShadowRoot', () => {
       it('should create a regular element', () => {
         const shadowRoot = getShadowRoot();
 
-        const $el = shadowRoot.createElement('div');
+        const $el = document.createElement('div', {
+          customElements: shadowRoot.customElements,
+        });
 
         expect($el).to.not.be.undefined;
         expect($el).to.be.instanceof(HTMLDivElement);
@@ -330,35 +319,9 @@ describe('ShadowRoot', () => {
         customElements.define(tagName, CustomElementClass);
         const shadowRoot = getShadowRoot();
 
-        const $el = shadowRoot.createElement(tagName);
-
-        expect($el).to.not.be.undefined;
-        expect($el).to.be.instanceof(CustomElementClass);
-      });
-    });
-
-    describe('createElementNS', () => {
-      it('should create a regular element', () => {
-        const shadowRoot = getShadowRoot();
-
-        const $el = shadowRoot.createElementNS(
-          'http://www.w3.org/1999/xhtml',
-          'div'
-        );
-
-        expect($el).to.not.be.undefined;
-        expect($el).to.be.instanceof(HTMLDivElement);
-      });
-
-      it(`should upgrade an element defined in the global registry`, () => {
-        const {tagName, CustomElementClass} = getTestElement();
-        customElements.define(tagName, CustomElementClass);
-        const shadowRoot = getShadowRoot();
-
-        const $el = shadowRoot.createElementNS(
-          'http://www.w3.org/1999/xhtml',
-          tagName
-        );
+        const $el = document.createElement(tagName, {
+          customElements: shadowRoot.customElements,
+        });
 
         expect($el).to.not.be.undefined;
         expect($el).to.be.instanceof(CustomElementClass);
