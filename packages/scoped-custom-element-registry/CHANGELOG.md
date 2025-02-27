@@ -6,15 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 <!-- ## Unreleased -->
+<!-- ### Added -->
+<!-- ### Changed -->
+<!-- ### Fixed -->
 
-## [Unreleased]
+## [0.0.10] - 2025-02-26
 
 ### Added
 
-- Added support for ShadowRoot.prototype.createElementNS()
+- Added support for `ShadowRoot.prototype.createElementNS()`
 
-- Added the `registry` property to ShadowRootInit to match current proposal. `customElements`
-  remains supported for compatibility
+- Added the `registry` property to ShadowRootInit to match current proposal.
+  `customElements` remains supported for compatibility
 
 ### Changed
 
@@ -24,6 +27,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   CustomElementRegistryPolyfill.formAssociated set contains name
 
 ### Fixed
+
+- Fixed a bug in versions of WebKit and Safari that had the prototype scoped
+  custom element registry implementation enabled.
 
 - parser created custom elements call attributeChangedCallback for parser
   created attributes
