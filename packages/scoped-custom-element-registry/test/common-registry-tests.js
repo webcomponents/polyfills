@@ -83,34 +83,36 @@ export const commonRegistryTests = (registry) => {
 
   describe('createElement', () => {
     it('should create built-in elements', async () => {
-      const el = registry.createElement('div');
+      const el = document.createElement('div', {});
       expect(el).to.be.ok;
     });
 
     it('should create custom elements', async () => {
       const {tagName, CustomElementClass} = getTestElement();
       registry.define(tagName, CustomElementClass);
-      const el = registry.createElement(tagName);
+      const el = document.createElement(tagName, {customElements: registry});
       expect(el).to.be.instanceOf(CustomElementClass);
     });
   });
 
-  describe('cloneSubtree', () => {
-    it('should upgrade custom elements in cloned subtree', async () => {
+  describe('importNode', () => {
+    it('should upgrade custom elements in an imported subtree', async () => {
       const {tagName, CustomElementClass} = getTestElement();
       registry.define(tagName, CustomElementClass);
       const template = createTemplate(`
         <${tagName}><${tagName}></${tagName}></${tagName}>
         <${tagName}><${tagName}></${tagName}></${tagName}>
       `);
-      const clone = registry.cloneSubtree(template.content);
+      const clone = document.importNode(template.content, {
+        customElements: registry,
+      });
       const els = clone.querySelectorAll(tagName);
       expect(els.length).to.be.equal(4);
       els.forEach((el) => expect(el).to.be.instanceOf(CustomElementClass));
     });
   });
 
-  describe('initializeSubtree', () => {
+  describe('initialize', () => {
     it('can create uninitialized roots', async () => {
       const shadowRoot = getUnitializedShadowRoot();
       expect(shadowRoot.customElements).to.be.null;
@@ -119,10 +121,10 @@ export const commonRegistryTests = (registry) => {
       expect(el.customElements).to.be.null;
     });
 
-    it('initializeSubtree sets customElements', async () => {
+    it('initialize sets customElements', async () => {
       const shadowRoot = getUnitializedShadowRoot();
       shadowRoot.innerHTML = `<div></div>`;
-      registry.initializeSubtree(shadowRoot);
+      registry.initialize(shadowRoot);
       expect(shadowRoot.customElements).to.be.equal(registry);
       shadowRoot.innerHTML = `<div></div>`;
       const el = shadowRoot.firstElementChild;
@@ -149,7 +151,7 @@ export const commonRegistryTests = (registry) => {
       const {tagName, CustomElementClass} = getTestElement();
       registry.define(tagName, CustomElementClass);
       shadowRoot.innerHTML = `<${tagName}></${tagName}><div></div>`;
-      registry.initializeSubtree(shadowRoot);
+      registry.initialize(shadowRoot);
       const el = shadowRoot.firstElementChild;
       const container = shadowRoot.lastElementChild;
       expect(el.localName).to.be.equal(tagName);
@@ -228,7 +230,9 @@ export const commonRegistryTests = (registry) => {
         const shadowRoot = getUnitializedShadowRoot();
         const {tagName, CustomElementClass} = getTestElement();
         registry.define(tagName, CustomElementClass);
-        const container = registry.createElement('div');
+        const container = document.createElement('div', {
+          customElements: registry,
+        });
         document.body.append(container);
         shadowRoot.innerHTML = `
           <${tagName}><${tagName}></${tagName}></${tagName}>
@@ -244,7 +248,9 @@ export const commonRegistryTests = (registry) => {
       it('cloned and appended from a template', async () => {
         const {tagName, CustomElementClass} = getTestElement();
         registry.define(tagName, CustomElementClass);
-        const container = registry.createElement('div');
+        const container = document.createElement('div', {
+          customElements: registry,
+        });
         document.body.append(container);
         const template = createTemplate(`
           <${tagName}><${tagName}></${tagName}></${tagName}>
@@ -264,7 +270,9 @@ export const commonRegistryTests = (registry) => {
       it('append from a template', async () => {
         const {tagName, CustomElementClass} = getTestElement();
         registry.define(tagName, CustomElementClass);
-        const container = registry.createElement('div');
+        const container = document.createElement('div', {
+          customElements: registry,
+        });
         document.body.append(container);
         const template = createTemplate(`
           <${tagName}><${tagName}></${tagName}></${tagName}>
@@ -284,7 +292,9 @@ export const commonRegistryTests = (registry) => {
       it('appendChild from a template', async () => {
         const {tagName, CustomElementClass} = getTestElement();
         registry.define(tagName, CustomElementClass);
-        const container = registry.createElement('div');
+        const container = document.createElement('div', {
+          customElements: registry,
+        });
         document.body.append(container);
         const template = createTemplate(`
           <${tagName}><${tagName}></${tagName}></${tagName}>
@@ -304,7 +314,9 @@ export const commonRegistryTests = (registry) => {
       it('insertBefore from a template', async () => {
         const {tagName, CustomElementClass} = getTestElement();
         registry.define(tagName, CustomElementClass);
-        const container = registry.createElement('div');
+        const container = document.createElement('div', {
+          customElements: registry,
+        });
         document.body.append(container);
         const template = createTemplate(`
           <${tagName}><${tagName}></${tagName}></${tagName}>
@@ -324,7 +336,9 @@ export const commonRegistryTests = (registry) => {
       it('prepend from a template', async () => {
         const {tagName, CustomElementClass} = getTestElement();
         registry.define(tagName, CustomElementClass);
-        const container = registry.createElement('div');
+        const container = document.createElement('div', {
+          customElements: registry,
+        });
         document.body.append(container);
         const template = createTemplate(`
           <${tagName}><${tagName}></${tagName}></${tagName}>
@@ -344,8 +358,12 @@ export const commonRegistryTests = (registry) => {
       it('insertAdjacentElement from a template', async () => {
         const {tagName, CustomElementClass} = getTestElement();
         registry.define(tagName, CustomElementClass);
-        const container = registry.createElement('div');
-        const parent = registry.createElement('div');
+        const container = document.createElement('div', {
+          customElements: registry,
+        });
+        const parent = document.createElement('div', {
+          customElements: registry,
+        });
         container.append(parent);
         document.body.append(container);
         const template = createTemplate(`
@@ -370,8 +388,12 @@ export const commonRegistryTests = (registry) => {
       it('replaceChild from a template', async () => {
         const {tagName, CustomElementClass} = getTestElement();
         registry.define(tagName, CustomElementClass);
-        const container = registry.createElement('div');
-        const parent = registry.createElement('div');
+        const container = document.createElement('div', {
+          customElements: registry,
+        });
+        const parent = document.createElement('div', {
+          customElements: registry,
+        });
         container.append(parent);
         document.body.append(container);
         const template = createTemplate(`
@@ -393,8 +415,12 @@ export const commonRegistryTests = (registry) => {
       it('replaceChildren from a template', async () => {
         const {tagName, CustomElementClass} = getTestElement();
         registry.define(tagName, CustomElementClass);
-        const container = registry.createElement('div');
-        const parent = registry.createElement('div');
+        const container = document.createElement('div', {
+          customElements: registry,
+        });
+        const parent = document.createElement('div', {
+          customElements: registry,
+        });
         container.append(parent);
         document.body.append(container);
         const template = createTemplate(`
@@ -416,8 +442,12 @@ export const commonRegistryTests = (registry) => {
       it('replaceWith from a template', async () => {
         const {tagName, CustomElementClass} = getTestElement();
         registry.define(tagName, CustomElementClass);
-        const container = registry.createElement('div');
-        const parent = registry.createElement('div');
+        const container = document.createElement('div', {
+          customElements: registry,
+        });
+        const parent = document.createElement('div', {
+          customElements: registry,
+        });
         container.append(parent);
         document.body.append(container);
         const template = createTemplate(`

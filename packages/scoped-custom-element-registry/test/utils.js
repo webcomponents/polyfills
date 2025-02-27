@@ -104,7 +104,9 @@ export const getUnitializedShadowRoot = () => {
  * @return {HTMLElement}
  */
 export const getHTML = (html, root = document) => {
-  const div = root.customElements.createElement('div');
+  const div = document.createElement('div', {
+    customElements: root.customElements,
+  });
 
   div.innerHTML = html;
 

@@ -23,19 +23,21 @@ describe('ShadowRoot', () => {
   });
 
   describe('with custom registry', () => {
-    describe('cloneSubtree', () => {
-      it('should clone a basic node', () => {
+    describe('importNode', () => {
+      it('should import a basic node', () => {
         const registry = new CustomElementRegistry();
         const shadowRoot = getShadowRoot(registry);
         const html = '<span>sample</span>';
         const $div = getHTML(html);
 
-        const $clone = shadowRoot.customElements.cloneSubtree($div);
+        const $clone = document.importNode($div, {
+          customElements: shadowRoot.customELements,
+        });
 
         expect($clone.outerHTML).to.be.equal(html);
       });
 
-      it('should clone a node tree with an upgraded custom element in global registry', () => {
+      it('should import a node tree with an upgraded custom element in global registry', () => {
         const {tagName, CustomElementClass} = getTestElement();
         customElements.define(tagName, CustomElementClass);
 
@@ -46,14 +48,16 @@ describe('ShadowRoot', () => {
         const shadowRoot = getShadowRoot(registry);
         const $el = getHTML(`<${tagName}></${tagName}>`);
 
-        const $clone = shadowRoot.customElements.cloneSubtree($el);
+        const $clone = document.importNode($el, {
+          customElements: shadowRoot.customElements,
+        });
 
         expect($clone.outerHTML).to.be.equal(`<${tagName}></${tagName}>`);
         expect($clone).not.to.be.instanceof(CustomElementClass);
         expect($clone).to.be.instanceof(AnotherCustomElementClass);
       });
 
-      it('should clone a node tree with an upgraded custom element from another shadowRoot', () => {
+      it('should import a node tree with an upgraded custom element from another shadowRoot', () => {
         const {tagName, CustomElementClass} = getTestElement();
         const firstRegistry = new CustomElementRegistry();
         firstRegistry.define(tagName, CustomElementClass);
@@ -65,25 +69,29 @@ describe('ShadowRoot', () => {
         secondRegistry.define(tagName, AnotherCustomElementClass);
         const secondShadowRoot = getShadowRoot(secondRegistry);
 
-        const $clone = secondShadowRoot.customElements.cloneSubtree($el);
+        const $clone = document.importNode($el, {
+          customElements: secondShadowRoot.customElements,
+        });
 
         expect($clone.outerHTML).to.be.equal($el.outerHTML);
         expect($clone).not.to.be.instanceof(CustomElementClass);
         expect($clone).to.be.instanceof(AnotherCustomElementClass);
       });
 
-      it('should clone a node tree with a non upgraded custom element', () => {
+      it('should import a node tree with a non upgraded custom element', () => {
         const tagName = getTestTagName();
         const registry = new CustomElementRegistry();
         const shadowRoot = getShadowRoot(registry);
         const $el = getHTML(`<${tagName}></${tagName}>`);
 
-        const $clone = shadowRoot.customElements.cloneSubtree($el);
+        const $clone = document.importNode($el, {
+          customElements: shadowRoot.customElements,
+        });
 
         expect($clone.outerHTML).to.be.equal(`<${tagName}></${tagName}>`);
       });
 
-      it('should clone a node tree with a non upgraded custom element defined in the custom registry', () => {
+      it('should import a node tree with a non upgraded custom element defined in the custom registry', () => {
         const {tagName, CustomElementClass} = getTestElement();
         const registry = new CustomElementRegistry();
         registry.define(tagName, CustomElementClass);
@@ -91,20 +99,22 @@ describe('ShadowRoot', () => {
         const shadowRoot = getShadowRoot(registry);
         const $el = getHTML(`<${tagName}></${tagName}>`);
 
-        const $clone = shadowRoot.customElements.cloneSubtree($el);
+        const $clone = document.importNode($el, {
+          customElements: shadowRoot.customElements,
+        });
 
         expect($clone).to.be.instanceof(CustomElementClass);
       });
 
-      it('should clone a template with an undefined custom element', () => {
+      it('should import a template with an undefined custom element', () => {
         const {tagName} = getTestTagName();
         const registry = new CustomElementRegistry();
         const shadowRoot = getShadowRoot(registry);
         const $template = createTemplate(`<${tagName}></${tagName}>`);
 
-        const $clone = shadowRoot.customElements.cloneSubtree(
-          $template.content
-        );
+        const $clone = document.importNode($template.content, {
+          customElements: shadowRoot.customElements,
+        });
 
         expect($clone).to.be.instanceof(DocumentFragment);
         expect($clone.firstElementChild.outerHTML).to.be.equal(
@@ -112,16 +122,16 @@ describe('ShadowRoot', () => {
         );
       });
 
-      it('should clone a template with a defined custom element', () => {
+      it('should import a template with a defined custom element', () => {
         const {tagName, CustomElementClass} = getTestElement();
         const registry = new CustomElementRegistry();
         const shadowRoot = getShadowRoot(registry);
         const $template = createTemplate(`<${tagName}></${tagName}>`);
         registry.define(tagName, CustomElementClass);
 
-        const $clone = shadowRoot.customElements.cloneSubtree(
-          $template.content
-        );
+        const $clone = document.importNode($template.content, {
+          customElements: shadowRoot.customElements,
+        });
 
         expect($clone).to.be.instanceof(DocumentFragment);
         expect($clone.firstElementChild.outerHTML).to.be.equal(
@@ -136,7 +146,9 @@ describe('ShadowRoot', () => {
         const registry = new CustomElementRegistry();
         const shadowRoot = getShadowRoot(registry);
 
-        const $el = shadowRoot.customElements.createElement('div');
+        const $el = document.createElement('div', {
+          customElements: shadowRoot.customElements,
+        });
 
         expect($el).to.not.be.undefined;
         expect($el).to.be.instanceof(HTMLDivElement);
@@ -148,7 +160,9 @@ describe('ShadowRoot', () => {
         const registry = new CustomElementRegistry();
         const shadowRoot = getShadowRoot(registry);
 
-        const $el = shadowRoot.customElements.createElement(tagName);
+        const $el = document.createElement(tagName, {
+          customElements: shadowRoot.customElements,
+        });
 
         expect($el).to.not.be.undefined;
         expect($el).to.not.be.instanceof(CustomElementClass);
@@ -160,7 +174,9 @@ describe('ShadowRoot', () => {
         registry.define(tagName, CustomElementClass);
         const shadowRoot = getShadowRoot(registry);
 
-        const $el = shadowRoot.customElements.createElement(tagName);
+        const $el = document.createElement(tagName, {
+          customElements: shadowRoot.customElements,
+        });
 
         expect($el).to.not.be.undefined;
         expect($el).to.be.instanceof(CustomElementClass);
@@ -197,31 +213,35 @@ describe('ShadowRoot', () => {
   });
 
   describe('without custom registry', () => {
-    describe('cloneSubtree', () => {
-      it('should clone a basic node', () => {
+    describe('importNode', () => {
+      it('should import a basic node', () => {
         const shadowRoot = getShadowRoot();
         const html = '<span>sample</span>';
         const $div = getHTML(html);
 
-        const $clone = shadowRoot.customElements.cloneSubtree($div);
+        const $clone = document.importNode($div, {
+          customElements: shadowRoot.customElements,
+        });
 
         expect($clone.outerHTML).to.be.equal(html);
       });
 
-      it('should clone a node tree with an upgraded custom element', () => {
+      it('should import a node tree with an upgraded custom element', () => {
         const {tagName, CustomElementClass} = getTestElement();
         customElements.define(tagName, CustomElementClass);
 
         const shadowRoot = getShadowRoot();
         const $el = getHTML(`<${tagName}></${tagName}>`);
 
-        const $clone = shadowRoot.customElements.cloneSubtree($el);
+        const $clone = document.importNode($el, {
+          customElements: shadowRoot.customElements,
+        });
 
         expect($clone.outerHTML).to.be.equal(`<${tagName}></${tagName}>`);
         expect($clone).to.be.instanceof(CustomElementClass);
       });
 
-      it('should clone a node tree with an upgraded custom element from another shadowRoot', () => {
+      it('should import a node tree with an upgraded custom element from another shadowRoot', () => {
         const {tagName, CustomElementClass} = getTestElement();
         const firstRegistry = new CustomElementRegistry();
         firstRegistry.define(tagName, CustomElementClass);
@@ -230,29 +250,33 @@ describe('ShadowRoot', () => {
         const $el = getHTML(`<${tagName}></${tagName}>`, firstShadowRoot);
         const secondShadowRoot = getShadowRoot();
 
-        const $clone = secondShadowRoot.customElements.cloneSubtree($el);
+        const $clone = document.importNode($el, {
+          customElements: secondShadowRoot.customElements,
+        });
 
         expect($clone.outerHTML).to.be.equal($el.outerHTML);
       });
 
-      it('should clone a node tree with a non upgraded custom element', () => {
+      it('should import a node tree with a non upgraded custom element', () => {
         const tagName = getTestTagName();
         const shadowRoot = getShadowRoot();
         const $el = getHTML(`<${tagName}></${tagName}>`);
 
-        const $clone = shadowRoot.customElements.cloneSubtree($el);
+        const $clone = document.importNode($el, {
+          customElements: shadowRoot.customElements,
+        });
 
         expect($clone.outerHTML).to.be.equal(`<${tagName}></${tagName}>`);
       });
 
-      it('should clone a template with an undefined custom element', () => {
+      it('should import a template with an undefined custom element', () => {
         const {tagName} = getTestTagName();
         const shadowRoot = getShadowRoot();
         const $template = createTemplate(`<${tagName}></${tagName}>`);
 
-        const $clone = shadowRoot.customElements.cloneSubtree(
-          $template.content
-        );
+        const $clone = document.importNode($template.content, {
+          customElements: shadowRoot.customElements,
+        });
 
         expect($clone).to.be.instanceof(DocumentFragment);
         expect($clone.firstElementChild.outerHTML).to.be.equal(
@@ -260,15 +284,15 @@ describe('ShadowRoot', () => {
         );
       });
 
-      it('should clone a template with a defined custom element', () => {
+      it('should import a template with a defined custom element', () => {
         const {tagName, CustomElementClass} = getTestElement();
         const shadowRoot = getShadowRoot();
         const $template = createTemplate(`<${tagName}></${tagName}>`);
         customElements.define(tagName, CustomElementClass);
 
-        const $clone = shadowRoot.customElements.cloneSubtree(
-          $template.content
-        );
+        const $clone = document.importNode($template.content, {
+          customElements: shadowRoot.customElements,
+        });
 
         expect($clone).to.be.instanceof(DocumentFragment);
         expect($clone.firstElementChild.outerHTML).to.be.equal(
@@ -282,7 +306,9 @@ describe('ShadowRoot', () => {
       it('should create a regular element', () => {
         const shadowRoot = getShadowRoot();
 
-        const $el = shadowRoot.customElements.createElement('div');
+        const $el = document.createElement('div', {
+          customElements: shadowRoot.customElements,
+        });
 
         expect($el).to.not.be.undefined;
         expect($el).to.be.instanceof(HTMLDivElement);
@@ -293,7 +319,9 @@ describe('ShadowRoot', () => {
         customElements.define(tagName, CustomElementClass);
         const shadowRoot = getShadowRoot();
 
-        const $el = shadowRoot.customElements.createElement(tagName);
+        const $el = document.createElement(tagName, {
+          customElements: shadowRoot.customElements,
+        });
 
         expect($el).to.not.be.undefined;
         expect($el).to.be.instanceof(CustomElementClass);

@@ -76,8 +76,7 @@ interface CustomHTMLElement {
 
 interface CustomElementRegistry {
   _getDefinition(tagName: string): CustomElementDefinition | undefined;
-  createElement(tagName: string): Node;
-  cloneSubtree(node: Node): Node;
+  initialize: (node: Node) => Node;
 }
 
 interface CustomElementDefinition {
@@ -343,24 +342,7 @@ class ShimmedCustomElementsRegistry implements CustomElementRegistry {
     }
   }
 
-  ['createElement'](localName: string) {
-    creationContext.push(this);
-    const el = document.createElement(localName);
-    creationContext.pop();
-    registryToSubtree(el, this);
-    return el;
-  }
-
-  ['cloneSubtree'](node: Node) {
-    creationContext.push(this);
-    // Note, cannot use `cloneNode` here becuase the node may not be in this document
-    const subtree = document.importNode(node, true);
-    creationContext.pop();
-    registryToSubtree(subtree, this);
-    return subtree;
-  }
-
-  ['initializeSubtree'](node: Node) {
+  ['initialize'](node: Node) {
     registryToSubtree(node, this, true);
     return node;
   }
@@ -758,16 +740,91 @@ const customElementsDescriptor = {
   configurable: true,
 };
 
+const {createElement, createElementNS, importNode} = Document.prototype;
+
 Object.defineProperty(
   Element.prototype,
   'customElements',
   customElementsDescriptor
 );
-Object.defineProperty(
-  Document.prototype,
-  'customElements',
-  customElementsDescriptor
-);
+Object.defineProperties(Document.prototype, {
+  'customElements': customElementsDescriptor,
+  'createElement': {
+    value<K extends keyof HTMLElementTagNameMap>(
+      this: Document,
+      tagName: K,
+      options?: ElementCreationOptions
+    ): HTMLElementTagNameMap[K] {
+      const {customElements} = options ?? {};
+      if (customElements === undefined) {
+        return createElement.call(this, tagName) as HTMLElementTagNameMap[K];
+      } else {
+        creationContext.push(customElements);
+        const el = createElement.call(
+          this,
+          tagName
+        ) as HTMLElementTagNameMap[K];
+        creationContext.pop();
+        registryToSubtree(el, customElements as ShimmedCustomElementsRegistry);
+        return el;
+      }
+    },
+    enumerable: true,
+    configurable: true,
+  },
+  'createElementNS': {
+    value<K extends keyof HTMLElementTagNameMap>(
+      this: Document,
+      namespace: string | null,
+      tagName: K,
+      options?: ElementCreationOptions
+    ): HTMLElementTagNameMap[K] {
+      const {customElements} = options ?? {};
+      if (customElements === undefined) {
+        return createElementNS.call(
+          this,
+          namespace,
+          tagName
+        ) as HTMLElementTagNameMap[K];
+      } else {
+        creationContext.push(customElements);
+        const el = createElementNS.call(
+          this,
+          namespace,
+          tagName
+        ) as HTMLElementTagNameMap[K];
+        creationContext.pop();
+        registryToSubtree(el, customElements as ShimmedCustomElementsRegistry);
+        return el;
+      }
+    },
+    enumerable: true,
+    configurable: true,
+  },
+  'importNode': {
+    value<T extends Node>(
+      this: Document,
+      node: T,
+      options?: boolean | ImportNodeOptions
+    ): T {
+      const deep = typeof options === 'boolean' ? options : !options?.selfOnly;
+      const {customElements} = (options ?? {}) as ImportNodeOptions;
+      if (customElements === undefined) {
+        return importNode.call(this, node, deep) as T;
+      }
+      creationContext.push(customElements);
+      const imported = importNode.call(this, node, deep) as T;
+      creationContext.pop();
+      registryToSubtree(
+        imported,
+        customElements as ShimmedCustomElementsRegistry
+      );
+      return imported;
+    },
+    enumerable: true,
+    configurable: true,
+  },
+});
 Object.defineProperty(
   ShadowRoot.prototype,
   'customElements',
