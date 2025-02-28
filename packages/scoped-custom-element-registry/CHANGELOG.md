@@ -10,6 +10,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <!-- ### Changed -->
 <!-- ### Fixed -->
 
+## Unreleased
+
+### Fixed
+
+- Fixes [issue](https://github.com/webcomponents/polyfills/issues/613) with setting `shadowRoot.customElements` on Safari's native implementation
+
 ## [0.0.10] - 2025-02-26
 
 ### Added
