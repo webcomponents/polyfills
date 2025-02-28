@@ -681,7 +681,13 @@ Element.prototype.attachShadow = function (
     ...(args as [])
   ) as ShadowRootWithSettableCustomElements;
   if (registry !== undefined) {
-    shadowRoot['customElements'] = shadowRoot['registry'] = registry;
+    const descriptor = {
+      value: registry,
+      configurable: true,
+      writable: true,
+    };
+    Object.defineProperty(shadowRoot, 'customElements', descriptor);
+    Object.defineProperty(shadowRoot, 'registry', descriptor);
   }
   return shadowRoot;
 };
