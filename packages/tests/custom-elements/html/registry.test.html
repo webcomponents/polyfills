@@ -209,6 +209,23 @@
             });
           });
 
+          suite('getName', function () {
+            test('returns the local name for a defined custom element constructor', function () {
+              class XGetName extends HTMLElement {}
+              customElements.define('x-get-name', XGetName);
+
+              var name = customElements.getName(XGetName);
+              assert.equal(name, 'x-get-name');
+            });
+
+            test('returns null for an undefined custom element constructor', function () {
+              class XUndefinedElement extends HTMLElement {}
+
+              var name = customElements.getName(XUndefinedElement);
+              assert.isNull(name);
+            });
+          });
+
           suite('whenDefined', function () {
             test('resolves when a tag is defined', function () {
               var promise = customElements
