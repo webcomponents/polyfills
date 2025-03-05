@@ -520,7 +520,8 @@ const patchAttributes = (
       if (observedAttributes.has(name)) {
         const old = this.getAttribute(name);
         setAttribute.call(this, name, value);
-        attributeChangedCallback.call(this, name, old, value);
+        const newValue = this.getAttribute(name);
+        attributeChangedCallback.call(this, name, old, newValue);
       } else {
         setAttribute.call(this, name, value);
       }
