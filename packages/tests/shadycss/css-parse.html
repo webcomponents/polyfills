@@ -99,6 +99,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     </style>
 
     <style id="empty"></style>
+    <style id="nested-calc">
+      .foo {
+        font-size: calc(calc(2px) + calc(2px));
+      }
+    </style>
 
     <script>
       function sanitizeCss(text) {
@@ -233,6 +238,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           var s = document.querySelector('#empty');
           var t = window.CssParse.parse(s.textContent);
           window.CssParse.stringify(t);
+        });
+        
+        test('nested calcs are flattened', function() {
+          var s = document.querySelector('#nested-calc');
+          var t = window.CssParse.parse(s.textContent);
+          var result = sanitizeCss(window.CssParse.stringify(t));
+          assert.equal(result, '.foo { font-size: calc((2px) + (2px)) }', 'unexpected stringified output');
         });
       });
     </script>

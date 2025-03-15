@@ -15,6 +15,8 @@ and definitely not necessarily correct =).
 
 'use strict';
 
+import {reduceCalc} from './calc-parse.js';
+
 /** @unrestricted */
 class StyleNode {
   constructor() {
@@ -178,7 +180,7 @@ export function stringify(node, preserveProperties, text = '') {
     } else {
       cssText = preserveProperties
         ? node['cssText']
-        : removeCustomProps(node['cssText']);
+        : reduceCalc(removeCustomProps(node['cssText']));
       cssText = cssText.trim();
       if (cssText) {
         cssText = '  ' + cssText + '\n';
