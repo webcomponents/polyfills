@@ -114,13 +114,21 @@ describe('Element', () => {
     it('should call setAttribute', () => {
       const {tagName, CustomElementClass} = getObservedAttributesTestElement([
         'foo',
+        'boo',
+        'int',
       ]);
       customElements.define(tagName, CustomElementClass);
       const $el = document.createElement(tagName);
 
       $el.setAttribute('foo', 'bar');
+      $el.setAttribute('boo', true);
+      $el.setAttribute('boo', false);
+      $el.setAttribute('int', 42);
       expect($el.attributeChanges).to.be.deep.equal([
         {name: 'foo', old: null, value: 'bar'},
+        {name: 'boo', old: null, value: 'true'},
+        {name: 'boo', old: 'true', value: 'false'},
+        {name: 'int', old: null, value: '42'},
       ]);
       expect($el.getAttribute('foo')).to.equal('bar');
     });
