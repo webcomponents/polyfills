@@ -45,6 +45,10 @@ packages/scoped-custom-element-registry/**/.wireit/
 packages/scoped-custom-element-registry/**/.tsbuildinfo
 packages/scoped-custom-element-registry/**/build/
 
+packages/template-attributes/**/.wireit/
+packages/template-attributes/**/.tsbuildinfo
+packages/template-attributes/**/build/
+
 LICENSE
 packages/*/LICENSE.md
 packages/tests/html-imports/html/imports/unclosed-import.html

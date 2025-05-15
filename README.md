@@ -141,6 +141,14 @@ The current version of the Web Components loader does **not** automatically
 polyfill HTML Imports. Applications that still depend on HTML Imports are
 recommended to install `@webcomponents/html-imports` and load it separately.
 
+---
+
+### [![Published on npm](https://img.shields.io/npm/v/@webcomponents/template-attributes.svg)](https://www.npmjs.com/package/@webcomponents/template-attributes) [template-attributes](https://github.com/webcomponents/polyfills/tree/master/packages/template-attributes)
+
+##### [Documentation](https://github.com/webcomponents/polyfills/tree/master/packages/template-attributes#readme) | [Changelog](https://github.com/webcomponents/polyfills/blob/master/packages/template-attributes/CHANGELOG.md) | [Issues](https://github.com/webcomponents/polyfills/issues?q=is%3Aissue+is%3Aopen+label%3A%22Package%3A+template-attributes%22)
+
+Polyfill for Template Attributes (Spec TBD)
+
 ## Roadmap
 
 The following APIs are on the roadmap for 2020:
