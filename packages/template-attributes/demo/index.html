@@ -1,0 +1,24 @@
+<template id="foo">
+  <p><span template-classname="colors" template-textcontent="msg"></span></p>
+</template>
+<script src="../build/template-attributes.js"></script>
+<my-hello id="hello"></my-hello>
+
+<script type="module">
+  class MyHello extends HTMLElement {
+    constructor() {
+      super();
+      this.attachShadow({mode: 'open'});
+      this.shadowRoot.appendChild(
+        document.querySelector('#foo').content.cloneNode(true)
+      );
+    }
+
+    connectedCallback() {
+      this.templates.msg = 'Hello, World!';
+      this.templates.colors = 'red';
+    }
+  }
+
+  customElements.define('my-hello', MyHello);
+</script>
