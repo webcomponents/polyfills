@@ -314,7 +314,8 @@ class ShimmedCustomElementsRegistry implements CustomElementRegistry {
   }
 }
 
-// User extends this HTMLElement, which returns the CE being upgraded
+// User extends this HTMLElement, which returns the element being upgraded
+const nativeCustomElements = window.customElements;
 let upgradingInstance: HTMLElement | undefined;
 window.HTMLElement = (function HTMLElement(this: HTMLElement) {
   // Upgrading case: the StandInElement constructor was run by the browser's
@@ -326,21 +327,32 @@ window.HTMLElement = (function HTMLElement(this: HTMLElement) {
     upgradingInstance = undefined;
     return instance;
   }
+
   // Construction case: we need to construct the StandInElement and return
   // it; note the current spec proposal only allows new'ing the constructor
   // of elements registered with the global registry
+
+  // Try our registry first
   const definition = globalDefinitionForConstructor.get(
     this.constructor as CustomElementConstructor
   );
-  if (!definition) {
-    throw new TypeError(
-      'Illegal constructor (custom element class must be registered with global customElements registry to be newable)'
-    );
+  if (definition) {
+    instance = Reflect.construct(NativeHTMLElement, [], definition.standInClass);
+    Object.setPrototypeOf(instance, this.constructor.prototype);
+    definitionForElement.set(instance!, definition);
+    return instance;
   }
-  instance = Reflect.construct(NativeHTMLElement, [], definition.standInClass);
-  Object.setPrototypeOf(instance, this.constructor.prototype);
-  definitionForElement.set(instance!, definition);
-  return instance;
+
+  // If unknown, also try the native registry
+  const tagName = nativeCustomElements.getName(this.constructor);
+  if (tagName) {
+    return Reflect.construct(NativeHTMLElement, [], this.constructor);
+  }
+
+  // Not found in any registries, so we should refuse to construct it
+  throw new TypeError(
+    'Illegal constructor (custom element class must be registered with global customElements registry to be newable)'
+  );
 } as unknown) as typeof HTMLElement;
 window.HTMLElement.prototype = NativeHTMLElement.prototype;
 
