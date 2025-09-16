@@ -19,9 +19,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - customElements.initialize: sets registry on a DOM tree
-- document.createElement(NS): takes options with {customElements}
-- document.importNode: takes options with {selfOnly, customElements}
-- Node.customElements set to creating registry
+- document.createElement(NS): takes options with {customElementRegistry}
+- document.importNode: takes options with {selfOnly, customElementRegistry}
+- Node.customElementRegistry set to creating registry
 
 ## [0.0.10] - 2025-02-26
 
