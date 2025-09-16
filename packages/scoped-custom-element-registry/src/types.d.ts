@@ -6,16 +6,12 @@ declare global {
     initialize: (node: Node) => Node;
   }
 
-  interface ShadowRootInit {
-    customElements?: CustomElementRegistry | null;
-  }
-
   interface ShadowRoot {
-    readonly customElements: CustomElementRegistry | null;
+    readonly ['customElementRegistry']: CustomElementRegistry | null;
   }
 
   interface Document {
-    readonly customElements: CustomElementRegistry | null;
+    readonly ['customElementRegistry']: CustomElementRegistry | null;
     createElement<K extends keyof HTMLElementTagNameMap>(
       tagName: K,
       options?: ElementCreationOptions
@@ -34,21 +30,21 @@ declare global {
   }
 
   interface Element {
-    readonly customElements: CustomElementRegistry | null;
+    readonly ['customElementRegistry']: CustomElementRegistry | null;
   }
 
   interface InitializeShadowRootInit {
-    customElements?: CustomElementRegistry;
+    ['customElementRegistry']?: CustomElementRegistry;
   }
 
   interface ImportNodeOptions {
     selfOnly?: boolean;
-    customElements?: CustomElementRegistry;
+    ['customElementRegistry']?: CustomElementRegistry;
   }
 
   interface ElementCreationOptions {
     is?: string;
-    customElements?: CustomElementRegistry;
+    ['customElementRegistry']?: CustomElementRegistry;
   }
 
   /*

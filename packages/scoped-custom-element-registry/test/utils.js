@@ -83,7 +83,7 @@ export const getFormAssociatedErrorTestElement = () => ({
  */
 export const getShadowRoot = (customElementRegistry) => {
   const el = document.createElement('div');
-  return el.attachShadow({mode: 'open', customElements: customElementRegistry});
+  return el.attachShadow({mode: 'open', customElementRegistry});
 };
 
 /**
@@ -93,7 +93,7 @@ export const getShadowRoot = (customElementRegistry) => {
  */
 export const getUnitializedShadowRoot = () => {
   const el = document.createElement('div');
-  return el.attachShadow({mode: 'open', customElements: null});
+  return el.attachShadow({mode: 'open', customElementRegistry: null});
 };
 
 /**
@@ -105,7 +105,7 @@ export const getUnitializedShadowRoot = () => {
  */
 export const getHTML = (html, root = document) => {
   const div = document.createElement('div', {
-    customElements: root.customElements,
+    customElementRegistry: root.customElementRegistry,
   });
 
   div.innerHTML = html;

@@ -90,7 +90,9 @@ export const commonRegistryTests = (registry) => {
     it('should create custom elements', async () => {
       const {tagName, CustomElementClass} = getTestElement();
       registry.define(tagName, CustomElementClass);
-      const el = document.createElement(tagName, {customElements: registry});
+      const el = document.createElement(tagName, {
+        customElementRegistry: registry,
+      });
       expect(el).to.be.instanceOf(CustomElementClass);
     });
   });
@@ -104,7 +106,7 @@ export const commonRegistryTests = (registry) => {
         <${tagName}><${tagName}></${tagName}></${tagName}>
       `);
       const clone = document.importNode(template.content, {
-        customElements: registry,
+        customElementRegistry: registry,
       });
       const els = clone.querySelectorAll(tagName);
       expect(els.length).to.be.equal(4);
@@ -115,20 +117,20 @@ export const commonRegistryTests = (registry) => {
   describe('initialize', () => {
     it('can create uninitialized roots', async () => {
       const shadowRoot = getUnitializedShadowRoot();
-      expect(shadowRoot.customElements).to.be.null;
+      expect(shadowRoot.customElementRegistry).to.be.null;
       shadowRoot.innerHTML = `<div></div>`;
       const el = shadowRoot.firstElementChild;
-      expect(el.customElements).to.be.null;
+      expect(el.customElementRegistry).to.be.null;
     });
 
     it('initialize sets customElements', async () => {
       const shadowRoot = getUnitializedShadowRoot();
       shadowRoot.innerHTML = `<div></div>`;
       registry.initialize(shadowRoot);
-      expect(shadowRoot.customElements).to.be.equal(registry);
+      expect(shadowRoot.customElementRegistry).to.be.equal(registry);
       shadowRoot.innerHTML = `<div></div>`;
       const el = shadowRoot.firstElementChild;
-      expect(el.customElements).to.be.equal(registry);
+      expect(el.customElementRegistry).to.be.equal(registry);
     });
 
     it('should not upgrade custom elements in uninitialized subtree', async () => {
@@ -231,7 +233,7 @@ export const commonRegistryTests = (registry) => {
         const {tagName, CustomElementClass} = getTestElement();
         registry.define(tagName, CustomElementClass);
         const container = document.createElement('div', {
-          customElements: registry,
+          customElementRegistry: registry,
         });
         document.body.append(container);
         shadowRoot.innerHTML = `
@@ -249,7 +251,7 @@ export const commonRegistryTests = (registry) => {
         const {tagName, CustomElementClass} = getTestElement();
         registry.define(tagName, CustomElementClass);
         const container = document.createElement('div', {
-          customElements: registry,
+          customElementRegistry: registry,
         });
         document.body.append(container);
         const template = createTemplate(`
@@ -258,7 +260,7 @@ export const commonRegistryTests = (registry) => {
         `);
         const clone = template.content.cloneNode(true);
         clone.querySelectorAll('*').forEach((el) => {
-          expect(el.customElements).to.be.null;
+          expect(el.customElementRegistry).to.be.null;
         });
         container.append(clone);
         const els = container.querySelectorAll(tagName);
@@ -271,7 +273,7 @@ export const commonRegistryTests = (registry) => {
         const {tagName, CustomElementClass} = getTestElement();
         registry.define(tagName, CustomElementClass);
         const container = document.createElement('div', {
-          customElements: registry,
+          customElementRegistry: registry,
         });
         document.body.append(container);
         const template = createTemplate(`
@@ -280,7 +282,7 @@ export const commonRegistryTests = (registry) => {
         `);
         const {content} = template;
         content.querySelectorAll('*').forEach((el) => {
-          expect(el.customElements).to.be.null;
+          expect(el.customElementRegistry).to.be.null;
         });
         container.append(content);
         const els = container.querySelectorAll(tagName);
@@ -293,7 +295,7 @@ export const commonRegistryTests = (registry) => {
         const {tagName, CustomElementClass} = getTestElement();
         registry.define(tagName, CustomElementClass);
         const container = document.createElement('div', {
-          customElements: registry,
+          customElementRegistry: registry,
         });
         document.body.append(container);
         const template = createTemplate(`
@@ -302,7 +304,7 @@ export const commonRegistryTests = (registry) => {
         `);
         const {content} = template;
         content.querySelectorAll('*').forEach((el) => {
-          expect(el.customElements).to.be.null;
+          expect(el.customElementRegistry).to.be.null;
         });
         container.appendChild(content);
         const els = container.querySelectorAll(tagName);
@@ -315,7 +317,7 @@ export const commonRegistryTests = (registry) => {
         const {tagName, CustomElementClass} = getTestElement();
         registry.define(tagName, CustomElementClass);
         const container = document.createElement('div', {
-          customElements: registry,
+          customElementRegistry: registry,
         });
         document.body.append(container);
         const template = createTemplate(`
@@ -324,7 +326,7 @@ export const commonRegistryTests = (registry) => {
         `);
         const {content} = template;
         content.querySelectorAll('*').forEach((el) => {
-          expect(el.customElements).to.be.null;
+          expect(el.customElementRegistry).to.be.null;
         });
         container.insertBefore(content, null);
         const els = container.querySelectorAll(tagName);
@@ -337,7 +339,7 @@ export const commonRegistryTests = (registry) => {
         const {tagName, CustomElementClass} = getTestElement();
         registry.define(tagName, CustomElementClass);
         const container = document.createElement('div', {
-          customElements: registry,
+          customElementRegistry: registry,
         });
         document.body.append(container);
         const template = createTemplate(`
@@ -346,7 +348,7 @@ export const commonRegistryTests = (registry) => {
         `);
         const {content} = template;
         content.querySelectorAll('*').forEach((el) => {
-          expect(el.customElements).to.be.null;
+          expect(el.customElementRegistry).to.be.null;
         });
         container.prepend(content);
         const els = container.querySelectorAll(tagName);
@@ -359,10 +361,10 @@ export const commonRegistryTests = (registry) => {
         const {tagName, CustomElementClass} = getTestElement();
         registry.define(tagName, CustomElementClass);
         const container = document.createElement('div', {
-          customElements: registry,
+          customElementRegistry: registry,
         });
         const parent = document.createElement('div', {
-          customElements: registry,
+          customElementRegistry: registry,
         });
         container.append(parent);
         document.body.append(container);
@@ -373,7 +375,7 @@ export const commonRegistryTests = (registry) => {
         const {content} = template;
         const contentEls = Array.from(content.querySelectorAll('*'));
         contentEls.forEach((el) => {
-          expect(el.customElements).to.be.null;
+          expect(el.customElementRegistry).to.be.null;
         });
         parent.insertAdjacentElement('beforebegin', contentEls[1]);
         parent.insertAdjacentElement('afterend', contentEls[2]);
@@ -389,10 +391,10 @@ export const commonRegistryTests = (registry) => {
         const {tagName, CustomElementClass} = getTestElement();
         registry.define(tagName, CustomElementClass);
         const container = document.createElement('div', {
-          customElements: registry,
+          customElementRegistry: registry,
         });
         const parent = document.createElement('div', {
-          customElements: registry,
+          customElementRegistry: registry,
         });
         container.append(parent);
         document.body.append(container);
@@ -403,7 +405,7 @@ export const commonRegistryTests = (registry) => {
         const {content} = template;
         const contentEls = Array.from(content.querySelectorAll('*'));
         contentEls.forEach((el) => {
-          expect(el.customElements).to.be.null;
+          expect(el.customElementRegistry).to.be.null;
         });
         container.replaceChild(content, parent);
         const els = container.querySelectorAll(tagName);
@@ -416,10 +418,10 @@ export const commonRegistryTests = (registry) => {
         const {tagName, CustomElementClass} = getTestElement();
         registry.define(tagName, CustomElementClass);
         const container = document.createElement('div', {
-          customElements: registry,
+          customElementRegistry: registry,
         });
         const parent = document.createElement('div', {
-          customElements: registry,
+          customElementRegistry: registry,
         });
         container.append(parent);
         document.body.append(container);
@@ -430,7 +432,7 @@ export const commonRegistryTests = (registry) => {
         const {content} = template;
         const contentEls = Array.from(content.querySelectorAll('*'));
         contentEls.forEach((el) => {
-          expect(el.customElements).to.be.null;
+          expect(el.customElementRegistry).to.be.null;
         });
         container.replaceChildren(...Array.from(content.childNodes));
         const els = container.querySelectorAll(tagName);
@@ -443,10 +445,10 @@ export const commonRegistryTests = (registry) => {
         const {tagName, CustomElementClass} = getTestElement();
         registry.define(tagName, CustomElementClass);
         const container = document.createElement('div', {
-          customElements: registry,
+          customElementRegistry: registry,
         });
         const parent = document.createElement('div', {
-          customElements: registry,
+          customElementRegistry: registry,
         });
         container.append(parent);
         document.body.append(container);
@@ -457,7 +459,7 @@ export const commonRegistryTests = (registry) => {
         const {content} = template;
         const contentEls = Array.from(content.querySelectorAll('*'));
         contentEls.forEach((el) => {
-          expect(el.customElements).to.be.null;
+          expect(el.customElementRegistry).to.be.null;
         });
         parent.replaceWith(content);
         const els = container.querySelectorAll(tagName);

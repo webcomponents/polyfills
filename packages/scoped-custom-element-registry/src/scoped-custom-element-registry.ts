@@ -104,16 +104,17 @@ interface CustomElementDefinition {
   standInClass?: CustomElementConstructor;
 }
 
-// Note, `registry` matches proposal but `customElements` was previously
-// proposed. It's supported for back compat.
-interface ShadowRootWithSettableCustomElements extends ShadowRoot {
-  registry?: CustomElementRegistry | null;
-  customElements: CustomElementRegistry | null;
+// Note, `customElementRegistry` matches spec, others provided for back compat.
+interface ShadowRootWithSettableCustomElementRegistry extends ShadowRoot {
+  ['registry']?: CustomElementRegistry | null;
+  ['customElements']?: CustomElementRegistry | null;
+  ['customElementRegistry']: CustomElementRegistry | null;
 }
 
 interface ShadowRootInitWithSettableCustomElements extends ShadowRootInit {
-  registry?: CustomElementRegistry | null;
-  customElements?: CustomElementRegistry | null;
+  ['registry']?: CustomElementRegistry;
+  ['customElements']?: CustomElementRegistry;
+  ['customElementRegistry']?: CustomElementRegistry;
 }
 
 type ParametersOf<
@@ -390,8 +391,9 @@ const registryFromContext = (
   if (context instanceof CustomElementRegistry) {
     return context as ShimmedCustomElementsRegistry;
   }
-  const registry = (context as Element)
-    .customElements as ShimmedCustomElementsRegistry;
+  const registry = (context as Element)[
+    'customElementRegistry'
+  ] as ShimmedCustomElementsRegistry;
   return registry ?? null;
 };
 
@@ -451,8 +453,10 @@ const createStandInElement = (tagName: string): CustomElementConstructor => {
           pendingRegistry._upgradeWhenDefined(this, tagName, true);
         } else {
           const registry =
-            this.customElements ??
-            (this.parentNode as Element | ShadowRoot)?.customElements;
+            this['customElementRegistry'] ??
+            (this.parentNode as Element | ShadowRoot)?.[
+              'customElementRegistry'
+            ];
           if (registry) {
             registryToSubtree(
               this,
@@ -705,26 +709,32 @@ Element.prototype.attachShadow = function (
   // Note, We must remove `registry` from the init object to avoid passing it to
   // the native implementation. Use string keys to avoid renaming in Closure.
   const {
-    'customElements': customElements,
-    'registry': registry = customElements,
+    'customElementRegistry': customElementRegistry,
+    'registry': registry = customElementRegistry,
     ...nativeInit
   } = init;
   const shadowRoot = nativeAttachShadow.call(
     this,
     nativeInit,
     ...(args as [])
-  ) as ShadowRootWithSettableCustomElements;
+  ) as ShadowRootWithSettableCustomElementRegistry;
   if (registry !== undefined) {
     registryForElement.set(
       shadowRoot,
       registry as ShimmedCustomElementsRegistry
     );
-    (shadowRoot as ShadowRootWithSettableCustomElements)['registry'] = registry;
+    // for back compat, set both `registry` and `customElements`
+    (shadowRoot as ShadowRootInitWithSettableCustomElements)[
+      'registry'
+    ] = registry;
+    (shadowRoot as ShadowRootInitWithSettableCustomElements)[
+      'customElements'
+    ] = registry;
   }
   return shadowRoot;
 };
 
-const customElementsDescriptor = {
+const customElementRegistryDescriptor = {
   get(this: Element) {
     const registry = registryForElement.get(this);
     return registry === undefined
@@ -742,28 +752,31 @@ const {createElement, createElementNS, importNode} = Document.prototype;
 
 Object.defineProperty(
   Element.prototype,
-  'customElements',
-  customElementsDescriptor
+  'customElementRegistry',
+  customElementRegistryDescriptor
 );
 Object.defineProperties(Document.prototype, {
-  'customElements': customElementsDescriptor,
+  'customElementRegistry': customElementRegistryDescriptor,
   'createElement': {
     value<K extends keyof HTMLElementTagNameMap>(
       this: Document,
       tagName: K,
       options?: ElementCreationOptions
     ): HTMLElementTagNameMap[K] {
-      const {customElements} = options ?? {};
-      if (customElements === undefined) {
+      const customElementRegistry = (options ?? {})['customElementRegistry'];
+      if (customElementRegistry === undefined) {
         return createElement.call(this, tagName) as HTMLElementTagNameMap[K];
       } else {
-        creationContext.push(customElements);
+        creationContext.push(customElementRegistry);
         const el = createElement.call(
           this,
           tagName
         ) as HTMLElementTagNameMap[K];
         creationContext.pop();
-        registryToSubtree(el, customElements as ShimmedCustomElementsRegistry);
+        registryToSubtree(
+          el,
+          customElementRegistry as ShimmedCustomElementsRegistry
+        );
         return el;
       }
     },
@@ -777,22 +790,25 @@ Object.defineProperties(Document.prototype, {
       tagName: K,
       options?: ElementCreationOptions
     ): HTMLElementTagNameMap[K] {
-      const {customElements} = options ?? {};
-      if (customElements === undefined) {
+      const customElementRegistry = (options ?? {})['customElementRegistry'];
+      if (customElementRegistry === undefined) {
         return createElementNS.call(
           this,
           namespace,
           tagName
         ) as HTMLElementTagNameMap[K];
       } else {
-        creationContext.push(customElements);
+        creationContext.push(customElementRegistry);
         const el = createElementNS.call(
           this,
           namespace,
           tagName
         ) as HTMLElementTagNameMap[K];
         creationContext.pop();
-        registryToSubtree(el, customElements as ShimmedCustomElementsRegistry);
+        registryToSubtree(
+          el,
+          customElementRegistry as ShimmedCustomElementsRegistry
+        );
         return el;
       }
     },
@@ -806,16 +822,18 @@ Object.defineProperties(Document.prototype, {
       options?: boolean | ImportNodeOptions
     ): T {
       const deep = typeof options === 'boolean' ? options : !options?.selfOnly;
-      const {customElements} = (options ?? {}) as ImportNodeOptions;
-      if (customElements === undefined) {
+      const customElementRegistry = ((options ?? {}) as ImportNodeOptions)[
+        'customElementRegistry'
+      ];
+      if (customElementRegistry === undefined) {
         return importNode.call(this, node, deep) as T;
       }
-      creationContext.push(customElements);
+      creationContext.push(customElementRegistry);
       const imported = importNode.call(this, node, deep) as T;
       creationContext.pop();
       registryToSubtree(
         imported,
-        customElements as ShimmedCustomElementsRegistry
+        customElementRegistry as ShimmedCustomElementsRegistry
       );
       return imported;
     },
@@ -825,8 +843,8 @@ Object.defineProperties(Document.prototype, {
 });
 Object.defineProperty(
   ShadowRoot.prototype,
-  'customElements',
-  customElementsDescriptor
+  'customElementRegistry',
+  customElementRegistryDescriptor
 );
 
 // Install scoped creation API on Element & ShadowRoot
@@ -839,7 +857,7 @@ const installScopedMethod = (
   coda = function (this: Element, result: Node) {
     registryToSubtree(
       result ?? this,
-      this.customElements as ShimmedCustomElementsRegistry
+      this['customElementRegistry'] as ShimmedCustomElementsRegistry
     );
   }
 ) => {
@@ -863,7 +881,7 @@ const applyScopeFromParent = function (this: Element) {
   const scope = (this.parentNode ?? this) as Element;
   registryToSubtree(
     scope,
-    scope.customElements as ShimmedCustomElementsRegistry
+    scope['customElementRegistry'] as ShimmedCustomElementsRegistry
   );
 };
 
@@ -891,7 +909,10 @@ const installScopedSetter = (ctor: Function, name: string) => {
       creationContext.push(this);
       descriptor.set!.call(this, value);
       creationContext.pop();
-      registryToSubtree(this, this.customElements);
+      registryToSubtree(
+        this,
+        this['customElementRegistry'] as ShimmedCustomElementsRegistry
+      );
     },
   });
 };
