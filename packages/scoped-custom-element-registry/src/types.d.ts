@@ -34,7 +34,7 @@ declare global {
   }
 
   interface InitializeShadowRootInit {
-    ['customElementRegistry']?: CustomElementRegistry;
+    customElementRegistry?: CustomElementRegistry;
   }
 
   interface ImportNodeOptions {
