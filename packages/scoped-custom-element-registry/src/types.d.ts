@@ -11,7 +11,7 @@ declare global {
   }
 
   interface Document {
-    readonly ['customElementRegistry']: CustomElementRegistry | null;
+    readonly customElementRegistry: CustomElementRegistry | null;
     createElement<K extends keyof HTMLElementTagNameMap>(
       tagName: K,
       options?: ElementCreationOptions
