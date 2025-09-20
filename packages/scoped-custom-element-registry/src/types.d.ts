@@ -7,7 +7,7 @@ declare global {
   }
 
   interface ShadowRoot {
-    readonly ['customElementRegistry']: CustomElementRegistry | null;
+    readonly customElementRegistry: CustomElementRegistry | null;
   }
 
   interface Document {
