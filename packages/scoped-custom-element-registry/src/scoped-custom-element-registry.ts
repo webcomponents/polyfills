@@ -394,7 +394,7 @@ const registryFromContext = (
   const registry = (context as Element)[
     'customElementRegistry'
   ] as ShimmedCustomElementsRegistry;
-  return registry ?? null;
+  return registry;
 };
 
 // Helper to create stand-in element for each tagName registered that delegates
