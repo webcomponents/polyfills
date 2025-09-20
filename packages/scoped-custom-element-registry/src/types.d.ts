@@ -2,49 +2,55 @@ export {};
 
 declare global {
   interface CustomElementRegistry {
-    // This overload is for roots that use the global registry
+    // https://html.spec.whatwg.org/multipage/custom-elements.html#dom-customelementregistry-initialize
     initialize: (node: Node) => Node;
   }
 
+  // https://dom.spec.whatwg.org/#documentorshadowroot
   interface ShadowRoot {
     readonly customElementRegistry: CustomElementRegistry | null;
   }
 
+  // https://dom.spec.whatwg.org/#documentorshadowroot
   interface Document {
     readonly customElementRegistry: CustomElementRegistry | null;
+    // https://dom.spec.whatwg.org/#dom-document-createelement
     createElement<K extends keyof HTMLElementTagNameMap>(
       tagName: K,
       options?: ElementCreationOptions
     ): HTMLElementTagNameMap[K];
-
+    // https://dom.spec.whatwg.org/#dom-document-createelementns
     createElementNS<K extends keyof HTMLElementTagNameMap>(
       namespace: string | null,
       tagName: K,
       options?: ElementCreationOptions
     ): HTMLElementTagNameMap[K];
-
+    // https://dom.spec.whatwg.org/#dom-document-importnode
     importNode<T extends Node>(
       node: T,
       options?: boolean | ImportNodeOptions
     ): T;
   }
 
+  // https://dom.spec.whatwg.org/#element
   interface Element {
     readonly customElementRegistry: CustomElementRegistry | null;
   }
 
+  // https://dom.spec.whatwg.org/#dictdef-shadowrootinit
   interface InitializeShadowRootInit {
     customElementRegistry?: CustomElementRegistry;
   }
 
+  // https://dom.spec.whatwg.org/#dictdef-importnodeoptions
   interface ImportNodeOptions {
     selfOnly?: boolean;
-    ['customElementRegistry']?: CustomElementRegistry;
+    customElementRegistry?: CustomElementRegistry;
   }
-
+  // https://dom.spec.whatwg.org/#dictdef-elementcreationoptions
   interface ElementCreationOptions {
     is?: string;
-    ['customElementRegistry']?: CustomElementRegistry;
+    customElementRegistry?: CustomElementRegistry;
   }
 
   /*
