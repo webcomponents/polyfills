@@ -30,7 +30,7 @@ declare global {
   }
 
   interface Element {
-    readonly ['customElementRegistry']: CustomElementRegistry | null;
+    readonly customElementRegistry: CustomElementRegistry | null;
   }
 
   interface InitializeShadowRootInit {
