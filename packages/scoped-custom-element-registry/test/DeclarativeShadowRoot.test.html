@@ -1,0 +1,32 @@
+<html>
+  <body>
+    <script src="../scoped-custom-element-registry.min.js"></script>
+    <div id="host1">
+      <template shadowrootmode="open">
+        <dsd-element></dsd-element>
+      </template>
+    </div>
+    <div id="host2" polyfill-shadowrootcustomelementregistry>
+      <template shadowrootmode="open" shadowrootcustomelementregistry>
+        <dsd-element></dsd-element>
+      </template>
+    </div>
+    <script type="module">
+      import {runTests} from '@web/test-runner-mocha';
+
+      customElements.define(
+        'dsd-element',
+        class extends HTMLElement {
+          constructor() {
+            super();
+            this.attachShadow({
+              mode: 'open',
+            }).innerHTML = `${this.localName}: global`;
+          }
+        }
+      );
+
+      runTests(async () => import('./DeclarativeShadowRoot.test.html.js'));
+    </script>
+  </body>
+</html>

@@ -91,9 +91,13 @@ export const getShadowRoot = (customElementRegistry) => {
  *
  * @return {ShadowRoot}
  */
-export const getUnitializedShadowRoot = () => {
+export const getUninitializedShadowRoot = () => {
   const el = document.createElement('div');
-  return el.attachShadow({mode: 'open', customElementRegistry: null});
+  // note: using polyfill-specific host attribute
+  el.setHTMLUnsafe(
+    `<div polyfill-shadowrootcustomelementregistry><template shadowrootmode="open" shadowrootcustomelementregistry></template></div>`
+  );
+  return /** @type {ShadowRoot} */ el.firstElementChild.shadowRoot;
 };
 
 /**
