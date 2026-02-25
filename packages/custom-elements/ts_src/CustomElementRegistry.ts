@@ -278,6 +278,11 @@ export default class CustomElementRegistry {
     return undefined;
   }
 
+  getName(constructor: ElementConstructor): string | null {
+    const definition = this._constructorToDefinition.get(constructor);
+    return definition ? definition.localName : null;
+  }
+
   whenDefined(localName: string): Promise<void> {
     if (!Utilities.isValidCustomElementName(localName)) {
       return Promise.reject(
@@ -363,4 +368,6 @@ CustomElementRegistry.prototype['polyfillDefineLazy'] =
   CustomElementRegistry.prototype.polyfillDefineLazy;
 CustomElementRegistry.prototype['polyfillWrapFlushCallback'] =
   CustomElementRegistry.prototype.polyfillWrapFlushCallback;
+CustomElementRegistry.prototype['getName'] =
+  CustomElementRegistry.prototype.getName;
 /* eslint-enable no-self-assign */
