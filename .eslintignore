@@ -44,3 +44,7 @@ packages/webcomponentsjs/webcomponents-bundle.js*
 packages/scoped-custom-element-registry/**/.wireit/
 packages/scoped-custom-element-registry/**/.tsbuildinfo
 packages/scoped-custom-element-registry/**/build/
+
+packages/template-attributes/**/.wireit/
+packages/template-attributes/**/.tsbuildinfo
+packages/template-attributes/**/build/

@@ -1,0 +1,10 @@
+<html>
+  <body>
+    <script src="../build/template-attributes.js"></script>
+    <script type="module">
+      import {runTests} from '@web/test-runner-mocha';
+
+      runTests(async () => import('./TemplateAttributes.test.html.js'));
+    </script>
+  </body>
+</html>
