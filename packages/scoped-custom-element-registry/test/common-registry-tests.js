@@ -84,9 +84,29 @@ export const commonRegistryTests = (registry) => {
   });
 
   describe('createElement', () => {
-    it('should create built-in elements', async () => {
-      const el = document.createElement('div', {});
-      expect(el).to.be.ok;
+    it('should create built-in elements with customElementRegistry', async () => {
+      const el1 = document.createElement('div', {});
+      expect(el1.customElementRegistry).to.equal(customElements);
+      const el2 = document.createElement('div', {
+        customElementRegistry: registry,
+      });
+      expect(el2.customElementRegistry).to.equal(registry);
+      const el3 = document.createElement('div', {customElementRegistry: null});
+      expect(el3.customElementRegistry).to.be.null;
+    });
+
+    it('should create custom element candidates with customElementRegistry', async () => {
+      const {tagName} = getTestElement();
+      const el1 = document.createElement(tagName, {});
+      expect(el1.customElementRegistry).to.equal(customElements);
+      const el2 = document.createElement(tagName, {
+        customElementRegistry: registry,
+      });
+      expect(el2.customElementRegistry).to.equal(registry);
+      const el3 = document.createElement(tagName, {
+        customElementRegistry: null,
+      });
+      expect(el3.customElementRegistry).to.be.null;
     });
 
     it('should create custom elements', async () => {
@@ -96,6 +116,43 @@ export const commonRegistryTests = (registry) => {
         customElementRegistry: registry,
       });
       expect(el).to.be.instanceOf(CustomElementClass);
+    });
+  });
+
+  describe('adoptNode', () => {
+    it('should set global custom element registry', async () => {
+      const {tagName, CustomElementClass} = getTestElement();
+      registry.define(tagName, CustomElementClass);
+      const template = createTemplate(`
+        <${tagName}><${tagName}></${tagName}></${tagName}>
+        <${tagName}><${tagName}></${tagName}></${tagName}>
+      `);
+      const els = template.content.querySelectorAll(tagName);
+      expect(els.length).to.be.equal(4);
+      els.forEach((el) => expect(el.customElementRegistry).to.be.null);
+      document.adoptNode(template.content);
+      els.forEach((el) => {
+        expect(el.customElementRegistry).to.be.equal(customElements);
+      });
+    });
+
+    it('should upgrade when connected', async () => {
+      const {tagName, CustomElementClass} = getTestElement();
+      customElements.define(tagName, CustomElementClass);
+      const template = createTemplate(`
+        <${tagName}><${tagName}></${tagName}></${tagName}>
+        <${tagName}><${tagName}></${tagName}></${tagName}>
+      `);
+      const els = Array.from(template.content.querySelectorAll(tagName));
+      expect(els.length).to.be.equal(4);
+      els.forEach((el) => expect(el.customElementRegistry).to.be.null);
+      document.adoptNode(template.content);
+      document.body.append(template.content);
+      els.forEach((el) => {
+        expect(el.customElementRegistry).to.be.equal(customElements);
+        expect(el).to.be.instanceOf(CustomElementClass);
+        el.remove();
+      });
     });
   });
 
@@ -137,7 +194,7 @@ export const commonRegistryTests = (registry) => {
 
     it('initialize sets customElements for entire subtree where null', async function () {
       if (!window.CustomElementRegistryPolyfill.inUse) {
-        // https://bugs.webkit.org/show_bug.cgi?id=299299
+        // https://issues.chromium.org/issues/489973914
         this.skip();
       }
       const shadowRoot = getUninitializedShadowRoot();
@@ -176,7 +233,7 @@ export const commonRegistryTests = (registry) => {
       expect(el2).not.to.be.instanceOf(CustomElementClass);
     });
 
-    it('should not upgrade custom elements in initialized subtree', async () => {
+    it('should upgrade custom elements in initialized subtree', async () => {
       const shadowRoot = getUninitializedShadowRoot();
       const {tagName, CustomElementClass} = getTestElement();
       registry.define(tagName, CustomElementClass);
@@ -185,10 +242,7 @@ export const commonRegistryTests = (registry) => {
       const el = shadowRoot.firstElementChild;
       const container = shadowRoot.lastElementChild;
       expect(el.localName).to.be.equal(tagName);
-      expect(el).not.to.be.instanceOf(CustomElementClass);
-      // Note, with the tree initialized, the parent's registry is set
-      // even though it is not customized. So innerHTML uses the parent's
-      // registry.
+      expect(el).to.be.instanceOf(CustomElementClass);
       container.innerHTML = `<${tagName}></${tagName}>`;
       const el2 = container.firstElementChild;
       expect(el2.localName).to.be.equal(tagName);
@@ -199,10 +253,6 @@ export const commonRegistryTests = (registry) => {
   describe('null customElements', () => {
     describe('do not customize when created', () => {
       it('with innerHTML', function () {
-        if (!window.CustomElementRegistryPolyfill.inUse) {
-          // https://bugs.webkit.org/show_bug.cgi?id=299603
-          this.skip();
-        }
         const shadowRoot = getUninitializedShadowRoot();
         const {tagName, CustomElementClass} = getTestElement();
         // globally define this
@@ -220,10 +270,6 @@ export const commonRegistryTests = (registry) => {
         shadowRoot.host.remove();
       });
       it('with insertAdjacentHTML', function () {
-        if (!window.CustomElementRegistryPolyfill.inUse) {
-          // https://bugs.webkit.org/show_bug.cgi?id=299603
-          this.skip();
-        }
         const shadowRoot = getUninitializedShadowRoot();
         const {tagName, CustomElementClass} = getTestElement();
         // globally define this
@@ -245,10 +291,6 @@ export const commonRegistryTests = (registry) => {
         shadowRoot.host.remove();
       });
       it('with setHTMLUnsafe', function () {
-        if (!window.CustomElementRegistryPolyfill.inUse) {
-          // https://bugs.webkit.org/show_bug.cgi?id=299603
-          this.skip();
-        }
         if (!(`setHTMLUnsafe` in Element.prototype)) {
           this.skip();
         }
@@ -271,11 +313,7 @@ export const commonRegistryTests = (registry) => {
       });
     });
     describe('customize when connected', () => {
-      it('append from uninitialized shadowRoot', async function () {
-        if (!window.CustomElementRegistryPolyfill.inUse) {
-          // https://bugs.webkit.org/show_bug.cgi?id=299603
-          this.skip();
-        }
+      it('append from uninitialized shadowRoot does not customize', async function () {
         const shadowRoot = getUninitializedShadowRoot();
         const {tagName, CustomElementClass} = getTestElement();
         registry.define(tagName, CustomElementClass);
@@ -290,13 +328,38 @@ export const commonRegistryTests = (registry) => {
         container.append(shadowRoot);
         const els = container.querySelectorAll(tagName);
         expect(els.length).to.be.equal(4);
-        els.forEach((el) => expect(el).to.be.instanceOf(CustomElementClass));
+        els.forEach((el) =>
+          expect(el).not.to.be.instanceOf(CustomElementClass)
+        );
         container.remove();
       });
 
-      it('cloned and appended from a template', async () => {
+      it('does not customize elements with null registry', async () => {
         const {tagName, CustomElementClass} = getTestElement();
         registry.define(tagName, CustomElementClass);
+        const el = document.createElement(tagName, {
+          customElementRegistry: null,
+        });
+        el.innerHTML = `<${tagName}></${tagName}>`;
+        const container = document.createElement('div', {
+          customElementRegistry: registry,
+        });
+        document.body.append(container);
+        container.append(el);
+        const els = container.querySelectorAll(tagName);
+        expect(els.length).to.be.equal(2);
+        els.forEach((el) =>
+          expect(el).not.to.be.instanceOf(CustomElementClass)
+        );
+        container.remove();
+      });
+
+      it('cloned and appended from a template customizes globally', async () => {
+        const {tagName, CustomElementClass} = getTestElement();
+        registry.define(tagName, CustomElementClass);
+        if (registry !== customElements) {
+          customElements.define(tagName, CustomElementClass);
+        }
         const container = document.createElement('div', {
           customElementRegistry: registry,
         });
@@ -312,35 +375,19 @@ export const commonRegistryTests = (registry) => {
         container.append(clone);
         const els = container.querySelectorAll(tagName);
         expect(els.length).to.be.equal(4);
-        els.forEach((el) => expect(el).to.be.instanceOf(CustomElementClass));
+        els.forEach((el) => {
+          expect(el).to.be.instanceOf(CustomElementClass);
+          expect(el.customElementRegistry).to.equal(customElements);
+        });
         container.remove();
       });
 
-      it('append from a template', async () => {
+      it('append from a template customizes globally', async () => {
         const {tagName, CustomElementClass} = getTestElement();
         registry.define(tagName, CustomElementClass);
-        const container = document.createElement('div', {
-          customElementRegistry: registry,
-        });
-        document.body.append(container);
-        const template = createTemplate(`
-          <${tagName}><${tagName}></${tagName}></${tagName}>
-          <${tagName}><${tagName}></${tagName}></${tagName}>
-        `);
-        const {content} = template;
-        content.querySelectorAll('*').forEach((el) => {
-          expect(el.customElementRegistry).to.be.null;
-        });
-        container.append(content);
-        const els = container.querySelectorAll(tagName);
-        expect(els.length).to.be.equal(4);
-        els.forEach((el) => expect(el).to.be.instanceOf(CustomElementClass));
-        container.remove();
-      });
-
-      it('appendChild from a template', async () => {
-        const {tagName, CustomElementClass} = getTestElement();
-        registry.define(tagName, CustomElementClass);
+        if (registry !== customElements) {
+          customElements.define(tagName, CustomElementClass);
+        }
         const container = document.createElement('div', {
           customElementRegistry: registry,
         });
@@ -356,13 +403,47 @@ export const commonRegistryTests = (registry) => {
         container.appendChild(content);
         const els = container.querySelectorAll(tagName);
         expect(els.length).to.be.equal(4);
-        els.forEach((el) => expect(el).to.be.instanceOf(CustomElementClass));
+        els.forEach((el) => {
+          expect(el).to.be.instanceOf(CustomElementClass);
+          expect(el.customElementRegistry).to.equal(customElements);
+        });
         container.remove();
       });
 
-      it('insertBefore from a template', async () => {
+      it('appendChild from a template customizes globally', async () => {
         const {tagName, CustomElementClass} = getTestElement();
         registry.define(tagName, CustomElementClass);
+        if (registry !== customElements) {
+          customElements.define(tagName, CustomElementClass);
+        }
+        const container = document.createElement('div', {
+          customElementRegistry: registry,
+        });
+        document.body.append(container);
+        const template = createTemplate(`
+          <${tagName}><${tagName}></${tagName}></${tagName}>
+          <${tagName}><${tagName}></${tagName}></${tagName}>
+        `);
+        const {content} = template;
+        content.querySelectorAll('*').forEach((el) => {
+          expect(el.customElementRegistry).to.be.null;
+        });
+        container.appendChild(content);
+        const els = container.querySelectorAll(tagName);
+        expect(els.length).to.be.equal(4);
+        els.forEach((el) => {
+          expect(el).to.be.instanceOf(CustomElementClass);
+          expect(el.customElementRegistry).to.equal(customElements);
+        });
+        container.remove();
+      });
+
+      it('insertBefore from a template customizes globally', async () => {
+        const {tagName, CustomElementClass} = getTestElement();
+        registry.define(tagName, CustomElementClass);
+        if (registry !== customElements) {
+          customElements.define(tagName, CustomElementClass);
+        }
         const container = document.createElement('div', {
           customElementRegistry: registry,
         });
@@ -378,13 +459,19 @@ export const commonRegistryTests = (registry) => {
         container.insertBefore(content, null);
         const els = container.querySelectorAll(tagName);
         expect(els.length).to.be.equal(4);
-        els.forEach((el) => expect(el).to.be.instanceOf(CustomElementClass));
+        els.forEach((el) => {
+          expect(el).to.be.instanceOf(CustomElementClass);
+          expect(el.customElementRegistry).to.equal(customElements);
+        });
         container.remove();
       });
 
-      it('prepend from a template', async () => {
+      it('prepend from a template customizes globally', async () => {
         const {tagName, CustomElementClass} = getTestElement();
         registry.define(tagName, CustomElementClass);
+        if (registry !== customElements) {
+          customElements.define(tagName, CustomElementClass);
+        }
         const container = document.createElement('div', {
           customElementRegistry: registry,
         });
@@ -400,13 +487,19 @@ export const commonRegistryTests = (registry) => {
         container.prepend(content);
         const els = container.querySelectorAll(tagName);
         expect(els.length).to.be.equal(4);
-        els.forEach((el) => expect(el).to.be.instanceOf(CustomElementClass));
+        els.forEach((el) => {
+          expect(el).to.be.instanceOf(CustomElementClass);
+          expect(el.customElementRegistry).to.equal(customElements);
+        });
         container.remove();
       });
 
-      it('insertAdjacentElement from a template', async () => {
+      it('insertAdjacentElement from a template customizes globally', async () => {
         const {tagName, CustomElementClass} = getTestElement();
         registry.define(tagName, CustomElementClass);
+        if (registry !== customElements) {
+          customElements.define(tagName, CustomElementClass);
+        }
         const container = document.createElement('div', {
           customElementRegistry: registry,
         });
@@ -430,13 +523,19 @@ export const commonRegistryTests = (registry) => {
         parent.insertAdjacentElement('beforeend', contentEls[3]);
         const els = container.querySelectorAll(tagName);
         expect(els.length).to.be.equal(4);
-        els.forEach((el) => expect(el).to.be.instanceOf(CustomElementClass));
+        els.forEach((el) => {
+          expect(el).to.be.instanceOf(CustomElementClass);
+          expect(el.customElementRegistry).to.equal(customElements);
+        });
         container.remove();
       });
 
-      it('replaceChild from a template', async () => {
+      it('replaceChild from a template customizes globally', async () => {
         const {tagName, CustomElementClass} = getTestElement();
         registry.define(tagName, CustomElementClass);
+        if (registry !== customElements) {
+          customElements.define(tagName, CustomElementClass);
+        }
         const container = document.createElement('div', {
           customElementRegistry: registry,
         });
@@ -457,13 +556,19 @@ export const commonRegistryTests = (registry) => {
         container.replaceChild(content, parent);
         const els = container.querySelectorAll(tagName);
         expect(els.length).to.be.equal(4);
-        els.forEach((el) => expect(el).to.be.instanceOf(CustomElementClass));
+        els.forEach((el) => {
+          expect(el).to.be.instanceOf(CustomElementClass);
+          expect(el.customElementRegistry).to.equal(customElements);
+        });
         container.remove();
       });
 
-      it('replaceChildren from a template', async () => {
+      it('replaceChildren from a template customizes globally', async () => {
         const {tagName, CustomElementClass} = getTestElement();
         registry.define(tagName, CustomElementClass);
+        if (registry !== customElements) {
+          customElements.define(tagName, CustomElementClass);
+        }
         const container = document.createElement('div', {
           customElementRegistry: registry,
         });
@@ -484,13 +589,19 @@ export const commonRegistryTests = (registry) => {
         container.replaceChildren(...Array.from(content.childNodes));
         const els = container.querySelectorAll(tagName);
         expect(els.length).to.be.equal(4);
-        els.forEach((el) => expect(el).to.be.instanceOf(CustomElementClass));
+        els.forEach((el) => {
+          expect(el).to.be.instanceOf(CustomElementClass);
+          expect(el.customElementRegistry).to.equal(customElements);
+        });
         container.remove();
       });
 
-      it('replaceWith from a template', async () => {
+      it('replaceWith from a template customizes globally', async () => {
         const {tagName, CustomElementClass} = getTestElement();
         registry.define(tagName, CustomElementClass);
+        if (registry !== customElements) {
+          customElements.define(tagName, CustomElementClass);
+        }
         const container = document.createElement('div', {
           customElementRegistry: registry,
         });
@@ -511,14 +622,21 @@ export const commonRegistryTests = (registry) => {
         parent.replaceWith(content);
         const els = container.querySelectorAll(tagName);
         expect(els.length).to.be.equal(4);
-        els.forEach((el) => expect(el).to.be.instanceOf(CustomElementClass));
+        els.forEach((el) => {
+          expect(el).to.be.instanceOf(CustomElementClass);
+          expect(el.customElementRegistry).to.equal(customElements);
+        });
         container.remove();
       });
     });
   });
 
   describe('mixed registries', () => {
-    it('uses root registry when appending', async function () {
+    it('uses global registry when appending from template', async function () {
+      if (!window.CustomElementRegistryPolyfill.inUse) {
+        // https://issues.chromium.org/issues/490139150
+        this.skip();
+      }
       const shadowRoot = getUninitializedShadowRoot();
       const {host} = shadowRoot;
       document.body.append(host);
@@ -537,18 +655,21 @@ export const commonRegistryTests = (registry) => {
         `);
       const c1 = template.content.firstElementChild;
       const c2 = template.content.lastElementChild;
+      expect(el.customElementRegistry).to.be.equal(registry2);
       el.appendChild(c1);
-      expect(c1).to.be.instanceOf(CustomElementClass);
+      expect(c1.customElementRegistry).to.be.equal(customElements);
+      expect(c1).not.to.be.instanceOf(CustomElementClass2);
       shadowRoot.appendChild(c2);
-      expect(c2).to.be.instanceOf(CustomElementClass);
+      expect(c2.customElementRegistry).to.be.equal(customElements);
+      if (registry === customElements) {
+        expect(c2).to.be.instanceOf(CustomElementClass);
+      } else {
+        expect(c2).not.to.be.instanceOf(CustomElementClass);
+      }
       host.remove();
     });
 
     it('uses parent registry when parsing from HTML', async function () {
-      if (!window.CustomElementRegistryPolyfill.inUse) {
-        // https://bugs.webkit.org/show_bug.cgi?id=299299
-        this.skip();
-      }
       const shadowRoot = getUninitializedShadowRoot();
       const registry2 = new CustomElementRegistry();
       shadowRoot.innerHTML = `<div></div>`;
@@ -570,9 +691,9 @@ export const commonRegistryTests = (registry) => {
     });
   });
 
-  it('uses source registry when importing', function () {
+  it('uses fallback registry when importing', function () {
     if (!window.CustomElementRegistryPolyfill.inUse) {
-      // https://bugs.webkit.org/show_bug.cgi?id=299299
+      // https://issues.chromium.org/issues/491031515
       this.skip();
     }
     const {tagName, CustomElementClass} = getTestElement();
@@ -582,61 +703,56 @@ export const commonRegistryTests = (registry) => {
     const Registry1CustomElementClass = class extends HTMLElement {};
     registry1.define(tagName, Registry1CustomElementClass);
 
-    const registry2 = new CustomElementRegistry();
-    const Registry2CustomElementClass = class extends HTMLElement {};
-    registry2.define(tagName, Registry2CustomElementClass);
-
-    const registry3 = new CustomElementRegistry();
-    const Registry3CustomElementClass = class extends HTMLElement {};
-    registry3.define(tagName, Registry3CustomElementClass);
-
-    const shadowRoot = getUninitializedShadowRoot();
-    shadowRoot.innerHTML = `<div><${tagName}></${tagName}></div>`;
-    const container = shadowRoot.firstElementChild;
-    const er = container.firstElementChild;
-    const er1 = document.createElement(tagName, {
-      customElementRegistry: registry1,
-    });
-    const er2 = document.createElement(tagName, {
-      customElementRegistry: registry2,
-    });
-    const er3 = document.createElement(tagName, {
-      customElementRegistry: registry3,
-    });
-    container.append(er1, er2);
-    er2.append(er3);
-
-    expect(er.customElementRegistry).to.be.equal(null);
-    expect(er).not.to.be.instanceof(CustomElementClass);
-    expect(er1.customElementRegistry).to.be.equal(registry1);
-    expect(er1).to.be.instanceof(Registry1CustomElementClass);
-    expect(er2.customElementRegistry).to.be.equal(registry2);
-    expect(er2).to.be.instanceof(Registry2CustomElementClass);
-    expect(er3.customElementRegistry).to.be.equal(registry3);
-    expect(er3).to.be.instanceof(Registry3CustomElementClass);
-    const imported = document.importNode(container, {
+    const container = document.createElement('div');
+    const e0 = document.createElement(tagName, {
       customElementRegistry: registry,
     });
+    const e1 = document.createElement(tagName, {
+      customElementRegistry: registry1,
+    });
+    container.append(e0, e1);
+    e0.append(
+      document.createElement(tagName, {
+        customElementRegistry: null,
+      })
+    );
 
-    const ier = imported.firstElementChild;
-    const ier1 = ier.nextElementSibling;
-    const ier2 = ier1.nextElementSibling;
-    const ier3 = ier2.firstElementChild;
-    expect(ier.customElementRegistry).to.be.equal(registry);
-    expect(ier).to.be.instanceof(CustomElementClass);
-    expect(ier1.customElementRegistry).to.be.equal(registry1);
-    expect(ier1).to.be.instanceof(Registry1CustomElementClass);
-    expect(ier2.customElementRegistry).to.be.equal(registry2);
-    expect(ier2).to.be.instanceof(Registry2CustomElementClass);
-    expect(ier3.customElementRegistry).to.be.equal(registry3);
-    expect(ier3).to.be.instanceof(Registry3CustomElementClass);
+    e1.append(
+      document.createElement(tagName, {
+        customElementRegistry: null,
+      })
+    );
+
+    expect(container.customElementRegistry).to.be.equal(customElements);
+    expect(e0.customElementRegistry).to.be.equal(registry);
+    expect(e0).to.be.instanceof(CustomElementClass);
+    expect(e0.firstChild.customElementRegistry).to.be.null;
+    expect(e0.firstChild).not.to.be.instanceof(CustomElementClass);
+    expect(e1.customElementRegistry).to.be.equal(registry1);
+    expect(e1).to.be.instanceof(Registry1CustomElementClass);
+    expect(e1.firstChild.customElementRegistry).to.be.null;
+    expect(e1.firstChild).not.to.be.instanceof(Registry1CustomElementClass);
+
+    const fallbackRegistry = new CustomElementRegistry();
+    const imported = document.importNode(container, {
+      customElementRegistry: fallbackRegistry,
+    });
+
+    const i0 = imported.firstElementChild;
+    const i1 = imported.lastElementChild;
+
+    expect(imported.customElementRegistry).to.be.equal(customElements);
+    expect(i0.customElementRegistry).to.be.equal(registry);
+    expect(i0).to.be.instanceof(CustomElementClass);
+    expect(i0.firstChild.customElementRegistry).to.be.equal(fallbackRegistry);
+    expect(i0.firstChild).not.to.be.instanceof(CustomElementClass);
+    expect(i1.customElementRegistry).to.be.equal(registry1);
+    expect(i1).to.be.instanceof(Registry1CustomElementClass);
+    expect(i1.firstChild.customElementRegistry).to.be.equal(fallbackRegistry);
+    expect(i1.firstChild).not.to.be.instanceof(Registry1CustomElementClass);
   });
 
   it('uses source registry when cloning', function () {
-    if (!window.CustomElementRegistryPolyfill.inUse) {
-      // https://bugs.webkit.org/show_bug.cgi?id=299299
-      this.skip();
-    }
     const {tagName, CustomElementClass} = getTestElement();
     registry.define(tagName, CustomElementClass);
 

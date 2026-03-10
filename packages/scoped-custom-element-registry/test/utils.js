@@ -91,13 +91,11 @@ export const getShadowRoot = (customElementRegistry) => {
  *
  * @return {ShadowRoot}
  */
+// Note, cannot use DSD here because buggy native implementations
+// may create true null registry elements which can't be polyfilled.
 export const getUninitializedShadowRoot = () => {
   const el = document.createElement('div');
-  // note: using polyfill-specific host attribute
-  el.setHTMLUnsafe(
-    `<div polyfill-shadowrootcustomelementregistry><template shadowrootmode="open" shadowrootcustomelementregistry></template></div>`
-  );
-  return /** @type {ShadowRoot} */ el.firstElementChild.shadowRoot;
+  return el.attachShadow({mode: 'open', customElementRegistry: null});
 };
 
 /**
@@ -107,9 +105,9 @@ export const getUninitializedShadowRoot = () => {
  * @param {Document|ShadowRoot} root
  * @return {HTMLElement}
  */
-export const getHTML = (html, root = document) => {
+export const getHTML = (html, root) => {
   const div = document.createElement('div', {
-    customElementRegistry: root.customElementRegistry,
+    customElementRegistry: root ? root.customElementRegistry : customElements,
   });
 
   div.innerHTML = html;

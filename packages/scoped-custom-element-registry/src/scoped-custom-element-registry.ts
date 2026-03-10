@@ -23,6 +23,8 @@ declare interface PolyfillWindow {
   CustomElementRegistryPolyfill: {
     formAssociated: Set<string>;
     nativeRegistry: CustomElementRegistry;
+    hasCustomElementRegistry: boolean;
+    hasNullCustomElementRegistry: boolean;
     inUse: boolean;
   };
 }
@@ -47,9 +49,30 @@ polyfillWindow[
 polyfillWindow['CustomElementRegistryPolyfill'][
   'formAssociated'
 ] ??= new Set<string>();
-polyfillWindow['CustomElementRegistryPolyfill']['inUse'] = !(
-  'customElementRegistry' in Element.prototype
+
+Object.assign(
+  polyfillWindow['CustomElementRegistryPolyfill'],
+  (() => {
+    const reg = 'customElementRegistry' in Element.prototype;
+    let nullReg = false;
+    try {
+      const d = document.createElement('div', {
+        ['customElementRegistry']: (null as unknown) as CustomElementRegistry,
+      });
+      d.innerHTML = `<span></span>`;
+      nullReg =
+        (d.firstChild! as HTMLElement)['customElementRegistry'] === null;
+    } catch (e) {
+      // squelch, unsupported browser
+    }
+    return {
+      'hasCustomElementRegistry': reg,
+      'hasNullCustomElementRegistry': nullReg,
+      'inUse': !(reg && nullReg),
+    };
+  })()
 );
+
 polyfillWindow['CustomElementRegistryPolyfill']['nativeRegistry'] =
   window.customElements;
 
@@ -129,16 +152,23 @@ type ParametersOf<
 
 // Use an IIFE to prevent polyfill use if native scoped registries are detected
 (() => {
-  const hasNativeScopedRegistries =
-    polyfillWindow['CustomElementRegistryPolyfill']['inUse'] === false;
+  const {
+    ['inUse']: inUse,
+    ['hasCustomElementRegistry']: hasCustomElementRegistry,
+    ['hasNullCustomElementRegistry']: hasNullCustomElementRegistry,
+  } = polyfillWindow['CustomElementRegistryPolyfill'];
   console.warn(
     `Scoped custom element registries polyfill ${
-      hasNativeScopedRegistries
-        ? 'detected browser support and did not load '
+      hasCustomElementRegistry
+        ? `detected browser support ${
+            hasNullCustomElementRegistry
+              ? `and did not load.`
+              : `but loaded because null registry support was not detected.`
+          }`
         : 'did *not* detect browser support and loaded.'
     }`
   );
-  if (hasNativeScopedRegistries) {
+  if (!inUse) {
     return;
   }
 
@@ -181,14 +211,13 @@ type ParametersOf<
   const setRegistryForSubtree = (
     node: Node,
     registry: ShimmedCustomElementsRegistry | null,
-    shouldUpgrade?: boolean,
-    allowChangeFromGlobal = false
+    shouldUpgrade = false,
+    allowChangeFromNull = false
   ) => {
+    const explicitRegistry = registryForElement.get(node);
     if (
-      registryForElement.get(node) == null ||
-      (allowChangeFromGlobal &&
-        (node as Element)['customElementRegistry'] ==
-          globalCustomElementRegistry)
+      explicitRegistry === undefined ||
+      (explicitRegistry === null && allowChangeFromNull)
     ) {
       registryForElement.set(node, registry);
     }
@@ -202,7 +231,7 @@ type ParametersOf<
           child,
           registry,
           shouldUpgrade,
-          allowChangeFromGlobal
+          allowChangeFromNull
         )
       );
     }
@@ -407,7 +436,8 @@ type ParametersOf<
     }
 
     ['initialize'](node: Node) {
-      setRegistryForSubtree(node, this);
+      // Note, this *does* cause elements to upgrade.
+      setRegistryForSubtree(node, this, true, true);
       return node;
     }
   }
@@ -457,7 +487,7 @@ type ParametersOf<
     node: Element | null
   ): ShimmedCustomElementsRegistry | null => {
     const explicitRegistry = registryForElement.get(node as Node);
-    if (explicitRegistry != null) {
+    if (explicitRegistry !== undefined) {
       return explicitRegistry;
     }
     return (
@@ -522,27 +552,10 @@ type ParametersOf<
           definition.connectedCallback &&
             definition.connectedCallback.apply(this, args);
         } else {
-          // NOTE, if this has a null registry, then it should be changed
-          // to the registry into which it's inserted.
-          // LIMITATION: this is only done for custom elements and not built-ins
-          // since we can't easily see their connection state changing.
           // Register for upgrade when defined (only when connected, so we don't leak)
           const pendingRegistry = pendingRegistryForElement.get(this);
           if (pendingRegistry !== undefined) {
             pendingRegistry._upgradeWhenDefined(this, tagName, true);
-          } else {
-            const registry =
-              this['customElementRegistry'] ??
-              (this.parentNode as Element | ShadowRoot)?.[
-                'customElementRegistry'
-              ];
-            if (registry) {
-              setRegistryForSubtree(
-                this,
-                registry as ShimmedCustomElementsRegistry,
-                true
-              );
-            }
           }
         }
       }
@@ -568,6 +581,11 @@ type ParametersOf<
         this: HTMLElement,
         ...args: ParametersOf<CustomHTMLElement['adoptedCallback']>
       ) {
+        // NOTE, if this has a null registry, then it should be changed
+        // to the registry of the document into which it's adopted.
+        if (this['customElementRegistry'] === null) {
+          setRegistryForSubtree(this, globalCustomElementRegistry);
+        }
         const definition = definitionForElement.get(this);
         definition?.adoptedCallback?.apply(this, args);
       }
@@ -830,21 +848,49 @@ type ParametersOf<
     return shadowRoot;
   };
 
+  // Note, captured to support polyfill use under native support.
+  const nativeElementRegistryDescriptor = Object.getOwnPropertyDescriptor(
+    Element.prototype,
+    'customElementRegistry'
+  );
+
+  const nativeShadowRegistryDescriptor = Object.getOwnPropertyDescriptor(
+    ShadowRoot.prototype,
+    'customElementRegistry'
+  );
+
   const customElementRegistryDescriptor = {
     get(this: Element) {
       const registry = registryForElement.get(this);
-      return registry === undefined
-        ? ((this.nodeType === Node.DOCUMENT_NODE
-            ? this
-            : this.ownerDocument) as Document)?.defaultView?.customElements ||
-            null
-        : registry;
+      if (registry !== undefined) {
+        return registry;
+      }
+      // Note, use native descriptors as fallback when polyfill is in use due
+      // to buggy platform support.
+      const nativeRegistry =
+        this.nodeType === Node.ELEMENT_NODE
+          ? nativeElementRegistryDescriptor?.get?.call(this)
+          : this.nodeType === Node.DOCUMENT_FRAGMENT_NODE
+          ? nativeShadowRegistryDescriptor?.get?.call(this)
+          : undefined;
+      if (nativeRegistry === null) {
+        return nativeRegistry;
+      }
+      const ownerDoc = (this.nodeType === Node.DOCUMENT_NODE
+        ? this
+        : this.ownerDocument) as Document;
+      return ownerDoc?.defaultView?.customElements || null;
     },
     enumerable: true,
     configurable: true,
   };
 
-  const {createElement, createElementNS, importNode} = Document.prototype;
+  const {
+    createElement,
+    createElementNS,
+    importNode,
+    adoptNode,
+  } = Document.prototype;
 
   Object.defineProperty(
     Element.prototype,
@@ -860,9 +906,11 @@ type ParametersOf<
         tagName: K,
         options?: ElementCreationOptions
       ): HTMLElementTagNameMap[K] {
+        const optionsRegistry = (options ?? {})['customElementRegistry'];
         const customElementRegistry =
-          (options ?? {})['customElementRegistry'] ??
-          globalCustomElementRegistry;
+          optionsRegistry === undefined
+            ? globalCustomElementRegistry
+            : optionsRegistry;
         creationContext.push(customElementRegistry);
         const el = createElement.call(
           this,
@@ -885,9 +933,11 @@ type ParametersOf<
         tagName: K,
         options?: ElementCreationOptions
       ): HTMLElementTagNameMap[K] {
+        const optionsRegistry = (options ?? {})['customElementRegistry'];
         const customElementRegistry =
-          (options ?? {})['customElementRegistry'] ??
-          globalCustomElementRegistry;
+          optionsRegistry === undefined
+            ? globalCustomElementRegistry
+            : optionsRegistry;
         creationContext.push(customElementRegistry);
         const el = createElementNS.call(
           this,
@@ -914,14 +964,18 @@ type ParametersOf<
       ): T {
         const deep =
           typeof options === 'boolean' ? options : !options?.selfOnly;
-        const customElementRegistry = ((options ?? {}) as ImportNodeOptions)[
+        const optionsRegistry = ((options ?? {}) as ImportNodeOptions)[
           'customElementRegistry'
         ];
+        // Note, the provided registry is used only as a fallback to set when
+        // the imported node's registry is null.
+        const fallbackRegistry =
+          optionsRegistry === undefined
+            ? globalCustomElementRegistry
+            : optionsRegistry;
         const performImport = (node: Node) => {
           const registry =
-            (node as Element)['customElementRegistry'] ??
-            customElementRegistry ??
-            globalCustomElementRegistry;
+            (node as Element)['customElementRegistry'] ?? fallbackRegistry;
           creationContext.push(registry);
           const imported = importNode.call(this, node);
           creationContext.pop();
@@ -941,12 +995,37 @@ type ParametersOf<
       enumerable: true,
       configurable: true,
     },
+    'adoptNode': {
+      value<T extends Node>(this: Document, node: T): T {
+        setRegistryForAdoptedNodes(node);
+        const adopted = adoptNode.call(this, node);
+        return adopted as T;
+      },
+      enumerable: true,
+      configurable: true,
+    },
   });
   Object.defineProperty(
     ShadowRoot.prototype,
     'customElementRegistry',
     customElementRegistryDescriptor
   );
+
+  const setRegistryForAdoptedNodes = (...args: Array<unknown>) => {
+    (args as unknown[]).forEach((arg) => {
+      if (!(arg instanceof Node) || (arg as Node).ownerDocument === document) {
+        return;
+      }
+      const {nodeType} = arg as Node;
+      if (
+        nodeType === Node.DOCUMENT_FRAGMENT_NODE ||
+        (nodeType === Node.ELEMENT_NODE &&
+          (arg as Element)['customElementRegistry'] === null)
+      ) {
+        setRegistryForSubtree(arg, globalCustomElementRegistry, false, true);
+      }
+    });
+  };
 
   // Install scoped creation API on Element & ShadowRoot
   const installScopedMethod = (
@@ -955,7 +1034,9 @@ type ParametersOf<
     coda = function (this: Element, result: Node) {
       setRegistryForSubtree(
         result ?? this,
-        this['customElementRegistry'] as ShimmedCustomElementsRegistry
+        this['customElementRegistry'] as ShimmedCustomElementsRegistry,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (result as any)?.isConnected
       );
     }
   ) => {
@@ -967,12 +1048,17 @@ type ParametersOf<
       this: Element | ShadowRoot,
       ...args: Array<unknown>
     ) {
+      // First check if any args need a registry as a result of adoption.
+      if (this.ownerDocument === document) {
+        setRegistryForAdoptedNodes(...args);
+      }
       creationContext.push(this['customElementRegistry']);
       const ret = native.apply(this, args);
       creationContext.pop();
       coda?.call(this as Element, ret);
       return ret;
     };
+    return native;
   };
 
   const applyScopeFromParent = function (this: Element) {
@@ -1004,7 +1090,7 @@ type ParametersOf<
   installScopedMethod(ShadowRoot, 'setHTMLUnsafe', setNullScopeWhenNeeded);
 
   // For setting null elements to this scope.
-  installScopedMethod(Node, 'appendChild');
+  const nativeAppendChild = installScopedMethod(Node, 'appendChild');
   installScopedMethod(Node, 'insertBefore');
 
   // Note, must always clone shallow and do deep manually to set scopes
@@ -1021,7 +1107,7 @@ type ParametersOf<
       setRegistryForSubtree(cloned, registry as ShimmedCustomElementsRegistry);
       if (deep) {
         node.childNodes.forEach((n) => {
-          cloned.appendChild(cloneWithScope(n));
+          nativeAppendChild.call(cloned, cloneWithScope(n));
         });
       }
       return cloned;
