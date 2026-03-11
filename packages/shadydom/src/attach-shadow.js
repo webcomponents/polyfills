@@ -593,7 +593,7 @@ export const attachShadow = (host, options) => {
   // creating one.
   if (options['shadyUpgradeFragment'] && utils.canUpgrade()) {
     root = options['shadyUpgradeFragment'];
-    root.__proto__ = ShadowRoot.prototype;
+    root.prototype = ShadowRoot.prototype;
     root._init(host, options);
     recordChildNodes(root, root);
     // Note: qsa is native when used with noPatch.
