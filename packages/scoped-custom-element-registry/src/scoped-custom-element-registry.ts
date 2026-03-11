@@ -343,6 +343,8 @@ window.HTMLElement = (function HTMLElement(this: HTMLElement) {
   return instance;
 } as unknown) as typeof HTMLElement;
 window.HTMLElement.prototype = NativeHTMLElement.prototype;
+window.HTMLElement.prototype.constructor = window.HTMLElement;
+Object.setPrototypeOf(window.HTMLElement, NativeHTMLElement);
 
 // Helpers to return the scope for a node where its registry would be located
 const isValidScope = (node: Node) =>
