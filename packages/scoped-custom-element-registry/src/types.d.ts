@@ -45,13 +45,13 @@ declare global {
   // https://dom.spec.whatwg.org/#dictdef-importnodeoptions
   interface ImportNodeOptions {
     /**
-      * A boolean flag, whose default value is `false`, which controls whether to include the entire DOM
-      * subtree of the `externalNode` in the import. `selfOnly` has the opposite effect of supplying a 
-      * boolean as the `options` argument.
-      * 
-      * If `selfOnly` is set to `false`, then `externalNode` and all of its descendants are copied.
-      * If `selfOnly` is set to `true`, then only `externalNode` is imported — the new node has no children.
-      */
+     * A boolean flag, whose default value is `false`, which controls whether to include the entire DOM
+     * subtree of the `externalNode` in the import. `selfOnly` has the opposite effect of supplying a
+     * boolean as the `options` argument.
+     *
+     * If `selfOnly` is set to `false`, then `externalNode` and all of its descendants are copied.
+     * If `selfOnly` is set to `true`, then only `externalNode` is imported — the new node has no children.
+     */
     selfOnly?: boolean;
     customElementRegistry?: CustomElementRegistry;
   }
