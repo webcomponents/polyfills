@@ -37,7 +37,9 @@ jobs:
         run: npm run bootstrap
 
       - name: Install playwright browsers (+ deps)
-        run: npx playwright install --with-deps
+        run: |
+          cd packages/tests && npx playwright install --with-deps
+          cd $GITHUB_WORKSPACE/packages/scoped-custom-element-registry && npx playwright install --with-deps
 
       - name: Build
         run: npm run build
@@ -65,7 +67,9 @@ jobs:
         run: npm run bootstrap
 
       - name: Install playwright browsers (+ deps)
-        run: npx playwright install --with-deps
+        run: |
+          cd packages/tests && npx playwright install --with-deps
+          cd $GITHUB_WORKSPACE/packages/scoped-custom-element-registry && npx playwright install --with-deps
 
       - name: Build
         run: npm run build
