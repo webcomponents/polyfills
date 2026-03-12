@@ -7,10 +7,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 20
 
       - name: NPM install
         run: npm ci
@@ -25,19 +25,19 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 20
 
       - name: NPM install
         run: npm ci
 
-      - name: Install playwright browsers (+ deps)
-        run: npx playwright install --with-deps
-
       - name: Lerna bootstrap
         run: npm run bootstrap
+
+      - name: Install playwright browsers (+ deps)
+        run: npx playwright install --with-deps
 
       - name: Build
         run: npm run build
@@ -53,19 +53,19 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 20
 
       - name: NPM install
         run: npm ci
 
-      - name: Install playwright browsers (+ deps)
-        run: npx playwright install --with-deps
-
       - name: Lerna bootstrap
         run: npm run bootstrap
+
+      - name: Install playwright browsers (+ deps)
+        run: npx playwright install --with-deps
 
       - name: Build
         run: npm run build
