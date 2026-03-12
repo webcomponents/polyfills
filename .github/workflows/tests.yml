@@ -37,7 +37,7 @@ jobs:
         run: sudo apt-get install -y libdbus-glib-1-2
 
       - name: Install playwright browsers
-        run: npx playwright install --with-deps
+        run: npx playwright install
 
       - name: Lerna bootstrap
         run: npm run bootstrap
@@ -68,7 +68,7 @@ jobs:
         run: sudo apt-get install -y libdbus-glib-1-2
 
       - name: Install playwright browsers
-        run: npx playwright install --with-deps
+        run: npx playwright install
 
       - name: Lerna bootstrap
         run: npm run bootstrap
