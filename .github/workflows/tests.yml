@@ -4,7 +4,7 @@ on: [push, pull_request]
 
 jobs:
   lint:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
@@ -22,7 +22,7 @@ jobs:
         run: npm run format && git diff --exit-code
 
   local:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
@@ -52,7 +52,7 @@ jobs:
     # secrets.
     if: github.event.pull_request.base.repo.id == github.event.pull_request.head.repo.id
 
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
