@@ -46,8 +46,8 @@ export const commonRegistryTests = (registry) => {
           form.append(element);
           form.append(element2);
           document.body.append(form);
-          expect(form.elements[name].includes(element)).to.be.true;
-          expect(form.elements[name].includes(element2)).to.be.true;
+          expect(Array.from(form.elements[name]).includes(element)).to.be.true;
+          expect(Array.from(form.elements[name]).includes(element2)).to.be.true;
           expect(form.elements[name].value).to.equal('');
         });
 
@@ -120,14 +120,20 @@ export const commonRegistryTests = (registry) => {
   });
 
   describe('formAssociated scoping limitations', () => {
-    it('is formAssociated if set in CustomElementRegistryPolyfill.formAssociated', () => {
+    it('is formAssociated if set in CustomElementRegistryPolyfill.formAssociated', function () {
+      if (!window.CustomElementRegistryPolyfill.inUse) {
+        this.skip();
+      }
       const tagName = getTestTagName();
       window.CustomElementRegistryPolyfill.formAssociated.add(tagName);
       class El extends HTMLElement {}
       customElements.define(tagName, El);
       expect(customElements.get(tagName).formAssociated).to.be.true;
     });
-    it('is always formAssociated if first defined tag is formAssociated', () => {
+    it('is always formAssociated if first defined tag is formAssociated', function () {
+      if (!window.CustomElementRegistryPolyfill.inUse) {
+        this.skip();
+      }
       const tagName = getTestTagName();
       class FormAssociatedEl extends HTMLElement {
         static formAssociated = true;

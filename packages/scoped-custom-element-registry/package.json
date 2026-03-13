@@ -41,10 +41,10 @@
   ],
   "devDependencies": {
     "@open-wc/testing": "^4.0.0",
-    "@web/test-runner": "^0.18.0",
+    "@web/test-runner": "^0.20.2",
     "@web/test-runner-mocha": "^0.9.0",
-    "@web/test-runner-playwright": "^0.11.0",
-    "wireit": "^0.14.4"
+    "@web/test-runner-playwright": "^0.11.1",
+    "wireit": "^0.14.12"
   },
   "wireit": {
     "build": {

@@ -12,6 +12,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Changed
+
+- Updated to latest [proposed spec](https://github.com/whatwg/html/issues/10854)
+
+### Added
+
+- customElements.initialize: sets registry on a DOM tree
+- document.createElement(NS): takes options with {customElementRegistry}
+- document.importNode: takes options with {selfOnly, customElementRegistry}
+- Node.customElementRegistry set to creating registry
+
 ### Fixed
 
 - Fixes [issue](https://github.com/webcomponents/polyfills/issues/613) with setting `shadowRoot.customElements` on Safari's native implementation

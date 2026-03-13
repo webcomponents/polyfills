@@ -7,10 +7,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: 16
+          node-version: 20
 
       - name: NPM install
         run: npm ci
@@ -25,16 +25,21 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: 16
+          node-version: 20
 
       - name: NPM install
         run: npm ci
 
       - name: Lerna bootstrap
         run: npm run bootstrap
+
+      - name: Install playwright browsers (+ deps)
+        run: |
+          cd packages/tests && npx playwright install --with-deps
+          cd $GITHUB_WORKSPACE/packages/scoped-custom-element-registry && npx playwright install --with-deps
 
       - name: Build
         run: npm run build
@@ -50,16 +55,21 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: 16
+          node-version: 20
 
       - name: NPM install
         run: npm ci
 
       - name: Lerna bootstrap
         run: npm run bootstrap
+
+      - name: Install playwright browsers (+ deps)
+        run: |
+          cd packages/tests && npx playwright install --with-deps
+          cd $GITHUB_WORKSPACE/packages/scoped-custom-element-registry && npx playwright install --with-deps
 
       - name: Build
         run: npm run build

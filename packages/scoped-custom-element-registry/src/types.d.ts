@@ -1,29 +1,64 @@
 export {};
 
 declare global {
+  interface CustomElementRegistry {
+    // https://html.spec.whatwg.org/multipage/custom-elements.html#dom-customelementregistry-initialize
+    initialize: (node: Node) => Node;
+  }
+
+  // https://dom.spec.whatwg.org/#documentorshadowroot
   interface ShadowRoot {
-    // This overload is for roots that use the global registry
+    readonly customElementRegistry: CustomElementRegistry | null;
+  }
+
+  // https://dom.spec.whatwg.org/#documentorshadowroot
+  interface Document {
+    readonly customElementRegistry: CustomElementRegistry | null;
+    // https://dom.spec.whatwg.org/#dom-document-createelement
     createElement<K extends keyof HTMLElementTagNameMap>(
       tagName: K,
       options?: ElementCreationOptions
     ): HTMLElementTagNameMap[K];
-    // This overload is for roots that use a scoped registry
-    createElement<K extends keyof BuiltInHTMLElementTagNameMap>(
+    // https://dom.spec.whatwg.org/#dom-document-createelementns
+    createElementNS<K extends keyof HTMLElementTagNameMap>(
+      namespace: string | null,
       tagName: K,
       options?: ElementCreationOptions
-    ): BuiltInHTMLElementTagNameMap[K];
-    createElement(
-      tagName: string,
-      options?: ElementCreationOptions
-    ): HTMLElement;
+    ): HTMLElementTagNameMap[K];
+    // https://dom.spec.whatwg.org/#dom-document-importnode
+    importNode<T extends Node>(
+      node: T,
+      options?: boolean | ImportNodeOptions
+    ): T;
   }
 
-  interface ShadowRootInit {
-    customElements?: CustomElementRegistry;
+  // https://dom.spec.whatwg.org/#element
+  interface Element {
+    readonly customElementRegistry: CustomElementRegistry | null;
   }
 
-  interface ShadowRoot {
-    readonly customElements?: CustomElementRegistry;
+  // https://dom.spec.whatwg.org/#dictdef-shadowrootinit
+  interface InitializeShadowRootInit {
+    customElementRegistry?: CustomElementRegistry;
+  }
+
+  // https://dom.spec.whatwg.org/#dictdef-importnodeoptions
+  interface ImportNodeOptions {
+    /**
+     * A boolean flag, whose default value is `false`, which controls whether to include the entire DOM
+     * subtree of the `externalNode` in the import. `selfOnly` has the opposite effect of supplying a
+     * boolean as the `options` argument.
+     *
+     * If `selfOnly` is set to `false`, then `externalNode` and all of its descendants are copied.
+     * If `selfOnly` is set to `true`, then only `externalNode` is imported — the new node has no children.
+     */
+    selfOnly?: boolean;
+    customElementRegistry?: CustomElementRegistry;
+  }
+  // https://dom.spec.whatwg.org/#dictdef-elementcreationoptions
+  interface ElementCreationOptions {
+    is?: string;
+    customElementRegistry?: CustomElementRegistry;
   }
 
   /*
