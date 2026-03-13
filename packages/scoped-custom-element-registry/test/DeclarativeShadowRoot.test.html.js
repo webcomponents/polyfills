@@ -12,11 +12,7 @@ describe('Declarative ShadowRoot', () => {
     expect(ce).to.be.instanceOf(customElements.get(ce.localName));
   });
 
-  it(`should *not* customize elements in null registry, should be browser ${
-    navigator.userAgent
-  } and polyfill ${JSON.stringify(
-    window.CustomElementRegistryPolyfill
-  )}`, () => {
+  it('should *not* customize elements in null registry', () => {
     const host = document.getElementById('host2');
     expect(host.shadowRoot).not.to.be.null;
     expect(host.shadowRoot.customElementRegistry).to.be.null;

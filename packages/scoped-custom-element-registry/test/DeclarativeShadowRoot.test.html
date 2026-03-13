@@ -1,5 +1,10 @@
 <html>
   <body>
+    <script>
+      window.CustomElementRegistryPolyfill = {
+        force: true,
+      };
+    </script>
     <script src="../scoped-custom-element-registry.min.js"></script>
     <div id="host1">
       <template shadowrootmode="open">
@@ -7,7 +12,8 @@
       </template>
     </div>
     <div id="host2" polyfill-shadowrootcustomelementregistry>
-      <template shadowrootmode="open" Xshadowrootcustomelementregistry>
+      <!-- note, cannot use native attribute here if browser has native support -->
+      <template shadowrootmode="open">
         <dsd-element></dsd-element>
       </template>
     </div>

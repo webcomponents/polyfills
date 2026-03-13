@@ -21,6 +21,7 @@
 
 declare interface PolyfillWindow {
   CustomElementRegistryPolyfill: {
+    force?: boolean;
     formAssociated: Set<string>;
     nativeRegistry: CustomElementRegistry;
     hasCustomElementRegistry: boolean;
@@ -50,6 +51,8 @@ polyfillWindow['CustomElementRegistryPolyfill'][
   'formAssociated'
 ] ??= new Set<string>();
 
+const {force} = polyfillWindow['CustomElementRegistryPolyfill'];
+
 Object.assign(
   polyfillWindow['CustomElementRegistryPolyfill'],
   (() => {
@@ -68,7 +71,7 @@ Object.assign(
     return {
       'hasCustomElementRegistry': reg,
       'hasNullCustomElementRegistry': nullReg,
-      'inUse': !(reg && nullReg),
+      'inUse': force || !(reg && nullReg),
     };
   })()
 );
@@ -153,19 +156,26 @@ type ParametersOf<
 // Use an IIFE to prevent polyfill use if native scoped registries are detected
 (() => {
   const {
+    ['force']: force,
     ['inUse']: inUse,
     ['hasCustomElementRegistry']: hasCustomElementRegistry,
     ['hasNullCustomElementRegistry']: hasNullCustomElementRegistry,
   } = polyfillWindow['CustomElementRegistryPolyfill'];
   console.warn(
-    `Scoped custom element registries polyfill ${
-      hasCustomElementRegistry
-        ? `detected browser support ${
-            hasNullCustomElementRegistry
-              ? `and did not load.`
-              : `but loaded because null registry support was not detected.`
+    `Scoped custom element registries polyfill is ${
+      inUse ? 'in use' : 'not in use'
+    }. ${
+      force
+        ? 'The "force" flag was set to true.'
+        : `The polyfill ${
+            hasCustomElementRegistry
+              ? `detected browser support ${
+                  hasNullCustomElementRegistry
+                    ? `and did not load.`
+                    : `but loaded because null registry support was not detected.`
+                }`
+              : 'did *not* detect browser support and loaded.'
           }`
-        : 'did *not* detect browser support and loaded.'
     }`
   );
   if (!inUse) {
