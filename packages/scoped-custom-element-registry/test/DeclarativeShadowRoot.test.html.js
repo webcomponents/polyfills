@@ -1,9 +1,13 @@
 import {expect} from '@open-wc/testing';
 
-// prettier-ignore
-import {getTestTagName, getTestElement, getShadowRoot, getHTML, createTemplate} from './utils.js';
-
 describe('Declarative ShadowRoot', () => {
+  it(
+    `should be browser ${navigator.userAgent} and polyfill ${JSON.stringify(
+      window.CustomElementRegistryPolyfill
+    )}`
+  ),
+    () => {};
+
   it('should customize elements in global registry', () => {
     const host = document.getElementById('host1');
     expect(host.shadowRoot).not.to.be.null;
@@ -38,7 +42,6 @@ describe('Declarative ShadowRoot', () => {
     registry.define('dsd-element', RegistryDsdElement);
     registry.initialize(host.shadowRoot);
     expect(host.shadowRoot.customElementRegistry).to.be.equal(registry);
-    registry.upgrade(host.shadowRoot);
     const ce = host.shadowRoot.firstElementChild;
     expect(ce.customElementRegistry).to.be.equal(registry);
     expect(ce).to.be.instanceOf(RegistryDsdElement);
