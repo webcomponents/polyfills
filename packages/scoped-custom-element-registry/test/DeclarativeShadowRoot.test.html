@@ -19,7 +19,6 @@
         class extends HTMLElement {
           constructor() {
             super();
-            console.warn('constructing GLOBAL', this.localName);
             this.attachShadow({
               mode: 'open',
             }).innerHTML = `${this.localName}: global`;

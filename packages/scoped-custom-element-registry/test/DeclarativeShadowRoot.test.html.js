@@ -20,27 +20,27 @@ describe('Declarative ShadowRoot', () => {
     const host = document.getElementById('host2');
     expect(host.shadowRoot).not.to.be.null;
     expect(host.shadowRoot.customElementRegistry).to.be.null;
-    // const ce = host.shadowRoot.firstElementChild;
-    // expect(ce.customElementRegistry).to.be.null;
-    // expect(ce).not.to.be.instanceOf(customElements.get(ce.localName));
+    const ce = host.shadowRoot.firstElementChild;
+    expect(ce.customElementRegistry).to.be.null;
+    expect(ce).not.to.be.instanceOf(customElements.get(ce.localName));
   });
 
-  // it('should customize when registry initializes', () => {
-  //   const host = document.getElementById('host2');
-  //   const registry = new CustomElementRegistry();
-  //   class RegistryDsdElement extends HTMLElement {
-  //     constructor() {
-  //       super();
-  //       this.attachShadow({
-  //         mode: 'open',
-  //       }).innerHTML = `${this.localName}: scoped`;
-  //     }
-  //   }
-  //   registry.define('dsd-element', RegistryDsdElement);
-  //   registry.initialize(host.shadowRoot);
-  //   expect(host.shadowRoot.customElementRegistry).to.be.equal(registry);
-  //   const ce = host.shadowRoot.firstElementChild;
-  //   expect(ce.customElementRegistry).to.be.equal(registry);
-  //   expect(ce).to.be.instanceOf(RegistryDsdElement);
-  // });
+  it('should customize when registry initializes', () => {
+    const host = document.getElementById('host2');
+    const registry = new CustomElementRegistry();
+    class RegistryDsdElement extends HTMLElement {
+      constructor() {
+        super();
+        this.attachShadow({
+          mode: 'open',
+        }).innerHTML = `${this.localName}: scoped`;
+      }
+    }
+    registry.define('dsd-element', RegistryDsdElement);
+    registry.initialize(host.shadowRoot);
+    expect(host.shadowRoot.customElementRegistry).to.be.equal(registry);
+    const ce = host.shadowRoot.firstElementChild;
+    expect(ce.customElementRegistry).to.be.equal(registry);
+    expect(ce).to.be.instanceOf(RegistryDsdElement);
+  });
 });
