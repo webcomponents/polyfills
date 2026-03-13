@@ -14,18 +14,18 @@
     <script type="module">
       import {runTests} from '@web/test-runner-mocha';
 
-      // customElements.define(
-      //   'dsd-element',
-      //   class extends HTMLElement {
-      //     constructor() {
-      //       super();
-      //       console.warn('constructing GLOBAL', this.localName);
-      //       this.attachShadow({
-      //         mode: 'open',
-      //       }).innerHTML = `${this.localName}: global`;
-      //     }
-      //   }
-      // );
+      customElements.define(
+        'dsd-element',
+        class extends HTMLElement {
+          constructor() {
+            super();
+            console.warn('constructing GLOBAL', this.localName);
+            this.attachShadow({
+              mode: 'open',
+            }).innerHTML = `${this.localName}: global`;
+          }
+        }
+      );
 
       runTests(async () => import('./DeclarativeShadowRoot.test.html.js'));
     </script>

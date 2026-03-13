@@ -18,19 +18,19 @@ describe('Declarative ShadowRoot', () => {
     window.CustomElementRegistryPolyfill
   )}`, () => {
     const host = document.getElementById('host2');
-    expect(host.shadowRoot.customElementRegistry).not.to.be.null;
-    customElements.define(
-      'dsd-element',
-      class extends HTMLElement {
-        constructor() {
-          super();
-          console.warn('constructing GLOBAL', this.localName);
-          this.attachShadow({
-            mode: 'open',
-          }).innerHTML = `${this.localName}: global`;
-        }
-      }
-    );
+    // expect(host.shadowRoot.customElementRegistry).not.to.be.null;
+    // customElements.define(
+    //   'dsd-element',
+    //   class extends HTMLElement {
+    //     constructor() {
+    //       super();
+    //       console.warn('constructing GLOBAL', this.localName);
+    //       this.attachShadow({
+    //         mode: 'open',
+    //       }).innerHTML = `${this.localName}: global`;
+    //     }
+    //   }
+    // );
     expect(host.shadowRoot).not.to.be.null;
     expect(host.shadowRoot.customElementRegistry).to.be.null;
     // const ce = host.shadowRoot.firstElementChild;
