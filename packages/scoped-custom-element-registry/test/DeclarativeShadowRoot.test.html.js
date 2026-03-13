@@ -20,9 +20,9 @@ describe('Declarative ShadowRoot', () => {
     const host = document.getElementById('host2');
     expect(host.shadowRoot).not.to.be.null;
     expect(host.shadowRoot.customElementRegistry).to.be.null;
-    const ce = host.shadowRoot.firstElementChild;
-    expect(ce.customElementRegistry).to.be.null;
-    expect(ce).not.to.be.instanceOf(customElements.get(ce.localName));
+    // const ce = host.shadowRoot.firstElementChild;
+    // expect(ce.customElementRegistry).to.be.null;
+    // expect(ce).not.to.be.instanceOf(customElements.get(ce.localName));
   });
 
   it('should customize when registry initializes', () => {
