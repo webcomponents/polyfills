@@ -1,15 +1,11 @@
-# Scoped CustomElementRegistry polyfill prototype
-
-## 🚨 Work in progress
-
-This polyfill explores implementation of a non-finalized spec proposal and is
-currently a work in progress.
+# Scoped CustomElementRegistry polyfill
 
 ## Overview
 
-Scoped CustomElementRegistry polyfill based on [Scoped Custom Element
-Registries](https://github.com/WICG/webcomponents/blob/gh-pages/proposals/Scoped-Custom-Element-Registries.md)
-WICG proposal.
+Scoped CustomElementRegistry polyfill based on [DOM Spec]https://html.spec.whatwg.org/multipage/custom-elements.html], originally proposed via [Scoped Custom Element
+Registries](https://github.com/WICG/webcomponents/blob/gh-pages/proposals/Scoped-Custom-Element-Registries.md).
+
+See [MDN](https://developer.mozilla.org/en-US/docs/Web/API/CustomElementRegistry/CustomElementRegistry) for current native support status.
 
 Technique: uses native CustomElements to register stand-in classes that
 delegate to the constructor in the registry for the element's scope; this
@@ -133,10 +129,3 @@ skipped (see `itWithPolyfill` in `test/utils.js`).
 
 To run the tests in a Firefox-engine browser without native support, see
 `test/wtr.firefox.config.js`.
-
-Outstanding TODOs:
-
-- [x] [#419](https://github.com/webcomponents/polyfills/issues/419): Convert source to TS (to match convention in this monorepo)
-- [ ] [#420](https://github.com/webcomponents/polyfills/issues/420): Test and work out layering strategy with standard custom-elements polyfill
-- [ ] [#421](https://github.com/webcomponents/polyfills/issues/421): Test and work out layering strategy with shady-dom & shady-css polyfills
-- [ ] [#422](https://github.com/webcomponents/polyfills/issues/422): Add benchmarks
