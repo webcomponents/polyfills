@@ -1,0 +1,284 @@
+<html>
+  <head>
+    <script src="../scoped-custom-element-registry.min.js"></script>
+    <script>
+      /* global log, registry */
+      // Defined before the markup below is parsed. Each constructor records
+      // which registry it came from and the element's data-where.
+      window.log = [];
+      window.registry = new CustomElementRegistry();
+      class GlobalEl extends HTMLElement {
+        constructor() {
+          super();
+          log.push(`global:${this.dataset.where}`);
+        }
+      }
+      class ScopedEl extends HTMLElement {
+        constructor() {
+          super();
+          log.push(`scoped:${this.dataset.where}`);
+        }
+        connectedCallback() {
+          log.push(`connected:${this.dataset.where}`);
+        }
+      }
+      customElements.define('p-el', GlobalEl);
+      registry.define('p-el', ScopedEl);
+      customElements.define(
+        'p-host',
+        class extends HTMLElement {
+          constructor() {
+            super();
+            this.internals = this.attachInternals();
+          }
+        }
+      );
+    </script>
+  </head>
+  <body>
+    <!-- element attribute, all four names, and siblings after a marked subtree -->
+    <div id="std" customelementregistry><p-el data-where="std"></p-el></div>
+    <p-el id="after-std" data-where="after-std"></p-el>
+    <div id="poly" polyfill-customelementregistry>
+      <p-el data-where="poly"></p-el>
+    </div>
+    <div id="scoped" scopedcustomelementregistry>
+      <p-el data-where="scoped"></p-el>
+    </div>
+    <div id="poly-scoped" polyfill-scopedcustomelementregistry>
+      <p-el data-where="poly-scoped"></p-el>
+    </div>
+    <p-el id="self" polyfill-customelementregistry data-where="self"></p-el>
+    <p-el id="after-self" data-where="after-self"></p-el>
+
+    <!-- open null declarative root: recommended markup, and host attribute only -->
+    <div id="open-both" polyfill-shadowrootcustomelementregistry>
+      <template shadowrootmode="open" shadowrootcustomelementregistry>
+        <p-el data-where="open-both"></p-el>
+      </template>
+    </div>
+    <div id="open-host" polyfill-shadowrootcustomelementregistry>
+      <template shadowrootmode="open">
+        <p-el data-where="open-host"></p-el>
+      </template>
+    </div>
+
+    <!-- closed null declarative roots: plain host and custom element host -->
+    <div id="closed-plain" polyfill-shadowrootcustomelementregistry>
+      <template shadowrootmode="closed" shadowrootcustomelementregistry>
+        <p-el data-where="closed-plain"></p-el>
+      </template>
+    </div>
+    <p-host id="closed-ce" polyfill-shadowrootcustomelementregistry>
+      <template shadowrootmode="closed" shadowrootcustomelementregistry>
+        <p-el data-where="closed-ce"></p-el>
+      </template>
+    </p-host>
+
+    <!-- closed null declarative root, custom element host, nothing custom inside -->
+    <p-dsd-host id="dsd-ce-empty" polyfill-shadowrootcustomelementregistry>
+      <template shadowrootmode="closed" shadowrootcustomelementregistry>
+        <span></span>
+      </template>
+    </p-dsd-host>
+
+    <!-- declarative clonable roots -->
+    <div id="clone-global">
+      <template shadowrootmode="open" shadowrootclonable>
+        <p-el data-where="clone-global"></p-el>
+      </template>
+    </div>
+    <div id="clone-null" polyfill-shadowrootcustomelementregistry>
+      <template
+        shadowrootmode="open"
+        shadowrootclonable
+        shadowrootcustomelementregistry
+      >
+        <p-el data-where="clone-null"></p-el>
+      </template>
+    </div>
+
+    <!-- recorded while parsing, before the document is interactive -->
+    <p-el id="while-parsing" data-where="while-parsing"></p-el>
+    <script>
+      window.notDefinedWhileParsing = document
+        .getElementById('while-parsing')
+        .matches(':is(:not(:defined), :state(polyfill-undefined))');
+    </script>
+
+    <!-- initialized via the document, by the last test -->
+    <p-el id="init-doc" customelementregistry data-where="init-doc"></p-el>
+
+    <!-- p-late is only defined after parsing, by the test -->
+    <div id="late-closed" polyfill-shadowrootcustomelementregistry>
+      <template shadowrootmode="closed" shadowrootcustomelementregistry>
+        <p-late data-where="late-closed"></p-late>
+      </template>
+    </div>
+    <div id="late-open" polyfill-shadowrootcustomelementregistry>
+      <template shadowrootmode="open" shadowrootcustomelementregistry>
+        <p-late data-where="late-open"></p-late>
+      </template>
+    </div>
+    <p-late data-where="late-outside"></p-late>
+
+    <!-- initialize during parsing: elements parsed afterwards inherit its registry -->
+    <div id="init-global" customelementregistry>
+      <div id="init-global-before" customelementregistry></div>
+      <script>
+        window.readWhileParsing = document.getElementById(
+          'init-global'
+        ).customElementRegistry;
+        customElements.initialize(document.getElementById('init-global'));
+      </script>
+      <p-el id="init-global-child" data-where="init-global"></p-el>
+      <div id="init-global-after" customelementregistry>
+        <p-el data-where="init-global-after"></p-el>
+      </div>
+    </div>
+    <div id="init-scoped" customelementregistry>
+      <script>
+        /* global registry */
+        registry.initialize(document.getElementById('init-scoped'));
+      </script>
+      <p-el id="init-scoped-child" data-where="init-scoped"></p-el>
+    </div>
+
+    <!-- p-move is only defined after parsing, by the test -->
+    <p-move id="move"></p-move>
+
+    <!-- Each operation moves or removes an element parsed in a null registry
+         subtree, before anything needed its registry, then puts it in
+         #move-dest. It keeps its null registry. -->
+    <div class="move-src" customelementregistry><span></span></div>
+    <div class="move-src" customelementregistry><span></span></div>
+    <div class="move-src" customelementregistry><span></span></div>
+    <div class="move-src" customelementregistry><span></span></div>
+    <div class="move-src" customelementregistry><span></span></div>
+    <div class="move-src" customelementregistry><span></span></div>
+    <div class="move-src" customelementregistry><span></span></div>
+    <div class="move-src" customelementregistry><span></span></div>
+    <div class="move-src" customelementregistry><span></span></div>
+    <div class="move-src" customelementregistry><span></span></div>
+    <div class="move-src" customelementregistry><span></span></div>
+    <div class="move-src" customelementregistry><span></span></div>
+    <div class="move-src" customelementregistry><span></span></div>
+    <div class="move-src" customelementregistry><span></span></div>
+    <div class="move-src" customelementregistry><span></span></div>
+    <div class="move-src" customelementregistry><span></span></div>
+    <div class="move-src" customelementregistry><span></span></div>
+    <div class="move-src" customelementregistry><span></span></div>
+    <div class="move-src" customelementregistry><span></span></div>
+    <div class="move-src" customelementregistry><span></span></div>
+    <div class="move-src" customelementregistry><span></span></div>
+    <div class="move-src" customelementregistry><span></span></div>
+    <div class="move-src" customelementregistry><span></span></div>
+    <div class="move-src" customelementregistry><span></span></div>
+    <div id="move-dest"><span id="move-marker"></span></div>
+    <script>
+      {
+        const dest = document.getElementById('move-dest');
+        const marker = document.getElementById('move-marker');
+        const placeholder = () => dest.appendChild(document.createElement('i'));
+        const removeWith = (remove) => (element) => {
+          remove(element);
+          dest.append(element);
+        };
+        const rangeAround = (element) => {
+          const range = document.createRange();
+          range.selectNode(element);
+          return range;
+        };
+        const operations = {
+          appendChild: (element) => dest.appendChild(element),
+          insertBefore: (element) => dest.insertBefore(element, marker),
+          append: (element) => dest.append(element),
+          prepend: (element) => dest.prepend(element),
+          before: (element) => marker.before(element),
+          after: (element) => marker.after(element),
+          replaceWith: (element) => placeholder().replaceWith(element),
+          replaceChild: (element) => dest.replaceChild(element, placeholder()),
+          replaceChildren: (element) =>
+            dest
+              .appendChild(document.createElement('div'))
+              .replaceChildren(element),
+          insertAdjacentElement: (element) =>
+            dest.insertAdjacentElement('beforeend', element),
+          moveBefore: (element) =>
+            dest.moveBefore
+              ? dest.moveBefore(element, null)
+              : dest.append(element),
+          remove: removeWith((element) => element.remove()),
+          removeChild: removeWith((element) =>
+            element.parentNode.removeChild(element)
+          ),
+          'replaceWith (removed)': removeWith((element) =>
+            element.replaceWith(document.createElement('i'))
+          ),
+          'replaceChildren (removed)': removeWith((element) =>
+            element.parentNode.replaceChildren()
+          ),
+          innerHTML: removeWith(
+            (element) => (element.parentNode.innerHTML = '')
+          ),
+          outerHTML: removeWith((element) => (element.outerHTML = '<i></i>')),
+          textContent: removeWith(
+            (element) => (element.parentNode.textContent = '')
+          ),
+          setHTMLUnsafe: removeWith((element) =>
+            element.parentNode.setHTMLUnsafe
+              ? element.parentNode.setHTMLUnsafe('')
+              : element.remove()
+          ),
+          setHTML: removeWith((element) =>
+            element.parentNode.setHTML
+              ? element.parentNode.setHTML('')
+              : element.remove()
+          ),
+          'Range.extractContents': removeWith((element) =>
+            rangeAround(element).extractContents()
+          ),
+          'Range.deleteContents': removeWith((element) =>
+            rangeAround(element).deleteContents()
+          ),
+          'Range.insertNode': (element) => {
+            const range = document.createRange();
+            range.selectNodeContents(dest);
+            range.insertNode(element);
+          },
+          'Range.surroundContents': (element) =>
+            rangeAround(element).surroundContents(
+              document.createElement('div')
+            ),
+        };
+        const sources = document.querySelectorAll('.move-src');
+        Object.entries(operations).forEach(([name, operation], i) => {
+          const element = sources[i].firstElementChild;
+          element.dataset.move = name;
+          operation(element);
+        });
+      }
+    </script>
+
+    <!-- entry points used by a script during parsing -->
+    <div id="mid-parse"></div>
+    <p-mid id="mid-define"></p-mid>
+    <script>
+      /* global GlobalEl */
+      const midParse = document.getElementById('mid-parse');
+      midParse.innerHTML = '<p-el></p-el>';
+      window.innerHTMLUpgradedWhileParsing =
+        midParse.firstChild instanceof GlobalEl;
+      class MidEl extends HTMLElement {}
+      customElements.define('p-mid', MidEl);
+      window.defineUpgradedWhileParsing =
+        document.getElementById('mid-define') instanceof MidEl;
+    </script>
+
+    <script type="module">
+      import {runTests} from '@web/test-runner-mocha';
+
+      runTests(async () => import('./parsing.test.html.js'));
+    </script>
+  </body>
+</html>
