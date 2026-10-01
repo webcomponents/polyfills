@@ -74,7 +74,7 @@ Object.assign(
         `<div scopedcustomelementregistry customelementregistry></div>`
       );
       nullDeclReg =
-        (d.firstChild! as HTMLElement)['customElementRegistry'] === null;
+        (g.firstChild! as HTMLElement)['customElementRegistry'] === null;
     } catch (e) {
       // squelch, unsupported browser
     }
