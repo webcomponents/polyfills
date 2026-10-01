@@ -238,7 +238,7 @@ type ParametersOf<
   const internalsForElement = new WeakMap<HTMLElement, ElementInternals>();
   const internalsAttachedByUser = new WeakSet<HTMLElement>();
   const statesOf = (internals: ElementInternals | undefined) =>
-    (internals as {states?: Set<string>} | undefined)?.states;
+    (internals as {['states']?: Set<string>} | undefined)?.['states'];
   const nativeDefine = window.customElements.define;
   const nativeGet = window.customElements.get;
   const nativeUpgrade = window.customElements.upgrade;
@@ -418,7 +418,7 @@ type ParametersOf<
       ? toStrings(elementClass.observedAttributes, 'observedAttributes')
       : [];
     const disabledFeatures = toStrings(
-      (elementClass as {disabledFeatures?: unknown}).disabledFeatures,
+      (elementClass as {['disabledFeatures']?: unknown})['disabledFeatures'],
       'disabledFeatures'
     );
     const formAssociated = Boolean(elementClass['formAssociated']);
@@ -642,7 +642,7 @@ type ParametersOf<
       return definition?.elementClass;
     }
 
-    getName(elementClass: CustomElementConstructor) {
+    ['getName'](elementClass: CustomElementConstructor) {
       const definition = this._definitionsByClass.get(elementClass);
       return definition?.tagName ?? null;
     }
@@ -768,9 +768,11 @@ type ParametersOf<
     // native custom elements and we're in the process of running the
     // "constructor-call trick" on the natively constructed instance, so just
     // return that here
+    // Note, `this` has the constructed class's prototype. (The build compiles
+    // to ES5, which can't express `new.target`.)
     if (
       activeConstruction &&
-      (new.target as unknown) === activeConstruction.elementClass
+      Object.getPrototypeOf(this) === activeConstruction.elementClass.prototype
     ) {
       const {instance} = activeConstruction;
       activeConstruction = undefined;
