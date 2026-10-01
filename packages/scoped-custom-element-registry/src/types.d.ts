@@ -35,6 +35,7 @@ declare global {
   // https://dom.spec.whatwg.org/#element
   interface Element {
     readonly customElementRegistry: CustomElementRegistry | null;
+    setHTMLUnsafe(html: string): void;
   }
 
   // https://dom.spec.whatwg.org/#dictdef-shadowrootinit

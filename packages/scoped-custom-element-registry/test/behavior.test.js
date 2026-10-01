@@ -2,6 +2,22 @@ import {expect} from '@open-wc/testing';
 import '../scoped-custom-element-registry.min.js';
 import {getTestTagName, itWithPolyfill} from './utils.js';
 
+const supportsCustomizedBuiltIns = (() => {
+  try {
+    // Test native support independently of the polyfill.
+    const registry =
+      window.CustomElementRegistryPolyfill?.nativeRegistry ??
+      window.customElements;
+    class Button extends HTMLButtonElement {}
+    registry.define(getTestTagName(), Button, {extends: 'button'});
+    return new Button().localName === 'button';
+  } catch {
+    return false;
+  }
+})();
+
+const itWithCustomizedBuiltIns = supportsCustomizedBuiltIns ? it : it.skip;
+
 // Defines a tag in a registry with a class that records upgrades and
 // lifecycle callbacks.
 const defineLogged = (registry, tagName = getTestTagName()) => {
@@ -255,40 +271,46 @@ describe('Registry API', () => {
     }
   );
 
-  it('the global registry defines customized built-in elements', async () => {
-    const tagName = getTestTagName();
-    class Button extends HTMLButtonElement {}
-    customElements.define(tagName, Button, {extends: 'button'});
-    expect(document.createElement('button', {is: tagName})).to.be.instanceOf(
-      Button
-    );
-    const container = document.createElement('div');
-    container.innerHTML = `<button is="${tagName}"></button>`;
-    expect(container.firstChild).to.be.instanceOf(Button);
-    expect(customElements.get(tagName)).to.equal(Button);
-    expect(customElements.getName(Button)).to.equal(tagName);
-    expect(await customElements.whenDefined(tagName)).to.equal(Button);
-  });
-
-  it('a customized built-in upgraded by define can look up its definition and define another', () => {
-    const tagName = getTestTagName();
-    const otherTag = getTestTagName();
-    const container = document.createElement('div');
-    container.innerHTML = `<button is="${tagName}"></button>`;
-    document.body.append(container);
-    let found;
-    class Button extends HTMLButtonElement {
-      constructor() {
-        super();
-        found = customElements.get(tagName);
-        customElements.define(otherTag, class extends HTMLElement {});
-      }
+  itWithCustomizedBuiltIns(
+    'the global registry defines customized built-in elements',
+    async () => {
+      const tagName = getTestTagName();
+      class Button extends HTMLButtonElement {}
+      customElements.define(tagName, Button, {extends: 'button'});
+      expect(document.createElement('button', {is: tagName})).to.be.instanceOf(
+        Button
+      );
+      const container = document.createElement('div');
+      container.innerHTML = `<button is="${tagName}"></button>`;
+      expect(container.firstChild).to.be.instanceOf(Button);
+      expect(customElements.get(tagName)).to.equal(Button);
+      expect(customElements.getName(Button)).to.equal(tagName);
+      expect(await customElements.whenDefined(tagName)).to.equal(Button);
     }
-    customElements.define(tagName, Button, {extends: 'button'});
-    expect(found).to.equal(Button);
-    expect(customElements.get(otherTag)).not.to.be.undefined;
-    container.remove();
-  });
+  );
+
+  itWithCustomizedBuiltIns(
+    'a customized built-in upgraded by define can look up its definition and define another',
+    () => {
+      const tagName = getTestTagName();
+      const otherTag = getTestTagName();
+      const container = document.createElement('div');
+      container.innerHTML = `<button is="${tagName}"></button>`;
+      document.body.append(container);
+      let found;
+      class Button extends HTMLButtonElement {
+        constructor() {
+          super();
+          found = customElements.get(tagName);
+          customElements.define(otherTag, class extends HTMLElement {});
+        }
+      }
+      customElements.define(tagName, Button, {extends: 'button'});
+      expect(found).to.equal(Button);
+      expect(customElements.get(otherTag)).not.to.be.undefined;
+      container.remove();
+    }
+  );
 
   it("define rejects a callback that isn't callable with a TypeError", () => {
     class Element extends HTMLElement {}
@@ -404,29 +426,32 @@ describe('Registry API', () => {
     }
   });
 
-  it("a customized built-in isn't defined while its class is being read", async () => {
-    const tagName = getTestTagName();
-    let during;
-    let whenDefined;
-    class Button extends HTMLButtonElement {
-      static get observedAttributes() {
-        during = customElements.get(tagName);
-        whenDefined = customElements.whenDefined(tagName);
-        throw new Error('observedAttributes');
+  itWithCustomizedBuiltIns(
+    "a customized built-in isn't defined while its class is being read",
+    async () => {
+      const tagName = getTestTagName();
+      let during;
+      let whenDefined;
+      class Button extends HTMLButtonElement {
+        static get observedAttributes() {
+          during = customElements.get(tagName);
+          whenDefined = customElements.whenDefined(tagName);
+          throw new Error('observedAttributes');
+        }
+        attributeChangedCallback() {}
       }
-      attributeChangedCallback() {}
+      expect(() =>
+        customElements.define(tagName, Button, {extends: 'button'})
+      ).to.throw('observedAttributes');
+      expect(during).to.be.undefined;
+      expect(customElements.get(tagName)).to.be.undefined;
+      const settled = await Promise.race([
+        whenDefined.then(() => 'defined'),
+        new Promise((resolve) => setTimeout(() => resolve('pending'), 20)),
+      ]);
+      expect(settled).to.equal('pending');
     }
-    expect(() =>
-      customElements.define(tagName, Button, {extends: 'button'})
-    ).to.throw('observedAttributes');
-    expect(during).to.be.undefined;
-    expect(customElements.get(tagName)).to.be.undefined;
-    const settled = await Promise.race([
-      whenDefined.then(() => 'defined'),
-      new Promise((resolve) => setTimeout(() => resolve('pending'), 20)),
-    ]);
-    expect(settled).to.equal('pending');
-  });
+  );
 
   it('whenDefined rejects invalid names with a SyntaxError', async () => {
     let error;

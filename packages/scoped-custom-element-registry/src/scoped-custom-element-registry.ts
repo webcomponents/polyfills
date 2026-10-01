@@ -59,12 +59,21 @@ Object.assign(
   (() => {
     const reg = 'customElementRegistry' in Element.prototype;
     let nullReg = false;
+    let nullDeclReg = false;
     try {
+      // basic support for null custom element registry
       const d = document.createElement('div', {
         ['customElementRegistry']: (null as unknown) as CustomElementRegistry,
       });
       d.innerHTML = `<span></span>`;
       nullReg =
+        (d.firstChild! as HTMLElement)['customElementRegistry'] === null;
+      // basic support for null declarative custom element registry
+      const g = document.createElement('div');
+      (g as HTMLElement).setHTMLUnsafe(
+        `<div scopedcustomelementregistry customelementregistry></div>`
+      );
+      nullDeclReg =
         (d.firstChild! as HTMLElement)['customElementRegistry'] === null;
     } catch (e) {
       // squelch, unsupported browser
@@ -72,7 +81,8 @@ Object.assign(
     return {
       'hasCustomElementRegistry': reg,
       'hasNullCustomElementRegistry': nullReg,
-      'inUse': force || !(reg && nullReg),
+      'hasNullDeclCustomElementRegistry': nullDeclReg,
+      'inUse': force || !(reg && nullReg && nullDeclReg),
     };
   })()
 );
@@ -632,6 +642,7 @@ type ParametersOf<
       }
       const shadowRoot = getShadowRoot(root);
       if (shadowRoot) {
+        nativeUpgrade.call(nativeRegistry, shadowRoot);
         this._upgrade(shadowRoot);
       }
       root.childNodes.forEach((n) => this._upgrade(n));
