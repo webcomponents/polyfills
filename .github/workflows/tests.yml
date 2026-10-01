@@ -39,9 +39,6 @@ jobs:
       - name: Lerna bootstrap
         run: npm run bootstrap
 
-      - name: Build wd browser scripts
-        run: node node_modules/wd/scripts/build-browser-scripts.js
-
       - name: Install playwright browsers (+ deps)
         run: |
           cd packages/tests && npx playwright install --with-deps
@@ -51,4 +48,4 @@ jobs:
         run: npm run build
 
       - name: Test
-        run: npm test
+        run: lerna run test --concurrency 1 --stream --no-bail
