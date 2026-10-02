@@ -54,37 +54,54 @@ polyfillWindow['CustomElementRegistryPolyfill'][
 
 const {force} = polyfillWindow['CustomElementRegistryPolyfill'];
 
-Object.assign(
-  polyfillWindow['CustomElementRegistryPolyfill'],
-  (() => {
-    const reg = 'customElementRegistry' in Element.prototype;
-    let nullReg = false;
-    let nullDeclReg = false;
+// Whether the browser's native support is complete enough to use. Added
+// based on native issues noted via testing in Chrome/Webkit. Besides the
+// registry itself, a null registry must: be inherited by parsed children, be
+// set by the declarative attributes, and keep an element from being customized
+// with a global definition. Note, the last check defines a uniquely named
+// probe element in the global registry. Names the build doesn't know are
+// quoted so it doesn't rename them.
+const detectNativeSupport = () => {
+  const hasCustomElementRegistry = 'customElementRegistry' in Element.prototype;
+  let hasNullCustomElementRegistry = false;
+  if (hasCustomElementRegistry) {
     try {
-      // basic support for null custom element registry
-      const d = document.createElement('div', {
+      const nullOptions = {
         ['customElementRegistry']: (null as unknown) as CustomElementRegistry,
-      });
-      d.innerHTML = `<span></span>`;
-      nullReg =
-        (d.firstChild! as HTMLElement)['customElementRegistry'] === null;
-      // basic support for null declarative custom element registry
-      const g = document.createElement('div');
-      (g as HTMLElement).setHTMLUnsafe(
-        `<div scopedcustomelementregistry customelementregistry></div>`
+      };
+      const parent = document.createElement('div', nullOptions);
+      parent.innerHTML = '<span></span>';
+      const declarative = document.createElement('div');
+      (declarative as HTMLElement)['setHTMLUnsafe'](
+        '<div customelementregistry scopedcustomelementregistry></div>'
       );
-      nullDeclReg =
-        (g.firstChild! as HTMLElement)['customElementRegistry'] === null;
+      const probeName = `polyfill-null-registry-probe-${Math.random()
+        .toString(36)
+        .slice(2)}`;
+      customElements.define(
+        probeName,
+        class extends HTMLElement {} as CustomElementConstructor
+      );
+      const probe = document.createElement(probeName, nullOptions);
+      hasNullCustomElementRegistry =
+        (parent.firstChild as HTMLElement)['customElementRegistry'] === null &&
+        (declarative.firstChild as HTMLElement)['customElementRegistry'] ===
+          null &&
+        !probe.matches(':defined');
     } catch (e) {
       // squelch, unsupported browser
     }
-    return {
-      'hasCustomElementRegistry': reg,
-      'hasNullCustomElementRegistry': nullReg,
-      'hasNullDeclCustomElementRegistry': nullDeclReg,
-      'inUse': force || !(reg && nullReg && nullDeclReg),
-    };
-  })()
+  }
+  return {
+    'hasCustomElementRegistry': hasCustomElementRegistry,
+    'hasNullCustomElementRegistry': hasNullCustomElementRegistry,
+    'inUse':
+      force || !hasCustomElementRegistry || !hasNullCustomElementRegistry,
+  };
+};
+Object.assign(
+  polyfillWindow['CustomElementRegistryPolyfill'],
+  detectNativeSupport()
 );
 
 // Note, `??=` so a second load does not capture the shimmed registry.

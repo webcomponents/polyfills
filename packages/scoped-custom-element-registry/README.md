@@ -101,6 +101,10 @@ use it anyway.
 Where browsers currently differ from the spec, the polyfill follows the spec.
 Tests of these are skipped when the browser's native support is used.
 
+- Safari 26 and 27 customize an element created with a null registry using
+  the global registry's definition, while still reporting a null registry.
+  The polyfill is used there.
+
 - Chromium and WebKit ignore `customelementregistry` when `innerHTML` uses
   their fast-path parser (e.g. for `<div customelementregistry></div>`), but
   honor it when the full parser runs. `setHTMLUnsafe` always honors it.
