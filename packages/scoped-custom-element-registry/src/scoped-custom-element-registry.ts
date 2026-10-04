@@ -78,9 +78,15 @@ const detectNativeSupport = () => {
       const probeName = `polyfill-null-registry-probe-${Math.random()
         .toString(36)
         .slice(2)}`;
+      // Note, not a class: the build compiles classes to functions, which
+      // can't construct an element (WebKit constructs the probe).
+      const Probe = function Probe() {
+        return Reflect.construct(HTMLElement, [], Probe);
+      };
+      Probe.prototype = Object.create(HTMLElement.prototype);
       customElements.define(
         probeName,
-        class extends HTMLElement {} as CustomElementConstructor
+        (Probe as unknown) as CustomElementConstructor
       );
       const probe = document.createElement(probeName, nullOptions);
       hasNullCustomElementRegistry =
@@ -729,6 +735,8 @@ type ParametersOf<
         waitingRegistryForElement.delete(element);
         customize(element, definition!, true);
       } else if (element.localName.includes('-')) {
+        // Note, so once defined, it's upgraded.
+        constructedDirectly.delete(element);
         // Note, only custom names can be defined. The stand-in's
         // connected/disconnected callbacks manage queuing for upgrade, so
         // only queue when the element is a stand-in and connected; otherwise
@@ -787,8 +795,16 @@ type ParametersOf<
   // for it (see `customize`). Note, a constructor can create or construct
   // other elements before calling `super()`, so this is saved and restored
   // around each customization, and only taken by that class.
+  // Note, during an upgrade, once the constructor has called `super()`,
+  // `instance` is cleared rather than the whole value: as natively (the
+  // "already constructed" marker), the constructor can't then construct its
+  // own class again.
   let activeConstruction:
-    | {instance: HTMLElement; elementClass: CustomElementConstructor}
+    | {
+        instance: HTMLElement | undefined;
+        elementClass: CustomElementConstructor;
+        isUpgrade: boolean;
+      }
     | undefined;
   // User extends this HTMLElement, which returns the CE being upgraded
   window.HTMLElement = (function HTMLElement(this: HTMLElement) {
@@ -802,8 +818,15 @@ type ParametersOf<
       activeConstruction &&
       Object.getPrototypeOf(this) === activeConstruction.elementClass.prototype
     ) {
-      const {instance} = activeConstruction;
-      activeConstruction = undefined;
+      const {instance, elementClass, isUpgrade} = activeConstruction;
+      if (instance === undefined) {
+        throw new TypeError(
+          'Failed to construct a custom element: it is being upgraded, and its constructor already called super()'
+        );
+      }
+      activeConstruction = isUpgrade
+        ? {instance: undefined, elementClass, isUpgrade}
+        : undefined;
       return instance;
     }
     // Construction case: we need to construct the StandInElement and return
@@ -833,6 +856,15 @@ type ParametersOf<
     return instance;
   } as unknown) as typeof HTMLElement;
   window.HTMLElement.prototype = NativeHTMLElement.prototype;
+  // Note, so `element.constructor === HTMLElement` holds, as natively, and
+  // its name is kept, since the build compiles the function to an anonymous
+  // one.
+  Object.defineProperty(window.HTMLElement, 'name', {value: 'HTMLElement'});
+  Object.defineProperty(NativeHTMLElement.prototype, 'constructor', {
+    value: window.HTMLElement,
+    writable: true,
+    configurable: true,
+  });
 
   // Creates the stand-in class the browser knows for a tag, which delegates to
   // the definition of each element's own registry.
@@ -863,6 +895,12 @@ type ParametersOf<
         // element is in its tree and its registry is known (see
         // `flushUpgrades`).
         standInElements.add(instance);
+        if (
+          directConstructions > 0 ||
+          (isParsing() && upgradeQueues.length === 1)
+        ) {
+          constructedDirectly.add(instance);
+        }
         if (formAssociated) {
           excludableFormElements.add(instance);
           excludableFormElementCount++;
@@ -1082,6 +1120,20 @@ type ParametersOf<
 
   // Elements which failed to upgrade get no further reactions.
   const failedElements = new WeakSet<HTMLElement>();
+  // Elements constructed directly, as natively by `createElement` and the main
+  // parser for an element whose definition already exists. Customizing any
+  // other element (made by fragment parsing or cloning, or before its
+  // definition) is an upgrade (see `activeConstruction`).
+  const constructedDirectly = new WeakSet<HTMLElement>();
+  let directConstructions = 0;
+  const constructDirectly = <T>(construct: () => T): T => {
+    directConstructions++;
+    try {
+      return construct();
+    } finally {
+      directConstructions--;
+    }
+  };
   const isFailed = (element: HTMLElement) => failedElements.has(element);
 
   // The definition of an element customized with a form-associated class. As
@@ -1265,7 +1317,11 @@ type ParametersOf<
     definitionForElement.set(instance, definition);
     const {elementClass} = definition;
     const previous = activeConstruction;
-    activeConstruction = {instance, elementClass};
+    activeConstruction = {
+      instance,
+      elementClass,
+      isUpgrade: !constructedDirectly.has(instance),
+    };
     try {
       // Note, as natively, an element with a shadow root can't upgrade to a
       // class that disables them.
@@ -1544,10 +1600,12 @@ type ParametersOf<
           nativeOptions,
         ] = flattenElementCreationOptions(this, options, 'createElement');
         return withDeferredUpgrades(() => {
-          const el = createElement.call(
-            this,
-            tagName,
-            nativeOptions as ElementCreationOptions
+          const el = constructDirectly(() =>
+            createElement.call(
+              this,
+              tagName,
+              nativeOptions as ElementCreationOptions
+            )
           ) as HTMLElementTagNameMap[K];
           registryForNode.set(
             el,
@@ -1571,11 +1629,13 @@ type ParametersOf<
           nativeOptions,
         ] = flattenElementCreationOptions(this, options, 'createElementNS');
         return withDeferredUpgrades(() => {
-          const el = createElementNS.call(
-            this,
-            namespace,
-            tagName,
-            nativeOptions as ElementCreationOptions
+          const el = constructDirectly(() =>
+            createElementNS.call(
+              this,
+              namespace,
+              tagName,
+              nativeOptions as ElementCreationOptions
+            )
           ) as HTMLElementTagNameMap[K];
           registryForNode.set(
             el,
@@ -1598,10 +1658,16 @@ type ParametersOf<
         const deep =
           typeof options === 'boolean'
             ? options
-            : options !== undefined && !options.selfOnly;
+            : options !== undefined && !options['selfOnly'];
         const optionsRegistry = ((options ?? {}) as ImportNodeOptions)[
           'customElementRegistry'
         ];
+        // Note, as natively, the option isn't nullable.
+        if (optionsRegistry === null) {
+          throw new TypeError(
+            "Failed to execute 'importNode' on 'Document': customElementRegistry can't be null"
+          );
+        }
         validateRegistry(optionsRegistry, this, 'importNode');
         // Note, the provided registry is used only as a fallback to set when
         // the imported node's registry is null.
@@ -2046,9 +2112,12 @@ type ParametersOf<
     const context = (start.nodeType === Node.ELEMENT_NODE
       ? start
       : start.parentElement) as Element | null;
-    const registry = getRegistry(
-      context ?? start.ownerDocument ?? (start as Document)
-    );
+    // Note, as natively, elements parsed in a template's context go into its
+    // contents, which have a null registry.
+    const registry =
+      context instanceof HTMLTemplateElement
+        ? null
+        : getRegistry(context ?? start.ownerDocument ?? (start as Document));
     return withDeferredUpgrades(() => {
       const fragment = nativeCreateContextualFragment.call(this, html);
       // Note, the fragment's elements get the context's registry.

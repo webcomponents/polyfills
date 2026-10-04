@@ -14,6 +14,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `define` no longer writes `formAssociated` onto the class; whether a tag is
   form-associated is still fixed by its first definition
+- `element.constructor === HTMLElement` holds for elements whose prototype is
+  `HTMLElement.prototype`, including ones not yet customized
+- As natively, an upgrade's constructor can't construct its own class again
+  after calling `super()`; a direct construction (`createElement`, the main
+  parser) still can
+- `importNode` honors `selfOnly`, and rejects a null `customElementRegistry`
+  with a `TypeError`
+- `Range.createContextualFragment` in a template's context gives elements a
+  null registry
 
 ### Changed
 

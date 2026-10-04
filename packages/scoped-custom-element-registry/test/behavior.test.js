@@ -954,6 +954,22 @@ describe('Cloning', () => {
     expect(log).to.deep.equal(['inner']);
   });
 
+  it('importNode with selfOnly copies only the node', () => {
+    const div = document.createElement('div');
+    div.append(document.createElement('span'));
+    expect(document.importNode(div, {selfOnly: true}).hasChildNodes()).to.be
+      .false;
+    expect(document.importNode(div, {}).hasChildNodes()).to.be.true;
+  });
+
+  it('importNode rejects a null registry with a TypeError', () => {
+    expect(() =>
+      document.importNode(document.createElement('div'), {
+        customElementRegistry: null,
+      })
+    ).to.throw(TypeError);
+  });
+
   it("doesn't clone a root that isn't clonable", () => {
     const host = document.createElement('div');
     host.attachShadow({mode: 'open'}).innerHTML = '<span></span>';
@@ -1232,6 +1248,19 @@ describe('Range.createContextualFragment', () => {
     const fragment = range.createContextualFragment('<span></span>');
     expect(fragment.firstChild.customElementRegistry).to.be.null;
     context.remove();
+  });
+});
+
+describe('Range.createContextualFragment in a template', () => {
+  it("gives elements a null registry, even if the template's is scoped", () => {
+    const registry = new CustomElementRegistry();
+    const template = document.createElement('template', {
+      customElementRegistry: registry,
+    });
+    const range = document.createRange();
+    range.selectNodeContents(template);
+    const fragment = range.createContextualFragment('<x-a></x-a>');
+    expect(fragment.firstChild.customElementRegistry).to.be.null;
   });
 });
 
@@ -2019,6 +2048,84 @@ describe('Constructors', () => {
     expect(() => new Element().attachInternals())
       .to.throw(DOMException)
       .with.property('name', 'NotSupportedError');
+  });
+
+  it("an element that isn't customized has HTMLElement as its constructor", () => {
+    const tagName = getTestTagName();
+    // Note, defined elsewhere, so the browser knows the name.
+    new CustomElementRegistry().define(tagName, class extends HTMLElement {});
+    expect(document.createElement(tagName).constructor).to.equal(HTMLElement);
+    expect(document.createElement('section').constructor).to.equal(HTMLElement);
+    expect(HTMLElement.name).to.equal('HTMLElement');
+  });
+
+  it('an upgrading constructor calling itself after super() throws', () => {
+    const tagName = getTestTagName();
+    const container = document.createElement('div');
+    container.innerHTML = `<${tagName}></${tagName}>`;
+    document.body.append(container);
+    let nestedError;
+    let nested;
+    class Element extends HTMLElement {
+      constructor() {
+        super();
+        if (nestedError === undefined && nested === undefined) {
+          try {
+            nested = new Element();
+          } catch (e) {
+            nestedError = e;
+          }
+        }
+      }
+    }
+    customElements.define(tagName, Element);
+    expect(container.firstChild).to.be.instanceOf(Element);
+    expect(nested).to.be.undefined;
+    expect(nestedError).to.be.instanceOf(TypeError);
+    container.remove();
+  });
+
+  it('an element created by innerHTML is upgraded, so its constructor calling itself after super() throws', () => {
+    const tagName = getTestTagName();
+    let nestedError;
+    let nested;
+    class Element extends HTMLElement {
+      constructor() {
+        super();
+        if (nestedError === undefined && nested === undefined) {
+          try {
+            nested = new Element();
+          } catch (e) {
+            nestedError = e;
+          }
+        }
+      }
+    }
+    customElements.define(tagName, Element);
+    const container = document.createElement('div');
+    container.innerHTML = `<${tagName}></${tagName}>`;
+    expect(container.firstChild).to.be.instanceOf(Element);
+    expect(nested).to.be.undefined;
+    expect(nestedError).to.be.instanceOf(TypeError);
+  });
+
+  it('a constructing constructor can call itself after super()', () => {
+    const tagName = getTestTagName();
+    let nested;
+    class Element extends HTMLElement {
+      constructor() {
+        super();
+        if (nested === undefined) {
+          nested = null;
+          nested = new Element();
+        }
+      }
+    }
+    customElements.define(tagName, Element);
+    const element = document.createElement(tagName);
+    expect(element).to.be.instanceOf(Element);
+    expect(nested).to.be.instanceOf(Element);
+    expect(nested).not.to.equal(element);
   });
 
   it('an upgrade fails if the constructor returns a different object', () => {
