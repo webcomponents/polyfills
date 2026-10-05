@@ -136,3 +136,18 @@ export const createTemplate = (html) => {
  */
 export const itWithPolyfill = (name, fn) =>
   (window.CustomElementRegistryPolyfill?.inUse ? it : it.skip)(name, fn);
+
+/**
+ * Appends a same-origin iframe running the polyfill as this page does (forced
+ * if this page's is), so tests can use registries, elements and nodes across
+ * windows. Where the browser's native support is used, so is it there.
+ */
+export const appendIframeWithPolyfill = async () => {
+  const iframe = document.createElement('iframe');
+  document.body.append(iframe);
+  const response = await fetch(
+    new URL('../scoped-custom-element-registry.min.js', import.meta.url)
+  );
+  iframe.contentWindow.eval(await response.text());
+  return iframe;
+};

@@ -1,6 +1,10 @@
 import {expect} from '@open-wc/testing';
 import '../scoped-custom-element-registry.min.js';
-import {getTestTagName, itWithPolyfill} from './utils.js';
+import {
+  appendIframeWithPolyfill,
+  getTestTagName,
+  itWithPolyfill,
+} from './utils.js';
 
 const supportsCustomizedBuiltIns = (() => {
   try {
@@ -1841,6 +1845,111 @@ describe('Adoption across documents', () => {
     inertDocument().adoptNode(host);
     expect(host.querySelector('span').customElementRegistry).to.be.null;
     expect(root.customElementRegistry).to.be.null;
+  });
+});
+
+describe('Adoption rules', () => {
+  // https://dom.spec.whatwg.org/#concept-node-adopt
+  // Note, Chromium gives the element the document's registry instead.
+  itWithPolyfill(
+    "a null-registry element gets its new parent's registry, as an effective global registry",
+    () => {
+      const registry = new CustomElementRegistry();
+      const doc = document.implementation.createHTMLDocument();
+      const parent = doc.createElement('div', {
+        customElementRegistry: registry,
+      });
+      const child = doc.createElement('span', {customElementRegistry: null});
+      parent.append(child);
+      document.body.append(parent);
+      expect(parent.customElementRegistry).to.equal(registry);
+      // Note, a scoped registry's effective global registry is null.
+      expect(child.customElementRegistry).to.be.null;
+      parent.remove();
+    }
+  );
+
+  it('a global element adopted into a document with a scoped registry gets null', () => {
+    const registry = new CustomElementRegistry();
+    const doc = document.implementation.createHTMLDocument();
+    registry.initialize(doc);
+    const element = document.createElement('div');
+    doc.body.append(element);
+    expect(element.customElementRegistry).to.be.null;
+  });
+
+  it('a declarative root with a null registry keeps it when adopted', () => {
+    const doc = document.implementation.createHTMLDocument();
+    doc.body.setHTMLUnsafe(
+      '<div polyfill-shadowrootcustomelementregistry><template shadowrootmode="open" shadowrootcustomelementregistry></template></div>'
+    );
+    const host = doc.body.firstElementChild;
+    document.body.append(host);
+    expect(host.shadowRoot.customElementRegistry).to.be.null;
+    host.remove();
+  });
+});
+
+describe('Across windows', () => {
+  let iframe;
+  beforeEach(async () => {
+    iframe = await appendIframeWithPolyfill();
+  });
+  afterEach(() => iframe.remove());
+
+  it("a scoped registry upgrades elements in another window's shadow roots", () => {
+    const registry = new CustomElementRegistry();
+    const tagName = getTestTagName();
+    const doc = iframe.contentDocument;
+    const host = doc.createElement('div');
+    const root = host.attachShadow({
+      mode: 'open',
+      customElementRegistry: registry,
+    });
+    root.innerHTML = `<${tagName}></${tagName}>`;
+    doc.body.append(host);
+    class Element extends HTMLElement {}
+    registry.define(tagName, Element);
+    expect(root.firstChild).to.be.instanceOf(Element);
+    expect(
+      doc.createElement(tagName, {customElementRegistry: registry})
+    ).to.be.instanceOf(Element);
+  });
+
+  it("an element moved into another window's document gets its registry", () => {
+    const element = document.createElement('div');
+    iframe.contentDocument.body.append(element);
+    expect(element.customElementRegistry).to.equal(
+      iframe.contentWindow.customElements
+    );
+  });
+
+  it('define upgrades in the order documents were associated with the registry', () => {
+    const registry = new CustomElementRegistry();
+    const tagName = getTestTagName();
+    const log = [];
+    const attach = (doc, id) => {
+      const host = doc.createElement('div');
+      host
+        .attachShadow({mode: 'open', customElementRegistry: registry})
+        .setHTMLUnsafe(`<${tagName} id="${id}"></${tagName}>`);
+      doc.body.append(host);
+      return host;
+    };
+    const inIframe = attach(iframe.contentDocument, 'a');
+    const inMain = attach(document, 'b');
+    registry.define(
+      tagName,
+      class extends HTMLElement {
+        constructor() {
+          super();
+          log.push(this.id);
+        }
+      }
+    );
+    expect(log).to.deep.equal(['a', 'b']);
+    inIframe.remove();
+    inMain.remove();
   });
 });
 

@@ -119,6 +119,8 @@ Tests of these are skipped when the browser's native support is used.
     registry, gets that scoped registry instead of null;
   - `ElementInternals.setFormValue` works for an element whose constructor
     failed, which isn't form-associated;
+  - adopting a null-registry element gives it the document's registry,
+    instead of its new parent's (as an effective global registry);
   - adopting a host gives its shadow root a null registry but leaves the
     elements inside it global.
 
