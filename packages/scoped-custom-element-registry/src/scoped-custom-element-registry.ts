@@ -1346,8 +1346,15 @@ type ParametersOf<
     });
   };
 
-  // An entry point: runs `fn` with its own queue, then flushes it.
+  // An entry point: runs `fn` with its own queue, then flushes it. Note,
+  // elements constructed outside any entry point (e.g. by an API the polyfill
+  // doesn't patch) wait for a microtask to be customized. An entry point
+  // customizes them first, so it sees them as natively it would (e.g. a
+  // `define` upgrading them).
   const withDeferredUpgrades = <T>(fn: () => T): T => {
+    if (!isParsing() && parserQueue.size && !flushingQueues.has(parserQueue)) {
+      flushUpgrades(parserQueue);
+    }
     const queue = new Set<HTMLElement>();
     entryQueues.push(queue);
     try {
