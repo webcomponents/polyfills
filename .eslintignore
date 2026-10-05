@@ -41,6 +41,11 @@ packages/webcomponentsjs/custom-elements-es5-adapter.js
 packages/webcomponentsjs/webcomponents-bundle.d.ts
 packages/webcomponentsjs/webcomponents-bundle.js*
 
+# Vendored web platform tests (see test/wpt/README.md)
+packages/scoped-custom-element-registry/test/wpt/custom-elements/
+packages/scoped-custom-element-registry/test/wpt/resources/
+packages/scoped-custom-element-registry/test/wpt/common/
+
 packages/scoped-custom-element-registry/**/.wireit/
 packages/scoped-custom-element-registry/**/.tsbuildinfo
 packages/scoped-custom-element-registry/**/build/

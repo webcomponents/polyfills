@@ -45,6 +45,11 @@ packages/scoped-custom-element-registry/**/.wireit/
 packages/scoped-custom-element-registry/**/.tsbuildinfo
 packages/scoped-custom-element-registry/**/build/
 
+# Vendored web platform tests (see test/wpt/README.md)
+packages/scoped-custom-element-registry/test/wpt/custom-elements/
+packages/scoped-custom-element-registry/test/wpt/resources/
+packages/scoped-custom-element-registry/test/wpt/common/
+
 LICENSE
 packages/*/LICENSE.md
 packages/tests/html-imports/html/imports/unclosed-import.html
