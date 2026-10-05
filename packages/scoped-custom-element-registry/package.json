@@ -21,7 +21,10 @@
     "build": "wireit",
     "build:ts": "wireit",
     "test": "wireit",
-    "test:forced": "wireit"
+    "test:forced": "wireit",
+    "test:wpt": "wireit",
+    "wpt:baseline": "npm run build && WPT_UPDATE_BASELINE=true FORCE_POLYFILL=true wtr --config web-test-runner.wpt.config.mjs",
+    "wpt:update": "node test/wpt/update.mjs"
   },
   "files": [
     "CHANGELOG.md",
@@ -83,7 +86,8 @@
       "command": "wtr",
       "dependencies": [
         "build",
-        "test:forced"
+        "test:forced",
+        "test:wpt"
       ],
       "files": [
         "web-test-runner.config.js",
@@ -103,6 +107,21 @@
       "files": [
         "web-test-runner.config.js",
         "test/**/*.test.(js|html)"
+      ],
+      "output": []
+    },
+    "test:wpt": {
+      "command": "wtr --config web-test-runner.wpt.config.mjs",
+      "env": {
+        "FORCE_POLYFILL": "true"
+      },
+      "dependencies": [
+        "build"
+      ],
+      "files": [
+        "web-test-runner.config.js",
+        "web-test-runner.wpt.config.mjs",
+        "test/wpt/**"
       ],
       "output": []
     }

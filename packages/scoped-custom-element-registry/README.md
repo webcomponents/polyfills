@@ -135,3 +135,16 @@ skipped (see `itWithPolyfill` in `test/utils.js`).
 
 To run the tests in a Firefox-engine browser without native support, see
 `test/wtr.firefox.config.js`.
+
+`npm test` also runs the web platform tests for custom element registries,
+vendored in `test/wpt/`, in Chromium, Firefox and WebKit with the polyfill
+forced (`npm run test:wpt`). Pages are adjusted for the limitations described
+above (see `test/wpt/shims.mjs`). Known failures are listed per browser in
+`test/wpt/baseline/`: a run fails if any other test fails, or if a listed one
+passes. To update:
+
+- `npm run wpt:update [-- <commit>]` vendors the tests from WPT (default: the
+  latest commit).
+- `npm run wpt:baseline` regenerates the known failures.
+
+To try tests by hand against wpt.live, see `test/wpt-proxy.mjs`.
