@@ -220,6 +220,8 @@ type ParametersOf<
 //   get its registry (see `cloneWithRegistries`).
 // - Forms: an element whose own class isn't form-associated, of a tag that
 //   is, is left out of its form's collections (see `isFormControl`).
+// - Windows: same-origin windows each run the polyfill, but share its state,
+//   so registries, elements and nodes work across them (see `shared`).
 //
 // Use an IIFE to prevent polyfill use if native scoped registries are detected
 (() => {
@@ -231,6 +233,34 @@ type ParametersOf<
   if (polyfillWindow['CustomElementRegistryPolyfill']['loaded']) {
     return;
   }
+
+  // Same-origin windows share the polyfill's state: the first copy to load
+  // puts it on the topmost window it can reach, and later copies use it, so
+  // registries, elements and nodes work across windows (e.g. iframes). A
+  // copy of another version keeps its own. Each window still has its own
+  // patches, global registry, stand-in classes and parser queue.
+  const STATE_VERSION = '1';
+  const stateKey = '__scopedCustomElementRegistryPolyfillState';
+  const topWindow = (() => {
+    let top: Window = window;
+    try {
+      while (top.parent !== top && top.parent.document) {
+        top = top.parent;
+      }
+    } catch {
+      // Note, a cross-origin ancestor can't be reached.
+    }
+    return (top as unknown) as Record<string, Record<string, unknown>>;
+  })();
+  let state = topWindow[stateKey];
+  if (state?.['version'] !== STATE_VERSION) {
+    state = {['version']: STATE_VERSION};
+    if (!topWindow[stateKey]) {
+      topWindow[stateKey] = state;
+    }
+  }
+  const shared = <T>(name: string, create: () => T): T =>
+    (state![name] ??= create()) as T;
   polyfillWindow['CustomElementRegistryPolyfill']['loaded'] = true;
 
   // Note, the parser consumes a declarative template, taking with it the
@@ -268,8 +298,14 @@ type ParametersOf<
   // Note, an element can attach internals only once, so the stand-in's
   // internals are handed to the user (see `attachInternals` below).
   const nativeAttachInternals = NativeHTMLElement.prototype['attachInternals'];
-  const internalsForElement = new WeakMap<HTMLElement, ElementInternals>();
-  const internalsAttachedByUser = new WeakSet<HTMLElement>();
+  const internalsForElement = shared(
+    'internalsForElement',
+    () => new WeakMap<HTMLElement, ElementInternals>()
+  );
+  const internalsAttachedByUser = shared(
+    'internalsAttachedByUser',
+    () => new WeakSet<HTMLElement>()
+  );
   const statesOf = (internals: ElementInternals | undefined) =>
     (internals as {['states']?: Set<string>} | undefined)?.['states'];
   const nativeDefine = window.customElements.define;
@@ -277,14 +313,14 @@ type ParametersOf<
   const nativeUpgrade = window.customElements.upgrade;
   const nativeRegistry = window.customElements;
 
-  const definitionForElement = new WeakMap<
-    HTMLElement,
-    CustomElementDefinition
-  >();
-  const waitingRegistryForElement = new WeakMap<
-    HTMLElement,
-    ShimmedCustomElementsRegistry
-  >();
+  const definitionForElement = shared(
+    'definitionForElement',
+    () => new WeakMap<HTMLElement, CustomElementDefinition>()
+  );
+  const waitingRegistryForElement = shared(
+    'waitingRegistryForElement',
+    () => new WeakMap<HTMLElement, ShimmedCustomElementsRegistry>()
+  );
   const globalDefinitionForConstructor = new WeakMap<
     CustomElementConstructor,
     CustomElementDefinition
@@ -304,12 +340,19 @@ type ParametersOf<
    *
    * See https://dom.spec.whatwg.org/#concept-create-element
    */
-  const registryForNode = new WeakMap<
-    Node,
-    ShimmedCustomElementsRegistry | null
-  >();
+  const registryForNode = shared(
+    'registryForNode',
+    () => new WeakMap<Node, ShimmedCustomElementsRegistry | null>()
+  );
   const childrenOf = (node: Node) =>
     Array.from((node as ParentNode).children ?? []);
+  // Note, not `instanceof`, which fails for nodes from other windows.
+  const isShadowRoot = (node: unknown): node is ShadowRoot =>
+    (node as Node | null)?.nodeType === Node.DOCUMENT_FRAGMENT_NODE &&
+    'host' in (node as ShadowRoot);
+  const isTemplate = (node: unknown): node is HTMLTemplateElement =>
+    (node as Element | null)?.localName === 'template' &&
+    (node as Element).namespaceURI === 'http://www.w3.org/1999/xhtml';
 
   // Gives `node` and every element under it with a null registry `registry`
   // (see `initialize`).
@@ -559,8 +602,8 @@ type ParametersOf<
       // Note, native define constructs the stand-ins of existing elements,
       // which are customized when this entry point returns.
       if (!standInClass) {
-        standInClass = createStandInClass(definition.standInFormAssociated!);
-        nativeDefine.call(nativeRegistry, tagName, standInClass);
+        defineStandInEverywhere(tagName, definition.standInFormAssociated!);
+        standInClass = nativeGet.call(nativeRegistry, tagName);
       }
       this._definitionsByTag.set(tagName, definition);
       this._definitionsByClass.set(elementClass, definition);
@@ -799,13 +842,17 @@ type ParametersOf<
   // `instance` is cleared rather than the whole value: as natively (the
   // "already constructed" marker), the constructor can't then construct its
   // own class again.
-  let activeConstruction:
-    | {
-        instance: HTMLElement | undefined;
-        elementClass: CustomElementConstructor;
-        isUpgrade: boolean;
-      }
-    | undefined;
+  const current = shared('current', () => ({
+    construction: undefined as
+      | {
+          instance: HTMLElement | undefined;
+          elementClass: CustomElementConstructor;
+          isUpgrade: boolean;
+        }
+      | undefined,
+    directConstructions: 0,
+    excludableFormElementCount: 0,
+  }));
   // User extends this HTMLElement, which returns the CE being upgraded
   window.HTMLElement = (function HTMLElement(this: HTMLElement) {
     // Upgrading case: the StandInElement constructor was run by the browser's
@@ -815,16 +862,17 @@ type ParametersOf<
     // Note, `this` has the constructed class's prototype. (The build compiles
     // to ES5, which can't express `new.target`.)
     if (
-      activeConstruction &&
-      Object.getPrototypeOf(this) === activeConstruction.elementClass.prototype
+      current.construction &&
+      Object.getPrototypeOf(this) ===
+        current.construction.elementClass.prototype
     ) {
-      const {instance, elementClass, isUpgrade} = activeConstruction;
+      const {instance, elementClass, isUpgrade} = current.construction;
       if (instance === undefined) {
         throw new TypeError(
           'Failed to construct a custom element: it is being upgraded, and its constructor already called super()'
         );
       }
-      activeConstruction = isUpgrade
+      current.construction = isUpgrade
         ? {instance: undefined, elementClass, isUpgrade}
         : undefined;
       return instance;
@@ -851,7 +899,7 @@ type ParametersOf<
     // counted here if it may be left out of its form (see `isFormControl`).
     if (definition.standInFormAssociated && !definition['formAssociated']) {
       excludableFormElements.add(instance);
-      excludableFormElementCount++;
+      current.excludableFormElementCount++;
     }
     return instance;
   } as unknown) as typeof HTMLElement;
@@ -896,14 +944,14 @@ type ParametersOf<
         // `flushUpgrades`).
         standInElements.add(instance);
         if (
-          directConstructions > 0 ||
-          (isParsing() && upgradeQueues.length === 1)
+          current.directConstructions > 0 ||
+          (isParsing() && entryQueues.length === 0)
         ) {
           constructedDirectly.add(instance);
         }
         if (formAssociated) {
           excludableFormElements.add(instance);
-          excludableFormElementCount++;
+          current.excludableFormElementCount++;
         }
         currentQueue().add(instance);
         if (!shouldDeferUpgrade()) {
@@ -1043,6 +1091,44 @@ type ParametersOf<
     standInClasses.add(standInClass);
     return standInClass;
   };
+
+  // Note, every window sharing the state (see `shared`) gets a stand-in for
+  // each name any registry defines, so its browser constructs elements of it
+  // too. A window that's closed or gone is dropped.
+  const standInTags = shared('standInTags', () => new Map<string, boolean>());
+  const standInDefiners = shared(
+    'standInDefiners',
+    () =>
+      new Set<{
+        window: Window;
+        define: (tagName: string, formAssociated: boolean) => void;
+      }>()
+  );
+  const defineStandInHere = (tagName: string, formAssociated: boolean) => {
+    if (!nativeGet.call(nativeRegistry, tagName)) {
+      nativeDefine.call(
+        nativeRegistry,
+        tagName,
+        createStandInClass(formAssociated)
+      );
+    }
+  };
+  const defineStandInEverywhere = (
+    tagName: string,
+    formAssociated: boolean
+  ) => {
+    standInTags.set(tagName, formAssociated);
+    for (const definer of standInDefiners) {
+      try {
+        if (definer.window.closed) {
+          throw new Error('closed');
+        }
+        definer.define(tagName, formAssociated);
+      } catch {
+        standInDefiners.delete(definer);
+      }
+    }
+  };
   window.CustomElementRegistry = ShimmedCustomElementsRegistry;
 
   // The browser only knows the stand-in class, whose observed attributes can't
@@ -1105,33 +1191,51 @@ type ParametersOf<
   // (customized once inserted, see `observeParsing`) and ones constructed
   // outside any entry point (customized in a microtask).
   const isParsing = () => document.readyState === 'loading';
-  const upgradeQueues: Array<Set<HTMLElement>> = [new Set()];
-  const flushingQueues = new WeakSet<Set<HTMLElement>>();
-  const currentQueue = () => upgradeQueues[upgradeQueues.length - 1];
+  // Note, entry points' queues are shared, since an entry point in one window
+  // can make another window's browser construct stand-ins (see
+  // `defineStandInEverywhere`). The parser's queue is this window's.
+  const entryQueues = shared(
+    'entryQueues',
+    () => [] as Array<Set<HTMLElement>>
+  );
+  const parserQueue = new Set<HTMLElement>();
+  const flushingQueues = shared(
+    'flushingQueues',
+    () => new WeakSet<Set<HTMLElement>>()
+  );
+  const currentQueue = () => entryQueues[entryQueues.length - 1] ?? parserQueue;
   const shouldDeferUpgrade = () =>
     !flushingQueues.has(currentQueue()) &&
-    (isParsing() || upgradeQueues.length > 1);
+    (isParsing() || entryQueues.length > 0);
   const isUpgradeQueued = (element: HTMLElement) =>
-    upgradeQueues.some((queue) => queue.has(element));
+    parserQueue.has(element) || entryQueues.some((queue) => queue.has(element));
   // Elements the browser constructed as stand-ins. Only these are customized:
   // customizing any other element would be undone when the browser later
   // constructs it, which resets its prototype.
-  const standInElements = new WeakSet<HTMLElement>();
+  const standInElements = shared(
+    'standInElements',
+    () => new WeakSet<HTMLElement>()
+  );
 
   // Elements which failed to upgrade get no further reactions.
-  const failedElements = new WeakSet<HTMLElement>();
+  const failedElements = shared(
+    'failedElements',
+    () => new WeakSet<HTMLElement>()
+  );
   // Elements constructed directly, as natively by `createElement` and the main
   // parser for an element whose definition already exists. Customizing any
   // other element (made by fragment parsing or cloning, or before its
-  // definition) is an upgrade (see `activeConstruction`).
-  const constructedDirectly = new WeakSet<HTMLElement>();
-  let directConstructions = 0;
+  // definition) is an upgrade (see `current.construction`).
+  const constructedDirectly = shared(
+    'constructedDirectly',
+    () => new WeakSet<HTMLElement>()
+  );
   const constructDirectly = <T>(construct: () => T): T => {
-    directConstructions++;
+    current.directConstructions++;
     try {
       return construct();
     } finally {
-      directConstructions--;
+      current.directConstructions--;
     }
   };
   const isFailed = (element: HTMLElement) => failedElements.has(element);
@@ -1150,8 +1254,10 @@ type ParametersOf<
   // form-associated class. Note, while there are none, collections are read
   // without filtering. One that's garbage collected first is never removed,
   // which only loses that shortcut.
-  const excludableFormElements = new WeakSet<HTMLElement>();
-  let excludableFormElementCount = 0;
+  const excludableFormElements = shared(
+    'excludableFormElements',
+    () => new WeakSet<HTMLElement>()
+  );
 
   // Note, as natively, an error from a constructor or callback is reported
   // rather than thrown, so the remaining reactions still run. Only a failed
@@ -1210,7 +1316,7 @@ type ParametersOf<
     queueMicrotask(() => {
       flushScheduled = false;
       if (!isParsing()) {
-        flushUpgrades(upgradeQueues[0]);
+        flushUpgrades(parserQueue);
       }
     });
   };
@@ -1218,12 +1324,12 @@ type ParametersOf<
   // An entry point: runs `fn` with its own queue, then flushes it.
   const withDeferredUpgrades = <T>(fn: () => T): T => {
     const queue = new Set<HTMLElement>();
-    upgradeQueues.push(queue);
+    entryQueues.push(queue);
     try {
       return fn();
     } finally {
       flushUpgrades(queue);
-      upgradeQueues.pop();
+      entryQueues.pop();
     }
   };
 
@@ -1237,7 +1343,7 @@ type ParametersOf<
   // Elements not yet inserted wait for a later callback, and any left are
   // customized when the document becomes interactive.
   const observeParsing = () => {
-    const parsed = upgradeQueues[0];
+    const parsed = parserQueue;
     const observer = new MutationObserver(() => {
       if (flushingQueues.has(parsed)) {
         return;
@@ -1347,8 +1453,8 @@ type ParametersOf<
     Object.setPrototypeOf(instance, definition.elementClass.prototype);
     definitionForElement.set(instance, definition);
     const {elementClass} = definition;
-    const previous = activeConstruction;
-    activeConstruction = {
+    const previous = current.construction;
+    current.construction = {
       instance,
       elementClass,
       isUpgrade: !constructedDirectly.has(instance),
@@ -1377,14 +1483,14 @@ type ParametersOf<
       failedElements.add(instance);
       throw e;
     } finally {
-      activeConstruction = previous;
+      current.construction = previous;
     }
     statesOf(internalsForElement.get(instance))?.delete(UNDEFINED_STATE);
     if (
       definition['formAssociated'] &&
       excludableFormElements.delete(instance)
     ) {
-      excludableFormElementCount--;
+      current.excludableFormElementCount--;
     }
     if (definition.attributeChangedCallback) {
       invokeInitialAttributeCallbacks(instance, definition);
@@ -1414,7 +1520,10 @@ type ParametersOf<
   };
 
   // Shadow roots the polyfill knows, including closed ones.
-  const shadowRootForHost = new WeakMap<Element, ShadowRoot>();
+  const shadowRootForHost = shared(
+    'shadowRootForHost',
+    () => new WeakMap<Element, ShadowRoot>()
+  );
 
   // The shadow root exposed to a host's internals, without recording its
   // registry.
@@ -1533,7 +1642,7 @@ type ParametersOf<
       return getDefaultRegistry(node);
     }
     let registry: ShimmedCustomElementsRegistry | null;
-    if (node instanceof ShadowRoot) {
+    if (isShadowRoot(node)) {
       const {host} = node;
       shadowRootForHost.set(host, node);
       registry = clonedShadowRootRegistries.has(host)
@@ -1548,7 +1657,7 @@ type ParametersOf<
       if (
         parent === null ||
         (parent.nodeType === Node.DOCUMENT_FRAGMENT_NODE &&
-          !(parent instanceof ShadowRoot))
+          !isShadowRoot(parent))
       ) {
         return getDefaultRegistry(node);
       }
@@ -1750,7 +1859,7 @@ type ParametersOf<
     node: Node,
     registry: ShimmedCustomElementsRegistry | null
   ) => {
-    if (node.nodeType === Node.ELEMENT_NODE || node instanceof ShadowRoot) {
+    if (node.nodeType === Node.ELEMENT_NODE || isShadowRoot(node)) {
       const current = (node as Element)[
         'customElementRegistry'
       ] as ShimmedCustomElementsRegistry | null;
@@ -1772,11 +1881,14 @@ type ParametersOf<
   // via their `connectedCallback`, others when the browser constructs them.
   const setRegistryForAdoptedNodes = (doc: Document, ...args: Array<unknown>) =>
     (args as unknown[]).forEach((arg) => {
-      if (!(arg instanceof Node) || (arg as Node).ownerDocument === doc) {
+      if (
+        typeof (arg as Node | null)?.nodeType !== 'number' ||
+        (arg as Node).ownerDocument === doc
+      ) {
         return;
       }
       adoptRegistries(
-        arg,
+        arg as Node,
         doc['customElementRegistry'] as ShimmedCustomElementsRegistry | null
       );
     });
@@ -1790,8 +1902,8 @@ type ParametersOf<
   // for methods that only move or remove.
   const recordRegistriesBeforeMove = (nodes: Iterable<unknown>) => {
     for (const node of nodes) {
-      if (node instanceof Element) {
-        getRegistry(node);
+      if ((node as Node | null)?.nodeType === Node.ELEMENT_NODE) {
+        getRegistry(node as Node);
       }
     }
   };
@@ -1958,7 +2070,7 @@ type ParametersOf<
     }
     // Note, as natively, the fallback registry doesn't apply to a template's
     // contents. A shallow clone doesn't copy them, so there's nothing to pair.
-    if (sourceElement instanceof HTMLTemplateElement) {
+    if (isTemplate(sourceElement)) {
       const sources = elementsOf(sourceElement.content, true);
       const copies = elementsOf(
         (copyElement as HTMLTemplateElement).content,
@@ -2018,10 +2130,10 @@ type ParametersOf<
   // nested inside it, which can't be reached either, the document's), even if
   // its original used a different one.
   const unreachableCopyRoots = new Map<Element, ShadowRoot>();
-  const clonedShadowRootRegistries = new WeakMap<
-    Element,
-    ShimmedCustomElementsRegistry | null
-  >();
+  const clonedShadowRootRegistries = shared(
+    'clonedShadowRootRegistries',
+    () => new WeakMap<Element, ShimmedCustomElementsRegistry | null>()
+  );
   const pairUnreachableCopyRoots = () => {
     // Note, pairing a root can note roots nested in it, so this repeats.
     let paired = true;
@@ -2031,16 +2143,12 @@ type ParametersOf<
         // Note, a root nested in a noted root is only noted once that one is
         // paired, so the element's root may be reached through its host's.
         let root = element.getRootNode();
-        while (
-          root instanceof ShadowRoot &&
-          !unreachableCopyRoots.has(root.host)
-        ) {
+        while (isShadowRoot(root) && !unreachableCopyRoots.has(root.host)) {
           root = root.host.getRootNode();
         }
-        const source =
-          root instanceof ShadowRoot
-            ? unreachableCopyRoots.get(root.host)
-            : undefined;
+        const source = isShadowRoot(root)
+          ? unreachableCopyRoots.get(root.host)
+          : undefined;
         if (source) {
           unreachableCopyRoots.delete((root as ShadowRoot).host);
           shadowRootForHost.set((root as ShadowRoot).host, root as ShadowRoot);
@@ -2154,10 +2262,9 @@ type ParametersOf<
       : start.parentElement) as Element | null;
     // Note, as natively, elements parsed in a template's context go into its
     // contents, which have a null registry.
-    const registry =
-      context instanceof HTMLTemplateElement
-        ? null
-        : getRegistry(context ?? start.ownerDocument ?? (start as Document));
+    const registry = isTemplate(context)
+      ? null
+      : getRegistry(context ?? start.ownerDocument ?? (start as Document));
     return withDeferredUpgrades(() => {
       const fragment = nativeCreateContextualFragment.call(this, html);
       // Note, the fragment's elements get the context's registry.
@@ -2403,7 +2510,7 @@ type ParametersOf<
         definitionForElement.has(element as HTMLElement)
       );
     const controlsOf = (list: ArrayLike<Element>): ArrayLike<Element> =>
-      excludableFormElementCount === 0
+      current.excludableFormElementCount === 0
         ? list
         : (Array.prototype.filter.call(list, isFormControl) as Array<Element>);
     const nativeNamedItem = HTMLFormControlsCollection.prototype.namedItem;
@@ -2534,4 +2641,12 @@ type ParametersOf<
       },
     });
   }
+
+  // Note, last, since defining stand-ins can construct elements, which needs
+  // everything above. A window joining later catches up on names defined so
+  // far.
+  standInDefiners.add({window, define: defineStandInHere});
+  standInTags.forEach((formAssociated, tagName) =>
+    defineStandInHere(tagName, formAssociated)
+  );
 })();
