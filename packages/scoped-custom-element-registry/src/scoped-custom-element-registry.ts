@@ -550,6 +550,17 @@ type ParametersOf<
     // Note, set while `define` reads the user's class (see `_whileDefining`).
     private _isDefining = false;
     readonly _isScoped = !isCreatingGlobalRegistry;
+    // Note, as natively (its "scoped document set"), the documents a scoped
+    // registry is used in, in the order it was first used there, which is
+    // the order `define` upgrades in. Approximated by when it's associated
+    // with a node (a shadow root, element or `initialize`), rather than when
+    // that node is connected.
+    readonly _documents = new Set<Document>();
+    _associate(doc: Document) {
+      if (this._isScoped) {
+        this._documents.add(doc);
+      }
+    }
 
     // Note, defining can upgrade existing elements, so it's an entry point.
     define(
@@ -619,6 +630,19 @@ type ParametersOf<
         for (const element of awaiting) {
           this._upgradeOrWait(element, definition);
         }
+      }
+      // Note, as natively, a scoped registry upgrades document by document,
+      // in its documents' order, then in tree order (the queue's order).
+      if (this._isScoped) {
+        const documents = [...this._documents];
+        const order = (element: HTMLElement) => {
+          const index = documents.indexOf(element.ownerDocument);
+          return index === -1 ? documents.length : index;
+        };
+        const queue = currentQueue();
+        const sorted = [...queue].sort((a, b) => order(a) - order(b));
+        queue.clear();
+        sorted.forEach((element) => queue.add(element));
       }
       this._resolveWhenDefined(tagName, elementClass);
     }
@@ -807,6 +831,7 @@ type ParametersOf<
           'NotSupportedError'
         );
       }
+      this._associate(node.ownerDocument ?? (node as Document));
       initializeSubtree(node, this);
       // Note, with native support, the browser never constructs elements it
       // parsed into a null registry subtree, so they get no native reactions.
@@ -1572,6 +1597,9 @@ type ParametersOf<
         'NotSupportedError'
       );
     }
+    (registry as ShimmedCustomElementsRegistry | undefined)?._associate?.(
+      this.ownerDocument
+    );
     return withDeferredUpgrades(() => {
       const shadowRoot = nativeAttachShadow.call(
         this,
@@ -1727,6 +1755,7 @@ type ParametersOf<
       );
     }
     validateRegistry(optionsRegistry, doc, method);
+    (optionsRegistry as ShimmedCustomElementsRegistry | null)?._associate(doc);
     return [optionsRegistry, nativeOptions];
   };
 
@@ -1852,28 +1881,50 @@ type ParametersOf<
     customElementRegistryDescriptor
   );
 
-  // Note, as native does, an adopted node whose registry is null or a global
-  // registry gets the registry of the document into which it's adopted; a
-  // scoped registry is kept. This applies through shadow roots.
+  // Adopting a node into another document updates registries as natively
+  // (https://dom.spec.whatwg.org/#concept-node-adopt), in shadow-including
+  // tree order. Scoped registries are kept. A shadow root's null or global
+  // registry becomes the document's effective global registry, except a
+  // declarative root with the null registry attribute stays null. An
+  // element's null or global registry becomes the effective global registry
+  // of the document's registry if it was global, or it's the adopted node
+  // (whose parent is removed first) or in a document fragment; otherwise of
+  // its parent's.
+  const effectiveGlobal = (registry: ShimmedCustomElementsRegistry | null) =>
+    registry?._isScoped ? null : registry;
   const adoptRegistries = (
     node: Node,
-    registry: ShimmedCustomElementsRegistry | null
+    documentRegistry: ShimmedCustomElementsRegistry | null,
+    isAdoptedNode = true
   ) => {
-    if (node.nodeType === Node.ELEMENT_NODE || isShadowRoot(node)) {
-      const current = (node as Element)[
-        'customElementRegistry'
-      ] as ShimmedCustomElementsRegistry | null;
-      if (current === null || !current._isScoped) {
-        registryForNode.set(node, registry);
+    const current = getRegistry(node);
+    if (current === null || !current._isScoped) {
+      if (isShadowRoot(node)) {
+        const keepsNull =
+          current === null && node.host.hasAttribute(DSD_HOST_ATTRIBUTE);
+        if (!keepsNull) {
+          registryForNode.set(node, effectiveGlobal(documentRegistry));
+        }
+      } else if (node.nodeType === Node.ELEMENT_NODE) {
+        const parent = node.parentNode;
+        const fromDocument =
+          current !== null ||
+          isAdoptedNode ||
+          parent === null ||
+          (parent.nodeType === Node.DOCUMENT_FRAGMENT_NODE &&
+            !isShadowRoot(parent));
+        registryForNode.set(
+          node,
+          effectiveGlobal(fromDocument ? documentRegistry : getRegistry(parent))
+        );
       }
     }
     const shadowRoot = getShadowRoot(node);
     if (shadowRoot) {
-      adoptRegistries(shadowRoot, registry);
+      adoptRegistries(shadowRoot, documentRegistry, false);
     }
-    const {children} = node as Element;
-    if (children?.length) {
-      Array.from(children).forEach((child) => adoptRegistries(child, registry));
+    for (const child of childrenOf(node)) {
+      adoptRegistries(child, documentRegistry, false);
     }
   };
 
