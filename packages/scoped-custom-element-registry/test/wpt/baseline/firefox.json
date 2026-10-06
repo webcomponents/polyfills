@@ -39,7 +39,6 @@
     "Serializing a null registry ShadowRoot with a scoped registry host (document)",
     "Serializing a scoped registry ShadowRoot with a global registry host (document)",
     "Serializing a scoped registry ShadowRoot with a null registry host (document)",
-    "Serializing a scoped registry ShadowRoot with a scoped registry host (document)",
-    "shadowRootCustomElementRegistry reflects as string"
+    "Serializing a scoped registry ShadowRoot with a scoped registry host (document)"
   ]
 }

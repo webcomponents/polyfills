@@ -51,8 +51,12 @@ http
       // Note, fetch has already decoded the body.
       delete headers['content-encoding'];
       delete headers['content-length'];
-      if (headers.location?.startsWith(upstream)) {
-        headers.location = headers.location.slice(upstream.length);
+      if (headers.location) {
+        const location = new URL(headers.location, upstream);
+        if (location.origin === new URL(upstream).origin) {
+          headers.location =
+            location.pathname + location.search + location.hash;
+        }
       }
       let content;
       if (headers['content-type']?.includes('text/html')) {
@@ -67,8 +71,9 @@ http
       response.writeHead(upstreamResponse.status, headers);
       response.end(content);
     } catch (error) {
+      console.error(error);
       response.writeHead(502, {'content-type': 'text/plain'});
-      response.end(String(error));
+      response.end('Bad gateway');
     }
   })
   .listen(port, () =>
