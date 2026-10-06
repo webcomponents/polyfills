@@ -6,6 +6,9 @@ import {wptPlugin} from './test/wpt/plugin.mjs';
 
 export default {
   ...config,
+  // wireit runs test:wpt in parallel with test:forced, which uses the
+  // default port (8000).
+  port: 8100,
   files: ['test/wpt/custom-elements/registries/*.html'],
   plugins: [
     ...config.plugins,
