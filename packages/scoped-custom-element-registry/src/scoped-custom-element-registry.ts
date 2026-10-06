@@ -2456,6 +2456,25 @@ type ParametersOf<
     });
   }
 
+  // Reflects the template's `shadowrootcustomelementregistry` attribute, for
+  // browsers that don't.
+  if (!('shadowRootCustomElementRegistry' in HTMLTemplateElement.prototype)) {
+    Object.defineProperty(
+      HTMLTemplateElement.prototype,
+      'shadowRootCustomElementRegistry',
+      {
+        get(this: HTMLTemplateElement) {
+          return this.getAttribute('shadowrootcustomelementregistry') ?? '';
+        },
+        set(this: HTMLTemplateElement, value: string) {
+          this.setAttribute('shadowrootcustomelementregistry', value);
+        },
+        enumerable: true,
+        configurable: true,
+      }
+    );
+  }
+
   // Install global registry
   Object.defineProperty(window, 'customElements', {
     value: globalCustomElementRegistry,
