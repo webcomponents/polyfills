@@ -107,6 +107,36 @@ describe('Creation', () => {
   });
 });
 
+// Note, earlier versions of the polyfill took the registry as `registry` or
+// `customElements`, and set both on the root; they're still supported.
+describe('attachShadow back compat', () => {
+  for (const option of ['registry', 'customElements']) {
+    itWithPolyfill(`takes the registry as \`${option}\``, () => {
+      const registry = new CustomElementRegistry();
+      const {tagName, Logged} = defineLogged(registry);
+      const root = document
+        .createElement('div')
+        .attachShadow({mode: 'open', [option]: registry});
+      root.innerHTML = `<${tagName}></${tagName}>`;
+      expect(root.customElementRegistry).to.equal(registry);
+      expect(root.firstChild).to.be.instanceOf(Logged);
+      expect(root.registry).to.equal(registry);
+      expect(root.customElements).to.equal(registry);
+    });
+  }
+
+  itWithPolyfill('prefers `customElementRegistry` to the earlier names', () => {
+    const registry = new CustomElementRegistry();
+    const root = document.createElement('div').attachShadow({
+      mode: 'open',
+      customElementRegistry: registry,
+      registry: new CustomElementRegistry(),
+      customElements: new CustomElementRegistry(),
+    });
+    expect(root.customElementRegistry).to.equal(registry);
+  });
+});
+
 describe('importNode', () => {
   it('is shallow by default', () => {
     const el = document.createElement('div');

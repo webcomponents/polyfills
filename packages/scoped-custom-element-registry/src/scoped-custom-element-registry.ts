@@ -1438,13 +1438,22 @@ type ParametersOf<
     init: ShadowRootInitWithSettableCustomElements,
     ...args: Array<unknown>
   ) {
-    // Note, We must remove `registry` from the init object to avoid passing it to
-    // the native implementation. Use string keys to avoid renaming in Closure.
+    // Note, the registry is removed from the init object so it isn't passed to
+    // the native implementation. `registry` and `customElements` are earlier
+    // names, still supported for back compat; the standard name wins. Use
+    // string keys to avoid renaming in Closure.
     const {
       'customElementRegistry': customElementRegistry,
-      'registry': registry = customElementRegistry,
+      'registry': legacyRegistry,
+      'customElements': legacyCustomElements,
       ...nativeInit
     } = init;
+    const registry =
+      customElementRegistry !== undefined
+        ? customElementRegistry
+        : legacyRegistry !== undefined
+        ? legacyRegistry
+        : legacyCustomElements;
     validateRegistry(registry, this.ownerDocument, 'attachShadow');
     // Note, the browser only knows the stand-in class, so the user's
     // `disabledFeatures` is checked here.
