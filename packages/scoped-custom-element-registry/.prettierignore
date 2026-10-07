@@ -1,0 +1,4 @@
+# Vendored web platform tests (see test/wpt/README.md)
+test/wpt/custom-elements/
+test/wpt/resources/
+test/wpt/common/
