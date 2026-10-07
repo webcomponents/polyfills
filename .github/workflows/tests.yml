@@ -2,15 +2,18 @@ name: tests
 
 on: [push, pull_request]
 
+permissions:
+  contents: read
+
 jobs:
   lint:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
-          node-version: 16
+          node-version: 24.5
 
       - name: NPM install
         run: npm ci
@@ -25,10 +28,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
-          node-version: 16
+          node-version: 24.5
 
       - name: NPM install
         run: npm ci
@@ -36,36 +39,13 @@ jobs:
       - name: Lerna bootstrap
         run: npm run bootstrap
 
-      - name: Build
-        run: npm run build
-
-      - name: Test
-        run: npm test
-
-  sauce:
-    # Skip if this is from a forked repository because we can't access Sauce
-    # secrets.
-    if: github.event.pull_request.base.repo.id == github.event.pull_request.head.repo.id
-
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
-        with:
-          node-version: 16
-
-      - name: NPM install
-        run: npm ci
-
-      - name: Lerna bootstrap
-        run: npm run bootstrap
+      - name: Install playwright browsers (+ deps)
+        run: |
+          cd packages/tests && npx playwright install --with-deps
+          cd $GITHUB_WORKSPACE/packages/scoped-custom-element-registry && npx playwright install --with-deps
 
       - name: Build
         run: npm run build
 
       - name: Test
-        env:
-          SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
-          SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
-        run: npm run test-sauce
+        run: lerna run test --concurrency 1 --stream --no-bail
