@@ -12,8 +12,8 @@ delegate to the constructor in the registry for the element's scope; this
 avoids any manual treewalks to identify custom elements that need upgrading.
 Stand-ins are queued when constructed and customized once their tree, and so
 their registry, is known: at the end of the DOM call that created them, or,
-for the main document, when it becomes interactive. The "constructor call
-trick" is then used to upgrade them.
+for the main document's parser, once inserted (before any script that follows
+them runs). The "constructor call trick" is then used to upgrade them.
 
 ## Supported
 
@@ -57,10 +57,10 @@ use it anyway.
 - **`:defined`** matches elements the polyfill hasn't customized yet. Use
   `:is(:not(:defined), :state(polyfill-undefined))` instead of `:not(:defined)`;
   it's correct with or without the polyfill.
-- **Elements the main parser creates upgrade when the document becomes
-  interactive**, so scripts running during parsing see them un-upgraded.
-  Elements those scripts create or upgrade through DOM calls (`innerHTML`,
-  `define`, ...) upgrade before the call returns, as natively.
+- **Elements the main parser creates upgrade once inserted**, rather than
+  when constructed: a script that follows them sees them upgraded, as
+  natively, but their constructors run a little later, just before such a
+  script or the next custom element the parser creates.
 - **Cloning a closed shadow root:** when a closed, clonable shadow root is on
   an element that wasn't a defined custom element when the root was attached
   (for example a `div`, or an undefined custom element like `my-element`), the

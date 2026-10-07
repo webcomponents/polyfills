@@ -28,7 +28,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Updated to latest [proposed spec](https://github.com/whatwg/html/issues/10854)
 - Elements are customized once their tree is known: at the end of the DOM call
-  that created them, or, for the main document, when it becomes interactive
+  that created them, or, for the main document's parser, once inserted, before
+  any script that follows them runs
 - The registry of parsed content is worked out from where it is, so reading
   registries and calling `initialize` during parsing match native
 - Cloning keeps each node's registry, including in clonable shadow roots

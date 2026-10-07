@@ -22,8 +22,10 @@
           log.push(`connected:${this.dataset.where}`);
         }
       }
+      class ScopedOnlyEl extends HTMLElement {}
       customElements.define('p-el', GlobalEl);
       registry.define('p-el', ScopedEl);
+      registry.define('p-scoped-only', ScopedOnlyEl);
       customElements.define(
         'p-host',
         class extends HTMLElement {
@@ -98,12 +100,40 @@
       </template>
     </div>
 
-    <!-- recorded while parsing, before the document is interactive -->
-    <p-el id="while-parsing" data-where="while-parsing"></p-el>
+    <!-- upgraded once inserted, before a script that follows runs -->
+    <p-el id="while-parsing" data-where="while-parsing">
+      <p-el id="while-parsing-child" data-where="while-parsing-child"></p-el>
+    </p-el>
+    <div customelementregistry>
+      <p-el id="while-parsing-null" data-where="while-parsing-null"></p-el>
+    </div>
+    <div id="while-parsing-host">
+      <template shadowrootmode="open">
+        <p-el id="while-parsing-dsd" data-where="while-parsing-dsd"></p-el>
+      </template>
+    </div>
+    <p-scoped-only id="while-parsing-scoped-only"></p-scoped-only>
     <script>
-      window.notDefinedWhileParsing = document
-        .getElementById('while-parsing')
-        .matches(':is(:not(:defined), :state(polyfill-undefined))');
+      {
+        /* global GlobalEl, ScopedEl, ScopedOnlyEl */
+        const byId = (id) => document.getElementById(id);
+        const inNull = byId('while-parsing-null');
+        window.whileParsing = {
+          element: byId('while-parsing') instanceof GlobalEl,
+          child: byId('while-parsing-child') instanceof GlobalEl,
+          declarative:
+            byId('while-parsing-host').shadowRoot.firstElementChild instanceof
+            GlobalEl,
+          nullStaysPlain:
+            !(inNull instanceof GlobalEl) && !(inNull instanceof ScopedEl),
+          scopedOnlyWaits: !(
+            byId('while-parsing-scoped-only') instanceof ScopedOnlyEl
+          ),
+          defined: !byId('while-parsing').matches(
+            ':is(:not(:defined), :state(polyfill-undefined))'
+          ),
+        };
+      }
     </script>
 
     <!-- initialized via the document, by the last test -->

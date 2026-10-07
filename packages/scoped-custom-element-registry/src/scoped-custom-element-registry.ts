@@ -209,9 +209,9 @@ type ParametersOf<
 //   that can construct elements is an "entry point" (`withDeferredUpgrades`)
 //   that records registries for what it created, then flushes before
 //   returning, customizing each queued element with its registry's
-//   definition. The main parser flushes when the document becomes
-//   interactive, since a parsed element's tree and attributes aren't known
-//   when it's constructed.
+//   definition. Elements the main parser creates are customized once inserted
+//   (see `observeParsing`), since a parsed element's tree and attributes aren't
+//   known when it's constructed.
 // - Null registries come from options, the null registry attributes, and
 //   declarative shadow roots (see `DSD_HOST_ATTRIBUTE`).
 // - Moves: a node's registry is recorded before it's moved or removed, so
@@ -1102,7 +1102,7 @@ type ParametersOf<
   // (e.g. `attachShadow`) finishes before elements queued with it are
   // customized, while elements created by that inner call are customized
   // before it returns. The bottom queue holds elements the main parser creates
-  // (customized when the document becomes interactive) and ones constructed
+  // (customized once inserted, see `observeParsing`) and ones constructed
   // outside any entry point (customized in a microtask).
   const isParsing = () => document.readyState === 'loading';
   const upgradeQueues: Array<Set<HTMLElement>> = [new Set()];
@@ -1227,15 +1227,46 @@ type ParametersOf<
     }
   };
 
-  if (isParsing()) {
+  // While the main document is parsing, the elements the parser constructs
+  // are customized once inserted, when their registry can be worked out from
+  // where they are. Note, the parser constructs an element before setting its
+  // attributes and inserting it, and microtasks run straight after the
+  // constructor, so a microtask is too early. A mutation observer's callback
+  // runs only after an insertion, and, since the browser runs microtasks
+  // before each script the parser runs, before any script that follows.
+  // Elements not yet inserted wait for a later callback, and any left are
+  // customized when the document becomes interactive.
+  const observeParsing = () => {
+    const parsed = upgradeQueues[0];
+    const observer = new MutationObserver(() => {
+      if (flushingQueues.has(parsed)) {
+        return;
+      }
+      const inserted = new Set(
+        Array.from(parsed).filter((element) => element.parentNode !== null)
+      );
+      inserted.forEach((element) => parsed.delete(element));
+      // Note, so customizing isn't deferred back to the bottom queue.
+      flushingQueues.add(parsed);
+      try {
+        flushUpgrades(inserted);
+      } finally {
+        flushingQueues.delete(parsed);
+      }
+    });
+    observer.observe(document, {childList: true, subtree: true});
     document.addEventListener(
       'readystatechange',
       () => {
+        observer.disconnect();
         recordRegistries(document);
-        flushUpgrades(upgradeQueues[0]);
+        flushUpgrades(parsed);
       },
       {once: true}
     );
+  };
+  if (isParsing()) {
+    observeParsing();
   }
 
   // Sets the registry for a subtree, replacing any registry already set.

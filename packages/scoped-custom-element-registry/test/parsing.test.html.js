@@ -17,6 +17,7 @@ const nullWheres = [
   'closed-plain',
   'closed-ce',
   'init-global-after',
+  'while-parsing-null',
 ];
 
 describe('Main document parsing', () => {
@@ -154,15 +155,16 @@ describe('Main document parsing', () => {
 
   const NOT_DEFINED = ':is(:not(:defined), :state(polyfill-undefined))';
 
-  // Note, the polyfill's custom state.
-  itWithPolyfill(
-    'an element is not defined while parsing, and is defined once customized',
-    () => {
-      expect(window.notDefinedWhileParsing).to.be.true;
-      expect(document.getElementById('while-parsing').matches(NOT_DEFINED)).to
-        .be.false;
-    }
-  );
+  it('elements are upgraded once inserted, before a script that follows runs', () => {
+    expect(window.whileParsing).to.deep.equal({
+      element: true,
+      child: true,
+      declarative: true,
+      nullStaysPlain: true,
+      scopedOnlyWaits: true,
+      defined: true,
+    });
+  });
 
   // Note, the polyfill's custom state.
   itWithPolyfill('elements in null registry subtrees are not defined', () => {
