@@ -320,10 +320,6 @@ type ParametersOf<
     'definitionForElement',
     () => new WeakMap<HTMLElement, CustomElementDefinition>()
   );
-  const waitingRegistryForElement = shared(
-    'waitingRegistryForElement',
-    () => new WeakMap<HTMLElement, ShimmedCustomElementsRegistry>()
-  );
   const globalDefinitionForConstructor = new WeakMap<
     CustomElementConstructor,
     CustomElementDefinition
@@ -441,8 +437,10 @@ type ParametersOf<
 
   // Whether an HTML element named `name` would be an HTMLUnknownElement.
   const nativeCreateElementNS = Document.prototype.createElementNS as (
-    namespace: string,
-    name: string
+    this: Document,
+    namespace: string | null,
+    name: string,
+    options?: ElementCreationOptions
   ) => Element;
   const isUnknownElementName = (name: string) => {
     try {
@@ -839,8 +837,7 @@ type ParametersOf<
       }
       definition ??= this._getDefinition(element.localName);
       if (definition !== undefined) {
-        waitingRegistryForElement.delete(element);
-        customize(element, definition!, true);
+        customize(element, definition!);
       } else if (element.localName.includes('-')) {
         // Note, so once defined, it's upgraded.
         constructedDirectly.delete(element);
@@ -848,7 +845,6 @@ type ParametersOf<
         // connected/disconnected callbacks manage queuing for upgrade, so
         // only queue when the element is a stand-in and connected; otherwise
         // the element upgrades via native define.
-        waitingRegistryForElement.set(element, this);
         if (element.isConnected && standInElements.has(element)) {
           this._waitForDefinition(element);
         }
@@ -1076,8 +1072,10 @@ type ParametersOf<
               definition.disconnectedCallback.apply(this, args);
           }
         } else {
-          // Note, so a disconnected element isn't kept alive.
-          waitingRegistryForElement.get(this)?._stopWaitingForDefinition(this);
+          // Note, so a disconnected element isn't kept alive. Its registry
+          // hasn't changed since it started waiting: only a null registry can
+          // change while connected (by `initialize`), and null never waits.
+          getRegistry(this)?._stopWaitingForDefinition(this);
         }
       }
 
@@ -1366,6 +1364,9 @@ type ParametersOf<
   // Note, elements added to the queue while it's flushing (e.g. constructed by
   // an unpatched API in a user's constructor) are customized in this flush.
   const flushUpgrades = (queue: Set<HTMLElement>) => {
+    if (queue.size === 0) {
+      return;
+    }
     flushingQueues.add(queue);
     try {
       queue.forEach((instance) => {
@@ -1432,9 +1433,6 @@ type ParametersOf<
   const observeParsing = () => {
     const parsed = parserQueue;
     const observer = new MutationObserver(() => {
-      if (flushingQueues.has(parsed)) {
-        return;
-      }
       const inserted = new Set(
         Array.from(parsed).filter((element) => element.parentNode !== null)
       );
@@ -1511,8 +1509,7 @@ type ParametersOf<
   // Helper to upgrade an instance with a CE definition using "constructor call trick"
   const customize = (
     instance: HTMLElement,
-    definition: CustomElementDefinition,
-    isUpgrade = false
+    definition: CustomElementDefinition
   ) => {
     // prevent double customization
     if (definitionForElement.get(instance) === definition) {
@@ -1573,7 +1570,9 @@ type ParametersOf<
     if (definition.attributeChangedCallback) {
       invokeInitialAttributeCallbacks(instance, definition);
     }
-    if (isUpgrade && instance.isConnected) {
+    // Note, the stand-in's own connected callback ran before it was
+    // customized, so the user's runs now.
+    if (instance.isConnected) {
       invokeCallback(definition.connectedCallback, instance);
     }
   };
@@ -1659,41 +1658,39 @@ type ParametersOf<
     (registry as ShimmedCustomElementsRegistry | undefined)?._associate?.(
       this.ownerDocument
     );
-    return withDeferredUpgrades(() => {
-      const shadowRoot = nativeAttachShadow.call(
-        this,
-        nativeInit,
-        ...(args as [])
-      ) as ShadowRootWithSettableCustomElementRegistry;
-      // Note, for a host with the polyfill's declarative attribute, native
-      // returns its existing declarative root, emptied.
-      if (this.hasAttribute(DSD_HOST_ATTRIBUTE)) {
-        getRegistry(shadowRoot);
-        return shadowRoot;
-      }
-      shadowRootForHost.set(this, shadowRoot);
-      // Note, as native does, the root uses the document's registry by
-      // default. Recording it marks the root as attached by the polyfill (see
-      // `getRegistry`).
-      registryForNode.set(
-        shadowRoot,
-        (registry !== undefined
-          ? registry
-          : this.ownerDocument[
-              'customElementRegistry'
-            ]) as ShimmedCustomElementsRegistry | null
-      );
-      if (registry !== undefined) {
-        // for back compat, set both `registry` and `customElements`
-        (shadowRoot as ShadowRootInitWithSettableCustomElements)[
-          'registry'
-        ] = registry;
-        (shadowRoot as ShadowRootInitWithSettableCustomElements)[
-          'customElements'
-        ] = registry;
-      }
+    const shadowRoot = nativeAttachShadow.call(
+      this,
+      nativeInit,
+      ...(args as [])
+    ) as ShadowRootWithSettableCustomElementRegistry;
+    // Note, for a host with the polyfill's declarative attribute, native
+    // returns its existing declarative root, emptied.
+    if (this.hasAttribute(DSD_HOST_ATTRIBUTE)) {
+      getRegistry(shadowRoot);
       return shadowRoot;
-    });
+    }
+    shadowRootForHost.set(this, shadowRoot);
+    // Note, as native does, the root uses the document's registry by
+    // default. Recording it marks the root as attached by the polyfill (see
+    // `getRegistry`).
+    registryForNode.set(
+      shadowRoot,
+      (registry !== undefined
+        ? registry
+        : this.ownerDocument[
+            'customElementRegistry'
+          ]) as ShimmedCustomElementsRegistry | null
+    );
+    if (registry !== undefined) {
+      // for back compat, set both `registry` and `customElements`
+      (shadowRoot as ShadowRootInitWithSettableCustomElements)[
+        'registry'
+      ] = registry;
+      (shadowRoot as ShadowRootInitWithSettableCustomElements)[
+        'customElements'
+      ] = registry;
+    }
+    return shadowRoot;
   };
 
   // The global registry of a document's window, or null if it has none (or
@@ -1782,12 +1779,18 @@ type ParametersOf<
     configurable: true,
   };
 
-  const {
-    createElement,
-    createElementNS,
-    importNode,
-    adoptNode,
-  } = Document.prototype;
+  const {importNode, adoptNode} = Document.prototype;
+  const createElement = Document.prototype.createElement as (
+    this: Document,
+    tagName: string,
+    options?: ElementCreationOptions
+  ) => Element;
+  const createElementNS = nativeCreateElementNS as (
+    this: Document,
+    namespace: string | null,
+    tagName: string,
+    options?: ElementCreationOptions
+  ) => Element;
 
   // https://dom.spec.whatwg.org/#flatten-element-creation-options
   // Returns the registry to use and the options to pass to the native method.
@@ -1820,6 +1823,28 @@ type ParametersOf<
     return [optionsRegistry, nativeOptions];
   };
 
+  // Creates an element with the registry from `options`, constructing it
+  // directly (see `constructedDirectly`).
+  const createElementWithRegistry = (
+    doc: Document,
+    options: string | ElementCreationOptions | undefined,
+    method: string,
+    create: (options: ElementCreationOptions | undefined) => Element
+  ) => {
+    const [registry, nativeOptions] = flattenElementCreationOptions(
+      doc,
+      options,
+      method
+    );
+    return withDeferredUpgrades(() => {
+      const element = constructDirectly(() =>
+        create(nativeOptions as ElementCreationOptions | undefined)
+      );
+      registryForNode.set(element, registry as ShimmedCustomElementsRegistry);
+      return element;
+    });
+  };
+
   Object.defineProperty(
     Element.prototype,
     'customElementRegistry',
@@ -1829,59 +1854,31 @@ type ParametersOf<
     'customElementRegistry': customElementRegistryDescriptor,
     // https://dom.spec.whatwg.org/#dom-document-createelement
     'createElement': {
-      value<K extends keyof HTMLElementTagNameMap>(
+      value(
         this: Document,
-        tagName: K,
+        tagName: string,
         options?: string | ElementCreationOptions
-      ): HTMLElementTagNameMap[K] {
-        const [
-          customElementRegistry,
-          nativeOptions,
-        ] = flattenElementCreationOptions(this, options, 'createElement');
-        return withDeferredUpgrades(() => {
-          const el = constructDirectly(() =>
-            createElement.call(
-              this,
-              tagName,
-              nativeOptions as ElementCreationOptions
-            )
-          ) as HTMLElementTagNameMap[K];
-          registryForNode.set(
-            el,
-            customElementRegistry as ShimmedCustomElementsRegistry
-          );
-          return el;
-        });
+      ) {
+        return createElementWithRegistry(this, options, 'createElement', (o) =>
+          createElement.call(this, tagName, o)
+        );
       },
       enumerable: true,
       configurable: true,
     },
     'createElementNS': {
-      value<K extends keyof HTMLElementTagNameMap>(
+      value(
         this: Document,
         namespace: string | null,
-        tagName: K,
+        tagName: string,
         options?: string | ElementCreationOptions
-      ): HTMLElementTagNameMap[K] {
-        const [
-          customElementRegistry,
-          nativeOptions,
-        ] = flattenElementCreationOptions(this, options, 'createElementNS');
-        return withDeferredUpgrades(() => {
-          const el = constructDirectly(() =>
-            createElementNS.call(
-              this,
-              namespace,
-              tagName,
-              nativeOptions as ElementCreationOptions
-            )
-          ) as HTMLElementTagNameMap[K];
-          registryForNode.set(
-            el,
-            customElementRegistry as ShimmedCustomElementsRegistry
-          );
-          return el;
-        });
+      ) {
+        return createElementWithRegistry(
+          this,
+          options,
+          'createElementNS',
+          (o) => createElementNS.call(this, namespace, tagName, o)
+        );
       },
       enumerable: true,
       configurable: true,
@@ -2213,9 +2210,6 @@ type ParametersOf<
         fallbackRegistry
       )
     );
-    if (copyElement.localName.includes('-')) {
-      currentQueue().add(copyElement as HTMLElement);
-    }
     // Note, as natively, the fallback registry doesn't apply to a template's
     // contents. A shallow clone doesn't copy them, so there's nothing to pair.
     if (isTemplate(sourceElement)) {
