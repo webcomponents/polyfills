@@ -105,10 +105,13 @@ const detectNativeSupport = () => {
       force || !hasCustomElementRegistry || !hasNullCustomElementRegistry,
   };
 };
-Object.assign(
-  polyfillWindow['CustomElementRegistryPolyfill'],
-  detectNativeSupport()
-);
+// Note, a second load would run detection against the polyfill itself.
+if (!polyfillWindow['CustomElementRegistryPolyfill']['loaded']) {
+  Object.assign(
+    polyfillWindow['CustomElementRegistryPolyfill'],
+    detectNativeSupport()
+  );
+}
 
 // Note, `??=` so a second load does not capture the shimmed registry.
 polyfillWindow['CustomElementRegistryPolyfill']['nativeRegistry'] ??=
@@ -396,6 +399,16 @@ type ParametersOf<
 
   // Set only while constructing the global registry so it is not scoped.
   let isCreatingGlobalRegistry = false;
+  // Every registry the polyfill created, so a registry from elsewhere (e.g. a
+  // window without the polyfill, or a user's object) is never used as one.
+  const polyfillRegistries = shared(
+    'polyfillRegistries',
+    () => new WeakSet<object>()
+  );
+  const isPolyfillRegistry = (
+    value: unknown
+  ): value is ShimmedCustomElementsRegistry =>
+    polyfillRegistries.has(value as object);
 
   // https://html.spec.whatwg.org/#valid-custom-element-name
   const reservedCustomElementNames = new Set([
@@ -414,10 +427,15 @@ type ParametersOf<
     !reservedCustomElementNames.has(name);
 
   // Whether an HTML element named `name` would be an HTMLUnknownElement.
+  const nativeCreateElementNS = Document.prototype.createElementNS as (
+    namespace: string,
+    name: string
+  ) => Element;
   const isUnknownElementName = (name: string) => {
     try {
       return (
-        document.createElementNS(
+        nativeCreateElementNS.call(
+          document,
           'http://www.w3.org/1999/xhtml',
           name
         ) instanceof HTMLUnknownElement
@@ -562,13 +580,19 @@ type ParametersOf<
       }
     }
 
+    constructor() {
+      polyfillRegistries.add(this);
+    }
+
     // Note, defining can upgrade existing elements, so it's an entry point.
     define(
       tagName: string,
       elementClass: CustomElementConstructor,
       options?: ElementDefinitionOptions
     ) {
-      withDeferredUpgrades(() => this._define(tagName, elementClass, options));
+      withDeferredUpgrades(() =>
+        this._define(String(tagName), elementClass, options)
+      );
     }
 
     _define(
@@ -739,7 +763,7 @@ type ParametersOf<
     }
 
     get(tagName: string) {
-      const definition = this._definitionsByTag.get(tagName);
+      const definition = this._definitionsByTag.get(String(tagName));
       return definition?.elementClass;
     }
 
@@ -752,7 +776,13 @@ type ParametersOf<
       return this._definitionsByTag.get(tagName);
     }
 
-    ['whenDefined'](tagName: string) {
+    ['whenDefined'](name: string) {
+      let tagName: string;
+      try {
+        tagName = String(name);
+      } catch (e) {
+        return Promise.reject(e);
+      }
       if (!isValidCustomElementName(tagName)) {
         return Promise.reject(
           new DOMException(
@@ -920,6 +950,8 @@ type ParametersOf<
     );
     Object.setPrototypeOf(instance, this.constructor.prototype);
     definitionForElement.set(instance!, definition);
+    // Note, as natively, a constructed element has the global registry.
+    registryForNode.set(instance, globalCustomElementRegistry);
     // Note, the browser didn't construct a stand-in, so this element is
     // counted here if it may be left out of its form (see `isFormControl`).
     if (definition.standInFormAssociated && !definition['formAssociated']) {
@@ -966,7 +998,13 @@ type ParametersOf<
         Object.setPrototypeOf(instance, HTMLElement.prototype);
         if (nativeAttachInternals) {
           const internals = nativeAttachInternals.call(instance);
-          statesOf(internals)?.add(UNDEFINED_STATE);
+          // Note, browsers that required a `--` prefix (e.g. Chrome before
+          // 125) throw for this name; the state is then simply unavailable.
+          try {
+            statesOf(internals)?.add(UNDEFINED_STATE);
+          } catch {
+            // squelch
+          }
           internalsForElement.set(instance, internals);
         }
         // Note, the element is only queued. Whatever caused its construction
@@ -1545,6 +1583,12 @@ type ParametersOf<
     doc: Document,
     method: string
   ) => {
+    // Note, as WebIDL converts the argument.
+    if (registry != null && !isPolyfillRegistry(registry)) {
+      throw new TypeError(
+        `Failed to execute '${method}': customElementRegistry is not a CustomElementRegistry`
+      );
+    }
     if (
       registry &&
       !(registry as ShimmedCustomElementsRegistry)._isScoped &&
@@ -1650,68 +1694,76 @@ type ParametersOf<
     });
   };
 
-  // Registry for a node not tracked in `registryForNode`.
-  const getDefaultRegistry = (
-    node: Node
-  ): ShimmedCustomElementsRegistry | null => {
-    // Note, native registry state is deliberately not consulted, so the
-    // polyfill behaves the same whether or not the browser has support.
-    const ownerDoc = (node.nodeType === Node.DOCUMENT_NODE
-      ? node
-      : node.ownerDocument) as Document;
-    return (ownerDoc?.defaultView?.customElements ||
-      null) as ShimmedCustomElementsRegistry | null;
+  // The global registry of a document's window, or null if it has none (or
+  // the window doesn't run the polyfill).
+  // Note, native registry state is deliberately not consulted, so the
+  // polyfill behaves the same whether or not the browser has support.
+  const getWindowRegistry = (doc: Document) => {
+    const registry = doc.defaultView?.customElements;
+    return isPolyfillRegistry(registry) ? registry : null;
   };
 
-  // The registry of a node. The polyfill records the registry of every node
-  // it creates, so a node without a record was made by a parser, or is in a
-  // copied shadow root the polyfill couldn't reach. Its registry is worked out
-  // from where it is, and recorded, so later moves don't change it:
-  // - an element with a null registry attribute: null;
-  // - a shadow root: the registry kept for it if it's such a copy (see
-  //   `pairUnreachableCopyRoots`); otherwise it's declarative, so null if its
-  //   host has the polyfill's declarative attribute, else the document's;
-  // - anything else: its parent's.
-  // Note, a node with no parent isn't recorded: the parser constructs a custom
-  // element before inserting it.
+  // The registry of a node.
+  //
+  // Every API the polyfill patches records the registry of each node it
+  // creates, when it creates it. So a node without a record was made by a
+  // parser (the main parser, or a parsing API before its wrapper records the
+  // new nodes), and its registry follows the parser's rules, worked out from
+  // where it is (see `getParsedRegistry`). It's then recorded, so later
+  // moves or attribute changes don't change it.
   const getRegistry = (node: Node): ShimmedCustomElementsRegistry | null => {
     const recorded = registryForNode.get(node);
     if (recorded !== undefined) {
       return recorded;
     }
     if (node.nodeType === Node.DOCUMENT_NODE) {
-      return getDefaultRegistry(node);
+      return getWindowRegistry(node as Document);
     }
-    let registry: ShimmedCustomElementsRegistry | null;
-    if (isShadowRoot(node)) {
-      const {host} = node;
-      shadowRootForHost.set(host, node);
-      registry = clonedShadowRootRegistries.has(host)
-        ? clonedShadowRootRegistries.get(host)!
-        : host.hasAttribute(DSD_HOST_ATTRIBUTE)
-        ? null
-        : getRegistry(host.ownerDocument);
-    } else if ((node as Element).matches?.(NULL_REGISTRY_SELECTOR)) {
-      registry = null;
-    } else {
-      const parent = node.parentNode;
-      if (
-        parent === null ||
+    const parent = node.parentNode;
+    const isRoot = isShadowRoot(node);
+    // Note, a parsed node is constructed before it's inserted, so one without
+    // a parent isn't recorded yet. One in a plain fragment (e.g. template
+    // contents) gets its window's registry, which for template contents is
+    // null.
+    if (
+      !isRoot &&
+      (parent === null ||
         (parent.nodeType === Node.DOCUMENT_FRAGMENT_NODE &&
-          !isShadowRoot(parent))
-      ) {
-        return getDefaultRegistry(node);
-      }
-      registry = getRegistry(parent);
-      // Note, working out the parent's registry can pair a copied shadow root,
-      // which records this node too.
-      const pairedRegistry = registryForNode.get(node);
-      if (pairedRegistry !== undefined) {
-        return pairedRegistry;
-      }
+          !isShadowRoot(parent)))
+    ) {
+      return getWindowRegistry(node.ownerDocument!);
     }
+    const registry = isRoot
+      ? getShadowRootRegistry(node as ShadowRoot)
+      : getParsedRegistry(node, parent!);
     registryForNode.set(node, registry);
     return registry;
+  };
+
+  // The parser's rules for a node: null if it's an element with a null
+  // registry attribute, else its parent's registry.
+  // Note, the attribute only matters while parsing; it's checked here since
+  // a node without a record was made by a parser (see `getRegistry`).
+  const getParsedRegistry = (node: Node, parent: Node) =>
+    (node as Element).matches?.(NULL_REGISTRY_SELECTOR)
+      ? null
+      : getRegistry(parent);
+
+  // A shadow root without a record is either declarative (the parser
+  // attached it) or a cloned closed root the polyfill couldn't reach when
+  // cloning (see `pairUnreachableCopyRoots`):
+  // - a cloned root: the registry kept for it;
+  // - a declarative root whose host has the polyfill's attribute: null;
+  // - another declarative root: its document's registry.
+  const getShadowRootRegistry = (root: ShadowRoot) => {
+    const {host} = root;
+    shadowRootForHost.set(host, root);
+    if (clonedShadowRootRegistries.has(host)) {
+      return clonedShadowRootRegistries.get(host)!;
+    }
+    return host.hasAttribute(DSD_HOST_ATTRIBUTE)
+      ? null
+      : getRegistry(host.ownerDocument);
   };
 
   // Records the registries of `node` and every element under it, including in
@@ -1845,14 +1897,18 @@ type ParametersOf<
         node: T,
         options?: boolean | ImportNodeOptions
       ): T {
-        // Note, as natively, the default is a shallow copy.
-        const deep =
-          typeof options === 'boolean'
-            ? options
-            : options !== undefined && !options['selfOnly'];
-        const optionsRegistry = ((options ?? {}) as ImportNodeOptions)[
-          'customElementRegistry'
-        ];
+        // Note, as WebIDL converts `(boolean or ImportNodeOptions)`: omitted
+        // is a shallow copy, null or an object is a dictionary (deep unless
+        // `selfOnly`), and anything else is a boolean.
+        const isDictionary =
+          options === null ||
+          typeof options === 'object' ||
+          typeof options === 'function';
+        const dictionary = (isDictionary
+          ? options ?? {}
+          : {}) as ImportNodeOptions;
+        const deep = isDictionary ? !dictionary['selfOnly'] : Boolean(options);
+        const optionsRegistry = dictionary['customElementRegistry'];
         // Note, as natively, the option isn't nullable.
         if (optionsRegistry === null) {
           throw new TypeError(
@@ -2490,25 +2546,28 @@ type ParametersOf<
 
   // Note, a stand-in has already attached internals (see `UNDEFINED_STATE`),
   // so they are returned to the user, emulating native: internals can be
-  // attached once, and not if the element's class disables them.
+  // attached once, only to a custom element (one being or already customized,
+  // not failed), and not if the element's class disables them.
+  const internalsToHostMap = new WeakMap<ElementInternals, HTMLElement>();
   if (nativeAttachInternals) {
     HTMLElement.prototype['attachInternals'] = function (this: HTMLElement) {
       // Note, the browser only knows the stand-in class, so the user's class
       // is checked here, however the element was constructed.
+      const definition = definitionForElement.get(this);
       if (
-        definitionForElement.get(this)?.disableInternals ||
-        internalsAttachedByUser.has(this)
+        definition?.disableInternals ||
+        internalsAttachedByUser.has(this) ||
+        (standInElements.has(this) && (!definition || isFailed(this)))
       ) {
         throw new DOMException(
-          `Failed to execute 'attachInternals' on 'HTMLElement': ElementInternals for the specified element was already attached or is disabled.`,
+          `Failed to execute 'attachInternals' on 'HTMLElement': ElementInternals for the specified element was already attached, is disabled, or the element isn't a custom element.`,
           'NotSupportedError'
         );
       }
-      const internals = internalsForElement.get(this);
-      if (internals === undefined) {
-        return nativeAttachInternals.call(this);
-      }
+      const internals =
+        internalsForElement.get(this) ?? nativeAttachInternals.call(this);
       internalsAttachedByUser.add(this);
+      internalsToHostMap.set(internals, this);
       return internals;
     };
   }
@@ -2517,14 +2576,6 @@ type ParametersOf<
     !!window['ElementInternals'] &&
     !!window['ElementInternals'].prototype['setFormValue']
   ) {
-    const internalsToHostMap = new WeakMap<ElementInternals, HTMLElement>();
-    const attachInternals = HTMLElement.prototype['attachInternals'];
-    HTMLElement.prototype['attachInternals'] = function (...args) {
-      const internals = attachInternals.call(this, ...args);
-      internalsToHostMap.set(internals, this);
-      return internals;
-    };
-
     // Note, the browser only knows the stand-in, so the form members of an
     // element's internals are checked here: as natively, they only work for
     // an element customized with a form-associated class that didn't fail

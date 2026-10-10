@@ -157,6 +157,59 @@ describe('importNode', () => {
     expect(document.importNode(el).childNodes.length).to.equal(0);
     expect(document.importNode(el, {}).childNodes.length).to.equal(1);
   });
+
+  // Note, as WebIDL converts `(boolean or ImportNodeOptions)`.
+  it('treats null as empty options and other values as a boolean', () => {
+    const el = document.createElement('div');
+    el.innerHTML = '<span></span>';
+    expect(document.importNode(el, null).childNodes.length).to.equal(1);
+    expect(document.importNode(el, 0).childNodes.length).to.equal(0);
+    expect(document.importNode(el, 1).childNodes.length).to.equal(1);
+  });
+});
+
+describe('Registry arguments', () => {
+  it('a value that is not a registry throws a TypeError', () => {
+    const notARegistry = {};
+    expect(() =>
+      document.createElement('div', {customElementRegistry: notARegistry})
+    ).to.throw(TypeError);
+    expect(() =>
+      document
+        .createElement('div')
+        .attachShadow({mode: 'open', customElementRegistry: notARegistry})
+    ).to.throw(TypeError);
+    expect(() =>
+      document.importNode(document.createElement('div'), {
+        customElementRegistry: notARegistry,
+      })
+    ).to.throw(TypeError);
+  });
+
+  it('names are converted to strings', async () => {
+    const registry = new CustomElementRegistry();
+    const tagName = getTestTagName();
+    const Logged = class extends HTMLElement {};
+    const name = {toString: () => tagName};
+    registry.define(name, Logged);
+    expect(registry.get(name)).to.equal(Logged);
+    expect(await registry.whenDefined(name)).to.equal(Logged);
+  });
+});
+
+describe('Constructing with new', () => {
+  it('an element constructed with new keeps the global registry when moved into a scoped root', () => {
+    const tagName = getTestTagName();
+    class X extends HTMLElement {}
+    customElements.define(tagName, X);
+    const registry = new CustomElementRegistry();
+    const root = document
+      .createElement('div')
+      .attachShadow({mode: 'open', customElementRegistry: registry});
+    const x = new X();
+    root.append(x);
+    expect(x.customElementRegistry).to.equal(customElements);
+  });
 });
 
 describe('Registry API', () => {
@@ -1529,6 +1582,16 @@ describe('Not yet customized: :state(polyfill-undefined)', () => {
     );
     document.createElement(tagName);
     expect(error?.name).to.equal('NotSupportedError');
+  });
+
+  // Note, as natively, internals attach only to a custom element.
+  it("attachInternals throws for an element its registry doesn't define", () => {
+    const registry = new CustomElementRegistry();
+    const tagName = getTestTagName();
+    registry.define(tagName, class extends HTMLElement {});
+    // Note, the global registry doesn't define the tag.
+    const el = document.createElement(tagName);
+    expect(() => el.attachInternals()).to.throw(DOMException);
   });
 });
 
