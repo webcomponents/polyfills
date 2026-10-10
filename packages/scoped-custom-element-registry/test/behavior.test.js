@@ -244,6 +244,46 @@ describe('Customized once', () => {
   });
 });
 
+describe('Prototype on a failed upgrade', () => {
+  it('a constructor that throws before super() leaves the element an HTMLElement', () => {
+    const tagName = getTestTagName();
+    const container = document.body.appendChild(document.createElement('div'));
+    container.innerHTML = `<${tagName}></${tagName}>`;
+    class Failing extends HTMLElement {
+      constructor() {
+        if (container) {
+          throw new Error('before super');
+        }
+        super();
+      }
+    }
+    captureReportedErrors(() => customElements.define(tagName, Failing));
+    expect(Object.getPrototypeOf(container.firstChild)).to.equal(
+      HTMLElement.prototype
+    );
+    container.remove();
+  });
+});
+
+describe('Registries kept when moved', () => {
+  it('a node parsed into a fragment keeps the document registry when moved into a scoped root', () => {
+    const tagName = getTestTagName();
+    const registry = new CustomElementRegistry();
+    const fragment = document.createDocumentFragment();
+    fragment.append(document.createElement('div'));
+    fragment.firstChild.insertAdjacentHTML(
+      'afterend',
+      `<${tagName}></${tagName}>`
+    );
+    const parsed = fragment.lastChild;
+    document
+      .createElement('div')
+      .attachShadow({mode: 'open', customElementRegistry: registry})
+      .append(fragment);
+    expect(parsed.customElementRegistry).to.equal(customElements);
+  });
+});
+
 describe('Constructing with new', () => {
   it('an element constructed with new keeps the global registry when moved into a scoped root', () => {
     const tagName = getTestTagName();
@@ -2455,6 +2495,29 @@ describe('Constructors', () => {
 });
 
 describe('Forms', () => {
+  // Note, the tag's first definition fixes that its stand-in isn't
+  // form-associated (see the README).
+  it("upgrading to a form-associated class doesn't throw when the tag's stand-in isn't form-associated", () => {
+    const tagName = getTestTagName();
+    customElements.define(tagName, class extends HTMLElement {});
+    const registry = new CustomElementRegistry();
+    registry.define(
+      tagName,
+      class extends HTMLElement {
+        static formAssociated = true;
+      }
+    );
+    const form = document.body.appendChild(document.createElement('form'));
+    const root = form
+      .appendChild(document.createElement('div'))
+      .attachShadow({mode: 'open', customElementRegistry: registry});
+    const errors = captureReportedErrors(() => {
+      root.innerHTML = `<${tagName}></${tagName}>`;
+    });
+    form.remove();
+    expect(errors).to.deep.equal([]);
+  });
+
   // Note, as natively on upgrade.
   it('upgrading tells a form-associated element its form and that it is disabled', () => {
     const tagName = getTestTagName();
