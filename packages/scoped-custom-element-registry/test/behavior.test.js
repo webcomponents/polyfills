@@ -197,6 +197,53 @@ describe('Registry arguments', () => {
   });
 });
 
+describe('Customized once', () => {
+  it("an element adopted into a null registry and initialized isn't customized again", () => {
+    const tagName = getTestTagName();
+    const constructed = [];
+    customElements.define(
+      tagName,
+      class extends HTMLElement {
+        constructor() {
+          super();
+          constructed.push('global');
+        }
+      }
+    );
+    const registry = new CustomElementRegistry();
+    registry.define(
+      tagName,
+      class extends HTMLElement {
+        constructor() {
+          super();
+          constructed.push('scoped');
+        }
+      }
+    );
+    const el = document.createElement(tagName);
+    document.implementation.createHTMLDocument().adoptNode(el);
+    registry.initialize(el);
+    document.body.append(el);
+    el.remove();
+    expect(constructed).to.deep.equal(['global']);
+  });
+
+  it('defining a tag while another registry reads its class works', () => {
+    const tagName = getTestTagName();
+    const other = new CustomElementRegistry();
+    class Outer extends HTMLElement {
+      static get observedAttributes() {
+        other.define(tagName, class extends HTMLElement {});
+        return [];
+      }
+      attributeChangedCallback() {}
+    }
+    const registry = new CustomElementRegistry();
+    expect(() => registry.define(tagName, Outer)).not.to.throw();
+    expect(registry.get(tagName)).to.equal(Outer);
+  });
+});
+
 describe('Constructing with new', () => {
   it('an element constructed with new keeps the global registry when moved into a scoped root', () => {
     const tagName = getTestTagName();
@@ -2408,6 +2455,31 @@ describe('Constructors', () => {
 });
 
 describe('Forms', () => {
+  // Note, as natively on upgrade.
+  it('upgrading tells a form-associated element its form and that it is disabled', () => {
+    const tagName = getTestTagName();
+    const calls = [];
+    const form = document.body.appendChild(document.createElement('form'));
+    form.innerHTML = `<fieldset disabled><${tagName}></${tagName}></fieldset>`;
+    customElements.define(
+      tagName,
+      class extends HTMLElement {
+        static formAssociated = true;
+        formAssociatedCallback(owner) {
+          calls.push(['form', owner === form]);
+        }
+        formDisabledCallback(disabled) {
+          calls.push(['disabled', disabled]);
+        }
+      }
+    );
+    form.remove();
+    expect(calls).to.deep.equal([
+      ['form', true],
+      ['disabled', true],
+    ]);
+  });
+
   it("an ordinary form's elements behave natively", () => {
     const form = document.createElement('form');
     form.innerHTML = `<input id="email"><input type="radio" name="choice" value="a"><input type="radio" name="choice" value="b">`;

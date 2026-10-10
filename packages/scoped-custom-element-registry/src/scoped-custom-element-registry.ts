@@ -309,6 +309,12 @@ type ParametersOf<
     'internalsAttachedByUser',
     () => new WeakSet<HTMLElement>()
   );
+  const nativeInternalsFormGetter = window['ElementInternals']
+    ? Object.getOwnPropertyDescriptor(
+        window['ElementInternals'].prototype,
+        'form'
+      )?.get
+    : undefined;
   const statesOf = (internals: ElementInternals | undefined) =>
     (internals as {['states']?: Set<string>} | undefined)?.['states'];
   const nativeDefine = window.customElements.define;
@@ -365,7 +371,12 @@ type ParametersOf<
     if (shadowRoot) {
       forEachInTree(shadowRoot, fn, true);
     }
-    for (const child of childrenOf(node)) {
+    // Note, `fn` doesn't change the tree.
+    for (
+      let child = (node as ParentNode).firstElementChild;
+      child;
+      child = child.nextElementSibling
+    ) {
       forEachInTree(child, fn, shadowRoots);
     }
   };
@@ -642,9 +653,18 @@ type ParametersOf<
           `the name "${tagName}" is used by a customized built-in element`
         );
       }
-      const definition = this._whileDefining(() =>
+      let definition = this._whileDefining(() =>
         readDefinition(tagName, elementClass, standInClass)
       );
+      // Note, reading the class runs user code, which can define the tag in
+      // another registry, so the stand-in is looked up again.
+      if (!standInClass && nativeGet.call(nativeRegistry, tagName)) {
+        standInClass = nativeGet.call(nativeRegistry, tagName);
+        definition = {
+          ...definition,
+          standInFormAssociated: standInClass!['formAssociated'],
+        };
+      }
       // Note, native define constructs the stand-ins of existing elements,
       // which are customized when this entry point returns.
       if (!standInClass) {
@@ -841,10 +861,11 @@ type ParametersOf<
       } else if (element.localName.includes('-')) {
         // Note, so once defined, it's upgraded.
         constructedDirectly.delete(element);
-        // Note, only custom names can be defined. The stand-in's
-        // connected/disconnected callbacks manage queuing for upgrade, so
-        // only queue when the element is a stand-in and connected; otherwise
-        // the element upgrades via native define.
+        // Note, only custom names can be defined. A connected stand-in waits
+        // for a definition here (its disconnected callback stops waiting, and
+        // its connected callback waits again). Any other element is upgraded
+        // once the browser constructs it, by native define or on its next
+        // connection.
         if (element.isConnected && standInElements.has(element)) {
           this._waitForDefinition(element);
         }
@@ -1062,7 +1083,7 @@ type ParametersOf<
 
       disconnectedCallback(
         this: HTMLElement,
-        ...args: ParametersOf<CustomHTMLElement['connectedCallback']>
+        ...args: ParametersOf<CustomHTMLElement['disconnectedCallback']>
       ) {
         const definition = definitionForElement.get(this);
         if (definition) {
@@ -1287,7 +1308,8 @@ type ParametersOf<
     (isParsing() || entryQueues.length > 0);
   const isUpgradeQueued = (element: HTMLElement) =>
     parserQueue.has(element) || entryQueues.some((queue) => queue.has(element));
-  // Elements the browser constructed as stand-ins. Only these are customized:
+  // Elements the browser constructed as stand-ins. Only these are customized
+  // (besides elements constructed with `new`, see `HTMLElement` above):
   // customizing any other element would be undone when the browser later
   // constructs it, which resets its prototype.
   const standInElements = shared(
@@ -1511,8 +1533,9 @@ type ParametersOf<
     instance: HTMLElement,
     definition: CustomElementDefinition
   ) => {
-    // prevent double customization
-    if (definitionForElement.get(instance) === definition) {
+    // Note, as natively, an element is customized at most once, and never
+    // after its upgrade failed.
+    if (definitionForElement.has(instance) || isFailed(instance)) {
       return;
     }
     // Note, an element the browser hasn't constructed is left to it; it's
@@ -1574,6 +1597,19 @@ type ParametersOf<
     // customized, so the user's runs now.
     if (instance.isConnected) {
       invokeCallback(definition.connectedCallback, instance);
+    }
+    // Note, as natively on upgrade, a form-associated element is told its
+    // form and whether it's disabled. The stand-in's own form callbacks ran
+    // before it was customized (see `getFormAssociatedDefinition`).
+    if (definition['formAssociated']) {
+      const internals = internalsForElement.get(instance);
+      const form = internals && nativeInternalsFormGetter?.call(internals);
+      if (form) {
+        invokeCallback(definition['formAssociatedCallback'], instance, form);
+      }
+      if (instance.matches(':disabled')) {
+        invokeCallback(definition['formDisabledCallback'], instance, true);
+      }
     }
   };
 
@@ -1698,6 +1734,10 @@ type ParametersOf<
   // Note, native registry state is deliberately not consulted, so the
   // polyfill behaves the same whether or not the browser has support.
   const getWindowRegistry = (doc: Document) => {
+    // Note, `window.customElements` is writable, so this window's isn't read.
+    if (doc === document) {
+      return globalCustomElementRegistry;
+    }
     const registry = doc.defaultView?.customElements;
     return isPolyfillRegistry(registry) ? registry : null;
   };
@@ -2026,6 +2066,11 @@ type ParametersOf<
     } catch (e) {
       for (let i = previous.length - 1; i >= 0; i--) {
         const [node, registry] = previous[i];
+        // Note, a native method can adopt and then throw, e.g. `append` of a
+        // node from another document along with an invalid node.
+        if (node.ownerDocument === doc) {
+          continue;
+        }
         if (registry === undefined) {
           registryForNode.delete(node);
         } else {
@@ -2103,21 +2148,22 @@ type ParametersOf<
     }
   };
 
+  // Runs `parse`, which replaces `target`'s children with parsed ones,
+  // recording the registries of the old children before and the new after.
+  const replaceChildrenByParsing = (target: Node, parse: () => void) =>
+    withDeferredUpgrades(() => {
+      recordRegistriesBeforeMove(childrenOf(target));
+      parse();
+      childrenOf(target).forEach(recordRegistries);
+    });
   // Parsing methods that replace the children, e.g. `setHTMLUnsafe`.
   const installScopedParsingMethod = (ctor: Function, method: string) => {
     const native = ctor.prototype[method];
     if (native === undefined) {
       return;
     }
-    ctor.prototype[method] = function (
-      this: Element | ShadowRoot,
-      ...args: Array<unknown>
-    ) {
-      withDeferredUpgrades(() => {
-        recordRegistriesBeforeMove(childrenOf(this));
-        native.apply(this, args);
-        childrenOf(this).forEach(recordRegistries);
-      });
+    ctor.prototype[method] = function (this: Node, ...args: Array<unknown>) {
+      replaceChildrenByParsing(this, () => native.apply(this, args));
     };
   };
 
@@ -2515,15 +2561,14 @@ type ParametersOf<
 
   // Install scoped innerHTML on Element & ShadowRoot
   const installScopedSetter = (ctor: Function, name: string) => {
-    const descriptor = Object.getOwnPropertyDescriptor(ctor.prototype, name)!;
+    const descriptor = Object.getOwnPropertyDescriptor(ctor.prototype, name);
+    if (!descriptor?.set) {
+      return;
+    }
     Object.defineProperty(ctor.prototype, name, {
       ...descriptor,
-      set(value) {
-        withDeferredUpgrades(() => {
-          recordRegistriesBeforeMove(childrenOf(this));
-          descriptor.set!.call(this, value);
-          Array.from((this as ParentNode).children).forEach(recordRegistries);
-        });
+      set(this: Node, value: unknown) {
+        replaceChildrenByParsing(this, () => descriptor.set!.call(this, value));
       },
     });
   };
