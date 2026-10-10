@@ -356,34 +356,47 @@ type ParametersOf<
   const isTemplate = (node: unknown): node is HTMLTemplateElement =>
     (node as Element | null)?.localName === 'template' &&
     (node as Element).namespaceURI === 'http://www.w3.org/1999/xhtml';
+  // Calls `fn` for `node` and each element under it, in tree order, and if
+  // `shadowRoots`, also for the shadow roots the polyfill knows and what's in
+  // them.
+  const forEachInTree = (
+    node: Node,
+    fn: (node: Node) => void,
+    shadowRoots = false
+  ) => {
+    fn(node);
+    const shadowRoot = shadowRoots ? getShadowRoot(node) : undefined;
+    if (shadowRoot) {
+      forEachInTree(shadowRoot, fn, true);
+    }
+    for (const child of childrenOf(node)) {
+      forEachInTree(child, fn, shadowRoots);
+    }
+  };
 
   // Gives `node` and every element under it with a null registry `registry`
   // (see `initialize`).
   const initializeSubtree = (
     node: Node,
     registry: ShimmedCustomElementsRegistry
-  ) => {
-    if (getRegistry(node) === null) {
-      registryForNode.set(node, registry);
-    }
-    for (const child of childrenOf(node)) {
-      initializeSubtree(child, registry);
-    }
-  };
+  ) =>
+    forEachInTree(node, (n) => {
+      if (getRegistry(n) === null) {
+        registryForNode.set(n, registry);
+      }
+    });
 
   // Upgrades each element in `node`'s subtree whose registry is `registry`,
   // or has it wait for a definition.
   const upgradeSubtree = (
     node: Node,
     registry: ShimmedCustomElementsRegistry
-  ) => {
-    if (node.nodeType === Node.ELEMENT_NODE && getRegistry(node) === registry) {
-      registry._upgradeOrWait(node as HTMLElement);
-    }
-    for (const child of childrenOf(node)) {
-      upgradeSubtree(child, registry);
-    }
-  };
+  ) =>
+    forEachInTree(node, (n) => {
+      if (n.nodeType === Node.ELEMENT_NODE && getRegistry(n) === registry) {
+        registry._upgradeOrWait(n as HTMLElement);
+      }
+    });
 
   class AsyncInfo<T> {
     readonly promise: Promise<T>;
@@ -741,25 +754,22 @@ type ParametersOf<
     upgrade(root: Node) {
       withDeferredUpgrades(() => {
         // Note, as natively, elements the browser hasn't constructed are
-        // constructed (queuing them) so they can be customized.
+        // constructed (queuing them) so they can be customized. Shadow roots
+        // are upgraded natively one by one too, since WebKit's upgrade doesn't
+        // reach into them (https://bugs.webkit.org/show_bug.cgi?id=326259).
         nativeUpgrade.call(nativeRegistry, root);
-        this._upgrade(root);
-      });
-    }
-
-    _upgrade(root: Node) {
-      const registry = (root as Element)['customElementRegistry'];
-      if (registry === this && root.nodeType === Node.ELEMENT_NODE) {
-        (registry as ShimmedCustomElementsRegistry)._upgradeOrWait(
-          root as HTMLElement
+        forEachInTree(
+          root,
+          (node) => {
+            if (isShadowRoot(node)) {
+              nativeUpgrade.call(nativeRegistry, node);
+            } else if (node.nodeType === Node.ELEMENT_NODE) {
+              this._upgradeOrWait(node as HTMLElement);
+            }
+          },
+          true
         );
-      }
-      const shadowRoot = getShadowRoot(root);
-      if (shadowRoot) {
-        nativeUpgrade.call(nativeRegistry, shadowRoot);
-        this._upgrade(shadowRoot);
-      }
-      root.childNodes.forEach((n) => this._upgrade(n));
+      });
     }
 
     get(tagName: string) {
@@ -1208,7 +1218,7 @@ type ParametersOf<
   const observingDefinition = (element: Element, name: string) => {
     const definition = definitionForElement.get(element as HTMLElement);
     return definition?.attributeChangedCallback &&
-      definition.observedAttributes.has(name.toLowerCase()) &&
+      definition.observedAttributes.has(String(name).toLowerCase()) &&
       !isFailed(element as HTMLElement)
       ? definition
       : undefined;
@@ -1239,9 +1249,10 @@ type ParametersOf<
         invokeCallback(
           definition.attributeChangedCallback,
           this as HTMLElement,
-          name.toLowerCase(),
+          String(name).toLowerCase(),
           oldValue,
-          newValue
+          newValue,
+          null
         );
       }
       return result;
@@ -1455,36 +1466,27 @@ type ParametersOf<
   const setRegistryForSubtree = (
     node: Node,
     registry: ShimmedCustomElementsRegistry | null
-  ) => {
-    registryForNode.set(node, registry);
-    const {children} = node as Element;
-    if (children?.length) {
-      Array.from(children).forEach((child) =>
-        setRegistryForSubtree(child, registry)
-      );
-    }
-  };
+  ) => forEachInTree(node, (n) => registryForNode.set(n, registry));
 
-  // Approximate observedAttributes from the user class, since the stand-in element had none
+  // As natively on upgrade, calls back for each observed attribute the element
+  // has, in attribute order (the stand-in observes none, see
+  // `patchAttributeMethod`).
   const invokeInitialAttributeCallbacks = (
     instance: CustomHTMLElement & HTMLElement,
     definition: CustomElementDefinition
   ) => {
-    if (!definition.attributeChangedCallback) {
-      return;
-    }
-    definition.observedAttributes.forEach((attr: string) => {
-      if (!instance.hasAttribute(attr)) {
-        return;
+    for (const attr of Array.from(instance.attributes)) {
+      if (definition.observedAttributes.has(attr.localName)) {
+        invokeCallback(
+          definition.attributeChangedCallback,
+          instance,
+          attr.localName,
+          null,
+          attr.value,
+          attr.namespaceURI
+        );
       }
-      invokeCallback(
-        definition.attributeChangedCallback,
-        instance,
-        attr,
-        null,
-        instance.getAttribute(attr)
-      );
-    });
+    }
   };
 
   // Makes a class that extends the native HTMLElement (e.g. one defined before
@@ -1767,16 +1769,10 @@ type ParametersOf<
   };
 
   // Records the registries of `node` and every element under it, including in
-  // open shadow roots (see `getRegistry`), so that moving them later doesn't
+  // shadow roots (see `getRegistry`), so that moving them later doesn't
   // change them.
-  const recordRegistries = (node: Node) => {
-    getRegistry(node);
-    const {shadowRoot} = node as Element;
-    if (shadowRoot) {
-      recordRegistries(shadowRoot);
-    }
-    Array.from((node as ParentNode).children ?? []).forEach(recordRegistries);
-  };
+  const recordRegistries = (node: Node) =>
+    forEachInTree(node, getRegistry, true);
 
   const customElementRegistryDescriptor = {
     get(this: Node) {
@@ -1936,9 +1932,11 @@ type ParametersOf<
       value<T extends Node>(this: Document, node: T): T {
         // Note, no upgrade here: as native does, adopted elements upgrade
         // when they are connected.
-        setRegistryForAdoptedNodes(this, node);
-        const adopted = adoptNode.call(this, node);
-        return adopted as T;
+        return withAdoption(
+          this,
+          [node],
+          () => adoptNode.call(this, node) as T
+        );
       },
       enumerable: true,
       configurable: true,
@@ -1961,18 +1959,21 @@ type ParametersOf<
   // its parent's.
   const effectiveGlobal = (registry: ShimmedCustomElementsRegistry | null) =>
     registry?._isScoped ? null : registry;
+  // Each change is noted in `previous`, so it can be undone.
   const adoptRegistries = (
     node: Node,
     documentRegistry: ShimmedCustomElementsRegistry | null,
+    previous: Array<[Node, ShimmedCustomElementsRegistry | null | undefined]>,
     isAdoptedNode = true
   ) => {
     const current = getRegistry(node);
     if (current === null || !current._isScoped) {
+      let registry: ShimmedCustomElementsRegistry | null | undefined;
       if (isShadowRoot(node)) {
         const keepsNull =
           current === null && node.host.hasAttribute(DSD_HOST_ATTRIBUTE);
         if (!keepsNull) {
-          registryForNode.set(node, effectiveGlobal(documentRegistry));
+          registry = effectiveGlobal(documentRegistry);
         }
       } else if (node.nodeType === Node.ELEMENT_NODE) {
         const parent = node.parentNode;
@@ -1982,37 +1983,61 @@ type ParametersOf<
           parent === null ||
           (parent.nodeType === Node.DOCUMENT_FRAGMENT_NODE &&
             !isShadowRoot(parent));
-        registryForNode.set(
-          node,
-          effectiveGlobal(fromDocument ? documentRegistry : getRegistry(parent))
+        registry = effectiveGlobal(
+          fromDocument ? documentRegistry : getRegistry(parent)
         );
+      }
+      if (registry !== undefined) {
+        previous.push([node, registryForNode.get(node)]);
+        registryForNode.set(node, registry);
       }
     }
     const shadowRoot = getShadowRoot(node);
     if (shadowRoot) {
-      adoptRegistries(shadowRoot, documentRegistry, false);
+      adoptRegistries(shadowRoot, documentRegistry, previous, false);
     }
     for (const child of childrenOf(node)) {
-      adoptRegistries(child, documentRegistry, false);
+      adoptRegistries(child, documentRegistry, previous, false);
     }
   };
 
+  // Runs `fn`, which inserts or adopts `nodes` into `doc`, having first given
+  // those from other documents their adopted registries (see
+  // `adoptRegistries`). If `fn` throws, the registries are restored.
   // Note, as natively, adopted elements upgrade when connected: stand-ins
   // via their `connectedCallback`, others when the browser constructs them.
-  const setRegistryForAdoptedNodes = (doc: Document, ...args: Array<unknown>) =>
-    (args as unknown[]).forEach((arg) => {
+  const withAdoption = <T>(
+    doc: Document,
+    nodes: Array<unknown>,
+    fn: () => T
+  ): T => {
+    const previous: Array<
+      [Node, ShimmedCustomElementsRegistry | null | undefined]
+    > = [];
+    for (const node of nodes) {
+      // Note, a document can't be adopted (native throws).
       if (
-        typeof (arg as Node | null)?.nodeType !== 'number' ||
-        (arg as Node).ownerDocument === doc
+        typeof (node as Node | null)?.nodeType === 'number' &&
+        (node as Node).nodeType !== Node.DOCUMENT_NODE &&
+        (node as Node).ownerDocument !== doc
       ) {
-        return;
+        adoptRegistries(node as Node, getRegistry(doc), previous);
       }
-      adoptRegistries(
-        arg as Node,
-        doc['customElementRegistry'] as ShimmedCustomElementsRegistry | null
-      );
-    });
-
+    }
+    try {
+      return fn();
+    } catch (e) {
+      for (let i = previous.length - 1; i >= 0; i--) {
+        const [node, registry] = previous[i];
+        if (registry === undefined) {
+          registryForNode.delete(node);
+        } else {
+          registryForNode.set(node, registry);
+        }
+      }
+      throw e;
+    }
+  };
   // A node without a record gets its registry from where it is (see
   // `getRegistry`), so before a node is moved or removed, its registry is
   // recorded. Recording the node is enough, since its descendants' registries
@@ -2056,11 +2081,11 @@ type ParametersOf<
         if (removed) {
           recordRegistriesBeforeMove(removed(this));
         }
-        setRegistryForAdoptedNodes(
+        return withAdoption(
           (this.ownerDocument ?? this) as Document,
-          ...args
+          args,
+          () => native.apply(this, args)
         );
-        return native.apply(this, args);
       });
     };
   };
@@ -2081,19 +2106,20 @@ type ParametersOf<
     }
   };
 
-  const installScopedSetHTMLUnsafe = (ctor: Function) => {
-    const native = ctor.prototype['setHTMLUnsafe'];
+  // Parsing methods that replace the children, e.g. `setHTMLUnsafe`.
+  const installScopedParsingMethod = (ctor: Function, method: string) => {
+    const native = ctor.prototype[method];
     if (native === undefined) {
       return;
     }
-    ctor.prototype['setHTMLUnsafe'] = function (
+    ctor.prototype[method] = function (
       this: Element | ShadowRoot,
       ...args: Array<unknown>
     ) {
       withDeferredUpgrades(() => {
         recordRegistriesBeforeMove(childrenOf(this));
         native.apply(this, args);
-        Array.from(this.children).forEach(recordRegistries);
+        childrenOf(this).forEach(recordRegistries);
       });
     };
   };
@@ -2130,8 +2156,10 @@ type ParametersOf<
       recordRegistriesBetween(parent, start, end);
     });
   };
-  installScopedSetHTMLUnsafe(Element);
-  installScopedSetHTMLUnsafe(ShadowRoot);
+  for (const ctor of [Element, ShadowRoot]) {
+    installScopedParsingMethod(ctor, 'setHTMLUnsafe');
+    installScopedParsingMethod(ctor, 'setHTML');
+  }
 
   // Clones a tree, preserving each node's registry.
   //
@@ -2302,10 +2330,25 @@ type ParametersOf<
         registryForNode.set(clone, registry);
       }
     }
+    const sources = elementsOf(node, deep);
     const copies = elementsOf(clone, deep);
-    elementsOf(node, deep).forEach((source, i) =>
-      pairClonedElement(source, copies[i], fallbackRegistry)
-    );
+    if (sources.length === copies.length) {
+      sources.forEach((source, i) =>
+        pairClonedElement(source, copies[i], fallbackRegistry)
+      );
+    } else {
+      // Note, the copy can't be paired by index (e.g. a customized built-in's
+      // constructor changed the source during the native clone), so it gets
+      // the source's registry throughout.
+      setRegistryForSubtree(
+        clone,
+        getCloneRegistry(
+          node.nodeType === Node.ELEMENT_NODE ? getRegistry(node) : null,
+          clone,
+          fallbackRegistry
+        )
+      );
+    }
     pairUnreachableCopyRoots();
     return clone;
   };
@@ -2347,11 +2390,11 @@ type ParametersOf<
     const container = this.startContainer;
     return withDeferredUpgrades(() => {
       recordRegistriesBeforeMove([node]);
-      setRegistryForAdoptedNodes(
+      withAdoption(
         (container.ownerDocument ?? container) as Document,
-        node
+        [node],
+        () => nativeInsertNode.call(this, node)
       );
-      nativeInsertNode.call(this, node);
     });
   };
   const nativeSurroundContents = Range.prototype.surroundContents;
@@ -2361,11 +2404,11 @@ type ParametersOf<
       // Note, the range's contents replace `newParent`'s children.
       recordRegistriesBeforeMove([newParent, ...childrenOf(newParent)]);
       recordRegistriesBeforeMove(elementsInRange(this));
-      setRegistryForAdoptedNodes(
+      withAdoption(
         (container.ownerDocument ?? container) as Document,
-        newParent
+        [newParent],
+        () => nativeSurroundContents.call(this, newParent)
       );
-      nativeSurroundContents.call(this, newParent);
     });
   };
   // Note, the new nodes are parsed in the context of the range's start, so
@@ -2421,6 +2464,12 @@ type ParametersOf<
   installScopedMethod(DocumentFragment, 'append');
   installScopedMethod(DocumentFragment, 'prepend');
   installScopedMethod(DocumentFragment, 'replaceChildren', childrenOf);
+  installScopedMethod(Document, 'append');
+  installScopedMethod(Document, 'prepend');
+  installScopedMethod(Document, 'replaceChildren', childrenOf);
+  installScopedMethod(CharacterData, 'before');
+  installScopedMethod(CharacterData, 'after');
+  installScopedMethod(CharacterData, 'replaceWith');
 
   // Methods that move or remove nodes without constructing any, which only
   // need to record the registries of those nodes first.
@@ -2443,20 +2492,32 @@ type ParametersOf<
   recordBefore(Element, 'moveBefore', (_, args) => args);
   recordBefore(Document, 'moveBefore', (_, args) => args);
   recordBefore(DocumentFragment, 'moveBefore', (_, args) => args);
-  recordBefore<Node>(Element, 'setHTML', childrenOf);
-  recordBefore<Node>(ShadowRoot, 'setHTML', childrenOf);
   recordBefore<Range>(Range, 'deleteContents', elementsInRange);
-  const textContentDescriptor = Object.getOwnPropertyDescriptor(
-    Node.prototype,
-    'textContent'
-  )!;
-  Object.defineProperty(Node.prototype, 'textContent', {
-    ...textContentDescriptor,
-    set(this: Node, value: string | null) {
-      recordRegistriesBeforeMove(childrenOf(this));
-      textContentDescriptor.set!.call(this, value);
-    },
-  });
+  // Setters that replace nodes with text, which only need to record the
+  // registries of the nodes they remove.
+  const recordBeforeSetter = (
+    ctor: Function,
+    name: string,
+    nodesOf: (target: Node) => Iterable<unknown>
+  ) => {
+    const descriptor = Object.getOwnPropertyDescriptor(ctor.prototype, name);
+    if (!descriptor?.set) {
+      return;
+    }
+    Object.defineProperty(ctor.prototype, name, {
+      ...descriptor,
+      set(this: Node, value: unknown) {
+        recordRegistriesBeforeMove(nodesOf(this));
+        descriptor.set!.call(this, value);
+      },
+    });
+  };
+  // Note, most `textContent` targets have no element children.
+  const elementChildrenOf = (node: Node) =>
+    (node as ParentNode).firstElementChild ? childrenOf(node) : [];
+  recordBeforeSetter(Node, 'textContent', elementChildrenOf);
+  recordBeforeSetter(HTMLElement, 'innerText', elementChildrenOf);
+  recordBeforeSetter(HTMLElement, 'outerText', (element) => [element]);
 
   // Install scoped innerHTML on Element & ShadowRoot
   const installScopedSetter = (ctor: Function, name: string) => {

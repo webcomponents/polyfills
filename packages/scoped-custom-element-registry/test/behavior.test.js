@@ -621,6 +621,27 @@ describe('initialize and lifecycle', () => {
 });
 
 describe('attributeChangedCallback', () => {
+  it('on upgrade, calls back in attribute order, matching names exactly', () => {
+    const tagName = getTestTagName();
+    const calls = [];
+    const container = document.createElement('div');
+    container.innerHTML = `<${tagName} b="1" foobar="2" a="3"></${tagName}>`;
+    customElements.define(
+      tagName,
+      class extends HTMLElement {
+        static observedAttributes = ['a', 'b', 'fooBar'];
+        attributeChangedCallback(name, oldValue, newValue, namespace) {
+          calls.push([name, oldValue, newValue, namespace]);
+        }
+      }
+    );
+    customElements.upgrade(container);
+    expect(calls).to.deep.equal([
+      ['b', null, '1', null],
+      ['a', null, '3', null],
+    ]);
+  });
+
   // Returns a class whose attributeChangedCallback logs `name`.
   const logAttributes = (log) =>
     class extends HTMLElement {
@@ -1822,6 +1843,27 @@ describe('Upgrade order', () => {
 });
 
 describe('Adoption', () => {
+  it('inserting next to a text node adopts the element', () => {
+    for (const method of ['before', 'after']) {
+      const el = inertDocument().createElement('div');
+      const text = document.body.appendChild(document.createTextNode(''));
+      text[method](el);
+      expect(el.customElementRegistry, method).to.equal(customElements);
+      el.remove();
+      text.remove();
+    }
+  });
+
+  it("an insertion that throws doesn't change the node's registry", () => {
+    const el = document.createElement('div');
+    const otherDocument = document.implementation.createHTMLDocument();
+    expect(() =>
+      otherDocument.body.insertBefore(el, document.createElement('i'))
+    ).to.throw(DOMException);
+    expect(el.ownerDocument).to.equal(document);
+    expect(el.customElementRegistry).to.equal(customElements);
+  });
+
   it('a null element adopted from an inert document gets the document registry', () => {
     const el = inertDocument().createElement('div');
     expect(el.customElementRegistry).to.be.null;
