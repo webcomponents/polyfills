@@ -388,13 +388,13 @@ type ParametersOf<
     });
 
   // Upgrades each element in `node`'s subtree whose registry is `registry`,
-  // or has it wait for a definition.
+  // or has it wait for a definition (see `_upgradeOrWait`).
   const upgradeSubtree = (
     node: Node,
     registry: ShimmedCustomElementsRegistry
   ) =>
     forEachInTree(node, (n) => {
-      if (n.nodeType === Node.ELEMENT_NODE && getRegistry(n) === registry) {
+      if (n.nodeType === Node.ELEMENT_NODE) {
         registry._upgradeOrWait(n as HTMLElement);
       }
     });
@@ -2149,7 +2149,8 @@ type ParametersOf<
   ) {
     const where = String(position).toLowerCase();
     const isOutside = where === 'beforebegin' || where === 'afterend';
-    const parent = (isOutside ? this.parentNode : this) ?? this;
+    // Note, without a parent, native throws for an outside position.
+    const parent = isOutside ? this.parentNode! : this;
     const start =
       where === 'beforebegin'
         ? this.previousSibling
