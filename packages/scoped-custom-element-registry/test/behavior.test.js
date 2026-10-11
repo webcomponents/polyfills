@@ -265,6 +265,28 @@ describe('Prototype on a failed upgrade', () => {
   });
 });
 
+describe('Definition after a failed upgrade', () => {
+  it('an element whose constructor threw can attach a shadow root, though its class disables them', () => {
+    const tagName = getTestTagName();
+    const container = document.body.appendChild(document.createElement('div'));
+    container.innerHTML = `<${tagName}></${tagName}>`;
+    class Failing extends HTMLElement {
+      static get disabledFeatures() {
+        return ['shadow'];
+      }
+      constructor() {
+        super();
+        throw new Error('constructor');
+      }
+    }
+    captureReportedErrors(() => customElements.define(tagName, Failing));
+    expect(() =>
+      container.firstChild.attachShadow({mode: 'open'})
+    ).not.to.throw();
+    container.remove();
+  });
+});
+
 describe('Registries kept when moved', () => {
   it('a node parsed into a fragment keeps the document registry when moved into a scoped root', () => {
     const tagName = getTestTagName();
@@ -833,6 +855,34 @@ describe('Cloning', () => {
     expect(template.cloneNode(true).content.childNodes.length).to.equal(1);
     expect(template.cloneNode(false).content.childNodes.length).to.equal(0);
   });
+
+  itWithCustomizedBuiltIns(
+    'a fragment copy that can\u2019t be paired keeps the global registry',
+    () => {
+      const tagName = getTestTagName();
+      let source;
+      class Button extends HTMLButtonElement {
+        constructor() {
+          super();
+          // Note, adds an element to the source after the native clone, so
+          // the copy can't be paired by index.
+          source?.append(document.createElement('div'));
+        }
+      }
+      customElements.define(tagName, Button, {extends: 'button'});
+      const fragment = document.createDocumentFragment();
+      fragment.append(
+        document.createElement('button', {is: tagName}),
+        document.createElement('div')
+      );
+      source = fragment;
+      const copy = fragment.cloneNode(true);
+      source = undefined;
+      expect(fragment.children.length).to.equal(3);
+      expect(copy.children.length).to.equal(2);
+      expect(copy.children[1].customElementRegistry).to.equal(customElements);
+    }
+  );
 
   it('keeps each node\u2019s registry in a mixed tree', () => {
     const registry = new CustomElementRegistry();
