@@ -1697,8 +1697,8 @@ type ParametersOf<
   };
 
   // The global registry of a document's window: this window's for its
-  // document, otherwise null (a document without a window, or another
-  // window's, whose registries this copy of the polyfill doesn't know).
+  // document (even once the window is gone), otherwise its window's if that
+  // runs the polyfill, else null (e.g. a document without a window).
   // Note, native registry state is deliberately not consulted, so the
   // polyfill behaves the same whether or not the browser has support.
   const getWindowRegistry = (doc: Document) => {
@@ -1787,8 +1787,11 @@ type ParametersOf<
     configurable: true,
   };
 
-  const {importNode, adoptNode} = Document.prototype;
-  const createElement = Document.prototype.createElement as (
+  const {
+    importNode: nativeImportNode,
+    adoptNode: nativeAdoptNode,
+  } = Document.prototype;
+  const nativeCreateElement = Document.prototype.createElement as (
     this: Document,
     tagName: string,
     options?: ElementCreationOptions
@@ -1862,7 +1865,7 @@ type ParametersOf<
         options?: string | ElementCreationOptions
       ) {
         return createElementWithRegistry(this, options, 'createElement', (o) =>
-          createElement.call(this, tagName, o)
+          nativeCreateElement.call(this, tagName, o)
         );
       },
       enumerable: true,
@@ -1918,7 +1921,7 @@ type ParametersOf<
           cloneWithRegistries(
             node,
             deep,
-            (n, nodeDeep) => importNode.call(this, n, nodeDeep),
+            (n, nodeDeep) => nativeImportNode.call(this, n, nodeDeep),
             fallbackRegistry
           )
         ) as T;
@@ -1934,7 +1937,7 @@ type ParametersOf<
         return withAdoption(
           this,
           [node],
-          () => adoptNode.call(this, node) as T
+          () => nativeAdoptNode.call(this, node) as T
         );
       },
       enumerable: true,
@@ -1960,48 +1963,46 @@ type ParametersOf<
     registry?._isScoped ? null : registry;
   // Each change is noted in `previous`, so it can be undone.
   const adoptRegistries = (
-    node: Node,
+    adopted: Node,
     documentRegistry: ShimmedCustomElementsRegistry | null,
-    previous: Array<[Node, ShimmedCustomElementsRegistry | null | undefined]>,
-    isAdoptedNode = true
-  ) => {
-    const current = getRegistry(node);
-    if (current === null || !current._isScoped) {
-      let registry: ShimmedCustomElementsRegistry | null | undefined;
-      if (isShadowRoot(node)) {
-        const keepsNull =
-          current === null && node.host.hasAttribute(DSD_HOST_ATTRIBUTE);
-        if (!keepsNull) {
-          registry = effectiveGlobal(documentRegistry);
+    previous: Array<[Node, ShimmedCustomElementsRegistry | null | undefined]>
+  ) =>
+    forEachInTree(
+      adopted,
+      (node) => {
+        const oldRegistry = getRegistry(node);
+        if (oldRegistry !== null && oldRegistry._isScoped) {
+          return;
         }
-      } else if (node.nodeType === Node.ELEMENT_NODE) {
-        const parent = node.parentNode;
-        const fromDocument =
-          current !== null ||
-          isAdoptedNode ||
-          parent === null ||
-          (parent.nodeType === Node.DOCUMENT_FRAGMENT_NODE &&
-            !isShadowRoot(parent));
-        registry = effectiveGlobal(
-          fromDocument ? documentRegistry : getRegistry(parent)
-        );
-        // Note, the native move disconnects it after this, by which time its
-        // registry has changed.
-        current?._stopWaitingForDefinition(node as HTMLElement);
-      }
-      if (registry !== undefined) {
-        previous.push([node, registryForNode.get(node)]);
-        registryForNode.set(node, registry);
-      }
-    }
-    const shadowRoot = getShadowRoot(node);
-    if (shadowRoot) {
-      adoptRegistries(shadowRoot, documentRegistry, previous, false);
-    }
-    for (const child of childrenOf(node)) {
-      adoptRegistries(child, documentRegistry, previous, false);
-    }
-  };
+        let registry: ShimmedCustomElementsRegistry | null | undefined;
+        if (isShadowRoot(node)) {
+          const keepsNull =
+            oldRegistry === null && node.host.hasAttribute(DSD_HOST_ATTRIBUTE);
+          if (!keepsNull) {
+            registry = effectiveGlobal(documentRegistry);
+          }
+        } else if (node.nodeType === Node.ELEMENT_NODE) {
+          const parent = node.parentNode;
+          const fromDocument =
+            oldRegistry !== null ||
+            node === adopted ||
+            parent === null ||
+            (parent.nodeType === Node.DOCUMENT_FRAGMENT_NODE &&
+              !isShadowRoot(parent));
+          registry = effectiveGlobal(
+            fromDocument ? documentRegistry : getRegistry(parent)
+          );
+          // Note, the native move disconnects it after this, by which time
+          // its registry has changed.
+          oldRegistry?._stopWaitingForDefinition(node as HTMLElement);
+        }
+        if (registry !== undefined) {
+          previous.push([node, registryForNode.get(node)]);
+          registryForNode.set(node, registry);
+        }
+      },
+      true
+    );
 
   // Runs `fn`, which inserts or adopts `nodes` into `doc`, having first given
   // those from other documents their adopted registries (see
@@ -2615,7 +2616,10 @@ type ParametersOf<
   // so they are returned to the user, emulating native: internals can be
   // attached once, only to a custom element (one being or already customized,
   // not failed), and not if the element's class disables them.
-  const internalsToHostMap = new WeakMap<ElementInternals, HTMLElement>();
+  const internalsToHostMap = shared(
+    'internalsToHostMap',
+    () => new WeakMap<ElementInternals, HTMLElement>()
+  );
   if (nativeAttachInternals) {
     HTMLElement.prototype['attachInternals'] = function (this: HTMLElement) {
       // Note, the browser only knows the stand-in class, so the user's class
