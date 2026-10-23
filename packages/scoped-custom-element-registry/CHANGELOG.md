@@ -23,6 +23,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   with a `TypeError`
 - `Range.createContextualFragment` in a template's context gives elements a
   null registry
+- `HTMLElement`, and classes extending it, inherit the statics of `Element`
+  and `Node` (e.g. `ELEMENT_NODE`)
 
 ### Changed
 

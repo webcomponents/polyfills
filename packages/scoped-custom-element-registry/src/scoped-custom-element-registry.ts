@@ -856,6 +856,12 @@ type ParametersOf<
     return instance;
   } as unknown) as typeof HTMLElement;
   window.HTMLElement.prototype = NativeHTMLElement.prototype;
+  // Note, so it and its subclasses inherit the statics of `Element` and
+  // `Node` (e.g. `ELEMENT_NODE`), as natively.
+  Object.setPrototypeOf(
+    window.HTMLElement,
+    Object.getPrototypeOf(NativeHTMLElement)
+  );
   // Note, so `element.constructor === HTMLElement` holds, as natively, and
   // its name is kept, since the build compiles the function to an anonymous
   // one.

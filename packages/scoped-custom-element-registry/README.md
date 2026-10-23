@@ -2,8 +2,10 @@
 
 ## Overview
 
-Scoped CustomElementRegistry polyfill based on [DOM Spec]https://html.spec.whatwg.org/multipage/custom-elements.html], originally proposed via [Scoped Custom Element
-Registries](https://github.com/WICG/webcomponents/blob/gh-pages/proposals/Scoped-Custom-Element-Registries.md).
+Scoped CustomElementRegistry polyfill based on the
+[HTML spec](https://html.spec.whatwg.org/multipage/custom-elements.html),
+originally proposed as
+[Scoped Custom Element Registries](https://github.com/WICG/webcomponents/blob/gh-pages/proposals/Scoped-Custom-Element-Registries.md).
 
 See [MDN](https://developer.mozilla.org/en-US/docs/Web/API/CustomElementRegistry/CustomElementRegistry) for current native support status.
 
@@ -13,7 +15,39 @@ avoids any manual treewalks to identify custom elements that need upgrading.
 Stand-ins are queued when constructed and customized once their tree, and so
 their registry, is known: at the end of the DOM call that created them, or,
 for the main document's parser, once inserted (before any script that follows
-them runs). The "constructor call trick" is then used to upgrade them.
+them runs). The "constructor call trick" is then used to upgrade them. See
+[DESIGN.md](DESIGN.md) for how it works.
+
+## Installing and loading
+
+```sh
+npm i @webcomponents/scoped-custom-element-registry
+```
+
+Load it as a classic script in the document's `<head>`, before any markup
+that uses custom elements and before any code that defines them. Don't use
+`defer`, `async` or `type="module"`, which run it after the document is
+parsed.
+
+```html
+<head>
+  <script src="node_modules/@webcomponents/scoped-custom-element-registry/scoped-custom-element-registry.min.js"></script>
+</head>
+```
+
+Options are set on `window.CustomElementRegistryPolyfill` before loading:
+
+```html
+<script>
+  window.CustomElementRegistryPolyfill = {
+    // Use the polyfill even where the browser supports scoped registries.
+    force: true,
+    // Tags that may be form-associated (see "Usage notes").
+    formAssociated: new Set(['my-input']),
+  };
+</script>
+<script src=".../scoped-custom-element-registry.min.js"></script>
+```
 
 ## Supported
 
@@ -31,13 +65,21 @@ them runs). The "constructor call trick" is then used to upgrade them.
   registry, including in clonable shadow roots.
 - Adoption into another document, as natively.
 
-The polyfill does nothing in browsers with native support. Set
-`window.CustomElementRegistryPolyfill = {force: true}` before loading it to
-use it anyway.
+The polyfill does nothing in browsers with native support, unless `force` is
+set.
 
-## Usage notes
+## Limitations
 
-- **Load it first**, before any markup that uses custom elements is parsed.
+- **Customized built-in elements** (`extends`) are best avoided, since
+  Safari doesn't support them. The polyfill passes them to the browser, in the
+  global registry only. A name can't be both a customized built-in and, in any
+  registry, an autonomous element, since the polyfill defines every
+  autonomous name natively.
+- **`attributeChangedCallback`** only runs for changes made with
+  `setAttribute`, `removeAttribute` and `toggleAttribute`, which the polyfill
+  patches, since the browser fixes `observedAttributes` at define time.
+  Changes made any other way (e.g. through reflecting properties or
+  `setAttributeNS`) are not observed.
 - **Declarative shadow roots with a null registry** also need
   `polyfill-shadowrootcustomelementregistry` on the host: the parser consumes
   the template, so the polyfill never sees its attribute. Use it only on a
@@ -49,52 +91,27 @@ use it anyway.
     <template shadowrootmode="open" shadowrootcustomelementregistry>…</template>
   </x-host>
   ```
+- **`:defined`** matches elements the polyfill hasn't customized yet. Use
+  `:is(:not(:defined), :state(polyfill-undefined))` instead of `:not(:defined)`;
+  it's correct with or without the polyfill.
+
+## Usage notes
+
 - **`polyfill-customelementregistry`** (or `polyfill-scopedcustomelementregistry`)
   is equivalent to the standard attribute but always handled by the polyfill,
   never by the browser. Use it only if you want the polyfill's behavior in
   browsers with native support (e.g. when forcing); don't combine it with the
   standard attribute.
-- **`:defined`** matches elements the polyfill hasn't customized yet. Use
-  `:is(:not(:defined), :state(polyfill-undefined))` instead of `:not(:defined)`;
-  it's correct with or without the polyfill.
-- **Elements the main parser creates upgrade once inserted**, rather than
-  when constructed: a script that follows them sees them upgraded, as
-  natively, but their constructors run a little later, just before such a
-  script or the next custom element the parser creates.
-- **Cloning a closed shadow root:** when a closed, clonable shadow root is on
-  an element that wasn't a defined custom element when the root was attached
-  (for example a `div`, or an undefined custom element like `my-element`), the
-  polyfill can't reach the copy's shadow root after cloning. Elements in the
-  copy that are only defined later get the shadow root's registry (or, in a
-  shadow root nested inside it, the document's), even if their originals used
-  a different one. This only matters if elements inside
-  the root use a different registry than the root itself. To avoid it, do any
-  of these:
-  - put the shadow root on a custom element that's defined before the root is
-    attached;
-  - define the elements inside before cloning;
-  - make the shadow root open.
-- **Uncommon APIs** the polyfill doesn't patch (e.g.
-  `execCommand('insertHTML')`) upgrade elements a microtask later than natively.
-- **`observedAttributes`** is simulated by patching `setAttribute`,
-  `removeAttribute` and `toggleAttribute`, since the browser fixes it at define
-  time. Attributes changed any other way (e.g. through reflecting properties
-  or `setAttributeNS`) are not observed.
+- **Elements the main parser creates** are constructed once inserted, so a
+  constructor may see attributes and children it wouldn't natively; don't
+  rely on that.
 - **Form-associated elements:** whether a tag can be form-associated is fixed
   by its first definition. If a later definition of the same tag is
-  form-associated when the first isn't, list the tag in
-  `window.CustomElementRegistryPolyfill.formAssociated` (a `Set`) before
-  loading. An element whose own class isn't form-associated, of a tag that
+  form-associated when the first isn't, list the tag in the `formAssociated`
+  option. An element whose own class isn't form-associated, of a tag that
   is, is left out of its form's data, `elements` and `length`, but it's still
   in `form[index]` and the form's named properties, matches `:disabled`, and
   is disabled by a `disabled` attribute.
-- **Customized built-in elements** (`extends`) are defined natively in the
-  global registry, where the browser supports them. A name can't be used both
-  for a customized built-in and in any registry's autonomous definitions,
-  since the polyfill defines every autonomous name natively. The polyfill
-  reads the class before the browser does, so a one-shot iterable (e.g. a
-  generator) for `observedAttributes` or `disabledFeatures` is empty when the
-  browser reads it, and nothing is observed.
 
 ## Differences from native implementations
 

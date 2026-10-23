@@ -109,6 +109,15 @@ describe('Creation', () => {
 
 // Note, earlier versions of the polyfill took the registry as `registry` or
 // `customElements`, and set both on the root; they're still supported.
+describe('HTMLElement', () => {
+  it('inherits the statics of Element and Node, as do its subclasses', () => {
+    expect(Object.getPrototypeOf(HTMLElement)).to.equal(Element);
+    expect(HTMLElement.ELEMENT_NODE).to.equal(1);
+    class X extends HTMLElement {}
+    expect(X.ELEMENT_NODE).to.equal(1);
+  });
+});
+
 describe('attachShadow back compat', () => {
   for (const option of ['registry', 'customElements']) {
     itWithPolyfill(`takes the registry as \`${option}\``, () => {
