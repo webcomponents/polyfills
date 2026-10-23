@@ -20,7 +20,8 @@
   "scripts": {
     "build": "wireit",
     "build:ts": "wireit",
-    "test": "wireit"
+    "test": "wireit",
+    "test:forced": "wireit"
   },
   "files": [
     "CHANGELOG.md",
@@ -41,10 +42,10 @@
   ],
   "devDependencies": {
     "@open-wc/testing": "^4.0.0",
-    "@web/test-runner": "^0.18.0",
+    "@web/test-runner": "^0.20.2",
     "@web/test-runner-mocha": "^0.9.0",
-    "@web/test-runner-playwright": "^0.11.0",
-    "wireit": "^0.14.4"
+    "@web/test-runner-playwright": "^0.11.1",
+    "wireit": "^0.14.12"
   },
   "wireit": {
     "build": {
@@ -80,6 +81,22 @@
     },
     "test": {
       "command": "wtr",
+      "dependencies": [
+        "build",
+        "test:forced"
+      ],
+      "files": [
+        "web-test-runner.config.js",
+        "test/**/*.test.(js|html)"
+      ],
+      "output": []
+    },
+    "test:forced": {
+      "command": "wtr",
+      "env": {
+        "FORCE_POLYFILL": "true",
+        "BROWSERS": "chromium"
+      },
       "dependencies": [
         "build"
       ],
