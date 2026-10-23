@@ -25,6 +25,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   null registry
 - `HTMLElement`, and classes extending it, inherit the statics of `Element`
   and `Node` (e.g. `ELEMENT_NODE`)
+- `new X()` gives the element the global registry
+- `importNode` reads its options as WebIDL does: null or an object is a
+  dictionary, anything else a boolean
+- A registry argument that isn't a `CustomElementRegistry` throws a
+  `TypeError`
+- `define`, `get` and `whenDefined` convert the name to a string
+- An element is customized at most once; as natively, a failed upgrade clears
+  its definition, and a constructor that throws before `super()` leaves it an
+  `HTMLElement`
+- `attachInternals` throws for an element that isn't customized
+- Form callbacks run on upgrade, and only for form-associated elements
+- Initial `attributeChangedCallback`s run in attribute order
+- An insertion that throws restores the registries it changed
+- `Document` `append`/`prepend`/`replaceChildren`, `CharacterData`
+  `before`/`after`/`replaceWith`, `textContent`, `innerText`, `outerText` and
+  `setHTML` keep registries
 
 ### Changed
 
