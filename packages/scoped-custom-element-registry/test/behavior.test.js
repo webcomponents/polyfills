@@ -157,6 +157,175 @@ describe('importNode', () => {
     expect(document.importNode(el).childNodes.length).to.equal(0);
     expect(document.importNode(el, {}).childNodes.length).to.equal(1);
   });
+
+  // Note, as WebIDL converts `(boolean or ImportNodeOptions)`.
+  it('treats null as empty options and other values as a boolean', () => {
+    const el = document.createElement('div');
+    el.innerHTML = '<span></span>';
+    expect(document.importNode(el, null).childNodes.length).to.equal(1);
+    expect(document.importNode(el, 0).childNodes.length).to.equal(0);
+    expect(document.importNode(el, 1).childNodes.length).to.equal(1);
+  });
+});
+
+describe('Registry arguments', () => {
+  it('a value that is not a registry throws a TypeError', () => {
+    const notARegistry = {};
+    expect(() =>
+      document.createElement('div', {customElementRegistry: notARegistry})
+    ).to.throw(TypeError);
+    expect(() =>
+      document
+        .createElement('div')
+        .attachShadow({mode: 'open', customElementRegistry: notARegistry})
+    ).to.throw(TypeError);
+    expect(() =>
+      document.importNode(document.createElement('div'), {
+        customElementRegistry: notARegistry,
+      })
+    ).to.throw(TypeError);
+  });
+
+  it('names are converted to strings', async () => {
+    const registry = new CustomElementRegistry();
+    const tagName = getTestTagName();
+    const Logged = class extends HTMLElement {};
+    const name = {toString: () => tagName};
+    registry.define(name, Logged);
+    expect(registry.get(name)).to.equal(Logged);
+    expect(await registry.whenDefined(name)).to.equal(Logged);
+  });
+});
+
+describe('Customized once', () => {
+  it("an element adopted into a null registry and initialized isn't customized again", () => {
+    const tagName = getTestTagName();
+    const constructed = [];
+    customElements.define(
+      tagName,
+      class extends HTMLElement {
+        constructor() {
+          super();
+          constructed.push('global');
+        }
+      }
+    );
+    const registry = new CustomElementRegistry();
+    registry.define(
+      tagName,
+      class extends HTMLElement {
+        constructor() {
+          super();
+          constructed.push('scoped');
+        }
+      }
+    );
+    const el = document.createElement(tagName);
+    document.implementation.createHTMLDocument().adoptNode(el);
+    registry.initialize(el);
+    document.body.append(el);
+    el.remove();
+    expect(constructed).to.deep.equal(['global']);
+  });
+
+  it('defining a tag while another registry reads its class works', () => {
+    const tagName = getTestTagName();
+    const other = new CustomElementRegistry();
+    class Outer extends HTMLElement {
+      static get observedAttributes() {
+        other.define(tagName, class extends HTMLElement {});
+        return [];
+      }
+      attributeChangedCallback() {}
+    }
+    const registry = new CustomElementRegistry();
+    expect(() => registry.define(tagName, Outer)).not.to.throw();
+    expect(registry.get(tagName)).to.equal(Outer);
+  });
+});
+
+describe('Prototype on a failed upgrade', () => {
+  it('a constructor that throws before super() leaves the element an HTMLElement', () => {
+    const tagName = getTestTagName();
+    const container = document.body.appendChild(document.createElement('div'));
+    container.innerHTML = `<${tagName}></${tagName}>`;
+    class Failing extends HTMLElement {
+      constructor() {
+        if (container) {
+          throw new Error('before super');
+        }
+        super();
+      }
+    }
+    captureReportedErrors(() => customElements.define(tagName, Failing));
+    expect(Object.getPrototypeOf(container.firstChild)).to.equal(
+      HTMLElement.prototype
+    );
+    container.remove();
+  });
+});
+
+describe('Definition after a failed upgrade', () => {
+  // Note, Chromium keeps the definition of an element whose constructor
+  // failed (see README).
+  itWithPolyfill(
+    'an element whose constructor threw can attach a shadow root, though its class disables them',
+    () => {
+      const tagName = getTestTagName();
+      const container = document.body.appendChild(
+        document.createElement('div')
+      );
+      container.innerHTML = `<${tagName}></${tagName}>`;
+      class Failing extends HTMLElement {
+        static get disabledFeatures() {
+          return ['shadow'];
+        }
+        constructor() {
+          super();
+          throw new Error('constructor');
+        }
+      }
+      captureReportedErrors(() => customElements.define(tagName, Failing));
+      expect(() =>
+        container.firstChild.attachShadow({mode: 'open'})
+      ).not.to.throw();
+      container.remove();
+    }
+  );
+});
+
+describe('Registries kept when moved', () => {
+  it('a node parsed into a fragment keeps the document registry when moved into a scoped root', () => {
+    const tagName = getTestTagName();
+    const registry = new CustomElementRegistry();
+    const fragment = document.createDocumentFragment();
+    fragment.append(document.createElement('div'));
+    fragment.firstChild.insertAdjacentHTML(
+      'afterend',
+      `<${tagName}></${tagName}>`
+    );
+    const parsed = fragment.lastChild;
+    document
+      .createElement('div')
+      .attachShadow({mode: 'open', customElementRegistry: registry})
+      .append(fragment);
+    expect(parsed.customElementRegistry).to.equal(customElements);
+  });
+});
+
+describe('Constructing with new', () => {
+  it('an element constructed with new keeps the global registry when moved into a scoped root', () => {
+    const tagName = getTestTagName();
+    class X extends HTMLElement {}
+    customElements.define(tagName, X);
+    const registry = new CustomElementRegistry();
+    const root = document
+      .createElement('div')
+      .attachShadow({mode: 'open', customElementRegistry: registry});
+    const x = new X();
+    root.append(x);
+    expect(x.customElementRegistry).to.equal(customElements);
+  });
 });
 
 describe('Registry API', () => {
@@ -568,6 +737,27 @@ describe('initialize and lifecycle', () => {
 });
 
 describe('attributeChangedCallback', () => {
+  it('on upgrade, calls back in attribute order, matching names exactly', () => {
+    const tagName = getTestTagName();
+    const calls = [];
+    const container = document.createElement('div');
+    container.innerHTML = `<${tagName} b="1" foobar="2" a="3"></${tagName}>`;
+    customElements.define(
+      tagName,
+      class extends HTMLElement {
+        static observedAttributes = ['a', 'b', 'fooBar'];
+        attributeChangedCallback(name, oldValue, newValue, namespace) {
+          calls.push([name, oldValue, newValue, namespace]);
+        }
+      }
+    );
+    customElements.upgrade(container);
+    expect(calls).to.deep.equal([
+      ['b', null, '1', null],
+      ['a', null, '3', null],
+    ]);
+  });
+
   // Returns a class whose attributeChangedCallback logs `name`.
   const logAttributes = (log) =>
     class extends HTMLElement {
@@ -672,6 +862,34 @@ describe('Cloning', () => {
     expect(template.cloneNode(true).content.childNodes.length).to.equal(1);
     expect(template.cloneNode(false).content.childNodes.length).to.equal(0);
   });
+
+  itWithCustomizedBuiltIns(
+    'a fragment copy that can\u2019t be paired keeps the global registry',
+    () => {
+      const tagName = getTestTagName();
+      let source;
+      class Button extends HTMLButtonElement {
+        constructor() {
+          super();
+          // Note, adds an element to the source after the native clone, so
+          // the copy can't be paired by index.
+          source?.append(document.createElement('div'));
+        }
+      }
+      customElements.define(tagName, Button, {extends: 'button'});
+      const fragment = document.createDocumentFragment();
+      fragment.append(
+        document.createElement('button', {is: tagName}),
+        document.createElement('div')
+      );
+      source = fragment;
+      const copy = fragment.cloneNode(true);
+      source = undefined;
+      expect(fragment.children.length).to.equal(3);
+      expect(copy.children.length).to.equal(2);
+      expect(copy.children[1].customElementRegistry).to.equal(customElements);
+    }
+  );
 
   it('keeps each node\u2019s registry in a mixed tree', () => {
     const registry = new CustomElementRegistry();
@@ -1530,6 +1748,16 @@ describe('Not yet customized: :state(polyfill-undefined)', () => {
     document.createElement(tagName);
     expect(error?.name).to.equal('NotSupportedError');
   });
+
+  // Note, as natively, internals attach only to a custom element.
+  it("attachInternals throws for an element its registry doesn't define", () => {
+    const registry = new CustomElementRegistry();
+    const tagName = getTestTagName();
+    registry.define(tagName, class extends HTMLElement {});
+    // Note, the global registry doesn't define the tag.
+    const el = document.createElement(tagName);
+    expect(() => el.attachInternals()).to.throw(DOMException);
+  });
 });
 
 describe('Every constructing API upgrades before it returns', () => {
@@ -1759,6 +1987,27 @@ describe('Upgrade order', () => {
 });
 
 describe('Adoption', () => {
+  it('inserting next to a text node adopts the element', () => {
+    for (const method of ['before', 'after']) {
+      const el = inertDocument().createElement('div');
+      const text = document.body.appendChild(document.createTextNode(''));
+      text[method](el);
+      expect(el.customElementRegistry, method).to.equal(customElements);
+      el.remove();
+      text.remove();
+    }
+  });
+
+  it("an insertion that throws doesn't change the node's registry", () => {
+    const el = document.createElement('div');
+    const otherDocument = document.implementation.createHTMLDocument();
+    expect(() =>
+      otherDocument.body.insertBefore(el, document.createElement('i'))
+    ).to.throw(DOMException);
+    expect(el.ownerDocument).to.equal(document);
+    expect(el.customElementRegistry).to.equal(customElements);
+  });
+
   it('a null element adopted from an inert document gets the document registry', () => {
     const el = inertDocument().createElement('div');
     expect(el.customElementRegistry).to.be.null;
@@ -2303,6 +2552,54 @@ describe('Constructors', () => {
 });
 
 describe('Forms', () => {
+  // Note, the tag's first definition fixes that its stand-in isn't
+  // form-associated (see the README).
+  it("upgrading to a form-associated class doesn't throw when the tag's stand-in isn't form-associated", () => {
+    const tagName = getTestTagName();
+    customElements.define(tagName, class extends HTMLElement {});
+    const registry = new CustomElementRegistry();
+    registry.define(
+      tagName,
+      class extends HTMLElement {
+        static formAssociated = true;
+      }
+    );
+    const form = document.body.appendChild(document.createElement('form'));
+    const root = form
+      .appendChild(document.createElement('div'))
+      .attachShadow({mode: 'open', customElementRegistry: registry});
+    const errors = captureReportedErrors(() => {
+      root.innerHTML = `<${tagName}></${tagName}>`;
+    });
+    form.remove();
+    expect(errors).to.deep.equal([]);
+  });
+
+  // Note, as natively on upgrade.
+  it('upgrading tells a form-associated element its form and that it is disabled', () => {
+    const tagName = getTestTagName();
+    const calls = [];
+    const form = document.body.appendChild(document.createElement('form'));
+    form.innerHTML = `<fieldset disabled><${tagName}></${tagName}></fieldset>`;
+    customElements.define(
+      tagName,
+      class extends HTMLElement {
+        static formAssociated = true;
+        formAssociatedCallback(owner) {
+          calls.push(['form', owner === form]);
+        }
+        formDisabledCallback(disabled) {
+          calls.push(['disabled', disabled]);
+        }
+      }
+    );
+    form.remove();
+    expect(calls).to.deep.equal([
+      ['form', true],
+      ['disabled', true],
+    ]);
+  });
+
   it("an ordinary form's elements behave natively", () => {
     const form = document.createElement('form');
     form.innerHTML = `<input id="email"><input type="radio" name="choice" value="a"><input type="radio" name="choice" value="b">`;

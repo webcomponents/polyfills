@@ -1,13 +1,8 @@
 {
-  "custom-elements/registries/Document-customElementRegistry.html": [
-    "customElementRegistry on a document of a disconnected iframe should return contentWindow.customElements"
-  ],
   "custom-elements/registries/Element-customElementRegistry-exceptions.html": [
     "customElementRegistry on a failed custom element created by parser should return the specified custom regsitry"
   ],
   "custom-elements/registries/define.html": [
-    "Element names: defining an element named null should throw a SyntaxError",
-    "Element names: defining an element named undefined should throw a SyntaxError",
     "If constructor.prototype throws, should rethrow"
   ],
   "custom-elements/registries/initial-about-blank.window.html": [

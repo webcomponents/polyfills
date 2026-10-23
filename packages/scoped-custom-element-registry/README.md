@@ -134,8 +134,9 @@ Tests of these are skipped when the browser's native support is used.
     one;
   - a copy of an element with a global registry, in a document with a scoped
     registry, gets that scoped registry instead of null;
-  - `ElementInternals.setFormValue` works for an element whose constructor
-    failed, which isn't form-associated;
+  - an element whose constructor failed keeps its definition, so
+    `ElementInternals.setFormValue` still works for it, and it can't attach a
+    shadow root if its class disables them;
   - adopting a null-registry element gives it the document's registry,
     instead of its new parent's (as an effective global registry);
   - adopting a host gives its shadow root a null registry but leaves the

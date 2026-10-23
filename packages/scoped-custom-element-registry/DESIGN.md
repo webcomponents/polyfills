@@ -89,7 +89,8 @@ registry.
 Moving a node into another document changes null and global registries as
 the spec says, to an _effective global registry_: the new document's global
 registry, or null if the document's registry is scoped. Scoped registries are
-kept. Patched insertion methods apply this before the native move.
+kept. Patched insertion methods apply this before the native move, and undo
+it if the move throws.
 
 The polyfill's state is shared by same-origin windows, so nodes moved between
 them work as natively.
