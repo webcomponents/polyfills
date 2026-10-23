@@ -1,0 +1,44 @@
+{
+  "custom-elements/registries/Document-customElementRegistry.html": [
+    "customElementRegistry on a document of a disconnected iframe should return contentWindow.customElements"
+  ],
+  "custom-elements/registries/Element-customElementRegistry-exceptions.html": [
+    "customElementRegistry on a failed custom element created by parser should return the specified custom regsitry"
+  ],
+  "custom-elements/registries/define.html": [
+    "Element names: defining an element named null should throw a SyntaxError",
+    "Element names: defining an element named undefined should throw a SyntaxError",
+    "If constructor.prototype throws, should rethrow"
+  ],
+  "custom-elements/registries/initial-about-blank.window.html": [
+    "Each navigable document has its own registry"
+  ],
+  "custom-elements/registries/pseudo-class-defined.window.html": [
+    "\"custom\" :defined should apply after initialize"
+  ],
+  "custom-elements/registries/scoped-custom-element-registry-customelementregistry-attribute.html": [
+    "Setting customelementregistry content attribute during constructor should not make it use null registry"
+  ],
+  "custom-elements/registries/scoped-registry-append.html": [
+    "Global registry element should gain effective global registry of scoped registry from its parent upon adoption."
+  ],
+  "custom-elements/registries/scoped-registry-define-upgrade-criteria.html": [
+    "Adding definition to scoped registry affects associated shadow roots in other frame trees"
+  ],
+  "custom-elements/registries/scoped-registry-initialize-upgrades.html": [
+    "Document: CustomElementRegistry.prototype.initialize only upgrades elements beloning to the registry",
+    "Document: CustomElementRegistry.prototype.initialize should upgrade elements in tree order",
+    "HTMLDocument: CustomElementRegistry.prototype.initialize only upgrades elements beloning to the registry",
+    "HTMLDocument: CustomElementRegistry.prototype.initialize should upgrade elements in tree order",
+    "XHTMLDocument: CustomElementRegistry.prototype.initialize only upgrades elements beloning to the registry",
+    "XHTMLDocument: CustomElementRegistry.prototype.initialize should upgrade elements in tree order"
+  ],
+  "custom-elements/registries/template.window.html": [
+    "Serializing a null registry ShadowRoot with a global registry host (document)",
+    "Serializing a null registry ShadowRoot with a null registry host (document)",
+    "Serializing a null registry ShadowRoot with a scoped registry host (document)",
+    "Serializing a scoped registry ShadowRoot with a global registry host (document)",
+    "Serializing a scoped registry ShadowRoot with a null registry host (document)",
+    "Serializing a scoped registry ShadowRoot with a scoped registry host (document)"
+  ]
+}

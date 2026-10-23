@@ -82,28 +82,20 @@ export const getFormAssociatedErrorTestElement = () => ({
  * @return {ShadowRoot}
  */
 export const getShadowRoot = (customElementRegistry) => {
-  const tagName = getTestTagName();
-  const CustomElementClass = class extends HTMLElement {
-    constructor() {
-      super();
+  const el = document.createElement('div');
+  return el.attachShadow({mode: 'open', customElementRegistry});
+};
 
-      const initOptions = {
-        mode: 'open',
-      };
-
-      if (customElementRegistry) {
-        initOptions.registry = customElementRegistry;
-      }
-
-      this.attachShadow(initOptions);
-    }
-  };
-
-  window.customElements.define(tagName, CustomElementClass);
-
-  const {shadowRoot} = new CustomElementClass();
-
-  return shadowRoot;
+/**
+ * Gets a shadowRoot with a null registry associated.
+ *
+ * @return {ShadowRoot}
+ */
+// Note, cannot use DSD here because buggy native implementations
+// may create true null registry elements which can't be polyfilled.
+export const getUninitializedShadowRoot = () => {
+  const el = document.createElement('div');
+  return el.attachShadow({mode: 'open', customElementRegistry: null});
 };
 
 /**
@@ -113,8 +105,10 @@ export const getShadowRoot = (customElementRegistry) => {
  * @param {Document|ShadowRoot} root
  * @return {HTMLElement}
  */
-export const getHTML = (html, root = document) => {
-  const div = root.createElement('div');
+export const getHTML = (html, root) => {
+  const div = document.createElement('div', {
+    customElementRegistry: root ? root.customElementRegistry : customElements,
+  });
 
   div.innerHTML = html;
 
@@ -133,4 +127,27 @@ export const createTemplate = (html) => {
   template.innerHTML = html;
 
   return template;
+};
+
+/**
+ * Like `it`, but skipped where the browser's native support is used instead of
+ * the polyfill. For behavior only the polyfill has, and for spots where native
+ * implementations differ from the spec; each use says which.
+ */
+export const itWithPolyfill = (name, fn) =>
+  (window.CustomElementRegistryPolyfill?.inUse ? it : it.skip)(name, fn);
+
+/**
+ * Appends a same-origin iframe running the polyfill as this page does (forced
+ * if this page's is), so tests can use registries, elements and nodes across
+ * windows. Where the browser's native support is used, so is it there.
+ */
+export const appendIframeWithPolyfill = async () => {
+  const iframe = document.createElement('iframe');
+  document.body.append(iframe);
+  const response = await fetch(
+    new URL('../scoped-custom-element-registry.min.js', import.meta.url)
+  );
+  iframe.contentWindow.eval(await response.text());
+  return iframe;
 };
