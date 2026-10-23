@@ -266,25 +266,32 @@ describe('Prototype on a failed upgrade', () => {
 });
 
 describe('Definition after a failed upgrade', () => {
-  it('an element whose constructor threw can attach a shadow root, though its class disables them', () => {
-    const tagName = getTestTagName();
-    const container = document.body.appendChild(document.createElement('div'));
-    container.innerHTML = `<${tagName}></${tagName}>`;
-    class Failing extends HTMLElement {
-      static get disabledFeatures() {
-        return ['shadow'];
+  // Note, Chromium keeps the definition of an element whose constructor
+  // failed (see README).
+  itWithPolyfill(
+    'an element whose constructor threw can attach a shadow root, though its class disables them',
+    () => {
+      const tagName = getTestTagName();
+      const container = document.body.appendChild(
+        document.createElement('div')
+      );
+      container.innerHTML = `<${tagName}></${tagName}>`;
+      class Failing extends HTMLElement {
+        static get disabledFeatures() {
+          return ['shadow'];
+        }
+        constructor() {
+          super();
+          throw new Error('constructor');
+        }
       }
-      constructor() {
-        super();
-        throw new Error('constructor');
-      }
+      captureReportedErrors(() => customElements.define(tagName, Failing));
+      expect(() =>
+        container.firstChild.attachShadow({mode: 'open'})
+      ).not.to.throw();
+      container.remove();
     }
-    captureReportedErrors(() => customElements.define(tagName, Failing));
-    expect(() =>
-      container.firstChild.attachShadow({mode: 'open'})
-    ).not.to.throw();
-    container.remove();
-  });
+  );
 });
 
 describe('Registries kept when moved', () => {
