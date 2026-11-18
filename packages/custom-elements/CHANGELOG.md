@@ -7,7 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- ## Unreleased -->
 
-## Unreleased
+## [1.6.1] - 2026-11-18
+
+(No changes.)
+
+## [1.6.0] - 2023-03-30
+
+- Add support for `Element.toggleAttribute()` ([#541](https://github.com/webcomponents/polyfills/pull/541))
+- Update dependencies ([#542](https://github.com/webcomponents/polyfills/pull/542))
+
+## [1.5.1] - 2022-10-20
 
 - Don't write to window.CustomElementsRegistry unless we're also writing to window.customElements. ([#524](https://github.com/webcomponents/polyfills/pull/524))
 - Update TypeScript and upstream internal changes.

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- ## Unreleased -->
 
+## [1.5.1] - 2023-03-30
+
+- Update dependencies ([#542](https://github.com/webcomponents/polyfills/pull/542))
+
 ## [1.5.0] - 2021-08-02
 
 - Add TS externs. ([#457](https://github.com/webcomponents/polyfills/pull/457))

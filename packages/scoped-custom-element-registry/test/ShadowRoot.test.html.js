@@ -163,6 +163,51 @@ describe('ShadowRoot', () => {
       });
     });
 
+    describe('createElementNS', () => {
+      it('should create a regular element', () => {
+        const registry = new CustomElementRegistry();
+        const shadowRoot = getShadowRoot(registry);
+
+        const $el = shadowRoot.createElementNS(
+          'http://www.w3.org/1999/xhtml',
+          'div'
+        );
+
+        expect($el).to.not.be.undefined;
+        expect($el).to.be.instanceof(HTMLDivElement);
+      });
+
+      it(`shouldn't upgrade an element defined in the global registry`, () => {
+        const {tagName, CustomElementClass} = getTestElement();
+        customElements.define(tagName, CustomElementClass);
+        const registry = new CustomElementRegistry();
+        const shadowRoot = getShadowRoot(registry);
+
+        const $el = shadowRoot.createElementNS(
+          'http://www.w3.org/1999/xhtml',
+          tagName
+        );
+
+        expect($el).to.not.be.undefined;
+        expect($el).to.not.be.instanceof(CustomElementClass);
+      });
+
+      it(`should upgrade an element defined in the custom registry`, () => {
+        const {tagName, CustomElementClass} = getTestElement();
+        const registry = new CustomElementRegistry();
+        registry.define(tagName, CustomElementClass);
+        const shadowRoot = getShadowRoot(registry);
+
+        const $el = shadowRoot.createElementNS(
+          'http://www.w3.org/1999/xhtml',
+          tagName
+        );
+
+        expect($el).to.not.be.undefined;
+        expect($el).to.be.instanceof(CustomElementClass);
+      });
+    });
+
     describe('innerHTML', () => {
       it(`shouldn't upgrade a defined custom element in the global registry`, () => {
         const {tagName, CustomElementClass} = getTestElement();
@@ -286,6 +331,34 @@ describe('ShadowRoot', () => {
         const shadowRoot = getShadowRoot();
 
         const $el = shadowRoot.createElement(tagName);
+
+        expect($el).to.not.be.undefined;
+        expect($el).to.be.instanceof(CustomElementClass);
+      });
+    });
+
+    describe('createElementNS', () => {
+      it('should create a regular element', () => {
+        const shadowRoot = getShadowRoot();
+
+        const $el = shadowRoot.createElementNS(
+          'http://www.w3.org/1999/xhtml',
+          'div'
+        );
+
+        expect($el).to.not.be.undefined;
+        expect($el).to.be.instanceof(HTMLDivElement);
+      });
+
+      it(`should upgrade an element defined in the global registry`, () => {
+        const {tagName, CustomElementClass} = getTestElement();
+        customElements.define(tagName, CustomElementClass);
+        const shadowRoot = getShadowRoot();
+
+        const $el = shadowRoot.createElementNS(
+          'http://www.w3.org/1999/xhtml',
+          tagName
+        );
 
         expect($el).to.not.be.undefined;
         expect($el).to.be.instanceof(CustomElementClass);

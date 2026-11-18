@@ -127,6 +127,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           svgElement.removeAttribute('class');
           assert(!svgElement.classList.contains('one'));
           assert(!svgElement.classList.contains('two'));
+
+          svgElement.setAttribute('class', 'one');
+          svgElement.toggleAttribute('class');
+          assert(!svgElement.classList.contains('one'));
         });
       });
     </script>

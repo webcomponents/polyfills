@@ -37,6 +37,7 @@ export const Element_innerHTML = Object.getOwnPropertyDescriptor(
 export const Element_getAttribute = window.Element.prototype.getAttribute;
 export const Element_setAttribute = window.Element.prototype.setAttribute;
 export const Element_removeAttribute = window.Element.prototype.removeAttribute;
+export const Element_toggleAttribute = window.Element.prototype.toggleAttribute;
 export const Element_getAttributeNS = window.Element.prototype.getAttributeNS;
 export const Element_setAttributeNS = window.Element.prototype.setAttributeNS;
 export const Element_removeAttributeNS =

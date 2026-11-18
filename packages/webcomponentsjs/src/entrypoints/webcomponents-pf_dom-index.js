@@ -16,3 +16,4 @@ import '../platform/matches.js';
 import '../platform/parent-node/index.js';
 import '../platform/child-node/index.js';
 import '../platform/svg-element-class-list.js';
+import '../platform/toggle-attribute.js';

@@ -353,6 +353,42 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             assert.equal(span.getAttribute('class'), null);
           });
 
+          test("`toggleAttribute('class')` scopes correctly", function () {
+            const el = document.createElement('naive-element');
+            const span = document.createElement('span');
+            ShadyDOM.wrapIfNeeded(
+              ShadyDOM.wrapIfNeeded(el).shadowRoot
+            ).appendChild(span);
+            ShadyDOM.wrapIfNeeded(span).toggleAttribute('class');
+            assert.equal(csfn(span), 'naive-element');
+          });
+
+          test("`toggleAttribute('class', false)` scopes correctly", function () {
+            const el = document.createElement('naive-element');
+            const span = document.createElement('span');
+            ShadyDOM.wrapIfNeeded(
+              ShadyDOM.wrapIfNeeded(el).shadowRoot
+            ).appendChild(span);
+            ShadyDOM.wrapIfNeeded(span).toggleAttribute('class', false);
+            assert.equal(csfn(span), 'naive-element');
+          });
+
+          test("`toggleAttribute('class')` removes if class is empty", function () {
+            const el = document.createElement('naive-element');
+            const span = document.createElement('span');
+            ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(el)).appendChild(span);
+            ShadyDOM.wrapIfNeeded(span).toggleAttribute('class');
+            assert.equal(span.getAttribute('class'), null);
+          });
+
+          test("`toggleAttribute('class', false)` removes if class is empty", function () {
+            const el = document.createElement('naive-element');
+            const span = document.createElement('span');
+            ShadyDOM.wrapIfNeeded(ShadyDOM.wrapIfNeeded(el)).appendChild(span);
+            ShadyDOM.wrapIfNeeded(span).toggleAttribute('class', false);
+            assert.equal(span.getAttribute('class'), null);
+          });
+
           test('`className` scopes correctly', function () {
             const el = document.createElement('naive-element');
             const span = document.createElement('span');

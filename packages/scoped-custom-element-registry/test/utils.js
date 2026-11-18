@@ -30,6 +30,26 @@ export const getTestElement = () => ({
   CustomElementClass: class extends HTMLElement {},
 });
 
+/**
+ *
+ * @param {Array<string>} observedAttributeNames the names of the attributes you want to observe
+ * @returns {{CustomElementClass: typeof HTMLElement, tagName: string}}
+ */
+export const getObservedAttributesTestElement = (
+  observedAttributeNames = []
+) => ({
+  tagName: getTestTagName(),
+  CustomElementClass: class extends HTMLElement {
+    static get observedAttributes() {
+      return observedAttributeNames;
+    }
+    attributeChanges = [];
+    attributeChangedCallback(name, old, value) {
+      this.attributeChanges.push({name, old, value});
+    }
+  },
+});
+
 export const getFormAssociatedTestElement = () => ({
   tagName: getTestTagName(),
   CustomElementClass: class extends HTMLElement {
@@ -72,7 +92,7 @@ export const getShadowRoot = (customElementRegistry) => {
       };
 
       if (customElementRegistry) {
-        initOptions.customElements = customElementRegistry;
+        initOptions.registry = customElementRegistry;
       }
 
       this.attachShadow(initOptions);

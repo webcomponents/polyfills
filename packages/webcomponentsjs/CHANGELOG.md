@@ -8,7 +8,16 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 <!-- ## [Unreleased] -->
 
-## [Unreleased]
+## [2.8.1] - 2026-11-18
+
+- Prevent loader from reading config from DOM ([#671](https://github.com/webcomponents/polyfills/pull/671))
+
+## [2.8.0] - 2023-03-30
+
+- Update dependencies ([#542](https://github.com/webcomponents/polyfills/pull/542))
+- Polyfill `Element.toggleAttribute()`. ([#541](https://github.com/webcomponents/polyfills/pull/541))
+
+## [2.7.0] - 2022-10-20
 
 - Polyfill `addEventListener/removeEventListener` event listener options,
   including `{capture: boolean, once: boolean}`.

@@ -7,7 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- ## Unreleased -->
 
-## Unreleased
+## [1.11.1] - 2026-11-18
+
+(No changes.)
+
+## [1.11.0] - 2023-03-30
+
+- Add support for `Element.toggleAttribute()` ([#541](https://github.com/webcomponents/polyfills/pull/541))
+- Update dependencies ([#542](https://github.com/webcomponents/polyfills/pull/542))
+
+## [1.10.0] - 2022-10-20
 
 - Fix focus/blur events to be usable without wrapped `addEventListener` in
   `noPatch` mode. ([#502](https://github.com/webcomponents/polyfills/pull/502))

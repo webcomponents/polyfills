@@ -1,6 +1,27 @@
 <html>
   <body>
     <script src="../scoped-custom-element-registry.min.js"></script>
+
+    <script>
+      // Test element for testing attribute processing of parser created
+      // elements.
+      customElements.define(
+        'parsed-el',
+        class extends HTMLElement {
+          static observedAttributes = ['a', 'b'];
+          attributeChanges = [];
+          attributeChangedCallback(name, old, value) {
+            this.attributeChanges.push({name, old, value});
+          }
+        }
+      );
+      const imp = document.createElement('parsed-el');
+      imp.setAttribute('a', 'ia');
+      imp.id = 'imperative-parsed-el';
+      document.body.append(imp);
+    </script>
+    <parsed-el id="parsed-el" a="a" b="b"></parsed-el>
+
     <script type="module">
       import {runTests} from '@web/test-runner-mocha';
 

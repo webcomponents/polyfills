@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<!--
+@license
+Copyright (c) 2020 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<html>
+  <head>
+    <title>Element toggleAttribute</title>
+    <script src="../node_modules/@webcomponents/webcomponentsjs/bundles/webcomponents-pf_dom.js"></script>
+    <script src="./wct-config.js"></script>
+    <script src="../node_modules/wct-browser-legacy/browser.js"></script>
+  </head>
+  <body>
+    <script>
+      suite('Element toggleAttribute', function () {
+        test('toggles an attribute', () => {
+          const element = document.createElement('div');
+
+          assert(element.getAttribute('attr') === null);
+
+          let result = element.toggleAttribute('attr');
+          assert(result === true);
+          assert(element.getAttribute('attr') === '');
+
+          result = element.toggleAttribute('attr');
+          assert(result === false);
+          assert(element.getAttribute('attr') === null);
+
+          result = element.toggleAttribute('attr', true);
+          assert(result === true);
+          assert(element.getAttribute('attr') === '');
+
+          result = element.toggleAttribute('attr', true);
+          assert(result === true);
+          assert(element.getAttribute('attr') === '');
+
+          result = element.toggleAttribute('attr', false);
+          assert(result === false);
+          assert(element.getAttribute('attr') === null);
+
+          result = element.toggleAttribute('attr', false);
+          assert(result === false);
+          assert(element.getAttribute('attr') === null);
+
+          element.setAttribute('attr', 'abc');
+          result = element.toggleAttribute('attr', true);
+          assert(result === true);
+          assert(element.getAttribute('attr') === 'abc');
+        });
+      });
+    </script>
+  </body>
+</html>

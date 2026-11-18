@@ -100,7 +100,22 @@
       });
   }
 
-  window.WebComponents = window.WebComponents || {};
+  // Named elements in the document (e.g. `<a id="WebComponents">`) become
+  // named properties on `window`, so an attacker with markup-only injection
+  // could otherwise control `WebComponents.root` / `ShadyDOM.force` and steer
+  // the polyfill bundle URL below. Only accept script-created config objects.
+  function safeGlobal(val) {
+    if (
+      val instanceof Node ||
+      val instanceof HTMLCollection ||
+      val instanceof NodeList
+    ) {
+      return undefined;
+    }
+    return val;
+  }
+
+  window.WebComponents = safeGlobal(window.WebComponents) || {};
   window.WebComponents.ready = window.WebComponents.ready || false;
   window.WebComponents.waitFor =
     window.WebComponents.waitFor ||
@@ -126,11 +141,12 @@
   if (window.WebComponents.loadHTMLImports && !hasNativeImports) {
     polyfills.push('hi');
   }
+  var shadyDOM = safeGlobal(window.ShadyDOM);
   if (
     !(
       'attachShadow' in Element.prototype && 'getRootNode' in Element.prototype
     ) ||
-    (window.ShadyDOM && window.ShadyDOM.force)
+    (shadyDOM && shadyDOM.force)
   ) {
     polyfills.push('sd');
   }
@@ -206,12 +222,10 @@
     var polyfillFile = 'bundles/webcomponents-' + polyfills.join('-') + '.js';
 
     // Load it from the right place.
-    if (window.WebComponents.root) {
-      url = window.WebComponents.root + polyfillFile;
-      if (
-        window.trustedTypes &&
-        window.trustedTypes.isScriptURL(window.WebComponents.root)
-      ) {
+    var root = window.WebComponents.root;
+    if (root && !(root instanceof Node)) {
+      url = root + polyfillFile;
+      if (window.trustedTypes && window.trustedTypes.isScriptURL(root)) {
         url = policy.createScriptURL(url);
       }
     } else {
