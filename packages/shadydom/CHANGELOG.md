@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- ## Unreleased -->
 
+## [1.11.1] - 2026-11-18
+
+(No changes.)
+
 ## [1.11.0] - 2023-03-30
 
 - Add support for `Element.toggleAttribute()` ([#541](https://github.com/webcomponents/polyfills/pull/541))
