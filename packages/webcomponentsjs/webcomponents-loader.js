@@ -206,10 +206,7 @@
     var root = window.WebComponents.root;
     if (root && !(root instanceof Node)) {
       url = root + polyfillFile;
-      if (
-        window.trustedTypes &&
-        window.trustedTypes.isScriptURL(root)
-      ) {
+      if (window.trustedTypes && window.trustedTypes.isScriptURL(root)) {
         url = policy.createScriptURL(url);
       }
     } else {
